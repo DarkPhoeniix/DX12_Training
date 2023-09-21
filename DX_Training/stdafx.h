@@ -18,6 +18,10 @@ using namespace Microsoft::WRL;
 
 #include <algorithm>
 #include <cassert>
+#include <string>
 #include <chrono>
+#include <memory>
+#include <map>
 
-#include "Helpers.h"
+#include "Utility/Helpers.h"
+#include "Utility/KeyCodes.h"
