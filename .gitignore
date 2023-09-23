@@ -1,11 +1,4 @@
-﻿################################################################################
-# This .gitignore file is manually maintained
-################################################################################
-
-/Samples/Desktop/D3D12Raytracing/src/D3D12RaytracingMiniEngineSample/dxcompiler.dll
-/Libraries/D3D12RaytracingFallback/src/FallbackLayerUnitTests/x64/
-/Packages
-
+﻿
 **/bin/x64
 **/obj/x64
 **/src/packages
@@ -19,5 +12,5 @@
 
 *.vcxproj.user
 *.opendb
-Samples/Desktop/D3D12HelloWorld/src/HelloVAResourceInterop/*.h264
-Samples/Desktop/D3D12HelloWorld/src/HelloVAEncode/*.h264
+
+/DX_Training/x64/

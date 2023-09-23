@@ -4,6 +4,14 @@
 #include <windows.h>
 #include <shellapi.h>			// For CommandLineToArgvW
 
+#if defined(min)
+#undef min
+#endif
+
+#if defined(max)
+#undef max
+#endif
+
 // Windows Runtime Library. Needed for Microsoft::WRL::ComPtr<> template class.
 #include <wrl.h>
 using namespace Microsoft::WRL;
@@ -18,6 +26,12 @@ using namespace Microsoft::WRL;
 
 #include <algorithm>
 #include <cassert>
+#include <cstdint>
+#include <string>
 #include <chrono>
+#include <memory>
+#include <queue>
+#include <map>
 
-#include "Helpers.h"
+#include "Utility/Helpers.h"
+#include "Utility/KeyCodes.h"
