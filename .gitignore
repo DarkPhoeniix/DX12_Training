@@ -2,7 +2,7 @@
 # This .gitignore file is manually maintained
 ################################################################################
 
-/DX_Training/x64/
+DX_Training/x64/
 
 **/bin/x64
 **/obj/x64
