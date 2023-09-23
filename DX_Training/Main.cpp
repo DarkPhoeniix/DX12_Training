@@ -1,14 +1,43 @@
 
 #include "stdafx.h"
 
-#include "RenderWindow.h"
+#include "Application.h"
+#include "RenderCubeExample.h"
 
-uint32_t g_ClientWidth = 1280;
-uint32_t g_ClientHeight = 720;
+#include <dxgidebug.h>
 
-_Use_decl_annotations_
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
+#include "pathcch.h"
+
+void ReportLiveObjects()
 {
-    RenderWindow window(g_ClientWidth, g_ClientHeight, L"D3DX12 Simple Render");
-    return Application::run(&window, hInstance, nCmdShow);
+    IDXGIDebug1* dxgiDebug;
+    DXGIGetDebugInterface1(0, IID_PPV_ARGS(&dxgiDebug));
+
+    dxgiDebug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_IGNORE_INTERNAL);
+    dxgiDebug->Release();
+}
+
+int CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lpCmdLine, int nCmdShow)
+{
+    int retCode = 0;
+
+    // Set the working directory to the path of the executable.
+    WCHAR path[MAX_PATH];
+    HMODULE hModule = GetModuleHandleW(NULL);
+    if (GetModuleFileNameW(hModule, path, MAX_PATH) > 0)
+    {
+        PathCchRemoveFileSpec(path, MAX_PATH);
+        SetCurrentDirectoryW(path);
+    }
+
+    Application::create(hInstance);
+    {
+        std::shared_ptr<RenderCubeExample> demo = std::make_shared<RenderCubeExample>(L"D3DX12 Render Cube Training", 1280, 720);
+        retCode = Application::get().run(demo);
+    }
+    Application::destroy();
+
+    atexit(&ReportLiveObjects);
+
+    return retCode;
 }

@@ -2,21 +2,23 @@
 #include "stdafx.h"
 
 #include "Application.h"
+
+#include "Game.h"
 #include "RenderWindow.h"
 #include "CommandQueue.h"
 #include "Events/KeyEvent.h"
 #include "Events/MouseButtonEvent.h"
 #include "Events/MouseMoveEvent.h"
-#include "Events/MouseWheelEvent.h"
+#include "Events/MouseScrollEvent.h"
 #include "Events/RenderEvent.h"
 #include "Events/ResizeEvent.h"
 #include "Events/UpdateEvent.h"
 
 namespace
 {
-    constexpr wchar_t WINDOW_CLASS_NAME[] = L"DX12RenderWindowClass";
+    constexpr wchar_t WINDOW_CLASS_NAME[] = L"DX12WindowClass";
 
-    using WindowPtr = std::shared_ptr<RenderWindow>;
+    using WindowPtr = std::shared_ptr<Window>;
     using WindowMap = std::map<HWND, WindowPtr>;
     using WindowNameMap = std::map<std::wstring, WindowPtr>;
 
@@ -26,13 +28,55 @@ namespace
     static Application* g_ApplicationInstance = nullptr;
 
     // A wrapper struct to allow shared pointers for the window class.
-    struct MakeWindow : public RenderWindow
+    struct MakeWindow : public Window
     {
         MakeWindow(HWND hWnd, const std::wstring& windowName, int clientWidth, int clientHeight, bool vSync)
-            : RenderWindow(hWnd, windowName, clientWidth, clientHeight, vSync)
+            : Window(hWnd, windowName, clientWidth, clientHeight, vSync)
         {   }
     };
 
+    static void RemoveWindow(HWND hWnd)
+    {
+        WindowMap::iterator windowIter = g_windows.find(hWnd);
+        if (windowIter != g_windows.end())
+        {
+            WindowPtr pWindow = windowIter->second;
+            g_windowsByName.erase(pWindow->getWindowName());
+            g_windows.erase(windowIter);
+        }
+    }
+
+    // Convert the message ID into a MouseButton ID
+    MouseButtonEvent::MouseButton DecodeMouseButton(UINT messageID)
+    {
+        MouseButtonEvent::MouseButton mouseButton = MouseButtonEvent::None;
+        switch (messageID)
+        {
+        case WM_LBUTTONDOWN:
+        case WM_LBUTTONUP:
+        case WM_LBUTTONDBLCLK:
+        {
+            mouseButton = MouseButtonEvent::Left;
+        }
+        break;
+        case WM_RBUTTONDOWN:
+        case WM_RBUTTONUP:
+        case WM_RBUTTONDBLCLK:
+        {
+            mouseButton = MouseButtonEvent::Right;
+        }
+        break;
+        case WM_MBUTTONDOWN:
+        case WM_MBUTTONUP:
+        case WM_MBUTTONDBLCLK:
+        {
+            mouseButton = MouseButtonEvent::Middle;
+        }
+        break;
+        }
+
+        return mouseButton;
+    }
 }
 
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -54,10 +98,10 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
         {
             // Delta time will be filled in by the Window.
             UpdateEvent updateEventArgs(0.0f, 0.0f);
-            pWindow->OnUpdate(updateEventArgs);
+            pWindow->onUpdate(updateEventArgs);
             RenderEvent renderEventArgs(0.0f, 0.0f);
             // Delta time will be filled in by the Window.
-            pWindow->OnRender(renderEventArgs);
+            pWindow->onRender(renderEventArgs);
         }
         break;
         case WM_SYSKEYDOWN:
@@ -80,7 +124,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
             KeyCode::Key key = (KeyCode::Key)wParam;
             unsigned int scanCode = (lParam & 0x00FF0000) >> 16;
             KeyEvent keyEventArgs(key, c, KeyEvent::Pressed, shift, control, alt);
-            pWindow->OnKeyPressed(keyEventArgs);
+            pWindow->onKeyPressed(keyEventArgs);
         }
         break;
         case WM_SYSKEYUP:
@@ -105,7 +149,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
             }
 
             KeyEvent keyEventArgs(key, c, KeyEvent::Released, shift, control, alt);
-            pWindow->OnKeyReleased(keyEventArgs);
+            pWindow->onKeyReleased(keyEventArgs);
         }
         break;
         // The default window procedure will play a system notification sound 
@@ -125,7 +169,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
             int y = ((int)(short)HIWORD(lParam));
 
             MouseMoveEvent mouseMotionEventArgs(lButton, mButton, rButton, control, shift, x, y);
-            pWindow->OnMouseMoved(mouseMotionEventArgs);
+            pWindow->onMouseMoved(mouseMotionEventArgs);
         }
         break;
         case WM_LBUTTONDOWN:
@@ -142,7 +186,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
             int y = ((int)(short)HIWORD(lParam));
 
             MouseButtonEvent mouseButtonEventArgs(DecodeMouseButton(message), MouseButtonEvent::Pressed, lButton, mButton, rButton, control, shift, x, y);
-            pWindow->OnMouseButtonPressed(mouseButtonEventArgs);
+            pWindow->onMouseButtonPressed(mouseButtonEventArgs);
         }
         break;
         case WM_LBUTTONUP:
@@ -159,7 +203,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
             int y = ((int)(short)HIWORD(lParam));
 
             MouseButtonEvent mouseButtonEventArgs(DecodeMouseButton(message), MouseButtonEvent::Released, lButton, mButton, rButton, control, shift, x, y);
-            pWindow->OnMouseButtonReleased(mouseButtonEventArgs);
+            pWindow->onMouseButtonReleased(mouseButtonEventArgs);
         }
         break;
         case WM_MOUSEWHEEL:
@@ -185,8 +229,8 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
             clientToScreenPoint.y = y;
             ScreenToClient(hwnd, &clientToScreenPoint);
 
-            MouseWheelEvent mouseWheelEventArgs(zDelta, lButton, mButton, rButton, control, shift, (int)clientToScreenPoint.x, (int)clientToScreenPoint.y);
-            pWindow->OnMouseWheel(mouseWheelEventArgs);
+            MouseScrollEvent mouseWheelEventArgs(zDelta, lButton, mButton, rButton, control, shift, (int)clientToScreenPoint.x, (int)clientToScreenPoint.y);
+            pWindow->onMouseScroll(mouseWheelEventArgs);
         }
         break;
         case WM_SIZE:
@@ -195,7 +239,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
             int height = ((int)(short)HIWORD(lParam));
 
             ResizeEvent resizeEventArgs(width, height);
-            pWindow->OnResize(resizeEventArgs);
+            pWindow->onResize(resizeEventArgs);
         }
         break;
         case WM_DESTROY:
@@ -223,7 +267,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
     return 0;
 }
 
-std::shared_ptr<RenderWindow> Application::createRenderWindow(const std::wstring& windowName, int clientWidth, int clientHeight, bool vSync)
+std::shared_ptr<Window> Application::createWindow(const std::wstring& windowName, int clientWidth, int clientHeight, bool vSync)
 {
     WindowNameMap::iterator windowIter = g_windowsByName.find(windowName);
     if (windowIter != g_windowsByName.end())
@@ -254,6 +298,32 @@ std::shared_ptr<RenderWindow> Application::createRenderWindow(const std::wstring
     return pWindow;
 }
 
+void Application::destroyWindow(std::shared_ptr<Window> window)
+{
+    if (window) window->destroy();
+}
+
+void Application::destroyWindow(const std::wstring& windowName)
+{
+    WindowPtr pWindow = getWindowByName(windowName);
+    if (pWindow)
+    {
+        destroyWindow(pWindow);
+    }
+}
+
+std::shared_ptr<Window> Application::getWindowByName(const std::wstring& windowName)
+{
+    std::shared_ptr<Window> window;
+    WindowNameMap::iterator iter = g_windowsByName.find(windowName);
+    if (iter != g_windowsByName.end())
+    {
+        window = iter->second;
+    }
+
+    return window;
+}
+
 void Application::create(HINSTANCE hInstance)
 {
     if (!g_ApplicationInstance)
@@ -271,6 +341,35 @@ Application& Application::get()
 {
     assert(g_ApplicationInstance);
     return *g_ApplicationInstance;
+}
+
+int Application::run(std::shared_ptr<Game> pGame)
+{
+    if (!pGame->initialize()) return 1;
+    if (!pGame->loadContent()) return 2;
+
+    MSG msg = { 0 };
+    while (msg.message != WM_QUIT)
+    {
+        if (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
+        {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+    }
+
+    // Flush any commands in the commands queues before quiting.
+    flush();
+
+    pGame->unloadContent();
+    pGame->destroy();
+
+    return static_cast<int>(msg.wParam);
+}
+
+void Application::quit(int exitCode)
+{
+    PostQuitMessage(exitCode);
 }
 
 bool Application::isTearingSupported() const
@@ -306,9 +405,9 @@ std::shared_ptr<CommandQueue> Application::getCommandQueue(D3D12_COMMAND_LIST_TY
 
 void Application::flush()
 {
-    _directCommandQueue->Flush();
-    _computeCommandQueue->Flush();
-    _copyCommandQueue->Flush();
+    _directCommandQueue->flush();
+    _computeCommandQueue->flush();
+    _copyCommandQueue->flush();
 }
 
 Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> Application::createDescriptorHeap(UINT numDescriptors, D3D12_DESCRIPTOR_HEAP_TYPE type)
@@ -320,7 +419,7 @@ Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> Application::createDescriptorHeap(U
     desc.NodeMask = 0;
 
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeap;
-    throwIfFailed(_d3d12Device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&descriptorHeap)));
+    Helper::throwIfFailed(_d3d12Device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&descriptorHeap)));
 
     return descriptorHeap;
 }
@@ -336,7 +435,7 @@ Application::Application(HINSTANCE hIntance)
 
 #if defined(_DEBUG)
     ComPtr<ID3D12Debug> debugInterface;
-    throwIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&debugInterface)));
+    Helper::throwIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&debugInterface)));
     debugInterface->EnableDebugLayer();
 #endif
 
@@ -381,7 +480,7 @@ Application::~Application()
 Microsoft::WRL::ComPtr<ID3D12Device2> Application::createDevice(Microsoft::WRL::ComPtr<IDXGIAdapter4> adapter)
 {
     ComPtr<ID3D12Device2> d3d12Device2;
-    throwIfFailed(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&d3d12Device2)));
+    Helper::throwIfFailed(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&d3d12Device2)));
     // NAME_D3D12_OBJECT(d3d12Device2);
 
     // Enable debug messages in debug mode.
@@ -417,7 +516,7 @@ Microsoft::WRL::ComPtr<ID3D12Device2> Application::createDevice(Microsoft::WRL::
         NewFilter.DenyList.NumIDs = _countof(DenyIds);
         NewFilter.DenyList.pIDList = DenyIds;
 
-        throwIfFailed(pInfoQueue->PushStorageFilter(&NewFilter));
+        Helper::throwIfFailed(pInfoQueue->PushStorageFilter(&NewFilter));
     }
 #endif
 
@@ -432,15 +531,15 @@ Microsoft::WRL::ComPtr<IDXGIAdapter4> Application::getAdapter(bool bUseWarp)
     createFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
 #endif
 
-    throwIfFailed(CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&dxgiFactory)));
+    Helper::throwIfFailed(CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&dxgiFactory)));
 
     ComPtr<IDXGIAdapter1> dxgiAdapter1;
     ComPtr<IDXGIAdapter4> dxgiAdapter4;
 
     if (bUseWarp)
     {
-        throwIfFailed(dxgiFactory->EnumWarpAdapter(IID_PPV_ARGS(&dxgiAdapter1)));
-        throwIfFailed(dxgiAdapter1.As(&dxgiAdapter4));
+        Helper::throwIfFailed(dxgiFactory->EnumWarpAdapter(IID_PPV_ARGS(&dxgiAdapter1)));
+        Helper::throwIfFailed(dxgiAdapter1.As(&dxgiAdapter4));
     }
     else
     {
@@ -459,7 +558,7 @@ Microsoft::WRL::ComPtr<IDXGIAdapter4> Application::getAdapter(bool bUseWarp)
                 dxgiAdapterDesc1.DedicatedVideoMemory > maxDedicatedVideoMemory)
             {
                 maxDedicatedVideoMemory = dxgiAdapterDesc1.DedicatedVideoMemory;
-                throwIfFailed(dxgiAdapter1.As(&dxgiAdapter4));
+                Helper::throwIfFailed(dxgiAdapter1.As(&dxgiAdapter4));
             }
         }
     }

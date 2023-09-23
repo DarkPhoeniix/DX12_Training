@@ -1,31 +1,26 @@
 #pragma once
 
-#include <cstdint>  // For uint64_t
-#include <queue>    // For std::queue
-
 class CommandQueue
 {
 public:
     CommandQueue(Microsoft::WRL::ComPtr<ID3D12Device2> device, D3D12_COMMAND_LIST_TYPE type);
     virtual ~CommandQueue();
 
-    // Get an available command list from the command queue.
-    Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> GetCommandList();
+    // Get an available command list from the command queue
+    Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> getCommandList();
+    // Returns the fence value to wait for this command list.
+    uint64_t executeCommandList(Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> commandList);
 
-    // Execute a command list.
-    // Returns the fence value to wait for for this command list.
-    uint64_t ExecuteCommandList(Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> commandList);
+    uint64_t signal();
+    bool isFenceComplete(uint64_t fenceValue);
+    void waitForFenceValue(uint64_t fenceValue);
+    void flush();
 
-    uint64_t Signal();
-    bool IsFenceComplete(uint64_t fenceValue);
-    void WaitForFenceValue(uint64_t fenceValue);
-    void Flush();
+    Microsoft::WRL::ComPtr<ID3D12CommandQueue> getD3D12CommandQueue() const;
 
-    Microsoft::WRL::ComPtr<ID3D12CommandQueue> GetD3D12CommandQueue() const;
 protected:
-
-    Microsoft::WRL::ComPtr<ID3D12CommandAllocator> CreateCommandAllocator();
-    Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> CreateCommandList(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> allocator);
+    Microsoft::WRL::ComPtr<ID3D12CommandAllocator> createCommandAllocator();
+    Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> createCommandList(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> allocator);
 
 private:
     // Keep track of command allocators that are "in-flight"
@@ -38,13 +33,13 @@ private:
     using CommandAllocatorQueue = std::queue<CommandAllocatorEntry>;
     using CommandListQueue = std::queue< Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> >;
 
-    D3D12_COMMAND_LIST_TYPE                     m_CommandListType;
-    Microsoft::WRL::ComPtr<ID3D12Device2>       m_d3d12Device;
-    Microsoft::WRL::ComPtr<ID3D12CommandQueue>  m_d3d12CommandQueue;
-    Microsoft::WRL::ComPtr<ID3D12Fence>         m_d3d12Fence;
-    HANDLE                                      m_FenceEvent;
-    uint64_t                                    m_FenceValue;
+    D3D12_COMMAND_LIST_TYPE _commandListType;
+    Microsoft::WRL::ComPtr<ID3D12Device2> _d3d12Device;
+    Microsoft::WRL::ComPtr<ID3D12CommandQueue> _d3d12CommandQueue;
+    Microsoft::WRL::ComPtr<ID3D12Fence> _d3d12Fence;
+    HANDLE _fenceEvent;
+    uint64_t _fenceValue;
 
-    CommandAllocatorQueue                       m_CommandAllocatorQueue;
-    CommandListQueue                            m_CommandListQueue;
+    CommandAllocatorQueue _commandAllocatorQueue;
+    CommandListQueue _commandListQueue;
 };

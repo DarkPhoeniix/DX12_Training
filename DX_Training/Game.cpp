@@ -7,25 +7,15 @@
 #include "RenderWindow.h"
 
 Game::Game(const std::wstring& name, int width, int height, bool vSync)
-    : m_Name(name)
+    : _name(name)
     , m_Width(width)
-    , m_Height(height)
-    , m_vSync(vSync)
+    , _height(height)
+    , _vSync(vSync)
 {   }
 
 Game::~Game()
 {
-    assert(!m_pWindow && "Use Game::Destroy() before destruction.");
-}
-
-inline int Game::getClientWidth() const
-{
-    return m_Width;
-}
-
-inline int Game::getClientHeight() const
-{
-    return m_Height;
+    assert(!_window && "Use Game::Destroy() before destruction.");
 }
 
 bool Game::initialize()
@@ -37,66 +27,50 @@ bool Game::initialize()
         return false;
     }
 
-    m_pWindow = Application::get().createRenderWindow(m_Name, m_Width, m_Height, m_vSync);
-    m_pWindow->registerCallbacks(shared_from_this());
-    m_pWindow->show();
+    _window = Application::get().createWindow(_name, m_Width, _height, _vSync);
+    _window->registerCallbacks(shared_from_this());
+    _window->show();
 
     return true;
 }
 
 void Game::destroy()
 {
-    Application::Get().DestroyWindow(m_pWindow);
-    m_pWindow.reset();
+    Application::get().destroyWindow(_window);
+    _window.reset();
 }
 
-void Game::OnUpdate(UpdateEvent& e)
-{
+void Game::onUpdate(UpdateEvent& e)
+{   }
 
-}
+void Game::onRender(RenderEvent& e)
+{   }
 
-void Game::OnRender(RenderEvent& e)
-{
+void Game::onKeyPressed(KeyEvent& e)
+{   }
 
-}
+void Game::onKeyReleased(KeyEvent& e)
+{   }
 
-void Game::OnKeyPressed(KeyEvent& e)
-{
-    // By default, do nothing.
-}
+void Game::onMouseMoved(class MouseMoveEvent& e)
+{   }
 
-void Game::OnKeyReleased(KeyEvent& e)
-{
-    // By default, do nothing.
-}
+void Game::onMouseButtonPressed(MouseButtonEvent& e)
+{   }
 
-void Game::OnMouseMoved(class MouseMoveEvent& e)
-{
-    // By default, do nothing.
-}
+void Game::onMouseButtonReleased(MouseButtonEvent& e)
+{   }
 
-void Game::OnMouseButtonPressed(MouseButtonEvent& e)
-{
-    // By default, do nothing.
-}
+void Game::onMouseScroll(MouseScrollEvent& e)
+{   }
 
-void Game::OnMouseButtonReleased(MouseButtonEvent& e)
-{
-    // By default, do nothing.
-}
-
-void Game::OnMouseWheel(MouseWheelEvent& e)
-{
-    // By default, do nothing.
-}
-
-void Game::OnResize(ResizeEvent& e)
+void Game::onResize(ResizeEvent& e)
 {
     m_Width = e.width;
-    m_Height = e.height;
+    _height = e.height;
 }
 
-void Game::OnWindowDestroy()
+void Game::onWindowDestroy()
 {
     // If the Window which we are registered to is 
     // destroyed, then any resources which are associated 

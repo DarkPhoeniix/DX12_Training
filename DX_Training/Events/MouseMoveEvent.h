@@ -8,24 +8,25 @@ public:
     typedef Event base;
 
     MouseMoveEvent(bool leftButton, bool middleButton, bool rightButton, bool control, bool shift, int x, int y)
-        : LeftButton(leftButton)
-        , MiddleButton(middleButton)
-        , RightButton(rightButton)
-        , Control(control)
-        , Shift(shift)
-        , X(x)
-        , Y(y)
-    {}
+        : leftButton(leftButton)
+        , middleButton(middleButton)
+        , rightButton(rightButton)
+        , control(control)
+        , shift(shift)
+        , x(x)
+        , y(y)
+        , relativeX(0)
+        , relativeY(0)
+    {   }
 
-    bool LeftButton;    // Is the left mouse button down?
-    bool MiddleButton;  // Is the middle mouse button down?
-    bool RightButton;   // Is the right mouse button down?
-    bool Control;       // Is the CTRL key down?
-    bool Shift;         // Is the Shift key down?
+    bool leftButton;    // Is the left mouse button down?
+    bool middleButton;  // Is the middle mouse button down?
+    bool rightButton;   // Is the right mouse button down?
+    bool control;       // Is the CTRL key down?
+    bool shift;         // Is the Shift key down?
 
-    int X;              // The X-position of the cursor relative to the upper-left corner of the client area.
-    int Y;              // The Y-position of the cursor relative to the upper-left corner of the client area.
-    int RelX;           // How far the mouse moved since the last event.
-    int RelY;           // How far the mouse moved since the last event.
-
+    int x;              // The X-position of the cursor relative to the upper-left corner of the client area.
+    int y;              // The Y-position of the cursor relative to the upper-left corner of the client area.
+    int relativeX;           // How far the mouse moved since the last event.
+    int relativeY;           // How far the mouse moved since the last event.
 };

@@ -3,62 +3,62 @@
 #include "HighResolutionClock.h"
 
 HighResolutionClock::HighResolutionClock()
-    : m_DeltaTime(0)
-    , m_TotalTime(0)
+    : _deltaTime(0)
+    , _totalTime(0)
 {
-    m_T0 = std::chrono::high_resolution_clock::now();
+    _startTime = std::chrono::high_resolution_clock::now();
 }
 
-void HighResolutionClock::Tick()
+void HighResolutionClock::tick()
 {
     auto t1 = std::chrono::high_resolution_clock::now();
-    m_DeltaTime = t1 - m_T0;
-    m_TotalTime += m_DeltaTime;
-    m_T0 = t1;
+    _deltaTime = t1 - _startTime;
+    _totalTime += _deltaTime;
+    _startTime = t1;
 }
 
-void HighResolutionClock::Reset()
+void HighResolutionClock::reset()
 {
-    m_T0 = std::chrono::high_resolution_clock::now();
-    m_DeltaTime = std::chrono::high_resolution_clock::duration();
-    m_TotalTime = std::chrono::high_resolution_clock::duration();
+    _startTime = std::chrono::high_resolution_clock::now();
+    _deltaTime = std::chrono::high_resolution_clock::duration();
+    _totalTime = std::chrono::high_resolution_clock::duration();
 }
 
-double HighResolutionClock::GetDeltaNanoseconds() const
+double HighResolutionClock::getDeltaNanoseconds() const
 {
-    return m_DeltaTime.count() * 1.0;
+    return _deltaTime.count() * 1.0;
 }
-double HighResolutionClock::GetDeltaMicroseconds() const
+double HighResolutionClock::getDeltaMicroseconds() const
 {
-    return m_DeltaTime.count() * 1e-3;
-}
-
-double HighResolutionClock::GetDeltaMilliseconds() const
-{
-    return m_DeltaTime.count() * 1e-6;
+    return _deltaTime.count() * 1e-3;
 }
 
-double HighResolutionClock::GetDeltaSeconds() const
+double HighResolutionClock::getDeltaMilliseconds() const
 {
-    return m_DeltaTime.count() * 1e-9;
+    return _deltaTime.count() * 1e-6;
 }
 
-double HighResolutionClock::GetTotalNanoseconds() const
+double HighResolutionClock::getDeltaSeconds() const
 {
-    return m_TotalTime.count() * 1.0;
+    return _deltaTime.count() * 1e-9;
 }
 
-double HighResolutionClock::GetTotalMicroseconds() const
+double HighResolutionClock::getTotalNanoseconds() const
 {
-    return m_TotalTime.count() * 1e-3;
+    return _totalTime.count() * 1.0;
 }
 
-double HighResolutionClock::GetTotalMilliSeconds() const
+double HighResolutionClock::getTotalMicroseconds() const
 {
-    return m_TotalTime.count() * 1e-6;
+    return _totalTime.count() * 1e-3;
 }
 
-double HighResolutionClock::GetTotalSeconds() const
+double HighResolutionClock::getTotalMilliSeconds() const
 {
-    return m_TotalTime.count() * 1e-9;
+    return _totalTime.count() * 1e-6;
+}
+
+double HighResolutionClock::getTotalSeconds() const
+{
+    return _totalTime.count() * 1e-9;
 }

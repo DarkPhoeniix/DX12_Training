@@ -1,9 +1,8 @@
 #pragma once
 
-#include "Interfaces/IRenderWindow.h"
-
-class RenderWindow;
+class Window;
 class CommandQueue;
+class Game;
 
 class Application
 {
@@ -11,16 +10,19 @@ public:
     Application(const Application&) = delete;
     Application& operator=(const Application&) = delete;
 
-    std::shared_ptr<RenderWindow> createRenderWindow(const std::wstring& windowName, int clientWidth, int clientHeight, bool vSync = true);
+    std::shared_ptr<Window> createWindow(const std::wstring& windowName, int clientWidth, int clientHeight, bool vSync = true);
+    void destroyWindow(const std::wstring& windowName);
+    void destroyWindow(std::shared_ptr<Window> window);
+
+    std::shared_ptr<Window> getWindowByName(const std::wstring& windowName);
 
     bool isTearingSupported() const;
-
-    void flush();
 
     static void create(HINSTANCE hInstance);
     static void destroy();
     static Application& get();
-    static int run(RenderWindow* window);
+    int run(std::shared_ptr<Game> pGame);
+    void quit(int exitCode = 0);
 
     Microsoft::WRL::ComPtr<ID3D12Device2> getDevice() const;
     std::shared_ptr<CommandQueue> getCommandQueue(D3D12_COMMAND_LIST_TYPE type = D3D12_COMMAND_LIST_TYPE_DIRECT) const;

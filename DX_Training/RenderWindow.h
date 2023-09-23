@@ -1,41 +1,47 @@
 #pragma once
 
-#include "Interfaces\IRenderWindow.h"
+#include "Utility/HighResolutionClock.h"
 
 class Game;
+class Window;
+class UpdateEvent;
+class RenderEvent;
+class MouseButtonEvent;
+class MouseMoveEvent;
+class MouseScrollEvent;
+class KeyEvent;
+class ResizeEvent;
 
 class Window
 {
 public:
-    // Number of swapchain back buffers.
-    static const UINT BufferCount = 3;
+    static constexpr UINT BUFFER_COUNT = 3;
 
-    HWND GetWindowHandle() const;
+    HWND getWindowHandle() const;
 
-    void Destroy();
+    void destroy();
 
-    const std::wstring& GetWindowName() const;
+    const std::wstring& getWindowName() const;
 
-    int GetClientWidth() const;
-    int GetClientHeight() const;
+    int getClientWidth() const;
+    int getClientHeight() const;
 
-    bool IsVSync() const;
-    void SetVSync(bool vSync);
-    void ToggleVSync();
+    bool isVSync() const;
+    void setVSync(bool vSync);
+    void toggleVSync();
 
-    bool IsFullScreen() const;
+    bool isFullScreen() const;
+    void setFullscreen(bool fullscreen);
+    void toggleFullscreen();
 
-    void SetFullscreen(bool fullscreen);
-    void ToggleFullscreen();
+    void show();
+    void hide();
 
-    void Show();
-    void Hide();
+    UINT getCurrentBackBufferIndex() const;
+    UINT present();
 
-    UINT GetCurrentBackBufferIndex() const;
-    UINT Present();
-
-    D3D12_CPU_DESCRIPTOR_HANDLE GetCurrentRenderTargetView() const;
-    Microsoft::WRL::ComPtr<ID3D12Resource> GetCurrentBackBuffer() const;
+    D3D12_CPU_DESCRIPTOR_HANDLE getCurrentRenderTargetView() const;
+    Microsoft::WRL::ComPtr<ID3D12Resource> getCurrentBackBuffer() const;
 
 protected:
     friend LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
@@ -47,49 +53,51 @@ protected:
     Window(HWND hWnd, const std::wstring& windowName, int clientWidth, int clientHeight, bool vSync);
     virtual ~Window();
 
-    void RegisterCallbacks(std::shared_ptr<Game> pGame);
+    void registerCallbacks(std::shared_ptr<Game> pGame);
 
-    virtual void OnUpdate(UpdateEvent& e);
-    virtual void OnRender(RenderEvent& e);
+    virtual void onUpdate(UpdateEvent& e);
+    virtual void onRender(RenderEvent& e);
 
-    virtual void OnKeyPressed(KeyEvent& e);
-    virtual void OnKeyReleased(KeyEvent& e);
+    virtual void onKeyPressed(KeyEvent& e);
+    virtual void onKeyReleased(KeyEvent& e);
 
-    virtual void OnMouseMoved(MouseMoveEvent& e);
-    virtual void OnMouseButtonPressed(MouseButtonEvent& e);
-    virtual void OnMouseButtonReleased(MouseButtonEvent& e);
-    virtual void OnMouseWheel(MouseWheelEvent& e);
+    virtual void onMouseMoved(MouseMoveEvent& e);
+    virtual void onMouseButtonPressed(MouseButtonEvent& e);
+    virtual void onMouseButtonReleased(MouseButtonEvent& e);
+    virtual void onMouseScroll(MouseScrollEvent& e);
 
-    virtual void OnResize(ResizeEvent& e);
+    virtual void onResize(ResizeEvent& e);
 
-    Microsoft::WRL::ComPtr<IDXGISwapChain4> CreateSwapChain();
+    Microsoft::WRL::ComPtr<IDXGISwapChain4> createSwapChain();
 
-    void UpdateRenderTargetViews();
+    void updateRenderTargetViews();
 
 private:
     Window(const Window& copy) = delete;
     Window& operator=(const Window& other) = delete;
 
-    HWND m_hWnd;
+    HWND _hWnd;
 
-    std::wstring m_WindowName;
+    std::wstring _windowName;
 
-    int m_ClientWidth;
-    int m_ClientHeight;
-    bool m_VSync;
-    bool m_Fullscreen;
+    int _clientWidth;
+    int _clientHeight;
+    bool _vSync;
+    bool _fullscreen;
 
-    uint64_t m_FrameCounter;
+    HighResolutionClock _updateClock;
+    HighResolutionClock _renderClock;
+    uint64_t _frameCounter;
 
-    std::weak_ptr<Game> m_pGame;
+    std::weak_ptr<Game> _game;
 
-    Microsoft::WRL::ComPtr<IDXGISwapChain4> m_dxgiSwapChain;
-    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_d3d12RTVDescriptorHeap;
-    Microsoft::WRL::ComPtr<ID3D12Resource> m_d3d12BackBuffers[BufferCount];
+    Microsoft::WRL::ComPtr<IDXGISwapChain4> _dxgiSwapChain;
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> _d3d12RTVDescriptorHeap;
+    Microsoft::WRL::ComPtr<ID3D12Resource> _d3d12BackBuffers[BUFFER_COUNT];
 
-    UINT m_RTVDescriptorSize;
-    UINT m_CurrentBackBufferIndex;
+    UINT _RTVDescriptorSize;
+    UINT _currentBackBufferIndex;
 
-    RECT m_WindowRect;
-    bool m_IsTearingSupported;
+    RECT _windowRect;
+    bool _isTearingSupported;
 };

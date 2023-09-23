@@ -8,10 +8,10 @@ public:
     typedef Event base;
 
     UpdateEvent(double fDeltaTime, double fTotalTime)
-        : ElapsedTime(fDeltaTime)
-        , TotalTime(fTotalTime)
+        : elapsedTime(fDeltaTime)
+        , totalTime(fTotalTime)
     {   }
 
-    double ElapsedTime;
-    double TotalTime;
+    double elapsedTime;
+    double totalTime;
 };

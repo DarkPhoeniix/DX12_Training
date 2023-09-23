@@ -1,9 +1,12 @@
 #pragma once
 
-inline void throwIfFailed(HRESULT hr)
+namespace Helper
 {
-    if (FAILED(hr))
+    inline void throwIfFailed(HRESULT hr)
     {
-        throw std::exception();
+        if (FAILED(hr))
+        {
+            throw std::exception();
+        }
     }
 }

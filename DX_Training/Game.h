@@ -1,13 +1,11 @@
 #pragma once
 
-#include "Events/Event.h"
-
-class RenderWindow;
+class Window;
 class UpdateEvent;
 class RenderEvent;
 class MouseButtonEvent;
 class MouseMoveEvent;
-class MouseWheelEvent;
+class MouseScrollEvent;
 class KeyEvent;
 class ResizeEvent;
 
@@ -17,8 +15,14 @@ public:
     Game(const std::wstring& name, int width, int height, bool vSync);
     virtual ~Game();
 
-    int getClientWidth() const;
-    int getClientHeight() const;
+    inline int getClientWidth() const
+    {
+        return m_Width;
+    }
+    inline int getClientHeight() const
+    {
+        return _height;
+    }
 
     virtual bool initialize();
     virtual void destroy();
@@ -29,22 +33,22 @@ public:
 protected:
     friend class Window;
 
-    virtual void OnUpdate(UpdateEvent& e);
-    virtual void OnRender(RenderEvent& e);
-    virtual void OnKeyPressed(KeyEvent& e);
-    virtual void OnKeyReleased(KeyEvent& e);
-    virtual void OnMouseMoved(MouseMoveEvent& e);
-    virtual void OnMouseButtonPressed(MouseButtonEvent& e);
-    virtual void OnMouseButtonReleased(MouseButtonEvent& e);
-    virtual void OnMouseWheel(MouseWheelEvent& e);
-    virtual void OnResize(ResizeEvent& e);
-    virtual void OnWindowDestroy();
+    virtual void onUpdate(UpdateEvent& e);
+    virtual void onRender(RenderEvent& e);
+    virtual void onKeyPressed(KeyEvent& e);
+    virtual void onKeyReleased(KeyEvent& e);
+    virtual void onMouseMoved(MouseMoveEvent& e);
+    virtual void onMouseButtonPressed(MouseButtonEvent& e);
+    virtual void onMouseButtonReleased(MouseButtonEvent& e);
+    virtual void onMouseScroll(MouseScrollEvent& e);
+    virtual void onResize(ResizeEvent& e);
+    virtual void onWindowDestroy();
 
-    std::shared_ptr<RenderWindow> m_pWindow;
+    std::shared_ptr<Window> _window;
 
 private:
-    std::wstring m_Name;
+    std::wstring _name;
     int m_Width;
-    int m_Height;
-    bool m_vSync;
+    int _height;
+    bool _vSync;
 };
