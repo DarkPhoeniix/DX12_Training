@@ -1,9 +1,4 @@
-﻿################################################################################
-# This .gitignore file is manually maintained
-################################################################################
-
-DX_Training/x64/
-
+﻿
 **/bin/x64
 **/obj/x64
 **/src/packages
@@ -18,3 +13,4 @@ DX_Training/x64/
 *.vcxproj.user
 *.opendb
 
+/DX_Training/x64/
