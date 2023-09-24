@@ -103,7 +103,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Resources\pixel_shader.hlsl" />
-    <FxCompile Include="Resources\vertex_shader.hlsl" />
+    <FxCompile Include="Resources\TrianglePixelShader.hlsl" />
+    <FxCompile Include="Resources\TriangleVertexShader.hlsl" />
   </ItemGroup>
 </Project>

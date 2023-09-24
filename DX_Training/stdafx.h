@@ -4,6 +4,7 @@
 #include <windows.h>
 #include <shellapi.h>			// For CommandLineToArgvW
 
+// The min/max macros conflict with like-named member functions from <algorithm>
 #if defined(min)
 #undef min
 #endif
@@ -12,7 +13,7 @@
 #undef max
 #endif
 
-// Windows Runtime Library. Needed for Microsoft::WRL::ComPtr<> template class.
+// Windows Runtime Library. Needed for Microsoft::WRL::ComPtr<> template class
 #include <wrl.h>
 using namespace Microsoft::WRL;
 
@@ -30,7 +31,6 @@ using namespace Microsoft::WRL;
 #include <string>
 #include <chrono>
 #include <memory>
-#include <queue>
 #include <map>
 
 #include "Utility/Helpers.h"

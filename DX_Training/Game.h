@@ -15,11 +15,11 @@ public:
     Game(const std::wstring& name, int width, int height, bool vSync);
     virtual ~Game();
 
-    inline int getClientWidth() const
+    inline int getWidth() const
     {
-        return m_Width;
+        return _width;
     }
-    inline int getClientHeight() const
+    inline int getHeight() const
     {
         return _height;
     }
@@ -48,7 +48,7 @@ protected:
 
 private:
     std::wstring _name;
-    int m_Width;
+    int _width;
     int _height;
     bool _vSync;
 };

@@ -1,10 +1,14 @@
 #pragma once
 
+#include <queue>
+
 class CommandQueue
 {
 public:
     CommandQueue(Microsoft::WRL::ComPtr<ID3D12Device2> device, D3D12_COMMAND_LIST_TYPE type);
     virtual ~CommandQueue();
+
+    Microsoft::WRL::ComPtr<ID3D12CommandQueue> getD3D12CommandQueue() const;
 
     // Get an available command list from the command queue
     Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> getCommandList();
@@ -12,11 +16,11 @@ public:
     uint64_t executeCommandList(Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> commandList);
 
     uint64_t signal();
+
     bool isFenceComplete(uint64_t fenceValue);
     void waitForFenceValue(uint64_t fenceValue);
-    void flush();
 
-    Microsoft::WRL::ComPtr<ID3D12CommandQueue> getD3D12CommandQueue() const;
+    void flush();
 
 protected:
     Microsoft::WRL::ComPtr<ID3D12CommandAllocator> createCommandAllocator();

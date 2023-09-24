@@ -8,7 +8,7 @@
 
 Game::Game(const std::wstring& name, int width, int height, bool vSync)
     : _name(name)
-    , m_Width(width)
+    , _width(width)
     , _height(height)
     , _vSync(vSync)
 {   }
@@ -27,7 +27,7 @@ bool Game::initialize()
         return false;
     }
 
-    _window = Application::get().createWindow(_name, m_Width, _height, _vSync);
+    _window = Application::get().createWindow(_name, _width, _height, _vSync);
     _window->registerCallbacks(shared_from_this());
     _window->show();
 
@@ -66,7 +66,7 @@ void Game::onMouseScroll(MouseScrollEvent& e)
 
 void Game::onResize(ResizeEvent& e)
 {
-    m_Width = e.width;
+    _width = e.width;
     _height = e.height;
 }
 

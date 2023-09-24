@@ -23,8 +23,8 @@ public:
 
     const std::wstring& getWindowName() const;
 
-    int getClientWidth() const;
-    int getClientHeight() const;
+    int getWidth() const;
+    int getHeight() const;
 
     bool isVSync() const;
     void setVSync(bool vSync);
@@ -80,8 +80,8 @@ private:
 
     std::wstring _windowName;
 
-    int _clientWidth;
-    int _clientHeight;
+    int _width;
+    int _height;
     bool _vSync;
     bool _fullscreen;
 

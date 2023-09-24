@@ -13,14 +13,18 @@
 #include "Events/ResizeEvent.h"
 #include "Events/UpdateEvent.h"
 
-using namespace DirectX;
+namespace
+{
+    const FLOAT BACKGROUND_COLOR[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+}
 
+using namespace DirectX;
 
 // Clamp a value between a min and max range.
 template<typename T>
 constexpr const T& clamp(const T& val, const T& min, const T& max)
 {
-    return val < min ? min : val > max ? max : val;
+    return (val < min) ? min : (val > max) ? max : val;
 }
 
 // Vertex data for a colored cube.
@@ -62,8 +66,8 @@ RenderCubeExample::RenderCubeExample(const std::wstring& name, int width, int he
 
 void RenderCubeExample::updateBufferResource(
     ComPtr<ID3D12GraphicsCommandList2> commandList,
-    ID3D12Resource** pDestinationResource,
-    ID3D12Resource** pIntermediateResource,
+    ID3D12Resource** destinationResource,
+    ID3D12Resource** intermediateResource,
     size_t numElements, size_t elementSize, const void* bufferData,
     D3D12_RESOURCE_FLAGS flags)
 {
@@ -80,7 +84,7 @@ void RenderCubeExample::updateBufferResource(
         &bufferWithFlags,
         D3D12_RESOURCE_STATE_COPY_DEST,
         nullptr,
-        IID_PPV_ARGS(pDestinationResource)));
+        IID_PPV_ARGS(destinationResource)));
 
     CD3DX12_HEAP_PROPERTIES heapTypeUpload(D3D12_HEAP_TYPE_UPLOAD);
     CD3DX12_RESOURCE_DESC buffer = CD3DX12_RESOURCE_DESC::Buffer(bufferSize, flags);
@@ -93,7 +97,7 @@ void RenderCubeExample::updateBufferResource(
             &buffer,
             D3D12_RESOURCE_STATE_GENERIC_READ,
             nullptr,
-            IID_PPV_ARGS(pIntermediateResource)));
+            IID_PPV_ARGS(intermediateResource)));
 
         D3D12_SUBRESOURCE_DATA subresourceData = {};
         subresourceData.pData = bufferData;
@@ -101,7 +105,7 @@ void RenderCubeExample::updateBufferResource(
         subresourceData.SlicePitch = subresourceData.RowPitch;
 
         UpdateSubresources(commandList.Get(),
-            *pDestinationResource, *pIntermediateResource,
+            *destinationResource, *intermediateResource,
             0, 0, 1, &subresourceData);
     }
 }
@@ -144,11 +148,11 @@ bool RenderCubeExample::loadContent()
 
     // Load the vertex shader.
     ComPtr<ID3DBlob> vertexShaderBlob;
-    Helper::throwIfFailed(D3DReadFileToBlob(L"vertex_shader.cso", &vertexShaderBlob));
+    Helper::throwIfFailed(D3DReadFileToBlob(L"TriangleVertexShader.cso", &vertexShaderBlob));
 
     // Load the pixel shader.
     ComPtr<ID3DBlob> pixelShaderBlob;
-    Helper::throwIfFailed(D3DReadFileToBlob(L"pixel_shader.cso", &pixelShaderBlob));
+    Helper::throwIfFailed(D3DReadFileToBlob(L"TrianglePixelShader.cso", &pixelShaderBlob));
 
     // Create the vertex input layout
     D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
@@ -222,7 +226,7 @@ bool RenderCubeExample::loadContent()
     _contentLoaded = true;
 
     // Resize/Create the depth buffer.
-    resizeDepthBuffer(getClientWidth(), getClientHeight());
+    resizeDepthBuffer(getWidth(), getHeight());
 
     return true;
 }
@@ -272,7 +276,7 @@ void RenderCubeExample::resizeDepthBuffer(int width, int height)
 
 void RenderCubeExample::onResize(ResizeEvent& e)
 {
-    if (e.width != super::getClientWidth() || e.height != getClientHeight())
+    if (e.width != super::getWidth() || e.height != getHeight())
     {
         super::onResize(e);
 
@@ -288,14 +292,14 @@ void RenderCubeExample::unloadContent()
     _contentLoaded = false;
 }
 
-void RenderCubeExample::onUpdate(UpdateEvent& e)
+void RenderCubeExample::onUpdate(UpdateEvent& updateEvent)
 {
     static uint64_t frameCount = 0;
     static double totalTime = 0.0;
 
-    super::onUpdate(e);
+    super::onUpdate(updateEvent);
 
-    totalTime += e.elapsedTime;
+    totalTime += updateEvent.elapsedTime;
     frameCount++;
 
     if (totalTime > 1.0)
@@ -311,18 +315,18 @@ void RenderCubeExample::onUpdate(UpdateEvent& e)
     }
 
     // Update the model matrix.
-    float angle = static_cast<float>(e.totalTime * 90.0);
-    const XMVECTOR rotationAxis = XMVectorSet(0, 1, 1, 0);
+    float angle = static_cast<float>(updateEvent.totalTime * 0.0f);
+    const XMVECTOR rotationAxis = XMVectorSet(0.0f, 1.0f, 1.0f, 0.0f);
     _modelMatrix = XMMatrixRotationAxis(rotationAxis, XMConvertToRadians(angle));
 
     // Update the view matrix.
-    const XMVECTOR eyePosition = XMVectorSet(0, 0, -10, 1);
-    const XMVECTOR focusPoint = XMVectorSet(0, 0, 0, 1);
-    const XMVECTOR upDirection = XMVectorSet(0, 1, 0, 0);
+    const XMVECTOR eyePosition = XMVectorSet(2.0f, 5.0f, -10.0f, 1.0f);
+    const XMVECTOR focusPoint = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+    const XMVECTOR upDirection = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
     _viewMatrix = XMMatrixLookAtLH(eyePosition, focusPoint, upDirection);
 
     // Update the projection matrix.
-    float aspectRatio = getClientWidth() / static_cast<float>(getClientHeight());
+    float aspectRatio = getWidth() / static_cast<float>(getHeight());
     _projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(_FoV), aspectRatio, 0.1f, 100.0f);
 }
 
@@ -351,9 +355,9 @@ void RenderCubeExample::clearDepth(Microsoft::WRL::ComPtr<ID3D12GraphicsCommandL
     commandList->ClearDepthStencilView(dsv, D3D12_CLEAR_FLAG_DEPTH, depth, 0, 0, nullptr);
 }
 
-void RenderCubeExample::onRender(RenderEvent& e)
+void RenderCubeExample::onRender(RenderEvent& renderEvent)
 {
-    super::onRender(e);
+    super::onRender(renderEvent);
 
     auto commandQueue = Application::get().getCommandQueue(D3D12_COMMAND_LIST_TYPE_DIRECT);
     auto commandList = commandQueue->getCommandList();
@@ -368,7 +372,7 @@ void RenderCubeExample::onRender(RenderEvent& e)
         transitionResource(commandList, backBuffer,
             D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
-        FLOAT clearColor[] = { 0.4f, 0.6f, 0.9f, 1.0f };
+        FLOAT clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
         clearRTV(commandList, rtv, clearColor);
         clearDepth(commandList, dsv);

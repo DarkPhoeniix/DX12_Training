@@ -11,8 +11,8 @@
 Window::Window(HWND hWnd, const std::wstring& windowName, int clientWidth, int clientHeight, bool vSync)
     : _hWnd(hWnd)
     , _windowName(windowName)
-    , _clientWidth(clientWidth)
-    , _clientHeight(clientHeight)
+    , _width(clientWidth)
+    , _height(clientHeight)
     , _vSync(vSync)
     , _fullscreen(false)
     , _frameCounter(0)
@@ -72,14 +72,14 @@ void Window::destroy()
     }
 }
 
-int Window::getClientWidth() const
+int Window::getWidth() const
 {
-    return _clientWidth;
+    return _width;
 }
 
-int Window::getClientHeight() const
+int Window::getHeight() const
 {
-    return _clientHeight;
+    return _height;
 }
 
 bool Window::isVSync() const
@@ -247,10 +247,10 @@ void Window::onMouseScroll(MouseScrollEvent& e)
 void Window::onResize(ResizeEvent& e)
 {
     // Update the client size.
-    if (_clientWidth != e.width || _clientHeight != e.height)
+    if (_width != e.width || _height != e.height)
     {
-        _clientWidth = std::max(1, e.width);
-        _clientHeight = std::max(1, e.height);
+        _width = std::max(1, e.width);
+        _height = std::max(1, e.height);
 
         Application::get().flush();
 
@@ -261,8 +261,8 @@ void Window::onResize(ResizeEvent& e)
 
         DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
         Helper::throwIfFailed(_dxgiSwapChain->GetDesc(&swapChainDesc));
-        Helper::throwIfFailed(_dxgiSwapChain->ResizeBuffers(BUFFER_COUNT, _clientWidth,
-            _clientHeight, swapChainDesc.BufferDesc.Format, swapChainDesc.Flags));
+        Helper::throwIfFailed(_dxgiSwapChain->ResizeBuffers(BUFFER_COUNT, _width,
+            _height, swapChainDesc.BufferDesc.Format, swapChainDesc.Flags));
 
         _currentBackBufferIndex = _dxgiSwapChain->GetCurrentBackBufferIndex();
 
@@ -289,8 +289,8 @@ Microsoft::WRL::ComPtr<IDXGISwapChain4> Window::createSwapChain()
     Helper::throwIfFailed(CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&dxgiFactory4)));
 
     DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
-    swapChainDesc.Width = _clientWidth;
-    swapChainDesc.Height = _clientHeight;
+    swapChainDesc.Width = _width;
+    swapChainDesc.Height = _height;
     swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     swapChainDesc.Stereo = FALSE;
     swapChainDesc.SampleDesc = { 1, 0 };

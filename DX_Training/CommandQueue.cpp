@@ -21,13 +21,13 @@ CommandQueue::CommandQueue(Microsoft::WRL::ComPtr<ID3D12Device2> device, D3D12_C
 }
 
 CommandQueue::~CommandQueue()
-{
-}
+{   }
 
 uint64_t CommandQueue::signal()
 {
     uint64_t fenceValue = ++_fenceValue;
     _d3d12CommandQueue->Signal(_d3d12Fence.Get(), fenceValue);
+
     return fenceValue;
 }
 
