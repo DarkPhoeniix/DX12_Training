@@ -3,6 +3,8 @@
 #include "Game.h"
 #include "RenderWindow.h"
 
+#include <vector>
+
 class RenderCubeExample : public Game
 {
 public:
@@ -38,6 +40,11 @@ private:
 
     void resizeDepthBuffer(int width, int height);
 
+    void spawnNewCubes(size_t K);
+    bool pointInExtents(const DirectX::XMVECTOR& location);
+    bool pointIntersects(const DirectX::XMVECTOR& location);
+    bool pointIntersectsGrid(const DirectX::XMVECTOR& location);
+
     uint64_t _fenceValues[Window::BUFFER_COUNT] = {};
 
     Microsoft::WRL::ComPtr<ID3D12Resource> _vertexBuffer;
@@ -61,4 +68,21 @@ private:
     DirectX::XMMATRIX _projectionMatrix;
 
     bool _contentLoaded;
+
+    float _spawnRate = 50.0f;
+    float _deltaTimeLastSpawn = 0.0f;
+    float _spawnRadius = 10.0f;
+
+    DirectX::XMVECTOR _minExtent = { -200.0f, -100.0f, 0.0f, 1.0f };
+    DirectX::XMVECTOR _maxExtent = {  200.0f,  100.0f, 0.0f, 1.0f };
+
+    std::vector<DirectX::XMVECTOR> _cubes;
+    size_t _activeIndex;
+
+    float _cellSize;
+    float _gridWidth;
+    float _gridHeight;
+    size_t _cellsNumX;
+    size_t _cellsNumY;
+    std::vector<std::vector<int>> _grid;
 };
