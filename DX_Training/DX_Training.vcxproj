@@ -161,6 +161,7 @@
   <ItemGroup>
     <ClCompile Include="CommandQueue.cpp" />
     <ClCompile Include="Game.cpp" />
+    <ClCompile Include="PoissonDiskDistribution.cpp" />
     <ClCompile Include="RenderCubeExample.cpp" />
     <ClCompile Include="Utility\Helpers.cpp" />
     <ClCompile Include="Interfaces\IRenderWindow.cpp" />
@@ -181,6 +182,7 @@
     <ClInclude Include="Events\ResizeEvent.h" />
     <ClInclude Include="Events\UpdateEvent.h" />
     <ClInclude Include="Game.h" />
+    <ClInclude Include="PoissonDiskDistribution.h" />
     <ClInclude Include="RenderCubeExample.h" />
     <ClInclude Include="Utility\Helpers.h" />
     <ClInclude Include="Interfaces\IRenderWindow.h" />

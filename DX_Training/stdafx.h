@@ -31,6 +31,7 @@ using namespace Microsoft::WRL;
 #include <string>
 #include <chrono>
 #include <memory>
+#include <vector>
 #include <map>
 
 #include "Utility/Helpers.h"
