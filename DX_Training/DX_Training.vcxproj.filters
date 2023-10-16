@@ -36,7 +36,7 @@
     <ClCompile Include="CommandQueue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Game.cpp">
+    <ClCompile Include="Interfaces\IGame.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="RenderCubeExample.cpp">
@@ -95,7 +95,7 @@
     <ClInclude Include="Events\UpdateEvent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Game.h">
+    <ClInclude Include="Interfaces\IGame.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="RenderCubeExample.h">

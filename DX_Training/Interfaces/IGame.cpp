@@ -1,24 +1,24 @@
 #include "stdafx.h"
 
-#include "Game.h"
+#include "IGame.h"
 
 #include "Application.h"
 #include "Events/ResizeEvent.h"
 #include "RenderWindow.h"
 
-Game::Game(const std::wstring& name, int width, int height, bool vSync)
+IGame::IGame(const std::wstring& name, int width, int height, bool vSync)
     : _name(name)
     , _width(width)
     , _height(height)
     , _vSync(vSync)
 {   }
 
-Game::~Game()
+IGame::~IGame()
 {
-    assert(!_window && "Use Game::Destroy() before destruction.");
+    assert(!_window && "Use IGame::Destroy() before destruction.");
 }
 
-bool Game::initialize()
+bool IGame::initialize()
 {
     // Check for DirectX Math library support.
     if (!DirectX::XMVerifyCPUSupport())
@@ -34,43 +34,43 @@ bool Game::initialize()
     return true;
 }
 
-void Game::destroy()
+void IGame::destroy()
 {
     Application::get().destroyWindow(_window);
     _window.reset();
 }
 
-void Game::onUpdate(UpdateEvent& e)
+void IGame::onUpdate(UpdateEvent&)
 {   }
 
-void Game::onRender(RenderEvent& e)
+void IGame::onRender(RenderEvent&)
 {   }
 
-void Game::onKeyPressed(KeyEvent& e)
+void IGame::onKeyPressed(KeyEvent&)
 {   }
 
-void Game::onKeyReleased(KeyEvent& e)
+void IGame::onKeyReleased(KeyEvent&)
 {   }
 
-void Game::onMouseMoved(class MouseMoveEvent& e)
+void IGame::onMouseMoved(MouseMoveEvent&)
 {   }
 
-void Game::onMouseButtonPressed(MouseButtonEvent& e)
+void IGame::onMouseButtonPressed(MouseButtonEvent&)
 {   }
 
-void Game::onMouseButtonReleased(MouseButtonEvent& e)
+void IGame::onMouseButtonReleased(MouseButtonEvent&)
 {   }
 
-void Game::onMouseScroll(MouseScrollEvent& e)
+void IGame::onMouseScroll(MouseScrollEvent&)
 {   }
 
-void Game::onResize(ResizeEvent& e)
+void IGame::onResize(ResizeEvent& e)
 {
     _width = e.width;
     _height = e.height;
 }
 
-void Game::onWindowDestroy()
+void IGame::onWindowDestroy()
 {
     // If the Window which we are registered to is 
     // destroyed, then any resources which are associated 

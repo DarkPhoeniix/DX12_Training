@@ -79,6 +79,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PrecompiledHeader>Create</PrecompiledHeader>
       <AdditionalIncludeDirectories>$(SolutionDir)ThirdParty\D3D12\;$(ProjectDir)</AdditionalIncludeDirectories>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -87,7 +88,7 @@
       <DelayLoadDLLs>d3dcompiler_47.dll;d3d12.dll;</DelayLoadDLLs>
     </Link>
     <FxCompile>
-      <ShaderModel>5.1</ShaderModel>
+      <ShaderModel>6.1</ShaderModel>
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -101,6 +102,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PrecompiledHeader>Create</PrecompiledHeader>
       <AdditionalIncludeDirectories>$(SolutionDir)ThirdParty\D3D12\;$(ProjectDir)</AdditionalIncludeDirectories>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -111,7 +113,7 @@
       <DelayLoadDLLs>d3dcompiler_47.dll;d3d12.dll;</DelayLoadDLLs>
     </Link>
     <FxCompile>
-      <ShaderModel>5.1</ShaderModel>
+      <ShaderModel>6.1</ShaderModel>
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -123,6 +125,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PrecompiledHeader>Create</PrecompiledHeader>
       <AdditionalIncludeDirectories>$(SolutionDir)ThirdParty\D3D12\;$(ProjectDir)</AdditionalIncludeDirectories>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -131,7 +134,7 @@
       <DelayLoadDLLs>d3dcompiler_47.dll;d3d12.dll;</DelayLoadDLLs>
     </Link>
     <FxCompile>
-      <ShaderModel>5.1</ShaderModel>
+      <ShaderModel>6.1</ShaderModel>
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -145,6 +148,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PrecompiledHeader>Create</PrecompiledHeader>
       <AdditionalIncludeDirectories>$(SolutionDir)ThirdParty\D3D12\;$(ProjectDir)</AdditionalIncludeDirectories>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -155,12 +159,12 @@
       <DelayLoadDLLs>d3dcompiler_47.dll;d3d12.dll;</DelayLoadDLLs>
     </Link>
     <FxCompile>
-      <ShaderModel>5.1</ShaderModel>
+      <ShaderModel>6.1</ShaderModel>
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CommandQueue.cpp" />
-    <ClCompile Include="Game.cpp" />
+    <ClCompile Include="Interfaces\IGame.cpp" />
     <ClCompile Include="PoissonDiskDistribution.cpp" />
     <ClCompile Include="RenderCubeExample.cpp" />
     <ClCompile Include="Utility\Helpers.cpp" />
@@ -181,7 +185,7 @@
     <ClInclude Include="Events\RenderEvent.h" />
     <ClInclude Include="Events\ResizeEvent.h" />
     <ClInclude Include="Events\UpdateEvent.h" />
-    <ClInclude Include="Game.h" />
+    <ClInclude Include="Interfaces\IGame.h" />
     <ClInclude Include="PoissonDiskDistribution.h" />
     <ClInclude Include="RenderCubeExample.h" />
     <ClInclude Include="Utility\Helpers.h" />

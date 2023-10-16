@@ -2,7 +2,7 @@
 
 #include "Utility/HighResolutionClock.h"
 
-class Game;
+class IGame;
 class Window;
 class UpdateEvent;
 class RenderEvent;
@@ -47,13 +47,13 @@ protected:
     friend LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
     friend class Application;
-    friend class Game;
+    friend class IGame;
 
     Window() = delete;
     Window(HWND hWnd, const std::wstring& windowName, int clientWidth, int clientHeight, bool vSync);
     virtual ~Window();
 
-    void registerCallbacks(std::shared_ptr<Game> pGame);
+    void registerCallbacks(std::shared_ptr<IGame> pGame);
 
     virtual void onUpdate(UpdateEvent& e);
     virtual void onRender(RenderEvent& e);
@@ -89,7 +89,7 @@ private:
     HighResolutionClock _renderClock;
     uint64_t _frameCounter;
 
-    std::weak_ptr<Game> _game;
+    std::weak_ptr<IGame> _game;
 
     Microsoft::WRL::ComPtr<IDXGISwapChain4> _dxgiSwapChain;
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> _d3d12RTVDescriptorHeap;

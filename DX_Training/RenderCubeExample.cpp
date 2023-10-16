@@ -13,7 +13,6 @@
 #include "Events/ResizeEvent.h"
 #include "Events/UpdateEvent.h"
 
-#include <vector>
 #include <random>
 #include <cmath>
 
@@ -68,21 +67,9 @@ RenderCubeExample::RenderCubeExample(const std::wstring& name, int width, int he
     , _viewport(CD3DX12_VIEWPORT(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height)))
     , _FoV(45.0)
     , _contentLoaded(false)
+    , distribution({-50.0f, -50.0f, -50.0f, 1.0f}, { 50.0f, 50.0f, 50.0f, 1.0f }, 10, 20)
 {
-    _cubes.push_back(XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f));
-    _activeIndex = 0;
-
-    _cellSize = _spawnRadius / std::sqrt(2);
-    _gridWidth = XMVectorGetX(_maxExtent) - XMVectorGetX(_minExtent);
-    _gridHeight = XMVectorGetY(_maxExtent) - XMVectorGetY(_minExtent);
-    _cellsNumX = std::ceil((XMVectorGetX(_maxExtent) - XMVectorGetX(_minExtent)) / _cellSize);
-    _cellsNumY = std::ceil((XMVectorGetY(_maxExtent) - XMVectorGetY(_minExtent)) / _cellSize);
-    
-    _grid = std::vector<std::vector<int>>(_cellsNumX, std::vector<int>(_cellsNumY, -1));
-
-    int pointIndexX = (0.0f + (_gridWidth / 2.0f)) / _cellSize;
-    int pointIndexY = (0.0f + (_gridHeight / 2.0f)) / _cellSize;
-    _grid[pointIndexX][pointIndexY] = 0;
+    distribution.Init();
 }
 
 void RenderCubeExample::updateBufferResource(
@@ -146,7 +133,7 @@ bool RenderCubeExample::loadContent()
 
     // Create the vertex buffer view.
     _vertexBufferView.BufferLocation = _vertexBuffer->GetGPUVirtualAddress();
-    _vertexBufferView.SizeInBytes = CUBE_VERTICES.size() * sizeof(VertexPosColor);
+    _vertexBufferView.SizeInBytes = static_cast<UINT>(CUBE_VERTICES.size() * sizeof(VertexPosColor));
     _vertexBufferView.StrideInBytes = sizeof(VertexPosColor);
 
     // Upload index buffer data.
@@ -158,7 +145,7 @@ bool RenderCubeExample::loadContent()
     // Create index buffer view.
     _indexBufferView.BufferLocation = _indexBuffer->GetGPUVirtualAddress();
     _indexBufferView.Format = DXGI_FORMAT_R16_UINT;
-    _indexBufferView.SizeInBytes = CUBE_INDICES.size() * sizeof(WORD);
+    _indexBufferView.SizeInBytes = static_cast<UINT>(CUBE_INDICES.size() * sizeof(WORD));
 
     // Create the descriptor heap for the depth-stencil view.
     D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
@@ -377,7 +364,7 @@ void RenderCubeExample::onUpdate(UpdateEvent& updateEvent)
     //_modelMatrix = XMMatrixRotationAxis(rotationAxis, XMConvertToRadians(angle));
 
     // Update the view matrix.
-    const XMVECTOR eyePosition = XMVectorSet(0.0f, 0.0f, -300.0f, 1.0f);
+    const XMVECTOR eyePosition = XMVectorSet(0.0f, 0.0f, -200.0f, 1.0f);
     const XMVECTOR focusPoint = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
     const XMVECTOR upDirection = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
     _viewMatrix = XMMatrixLookAtLH(eyePosition, focusPoint, upDirection);
@@ -386,8 +373,7 @@ void RenderCubeExample::onUpdate(UpdateEvent& updateEvent)
     float aspectRatio = getWidth() / static_cast<float>(getHeight());
     _projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(_FoV), aspectRatio, 0.1f, 1000.0f);
 
-    if (_activeIndex < _cubes.size())
-        spawnNewCubes(10);
+    distribution.TrySpawnStep();
 }
 
 // Transition a resource
@@ -455,10 +441,10 @@ void RenderCubeExample::onRender(RenderEvent& renderEvent)
     mvpMatrix = XMMatrixMultiply(mvpMatrix, _projectionMatrix);
     commandList->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvpMatrix, 0);
 
-    for (const auto& cube : _cubes)
+    for (const auto& cube : distribution.GetLocationsArray())
     {
         // Cube reneder
-        commandList->DrawIndexedInstanced(CUBE_INDICES.size(), 1, 0, 0, 0);
+        commandList->DrawIndexedInstanced(static_cast<UINT>(CUBE_INDICES.size()), 1, 0, 0, 0);
 
         _modelMatrix = XMMatrixMultiply(XMMatrixIdentity(), XMMatrixTranslation(XMVectorGetX(cube), XMVectorGetY(cube), XMVectorGetZ(cube)));
         mvpMatrix = XMMatrixMultiply(_modelMatrix, _viewMatrix);
@@ -488,22 +474,18 @@ void RenderCubeExample::onKeyPressed(KeyEvent& e)
     case KeyCode::Escape:
         Application::get().quit(0);
         break;
-    case KeyCode::Enter:
+    case KeyCode::Enter:        // TODO: looks weird
         if (e.alt)
         {
-    case KeyCode::F11:
-        _window->toggleFullscreen();
-        break;
+            case KeyCode::F11:
+                _window->toggleFullscreen();
+                break;
         }
     case KeyCode::V:
         _window->toggleVSync();
         break;
     case KeyCode::Space:
-        _cubes.clear();
-        _activeIndex = 0;
-        for (auto& row : _grid)
-            for (auto& el : row)
-                el = -1;
+        // TODO: add a Reset for the Poisson Distribution on Space button
         break;
     }
 }
@@ -516,85 +498,4 @@ void RenderCubeExample::onMouseScroll(MouseScrollEvent& e)
     char buffer[256];
     sprintf_s(buffer, "FoV: %f\n", _FoV);
     OutputDebugStringA(buffer);
-}
-
-void RenderCubeExample::spawnNewCubes(size_t K)
-{
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<> dis(0.0f, 1.0f);
-
-    for (size_t i = 0; i < K; ++i)
-    {
-        XMVECTOR newLocation = _cubes[_activeIndex];
-
-        float distance = (dis(gen) + 1.0f) * _spawnRadius;  // Spawn in [R; 2*R]
-        float angle = dis(gen) * XM_2PI;                    // Randon angle
-
-        newLocation += XMVectorSet(distance * XMScalarCos(angle), distance * XMScalarSin(angle), 0.0f, 0.0f);
-
-        if (pointInExtents(newLocation) && !pointIntersectsGrid(newLocation))
-        {
-            _cubes.push_back(newLocation);
-            int pointIndexX = ((XMVectorGetX(newLocation) + (_gridWidth / 2.0f)) / _cellSize);
-            int pointIndexY = ((XMVectorGetY(newLocation) + (_gridHeight / 2.0f)) / _cellSize);
-            if (_grid[pointIndexX][pointIndexY] != -1)
-                return;
-            _grid[pointIndexX][pointIndexY] = _cubes.size() - 1;
-        }
-    }
-
-    ++_activeIndex;
-}
-
-bool RenderCubeExample::pointInExtents(const DirectX::XMVECTOR& location)
-{
-    return (XMVectorGetX(location) > XMVectorGetX(_minExtent) && XMVectorGetY(location) > XMVectorGetY(_minExtent)) &&
-           (XMVectorGetX(location) < XMVectorGetX(_maxExtent) && XMVectorGetY(location) < XMVectorGetY(_maxExtent));
-}
-
-bool RenderCubeExample::pointIntersects(const DirectX::XMVECTOR& location)
-{
-    for (const auto& point : _cubes)
-    {
-        if (XMVectorGetX(XMVector3Length(XMVectorSubtract(point, location))) <= _spawnRadius)
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-bool RenderCubeExample::pointIntersectsGrid(const XMVECTOR& location)
-{
-    int pointIndexX = ((XMVectorGetX(location) + (_gridWidth / 2.0f)) / _cellSize);
-    int pointIndexY = ((XMVectorGetY(location) + (_gridHeight / 2.0f)) / _cellSize);
-
-    for (int x = -2; x <= 2; x++)
-    {
-        for (int y = -2; y <= 2; ++y)
-        {
-            //if (x == 0 && y == 0)
-            //    continue;
-
-            int indX = pointIndexX + x;
-            int indY = pointIndexY + y;
-
-            if (indX < 0 || indX >= _cellsNumX)
-                continue;
-            if (indY < 0 || indY >= _cellsNumY)
-                continue;
-
-            int cubeIndex = _grid[indX][indY];
-            if (cubeIndex == -1)
-                continue;
-
-            float dist = XMVectorGetX(XMVector3Length(XMVectorSubtract(_cubes[cubeIndex], location)));
-            if (dist <= _spawnRadius)
-                return true;
-        }
-    }
-
-    return false;
 }

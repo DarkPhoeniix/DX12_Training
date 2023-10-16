@@ -9,11 +9,11 @@ class MouseScrollEvent;
 class KeyEvent;
 class ResizeEvent;
 
-class Game : public std::enable_shared_from_this<Game>
+class IGame : public std::enable_shared_from_this<IGame>
 {
 public:
-    Game(const std::wstring& name, int width, int height, bool vSync);
-    virtual ~Game();
+    IGame(const std::wstring& name, int width, int height, bool vSync);
+    virtual ~IGame();
 
     inline int getWidth() const
     {
