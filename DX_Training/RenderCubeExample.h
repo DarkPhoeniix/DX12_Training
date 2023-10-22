@@ -4,6 +4,7 @@
 #include "RenderWindow.h"
 
 #include "PoissonDiskDistribution.h"
+#include "Camera.h"
 
 #include <vector>
 
@@ -18,11 +19,14 @@ public:
     virtual void unloadContent() override;
 
 protected:
-    virtual void onUpdate(UpdateEvent& e) override;
-    virtual void onRender(RenderEvent& e) override;
-    virtual void onKeyPressed(KeyEvent& e) override;
-    virtual void onMouseScroll(MouseScrollEvent& e) override;
-    virtual void onResize(ResizeEvent& e) override;
+    void onUpdate(UpdateEvent& e) override;
+    void onRender(RenderEvent& e) override;
+    void onKeyPressed(KeyEvent& e) override;
+    void onMouseScroll(MouseScrollEvent& e) override;
+    void onMouseMoved(MouseMoveEvent& e) override;
+    void onMouseButtonPressed(MouseButtonEvent& e) override;
+    void onMouseButtonReleased(MouseButtonEvent& e) override;
+    void onResize(ResizeEvent& e) override;
 
 private:
     void transitionResource(Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> commandList,
@@ -70,4 +74,7 @@ private:
     float _deltaTimeLastSpawn = 0.0f;
 
     PoissonDiskDistribution distribution;
+
+    bool _isCameraMoving = false;
+    Camera camera;
 };

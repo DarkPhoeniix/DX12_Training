@@ -213,7 +213,12 @@ void Window::onMouseMoved(MouseMoveEvent& e)
 {
     if (auto pGame = _game.lock())
     {
+        e.relativeX = e.x - _lastMouseMoveEvent.x;
+        e.relativeY = e.y - _lastMouseMoveEvent.y;
+
         pGame->onMouseMoved(e);
+
+        _lastMouseMoveEvent = e;
     }
 }
 

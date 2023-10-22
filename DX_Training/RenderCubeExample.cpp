@@ -67,9 +67,15 @@ RenderCubeExample::RenderCubeExample(const std::wstring& name, int width, int he
     , _viewport(CD3DX12_VIEWPORT(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height)))
     , _FoV(45.0)
     , _contentLoaded(false)
-    , distribution({-50.0f, -50.0f, -50.0f, 1.0f}, { 50.0f, 50.0f, 50.0f, 1.0f }, 10, 20)
+    , distribution({-180.0f, -100.0f, 0.0f, 1.0f}, { 180.0f, 100.0f, 0.0f, 1.0f }, 10, 20)
 {
     distribution.Init();
+    XMVECTOR pos = XMVectorSet(0.0f, 0.0f, -20.0f, 1.0f);
+    XMVECTOR target = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+    XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+    camera.LookAt(pos, target, up);
+    float aspectRatio = getWidth() / static_cast<float>(getHeight());
+    camera.SetLens(45.0f, aspectRatio, 0.1f, 1000.0f);
 }
 
 void RenderCubeExample::updateBufferResource(
@@ -362,9 +368,10 @@ void RenderCubeExample::onUpdate(UpdateEvent& updateEvent)
     //float angle = static_cast<float>(updateEvent.totalTime * 90.0f);
     //const XMVECTOR rotationAxis = XMVectorSet(0.0f, 1.0f, 1.0f, 0.0f);
     //_modelMatrix = XMMatrixRotationAxis(rotationAxis, XMConvertToRadians(angle));
+    _modelMatrix = XMMatrixIdentity();
 
     // Update the view matrix.
-    const XMVECTOR eyePosition = XMVectorSet(0.0f, 0.0f, -200.0f, 1.0f);
+    const XMVECTOR eyePosition = XMVectorSet(0.0f, 0.0f, 200.0f, 1.0f);
     const XMVECTOR focusPoint = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
     const XMVECTOR upDirection = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
     _viewMatrix = XMMatrixLookAtLH(eyePosition, focusPoint, upDirection);
@@ -437,20 +444,24 @@ void RenderCubeExample::onRender(RenderEvent& renderEvent)
     commandList->OMSetRenderTargets(1, &rtv, FALSE, &dsv);
 
     // Update the MVP matrix
-    XMMATRIX mvpMatrix = XMMatrixMultiply(_modelMatrix, _viewMatrix);
-    mvpMatrix = XMMatrixMultiply(mvpMatrix, _projectionMatrix);
+    XMMATRIX mvpMatrix = XMMatrixMultiply(_modelMatrix, camera.View());
+    mvpMatrix = XMMatrixMultiply(mvpMatrix, camera.Projection());
+    //XMMATRIX mvpMatrix = XMMatrixMultiply(_modelMatrix, _viewMatrix);
+    //mvpMatrix = XMMatrixMultiply(mvpMatrix, _projectionMatrix);
     commandList->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvpMatrix, 0);
 
-    for (const auto& cube : distribution.GetLocationsArray())
-    {
-        // Cube reneder
-        commandList->DrawIndexedInstanced(static_cast<UINT>(CUBE_INDICES.size()), 1, 0, 0, 0);
+    commandList->DrawIndexedInstanced(static_cast<UINT>(CUBE_INDICES.size()), 1, 0, 0, 0);
 
-        _modelMatrix = XMMatrixMultiply(XMMatrixIdentity(), XMMatrixTranslation(XMVectorGetX(cube), XMVectorGetY(cube), XMVectorGetZ(cube)));
-        mvpMatrix = XMMatrixMultiply(_modelMatrix, _viewMatrix);
-        mvpMatrix = XMMatrixMultiply(mvpMatrix, _projectionMatrix);
-        commandList->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvpMatrix, 0);
-    }
+    //for (const auto& cube : distribution.GetLocationsArray())
+    //{
+    //    // Cube reneder
+    //    commandList->DrawIndexedInstanced(static_cast<UINT>(CUBE_INDICES.size()), 1, 0, 0, 0);
+
+    //    _modelMatrix = XMMatrixMultiply(XMMatrixIdentity(), XMMatrixTranslation(XMVectorGetX(cube), XMVectorGetY(cube), XMVectorGetZ(cube)));
+    //    mvpMatrix = XMMatrixMultiply(_modelMatrix, _viewMatrix);
+    //    mvpMatrix = XMMatrixMultiply(mvpMatrix, _projectionMatrix);
+    //    commandList->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvpMatrix, 0);
+    //}
 
     // Present
     {
@@ -468,6 +479,25 @@ void RenderCubeExample::onRender(RenderEvent& renderEvent)
 void RenderCubeExample::onKeyPressed(KeyEvent& e)
 {
     super::onKeyPressed(e);
+
+    XMVECTOR dir = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
+    if (e.key == KeyCode::W)
+    {
+        dir += camera.Look();
+    }
+    if (e.key == KeyCode::S)
+    {
+        dir -= camera.Look();
+    }
+    if (e.key == KeyCode::D)
+    {
+        dir += camera.Right();
+    }
+    if (e.key == KeyCode::A)
+    {
+        dir -= camera.Right();
+    }
+    camera.Update(dir);
 
     switch (e.key)
     {
@@ -498,4 +528,25 @@ void RenderCubeExample::onMouseScroll(MouseScrollEvent& e)
     char buffer[256];
     sprintf_s(buffer, "FoV: %f\n", _FoV);
     OutputDebugStringA(buffer);
+}
+
+void RenderCubeExample::onMouseMoved(MouseMoveEvent& e)
+{
+    float pitch = e.relativeX;
+    float yAngle = e.relativeY;
+
+    if (std::abs(pitch) > 0.0f && _isCameraMoving)
+        camera.Update(pitch, yAngle);
+}
+
+void RenderCubeExample::onMouseButtonPressed(MouseButtonEvent& e)
+{
+    if (e.button == MouseButtonEvent::MouseButton::Right)
+        _isCameraMoving = true;
+}
+
+void RenderCubeExample::onMouseButtonReleased(MouseButtonEvent& e)
+{
+    if (e.button == MouseButtonEvent::MouseButton::Right)
+        _isCameraMoving = false;
 }

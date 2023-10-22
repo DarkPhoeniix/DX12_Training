@@ -1,13 +1,13 @@
 #pragma once
 
 #include "Utility/HighResolutionClock.h"
+#include "Events/MouseMoveEvent.h"
 
 class IGame;
 class Window;
 class UpdateEvent;
 class RenderEvent;
 class MouseButtonEvent;
-class MouseMoveEvent;
 class MouseScrollEvent;
 class KeyEvent;
 class ResizeEvent;
@@ -100,4 +100,6 @@ private:
 
     RECT _windowRect;
     bool _isTearingSupported;
+
+    MouseMoveEvent _lastMouseMoveEvent = MouseMoveEvent(false, false, false, false, false, 0.0f, 0.0f);
 };
