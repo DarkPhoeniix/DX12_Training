@@ -33,7 +33,7 @@ public:
 	// Updates the camera's basis vectors and origin, relative to 
 	// the world space, based in user input.
 	void Update(DirectX::XMVECTOR direction);
-	void Update(float pitch, float yaw);
+	void Update(int pitch, int yaw);
 
 protected:
 	// Constructs the view matrix based on the camera's basis
@@ -56,6 +56,6 @@ protected:
 	// Camera speed.
 	float _speed;
 
-	float _prevX;
-	float _prevY;
+	int _prevX;
+	int _prevY;
 };

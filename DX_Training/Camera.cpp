@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "pch.h"
 
 #include "Camera.h"
 
@@ -137,7 +137,7 @@ void Camera::Update(XMVECTOR direction)
 	buildView();
 }
 
-void Camera::Update(float pitch, float yaw)
+void Camera::Update(int pitch, int yaw)
 {
 	float xDelta = -XMConvertToRadians((-yaw) / 15.0f);
 	float yDelta = -XMConvertToRadians((-pitch) * 2.0f);

@@ -101,5 +101,5 @@ private:
     RECT _windowRect;
     bool _isTearingSupported;
 
-    MouseMoveEvent _lastMouseMoveEvent = MouseMoveEvent(false, false, false, false, false, 0.0f, 0.0f);
+    MouseMoveEvent _lastMouseMoveEvent = MouseMoveEvent(false, false, false, false, false, 0, 0);
 };

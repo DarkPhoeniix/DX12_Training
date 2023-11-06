@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "pch.h"
 
 #include "HighResolutionClock.h"
 
@@ -45,7 +45,7 @@ double HighResolutionClock::getDeltaSeconds() const
 
 double HighResolutionClock::getTotalNanoseconds() const
 {
-    return _totalTime.count();
+    return _totalTime.count() * 1.0;
 }
 
 double HighResolutionClock::getTotalMicroseconds() const

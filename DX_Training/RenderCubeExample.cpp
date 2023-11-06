@@ -1,5 +1,5 @@
 
-#include "stdafx.h"
+#include "pch.h"
 
 #include "RenderCubeExample.h"
 
@@ -532,10 +532,10 @@ void RenderCubeExample::onMouseScroll(MouseScrollEvent& e)
 
 void RenderCubeExample::onMouseMoved(MouseMoveEvent& e)
 {
-    float pitch = e.relativeX;
-    float yAngle = e.relativeY;
+    int pitch = e.relativeX;
+    int yAngle = e.relativeY;
 
-    if (std::abs(pitch) > 0.0f && _isCameraMoving)
+    if (std::abs(pitch) > 0 && _isCameraMoving)
         camera.Update(pitch, yAngle);
 }
 
