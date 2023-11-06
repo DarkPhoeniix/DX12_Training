@@ -78,13 +78,13 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PrecompiledHeader>Create</PrecompiledHeader>
-      <AdditionalIncludeDirectories>$(SolutionDir)ThirdParty\D3D12\;$(ProjectDir)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)ThirdParty\jsoncpp\include\;$(SolutionDir)ThirdParty\D3D12\;$(ProjectDir)</AdditionalIncludeDirectories>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>d3d12.lib;dxgi.lib;d3dcompiler.lib;dxguid.lib;pathcch.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>JsonCPP.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;dxguid.lib;pathcch.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <DelayLoadDLLs>d3dcompiler_47.dll;d3d12.dll;</DelayLoadDLLs>
     </Link>
     <FxCompile>
@@ -101,7 +101,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PrecompiledHeader>Create</PrecompiledHeader>
-      <AdditionalIncludeDirectories>$(SolutionDir)ThirdParty\D3D12\;$(ProjectDir)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)ThirdParty\jsoncpp\include\;$(SolutionDir)ThirdParty\D3D12\;$(ProjectDir)</AdditionalIncludeDirectories>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
     </ClCompile>
     <Link>
@@ -109,7 +109,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>d3d12.lib;dxgi.lib;d3dcompiler.lib;dxguid.lib;pathcch.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>JsonCPP.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;dxguid.lib;pathcch.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <DelayLoadDLLs>d3dcompiler_47.dll;d3d12.dll;</DelayLoadDLLs>
     </Link>
     <FxCompile>
@@ -124,14 +124,15 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PrecompiledHeader>Create</PrecompiledHeader>
-      <AdditionalIncludeDirectories>$(SolutionDir)ThirdParty\D3D12\;$(ProjectDir)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)ThirdParty\jsoncpp\include\;$(SolutionDir)ThirdParty\D3D12\;$(ProjectDir)</AdditionalIncludeDirectories>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>d3d12.lib;dxgi.lib;d3dcompiler.lib;dxguid.lib;pathcch.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>JsonCPP.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;dxguid.lib;pathcch.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <DelayLoadDLLs>d3dcompiler_47.dll;d3d12.dll;</DelayLoadDLLs>
+      <AdditionalLibraryDirectories>$(SolutionDir)Bin\$(Configuration)-$(PlatformName)\</AdditionalLibraryDirectories>
     </Link>
     <FxCompile>
       <ShaderModel>6.1</ShaderModel>
@@ -147,7 +148,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PrecompiledHeader>Create</PrecompiledHeader>
-      <AdditionalIncludeDirectories>$(SolutionDir)ThirdParty\D3D12\;$(ProjectDir)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)ThirdParty\jsoncpp\include\;$(SolutionDir)ThirdParty\D3D12\;$(ProjectDir)</AdditionalIncludeDirectories>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
     </ClCompile>
     <Link>
@@ -155,8 +156,9 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>d3d12.lib;dxgi.lib;d3dcompiler.lib;dxguid.lib;pathcch.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>JsonCPP.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;dxguid.lib;pathcch.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <DelayLoadDLLs>d3dcompiler_47.dll;d3d12.dll;</DelayLoadDLLs>
+      <AdditionalLibraryDirectories>$(SolutionDir)Bin\$(Configuration)-$(PlatformName)\</AdditionalLibraryDirectories>
     </Link>
     <FxCompile>
       <ShaderModel>6.1</ShaderModel>
@@ -166,6 +168,7 @@
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="CommandQueue.cpp" />
     <ClCompile Include="Interfaces\IGame.cpp" />
+    <ClCompile Include="PipelineSettingsParser.cpp" />
     <ClCompile Include="PoissonDiskDistribution.cpp" />
     <ClCompile Include="RenderCubeExample.cpp" />
     <ClCompile Include="Utility\Helpers.cpp" />
@@ -188,6 +191,7 @@
     <ClInclude Include="Events\ResizeEvent.h" />
     <ClInclude Include="Events\UpdateEvent.h" />
     <ClInclude Include="Interfaces\IGame.h" />
+    <ClInclude Include="PipelineSettingsParser.h" />
     <ClInclude Include="PoissonDiskDistribution.h" />
     <ClInclude Include="RenderCubeExample.h" />
     <ClInclude Include="Utility\Helpers.h" />
@@ -221,6 +225,12 @@
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">-Qembed_debug %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">-Qembed_debug %(AdditionalOptions)</AdditionalOptions>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\RenderPipeline.blend" />
+    <None Include="Resources\RenderPipeline.depth" />
+    <None Include="Resources\RenderPipeline.raster" />
+    <None Include="Resources\RenderPipeline.tech" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
