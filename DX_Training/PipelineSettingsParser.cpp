@@ -1,26 +1,12 @@
 #include "stdafx.h"
 #include "PipelineSettingsParser.h"
 
-#include <json/reader.h>
-
 #include <fstream>
 
 // TODO: add logs to the file
 
 namespace
 {
-    Json::Value ParseJson(const std::string& filepath)
-    {
-        std::ifstream file(filepath, std::ios_base::binary);
-
-        // TODO: handle error / add logs
-
-        Json::Value root;
-        file >> root;
-
-        return root;
-    }
-
     // Blend Description
 
     const std::map<std::string, D3D12_BLEND> DEPTH =
@@ -202,10 +188,10 @@ namespace
 
 D3D12_BLEND_DESC PipelineSettingsParser::ParseBlendDescription(const std::string& filepath)
 {
-    Json::Value root = ParseJson(filepath);
+    Json::Value root = Helper::ParseJson(filepath);
     Json::Value renderTargets = root["RenderTargets"];
 
-    D3D12_BLEND_DESC description;
+    D3D12_BLEND_DESC description = {};
 
     for (size_t i = 0; i < renderTargets.size(); ++i)
     {
@@ -229,7 +215,7 @@ D3D12_BLEND_DESC PipelineSettingsParser::ParseBlendDescription(const std::string
 
 D3D12_RASTERIZER_DESC PipelineSettingsParser::ParseRasterizerDescription(const std::string& filepath)
 {
-    Json::Value root = ParseJson(filepath);
+    Json::Value root = Helper::ParseJson(filepath);
 
     D3D12_RASTERIZER_DESC description = {};
     description.FillMode = ParseFillMode(root["FillMode"].asString());
@@ -241,7 +227,7 @@ D3D12_RASTERIZER_DESC PipelineSettingsParser::ParseRasterizerDescription(const s
 
 D3D12_DEPTH_STENCIL_DESC PipelineSettingsParser::ParseDepthStencilDescription(const std::string& filepath)
 {
-    Json::Value root = ParseJson(filepath);
+    Json::Value root = Helper::ParseJson(filepath);
 
     D3D12_DEPTH_STENCIL_DESC description = {};
     description.DepthEnable = root["DepthEnable"].asBool();

@@ -16,7 +16,7 @@ public:
 private:
     DirectX::XMVECTOR GenerateRandomLocationAroundPoint() const;
     bool CheckCollisions(const DirectX::XMVECTOR& point) const;
-    bool AddPointToGrid(const DirectX::XMVECTOR& point, size_t index);
+    bool AddPointToGrid(const DirectX::XMVECTOR& point, int index);
     bool IsPointInExtents(const DirectX::XMVECTOR& point) const;
     
     DirectX::XMVECTOR _minExtent;

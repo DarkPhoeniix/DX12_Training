@@ -26,4 +26,6 @@ namespace Helper
             throw HrException(hr);
         }
     }
+
+    Json::Value ParseJson(const std::string& filepath);
 }

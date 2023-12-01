@@ -46,9 +46,9 @@ void PoissonDiskDistribution::Reset(const DirectX::XMVECTOR& minExtent, const Di
     _gridLengthZ = XMVectorGetZ(_maxExtent) - XMVectorGetZ(_minExtent);
 
     _cellSize = _minSpawnRadius / std::sqrtf(2);
-    _cellsNumX = std::ceil((XMVectorGetX(_maxExtent) - XMVectorGetX(_minExtent)) / _cellSize);
-    _cellsNumY = std::ceil((XMVectorGetY(_maxExtent) - XMVectorGetY(_minExtent)) / _cellSize);
-    _cellsNumZ = std::ceil((XMVectorGetZ(_maxExtent) - XMVectorGetZ(_minExtent)) / _cellSize);
+    _cellsNumX = static_cast<size_t>(std::ceil((XMVectorGetX(_maxExtent) - XMVectorGetX(_minExtent)) / _cellSize));
+    _cellsNumY = static_cast<size_t>(std::ceil((XMVectorGetY(_maxExtent) - XMVectorGetY(_minExtent)) / _cellSize));
+    _cellsNumZ = static_cast<size_t>(std::ceil((XMVectorGetZ(_maxExtent) - XMVectorGetZ(_minExtent)) / _cellSize));
 
     // In the case of a plane, not a volume
     // TODO: bad solution, need something else. "If" for the every coord case... seems to be buggy :P
@@ -77,7 +77,7 @@ bool PoissonDiskDistribution::TrySpawnStep()
         }
 
         size_t lastIndex = _objectLocations.size();
-        if (!AddPointToGrid(newPoint, lastIndex))
+        if (!AddPointToGrid(newPoint, static_cast<int>(lastIndex)))
         {
             continue;
         }
@@ -117,9 +117,9 @@ DirectX::XMVECTOR PoissonDiskDistribution::GenerateRandomLocationAroundPoint() c
 
 bool PoissonDiskDistribution::CheckCollisions(const DirectX::XMVECTOR& point) const
 {
-    int pointIndexX = ((XMVectorGetX(point) + (_gridLengthX * 0.5f)) / _cellSize);
-    int pointIndexY = ((XMVectorGetY(point) + (_gridLengthY * 0.5f)) / _cellSize);
-    int pointIndexZ = ((XMVectorGetZ(point) + (_gridLengthZ * 0.5f)) / _cellSize);
+    int pointIndexX = static_cast<int>((XMVectorGetX(point) + (_gridLengthX * 0.5f)) / _cellSize);
+    int pointIndexY = static_cast<int>((XMVectorGetY(point) + (_gridLengthY * 0.5f)) / _cellSize);
+    int pointIndexZ = static_cast<int>((XMVectorGetZ(point) + (_gridLengthZ * 0.5f)) / _cellSize);
 
     for (int x = -2; x <= 2; x++)
     {
@@ -152,11 +152,11 @@ bool PoissonDiskDistribution::CheckCollisions(const DirectX::XMVECTOR& point) co
     return false;
 }
 
-bool PoissonDiskDistribution::AddPointToGrid(const DirectX::XMVECTOR& point, size_t index)
+bool PoissonDiskDistribution::AddPointToGrid(const DirectX::XMVECTOR& point, int index)
 {
-    int pointIndexX = ((XMVectorGetX(point) + (_gridLengthX * 0.5f)) / _cellSize);
-    int pointIndexY = ((XMVectorGetY(point) + (_gridLengthY * 0.5f)) / _cellSize);
-    int pointIndexZ = ((XMVectorGetZ(point) + (_gridLengthZ * 0.5f)) / _cellSize);
+    int pointIndexX = static_cast<int>((XMVectorGetX(point) + (_gridLengthX * 0.5f)) / _cellSize);
+    int pointIndexY = static_cast<int>((XMVectorGetY(point) + (_gridLengthY * 0.5f)) / _cellSize);
+    int pointIndexZ = static_cast<int>((XMVectorGetZ(point) + (_gridLengthZ * 0.5f)) / _cellSize);
 
     if (_grid[pointIndexX][pointIndexY][pointIndexZ] != -1)
         return false;
