@@ -3,7 +3,7 @@
 
 #include "Application.h"
 
-#include "Game.h"
+#include "Interfaces/IGame.h"
 #include "RenderWindow.h"
 #include "CommandQueue.h"
 #include "Events/KeyEvent.h"
@@ -343,7 +343,7 @@ Application& Application::get()
     return *g_ApplicationInstance;
 }
 
-int Application::run(std::shared_ptr<Game> pGame)
+int Application::run(std::shared_ptr<IGame> pGame)
 {
     if (!pGame->initialize()) return 1;
     if (!pGame->loadContent()) return 2;
@@ -429,7 +429,7 @@ UINT Application::getDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE ty
     return _d3d12Device->GetDescriptorHandleIncrementSize(type);
 }
 
-Application::Application(HINSTANCE hIntance)
+Application::Application(HINSTANCE)
 {
     SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
 

@@ -3,7 +3,7 @@
 #include "RenderWindow.h"
 #include "Application.h"
 #include "CommandQueue.h"
-#include "Game.h"
+#include "Interfaces/IGame.h"
 #include "Events/ResizeEvent.h"
 #include "Events/RenderEvent.h"
 #include "Events/UpdateEvent.h"
@@ -161,7 +161,7 @@ void Window::toggleFullscreen()
 }
 
 
-void Window::registerCallbacks(std::shared_ptr<Game> pGame)
+void Window::registerCallbacks(std::shared_ptr<IGame> pGame)
 {
     _game = pGame;
 
@@ -213,7 +213,12 @@ void Window::onMouseMoved(MouseMoveEvent& e)
 {
     if (auto pGame = _game.lock())
     {
+        e.relativeX = e.x - _lastMouseMoveEvent.x;
+        e.relativeY = e.y - _lastMouseMoveEvent.y;
+
         pGame->onMouseMoved(e);
+
+        _lastMouseMoveEvent = e;
     }
 }
 

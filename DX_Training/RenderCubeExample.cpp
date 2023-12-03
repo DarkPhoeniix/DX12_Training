@@ -12,8 +12,8 @@
 #include "Events/RenderEvent.h"
 #include "Events/ResizeEvent.h"
 #include "Events/UpdateEvent.h"
+#include "PipelineSettingsParser.h"
 
-#include <vector>
 #include <random>
 #include <cmath>
 
@@ -68,21 +68,15 @@ RenderCubeExample::RenderCubeExample(const std::wstring& name, int width, int he
     , _viewport(CD3DX12_VIEWPORT(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height)))
     , _FoV(45.0)
     , _contentLoaded(false)
+    , distribution({-180.0f, -100.0f, 0.0f, 1.0f}, { 180.0f, 100.0f, 0.0f, 1.0f }, 10, 20)
 {
-    _cubes.push_back(XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f));
-    _activeIndex = 0;
-
-    _cellSize = _spawnRadius / std::sqrt(2);
-    _gridWidth = XMVectorGetX(_maxExtent) - XMVectorGetX(_minExtent);
-    _gridHeight = XMVectorGetY(_maxExtent) - XMVectorGetY(_minExtent);
-    _cellsNumX = std::ceil((XMVectorGetX(_maxExtent) - XMVectorGetX(_minExtent)) / _cellSize);
-    _cellsNumY = std::ceil((XMVectorGetY(_maxExtent) - XMVectorGetY(_minExtent)) / _cellSize);
-    
-    _grid = std::vector<std::vector<int>>(_cellsNumX, std::vector<int>(_cellsNumY, -1));
-
-    int pointIndexX = (0.0f + (_gridWidth / 2.0f)) / _cellSize;
-    int pointIndexY = (0.0f + (_gridHeight / 2.0f)) / _cellSize;
-    _grid[pointIndexX][pointIndexY] = 0;
+    distribution.Init();
+    XMVECTOR pos = XMVectorSet(0.0f, 0.0f, -20.0f, 1.0f);
+    XMVECTOR target = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+    XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+    camera.LookAt(pos, target, up);
+    float aspectRatio = getWidth() / static_cast<float>(getHeight());
+    camera.SetLens(45.0f, aspectRatio, 0.1f, 1000.0f);
 }
 
 void RenderCubeExample::updateBufferResource(
@@ -134,6 +128,9 @@ void RenderCubeExample::updateBufferResource(
 
 bool RenderCubeExample::loadContent()
 {
+    const std::string pipelineFilepath = "RenderPipeline.tech";
+    Json::Value root = Helper::ParseJson(pipelineFilepath);
+
     auto device = Application::get().getDevice();
     auto commandQueue = Application::get().getCommandQueue(D3D12_COMMAND_LIST_TYPE_COPY);
     auto commandList = commandQueue->getCommandList();
@@ -146,7 +143,7 @@ bool RenderCubeExample::loadContent()
 
     // Create the vertex buffer view.
     _vertexBufferView.BufferLocation = _vertexBuffer->GetGPUVirtualAddress();
-    _vertexBufferView.SizeInBytes = CUBE_VERTICES.size() * sizeof(VertexPosColor);
+    _vertexBufferView.SizeInBytes = static_cast<UINT>(CUBE_VERTICES.size() * sizeof(VertexPosColor));
     _vertexBufferView.StrideInBytes = sizeof(VertexPosColor);
 
     // Upload index buffer data.
@@ -158,7 +155,7 @@ bool RenderCubeExample::loadContent()
     // Create index buffer view.
     _indexBufferView.BufferLocation = _indexBuffer->GetGPUVirtualAddress();
     _indexBufferView.Format = DXGI_FORMAT_R16_UINT;
-    _indexBufferView.SizeInBytes = CUBE_INDICES.size() * sizeof(WORD);
+    _indexBufferView.SizeInBytes = static_cast<UINT>(CUBE_INDICES.size() * sizeof(WORD));
 
     // Create the descriptor heap for the depth-stencil view.
     D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
@@ -167,15 +164,18 @@ bool RenderCubeExample::loadContent()
     dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
     Helper::throwIfFailed(device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&_DSVHeap)));
 
-    // Load the vertex shader.
+    // Load the vertex shader
+    std::string vertexShaderFilepath = root["VS"].asString();
     ComPtr<ID3DBlob> vertexShaderBlob;
-    Helper::throwIfFailed(D3DReadFileToBlob(L"TriangleVertexShader.cso", &vertexShaderBlob));
+    Helper::throwIfFailed(D3DReadFileToBlob(std::wstring(vertexShaderFilepath.begin(), vertexShaderFilepath.end()).c_str(), &vertexShaderBlob));
 
-    // Load the pixel shader.
+    // Load the pixel shader
+    std::string pixelShaderFilepath = root["PS"].asString();
     ComPtr<ID3DBlob> pixelShaderBlob;
-    Helper::throwIfFailed(D3DReadFileToBlob(L"TrianglePixelShader.cso", &pixelShaderBlob));
+    Helper::throwIfFailed(D3DReadFileToBlob(std::wstring(pixelShaderFilepath.begin(), pixelShaderFilepath.end()).c_str(), &pixelShaderBlob));
 
     // Create the vertex input layout
+    // TODO implement parsing the layout from the "RenderPipeline.tech" 
     D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
         { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
         { "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
@@ -210,23 +210,9 @@ bool RenderCubeExample::loadContent()
     ComPtr<ID3DBlob> errorBlob;
     Helper::throwIfFailed(D3DX12SerializeVersionedRootSignature(&rootSignatureDescription,
         featureData.HighestVersion, &rootSignatureBlob, &errorBlob));
-    //Helper::throwIfFailed(device->CreateRootSignature(0, rootSignatureBlob->GetBufferPointer(),
-    //    rootSignatureBlob->GetBufferSize(), IID_PPV_ARGS(&_rootSignature)));
 
      Helper::throwIfFailed(device->CreateRootSignature(0, vertexShaderBlob->GetBufferPointer(),
          vertexShaderBlob->GetBufferSize(), IID_PPV_ARGS(&_rootSignature)));
-
-
-    //struct PipelineStateStream
-    //{
-    //    CD3DX12_PIPELINE_STATE_STREAM_ROOT_SIGNATURE pRootSignature;
-    //    CD3DX12_PIPELINE_STATE_STREAM_INPUT_LAYOUT InputLayout;
-    //    CD3DX12_PIPELINE_STATE_STREAM_PRIMITIVE_TOPOLOGY PrimitiveTopologyType;
-    //    CD3DX12_PIPELINE_STATE_STREAM_VS VS;
-    //    CD3DX12_PIPELINE_STATE_STREAM_PS PS;
-    //    CD3DX12_PIPELINE_STATE_STREAM_DEPTH_STENCIL_FORMAT DSVFormat;
-    //    CD3DX12_PIPELINE_STATE_STREAM_RENDER_TARGET_FORMATS RTVFormats;
-    //} pipelineStateStream;
 
     D3D12_RT_FORMAT_ARRAY rtvFormats = {};
     rtvFormats.NumRenderTargets = 1;
@@ -234,35 +220,13 @@ bool RenderCubeExample::loadContent()
 
     D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineStateStreamDesc = {};
 
-    D3D12_BLEND_DESC blend = {};
-    blend.RenderTarget[0].BlendEnable = true;
-    blend.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
-    blend.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
-    blend.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+    const std::string blendPipelineDescFilepath = "RenderPipeline.blend";
+    const std::string rasterPipelineDescFilepath = root["raster"].asString();
+    const std::string depthPipelineDescFilepath = root["depth"].asString();
 
-    blend.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
-    blend.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
-    blend.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
-
-    blend.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-
-    blend.RenderTarget[0].LogicOpEnable = false;
-    blend.RenderTarget[0].LogicOp = D3D12_LOGIC_OP_NOOP;
-
-    D3D12_RASTERIZER_DESC raster = {};
-    raster.FillMode = D3D12_FILL_MODE::D3D12_FILL_MODE_SOLID;
-    raster.CullMode = D3D12_CULL_MODE_NONE;
-    raster.DepthClipEnable = true;
-
-    D3D12_DEPTH_STENCIL_DESC depth = {};
-    depth.DepthEnable = true;
-    depth.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
-    depth.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-    depth.StencilEnable = false;
-
-    pipelineStateStreamDesc.BlendState = blend;
-    pipelineStateStreamDesc.RasterizerState = raster;
-    pipelineStateStreamDesc.DepthStencilState = depth;
+    pipelineStateStreamDesc.BlendState = PipelineSettingsParser::ParseBlendDescription(blendPipelineDescFilepath);
+    pipelineStateStreamDesc.RasterizerState = PipelineSettingsParser::ParseRasterizerDescription(rasterPipelineDescFilepath);
+    pipelineStateStreamDesc.DepthStencilState = PipelineSettingsParser::ParseDepthStencilDescription(depthPipelineDescFilepath);
 
     pipelineStateStreamDesc.pRootSignature = _rootSignature.Get();
     pipelineStateStreamDesc.InputLayout = { inputLayout, _countof(inputLayout) };
@@ -372,12 +336,10 @@ void RenderCubeExample::onUpdate(UpdateEvent& updateEvent)
     }
 
     // Update the model matrix.
-    //float angle = static_cast<float>(updateEvent.totalTime * 90.0f);
-    //const XMVECTOR rotationAxis = XMVectorSet(0.0f, 1.0f, 1.0f, 0.0f);
-    //_modelMatrix = XMMatrixRotationAxis(rotationAxis, XMConvertToRadians(angle));
+    _modelMatrix = XMMatrixIdentity();
 
     // Update the view matrix.
-    const XMVECTOR eyePosition = XMVectorSet(0.0f, 0.0f, -300.0f, 1.0f);
+    const XMVECTOR eyePosition = XMVectorSet(0.0f, 0.0f, 200.0f, 1.0f);
     const XMVECTOR focusPoint = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
     const XMVECTOR upDirection = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
     _viewMatrix = XMMatrixLookAtLH(eyePosition, focusPoint, upDirection);
@@ -386,8 +348,7 @@ void RenderCubeExample::onUpdate(UpdateEvent& updateEvent)
     float aspectRatio = getWidth() / static_cast<float>(getHeight());
     _projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(_FoV), aspectRatio, 0.1f, 1000.0f);
 
-    if (_activeIndex < _cubes.size())
-        spawnNewCubes(10);
+    distribution.TrySpawnStep();
 }
 
 // Transition a resource
@@ -451,20 +412,11 @@ void RenderCubeExample::onRender(RenderEvent& renderEvent)
     commandList->OMSetRenderTargets(1, &rtv, FALSE, &dsv);
 
     // Update the MVP matrix
-    XMMATRIX mvpMatrix = XMMatrixMultiply(_modelMatrix, _viewMatrix);
-    mvpMatrix = XMMatrixMultiply(mvpMatrix, _projectionMatrix);
+    XMMATRIX mvpMatrix = XMMatrixMultiply(_modelMatrix, camera.View());
+    mvpMatrix = XMMatrixMultiply(mvpMatrix, camera.Projection());
     commandList->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvpMatrix, 0);
 
-    for (const auto& cube : _cubes)
-    {
-        // Cube reneder
-        commandList->DrawIndexedInstanced(CUBE_INDICES.size(), 1, 0, 0, 0);
-
-        _modelMatrix = XMMatrixMultiply(XMMatrixIdentity(), XMMatrixTranslation(XMVectorGetX(cube), XMVectorGetY(cube), XMVectorGetZ(cube)));
-        mvpMatrix = XMMatrixMultiply(_modelMatrix, _viewMatrix);
-        mvpMatrix = XMMatrixMultiply(mvpMatrix, _projectionMatrix);
-        commandList->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvpMatrix, 0);
-    }
+    commandList->DrawIndexedInstanced(static_cast<UINT>(CUBE_INDICES.size()), 1, 0, 0, 0);
 
     // Present
     {
@@ -483,27 +435,42 @@ void RenderCubeExample::onKeyPressed(KeyEvent& e)
 {
     super::onKeyPressed(e);
 
+    XMVECTOR dir = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
+    if (e.key == KeyCode::W)
+    {
+        dir += camera.Look();
+    }
+    if (e.key == KeyCode::S)
+    {
+        dir -= camera.Look();
+    }
+    if (e.key == KeyCode::D)
+    {
+        dir += camera.Right();
+    }
+    if (e.key == KeyCode::A)
+    {
+        dir -= camera.Right();
+    }
+    camera.Update(dir);
+
     switch (e.key)
     {
     case KeyCode::Escape:
         Application::get().quit(0);
         break;
-    case KeyCode::Enter:
+    case KeyCode::Enter:        // TODO: looks weird
         if (e.alt)
         {
-    case KeyCode::F11:
-        _window->toggleFullscreen();
-        break;
+            case KeyCode::F11:
+                _window->toggleFullscreen();
+                break;
         }
     case KeyCode::V:
         _window->toggleVSync();
         break;
     case KeyCode::Space:
-        _cubes.clear();
-        _activeIndex = 0;
-        for (auto& row : _grid)
-            for (auto& el : row)
-                el = -1;
+        // TODO: add a Reset for the Poisson Distribution on Space button
         break;
     }
 }
@@ -518,83 +485,23 @@ void RenderCubeExample::onMouseScroll(MouseScrollEvent& e)
     OutputDebugStringA(buffer);
 }
 
-void RenderCubeExample::spawnNewCubes(size_t K)
+void RenderCubeExample::onMouseMoved(MouseMoveEvent& e)
 {
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<> dis(0.0f, 1.0f);
+    float pitch = static_cast<float>(e.relativeX);
+    float yAngle = static_cast<float>(e.relativeY);
 
-    for (size_t i = 0; i < K; ++i)
-    {
-        XMVECTOR newLocation = _cubes[_activeIndex];
-
-        float distance = (dis(gen) + 1.0f) * _spawnRadius;  // Spawn in [R; 2*R]
-        float angle = dis(gen) * XM_2PI;                    // Randon angle
-
-        newLocation += XMVectorSet(distance * XMScalarCos(angle), distance * XMScalarSin(angle), 0.0f, 0.0f);
-
-        if (pointInExtents(newLocation) && !pointIntersectsGrid(newLocation))
-        {
-            _cubes.push_back(newLocation);
-            int pointIndexX = ((XMVectorGetX(newLocation) + (_gridWidth / 2.0f)) / _cellSize);
-            int pointIndexY = ((XMVectorGetY(newLocation) + (_gridHeight / 2.0f)) / _cellSize);
-            if (_grid[pointIndexX][pointIndexY] != -1)
-                return;
-            _grid[pointIndexX][pointIndexY] = _cubes.size() - 1;
-        }
-    }
-
-    ++_activeIndex;
+    if (std::abs(pitch) > 0.0f && _isCameraMoving)
+        camera.Update(pitch, yAngle);
 }
 
-bool RenderCubeExample::pointInExtents(const DirectX::XMVECTOR& location)
+void RenderCubeExample::onMouseButtonPressed(MouseButtonEvent& e)
 {
-    return (XMVectorGetX(location) > XMVectorGetX(_minExtent) && XMVectorGetY(location) > XMVectorGetY(_minExtent)) &&
-           (XMVectorGetX(location) < XMVectorGetX(_maxExtent) && XMVectorGetY(location) < XMVectorGetY(_maxExtent));
+    if (e.button == MouseButtonEvent::MouseButton::Right)
+        _isCameraMoving = true;
 }
 
-bool RenderCubeExample::pointIntersects(const DirectX::XMVECTOR& location)
+void RenderCubeExample::onMouseButtonReleased(MouseButtonEvent& e)
 {
-    for (const auto& point : _cubes)
-    {
-        if (XMVectorGetX(XMVector3Length(XMVectorSubtract(point, location))) <= _spawnRadius)
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-bool RenderCubeExample::pointIntersectsGrid(const XMVECTOR& location)
-{
-    int pointIndexX = ((XMVectorGetX(location) + (_gridWidth / 2.0f)) / _cellSize);
-    int pointIndexY = ((XMVectorGetY(location) + (_gridHeight / 2.0f)) / _cellSize);
-
-    for (int x = -2; x <= 2; x++)
-    {
-        for (int y = -2; y <= 2; ++y)
-        {
-            //if (x == 0 && y == 0)
-            //    continue;
-
-            int indX = pointIndexX + x;
-            int indY = pointIndexY + y;
-
-            if (indX < 0 || indX >= _cellsNumX)
-                continue;
-            if (indY < 0 || indY >= _cellsNumY)
-                continue;
-
-            int cubeIndex = _grid[indX][indY];
-            if (cubeIndex == -1)
-                continue;
-
-            float dist = XMVectorGetX(XMVector3Length(XMVectorSubtract(_cubes[cubeIndex], location)));
-            if (dist <= _spawnRadius)
-                return true;
-        }
-    }
-
-    return false;
+    if (e.button == MouseButtonEvent::MouseButton::Right)
+        _isCameraMoving = false;
 }

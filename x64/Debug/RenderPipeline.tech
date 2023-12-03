@@ -1,0 +1,33 @@
+{
+	"type": "RenderSpriteTechnique",
+
+	"isGraphicPipeline": true,
+
+	"blend": "RenderPipeline.blend",
+	"raster": "RenderPipeline.raster",
+	"depth": "RenderPipeline.depth",
+
+	"RenderTargets": [
+		"BackBuffer"
+	],
+	"DepthBuffer": "BackBufferDepth",
+	"Layout": [
+		{
+			"name": "POSITION",
+			"stream": 0,
+			"offset": 0,
+			"type": "float2",
+			"semanticIndex": 0
+		},
+		{
+			"name": "TEXTURE",
+			"stream": 0,
+			"offset": 8,
+			"type": "float2",
+			"semanticIndex": 0
+		}
+	],
+
+	"VS": "TriangleVertexShader.cso",
+	"PS": "TrianglePixelShader.cso"
+}

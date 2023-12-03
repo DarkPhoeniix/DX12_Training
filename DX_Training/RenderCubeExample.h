@@ -1,14 +1,17 @@
 #pragma once
 
-#include "Game.h"
+#include "Interfaces/IGame.h"
 #include "RenderWindow.h"
+
+#include "PoissonDiskDistribution.h"
+#include "Camera.h"
 
 #include <vector>
 
-class RenderCubeExample : public Game
+class RenderCubeExample : public IGame
 {
 public:
-    using super = Game;
+    using super = IGame;
 
     RenderCubeExample(const std::wstring& name, int width, int height, bool vSync = false);
 
@@ -16,11 +19,14 @@ public:
     virtual void unloadContent() override;
 
 protected:
-    virtual void onUpdate(UpdateEvent& e) override;
-    virtual void onRender(RenderEvent& e) override;
-    virtual void onKeyPressed(KeyEvent& e) override;
-    virtual void onMouseScroll(MouseScrollEvent& e) override;
-    virtual void onResize(ResizeEvent& e) override;
+    void onUpdate(UpdateEvent& e) override;
+    void onRender(RenderEvent& e) override;
+    void onKeyPressed(KeyEvent& e) override;
+    void onMouseScroll(MouseScrollEvent& e) override;
+    void onMouseMoved(MouseMoveEvent& e) override;
+    void onMouseButtonPressed(MouseButtonEvent& e) override;
+    void onMouseButtonReleased(MouseButtonEvent& e) override;
+    void onResize(ResizeEvent& e) override;
 
 private:
     void transitionResource(Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> commandList,
@@ -39,11 +45,6 @@ private:
         D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE);
 
     void resizeDepthBuffer(int width, int height);
-
-    void spawnNewCubes(size_t K);
-    bool pointInExtents(const DirectX::XMVECTOR& location);
-    bool pointIntersects(const DirectX::XMVECTOR& location);
-    bool pointIntersectsGrid(const DirectX::XMVECTOR& location);
 
     uint64_t _fenceValues[Window::BUFFER_COUNT] = {};
 
@@ -71,18 +72,9 @@ private:
 
     float _spawnRate = 50.0f;
     float _deltaTimeLastSpawn = 0.0f;
-    float _spawnRadius = 10.0f;
 
-    DirectX::XMVECTOR _minExtent = { -200.0f, -100.0f, 0.0f, 1.0f };
-    DirectX::XMVECTOR _maxExtent = {  200.0f,  100.0f, 0.0f, 1.0f };
+    PoissonDiskDistribution distribution;
 
-    std::vector<DirectX::XMVECTOR> _cubes;
-    size_t _activeIndex;
-
-    float _cellSize;
-    float _gridWidth;
-    float _gridHeight;
-    size_t _cellsNumX;
-    size_t _cellsNumY;
-    std::vector<std::vector<int>> _grid;
+    bool _isCameraMoving = false;
+    Camera camera;
 };
