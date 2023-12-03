@@ -2,7 +2,7 @@
 
 class Window;
 class CommandQueue;
-class Game;
+class IGame;
 
 class Application
 {
@@ -21,7 +21,7 @@ public:
     static void create(HINSTANCE hInstance);
     static void destroy();
     static Application& get();
-    int run(std::shared_ptr<Game> pGame);
+    int run(std::shared_ptr<IGame> pGame);
     void quit(int exitCode = 0);
 
     Microsoft::WRL::ComPtr<ID3D12Device2> getDevice() const;

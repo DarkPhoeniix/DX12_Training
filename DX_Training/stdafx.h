@@ -25,12 +25,14 @@ using namespace Microsoft::WRL;
 
 #include "d3dx12.h"             // D3D12 extension library
 
+#include <json/reader.h>
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <string>
 #include <chrono>
 #include <memory>
+#include <vector>
 #include <map>
 
 #include "Utility/Helpers.h"
