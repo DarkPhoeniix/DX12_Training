@@ -1,1 +1,1 @@
-%T | Error: Called Widnow::~Window before the Application::DestroyWindow
+17:04:14.4409138 | Error: Failed to load RenderPipeline.tech

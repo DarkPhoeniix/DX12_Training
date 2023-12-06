@@ -42,11 +42,11 @@ LogType Logger::_logLevel = LogType::Error;
 
 void Logger::Log(LogType type, const std::string& message)
 {
-    std::time_t time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    std::chrono::time_point<std::chrono::system_clock> time = std::chrono::zoned_time(std::chrono::current_zone(), std::chrono::system_clock::now()).get_sys_time();
 
     std::ofstream file(LOG_FILEPATH);
-
-    file << std::format("%T", time) << " | " << logType(type) << ": " << message << std::endl;
+    
+    file << std::format("{0:%T}", time) << " | " << logType(type) << ": " << message << std::endl;
 }
 
 void Logger::SetLogLevel(LogType logLevel)
