@@ -18,6 +18,10 @@ CommandQueue::CommandQueue(Microsoft::WRL::ComPtr<ID3D12Device2> device, D3D12_C
 
     _fenceEvent = ::CreateEvent(NULL, FALSE, FALSE, NULL);
     assert(_fenceEvent && "Failed to create fence event handle.");
+    if (!_fenceEvent)
+    {
+        Logger::Log(LogType::Error, "Failed to create fence event handle");
+    }
 }
 
 CommandQueue::~CommandQueue()

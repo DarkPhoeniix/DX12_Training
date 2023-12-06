@@ -29,11 +29,13 @@ using namespace Microsoft::WRL;
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
+#include <fstream>
 #include <string>
 #include <chrono>
 #include <memory>
 #include <vector>
 #include <map>
 
+#include "Utility/Logger.h"
 #include "Utility/Helpers.h"
 #include "Utility/KeyCodes.h"

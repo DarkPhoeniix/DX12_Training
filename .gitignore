@@ -14,3 +14,5 @@
 *.opendb
 
 /DX_Training/x64/
+/delete_pdb/*
+/delete_pdb/x64/JsonCPP/json_value.obj

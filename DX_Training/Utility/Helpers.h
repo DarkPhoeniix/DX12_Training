@@ -2,12 +2,7 @@
 
 namespace Helper
 {
-    inline std::string HrToString(HRESULT hr)
-    {
-        char s_str[64] = {};
-        sprintf_s(s_str, "HRESULT of 0x%08X", static_cast<UINT>(hr));
-        return std::string(s_str);
-    }
+    std::string HrToString(HRESULT hr);
 
     class HrException : public std::runtime_error
     {
@@ -19,13 +14,7 @@ namespace Helper
         const HRESULT m_hr;
     };
 
-    inline void throwIfFailed(HRESULT hr)
-    {
-        if (FAILED(hr))
-        {
-            throw HrException(hr);
-        }
-    }
+    void throwIfFailed(HRESULT hr);
 
     Json::Value ParseJson(const std::string& filepath);
 }

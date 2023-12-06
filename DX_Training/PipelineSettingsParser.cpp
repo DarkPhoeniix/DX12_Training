@@ -77,6 +77,7 @@ namespace
         {
             return it->second;
         }
+        Logger::Log(LogType::Warning, "Failed to parse " + str + " from the blend description");
         return DEPTH.begin()->second;
     }
 
@@ -87,6 +88,7 @@ namespace
         {
             return it->second;
         }
+        Logger::Log(LogType::Warning, "Failed to parse " + str + " from the blend description");
         return BLEND_OP.begin()->second;
     }
 
@@ -97,6 +99,7 @@ namespace
         {
             return it->second;
         }
+        Logger::Log(LogType::Warning, "Failed to parse " + str + " from the blend description");
         return COLOR_WRITE.begin()->second;
     }
 
@@ -107,6 +110,7 @@ namespace
         {
             return it->second;
         }
+        Logger::Log(LogType::Warning, "Failed to parse " + str + " from the blend description");
         return LOGIC_OP.begin()->second;
     }
 
@@ -132,6 +136,7 @@ namespace
         {
             return it->second;
         }
+        Logger::Log(LogType::Warning, "Failed to parse " + str + " from the raster description");
         return FILL_MODE.begin()->second;
     }
 
@@ -142,6 +147,7 @@ namespace
         {
             return it->second;
         }
+        Logger::Log(LogType::Warning, "Failed to parse " + str + " from the raster description");
         return CULL_MODE.begin()->second;
     }
 
@@ -172,6 +178,7 @@ namespace
         {
             return it->second;
         }
+        Logger::Log(LogType::Warning, "Failed to parse " + str + " from the depth stencil description");
         return COMPARISON_FUNC.begin()->second;
     }
 
@@ -182,6 +189,7 @@ namespace
         {
             return it->second;
         }
+        Logger::Log(LogType::Warning, "Failed to parse " + str + " from the depth stencil description");
         return DEPTH_WRITE_MASK.begin()->second;
     }
 }
@@ -195,7 +203,7 @@ D3D12_BLEND_DESC PipelineSettingsParser::ParseBlendDescription(const std::string
 
     for (size_t i = 0; i < renderTargets.size(); ++i)
     {
-        description.RenderTarget[i].BlendEnable = root["BlendEnbale"].asBool();
+        description.RenderTarget[i].BlendEnable = root["BlendEnable"].asBool();
         description.RenderTarget[i].SrcBlend = ParseBlend(root["SrcBlend"].asString());
         description.RenderTarget[i].DestBlend = ParseBlend(root["DestBlend"].asString());
         description.RenderTarget[i].BlendOp = ParseBlendOp(root["BlendOp"].asString());

@@ -76,7 +76,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <PrecompiledHeader>Create</PrecompiledHeader>
       <AdditionalIncludeDirectories>$(SolutionDir)ThirdParty\jsoncpp\include\;$(SolutionDir)ThirdParty\D3D12\;$(ProjectDir)</AdditionalIncludeDirectories>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
@@ -99,7 +99,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <PrecompiledHeader>Create</PrecompiledHeader>
       <AdditionalIncludeDirectories>$(SolutionDir)ThirdParty\jsoncpp\include\;$(SolutionDir)ThirdParty\D3D12\;$(ProjectDir)</AdditionalIncludeDirectories>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
@@ -122,7 +122,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <PrecompiledHeader>Create</PrecompiledHeader>
       <AdditionalIncludeDirectories>$(SolutionDir)ThirdParty\jsoncpp\include\;$(SolutionDir)ThirdParty\D3D12\;$(ProjectDir)</AdditionalIncludeDirectories>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
@@ -146,7 +146,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <PrecompiledHeader>Create</PrecompiledHeader>
       <AdditionalIncludeDirectories>$(SolutionDir)ThirdParty\jsoncpp\include\;$(SolutionDir)ThirdParty\D3D12\;$(ProjectDir)</AdditionalIncludeDirectories>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
@@ -170,7 +170,7 @@
     <ClCompile Include="Interfaces\IGame.cpp" />
     <ClCompile Include="PipelineSettingsParser.cpp" />
     <ClCompile Include="PoissonDiskDistribution.cpp" />
-    <ClCompile Include="Logger.cpp" />
+    <ClCompile Include="Utility\Logger.cpp" />
     <ClCompile Include="RenderCubeExample.cpp" />
     <ClCompile Include="Utility\Helpers.cpp" />
     <ClCompile Include="Interfaces\IRenderWindow.cpp" />
@@ -194,7 +194,7 @@
     <ClInclude Include="Interfaces\IGame.h" />
     <ClInclude Include="PipelineSettingsParser.h" />
     <ClInclude Include="PoissonDiskDistribution.h" />
-    <ClInclude Include="Logger.h" />
+    <ClInclude Include="Utility\Logger.h" />
     <ClInclude Include="RenderCubeExample.h" />
     <ClInclude Include="Utility\Helpers.h" />
     <ClInclude Include="Interfaces\IRenderWindow.h" />
