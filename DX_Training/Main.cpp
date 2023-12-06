@@ -29,6 +29,10 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstan
         PathCchRemoveFileSpec(path, MAX_PATH);              // Removes the last element in a path string, whether that element is a file name or a directory name
         SetCurrentDirectoryW(path);                         // Changes the current directory for the current process
     }
+    else
+    {
+        Logger::Log(LogType::Error, "Failed to retrieve the path of the executable file");
+    }
 
     Application::create(hInstance);
     {

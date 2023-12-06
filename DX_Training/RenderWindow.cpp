@@ -33,6 +33,11 @@ Window::~Window()
     // Window should be destroyed with Application::DestroyWindow before
     // the window goes out of scope.
     assert(!_hWnd && "Use Application::DestroyWindow before destruction.");
+
+    if (!_hWnd)
+    {
+        Logger::Log(LogType::Error, "Called Widnow::~Window before the Application::DestroyWindow");
+    }
 }
 
 HWND Window::getWindowHandle() const
