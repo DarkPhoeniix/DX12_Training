@@ -12,6 +12,7 @@
 #include "Events/RenderEvent.h"
 #include "Events/ResizeEvent.h"
 #include "Events/UpdateEvent.h"
+#include "PipelineSettingsParser.h"
 
 #include <random>
 #include <cmath>
@@ -127,6 +128,9 @@ void RenderCubeExample::updateBufferResource(
 
 bool RenderCubeExample::loadContent()
 {
+    const std::string pipelineFilepath = "RenderPipeline.tech";
+    Json::Value root = Helper::ParseJson(pipelineFilepath);
+
     auto device = Application::get().getDevice();
     auto commandQueue = Application::get().getCommandQueue(D3D12_COMMAND_LIST_TYPE_COPY);
     auto commandList = commandQueue->getCommandList();
@@ -160,15 +164,18 @@ bool RenderCubeExample::loadContent()
     dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
     Helper::throwIfFailed(device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&_DSVHeap)));
 
-    // Load the vertex shader.
+    // Load the vertex shader
+    std::string vertexShaderFilepath = root["VS"].asString();
     ComPtr<ID3DBlob> vertexShaderBlob;
-    Helper::throwIfFailed(D3DReadFileToBlob(L"TriangleVertexShader.cso", &vertexShaderBlob));
+    Helper::throwIfFailed(D3DReadFileToBlob(std::wstring(vertexShaderFilepath.begin(), vertexShaderFilepath.end()).c_str(), &vertexShaderBlob));
 
-    // Load the pixel shader.
+    // Load the pixel shader
+    std::string pixelShaderFilepath = root["PS"].asString();
     ComPtr<ID3DBlob> pixelShaderBlob;
-    Helper::throwIfFailed(D3DReadFileToBlob(L"TrianglePixelShader.cso", &pixelShaderBlob));
+    Helper::throwIfFailed(D3DReadFileToBlob(std::wstring(pixelShaderFilepath.begin(), pixelShaderFilepath.end()).c_str(), &pixelShaderBlob));
 
     // Create the vertex input layout
+    // TODO implement parsing the layout from the "RenderPipeline.tech" 
     D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
         { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
         { "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
@@ -203,23 +210,9 @@ bool RenderCubeExample::loadContent()
     ComPtr<ID3DBlob> errorBlob;
     Helper::throwIfFailed(D3DX12SerializeVersionedRootSignature(&rootSignatureDescription,
         featureData.HighestVersion, &rootSignatureBlob, &errorBlob));
-    //Helper::throwIfFailed(device->CreateRootSignature(0, rootSignatureBlob->GetBufferPointer(),
-    //    rootSignatureBlob->GetBufferSize(), IID_PPV_ARGS(&_rootSignature)));
 
      Helper::throwIfFailed(device->CreateRootSignature(0, vertexShaderBlob->GetBufferPointer(),
          vertexShaderBlob->GetBufferSize(), IID_PPV_ARGS(&_rootSignature)));
-
-
-    //struct PipelineStateStream
-    //{
-    //    CD3DX12_PIPELINE_STATE_STREAM_ROOT_SIGNATURE pRootSignature;
-    //    CD3DX12_PIPELINE_STATE_STREAM_INPUT_LAYOUT InputLayout;
-    //    CD3DX12_PIPELINE_STATE_STREAM_PRIMITIVE_TOPOLOGY PrimitiveTopologyType;
-    //    CD3DX12_PIPELINE_STATE_STREAM_VS VS;
-    //    CD3DX12_PIPELINE_STATE_STREAM_PS PS;
-    //    CD3DX12_PIPELINE_STATE_STREAM_DEPTH_STENCIL_FORMAT DSVFormat;
-    //    CD3DX12_PIPELINE_STATE_STREAM_RENDER_TARGET_FORMATS RTVFormats;
-    //} pipelineStateStream;
 
     D3D12_RT_FORMAT_ARRAY rtvFormats = {};
     rtvFormats.NumRenderTargets = 1;
@@ -227,35 +220,13 @@ bool RenderCubeExample::loadContent()
 
     D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineStateStreamDesc = {};
 
-    D3D12_BLEND_DESC blend = {};
-    blend.RenderTarget[0].BlendEnable = true;
-    blend.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
-    blend.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
-    blend.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+    const std::string blendPipelineDescFilepath = "RenderPipeline.blend";
+    const std::string rasterPipelineDescFilepath = root["raster"].asString();
+    const std::string depthPipelineDescFilepath = root["depth"].asString();
 
-    blend.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
-    blend.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
-    blend.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
-
-    blend.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-
-    blend.RenderTarget[0].LogicOpEnable = false;
-    blend.RenderTarget[0].LogicOp = D3D12_LOGIC_OP_NOOP;
-
-    D3D12_RASTERIZER_DESC raster = {};
-    raster.FillMode = D3D12_FILL_MODE::D3D12_FILL_MODE_SOLID;
-    raster.CullMode = D3D12_CULL_MODE_NONE;
-    raster.DepthClipEnable = true;
-
-    D3D12_DEPTH_STENCIL_DESC depth = {};
-    depth.DepthEnable = true;
-    depth.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
-    depth.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-    depth.StencilEnable = false;
-
-    pipelineStateStreamDesc.BlendState = blend;
-    pipelineStateStreamDesc.RasterizerState = raster;
-    pipelineStateStreamDesc.DepthStencilState = depth;
+    pipelineStateStreamDesc.BlendState = PipelineSettingsParser::ParseBlendDescription(blendPipelineDescFilepath);
+    pipelineStateStreamDesc.RasterizerState = PipelineSettingsParser::ParseRasterizerDescription(rasterPipelineDescFilepath);
+    pipelineStateStreamDesc.DepthStencilState = PipelineSettingsParser::ParseDepthStencilDescription(depthPipelineDescFilepath);
 
     pipelineStateStreamDesc.pRootSignature = _rootSignature.Get();
     pipelineStateStreamDesc.InputLayout = { inputLayout, _countof(inputLayout) };
@@ -365,9 +336,6 @@ void RenderCubeExample::onUpdate(UpdateEvent& updateEvent)
     }
 
     // Update the model matrix.
-    //float angle = static_cast<float>(updateEvent.totalTime * 90.0f);
-    //const XMVECTOR rotationAxis = XMVectorSet(0.0f, 1.0f, 1.0f, 0.0f);
-    //_modelMatrix = XMMatrixRotationAxis(rotationAxis, XMConvertToRadians(angle));
     _modelMatrix = XMMatrixIdentity();
 
     // Update the view matrix.
@@ -446,22 +414,9 @@ void RenderCubeExample::onRender(RenderEvent& renderEvent)
     // Update the MVP matrix
     XMMATRIX mvpMatrix = XMMatrixMultiply(_modelMatrix, camera.View());
     mvpMatrix = XMMatrixMultiply(mvpMatrix, camera.Projection());
-    //XMMATRIX mvpMatrix = XMMatrixMultiply(_modelMatrix, _viewMatrix);
-    //mvpMatrix = XMMatrixMultiply(mvpMatrix, _projectionMatrix);
     commandList->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvpMatrix, 0);
 
     commandList->DrawIndexedInstanced(static_cast<UINT>(CUBE_INDICES.size()), 1, 0, 0, 0);
-
-    //for (const auto& cube : distribution.GetLocationsArray())
-    //{
-    //    // Cube reneder
-    //    commandList->DrawIndexedInstanced(static_cast<UINT>(CUBE_INDICES.size()), 1, 0, 0, 0);
-
-    //    _modelMatrix = XMMatrixMultiply(XMMatrixIdentity(), XMMatrixTranslation(XMVectorGetX(cube), XMVectorGetY(cube), XMVectorGetZ(cube)));
-    //    mvpMatrix = XMMatrixMultiply(_modelMatrix, _viewMatrix);
-    //    mvpMatrix = XMMatrixMultiply(mvpMatrix, _projectionMatrix);
-    //    commandList->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvpMatrix, 0);
-    //}
 
     // Present
     {
@@ -532,8 +487,8 @@ void RenderCubeExample::onMouseScroll(MouseScrollEvent& e)
 
 void RenderCubeExample::onMouseMoved(MouseMoveEvent& e)
 {
-    int pitch = e.relativeX;
-    int yAngle = e.relativeY;
+    float pitch = static_cast<float>(e.relativeX);
+    float yAngle = static_cast<float>(e.relativeY);
 
     if (std::abs(pitch) > 0 && _isCameraMoving)
         camera.Update(pitch, yAngle);

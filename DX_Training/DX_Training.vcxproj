@@ -76,15 +76,15 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <PrecompiledHeader>Create</PrecompiledHeader>
-      <AdditionalIncludeDirectories>$(SolutionDir)ThirdParty\D3D12\;$(ProjectDir)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)ThirdParty\jsoncpp\include\;$(SolutionDir)ThirdParty\D3D12\;$(ProjectDir)</AdditionalIncludeDirectories>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>d3d12.lib;dxgi.lib;d3dcompiler.lib;dxguid.lib;pathcch.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>JsonCPP.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;dxguid.lib;pathcch.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <DelayLoadDLLs>d3dcompiler_47.dll;d3d12.dll;</DelayLoadDLLs>
     </Link>
     <FxCompile>
@@ -99,9 +99,9 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <PrecompiledHeader>Create</PrecompiledHeader>
-      <AdditionalIncludeDirectories>$(SolutionDir)ThirdParty\D3D12\;$(ProjectDir)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)ThirdParty\jsoncpp\include\;$(SolutionDir)ThirdParty\D3D12\;$(ProjectDir)</AdditionalIncludeDirectories>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
     </ClCompile>
     <Link>
@@ -109,7 +109,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>d3d12.lib;dxgi.lib;d3dcompiler.lib;dxguid.lib;pathcch.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>JsonCPP.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;dxguid.lib;pathcch.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <DelayLoadDLLs>d3dcompiler_47.dll;d3d12.dll;</DelayLoadDLLs>
     </Link>
     <FxCompile>
@@ -122,17 +122,18 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <PrecompiledHeader>Create</PrecompiledHeader>
-      <AdditionalIncludeDirectories>$(SolutionDir)ThirdParty\D3D12\;$(ProjectDir)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)ThirdParty\jsoncpp\include\;$(SolutionDir)ThirdParty\D3D12\;$(ProjectDir)</AdditionalIncludeDirectories>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>d3d12.lib;dxgi.lib;d3dcompiler.lib;dxguid.lib;pathcch.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>JsonCPP.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;dxguid.lib;pathcch.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <DelayLoadDLLs>d3dcompiler_47.dll;d3d12.dll;</DelayLoadDLLs>
+      <AdditionalLibraryDirectories>$(SolutionDir)Bin\$(Configuration)-$(PlatformName)\</AdditionalLibraryDirectories>
     </Link>
     <FxCompile>
       <ShaderModel>6.1</ShaderModel>
@@ -146,9 +147,9 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <PrecompiledHeader>Create</PrecompiledHeader>
-      <AdditionalIncludeDirectories>$(SolutionDir)ThirdParty\D3D12\;$(ProjectDir)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)ThirdParty\jsoncpp\include\;$(SolutionDir)ThirdParty\D3D12\;$(ProjectDir)</AdditionalIncludeDirectories>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
@@ -157,8 +158,9 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>d3d12.lib;dxgi.lib;d3dcompiler.lib;dxguid.lib;pathcch.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>JsonCPP.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;dxguid.lib;pathcch.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <DelayLoadDLLs>d3dcompiler_47.dll;d3d12.dll;</DelayLoadDLLs>
+      <AdditionalLibraryDirectories>$(SolutionDir)Bin\$(Configuration)-$(PlatformName)\</AdditionalLibraryDirectories>
     </Link>
     <FxCompile>
       <ShaderModel>6.1</ShaderModel>
@@ -171,15 +173,17 @@
     <ClCompile Include="Components\IComponent.cpp" />
     <ClCompile Include="Interfaces\IEntity.cpp" />
     <ClCompile Include="Interfaces\IGame.cpp" />
+    <ClCompile Include="PipelineSettingsParser.cpp" />
     <ClCompile Include="Components\Mesh.cpp" />
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="PoissonDiskDistribution.cpp" />
+    <ClCompile Include="Utility\Logger.cpp" />
     <ClCompile Include="RenderCubeExample.cpp" />
     <ClCompile Include="Utility\Helpers.cpp" />
     <ClCompile Include="Interfaces\IRenderWindow.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="RenderWindow.cpp" />
-    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="Utility\HighResolutionClock.cpp" />
   </ItemGroup>
@@ -200,12 +204,14 @@
     <ClInclude Include="Interfaces\IGame.h" />
     <ClInclude Include="Components\Mesh.h" />
     <ClInclude Include="Object.h" />
+    <ClInclude Include="PipelineSettingsParser.h" />
     <ClInclude Include="PoissonDiskDistribution.h" />
+    <ClInclude Include="Utility\Logger.h" />
     <ClInclude Include="RenderCubeExample.h" />
     <ClInclude Include="Utility\Helpers.h" />
     <ClInclude Include="Interfaces\IRenderWindow.h" />
     <ClInclude Include="RenderWindow.h" />
-    <ClInclude Include="pch.h" />
+    <ClInclude Include="stdafx.h" />
     <ClInclude Include="Application.h" />
     <ClInclude Include="Utility\HighResolutionClock.h" />
     <ClInclude Include="Utility\KeyCodes.h" />
@@ -233,6 +239,12 @@
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">-Qembed_debug %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">-Qembed_debug %(AdditionalOptions)</AdditionalOptions>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\RenderPipeline.blend" />
+    <None Include="Resources\RenderPipeline.depth" />
+    <None Include="Resources\RenderPipeline.raster" />
+    <None Include="Resources\RenderPipeline.tech" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

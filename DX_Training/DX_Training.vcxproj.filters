@@ -18,7 +18,7 @@
     <ClCompile Include="Main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="pch.cpp">
+    <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Utility\Helpers.cpp">
@@ -66,9 +66,15 @@
     <ClCompile Include="Interfaces\IEntity.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Utility\Logger.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PipelineSettingsParser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="pch.h">
+    <ClInclude Include="stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Utility\Helpers.h">
@@ -143,9 +149,21 @@
     <ClInclude Include="Interfaces\IEntity.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Utility\Logger.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PipelineSettingsParser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\TrianglePixelShader.hlsl" />
     <FxCompile Include="Resources\TriangleVertexShader.hlsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\RenderPipeline.blend" />
+    <None Include="Resources\RenderPipeline.depth" />
+    <None Include="Resources\RenderPipeline.raster" />
+    <None Include="Resources\RenderPipeline.tech" />
   </ItemGroup>
 </Project>

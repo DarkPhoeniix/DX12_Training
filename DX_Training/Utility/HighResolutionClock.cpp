@@ -26,7 +26,7 @@ void HighResolutionClock::reset()
 
 double HighResolutionClock::getDeltaNanoseconds() const
 {
-    return _deltaTime.count() * 1.0;
+    return static_cast<double>(_deltaTime.count());
 }
 double HighResolutionClock::getDeltaMicroseconds() const
 {
@@ -45,7 +45,7 @@ double HighResolutionClock::getDeltaSeconds() const
 
 double HighResolutionClock::getTotalNanoseconds() const
 {
-    return _totalTime.count() * 1.0;
+    return static_cast<double>(_totalTime.count());
 }
 
 double HighResolutionClock::getTotalMicroseconds() const

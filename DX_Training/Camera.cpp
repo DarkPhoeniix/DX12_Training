@@ -177,5 +177,4 @@ void Camera::buildView()
 		XMVectorGetX(_up), XMVectorGetY(_up), XMVectorGetZ(_up), y, 
 		XMVectorGetX(_look), XMVectorGetY(_look), XMVectorGetZ(_look), z,
 		0.0f, 0.0f, 0.0f, 1.0f));
-
 }
