@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Components/IComponent.h"
-
 class IEntity
 {
 public:

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -126,7 +126,7 @@
       <PrecompiledHeader>Create</PrecompiledHeader>
       <AdditionalIncludeDirectories>$(SolutionDir)ThirdParty\jsoncpp\include\;$(SolutionDir)ThirdParty\D3D12\;$(ProjectDir)</AdditionalIncludeDirectories>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -151,7 +151,7 @@
       <PrecompiledHeader>Create</PrecompiledHeader>
       <AdditionalIncludeDirectories>$(SolutionDir)ThirdParty\jsoncpp\include\;$(SolutionDir)ThirdParty\D3D12\;$(ProjectDir)</AdditionalIncludeDirectories>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -167,29 +167,31 @@
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Camera.cpp" />
-    <ClCompile Include="CommandQueue.cpp" />
+    <ClCompile Include="Objects\Camera.cpp" />
+    <ClCompile Include="Render\CommandQueue.cpp" />
     <ClCompile Include="Components\ComponentFactory.cpp" />
     <ClCompile Include="Components\IComponent.cpp" />
     <ClCompile Include="Interfaces\IEntity.cpp" />
     <ClCompile Include="Interfaces\IGame.cpp" />
-    <ClCompile Include="PipelineSettingsParser.cpp" />
+    <ClCompile Include="Utility\PipelineSettingsParser.cpp" />
     <ClCompile Include="Components\Mesh.cpp" />
-    <ClCompile Include="Object.cpp" />
+    <ClCompile Include="Objects\Object.cpp" />
     <ClCompile Include="PoissonDiskDistribution.cpp" />
+    <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="Components\Transformation.cpp" />
     <ClCompile Include="Utility\Logger.cpp" />
-    <ClCompile Include="RenderCubeExample.cpp" />
+    <ClCompile Include="Render\RenderCubeExample.cpp" />
     <ClCompile Include="Utility\Helpers.cpp" />
     <ClCompile Include="Interfaces\IRenderWindow.cpp" />
     <ClCompile Include="Main.cpp" />
-    <ClCompile Include="RenderWindow.cpp" />
-    <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="Render\RenderWindow.cpp" />
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="Utility\HighResolutionClock.cpp" />
+    <ClCompile Include="Objects\Volume.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Camera.h" />
-    <ClInclude Include="CommandQueue.h" />
+    <ClInclude Include="Objects\Camera.h" />
+    <ClInclude Include="Render\CommandQueue.h" />
     <ClInclude Include="Components\ComponentFactory.h" />
     <ClInclude Include="Events\Event.h" />
     <ClInclude Include="Events\KeyEvent.h" />
@@ -203,18 +205,20 @@
     <ClInclude Include="Interfaces\IEntity.h" />
     <ClInclude Include="Interfaces\IGame.h" />
     <ClInclude Include="Components\Mesh.h" />
-    <ClInclude Include="Object.h" />
-    <ClInclude Include="PipelineSettingsParser.h" />
+    <ClInclude Include="Objects\Object.h" />
+    <ClInclude Include="Utility\PipelineSettingsParser.h" />
     <ClInclude Include="PoissonDiskDistribution.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="Components\Transformation.h" />
     <ClInclude Include="Utility\Logger.h" />
-    <ClInclude Include="RenderCubeExample.h" />
+    <ClInclude Include="Render\RenderCubeExample.h" />
     <ClInclude Include="Utility\Helpers.h" />
     <ClInclude Include="Interfaces\IRenderWindow.h" />
-    <ClInclude Include="RenderWindow.h" />
-    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="Render\RenderWindow.h" />
     <ClInclude Include="Application.h" />
     <ClInclude Include="Utility\HighResolutionClock.h" />
     <ClInclude Include="Utility\KeyCodes.h" />
+    <ClInclude Include="Objects\Volume.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\TrianglePixelShader.hlsl">
