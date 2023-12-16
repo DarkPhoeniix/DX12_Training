@@ -21,9 +21,8 @@ using namespace DirectX;
 
 namespace
 {
-    // TODO: remove
-    static float deltaTime = 0.0f;
-
+    // TODO: remove later
+    double DELTATIME = 0.0f;
     const FLOAT BACKGROUND_COLOR[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
     // Clamp a value between a min and max range.
@@ -68,14 +67,16 @@ RenderCubeExample::RenderCubeExample(const std::wstring& name, int width, int he
     , _viewport(CD3DX12_VIEWPORT(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height)))
     , _FoV(45.0)
     , _contentLoaded(false)
-    , distribution({-180.0f, -100.0f, 0.0f, 1.0f}, { 180.0f, 100.0f, 0.0f, 1.0f }, 10, 20)
+    , distribution({-20.0f, -20.0f, -20.0f, 1.0f}, { 20.0f, 20.0f, 20.0f, 1.0f }, 10, 20)
 {
     distribution.Init();
-    XMVECTOR pos = XMVectorSet(0.0f, 0.0f, -20.0f, 1.0f);
+
+    XMVECTOR pos = XMVectorSet(0.0f, 0.0f, -100.0f, 1.0f);
     XMVECTOR target = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
     XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-    camera.LookAt(pos, target, up);
     float aspectRatio = getWidth() / static_cast<float>(getHeight());
+
+    camera.LookAt(pos, target, up);
     camera.SetLens(45.0f, aspectRatio, 0.1f, 1000.0f);
 }
 
@@ -348,7 +349,12 @@ void RenderCubeExample::onUpdate(UpdateEvent& updateEvent)
     float aspectRatio = getWidth() / static_cast<float>(getHeight());
     _projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(_FoV), aspectRatio, 0.1f, 1000.0f);
 
-    distribution.TrySpawnStep();
+    if (DELTATIME > 1.0f)
+    {
+        distribution.TrySpawnStep();
+        DELTATIME = 0.0f;
+    }
+    DELTATIME += updateEvent.elapsedTime;
 }
 
 // Transition a resource
@@ -411,12 +417,30 @@ void RenderCubeExample::onRender(RenderEvent& renderEvent)
 
     commandList->OMSetRenderTargets(1, &rtv, FALSE, &dsv);
 
+    //XMMATRIX mvpMatrix = XMMatrixMultiply(_modelMatrix, camera.View());
+    //mvpMatrix = XMMatrixMultiply(mvpMatrix, camera.Projection());
+    //commandList->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvpMatrix, 0);
+
+    //commandList->DrawIndexedInstanced(static_cast<UINT>(CUBE_INDICES.size()), 1, 0, 0, 0);
+
+
     // Update the MVP matrix
+    XMMATRIX cubeMatrix = XMMatrixIdentity();
+
+    for (const auto& cube : distribution.GetLocationsArray())
+    {
+        // Cube reneder
+        commandList->DrawIndexedInstanced(static_cast<UINT>(CUBE_INDICES.size()), 1, 0, 0, 0);
+
+        cubeMatrix = XMMatrixMultiply(XMMatrixIdentity(), XMMatrixTranslation(XMVectorGetX(cube), XMVectorGetY(cube), XMVectorGetZ(cube)));
+        cubeMatrix = XMMatrixMultiply(cubeMatrix, camera.View());
+        cubeMatrix = XMMatrixMultiply(cubeMatrix, camera.Projection());
+        commandList->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &cubeMatrix, 0);
+    }
+
     XMMATRIX mvpMatrix = XMMatrixMultiply(_modelMatrix, camera.View());
     mvpMatrix = XMMatrixMultiply(mvpMatrix, camera.Projection());
     commandList->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvpMatrix, 0);
-
-    commandList->DrawIndexedInstanced(static_cast<UINT>(CUBE_INDICES.size()), 1, 0, 0, 0);
 
     // Present
     {
@@ -470,7 +494,8 @@ void RenderCubeExample::onKeyPressed(KeyEvent& e)
         _window->toggleVSync();
         break;
     case KeyCode::Space:
-        // TODO: add a Reset for the Poisson Distribution on Space button
+        distribution.Reset();
+        distribution.Init();
         break;
     }
 }
@@ -479,6 +504,7 @@ void RenderCubeExample::onMouseScroll(MouseScrollEvent& e)
 {
     _FoV -= e.scrollDelta;
     _FoV = clamp(_FoV, 12.0f, 90.0f);
+    camera.SetFOV(_FoV);
 
     char buffer[256];
     sprintf_s(buffer, "FoV: %f\n", _FoV);
@@ -487,11 +513,8 @@ void RenderCubeExample::onMouseScroll(MouseScrollEvent& e)
 
 void RenderCubeExample::onMouseMoved(MouseMoveEvent& e)
 {
-    float pitch = static_cast<float>(e.relativeX);
-    float yAngle = static_cast<float>(e.relativeY);
-
-    if (std::abs(pitch) > 0 && _isCameraMoving)
-        camera.Update(pitch, yAngle);
+    if ((e.relativeX != 0 || e.relativeY != 0) && _isCameraMoving)
+        camera.Update(e.relativeX, e.relativeY);
 }
 
 void RenderCubeExample::onMouseButtonPressed(MouseButtonEvent& e)

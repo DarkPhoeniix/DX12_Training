@@ -3,34 +3,41 @@
 class ComponentFactory
 {
 public:
+    using function = void* (*)();
+
     template<typename Type>
     static void* RegisterType()
     {
         return new Type();
     }
 
-    using function = void* (*)();
-
     static std::map<std::string, function>& get();
 
     template<typename Type = void>
-    static Type* Create(const std::string& sName)
+    static Type* Create(const std::string& name)
     {
-        std::map<std::string, function>::const_iterator itFind = get().find(sName);
+        std::map<std::string, function>::const_iterator itFind = get().find(name);
+
         if (itFind == get().end())
+        {
             return nullptr;
+        }
 
         return (Type*)itFind->second();
     }
 
     template<typename Type>
-    static bool Register(const std::string& sName)
+    static bool Register(const std::string& name)
     {
-        std::map<std::string, function>::const_iterator itFind = get().find(sName);
-        if (itFind != get().end())
-            return false;
+        std::map<std::string, function>::const_iterator itFind = get().find(name);
 
-        get()[sName] = &RegisterType<Type>;
+        if (itFind != get().end())
+        {
+            return false;
+        }
+
+        get()[name] = &RegisterType<Type>;
+
         return true;
     }
 };

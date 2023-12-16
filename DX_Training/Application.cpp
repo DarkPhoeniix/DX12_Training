@@ -4,8 +4,8 @@
 #include "Application.h"
 
 #include "Interfaces/IGame.h"
-#include "RenderWindow.h"
-#include "CommandQueue.h"
+#include "Render/RenderWindow.h"
+#include "Render/CommandQueue.h"
 #include "Events/KeyEvent.h"
 #include "Events/MouseButtonEvent.h"
 #include "Events/MouseMoveEvent.h"

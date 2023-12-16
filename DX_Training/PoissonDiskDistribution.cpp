@@ -21,13 +21,17 @@ PoissonDiskDistribution::PoissonDiskDistribution(const DirectX::XMVECTOR& minExt
 
 XMVECTOR PoissonDiskDistribution::Init()
 {
-    float randomX = (dis(gen) * (XMVectorGetX(_maxExtent) - XMVectorGetX(_minExtent))) + XMVectorGetX(_minExtent);
-    float randomY = (dis(gen) * (XMVectorGetY(_maxExtent) - XMVectorGetY(_minExtent))) + XMVectorGetY(_minExtent);
-    float randomZ = (dis(gen) * (XMVectorGetZ(_maxExtent) - XMVectorGetZ(_minExtent))) + XMVectorGetZ(_minExtent);
+    //float randomX = (dis(gen) * (XMVectorGetX(_maxExtent) - XMVectorGetX(_minExtent))) + XMVectorGetX(_minExtent);
+    //float randomY = (dis(gen) * (XMVectorGetY(_maxExtent) - XMVectorGetY(_minExtent))) + XMVectorGetY(_minExtent);
+    //float randomZ = (dis(gen) * (XMVectorGetZ(_maxExtent) - XMVectorGetZ(_minExtent))) + XMVectorGetZ(_minExtent);
+
+    float randomX = 0.0f;
+    float randomY = 0.0f;
+    float randomZ = 0.0f;
 
     XMVECTOR startPoint = XMVectorSet(randomX, randomY, randomZ, 1.0f);
     _objectLocations.push_back(startPoint);
-    AddPointToGrid(startPoint, 0);
+    _AddPointToGrid(startPoint, 0);
 
     return startPoint;
 }
@@ -56,7 +60,14 @@ void PoissonDiskDistribution::Reset(const DirectX::XMVECTOR& minExtent, const Di
     if (_cellsNumY == 0) _cellsNumY = 1;
     if (_cellsNumZ == 0) _cellsNumZ = 1;
 
-    _grid = std::vector<std::vector<std::vector<int>>>(_cellsNumX, std::vector<std::vector<int>>(_cellsNumY, std::vector<int>(_cellsNumZ, -1)));
+    _InitGrid();
+}
+
+void PoissonDiskDistribution::Reset()
+{
+    _InitGrid();
+    _objectLocations.clear();
+    _currentSpawnIndex = 0;
 }
 
 bool PoissonDiskDistribution::TrySpawnStep()
@@ -69,15 +80,15 @@ bool PoissonDiskDistribution::TrySpawnStep()
 
     for (size_t spawnAttempt = 0; spawnAttempt < _spawnAttempts; ++spawnAttempt)
     {
-        XMVECTOR newPoint = GenerateRandomLocationAroundPoint();
+        XMVECTOR newPoint = _GenerateRandomLocationAroundPoint();
 
-        if (!IsPointInExtents(newPoint) || CheckCollisions(newPoint))
+        if (!_IsPointInExtents(newPoint) || _CheckCollisions(newPoint))
         {
             continue;
         }
 
         size_t lastIndex = _objectLocations.size();
-        if (!AddPointToGrid(newPoint, static_cast<int>(lastIndex)))
+        if (!_AddPointToGrid(newPoint, static_cast<int>(lastIndex)))
         {
             continue;
         }
@@ -94,7 +105,7 @@ const std::vector<DirectX::XMVECTOR>& PoissonDiskDistribution::GetLocationsArray
     return _objectLocations;
 }
 
-DirectX::XMVECTOR PoissonDiskDistribution::GenerateRandomLocationAroundPoint() const
+DirectX::XMVECTOR PoissonDiskDistribution::_GenerateRandomLocationAroundPoint() const
 {
     XMVECTOR newLocation = _objectLocations[_currentSpawnIndex];
 
@@ -115,7 +126,7 @@ DirectX::XMVECTOR PoissonDiskDistribution::GenerateRandomLocationAroundPoint() c
     return XMVectorAdd(XMVectorSet(x, y, z, 1.0f), newLocation);
 }
 
-bool PoissonDiskDistribution::CheckCollisions(const DirectX::XMVECTOR& point) const
+bool PoissonDiskDistribution::_CheckCollisions(const DirectX::XMVECTOR& point) const
 {
     int pointIndexX = static_cast<int>((XMVectorGetX(point) + (_gridLengthX * 0.5f)) / _cellSize);
     int pointIndexY = static_cast<int>((XMVectorGetY(point) + (_gridLengthY * 0.5f)) / _cellSize);
@@ -152,7 +163,7 @@ bool PoissonDiskDistribution::CheckCollisions(const DirectX::XMVECTOR& point) co
     return false;
 }
 
-bool PoissonDiskDistribution::AddPointToGrid(const DirectX::XMVECTOR& point, int index)
+bool PoissonDiskDistribution::_AddPointToGrid(const DirectX::XMVECTOR& point, int index)
 {
     int pointIndexX = static_cast<int>((XMVectorGetX(point) + (_gridLengthX * 0.5f)) / _cellSize);
     int pointIndexY = static_cast<int>((XMVectorGetY(point) + (_gridLengthY * 0.5f)) / _cellSize);
@@ -166,8 +177,16 @@ bool PoissonDiskDistribution::AddPointToGrid(const DirectX::XMVECTOR& point, int
     return true;
 }
 
-bool PoissonDiskDistribution::IsPointInExtents(const DirectX::XMVECTOR& point) const
+bool PoissonDiskDistribution::_IsPointInExtents(const DirectX::XMVECTOR& point) const
 {
     return (XMVectorGetX(point) >= XMVectorGetX(_minExtent) && XMVectorGetY(point) >= XMVectorGetY(_minExtent) && XMVectorGetZ(point) >= XMVectorGetZ(_minExtent)) &&
            (XMVectorGetX(point) <= XMVectorGetX(_maxExtent) && XMVectorGetY(point) <= XMVectorGetY(_maxExtent) && XMVectorGetZ(point) <= XMVectorGetZ(_maxExtent));
+}
+
+void PoissonDiskDistribution::_InitGrid()
+{
+    // Initialize the grid with -1 (empty cells)
+    _grid = std::vector<std::vector<std::vector<int>>>(_cellsNumX, 
+            std::vector<std::vector<int>>(_cellsNumY, 
+            std::vector<int>(_cellsNumZ, -1)));
 }

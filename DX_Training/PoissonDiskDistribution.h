@@ -8,16 +8,18 @@ public:
 
     DirectX::XMVECTOR Init();
     void Reset(const DirectX::XMVECTOR& minExtent, const DirectX::XMVECTOR& maxExtent, float minSpawnRadius, float maxSpawnRadius, size_t spawnAttempts = 10);
+    void Reset();
 
     bool TrySpawnStep();
 
     const std::vector<DirectX::XMVECTOR>& GetLocationsArray() const;
 
 private:
-    DirectX::XMVECTOR GenerateRandomLocationAroundPoint() const;
-    bool CheckCollisions(const DirectX::XMVECTOR& point) const;
-    bool AddPointToGrid(const DirectX::XMVECTOR& point, int index);
-    bool IsPointInExtents(const DirectX::XMVECTOR& point) const;
+    DirectX::XMVECTOR _GenerateRandomLocationAroundPoint() const;
+    bool _CheckCollisions(const DirectX::XMVECTOR& point) const;
+    bool _AddPointToGrid(const DirectX::XMVECTOR& point, int index);
+    bool _IsPointInExtents(const DirectX::XMVECTOR& point) const;
+    void _InitGrid();
     
     DirectX::XMVECTOR _minExtent;
     DirectX::XMVECTOR _maxExtent;

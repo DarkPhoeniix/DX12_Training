@@ -38,7 +38,7 @@ IComponent* IEntity::GetComponent(const std::string& componentType) const
 void IEntity::AddComponent(IComponent* component)
 {
     _components.push_back(component);
-    _components.back()->setEntity(this);
+    _components.back()->SetEntity(this);
 }
 
 void IEntity::AddComponent(const std::string& componentType)

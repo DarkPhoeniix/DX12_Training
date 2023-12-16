@@ -4,7 +4,7 @@
 
 #include "Application.h"
 #include "Events/ResizeEvent.h"
-#include "RenderWindow.h"
+#include "Render/RenderWindow.h"
 
 IGame::IGame(const std::wstring& name, int width, int height, bool vSync)
     : _name(name)

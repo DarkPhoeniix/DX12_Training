@@ -26,6 +26,18 @@ public:
 	// Perspective projection parameters.
 	void SetLens(float fov, float aspect, float nearZ, float farZ);
 
+	void SetFOV(float fov);
+	float GetFOV() const;
+
+	void SetAspectRatio(float aspectRatio);
+	float GetAspectRatio() const;
+
+	void SetNearZ(float nearZ);
+	float GetNearZ() const;
+
+	void SetFarZ(float farZ);
+	float GetFarZ() const;
+
 	// Sets the camera speed.
 	void SetSpeed(float s);
 	float GetSpeed() const;
@@ -38,7 +50,8 @@ public:
 protected:
 	// Constructs the view matrix based on the camera's basis
 	// vectors and origin, relative to the world space
-	void buildView();
+	void _buildView();
+	void _buildProjection();
 
 protected:
 	// Save camera related matrices.
@@ -52,6 +65,12 @@ protected:
 	DirectX::XMVECTOR _up;
 	DirectX::XMVECTOR _target;
 	DirectX::XMVECTOR _look;
+
+	// Lens params
+	float _fov;
+	float _aspectRatio;
+	float _nearZ;
+	float _farZ;
 
 	// Camera speed.
 	float _speed;

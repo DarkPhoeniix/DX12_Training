@@ -2,7 +2,7 @@
 #include "stdafx.h"
 
 #include "Application.h"
-#include "RenderCubeExample.h"
+#include "Render/RenderCubeExample.h"
 
 #include <dxgidebug.h>
 
@@ -36,7 +36,7 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstan
 
     Application::create(hInstance);
     {
-        std::shared_ptr<RenderCubeExample> demo = std::make_shared<RenderCubeExample>(L"D3DX12 Render Cube Training", 1280, 720, true); // TODO: vSync here
+        std::shared_ptr<RenderCubeExample> demo = std::make_shared<RenderCubeExample>(L"D3DX12 Render Cube Training", 1280, 720, false); // TODO: vSync here
         retCode = Application::get().run(demo);
     }
     Application::destroy();

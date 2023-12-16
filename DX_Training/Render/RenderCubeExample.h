@@ -4,7 +4,7 @@
 #include "RenderWindow.h"
 
 #include "PoissonDiskDistribution.h"
-#include "Camera.h"
+#include "Objects/Camera.h"
 
 #include <vector>
 

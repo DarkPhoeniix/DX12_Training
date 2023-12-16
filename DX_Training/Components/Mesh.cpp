@@ -7,6 +7,8 @@ namespace
     const std::string& TYPE = "Mesh";
 }
 
+Register_Component(Mesh);
+
 const std::string& Mesh::GetType() const
 {
     return TYPE;
@@ -19,5 +21,5 @@ void Mesh::SetVertices(const std::vector<VertexPosColor>& vertices)
 
 const std::vector<VertexPosColor>& Mesh::GetVertices() const
 {
-    _vertices;
+    return _vertices;
 }
