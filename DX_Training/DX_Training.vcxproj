@@ -173,6 +173,9 @@
     <ClCompile Include="Components\IComponent.cpp" />
     <ClCompile Include="Interfaces\IEntity.cpp" />
     <ClCompile Include="Interfaces\IGame.cpp" />
+    <ClCompile Include="Render\UploadBuffer.cpp" />
+    <ClCompile Include="Utility\Defines.cpp" />
+    <ClCompile Include="Utility\Defines.h" />
     <ClCompile Include="Utility\PipelineSettingsParser.cpp" />
     <ClCompile Include="Components\Mesh.cpp" />
     <ClCompile Include="Objects\Object.cpp" />
@@ -206,6 +209,7 @@
     <ClInclude Include="Interfaces\IGame.h" />
     <ClInclude Include="Components\Mesh.h" />
     <ClInclude Include="Objects\Object.h" />
+    <ClInclude Include="Render\UploadBuffer.h" />
     <ClInclude Include="Utility\PipelineSettingsParser.h" />
     <ClInclude Include="PoissonDiskDistribution.h" />
     <ClInclude Include="stdafx.h" />
