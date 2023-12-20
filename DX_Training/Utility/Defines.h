@@ -1,8 +1,5 @@
 #pragma once
 
-// TODO: why "stdafx.h" is required here?
-#include "stdafx.h"
-
 #define _KB(x) (x * 1024)
 #define _MB(x) (x * 1024 * 1024)
 

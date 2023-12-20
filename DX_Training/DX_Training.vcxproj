@@ -167,6 +167,8 @@
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Interfaces\IVolume.cpp" />
+    <ClCompile Include="Interfaces\IObject.cpp" />
     <ClCompile Include="Objects\Camera.cpp" />
     <ClCompile Include="Render\CommandQueue.cpp" />
     <ClCompile Include="Components\ComponentFactory.cpp" />
@@ -174,8 +176,6 @@
     <ClCompile Include="Interfaces\IEntity.cpp" />
     <ClCompile Include="Interfaces\IGame.cpp" />
     <ClCompile Include="Render\UploadBuffer.cpp" />
-    <ClCompile Include="Utility\Defines.cpp" />
-    <ClCompile Include="Utility\Defines.h" />
     <ClCompile Include="Utility\PipelineSettingsParser.cpp" />
     <ClCompile Include="Components\Mesh.cpp" />
     <ClCompile Include="Objects\Object.cpp" />
@@ -193,6 +193,8 @@
     <ClCompile Include="Objects\Volume.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Interfaces\IVolume.h" />
+    <ClInclude Include="Interfaces\IObject.h" />
     <ClInclude Include="Objects\Camera.h" />
     <ClInclude Include="Render\CommandQueue.h" />
     <ClInclude Include="Components\ComponentFactory.h" />
@@ -210,6 +212,7 @@
     <ClInclude Include="Components\Mesh.h" />
     <ClInclude Include="Objects\Object.h" />
     <ClInclude Include="Render\UploadBuffer.h" />
+    <ClInclude Include="Utility\Defines.h" />
     <ClInclude Include="Utility\PipelineSettingsParser.h" />
     <ClInclude Include="PoissonDiskDistribution.h" />
     <ClInclude Include="stdafx.h" />

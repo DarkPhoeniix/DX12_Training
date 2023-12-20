@@ -13,5 +13,5 @@ public:
     IComponent* GetSibling(const std::string& componentType) const;
 
 protected:
-    IEntity* _parent;
+    IEntity* _parent = nullptr;
 };

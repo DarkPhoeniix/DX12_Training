@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Interfaces/IEntity.h"
+#include "Interfaces/IObject.h"
 
-class Object : public IEntity
+class Object : public IObject
 {
 public:
     void SetName(const std::string& name);

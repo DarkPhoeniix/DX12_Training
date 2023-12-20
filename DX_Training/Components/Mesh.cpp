@@ -23,3 +23,13 @@ const std::vector<VertexPosColor>& Mesh::GetVertices() const
 {
     return _vertices;
 }
+
+void Mesh::SetIndices(const std::vector<uint32_t>& indices)
+{
+    _indices = indices;
+}
+
+const std::vector<uint32_t>& Mesh::GetIndices() const
+{
+    return _indices;
+}
