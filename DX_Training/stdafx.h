@@ -27,6 +27,7 @@ using namespace Microsoft::WRL;
 
 #include <json/reader.h>
 #include <algorithm>
+#include <assert.h>
 #include <cassert>
 #include <cstdint>
 #include <fstream>
@@ -36,11 +37,11 @@ using namespace Microsoft::WRL;
 #include <vector>
 #include <map>
 
-#include "Interfaces/IEntity.h"
-
-#include "Components/ComponentFactory.h"
-#include "Components/IComponent.h"
+#include "Interfaces/IObject.h"
 
 #include "Utility/KeyCodes.h"
+#include "Utility/Defines.h"
 #include "Utility/Helpers.h"
 #include "Utility/Logger.h"
+
+#include "Resource.h"

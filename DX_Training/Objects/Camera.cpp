@@ -37,7 +37,7 @@ const XMMATRIX& Camera::Projection() const
 
 const XMMATRIX& Camera::ViewProjection() const
 {
-	return _view * _projection;
+	return _view * _projection; // TODO: fix warning
 }
 
 const XMVECTOR& Camera::Right() const

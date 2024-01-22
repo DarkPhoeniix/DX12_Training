@@ -5,6 +5,7 @@
 
 #include "PoissonDiskDistribution.h"
 #include "Objects/Camera.h"
+#include "Model.h"
 
 #include <vector>
 
@@ -14,6 +15,7 @@ public:
     using super = IGame;
 
     RenderCubeExample(const std::wstring& name, int width, int height, bool vSync = false);
+    ~RenderCubeExample();
 
     virtual bool loadContent() override;
     virtual void unloadContent() override;
@@ -73,7 +75,12 @@ private:
     float _spawnRate = 50.0f;
     float _deltaTimeLastSpawn = 0.0f;
 
+    Model _model;
     PoissonDiskDistribution distribution;
+    ID3D12Heap* _pHeap;
+    Resource* _ambient;
+    Resource* _cubeTransformsRes[3];
+    DirectX::XMMATRIX* _transfP[3];
 
     bool _isCameraMoving = false;
     Camera camera;

@@ -21,7 +21,7 @@ Window::Window(HWND hWnd, const std::wstring& windowName, int clientWidth, int c
 
     _isTearingSupported = app.isTearingSupported();
 
-    _dxgiSwapChain = createSwastdafxain();
+    _dxgiSwapChain = createSwapChain();
     _d3d12RTVDescriptorHeap = app.createDescriptorHeap(BUFFER_COUNT, D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
     _RTVDescriptorSize = app.getDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
@@ -182,6 +182,7 @@ void Window::onUpdate(UpdateEvent&)
         _frameCounter++;
 
         UpdateEvent updateEventArgs(_updateClock.getDeltaSeconds(), _updateClock.getTotalSeconds());
+        updateEventArgs.frameIndex = _frameCounter % 3;
         pGame->onUpdate(updateEventArgs);
     }
 }
@@ -193,6 +194,7 @@ void Window::onRender(RenderEvent&)
     if (auto pGame = _game.lock())
     {
         RenderEvent renderEventArgs(_renderClock.getDeltaSeconds(), _renderClock.getTotalSeconds());
+        renderEventArgs.frameIndex = _frameCounter % 3;
         pGame->onRender(renderEventArgs);
     }
 }
@@ -285,7 +287,7 @@ void Window::onResize(ResizeEvent& e)
     }
 }
 
-Microsoft::WRL::ComPtr<IDXGISwapChain4> Window::createSwastdafxain()
+Microsoft::WRL::ComPtr<IDXGISwapChain4> Window::createSwapChain()
 {
     Application& app = Application::get();
 
@@ -346,7 +348,7 @@ void Window::updateRenderTargetViews()
         Helper::throwIfFailed(_dxgiSwapChain->GetBuffer(i, IID_PPV_ARGS(&backBuffer)));
 
         device->CreateRenderTargetView(backBuffer.Get(), nullptr, rtvHandle);
-
+       
         _d3d12BackBuffers[i] = backBuffer;
 
         rtvHandle.Offset(_RTVDescriptorSize);

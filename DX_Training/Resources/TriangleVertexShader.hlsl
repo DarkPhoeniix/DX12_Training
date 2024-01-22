@@ -11,55 +11,37 @@
 		"DENY_HULL_SHADER_ROOT_ACCESS | " \
 		"DENY_DOMAIN_SHADER_ROOT_ACCESS " \
 	"), " \
-	"RootConstants(num32BitConstants=16, b0, visibility=SHADER_VISIBILITY_ALL), " \
-	"RootConstants(num32BitConstants=16, b1, visibility=SHADER_VISIBILITY_ALL), " \
-    "StaticSampler(s0," \
-        "addressU = TEXTURE_ADDRESS_CLAMP," \
-        "addressV = TEXTURE_ADDRESS_CLAMP," \
-        "addressW = TEXTURE_ADDRESS_CLAMP," \
-        "filter = FILTER_MIN_MAG_MIP_LINEAR)," \
-    "StaticSampler(s1," \
-        "addressU = TEXTURE_ADDRESS_WRAP," \
-        "addressV = TEXTURE_ADDRESS_WRAP," \
-        "addressW = TEXTURE_ADDRESS_WRAP," \
-        "filter = FILTER_MIN_MAG_MIP_LINEAR)," \
-	"StaticSampler(s2," \
-		"addressU = TEXTURE_ADDRESS_WRAP," \
-		"addressV = TEXTURE_ADDRESS_WRAP," \
-		"addressW = TEXTURE_ADDRESS_WRAP," \
-		"filter = FILTER_ANISOTROPIC,"\
-		"maxAnisotropy=2)," \
-	"StaticSampler(s3," \
-		"addressU = TEXTURE_ADDRESS_WRAP," \
-		"addressV = TEXTURE_ADDRESS_WRAP," \
-		"addressW = TEXTURE_ADDRESS_WRAP," \
-		"filter = FILTER_ANISOTROPIC,"\
-		"maxAnisotropy=4)" 
+    "RootConstants(num32BitConstants=16, b0, visibility=SHADER_VISIBILITY_ALL), " \
+    "CBV(b1, visibility=SHADER_VISIBILITY_ALL), " \
+	"SRV(t1, visibility=SHADER_VISIBILITY_ALL) "
+
+struct Constants
+{
+    row_major float4x4 ViewProj;
+};
 
 struct ModelViewProjection
 {
-    matrix MVP;
+    row_major matrix Model;
 };
 
-ConstantBuffer<ModelViewProjection> ModelViewProjectionCB : register(b0);
-
-//struct ModelViewProjection1
-//{
-//    matrix MVP;
-//};
-
-//ConstantBuffer<ModelViewProjection1> ModelViewProjectionCB1 : register(b1);
+ConstantBuffer<Constants> Globals : register(b0);
+StructuredBuffer<ModelViewProjection> ModelViewProjectionCB : register(t1);
 
 struct VertexPosColor
 {
-    float3 Position : POSITION;
+    float3 PositionL : POSITION;
+    float3 Normal : NORMAL;
     float3 Color : COLOR;
+    
+    uint sv_instance : SV_InstanceID;
 };
 
 struct VertexShaderOutput
 {
+    float4 PositionH : SV_Position;
+    float4 Normal : Normal;
     float4 Color : COLOR;
-    float4 Position : SV_Position;
 };
 
 [RootSignature(Sprite_RootSig)]
@@ -67,7 +49,10 @@ VertexShaderOutput main(VertexPosColor IN)
 {
     VertexShaderOutput OUT;
 
-    OUT.Position = mul(ModelViewProjectionCB.MVP, float4(IN.Position, 1.0f));
+    float4 posW = mul(float4(IN.PositionL, 1.0f), ModelViewProjectionCB[IN.sv_instance].Model);
+    
+    OUT.PositionH = mul(posW, Globals.ViewProj);
+    OUT.Normal = float4(IN.Normal, 0.0f);
     OUT.Color = float4(IN.Color, 1.0f);
 
     return OUT;

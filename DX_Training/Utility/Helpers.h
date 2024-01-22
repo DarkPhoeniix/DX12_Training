@@ -1,5 +1,58 @@
 #pragma once
 
+// TODO: binary op macros
+// why const for the enum?
+#define BINARY_OPERATION_TO_ENUM(type) \
+	inline type& operator|=(type &x, const type y)\
+	{\
+		x = (type)((int)x | (int)y); return x;\
+	}\
+	inline type operator|(const type x, const type y)\
+	{\
+		return (type)((int)x | (int)y);\
+	}\
+	inline type& operator&=(type &x, const type y)\
+	{\
+		x = (type)((int)x & (int)y); return x;\
+	}\
+	inline int operator&(const type x, const type y)\
+	{\
+		return ((int)x & (int)y);\
+	}\
+	inline type& operator^=(type &x, const type y)\
+	{\
+		x = (type)((int)x ^ (int)y); return x;\
+	}\
+	inline type operator^(const type x, const type y)\
+	{\
+		return (type)((int)x ^ (int)y);\
+	}
+
+enum class EResourceType : int
+{
+    None = 1 << 0,
+
+    // access type 
+    Dynamic = 1 << 1,
+    ReadBack = 1 << 2,
+    Unordered = 1 << 3,
+
+    // kind of resource
+    Buffer = 1 << 4,
+    Texture = 1 << 5,
+    RenderTarget = 1 << 6,
+    DepthTarget = 1 << 7,
+
+    // addition flags
+    StrideAlignment = 1 << 8,
+
+    // acceleration flags
+    Deny_shader_resource = 1 << 9,
+
+    Last = 1 << 10
+};
+BINARY_OPERATION_TO_ENUM(EResourceType);
+
 namespace Helper
 {
     std::string HrToString(HRESULT hr);
@@ -17,6 +70,10 @@ namespace Helper
     void throwIfFailed(HRESULT hr);
 
     Json::Value ParseJson(const std::string& filepath);
+
+    ID3D12Resource* CreateBuffers(Microsoft::WRL::ComPtr<ID3D12Device2> device, EResourceType type, unsigned int size, unsigned int stride);
+
+    ID3D12Resource* CreateBuffers(ID3D12Heap* pHeap, Microsoft::WRL::ComPtr<ID3D12Device2> device, EResourceType type, unsigned int size, unsigned int stride, unsigned int offset);
 }
 
 namespace Math

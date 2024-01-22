@@ -123,10 +123,11 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <PrecompiledHeader>Create</PrecompiledHeader>
+      <PrecompiledHeader>Use</PrecompiledHeader>
       <AdditionalIncludeDirectories>$(SolutionDir)ThirdParty\jsoncpp\include\;$(SolutionDir)ThirdParty\D3D12\;$(ProjectDir)</AdditionalIncludeDirectories>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -169,19 +170,18 @@
   <ItemGroup>
     <ClCompile Include="Interfaces\IVolume.cpp" />
     <ClCompile Include="Interfaces\IObject.cpp" />
+    <ClCompile Include="Model.cpp" />
     <ClCompile Include="Objects\Camera.cpp" />
     <ClCompile Include="Render\CommandQueue.cpp" />
-    <ClCompile Include="Components\ComponentFactory.cpp" />
-    <ClCompile Include="Components\IComponent.cpp" />
-    <ClCompile Include="Interfaces\IEntity.cpp" />
     <ClCompile Include="Interfaces\IGame.cpp" />
     <ClCompile Include="Render\UploadBuffer.cpp" />
+    <ClCompile Include="Resource.cpp" />
     <ClCompile Include="Utility\PipelineSettingsParser.cpp" />
-    <ClCompile Include="Components\Mesh.cpp" />
     <ClCompile Include="Objects\Object.cpp" />
     <ClCompile Include="PoissonDiskDistribution.cpp" />
-    <ClCompile Include="stdafx.cpp" />
-    <ClCompile Include="Components\Transformation.cpp" />
+    <ClCompile Include="stdafx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="Utility\Logger.cpp" />
     <ClCompile Include="Render\RenderCubeExample.cpp" />
     <ClCompile Include="Utility\Helpers.cpp" />
@@ -195,9 +195,9 @@
   <ItemGroup>
     <ClInclude Include="Interfaces\IVolume.h" />
     <ClInclude Include="Interfaces\IObject.h" />
+    <ClInclude Include="Model.h" />
     <ClInclude Include="Objects\Camera.h" />
     <ClInclude Include="Render\CommandQueue.h" />
-    <ClInclude Include="Components\ComponentFactory.h" />
     <ClInclude Include="Events\Event.h" />
     <ClInclude Include="Events\KeyEvent.h" />
     <ClInclude Include="Events\MouseButtonEvent.h" />
@@ -206,17 +206,14 @@
     <ClInclude Include="Events\RenderEvent.h" />
     <ClInclude Include="Events\ResizeEvent.h" />
     <ClInclude Include="Events\UpdateEvent.h" />
-    <ClInclude Include="Components\IComponent.h" />
-    <ClInclude Include="Interfaces\IEntity.h" />
     <ClInclude Include="Interfaces\IGame.h" />
-    <ClInclude Include="Components\Mesh.h" />
     <ClInclude Include="Objects\Object.h" />
     <ClInclude Include="Render\UploadBuffer.h" />
+    <ClInclude Include="Resource.h" />
     <ClInclude Include="Utility\Defines.h" />
     <ClInclude Include="Utility\PipelineSettingsParser.h" />
     <ClInclude Include="PoissonDiskDistribution.h" />
     <ClInclude Include="stdafx.h" />
-    <ClInclude Include="Components\Transformation.h" />
     <ClInclude Include="Utility\Logger.h" />
     <ClInclude Include="Render\RenderCubeExample.h" />
     <ClInclude Include="Utility\Helpers.h" />

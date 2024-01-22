@@ -14,4 +14,5 @@ public:
 
     double elapsedTime;
     double totalTime;
+    unsigned int frameIndex;
 };

@@ -68,7 +68,7 @@ protected:
 
     virtual void onResize(ResizeEvent& e);
 
-    Microsoft::WRL::ComPtr<IDXGISwapChain4> createSwastdafxain();
+    Microsoft::WRL::ComPtr<IDXGISwapChain4> createSwapChain();
 
     void updateRenderTargetViews();
 

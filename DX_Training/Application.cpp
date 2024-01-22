@@ -356,6 +356,11 @@ int Application::run(std::shared_ptr<IGame> pGame)
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
+        else
+        {
+            // RENDER
+        }
+        
     }
 
     // Flush any commands in the commands queues before quiting.

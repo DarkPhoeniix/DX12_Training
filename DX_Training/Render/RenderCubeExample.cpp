@@ -21,9 +21,21 @@ using namespace DirectX;
 
 namespace
 {
+    //XMFLOAT3 AmbientUp = { 0.78f, 0.22f, 1.0f };
+    //XMFLOAT3 AmbientDown = { 1.0f, 0.0f, 0.0f };
+
+    struct Ambient
+    {
+        XMFLOAT4 Up;
+        XMFLOAT4 Down;
+    };
+    //Ambient amb = { { 0.39f, 0.25f, 1.0f }, { 0.17f, 0.73f, 0.51f } };
+
     // TODO: remove later
     double DELTATIME = 0.0f;
     const FLOAT BACKGROUND_COLOR[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+
+    const int CUBES_SIZE = 1;
 
     // Clamp a value between a min and max range.
     template<typename T>
@@ -33,21 +45,21 @@ namespace
     }
 
     // Vertex data for a colored cube.
-    struct VertexPosColor
-    {
-        XMFLOAT3 Position;
-        XMFLOAT3 Color;
-    };
+    //struct VertexPosColor
+    //{
+    //    XMFLOAT3 Position;
+    //    XMFLOAT3 Color;
+    //};
 
     const std::vector<VertexPosColor> CUBE_VERTICES = {
-        { XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT3(0.0f, 0.0f, 0.0f) },  // 0
-        { XMFLOAT3(-1.0f,  1.0f, -1.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },  // 1
-        { XMFLOAT3(1.0f,  1.0f, -1.0f), XMFLOAT3(1.0f, 1.0f, 0.0f) },   // 2
-        { XMFLOAT3(1.0f, -1.0f, -1.0f), XMFLOAT3(1.0f, 0.0f, 0.0f) },   // 3
-        { XMFLOAT3(-1.0f, -1.0f,  1.0f), XMFLOAT3(0.0f, 0.0f, 1.0f) },  // 4
-        { XMFLOAT3(-1.0f,  1.0f,  1.0f), XMFLOAT3(0.0f, 1.0f, 1.0f) },  // 5
-        { XMFLOAT3(1.0f,  1.0f,  1.0f), XMFLOAT3(1.0f, 1.0f, 1.0f) },   // 6
-        { XMFLOAT3(1.0f, -1.0f,  1.0f), XMFLOAT3(1.0f, 0.0f, 1.0f) }    // 7
+        { XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, 0.0f) },  // 0
+        { XMFLOAT3(-1.0f,  1.0f, -1.0f), XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },  // 1
+        { XMFLOAT3(1.0f,  1.0f, -1.0f), XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, 1.0f, 0.0f) },   // 2
+        { XMFLOAT3(1.0f, -1.0f, -1.0f), XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, 0.0f, 0.0f) },   // 3
+        { XMFLOAT3(-1.0f, -1.0f,  1.0f), XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, 1.0f) },  // 4
+        { XMFLOAT3(-1.0f,  1.0f,  1.0f), XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 1.0f, 1.0f) },  // 5
+        { XMFLOAT3(1.0f,  1.0f,  1.0f), XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, 1.0f, 1.0f) },   // 6
+        { XMFLOAT3(1.0f, -1.0f,  1.0f), XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, 0.0f, 1.0f) }    // 7
     };
 
     const std::vector<WORD> CUBE_INDICES =
@@ -68,7 +80,10 @@ RenderCubeExample::RenderCubeExample(const std::wstring& name, int width, int he
     , _FoV(45.0)
     , _contentLoaded(false)
     , distribution({-20.0f, -20.0f, -20.0f, 1.0f}, { 20.0f, 20.0f, 20.0f, 1.0f }, 10, 20)
+    //, _model(CUBE_VERTICES, CUBE_INDICES)
+    , _model("scat.obj")
 {
+    //_model.ParseFile("model.obj");
     distribution.Init();
 
     XMVECTOR pos = XMVectorSet(0.0f, 0.0f, -100.0f, 1.0f);
@@ -78,6 +93,50 @@ RenderCubeExample::RenderCubeExample(const std::wstring& name, int width, int he
 
     camera.LookAt(pos, target, up);
     camera.SetLens(45.0f, aspectRatio, 0.1f, 1000.0f);
+
+    D3D12_HEAP_PROPERTIES heapDesc = {};
+    {
+        memset(&heapDesc, 0, sizeof(D3D12_HEAP_PROPERTIES));
+
+        heapDesc.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+        heapDesc.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+        heapDesc.CreationNodeMask = 1;
+        heapDesc.VisibleNodeMask = 1;
+
+        heapDesc.Type = D3D12_HEAP_TYPE_UPLOAD;
+    }
+    D3D12_HEAP_DESC desc;
+    desc.Alignment = 0;
+    desc.Flags = D3D12_HEAP_FLAG_NONE;
+    desc.Properties = heapDesc;
+    desc.SizeInBytes = 15 * _1MB;
+    Application::get().getDevice()->CreateHeap(&desc, IID_PPV_ARGS(&_pHeap));
+
+    EResourceType type = EResourceType::Dynamic | EResourceType::Buffer;
+
+    _ambient = new Resource(Helper::CreateBuffers(Application::get().getDevice(), type, 24, 1));
+    Ambient* val = (Ambient*)_ambient->Map();
+    //val->Up = { 0.39f, 0.25f, 1.0f };
+    //val->Down = { 0.17f, 0.73f, 0.51f };
+    val->Up = { 0.0f, 0.8f, 0.7f, 1.0f };
+    val->Down = { 0.3f, 0.0f, 0.3f, 1.0f };
+
+    _cubeTransformsRes[0] = new Resource(Helper::CreateBuffers(_pHeap, Application::get().getDevice(), type, 5 * _1MB, 1, 0));
+    _cubeTransformsRes[1] = new Resource(Helper::CreateBuffers(_pHeap, Application::get().getDevice(), type, 5 * _1MB, 1, 5 * _1MB));
+    _cubeTransformsRes[2] = new Resource(Helper::CreateBuffers(_pHeap, Application::get().getDevice(), type, 5 * _1MB, 1, 10 * _1MB));
+
+    _transfP[0] = (DirectX::XMMATRIX*)_cubeTransformsRes[0]->Map();
+    _transfP[1] = (DirectX::XMMATRIX*)_cubeTransformsRes[1]->Map();
+    _transfP[2] = (DirectX::XMMATRIX*)_cubeTransformsRes[2]->Map();
+}
+
+RenderCubeExample::~RenderCubeExample()
+{
+    for (auto& item : _cubeTransformsRes)
+        delete item;
+
+    delete _ambient;
+    //delete _pHeap;
 }
 
 void RenderCubeExample::updateBufferResource(
@@ -101,6 +160,7 @@ void RenderCubeExample::updateBufferResource(
         D3D12_RESOURCE_STATE_COPY_DEST,
         nullptr,
         IID_PPV_ARGS(destinationResource)));
+    (*destinationResource)->GetGPUVirtualAddress();
 
     CD3DX12_HEAP_PROPERTIES heapTypeUpload(D3D12_HEAP_TYPE_UPLOAD);
     CD3DX12_RESOURCE_DESC buffer = CD3DX12_RESOURCE_DESC::Buffer(bufferSize, flags);
@@ -140,23 +200,23 @@ bool RenderCubeExample::loadContent()
     ComPtr<ID3D12Resource> intermediateVertexBuffer;
     updateBufferResource(commandList,
         &_vertexBuffer, &intermediateVertexBuffer,
-        CUBE_VERTICES.size(), sizeof(VertexPosColor), CUBE_VERTICES.data());
+        _model.GetVertices().size(), sizeof(VertexPosColor), _model.GetVertices().data());
 
     // Create the vertex buffer view.
     _vertexBufferView.BufferLocation = _vertexBuffer->GetGPUVirtualAddress();
-    _vertexBufferView.SizeInBytes = static_cast<UINT>(CUBE_VERTICES.size() * sizeof(VertexPosColor));
+    _vertexBufferView.SizeInBytes = static_cast<UINT>(_model.GetVertices().size() * sizeof(VertexPosColor));
     _vertexBufferView.StrideInBytes = sizeof(VertexPosColor);
 
     // Upload index buffer data.
     ComPtr<ID3D12Resource> intermediateIndexBuffer;
     updateBufferResource(commandList,
         &_indexBuffer, &intermediateIndexBuffer,
-        CUBE_INDICES.size(), sizeof(WORD), CUBE_INDICES.data());
+        _model.GetIndices().size(), sizeof(WORD), _model.GetIndices().data());
 
     // Create index buffer view.
     _indexBufferView.BufferLocation = _indexBuffer->GetGPUVirtualAddress();
     _indexBufferView.Format = DXGI_FORMAT_R16_UINT;
-    _indexBufferView.SizeInBytes = static_cast<UINT>(CUBE_INDICES.size() * sizeof(WORD));
+    _indexBufferView.SizeInBytes = static_cast<UINT>(_model.GetIndices().size() * sizeof(WORD));
 
     // Create the descriptor heap for the depth-stencil view.
     D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
@@ -179,41 +239,15 @@ bool RenderCubeExample::loadContent()
     // TODO implement parsing the layout from the "RenderPipeline.tech" 
     D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
         { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+        { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
         { "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
     };
 
-    // Create a root signature.
-    D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = {};
-    featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1;
-    if (FAILED(device->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &featureData, sizeof(featureData))))
-    {
-        featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
-    }
-
-    // Allow input layout and deny unnecessary access to certain pipeline stages.
-    // Denying access to shader stages that do not require root signature access 
-    // is a minor optimization on some hardware.
-    D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
-        D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
-        D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
-        D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
-        D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
-        D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
-
-    // A single 32-bit constant root parameter that is used by the vertex shader.
-    CD3DX12_ROOT_PARAMETER1 rootParameters[1];
-    rootParameters[0].InitAsConstants(sizeof(XMMATRIX) / 4, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
-
-    CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDescription;
-    rootSignatureDescription.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, rootSignatureFlags);
-
     ComPtr<ID3DBlob> rootSignatureBlob;
     ComPtr<ID3DBlob> errorBlob;
-    Helper::throwIfFailed(D3DX12SerializeVersionedRootSignature(&rootSignatureDescription,
-        featureData.HighestVersion, &rootSignatureBlob, &errorBlob));
 
-     Helper::throwIfFailed(device->CreateRootSignature(0, vertexShaderBlob->GetBufferPointer(),
-         vertexShaderBlob->GetBufferSize(), IID_PPV_ARGS(&_rootSignature)));
+    Helper::throwIfFailed(device->CreateRootSignature(0, vertexShaderBlob->GetBufferPointer(),
+        vertexShaderBlob->GetBufferSize(), IID_PPV_ARGS(&_rootSignature)));
 
     D3D12_RT_FORMAT_ARRAY rtvFormats = {};
     rtvFormats.NumRenderTargets = 1;
@@ -221,7 +255,7 @@ bool RenderCubeExample::loadContent()
 
     D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineStateStreamDesc = {};
 
-    const std::string blendPipelineDescFilepath = "RenderPipeline.blend";
+    const std::string blendPipelineDescFilepath = root["blend"].asString();
     const std::string rasterPipelineDescFilepath = root["raster"].asString();
     const std::string depthPipelineDescFilepath = root["depth"].asString();
 
@@ -237,7 +271,7 @@ bool RenderCubeExample::loadContent()
     pipelineStateStreamDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
     pipelineStateStreamDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
     pipelineStateStreamDesc.NumRenderTargets = 1;
-    pipelineStateStreamDesc.SampleDesc.Count = 1; // must be the same sample description as the swastdafxain and depth/stencil buffer
+    pipelineStateStreamDesc.SampleDesc.Count = 1; // must be the same sample description as the swapChain and depth/stencil buffer
     pipelineStateStreamDesc.SampleMask = 0xffffffff; // sample mask has to do with multi-sampling. 0xffffffff means point sampling is done
 
     Helper::throwIfFailed(device->CreateGraphicsPipelineState(&pipelineStateStreamDesc, IID_PPV_ARGS(&_pipelineState)));
@@ -355,6 +389,17 @@ void RenderCubeExample::onUpdate(UpdateEvent& updateEvent)
         DELTATIME = 0.0f;
     }
     DELTATIME += updateEvent.elapsedTime;
+
+    static float angle = 0.0f;
+    angle += 0.001;
+    for (int i = 0; i < CUBES_SIZE; ++i)
+    {
+        for (int j = 0; j < CUBES_SIZE; ++j)
+        {
+
+            _transfP[updateEvent.frameIndex][i + j * CUBES_SIZE] = DirectX::XMMatrixRotationY(angle) * DirectX::XMMatrixTranslation(i * 2 - CUBES_SIZE, j * 2 - CUBES_SIZE, 0.0f);
+        }
+    }
 }
 
 // Transition a resource
@@ -369,7 +414,6 @@ void RenderCubeExample::transitionResource(Microsoft::WRL::ComPtr<ID3D12Graphics
     commandList->ResourceBarrier(1, &barrier);
 }
 
-// Clear a render target.
 void RenderCubeExample::clearRTV(Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> commandList,
     D3D12_CPU_DESCRIPTOR_HANDLE rtv, FLOAT* clearColor)
 {
@@ -417,30 +461,13 @@ void RenderCubeExample::onRender(RenderEvent& renderEvent)
 
     commandList->OMSetRenderTargets(1, &rtv, FALSE, &dsv);
 
-    //XMMATRIX mvpMatrix = XMMatrixMultiply(_modelMatrix, camera.View());
-    //mvpMatrix = XMMatrixMultiply(mvpMatrix, camera.Projection());
-    //commandList->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvpMatrix, 0);
-
-    //commandList->DrawIndexedInstanced(static_cast<UINT>(CUBE_INDICES.size()), 1, 0, 0, 0);
-
+    XMMATRIX mvpMatrix = XMMatrixMultiply(camera.View(), camera.Projection());
+    commandList->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvpMatrix, 0);
+    commandList->SetGraphicsRootConstantBufferView(1, _ambient->OffsetGPU(0));
 
     // Update the MVP matrix
-    XMMATRIX cubeMatrix = XMMatrixIdentity();
-
-    for (const auto& cube : distribution.GetLocationsArray())
-    {
-        // Cube reneder
-        commandList->DrawIndexedInstanced(static_cast<UINT>(CUBE_INDICES.size()), 1, 0, 0, 0);
-
-        cubeMatrix = XMMatrixMultiply(XMMatrixIdentity(), XMMatrixTranslation(XMVectorGetX(cube), XMVectorGetY(cube), XMVectorGetZ(cube)));
-        cubeMatrix = XMMatrixMultiply(cubeMatrix, camera.View());
-        cubeMatrix = XMMatrixMultiply(cubeMatrix, camera.Projection());
-        commandList->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &cubeMatrix, 0);
-    }
-
-    XMMATRIX mvpMatrix = XMMatrixMultiply(_modelMatrix, camera.View());
-    mvpMatrix = XMMatrixMultiply(mvpMatrix, camera.Projection());
-    commandList->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvpMatrix, 0);
+    commandList->SetGraphicsRootShaderResourceView(2, _cubeTransformsRes[renderEvent.frameIndex]->OffsetGPU(0));
+    commandList->DrawIndexedInstanced(static_cast<UINT>(_model.GetIndices().size()), CUBES_SIZE * CUBES_SIZE, 0, 0, 0);
 
     // Present
     {
