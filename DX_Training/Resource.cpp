@@ -6,6 +6,11 @@ Resource::Resource(ID3D12Resource* resource)
 	_resource = resource;
 }
 
+Resource::~Resource()
+{
+	_resource->Release();
+}
+
 void* Resource::Map()
 {
 	void* res = nullptr;

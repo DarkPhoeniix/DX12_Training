@@ -14,9 +14,13 @@ ConstantBuffer<AmbientDesc> Ambient : register(b1);
 struct PixelShaderInput
 {
     float4 PositionH : SV_Position;
-    float4 Normal : NORMAL;
+    float3 PositionW : POSW;
+    float3 Normal : NORMAL;
     float4 Color : COLOR;
 };
+
+SamplerState s1 : register(s1);
+Texture2D tex : register(t8);
 
 float3 CalcAmbient(float3 normal, float3 color)
 {
@@ -35,6 +39,6 @@ float4 main(PixelShaderInput IN) : SV_Target
     float3 normal = normalize(IN.Normal);
     
     // Call the helper function and return the value
-    return float4(CalcAmbient(normal, IN.Color.rgb), 1.0f);
-
+    return tex.Sample(s1, IN.PositionW.xy);
+    //float4(CalcAmbient(normal, IN.Color.rgb), 1.0f);
 }

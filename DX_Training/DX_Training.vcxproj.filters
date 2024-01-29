@@ -48,7 +48,7 @@
     <ClCompile Include="Render\CommandQueue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Utility\PipelineSettingsParser.cpp">
+    <ClCompile Include="Utility\PipelineSettings.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Objects\Object.cpp">
@@ -140,7 +140,7 @@
     <ClInclude Include="Objects\Object.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Utility\PipelineSettingsParser.h">
+    <ClInclude Include="Utility\PipelineSettings.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Render\RenderCubeExample.h">
@@ -174,6 +174,7 @@
   <ItemGroup>
     <FxCompile Include="Resources\TrianglePixelShader.hlsl" />
     <FxCompile Include="Resources\TriangleVertexShader.hlsl" />
+    <FxCompile Include="Resources\Compute.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\RenderPipeline.blend" />

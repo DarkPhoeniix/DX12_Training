@@ -13,7 +13,13 @@
 	"), " \
     "RootConstants(num32BitConstants=16, b0, visibility=SHADER_VISIBILITY_ALL), " \
     "CBV(b1, visibility=SHADER_VISIBILITY_ALL), " \
-	"SRV(t1, visibility=SHADER_VISIBILITY_ALL) "
+	"SRV(t1, visibility=SHADER_VISIBILITY_ALL), "\
+    "DescriptorTable( SRV(t8 ),visibility=SHADER_VISIBILITY_PIXEL )," \
+    "StaticSampler(s1," \
+        "addressU = TEXTURE_ADDRESS_MIRROR," \
+        "addressV = TEXTURE_ADDRESS_MIRROR," \
+        "addressW = TEXTURE_ADDRESS_MIRROR," \
+        "filter = FILTER_MIN_MAG_MIP_LINEAR)," \
 
 struct Constants
 {
@@ -40,7 +46,8 @@ struct VertexPosColor
 struct VertexShaderOutput
 {
     float4 PositionH : SV_Position;
-    float4 Normal : Normal;
+    float3 PositionW : POSW;
+    float3 Normal : Normal;
     float4 Color : COLOR;
 };
 
@@ -51,8 +58,9 @@ VertexShaderOutput main(VertexPosColor IN)
 
     float4 posW = mul(float4(IN.PositionL, 1.0f), ModelViewProjectionCB[IN.sv_instance].Model);
     
+    OUT.PositionW = posW;
     OUT.PositionH = mul(posW, Globals.ViewProj);
-    OUT.Normal = float4(IN.Normal, 0.0f);
+    OUT.Normal = mul(float4(IN.Normal, 0.0f), ModelViewProjectionCB[IN.sv_instance].Model).xyz;
     OUT.Color = float4(IN.Color, 1.0f);
 
     return OUT;

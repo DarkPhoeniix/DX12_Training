@@ -176,7 +176,7 @@
     <ClCompile Include="Interfaces\IGame.cpp" />
     <ClCompile Include="Render\UploadBuffer.cpp" />
     <ClCompile Include="Resource.cpp" />
-    <ClCompile Include="Utility\PipelineSettingsParser.cpp" />
+    <ClCompile Include="Utility\PipelineSettings.cpp" />
     <ClCompile Include="Objects\Object.cpp" />
     <ClCompile Include="PoissonDiskDistribution.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -211,7 +211,7 @@
     <ClInclude Include="Render\UploadBuffer.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="Utility\Defines.h" />
-    <ClInclude Include="Utility\PipelineSettingsParser.h" />
+    <ClInclude Include="Utility\PipelineSettings.h" />
     <ClInclude Include="PoissonDiskDistribution.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Utility\Logger.h" />
@@ -225,6 +225,9 @@
     <ClInclude Include="Objects\Volume.h" />
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="Resources\Compute.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+    </FxCompile>
     <FxCompile Include="Resources\TrianglePixelShader.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>

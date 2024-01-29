@@ -12,7 +12,7 @@
 #include "Events/RenderEvent.h"
 #include "Events/ResizeEvent.h"
 #include "Events/UpdateEvent.h"
-#include "Utility/PipelineSettingsParser.h"
+//#include "Utility/PipelineSettingsParser.h"
 
 #include <random>
 #include <cmath>
@@ -77,11 +77,10 @@ RenderCubeExample::RenderCubeExample(const std::wstring& name, int width, int he
     : super(name, width, height, vSync)
     , _scissorRect(CD3DX12_RECT(0, 0, LONG_MAX, LONG_MAX))
     , _viewport(CD3DX12_VIEWPORT(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height)))
-    , _FoV(45.0)
     , _contentLoaded(false)
     , distribution({-20.0f, -20.0f, -20.0f, 1.0f}, { 20.0f, 20.0f, 20.0f, 1.0f }, 10, 20)
     //, _model(CUBE_VERTICES, CUBE_INDICES)
-    , _model("scat.obj")
+    , _model("cat.obj")
 {
     //_model.ParseFile("model.obj");
     distribution.Init();
@@ -113,30 +112,76 @@ RenderCubeExample::RenderCubeExample(const std::wstring& name, int width, int he
     Application::get().getDevice()->CreateHeap(&desc, IID_PPV_ARGS(&_pHeap));
 
     EResourceType type = EResourceType::Dynamic | EResourceType::Buffer;
-
-    _ambient = new Resource(Helper::CreateBuffers(Application::get().getDevice(), type, 24, 1));
+    EResourceType type1 = EResourceType::Dynamic | EResourceType::Buffer | EResourceType::StrideAlignment;
+    _ambient = new Resource(Helper::CreateBuffers(Application::get().getDevice(), type1, 1, sizeof(Ambient)));
+    _ambient->_resource->SetName(L"_ambient");
     Ambient* val = (Ambient*)_ambient->Map();
     //val->Up = { 0.39f, 0.25f, 1.0f };
     //val->Down = { 0.17f, 0.73f, 0.51f };
     val->Up = { 0.0f, 0.8f, 0.7f, 1.0f };
     val->Down = { 0.3f, 0.0f, 0.3f, 1.0f };
 
-    _cubeTransformsRes[0] = new Resource(Helper::CreateBuffers(_pHeap, Application::get().getDevice(), type, 5 * _1MB, 1, 0));
-    _cubeTransformsRes[1] = new Resource(Helper::CreateBuffers(_pHeap, Application::get().getDevice(), type, 5 * _1MB, 1, 5 * _1MB));
-    _cubeTransformsRes[2] = new Resource(Helper::CreateBuffers(_pHeap, Application::get().getDevice(), type, 5 * _1MB, 1, 10 * _1MB));
+    _cubeTransformsRes[0] = new Resource(Helper::CreateBuffers(_pHeap.Get(), Application::get().getDevice(), type, 5 * _1MB, 1, 0));
+    _cubeTransformsRes[1] = new Resource(Helper::CreateBuffers(_pHeap.Get(), Application::get().getDevice(), type, 5 * _1MB, 1, 5 * _1MB));
+    _cubeTransformsRes[2] = new Resource(Helper::CreateBuffers(_pHeap.Get(), Application::get().getDevice(), type, 5 * _1MB, 1, 10 * _1MB));
+    _cubeTransformsRes[0]->_resource->SetName(L"_cubeTransformsRes[0]");
+    _cubeTransformsRes[1]->_resource->SetName(L"_cubeTransformsRes[1]");
+    _cubeTransformsRes[2]->_resource->SetName(L"_cubeTransformsRes[2]");
 
     _transfP[0] = (DirectX::XMMATRIX*)_cubeTransformsRes[0]->Map();
     _transfP[1] = (DirectX::XMMATRIX*)_cubeTransformsRes[1]->Map();
     _transfP[2] = (DirectX::XMMATRIX*)_cubeTransformsRes[2]->Map();
-}
 
-RenderCubeExample::~RenderCubeExample()
-{
-    for (auto& item : _cubeTransformsRes)
-        delete item;
 
-    delete _ambient;
-    //delete _pHeap;
+
+
+    D3D12_DESCRIPTOR_HEAP_DESC descHeapDesc;
+    descHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    descHeapDesc.NodeMask = 0;
+    descHeapDesc.NumDescriptors = 32;
+    descHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+
+    Application::get().getDevice()->CreateDescriptorHeap(&descHeapDesc, IID_PPV_ARGS(&_descHeap));
+
+
+    _dynamicData = new Resource(Helper::CreateBuffers(Application::get().getDevice(), EResourceType::Dynamic | EResourceType::Buffer, 2, sizeof(XMFLOAT4)));
+    _UAVRes = new Resource(Helper::CreateBuffers(Application::get().getDevice(), EResourceType::Unordered | EResourceType::Texture, 64,64, sizeof(float) * 4, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+    _readBack = new Resource(Helper::CreateBuffers(Application::get().getDevice(), EResourceType::ReadBack | EResourceType::Buffer, 1, sizeof(float)));
+    _dynamicData->_resource->SetName(L"_dynamicData");
+    _UAVRes->_resource->SetName(L"UAV texture");
+    _readBack->_resource->SetName(L"_readBack");
+
+    XMFLOAT4* flData = (XMFLOAT4*)_dynamicData->Map();
+    flData[0] = { 1.0f, 0.0f, 0.0f, 1.0f };
+    flData[1] = { 0.0f, 0.0f, 1.0f, 1.0f };
+
+    auto  asdas  = Application::get().getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    auto  asdas1 = Application::get().getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+    auto  asdas2 = Application::get().getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+    auto  asdas3 = Application::get().getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+
+    D3D12_CPU_DESCRIPTOR_HANDLE offset = _descHeap->GetCPUDescriptorHandleForHeapStart();
+    offset.ptr += asdas * 0;
+
+    D3D12_CPU_DESCRIPTOR_HANDLE offset2 = _descHeap->GetCPUDescriptorHandleForHeapStart();
+    offset2.ptr += asdas * 1;
+
+
+    D3D12_UNORDERED_ACCESS_VIEW_DESC _resDesc = {};
+    _resDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    _resDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+    _resDesc.Texture2D.MipSlice = 0;
+    Application::get().getDevice()->CreateUnorderedAccessView(_UAVRes->_resource.Get(), nullptr, &_resDesc, offset);
+
+
+
+    D3D12_SHADER_RESOURCE_VIEW_DESC _resDesc2 = {};
+    _resDesc2.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    _resDesc2.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    _resDesc2.Texture2D.MipLevels = 1;
+    _resDesc2.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    Application::get().getDevice()->CreateShaderResourceView(_UAVRes->_resource.Get(), &_resDesc2, offset2);
+
 }
 
 void RenderCubeExample::updateBufferResource(
@@ -189,34 +234,38 @@ void RenderCubeExample::updateBufferResource(
 
 bool RenderCubeExample::loadContent()
 {
-    const std::string pipelineFilepath = "RenderPipeline.tech";
-    Json::Value root = Helper::ParseJson(pipelineFilepath);
-
     auto device = Application::get().getDevice();
     auto commandQueue = Application::get().getCommandQueue(D3D12_COMMAND_LIST_TYPE_COPY);
     auto commandList = commandQueue->getCommandList();
 
-    // Upload vertex buffer data.
     ComPtr<ID3D12Resource> intermediateVertexBuffer;
-    updateBufferResource(commandList,
-        &_vertexBuffer, &intermediateVertexBuffer,
-        _model.GetVertices().size(), sizeof(VertexPosColor), _model.GetVertices().data());
-
-    // Create the vertex buffer view.
-    _vertexBufferView.BufferLocation = _vertexBuffer->GetGPUVirtualAddress();
-    _vertexBufferView.SizeInBytes = static_cast<UINT>(_model.GetVertices().size() * sizeof(VertexPosColor));
-    _vertexBufferView.StrideInBytes = sizeof(VertexPosColor);
-
-    // Upload index buffer data.
     ComPtr<ID3D12Resource> intermediateIndexBuffer;
-    updateBufferResource(commandList,
-        &_indexBuffer, &intermediateIndexBuffer,
-        _model.GetIndices().size(), sizeof(WORD), _model.GetIndices().data());
 
-    // Create index buffer view.
-    _indexBufferView.BufferLocation = _indexBuffer->GetGPUVirtualAddress();
-    _indexBufferView.Format = DXGI_FORMAT_R16_UINT;
-    _indexBufferView.SizeInBytes = static_cast<UINT>(_model.GetIndices().size() * sizeof(WORD));
+    // Vertex Buffer Setup
+    {
+        // Upload vertex buffer data.
+        updateBufferResource(commandList,
+            &_vertexBuffer, &intermediateVertexBuffer,
+            _model.GetVertices().size(), sizeof(VertexPosColor), _model.GetVertices().data());
+
+        // Create the vertex buffer view.
+        _vertexBufferView.BufferLocation = _vertexBuffer->GetGPUVirtualAddress();
+        _vertexBufferView.SizeInBytes = static_cast<UINT>(_model.GetVertices().size() * sizeof(VertexPosColor));
+        _vertexBufferView.StrideInBytes = sizeof(VertexPosColor);
+    }
+
+    // Index Buffer Setup
+    {
+        // Upload index buffer data.
+        updateBufferResource(commandList,
+            &_indexBuffer, &intermediateIndexBuffer,
+            _model.GetIndices().size(), sizeof(WORD), _model.GetIndices().data());
+
+        // Create index buffer view.
+        _indexBufferView.BufferLocation = _indexBuffer->GetGPUVirtualAddress();
+        _indexBufferView.Format = DXGI_FORMAT_R16_UINT;
+        _indexBufferView.SizeInBytes = static_cast<UINT>(_model.GetIndices().size() * sizeof(WORD));
+    }
 
     // Create the descriptor heap for the depth-stencil view.
     D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
@@ -225,56 +274,28 @@ bool RenderCubeExample::loadContent()
     dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
     Helper::throwIfFailed(device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&_DSVHeap)));
 
-    // Load the vertex shader
-    std::string vertexShaderFilepath = root["VS"].asString();
-    ComPtr<ID3DBlob> vertexShaderBlob;
-    Helper::throwIfFailed(D3DReadFileToBlob(std::wstring(vertexShaderFilepath.begin(), vertexShaderFilepath.end()).c_str(), &vertexShaderBlob));
-
-    // Load the pixel shader
-    std::string pixelShaderFilepath = root["PS"].asString();
-    ComPtr<ID3DBlob> pixelShaderBlob;
-    Helper::throwIfFailed(D3DReadFileToBlob(std::wstring(pixelShaderFilepath.begin(), pixelShaderFilepath.end()).c_str(), &pixelShaderBlob));
-
-    // Create the vertex input layout
-    // TODO implement parsing the layout from the "RenderPipeline.tech" 
-    D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
-        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-        { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-        { "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-    };
-
-    ComPtr<ID3DBlob> rootSignatureBlob;
-    ComPtr<ID3DBlob> errorBlob;
-
-    Helper::throwIfFailed(device->CreateRootSignature(0, vertexShaderBlob->GetBufferPointer(),
-        vertexShaderBlob->GetBufferSize(), IID_PPV_ARGS(&_rootSignature)));
-
     D3D12_RT_FORMAT_ARRAY rtvFormats = {};
     rtvFormats.NumRenderTargets = 1;
     rtvFormats.RTFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 
-    D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineStateStreamDesc = {};
+    pipeline.Parse(device.Get(), "RenderPipeline.tech");
 
-    const std::string blendPipelineDescFilepath = root["blend"].asString();
-    const std::string rasterPipelineDescFilepath = root["raster"].asString();
-    const std::string depthPipelineDescFilepath = root["depth"].asString();
+    {
+        std::string computeShaderFilepath = "Compute.cso";
+        ComPtr<ID3DBlob> computeShaderBlob;
+        Helper::throwIfFailed(D3DReadFileToBlob(std::wstring(computeShaderFilepath.begin(), computeShaderFilepath.end()).c_str(), &computeShaderBlob));
 
-    pipelineStateStreamDesc.BlendState = PipelineSettingsParser::ParseBlendDescription(blendPipelineDescFilepath);
-    pipelineStateStreamDesc.RasterizerState = PipelineSettingsParser::ParseRasterizerDescription(rasterPipelineDescFilepath);
-    pipelineStateStreamDesc.DepthStencilState = PipelineSettingsParser::ParseDepthStencilDescription(depthPipelineDescFilepath);
+        Helper::throwIfFailed(device->CreateRootSignature(0, computeShaderBlob->GetBufferPointer(),
+            computeShaderBlob->GetBufferSize(), IID_PPV_ARGS(&_rootComputeSignature)));
 
-    pipelineStateStreamDesc.pRootSignature = _rootSignature.Get();
-    pipelineStateStreamDesc.InputLayout = { inputLayout, _countof(inputLayout) };
-    pipelineStateStreamDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-    pipelineStateStreamDesc.VS = CD3DX12_SHADER_BYTECODE(vertexShaderBlob.Get());
-    pipelineStateStreamDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShaderBlob.Get());
-    pipelineStateStreamDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
-    pipelineStateStreamDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-    pipelineStateStreamDesc.NumRenderTargets = 1;
-    pipelineStateStreamDesc.SampleDesc.Count = 1; // must be the same sample description as the swapChain and depth/stencil buffer
-    pipelineStateStreamDesc.SampleMask = 0xffffffff; // sample mask has to do with multi-sampling. 0xffffffff means point sampling is done
+        D3D12_COMPUTE_PIPELINE_STATE_DESC _compDesc = {};
+        _compDesc.NodeMask = 0;
+        _compDesc.CS = CD3DX12_SHADER_BYTECODE(computeShaderBlob.Get());
+        _compDesc.pRootSignature = _rootComputeSignature.Get();
+        _compDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 
-    Helper::throwIfFailed(device->CreateGraphicsPipelineState(&pipelineStateStreamDesc, IID_PPV_ARGS(&_pipelineState)));
+        Helper::throwIfFailed(device->CreateComputePipelineState(&_compDesc, IID_PPV_ARGS(&_pipelineComputeState)));
+    }
 
     auto fenceValue = commandQueue->executeCommandList(commandList);
     commandQueue->waitForFenceValue(fenceValue);
@@ -284,7 +305,7 @@ bool RenderCubeExample::loadContent()
     // Resize/Create the depth buffer.
     resizeDepthBuffer(getWidth(), getHeight());
 
-    return true;
+    return _contentLoaded;
 }
 
 void RenderCubeExample::resizeDepthBuffer(int width, int height)
@@ -345,6 +366,20 @@ void RenderCubeExample::onResize(ResizeEvent& e)
 
 void RenderCubeExample::unloadContent()
 {
+    if (_contentLoaded)
+    {
+        for (auto& item : _cubeTransformsRes)
+            delete item;
+
+        delete _ambient;
+        delete _dynamicData;
+        delete _UAVRes;
+        delete _readBack;
+
+        //_pHeap->Release(); // TODO: why Release doesn't work? :(
+        _descHeap->Release();
+    }
+
     _contentLoaded = false;
 }
 
@@ -370,19 +405,6 @@ void RenderCubeExample::onUpdate(UpdateEvent& updateEvent)
         totalTime = 0.0;
     }
 
-    // Update the model matrix.
-    _modelMatrix = XMMatrixIdentity();
-
-    // Update the view matrix.
-    const XMVECTOR eyePosition = XMVectorSet(0.0f, 0.0f, 200.0f, 1.0f);
-    const XMVECTOR focusPoint = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
-    const XMVECTOR upDirection = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-    _viewMatrix = XMMatrixLookAtLH(eyePosition, focusPoint, upDirection);
-
-    // Update the projection matrix.
-    float aspectRatio = getWidth() / static_cast<float>(getHeight());
-    _projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(_FoV), aspectRatio, 0.1f, 1000.0f);
-
     if (DELTATIME > 1.0f)
     {
         distribution.TrySpawnStep();
@@ -391,12 +413,11 @@ void RenderCubeExample::onUpdate(UpdateEvent& updateEvent)
     DELTATIME += updateEvent.elapsedTime;
 
     static float angle = 0.0f;
-    angle += 0.001;
+    angle += 0.00035;
     for (int i = 0; i < CUBES_SIZE; ++i)
     {
         for (int j = 0; j < CUBES_SIZE; ++j)
         {
-
             _transfP[updateEvent.frameIndex][i + j * CUBES_SIZE] = DirectX::XMMatrixRotationY(angle) * DirectX::XMMatrixTranslation(i * 2 - CUBES_SIZE, j * 2 - CUBES_SIZE, 0.0f);
         }
     }
@@ -449,25 +470,64 @@ void RenderCubeExample::onRender(RenderEvent& renderEvent)
         clearDepth(commandList, dsv);
     }
 
-    commandList->SetPipelineState(_pipelineState.Get());
-    commandList->SetGraphicsRootSignature(_rootSignature.Get());
+    // Execute the Compute shader
+    {
+        transitionResource(commandList, _UAVRes->_resource, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE , D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
-    commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    commandList->IASetVertexBuffers(0, 1, &_vertexBufferView);
-    commandList->IASetIndexBuffer(&_indexBufferView);
+        commandList->SetPipelineState(_pipelineComputeState.Get());
+        commandList->SetComputeRootSignature(_rootComputeSignature.Get());
 
-    commandList->RSSetViewports(1, &_viewport);
-    commandList->RSSetScissorRects(1, &_scissorRect);
+        commandList->SetComputeRootShaderResourceView(0, _dynamicData->OffsetGPU(0));
+        //commandList->SetComputeRootUnorderedAccessView(1, _UAVRes->OffsetGPU(0));
 
-    commandList->OMSetRenderTargets(1, &rtv, FALSE, &dsv);
+        ID3D12DescriptorHeap* heaps = { _descHeap.Get() };
+        commandList->SetDescriptorHeaps(1, &heaps);
 
-    XMMATRIX mvpMatrix = XMMatrixMultiply(camera.View(), camera.Projection());
-    commandList->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvpMatrix, 0);
-    commandList->SetGraphicsRootConstantBufferView(1, _ambient->OffsetGPU(0));
+        D3D12_GPU_DESCRIPTOR_HANDLE offset2 = _descHeap->GetGPUDescriptorHandleForHeapStart();
+        offset2.ptr += 32 * 0;
+        commandList->SetComputeRootDescriptorTable(1, offset2);
 
-    // Update the MVP matrix
-    commandList->SetGraphicsRootShaderResourceView(2, _cubeTransformsRes[renderEvent.frameIndex]->OffsetGPU(0));
-    commandList->DrawIndexedInstanced(static_cast<UINT>(_model.GetIndices().size()), CUBES_SIZE * CUBES_SIZE, 0, 0, 0);
+        uint32_t x, y, z;
+        x = 64 / 8; // 64 / 2
+        y = 64 / 8; // 64 / 2
+        z = 1;
+        commandList->Dispatch(x, y, z);
+
+        transitionResource(commandList, _UAVRes->_resource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE );
+
+       // commandList->CopyResource(_readBack->_resource.Get(), _UAVRes->_resource.Get());
+    }
+
+    // Execute the TriangleRender shader
+    {
+        commandList->SetPipelineState(pipeline.GetPipelineState().Get());
+        commandList->SetGraphicsRootSignature(pipeline.GetRootSignature().Get());
+
+        commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        commandList->IASetVertexBuffers(0, 1, &_vertexBufferView);
+        commandList->IASetIndexBuffer(&_indexBufferView);
+
+        commandList->RSSetViewports(1, &_viewport);
+        commandList->RSSetScissorRects(1, &_scissorRect);
+
+        commandList->OMSetRenderTargets(1, &rtv, FALSE, &dsv);
+
+        XMMATRIX mvpMatrix = XMMatrixMultiply(camera.View(), camera.Projection());
+        commandList->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvpMatrix, 0);
+        commandList->SetGraphicsRootConstantBufferView(1, _ambient->OffsetGPU(0));
+
+        // Update the MVP matrix
+        commandList->SetGraphicsRootShaderResourceView(2, _cubeTransformsRes[renderEvent.frameIndex]->OffsetGPU(0));
+
+        ID3D12DescriptorHeap* heaps = { _descHeap.Get() };
+        commandList->SetDescriptorHeaps(1, &heaps);
+
+        D3D12_GPU_DESCRIPTOR_HANDLE offset2 = _descHeap->GetGPUDescriptorHandleForHeapStart();
+        offset2.ptr += 32 * 1;
+        commandList->SetGraphicsRootDescriptorTable(3, offset2);
+
+        commandList->DrawIndexedInstanced(static_cast<UINT>(_model.GetIndices().size()), CUBES_SIZE * CUBES_SIZE, 0, 0, 0);
+    }
 
     // Present
     {
@@ -478,8 +538,12 @@ void RenderCubeExample::onRender(RenderEvent& renderEvent)
 
         currentBackBufferIndex = _window->present();
 
-        commandQueue->waitForFenceValue(_fenceValues[currentBackBufferIndex]);
+        
+        commandQueue->waitForFenceValue(_fenceValues[0]);
     }
+
+    //float* result = (float*)_readBack->Map();
+    //int dd = 23;
 }
 
 void RenderCubeExample::onKeyPressed(KeyEvent& e)
@@ -529,13 +593,13 @@ void RenderCubeExample::onKeyPressed(KeyEvent& e)
 
 void RenderCubeExample::onMouseScroll(MouseScrollEvent& e)
 {
-    _FoV -= e.scrollDelta;
-    _FoV = clamp(_FoV, 12.0f, 90.0f);
-    camera.SetFOV(_FoV);
+    //_FoV -= e.scrollDelta;
+    //_FoV = clamp(_FoV, 12.0f, 90.0f);
+    //camera.SetFOV(_FoV);
 
-    char buffer[256];
-    sprintf_s(buffer, "FoV: %f\n", _FoV);
-    OutputDebugStringA(buffer);
+    //char buffer[256];
+    //sprintf_s(buffer, "FoV: %f\n", _FoV);
+    //OutputDebugStringA(buffer);
 }
 
 void RenderCubeExample::onMouseMoved(MouseMoveEvent& e)

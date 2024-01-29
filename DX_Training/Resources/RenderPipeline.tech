@@ -1,7 +1,7 @@
 {
 	"type": "RenderSpriteTechnique",
 
-	"isGraphicPipeline": true,
+	"isGraphicsPipeline": true,
 
 	"blend": "RenderPipeline.blend",
 	"raster": "RenderPipeline.raster",
@@ -10,20 +10,27 @@
 	"RenderTargets": [
 		"BackBuffer"
 	],
-	"DepthBuffer": "BackBufferDepth",
-	"Layout": [
+	"depthBuffer": "BackBufferDepth",
+	"layout": [
 		{
 			"name": "POSITION",
 			"stream": 0,
 			"offset": 0,
-			"type": "float2",
+			"format": "float3",
 			"semanticIndex": 0
 		},
 		{
-			"name": "TEXTURE",
+			"name": "NORMAL",
 			"stream": 0,
-			"offset": 8,
-			"type": "float2",
+			"offset": 0,
+			"format": "float3",
+			"semanticIndex": 0
+		},
+		{
+			"name": "COLOR",
+			"stream": 0,
+			"offset": 0,
+			"format": "float3",
 			"semanticIndex": 0
 		}
 	],

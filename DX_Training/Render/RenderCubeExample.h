@@ -5,6 +5,7 @@
 
 #include "PoissonDiskDistribution.h"
 #include "Objects/Camera.h"
+#include "Utility/PipelineSettings.h"
 #include "Model.h"
 
 #include <vector>
@@ -15,7 +16,7 @@ public:
     using super = IGame;
 
     RenderCubeExample(const std::wstring& name, int width, int height, bool vSync = false);
-    ~RenderCubeExample();
+    //~RenderCubeExample();
 
     virtual bool loadContent() override;
     virtual void unloadContent() override;
@@ -58,29 +59,30 @@ private:
 
     Microsoft::WRL::ComPtr<ID3D12Resource> _depthBuffer;
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> _DSVHeap;
-    Microsoft::WRL::ComPtr<ID3D12RootSignature> _rootSignature;
-    Microsoft::WRL::ComPtr<ID3D12PipelineState> _pipelineState;
+
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> _rootComputeSignature;
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> _pipelineComputeState;
 
     D3D12_VIEWPORT _viewport;
     D3D12_RECT _scissorRect;
-
-    float _FoV;
-
-    DirectX::XMMATRIX _modelMatrix;
-    DirectX::XMMATRIX _viewMatrix;
-    DirectX::XMMATRIX _projectionMatrix;
 
     bool _contentLoaded;
 
     float _spawnRate = 50.0f;
     float _deltaTimeLastSpawn = 0.0f;
 
+    PipelineSettings pipeline;
     Model _model;
     PoissonDiskDistribution distribution;
-    ID3D12Heap* _pHeap;
     Resource* _ambient;
     Resource* _cubeTransformsRes[3];
     DirectX::XMMATRIX* _transfP[3];
+
+    Resource* _dynamicData;
+    Resource* _UAVRes;
+    Resource* _readBack;
+    ComPtr<ID3D12Heap> _pHeap;
+    ComPtr<ID3D12DescriptorHeap> _descHeap;
 
     bool _isCameraMoving = false;
     Camera camera;

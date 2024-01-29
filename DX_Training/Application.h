@@ -45,8 +45,8 @@ private:
     // The application instance handle that this application was created with.
     HINSTANCE _hInstance;
 
-    Microsoft::WRL::ComPtr<IDXGIAdapter4> _dxgiAdapter;
     Microsoft::WRL::ComPtr<ID3D12Device2> _d3d12Device;
+    Microsoft::WRL::ComPtr<IDXGIAdapter4> _dxgiAdapter;
 
     std::shared_ptr<CommandQueue> _directCommandQueue;
     std::shared_ptr<CommandQueue> _computeCommandQueue;

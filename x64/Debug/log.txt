@@ -1,1 +1,1 @@
-20:56:31.3212302 | Warning: Failed to parse  from the blend description
+14:17:37.1752708 | Error: Called Widnow::~Window before the Application::DestroyWindow
