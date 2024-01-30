@@ -40,7 +40,7 @@ namespace Helper
         return root;
     }
 
-    ID3D12Resource* CreateBuffers(Microsoft::WRL::ComPtr<ID3D12Device2> device, EResourceType type, unsigned int size, unsigned int stride)
+    ID3D12Resource* CreateBuffers(ComPtr<ID3D12Device2> device, EResourceType type, unsigned int size, unsigned int stride)
     {
         ID3D12Resource* resource = nullptr;
         D3D12_RESOURCE_DESC resourceDesc = {};
@@ -141,7 +141,7 @@ namespace Helper
 
         return resource;
     }
-	ID3D12Resource* CreateBuffers(Microsoft::WRL::ComPtr<ID3D12Device2> device, EResourceType type, unsigned int sizeW, unsigned int sizeH, unsigned int stride, D3D12_RESOURCE_STATES state)
+	ID3D12Resource* CreateBuffers(ComPtr<ID3D12Device2> device, EResourceType type, unsigned int sizeW, unsigned int sizeH, unsigned int stride, D3D12_RESOURCE_STATES state)
 	{
 		ID3D12Resource* resource = nullptr;
 		D3D12_RESOURCE_DESC resourceDesc = {};
@@ -252,7 +252,7 @@ namespace Helper
 		return resource;
 	}
 
-	ID3D12Resource* CreateBuffers(ID3D12Heap* pHeap, Microsoft::WRL::ComPtr<ID3D12Device2> device, EResourceType type, unsigned int size, unsigned int stride, unsigned int offset)
+	ID3D12Resource* CreateBuffers(ID3D12Heap* pHeap, ComPtr<ID3D12Device2> device, EResourceType type, unsigned int size, unsigned int stride, unsigned int offset)
 	{
 		ID3D12Resource* resource = nullptr;
 		D3D12_RESOURCE_DESC resourceDesc = {};

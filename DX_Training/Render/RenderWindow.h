@@ -41,7 +41,7 @@ public:
     UINT present();
 
     D3D12_CPU_DESCRIPTOR_HANDLE getCurrentRenderTargetView() const;
-    Microsoft::WRL::ComPtr<ID3D12Resource> getCurrentBackBuffer() const;
+    ComPtr<ID3D12Resource> getCurrentBackBuffer() const;
 
 protected:
     friend LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
@@ -68,7 +68,7 @@ protected:
 
     virtual void onResize(ResizeEvent& e);
 
-    Microsoft::WRL::ComPtr<IDXGISwapChain4> createSwapChain();
+    ComPtr<IDXGISwapChain4> createSwapChain();
 
     void updateRenderTargetViews();
 
@@ -91,9 +91,9 @@ private:
 
     std::weak_ptr<IGame> _game;
 
-    Microsoft::WRL::ComPtr<IDXGISwapChain4> _dxgiSwapChain;
-    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> _d3d12RTVDescriptorHeap;
-    Microsoft::WRL::ComPtr<ID3D12Resource> _d3d12BackBuffers[BUFFER_COUNT];
+    ComPtr<IDXGISwapChain4> _dxgiSwapChain;
+    ComPtr<ID3D12DescriptorHeap> _d3d12RTVDescriptorHeap;
+    ComPtr<ID3D12Resource> _d3d12BackBuffers[BUFFER_COUNT];
 
     UINT _RTVDescriptorSize;
     UINT _currentBackBufferIndex;

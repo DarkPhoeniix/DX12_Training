@@ -90,8 +90,8 @@ RenderCubeExample::RenderCubeExample(const std::wstring& name, int width, int he
     XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
     float aspectRatio = getWidth() / static_cast<float>(getHeight());
 
-    camera.LookAt(pos, target, up);
-    camera.SetLens(45.0f, aspectRatio, 0.1f, 1000.0f);
+    _camera.LookAt(pos, target, up);
+    _camera.SetLens(45.0f, aspectRatio, 0.1f, 1000.0f);
 
     D3D12_HEAP_PROPERTIES heapDesc = {};
     {
@@ -278,7 +278,7 @@ bool RenderCubeExample::loadContent()
     rtvFormats.NumRenderTargets = 1;
     rtvFormats.RTFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 
-    pipeline.Parse(device.Get(), "RenderPipeline.tech");
+    _pipeline.Parse(device.Get(), "RenderPipeline.tech");
 
     {
         std::string computeShaderFilepath = "Compute.cso";
@@ -424,8 +424,8 @@ void RenderCubeExample::onUpdate(UpdateEvent& updateEvent)
 }
 
 // Transition a resource
-void RenderCubeExample::transitionResource(Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> commandList,
-    Microsoft::WRL::ComPtr<ID3D12Resource> resource,
+void RenderCubeExample::transitionResource(ComPtr<ID3D12GraphicsCommandList2> commandList,
+    ComPtr<ID3D12Resource> resource,
     D3D12_RESOURCE_STATES beforeState, D3D12_RESOURCE_STATES afterState)
 {
     CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
@@ -435,13 +435,13 @@ void RenderCubeExample::transitionResource(Microsoft::WRL::ComPtr<ID3D12Graphics
     commandList->ResourceBarrier(1, &barrier);
 }
 
-void RenderCubeExample::clearRTV(Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> commandList,
+void RenderCubeExample::clearRTV(ComPtr<ID3D12GraphicsCommandList2> commandList,
     D3D12_CPU_DESCRIPTOR_HANDLE rtv, FLOAT* clearColor)
 {
     commandList->ClearRenderTargetView(rtv, clearColor, 0, nullptr);
 }
 
-void RenderCubeExample::clearDepth(Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> commandList,
+void RenderCubeExample::clearDepth(ComPtr<ID3D12GraphicsCommandList2> commandList,
     D3D12_CPU_DESCRIPTOR_HANDLE dsv, FLOAT depth)
 {
     commandList->ClearDepthStencilView(dsv, D3D12_CLEAR_FLAG_DEPTH, depth, 0, 0, nullptr);
@@ -500,8 +500,8 @@ void RenderCubeExample::onRender(RenderEvent& renderEvent)
 
     // Execute the TriangleRender shader
     {
-        commandList->SetPipelineState(pipeline.GetPipelineState().Get());
-        commandList->SetGraphicsRootSignature(pipeline.GetRootSignature().Get());
+        commandList->SetPipelineState(_pipeline.GetPipelineState().Get());
+        commandList->SetGraphicsRootSignature(_pipeline.GetRootSignature().Get());
 
         commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         commandList->IASetVertexBuffers(0, 1, &_vertexBufferView);
@@ -512,7 +512,7 @@ void RenderCubeExample::onRender(RenderEvent& renderEvent)
 
         commandList->OMSetRenderTargets(1, &rtv, FALSE, &dsv);
 
-        XMMATRIX mvpMatrix = XMMatrixMultiply(camera.View(), camera.Projection());
+        XMMATRIX mvpMatrix = XMMatrixMultiply(_camera.View(), _camera.Projection());
         commandList->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvpMatrix, 0);
         commandList->SetGraphicsRootConstantBufferView(1, _ambient->OffsetGPU(0));
 
@@ -553,21 +553,21 @@ void RenderCubeExample::onKeyPressed(KeyEvent& e)
     XMVECTOR dir = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
     if (e.key == KeyCode::W)
     {
-        dir += camera.Look();
+        dir += _camera.Look();
     }
     if (e.key == KeyCode::S)
     {
-        dir -= camera.Look();
+        dir -= _camera.Look();
     }
     if (e.key == KeyCode::D)
     {
-        dir += camera.Right();
+        dir += _camera.Right();
     }
     if (e.key == KeyCode::A)
     {
-        dir -= camera.Right();
+        dir -= _camera.Right();
     }
-    camera.Update(dir);
+    _camera.Update(dir);
 
     switch (e.key)
     {
@@ -605,7 +605,7 @@ void RenderCubeExample::onMouseScroll(MouseScrollEvent& e)
 void RenderCubeExample::onMouseMoved(MouseMoveEvent& e)
 {
     if ((e.relativeX != 0 || e.relativeY != 0) && _isCameraMoving)
-        camera.Update(e.relativeX, e.relativeY);
+        _camera.Update(e.relativeX, e.relativeY);
 }
 
 void RenderCubeExample::onMouseButtonPressed(MouseButtonEvent& e)

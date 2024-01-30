@@ -35,7 +35,7 @@ private:
         bool HasSpace(size_t sizeInBytes, size_t alignment) const;
 
     private:
-        Microsoft::WRL::ComPtr<ID3D12Resource> _d3d12Resource;
+        ComPtr<ID3D12Resource> _d3d12Resource;
 
         void* _CPUPtr;
         D3D12_GPU_VIRTUAL_ADDRESS _GPUPtr;

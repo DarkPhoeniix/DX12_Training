@@ -1,1 +1,1 @@
-14:17:37.1752708 | Error: Called Widnow::~Window before the Application::DestroyWindow
+15:16:46.3295219 | Error: Called Widnow::~Window before the Application::DestroyWindow

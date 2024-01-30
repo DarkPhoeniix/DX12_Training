@@ -382,7 +382,7 @@ bool Application::isTearingSupported() const
     return _isTearingSupported;
 }
 
-Microsoft::WRL::ComPtr<ID3D12Device2> Application::getDevice() const
+ComPtr<ID3D12Device2> Application::getDevice() const
 {
     return _d3d12Device;
 }
@@ -415,7 +415,7 @@ void Application::flush()
     _copyCommandQueue->flush();
 }
 
-Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> Application::createDescriptorHeap(UINT numDescriptors, D3D12_DESCRIPTOR_HEAP_TYPE type)
+ComPtr<ID3D12DescriptorHeap> Application::createDescriptorHeap(UINT numDescriptors, D3D12_DESCRIPTOR_HEAP_TYPE type)
 {
     D3D12_DESCRIPTOR_HEAP_DESC desc = {};
     desc.Type = type;
@@ -423,7 +423,7 @@ Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> Application::createDescriptorHeap(U
     desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
     desc.NodeMask = 0;
 
-    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeap;
+    ComPtr<ID3D12DescriptorHeap> descriptorHeap;
     Helper::throwIfFailed(_d3d12Device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&descriptorHeap)));
 
     return descriptorHeap;
@@ -482,7 +482,7 @@ Application::~Application()
     flush();
 }
 
-Microsoft::WRL::ComPtr<ID3D12Device2> Application::createDevice(Microsoft::WRL::ComPtr<IDXGIAdapter4> adapter)
+ComPtr<ID3D12Device2> Application::createDevice(ComPtr<IDXGIAdapter4> adapter)
 {
     ComPtr<ID3D12Device2> d3d12Device2;
     Helper::throwIfFailed(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&d3d12Device2)));
@@ -528,7 +528,7 @@ Microsoft::WRL::ComPtr<ID3D12Device2> Application::createDevice(Microsoft::WRL::
     return d3d12Device2;
 }
 
-Microsoft::WRL::ComPtr<IDXGIAdapter4> Application::getAdapter(bool bUseWarp)
+ComPtr<IDXGIAdapter4> Application::getAdapter(bool bUseWarp)
 {
     ComPtr<IDXGIFactory4> dxgiFactory;
     UINT createFactoryFlags = 0;
