@@ -7,6 +7,9 @@
 #include "Events/ResizeEvent.h"
 #include "Events/RenderEvent.h"
 #include "Events/UpdateEvent.h"
+#include "Render/RenderCubeExample.h"
+
+extern RenderCubeExample* pShared;
 
 Window::Window(HWND hWnd, const std::wstring& windowName, int clientWidth, int clientHeight, bool vSync)
     : _hWnd(hWnd)
@@ -315,20 +318,20 @@ ComPtr<IDXGISwapChain4> Window::createSwapChain()
     swastdafxainDesc.Flags = _isTearingSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
     ID3D12CommandQueue* pCommandQueue = app.getCommandQueue()->getD3D12CommandQueue().Get();
 
-    ComPtr<IDXGISwapChain1> swastdafxain1;
+    ComPtr<IDXGISwapChain1> swapChain1;
     Helper::throwIfFailed(dxgiFactory4->CreateSwapChainForHwnd(
-        pCommandQueue,
+        pShared->queueStream.Get(),
         _hWnd,
         &swastdafxainDesc,
         nullptr,
         nullptr,
-        &swastdafxain1));
+        &swapChain1));
 
     // Disable the Alt+Enter fullscreen toggle feature. Switching to fullscreen
     // will be handled manually.
     Helper::throwIfFailed(dxgiFactory4->MakeWindowAssociation(_hWnd, DXGI_MWA_NO_ALT_ENTER));
 
-    Helper::throwIfFailed(swastdafxain1.As(&dxgiSwastdafxain4));
+    Helper::throwIfFailed(swapChain1.As(&dxgiSwastdafxain4));
 
     _currentBackBufferIndex = dxgiSwastdafxain4->GetCurrentBackBufferIndex();
 
@@ -368,6 +371,16 @@ ComPtr<ID3D12Resource> Window::getCurrentBackBuffer() const
 
 UINT Window::getCurrentBackBufferIndex() const
 {
+    return _currentBackBufferIndex;
+}
+
+UINT Window::present2()
+{
+    UINT syncInterval = _vSync ? 1 : 0;
+    UINT presentFlags = _isTearingSupported && !_vSync ? DXGI_PRESENT_ALLOW_TEARING : 0;
+    Helper::throwIfFailed(_dxgiSwapChain->Present(syncInterval, presentFlags));
+    _currentBackBufferIndex = _dxgiSwapChain->GetCurrentBackBufferIndex();
+
     return _currentBackBufferIndex;
 }
 

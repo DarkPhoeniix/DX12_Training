@@ -31,12 +31,6 @@ private:
         ComPtr<ID3D12CommandAllocator> commandAllocator;
     };
 
-    struct CommandListEntry
-    {
-        bool free;
-        ComPtr<ID>
-    };
-
     using CommandAllocatorQueue = std::queue<CommandAllocatorEntry>;
     using CommandListQueue = std::queue< ComPtr<ID3D12GraphicsCommandList2> >;
 

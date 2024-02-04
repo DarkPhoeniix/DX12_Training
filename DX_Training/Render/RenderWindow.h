@@ -38,6 +38,7 @@ public:
     void hide();
 
     UINT getCurrentBackBufferIndex() const;
+    UINT present2();
     UINT present();
 
     D3D12_CPU_DESCRIPTOR_HANDLE getCurrentRenderTargetView() const;
@@ -72,7 +73,7 @@ protected:
 
     void updateRenderTargetViews();
 
-private:
+public:
     Window(const Window& copy) = delete;
     Window& operator=(const Window& other) = delete;
 

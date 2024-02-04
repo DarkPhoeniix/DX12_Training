@@ -27,6 +27,19 @@ bool IGame::initialize()
         return false;
     }
 
+    D3D12_COMMAND_QUEUE_DESC desc = {};
+    desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+    desc.NodeMask = 0;
+    desc.Priority = 0;
+    desc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
+    Application::get().getDevice()->CreateCommandQueue(&desc, IID_PPV_ARGS(&queueStream));
+
+    desc.Type = D3D12_COMMAND_LIST_TYPE_COMPUTE;
+    Application::get().getDevice()->CreateCommandQueue(&desc, IID_PPV_ARGS(&queueCompute));
+
+    desc.Type = D3D12_COMMAND_LIST_TYPE_COPY;
+    Application::get().getDevice()->CreateCommandQueue(&desc, IID_PPV_ARGS(&queueCopy));
+
     _window = Application::get().createWindow(_name, _width, _height, _vSync);
     _window->registerCallbacks(shared_from_this());
     _window->show();

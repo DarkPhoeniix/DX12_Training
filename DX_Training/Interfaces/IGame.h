@@ -46,9 +46,17 @@ protected:
 
     std::shared_ptr<Window> _window;
 
+
+public:
+    ComPtr<ID3D12CommandQueue> queueStream;
+    ComPtr<ID3D12CommandQueue> queueCopy;
+    ComPtr<ID3D12CommandQueue> queueCompute;
+
 private:
     std::wstring _name;
     int _width;
     int _height;
     bool _vSync;
+
+
 };

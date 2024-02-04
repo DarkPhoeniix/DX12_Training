@@ -34,11 +34,13 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstan
         Logger::Log(LogType::Error, "Failed to retrieve the path of the executable file");
     }
 
-    Application::create(hInstance);
     {
         std::shared_ptr<RenderCubeExample> demo = std::make_shared<RenderCubeExample>(L"D3DX12 Render Cube Training", 1280, 720, false); // TODO: vSync here
-        retCode = Application::get().run(demo);
-    }
+        Application::create(hInstance);
+        {
+            
+            retCode = Application::get().run(demo);
+        }}
     Application::destroy();
 
     atexit(&ReportLiveObjects);

@@ -485,7 +485,7 @@ Application::~Application()
 ComPtr<ID3D12Device2> Application::createDevice(ComPtr<IDXGIAdapter4> adapter)
 {
     ComPtr<ID3D12Device2> d3d12Device2;
-    Helper::throwIfFailed(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&d3d12Device2)));
+    Helper::throwIfFailed(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&d3d12Device2)));
     // NAME_D3D12_OBJECT(d3d12Device2);
 
     // Enable debug messages in debug mode.
@@ -559,7 +559,7 @@ ComPtr<IDXGIAdapter4> Application::getAdapter(bool bUseWarp)
             // is favored.
             if ((dxgiAdapterDesc1.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) == 0 &&
                 SUCCEEDED(D3D12CreateDevice(dxgiAdapter1.Get(),
-                    D3D_FEATURE_LEVEL_11_0, __uuidof(ID3D12Device), nullptr)) &&
+                    D3D_FEATURE_LEVEL_12_0, __uuidof(ID3D12Device), nullptr)) &&
                 dxgiAdapterDesc1.DedicatedVideoMemory > maxDedicatedVideoMemory)
             {
                 maxDedicatedVideoMemory = dxgiAdapterDesc1.DedicatedVideoMemory;
