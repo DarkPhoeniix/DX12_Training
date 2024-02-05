@@ -10,46 +10,9 @@
 
 #include <vector>
 
-struct Executor
-{
-    bool isFree = true;
-    ComPtr<ID3D12CommandAllocator> allocator;
-    ComPtr<ID3D12GraphicsCommandList2> commandList;
-
-    void Allocate(ComPtr<ID3D12Device> device, D3D12_COMMAND_LIST_TYPE type)
-    {
-        device->CreateCommandAllocator(type, IID_PPV_ARGS(&allocator));
-        device->CreateCommandList(0, type, allocator.Get(), nullptr, IID_PPV_ARGS(&commandList));
-        commandList->Close();
-    }
-
-    void Reset(ComPtr<ID3D12PipelineState> pipeline = nullptr)
-    {
-        //if (isFree)
-        //{
-        //    return;
-        //}
-
-        ID3D12PipelineState* pState = nullptr;
-        if (pipeline)
-        {
-            pState = pipeline.Get();
-        }
-
-        allocator->Reset();
-        commandList->Reset(allocator.Get(), pState);
-    }
-};
-
 struct Sync
 {
-    bool isFree = true;
-    ComPtr<ID3D12Fence> fence;
-    HANDLE Event;
-    UINT64 value = 0;
-
-    
-
+public:
     void Init(ComPtr<ID3D12Device> device)
     {
         value = 0;
@@ -58,7 +21,7 @@ struct Sync
         Event = ::CreateEvent(NULL, FALSE, FALSE, NULL);
     }
 
-    void WaitCPU()
+    void WaitForCPU()
     {
         if (fence->GetCompletedValue() >= value)
         {
@@ -68,59 +31,12 @@ struct Sync
         this->fence->SetEventOnCompletion(value, Event);
         ::WaitForSingleObject(Event, DWORD_MAX);
     }
-};
 
-struct Allocators
-{
-    std::vector<Executor> streams;
-    std::vector<Executor> computes;
-    std::vector<Executor> copies;
-
-    void Init(ComPtr<ID3D12Device> device)
-    {
-        Make(device, streams, D3D12_COMMAND_LIST_TYPE_DIRECT);
-        Make(device, computes, D3D12_COMMAND_LIST_TYPE_COMPUTE);
-        Make(device, copies, D3D12_COMMAND_LIST_TYPE_COPY);
-    }
-
-    Executor* Obtain(D3D12_COMMAND_LIST_TYPE type)
-    {
-        std::vector<Executor>* res;
-        if (type == D3D12_COMMAND_LIST_TYPE_DIRECT)
-        {
-            res = &streams;
-        }
-        else if (type == D3D12_COMMAND_LIST_TYPE_COMPUTE)
-        {
-            res = &computes;
-        }
-        else/* (type == D3D12_COMMAND_LIST_TYPE_COPY)*/
-        {
-            res = &copies;
-        }
-
-        for (auto& exec : *res)
-        {
-            if (exec.isFree)
-            {
-                return &exec;
-            }
-        }
-
-        return nullptr;
-    }
-
-protected:
-    void Make(ComPtr<ID3D12Device> device, std::vector<Executor>& vecExec, D3D12_COMMAND_LIST_TYPE type)
-    {
-        vecExec.resize(32);
-
-        for (auto& exec : vecExec)
-        {
-            exec.Allocate(device, type);
-            exec.isFree = true;
-        }
-    }
+private:
+    bool isFree = true;
+    ComPtr<ID3D12Fence> fence;
+    HANDLE Event;
+    UINT64 value = 0;
 };
 
 struct Syncs
@@ -145,108 +61,6 @@ struct Syncs
             if (s.isFree)
             {
                 return &s;
-            }
-        }
-
-        return nullptr;
-    }
-};
-
-struct TaskGPU
-{
-    std::vector<ComPtr<ID3D12GraphicsCommandList2>> cmd;
-    ComPtr<ID3D12CommandQueue> queue;
-    Sync* sync = nullptr;
-
-    std::string name;
-
-    //vec< string> depend;
-    std::vector<std::string> dependency;
-};
-
-struct Frame
-{
-    std::vector<Executor*> currentTasks;
-    std::vector<Executor*> executedTasks;
-
-    ComPtr<ID3D12CommandQueue> queueStream;
-    ComPtr<ID3D12CommandQueue> queueCopy;
-    ComPtr<ID3D12CommandQueue> queueCompute;
-
-    Sync* syncFrame = nullptr;
-    Allocators* allocs;
-    Syncs* syncs;
-
-    unsigned int index = 0;
-    Frame* prev = nullptr;
-    Frame* next = nullptr;
-
-    std::vector<TaskGPU> tasks;
-
-    TaskGPU* CreateTask(D3D12_COMMAND_LIST_TYPE type, ComPtr<ID3D12PipelineState> pipelineState)
-    {
-        Executor* exec = allocs->Obtain(type);
-        currentTasks.push_back(exec);
-
-        exec->Reset(pipelineState);
-        exec->isFree = false;
-
-        tasks.push_back({});
-        TaskGPU* task = &tasks.back();
-        if (type == D3D12_COMMAND_LIST_TYPE_DIRECT)
-        {
-            task->queue = queueStream;
-        }
-        else if (type == D3D12_COMMAND_LIST_TYPE_COMPUTE)
-        {
-            task->queue = queueCompute;
-        }
-        else if (type == D3D12_COMMAND_LIST_TYPE_COPY)
-        {
-            task->queue = queueCopy;
-        }
-        task->cmd.push_back(exec->commandList.Get());
-        task->sync = syncs->Obtain();
-        task->sync->isFree = false;
-        task->sync->value++;
-
-        return task;
-    }
-
-    void WaitCPU()
-    {
-        if (syncFrame)
-        {
-            syncFrame->WaitCPU();
-            syncFrame->isFree = true;
-            syncFrame = nullptr;
-        }
-    }
-
-    void ResetGPU()
-    {
-        for (auto& task : executedTasks)
-        {
-            task->isFree = true;
-        }
-
-        for (auto& task : tasks)
-        {
-            task.sync->isFree = true;
-        }
-
-        tasks.clear();
-        executedTasks.clear();
-        executedTasks = std::move(currentTasks);
-    }
-
-    TaskGPU* GetTask(const std::string& name)
-    {
-        for (auto& task : tasks)
-        {
-            if (task.name == name)
-            {
-                return &task;
             }
         }
 

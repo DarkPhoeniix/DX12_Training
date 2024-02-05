@@ -13,6 +13,9 @@
 #include "Events/ResizeEvent.h"
 #include "Events/UpdateEvent.h"
 
+#include "TaskGPU.h"
+#include "Frame.h"
+
 #include <random>
 #include <cmath>
 
@@ -450,15 +453,12 @@ void RenderCubeExample::onRender(RenderEvent& renderEvent)
     this->current->WaitCPU();
     this->current->ResetGPU();
 
-
     auto backBuffer = _window->getCurrentBackBuffer();
-
-
 
     // Clear the render targets
     {
         TaskGPU* task = this->current->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
-        task->name = "clean";
+        task->SetName("clean");
 
         ComPtr<ID3D12GraphicsCommandList2> commandList = task->cmd.front();
 
@@ -472,7 +472,7 @@ void RenderCubeExample::onRender(RenderEvent& renderEvent)
 
         clearRTV(commandList, rtv, clearColor);
         clearDepth(commandList, dsv);
-       
+
         transitionResource(commandList, _UAVRes->_resource, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
         commandList->Close();
@@ -481,17 +481,12 @@ void RenderCubeExample::onRender(RenderEvent& renderEvent)
     // Execute the Compute shader
     {
         TaskGPU* task = this->current->CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE, _pipelineComputeState);
-        task->name = "compute";
+        task->SetName("compute");
 
         ComPtr<ID3D12GraphicsCommandList2> commandList = task->cmd.front();
 
-         
-
-        //commandList->SetPipelineState(_pipelineComputeState.Get());
         commandList->SetComputeRootSignature(_rootComputeSignature.Get());
-
         commandList->SetComputeRootShaderResourceView(0, _dynamicData->OffsetGPU(0));
-        //commandList->SetComputeRootUnorderedAccessView(1, _UAVRes->OffsetGPU(0));
 
         ID3D12DescriptorHeap* heaps = { _descHeap.Get() };
         commandList->SetDescriptorHeaps(1, &heaps);
@@ -501,13 +496,10 @@ void RenderCubeExample::onRender(RenderEvent& renderEvent)
         commandList->SetComputeRootDescriptorTable(1, offset2);
 
         uint32_t x, y, z;
-        x = 64 / 8; // 64 / 2
-        y = 64 / 8; // 64 / 2
+        x = 8;//64 / 8;
+        y = 8;//64 / 8;
         z = 1;
         commandList->Dispatch(x, y, z);
-
-
-        ///commandList->CopyResource(_readBack->_resource.Get(), _UAVRes->_resource.Get());
 
         commandList->Close();
     }
@@ -515,12 +507,12 @@ void RenderCubeExample::onRender(RenderEvent& renderEvent)
     // Execute the TriangleRender shader
     {
         TaskGPU* task = this->current->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, _pipeline.GetPipelineState());
-        task->name = "render";
+        task->SetName("render");
 
         ComPtr<ID3D12GraphicsCommandList2> commandList = task->cmd.front();
 
-        task->dependency.push_back("clean");
-        task->dependency.push_back("compute");
+        task->AddDependency("clean");
+        task->AddDependency("compute");
 
         transitionResource(commandList, _UAVRes->_resource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
@@ -559,14 +551,12 @@ void RenderCubeExample::onRender(RenderEvent& renderEvent)
 
     // Present
     {
-
         TaskGPU* task = this->current->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
-        task->name = "present";
+        task->SetName("present");
 
         ComPtr<ID3D12GraphicsCommandList2> commandList = task->cmd.front();
-        task->dependency.push_back("clean");
 
-        task->dependency.push_back("render");
+        task->AddDependency("render");
 
         transitionResource(commandList, backBuffer,
             D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
@@ -576,14 +566,13 @@ void RenderCubeExample::onRender(RenderEvent& renderEvent)
 
     for (auto& task : current->tasks)
     {
-
-        std::vector<TaskGPU*> deps;
+        std::vector<TaskGPU*> dependencies;
 
         // wait
         for (auto& t : task.dependency)
-            deps.push_back(current->GetTask(t));
+            dependencies.push_back(current->GetTask(t));
 
-        for (auto d : deps)
+        for (auto d : dependencies)
             task.queue->Wait(d->sync->fence.Get(), d->sync->value);
 
         std::vector<ID3D12CommandList*> comLists;
@@ -601,124 +590,9 @@ void RenderCubeExample::onRender(RenderEvent& renderEvent)
             current->syncFrame = task.sync;
         }
         task.queue->Signal(task.sync->fence.Get(), task.sync->value);
-   }
-
-    
-
-
+    }
 
     this->current = current->next;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    //auto commandQueue = Application::get().getCommandQueue(D3D12_COMMAND_LIST_TYPE_DIRECT);
-    //auto commandList = commandQueue->getCommandList();
-
-    //UINT currentBackBufferIndex = _window->getCurrentBackBufferIndex();
-    //auto backBuffer = _window->getCurrentBackBuffer();
-    //auto rtv = _window->getCurrentRenderTargetView();
-    //auto dsv = _DSVHeap->GetCPUDescriptorHandleForHeapStart();
-
-    //// Clear the render targets
-    //{
-    //    transitionResource(commandList, backBuffer,
-    //        D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
-
-    //    FLOAT clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-
-    //    clearRTV(commandList, rtv, clearColor);
-    //    clearDepth(commandList, dsv);
-    //}
-
-    //// Execute the Compute shader
-    //{
-    //    transitionResource(commandList, _UAVRes->_resource, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE , D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-
-    //    commandList->SetPipelineState(_pipelineComputeState.Get());
-    //    commandList->SetComputeRootSignature(_rootComputeSignature.Get());
-
-    //    commandList->SetComputeRootShaderResourceView(0, _dynamicData->OffsetGPU(0));
-    //    //commandList->SetComputeRootUnorderedAccessView(1, _UAVRes->OffsetGPU(0));
-
-    //    ID3D12DescriptorHeap* heaps = { _descHeap.Get() };
-    //    commandList->SetDescriptorHeaps(1, &heaps);
-
-    //    D3D12_GPU_DESCRIPTOR_HANDLE offset2 = _descHeap->GetGPUDescriptorHandleForHeapStart();
-    //    offset2.ptr += 32 * 0;
-    //    commandList->SetComputeRootDescriptorTable(1, offset2);
-
-    //    uint32_t x, y, z;
-    //    x = 64 / 8; // 64 / 2
-    //    y = 64 / 8; // 64 / 2
-    //    z = 1;
-    //    commandList->Dispatch(x, y, z);
-
-    //    transitionResource(commandList, _UAVRes->_resource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE );
-
-    //   // commandList->CopyResource(_readBack->_resource.Get(), _UAVRes->_resource.Get());
-    //}
-
-    //// Execute the TriangleRender shader
-    //{
-    //    commandList->SetPipelineState(_pipeline.GetPipelineState().Get());
-    //    commandList->SetGraphicsRootSignature(_pipeline.GetRootSignature().Get());
-
-    //    commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    //    commandList->IASetVertexBuffers(0, 1, &_vertexBufferView);
-    //    commandList->IASetIndexBuffer(&_indexBufferView);
-
-    //    commandList->RSSetViewports(1, &_viewport);
-    //    commandList->RSSetScissorRects(1, &_scissorRect);
-
-    //    commandList->OMSetRenderTargets(1, &rtv, FALSE, &dsv);
-
-    //    XMMATRIX mvpMatrix = XMMatrixMultiply(_camera.View(), _camera.Projection());
-    //    commandList->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvpMatrix, 0);
-    //    commandList->SetGraphicsRootConstantBufferView(1, _ambient->OffsetGPU(0));
-
-    //    // Update the MVP matrix
-    //    commandList->SetGraphicsRootShaderResourceView(2, _cubeTransformsRes[renderEvent.frameIndex]->OffsetGPU(0));
-
-    //    ID3D12DescriptorHeap* heaps = { _descHeap.Get() };
-    //    commandList->SetDescriptorHeaps(1, &heaps);
-
-    //    D3D12_GPU_DESCRIPTOR_HANDLE offset2 = _descHeap->GetGPUDescriptorHandleForHeapStart();
-    //    offset2.ptr += 32 * 1;
-    //    commandList->SetGraphicsRootDescriptorTable(3, offset2);
-
-    //    commandList->DrawIndexedInstanced(static_cast<UINT>(_model.GetIndices().size()), CUBES_SIZE * CUBES_SIZE, 0, 0, 0);
-    //}
-
-    //// Present
-    //{
-    //    transitionResource(commandList, backBuffer,
-    //        D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-
-    //    _fenceValues[currentBackBufferIndex] = commandQueue->executeCommandList(commandList);
-
-    //    currentBackBufferIndex = _window->present();
-
-    //    commandQueue->waitForFenceValue(_fenceValues[0]);
-    //}
-
-   
 }
 
 void RenderCubeExample::onKeyPressed(KeyEvent& e)

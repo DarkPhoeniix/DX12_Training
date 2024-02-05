@@ -168,6 +168,9 @@
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Render\Allocators.cpp" />
+    <ClCompile Include="Render\Executor.cpp" />
+    <ClCompile Include="Render\Frame.cpp" />
     <ClCompile Include="Interfaces\IVolume.cpp" />
     <ClCompile Include="Interfaces\IObject.cpp" />
     <ClCompile Include="Model.cpp" />
@@ -176,6 +179,7 @@
     <ClCompile Include="Interfaces\IGame.cpp" />
     <ClCompile Include="Render\UploadBuffer.cpp" />
     <ClCompile Include="Resource.cpp" />
+    <ClCompile Include="Render\TaskGPU.cpp" />
     <ClCompile Include="Utility\PipelineSettings.cpp" />
     <ClCompile Include="Objects\Object.cpp" />
     <ClCompile Include="PoissonDiskDistribution.cpp" />
@@ -193,6 +197,9 @@
     <ClCompile Include="Objects\Volume.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Render\Allocators.h" />
+    <ClInclude Include="Render\Executor.h" />
+    <ClInclude Include="Render\Frame.h" />
     <ClInclude Include="Interfaces\IVolume.h" />
     <ClInclude Include="Interfaces\IObject.h" />
     <ClInclude Include="Model.h" />
@@ -210,6 +217,7 @@
     <ClInclude Include="Objects\Object.h" />
     <ClInclude Include="Render\UploadBuffer.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="Render\TaskGPU.h" />
     <ClInclude Include="Utility\Defines.h" />
     <ClInclude Include="Utility\PipelineSettings.h" />
     <ClInclude Include="PoissonDiskDistribution.h" />
