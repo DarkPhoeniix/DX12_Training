@@ -25,7 +25,6 @@ public:
     void quit(int exitCode = 0);
 
     ComPtr<ID3D12Device2> getDevice() const;
-    std::shared_ptr<CommandQueue> getCommandQueue(D3D12_COMMAND_LIST_TYPE type = D3D12_COMMAND_LIST_TYPE_DIRECT) const;
 
     void flush();
 
@@ -47,10 +46,6 @@ private:
 
     ComPtr<ID3D12Device2> _d3d12Device;
     ComPtr<IDXGIAdapter4> _dxgiAdapter;
-
-    std::shared_ptr<CommandQueue> _directCommandQueue;
-    std::shared_ptr<CommandQueue> _computeCommandQueue;
-    std::shared_ptr<CommandQueue> _copyCommandQueue;
 
     bool _isTearingSupported;
 };

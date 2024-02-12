@@ -8,65 +8,10 @@
 #include "Utility/PipelineSettings.h"
 #include "Model.h"
 
+#include "FencePool.h"
+#include "Frame.h"
+
 #include <vector>
-
-struct Sync
-{
-public:
-    void Init(ComPtr<ID3D12Device> device)
-    {
-        value = 0;
-
-        device->CreateFence(value, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
-        Event = ::CreateEvent(NULL, FALSE, FALSE, NULL);
-    }
-
-    void WaitForCPU()
-    {
-        if (fence->GetCompletedValue() >= value)
-        {
-            return;
-        }
-
-        this->fence->SetEventOnCompletion(value, Event);
-        ::WaitForSingleObject(Event, DWORD_MAX);
-    }
-
-private:
-    bool isFree = true;
-    ComPtr<ID3D12Fence> fence;
-    HANDLE Event;
-    UINT64 value = 0;
-};
-
-struct Syncs
-{
-    std::vector<Sync> syncss;
-
-    void Init(ComPtr<ID3D12Device> device)
-    {
-        syncss.resize(32 + 32 + 32); // Direct + Compute + Copy
-
-        for (auto& s : syncss)
-        {
-            s.Init(device);
-            s.isFree = true;
-        }
-    }
-
-    Sync* Obtain()
-    {
-        for (auto& s : syncss)
-        {
-            if (s.isFree)
-            {
-                return &s;
-            }
-        }
-
-        return nullptr;
-    }
-};
 
 class RenderCubeExample : public IGame
 {
@@ -74,9 +19,6 @@ public:
     using super = IGame;
 
     RenderCubeExample(const std::wstring& name, int width, int height, bool vSync = false);
-    //~RenderCubeExample();
-
-
 
     virtual bool loadContent() override;
     virtual void unloadContent() override;
@@ -149,8 +91,8 @@ private:
     bool _isCameraMoving = false;
     Camera _camera;
 
-    Frame frames[3];
-    Frame* current;
-    Allocators allocs;
-    Syncs syncs;
+    Frame _frames[3];
+    Frame* _current;
+    AllocatorPool _allocs;
+    FencePool _fencePool;
 };

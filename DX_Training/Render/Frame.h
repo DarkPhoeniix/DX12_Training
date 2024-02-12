@@ -1,97 +1,61 @@
 #pragma once
 
-#include "Allocators.h"
+#include "AllocatorPool.h"
 #include "Executor.h"
 #include "TaskGPU.h"
+#include "FencePool.h"
 
 class Frame
 {
 public:
-    TaskGPU* CreateTask(D3D12_COMMAND_LIST_TYPE type, ComPtr<ID3D12PipelineState> pipelineState)
-    {
-        Executor* exec = _allocs->Obtain(type);
-        _currentTasks.push_back(exec);
+    void Init(ComPtr<ID3D12Device2> device, ComPtr<IDXGISwapChain> swapChain);
 
-        exec->Reset(pipelineState);
-        exec->SetFree(false);
+    void SetDirectQueue(ComPtr<ID3D12CommandQueue> directQueue);
+    ComPtr<ID3D12CommandQueue> GetDirectQueue() const;
 
-        _tasks.push_back({});
-        TaskGPU* task = &_tasks.back();
-        if (type == D3D12_COMMAND_LIST_TYPE_DIRECT)
-        {
-            task->SetCommandQueue(_queueStream);
-        }
-        else if (type == D3D12_COMMAND_LIST_TYPE_COMPUTE)
-        {
-            task->SetCommandQueue(_queueCompute);
-        }
-        else if (type == D3D12_COMMAND_LIST_TYPE_COPY)
-        {
-            task->SetCommandQueue(_queueCopy);
-        }
-        task->AddCommandList(exec->GetCommandList().Get());
-        task->sync = _syncs->Obtain();
-        task->sync->setFree(false);
-        task->sync->value++;
+    void SetComputeQueue(ComPtr<ID3D12CommandQueue> computeQueue);
+    ComPtr<ID3D12CommandQueue> GetComputeQueue() const;
 
-        return task;
-    }
+    void SetCopyQueue(ComPtr<ID3D12CommandQueue> copyQueue);
+    ComPtr<ID3D12CommandQueue> GetCopyQueue() const;
 
-    void WaitCPU()
-    {
-        if (_syncFrame)
-        {
-            _syncFrame->WaitForCPU();
-            _syncFrame->IsFree = true;
-            _syncFrame = nullptr;
-        }
-    }
+    void SetAllocatorPool(AllocatorPool* allocatorPool);
 
-    void ResetGPU()
-    {
-        for (auto& task : _executedTasks)
-        {
-            task->SetFree(true);
-        }
+    void SetFencePool(FencePool* fencePool);
 
-        for (auto& task : _tasks)
-        {
-            task.sync->SetFree(true);
-        }
+    void SetSyncFrame(Fence* syncFrame);
+    Fence* GetSyncFrame() const;
 
-        _tasks.clear();
-        _executedTasks.clear();
-        _executedTasks = std::move(_currentTasks);
-    }
+    TaskGPU* CreateTask(D3D12_COMMAND_LIST_TYPE type, ComPtr<ID3D12PipelineState> pipelineState);
 
-    TaskGPU* GetTask(const std::string& name)
-    {
-        for (auto& task : _tasks)
-        {
-            if (task.GetName() == name)
-            {
-                return &task;
-            }
-        }
+    TaskGPU* GetTask(const std::string& name);
+    std::vector<TaskGPU> GetTasks() const;
 
-        return nullptr;
-    }
+    void WaitCPU();
+    void ResetGPU();
+
+    unsigned int Index = 0;
+    Frame* Prev = nullptr;
+    Frame* Next = nullptr;
+
+    ComPtr<ID3D12Resource> _swapChainTexture;
+    ComPtr<ID3D12Resource> _targetTexture;
+    ComPtr<ID3D12Resource> _depthTexture;
+
+    ComPtr<ID3D12DescriptorHeap> _targetHeap;
+    ComPtr<ID3D12DescriptorHeap> _depthHeap;
 
 private:
     std::vector<Executor*> _currentTasks;
     std::vector<Executor*> _executedTasks;
 
     ComPtr<ID3D12CommandQueue> _queueStream;
-    ComPtr<ID3D12CommandQueue> _queueCopy;
     ComPtr<ID3D12CommandQueue> _queueCompute;
+    ComPtr<ID3D12CommandQueue> _queueCopy;
 
-    Sync* _syncFrame = nullptr;
-    Allocators* _allocs;
-    Syncs* _syncs;
-
-    unsigned int _index = 0;
-    Frame* _prev = nullptr;
-    Frame* _next = nullptr;
+    AllocatorPool* _allocatorPool;
+    FencePool* _fencePool;
+    Fence* _syncFrame = nullptr;
 
     std::vector<TaskGPU> _tasks;
 };

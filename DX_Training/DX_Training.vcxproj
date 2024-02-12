@@ -168,15 +168,18 @@
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Render\Allocators.cpp" />
+    <ClCompile Include="Render\FencePool.cpp" />
+    <ClCompile Include="Render\Fence.cpp" />
+    <ClCompile Include="Render\AllocatorPool.cpp" />
     <ClCompile Include="Render\Executor.cpp" />
     <ClCompile Include="Render\Frame.cpp" />
     <ClCompile Include="Interfaces\IVolume.cpp" />
     <ClCompile Include="Interfaces\IObject.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="Objects\Camera.cpp" />
-    <ClCompile Include="Render\CommandQueue.cpp" />
     <ClCompile Include="Interfaces\IGame.cpp" />
+    <ClCompile Include="Render\Resource.cpp" />
+    <ClCompile Include="Render\ResourceDescription.cpp" />
     <ClCompile Include="Render\UploadBuffer.cpp" />
     <ClCompile Include="Resource.cpp" />
     <ClCompile Include="Render\TaskGPU.cpp" />
@@ -197,14 +200,15 @@
     <ClCompile Include="Objects\Volume.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Render\Allocators.h" />
+    <ClInclude Include="Render\FencePool.h" />
+    <ClInclude Include="Render\Fence.h" />
+    <ClInclude Include="Render\AllocatorPool.h" />
     <ClInclude Include="Render\Executor.h" />
     <ClInclude Include="Render\Frame.h" />
     <ClInclude Include="Interfaces\IVolume.h" />
     <ClInclude Include="Interfaces\IObject.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="Objects\Camera.h" />
-    <ClInclude Include="Render\CommandQueue.h" />
     <ClInclude Include="Events\Event.h" />
     <ClInclude Include="Events\KeyEvent.h" />
     <ClInclude Include="Events\MouseButtonEvent.h" />
@@ -215,6 +219,8 @@
     <ClInclude Include="Events\UpdateEvent.h" />
     <ClInclude Include="Interfaces\IGame.h" />
     <ClInclude Include="Objects\Object.h" />
+    <ClInclude Include="Render\Resource.h" />
+    <ClInclude Include="Render\ResourceDescription.h" />
     <ClInclude Include="Render\UploadBuffer.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="Render\TaskGPU.h" />

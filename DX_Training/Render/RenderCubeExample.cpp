@@ -4,7 +4,6 @@
 #include "RenderCubeExample.h"
 
 #include "Application.h"
-#include "CommandQueue.h"
 #include "Events/KeyEvent.h"
 #include "Events/MouseButtonEvent.h"
 #include "Events/MouseMoveEvent.h"
@@ -56,17 +55,18 @@ RenderCubeExample::RenderCubeExample(const std::wstring& name, int width, int he
 
     for (int i = 0; i < 3; ++i)
     {
-        Frame& frame = frames[i];
-        frame.index = i;
-        frame.queueStream = queueStream;
-        frame.queueCompute = queueCompute;
-        frame.queueCopy = queueCopy;
-        frame.next = &frames[(i + 1) % 3];
-        frame.prev = &frames[(i - 1) % 3];
-        frame.syncFrame = nullptr;
-        frame.allocs = &allocs;
-        frame.syncs = &syncs;
-        frame.tasks.reserve(64);
+        Frame& frame = _frames[i];
+        frame.Index = i;
+        frame.Next = &_frames[(i + 1) % 3];
+        frame.Prev = &_frames[(i + 3 - 1) % 3];
+
+        frame.SetDirectQueue(queueStream);
+        frame.SetComputeQueue(queueCompute);
+        frame.SetCopyQueue(queueCopy);
+
+        frame.SetSyncFrame(nullptr);
+        frame.SetAllocatorPool(&_allocs);
+        frame.SetFencePool(&_fencePool);
     }
 }
 
@@ -119,22 +119,28 @@ void RenderCubeExample::updateBufferResource(
 
 bool RenderCubeExample::loadContent()
 {
-    allocs.Init(Application::get().getDevice());
-    syncs.Init(Application::get().getDevice());
+    auto device = Application::get().getDevice();
+
+    this->_current = &_frames[_window->getCurrentBackBufferIndex()];
+
+    _allocs.Init(Application::get().getDevice());
+    _fencePool.Init(Application::get().getDevice());
 
     for (int i = 0; i < 3; ++i)
     {
-        Frame& frame = frames[i];
-        frame.queueStream = queueStream;
-        frame.queueCompute = queueCompute;
-        frame.queueCopy = queueCopy;
-    }
-    //distribution.Init();
+        Frame& frame = _frames[i];
 
-    // Camera
+        frame.SetDirectQueue(queueStream);
+        frame.SetComputeQueue(queueCompute);
+        frame.SetCopyQueue(queueCopy);
+
+        frame.Init(device, _window->GetSwapChain());
+    }
+
+    // Camera Setup
     {
-        XMVECTOR pos = XMVectorSet(0.0f, 0.0f, -100.0f, 1.0f);
-        XMVECTOR target = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+        XMVECTOR pos = XMVectorSet(0.0f, 25.0f, -50.0f, 1.0f);
+        XMVECTOR target = XMVectorSet(0.0f, 5.0f, 0.0f, 1.0f);
         XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
         float aspectRatio = getWidth() / static_cast<float>(getHeight());
 
@@ -142,23 +148,26 @@ bool RenderCubeExample::loadContent()
         _camera.SetLens(45.0f, aspectRatio, 0.1f, 1000.0f);
     }
 
-    D3D12_HEAP_PROPERTIES heapProperties = {};
+    // ID3D12Heap Setup
     {
-        memset(&heapProperties, 0, sizeof(D3D12_HEAP_PROPERTIES));
+        D3D12_HEAP_PROPERTIES heapProperties = {};
+        {
+            memset(&heapProperties, 0, sizeof(D3D12_HEAP_PROPERTIES));
 
-        heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-        heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-        heapProperties.CreationNodeMask = 1;
-        heapProperties.VisibleNodeMask = 1;
+            heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+            heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+            heapProperties.CreationNodeMask = 1;
+            heapProperties.VisibleNodeMask = 1;
 
-        heapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
+            heapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
+        }
+        D3D12_HEAP_DESC heapDesc;
+        heapDesc.Alignment = 0;
+        heapDesc.Flags = D3D12_HEAP_FLAG_NONE;
+        heapDesc.Properties = heapProperties;
+        heapDesc.SizeInBytes = 15 * _1MB;
+        Application::get().getDevice()->CreateHeap(&heapDesc, IID_PPV_ARGS(&_pHeap));
     }
-    D3D12_HEAP_DESC heapDesc;
-    heapDesc.Alignment = 0;
-    heapDesc.Flags = D3D12_HEAP_FLAG_NONE;
-    heapDesc.Properties = heapProperties;
-    heapDesc.SizeInBytes = 15 * _1MB;
-    Application::get().getDevice()->CreateHeap(&heapDesc, IID_PPV_ARGS(&_pHeap));
 
     EResourceType SRVType = EResourceType::Dynamic | EResourceType::Buffer;
     EResourceType CBVType = EResourceType::Dynamic | EResourceType::Buffer | EResourceType::StrideAlignment;
@@ -195,42 +204,48 @@ bool RenderCubeExample::loadContent()
     }
 
     _dynamicData = new Resource(Helper::CreateBuffers(Application::get().getDevice(), EResourceType::Dynamic | EResourceType::Buffer, 2, sizeof(XMFLOAT4)));
-    _UAVRes = new Resource(Helper::CreateBuffers(Application::get().getDevice(), EResourceType::Unordered | EResourceType::Texture, 64, 64, sizeof(float) * 4, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
-    _readBack = new Resource(Helper::CreateBuffers(Application::get().getDevice(), EResourceType::ReadBack | EResourceType::Buffer, 1, sizeof(float)));
     _dynamicData->_resource->SetName(L"_dynamicData");
+    XMFLOAT4* flData = (XMFLOAT4*)_dynamicData->Map();
+    flData[0] = { 0.7f, 0.1f, 0.43f, 1.0f };
+    flData[1] = { 0.7f, 0.7f, 1.0f, 1.0f };
+
+    _UAVRes = new Resource(Helper::CreateBuffers(Application::get().getDevice(), EResourceType::Unordered | EResourceType::Texture, 64, 64, sizeof(float) * 4, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
     _UAVRes->_resource->SetName(L"UAV texture");
+
+    _readBack = new Resource(Helper::CreateBuffers(Application::get().getDevice(), EResourceType::ReadBack | EResourceType::Buffer, 1, sizeof(float)));
     _readBack->_resource->SetName(L"_readBack");
 
-    XMFLOAT4* flData = (XMFLOAT4*)_dynamicData->Map();
-    flData[0] = { 1.0f, 0.0f, 0.0f, 1.0f };
-    flData[1] = { 0.0f, 0.0f, 1.0f, 1.0f };
+    UINT SRVIncrementSize = Application::get().getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-    auto  asdas = Application::get().getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-    auto  asdas1 = Application::get().getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
-    auto  asdas2 = Application::get().getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-    auto  asdas3 = Application::get().getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+    // UAV setup
+    {
+        D3D12_CPU_DESCRIPTOR_HANDLE offset = _descHeap->GetCPUDescriptorHandleForHeapStart();
+        offset.ptr += SRVIncrementSize * 0;
 
-    D3D12_CPU_DESCRIPTOR_HANDLE offset = _descHeap->GetCPUDescriptorHandleForHeapStart();
-    offset.ptr += asdas * 0;
+        D3D12_UNORDERED_ACCESS_VIEW_DESC _resDesc = {};
+        _resDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        _resDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+        _resDesc.Texture2D.MipSlice = 0;
+        Application::get().getDevice()->CreateUnorderedAccessView(_UAVRes->_resource.Get(), nullptr, &_resDesc, offset);
+    }
 
-    D3D12_CPU_DESCRIPTOR_HANDLE offset2 = _descHeap->GetCPUDescriptorHandleForHeapStart();
-    offset2.ptr += asdas * 1;
+    // SRV setup
+    {
+        D3D12_CPU_DESCRIPTOR_HANDLE offset2 = _descHeap->GetCPUDescriptorHandleForHeapStart();
+        offset2.ptr += SRVIncrementSize * 1;
 
-    D3D12_UNORDERED_ACCESS_VIEW_DESC _resDesc = {};
-    _resDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    _resDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-    _resDesc.Texture2D.MipSlice = 0;
-    Application::get().getDevice()->CreateUnorderedAccessView(_UAVRes->_resource.Get(), nullptr, &_resDesc, offset);
+        D3D12_SHADER_RESOURCE_VIEW_DESC _resDesc2 = {};
+        _resDesc2.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        _resDesc2.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+        _resDesc2.Texture2D.MipLevels = 1;
+        _resDesc2.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        Application::get().getDevice()->CreateShaderResourceView(_UAVRes->_resource.Get(), &_resDesc2, offset2);
+    }
 
-    D3D12_SHADER_RESOURCE_VIEW_DESC _resDesc2 = {};
-    _resDesc2.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    _resDesc2.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    _resDesc2.Texture2D.MipLevels = 1;
-    _resDesc2.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    Application::get().getDevice()->CreateShaderResourceView(_UAVRes->_resource.Get(), &_resDesc2, offset2);
-    auto device = Application::get().getDevice();
-    auto commandQueue = Application::get().getCommandQueue(D3D12_COMMAND_LIST_TYPE_COPY);
-    auto commandList = commandQueue->getCommandList();
+    TaskGPU* task = _current->CreateTask(D3D12_COMMAND_LIST_TYPE_COPY, nullptr);
+    task->SetName("Upload Data");
+
+    auto commandList = task->GetCommandLists().front();
 
     ComPtr<ID3D12Resource> intermediateVertexBuffer;
     ComPtr<ID3D12Resource> intermediateIndexBuffer;
@@ -260,6 +275,8 @@ bool RenderCubeExample::loadContent()
         _indexBufferView.Format = DXGI_FORMAT_R16_UINT;
         _indexBufferView.SizeInBytes = static_cast<UINT>(_model.GetIndices().size() * sizeof(WORD));
     }
+
+    commandList->Close();
 
     // Create the descriptor heap for the depth-stencil view
     {
@@ -294,8 +311,15 @@ bool RenderCubeExample::loadContent()
         Helper::throwIfFailed(device->CreateComputePipelineState(&_compDesc, IID_PPV_ARGS(&_pipelineComputeState)));
     }
 
-    auto fenceValue = commandQueue->executeCommandList(commandList);
-    commandQueue->waitForFenceValue(fenceValue);
+    std::vector<ID3D12CommandList*> comLists;
+    comLists.reserve(task->GetCommandLists().size());
+    for (auto cl : task->GetCommandLists())
+    {
+        comLists.push_back(cl.Get());
+    }
+
+    task->GetCommandQueue()->ExecuteCommandLists(comLists.size(), comLists.data());
+    task->GetCommandQueue()->Signal(task->GetFence()->GetFence().Get(), task->GetFenceValue());
 
     _contentLoaded = true;
 
@@ -347,7 +371,7 @@ void RenderCubeExample::resizeDepthBuffer(int width, int height)
             _DSVHeap->GetCPUDescriptorHandleForHeapStart());
     }
 
-    this->current = &frames[_window->getCurrentBackBufferIndex()];
+    this->_current = &_frames[_window->getCurrentBackBufferIndex()];
 }
 
 void RenderCubeExample::onResize(ResizeEvent& e)
@@ -450,28 +474,29 @@ void RenderCubeExample::onRender(RenderEvent& renderEvent)
 {
     super::onRender(renderEvent);
 
-    this->current->WaitCPU();
-    this->current->ResetGPU();
 
-    auto backBuffer = _window->getCurrentBackBuffer();
+    // WAIT CPU
+
+    this->_current->WaitCPU(); // actually ewait GPU
+    this->_current->ResetGPU();
+
+
+    //lock CPU
 
     // Clear the render targets
     {
-        TaskGPU* task = this->current->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
+        TaskGPU* task = this->_current->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
         task->SetName("clean");
 
-        ComPtr<ID3D12GraphicsCommandList2> commandList = task->cmd.front();
+        ComPtr<ID3D12GraphicsCommandList2> commandList = task->GetCommandLists().front();
 
-        auto rtv = _window->getCurrentRenderTargetView();
-        auto dsv = _DSVHeap->GetCPUDescriptorHandleForHeapStart();
-
-        transitionResource(commandList, backBuffer,
-            D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+        transitionResource(commandList, _current->_targetTexture,
+            D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
         FLOAT clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
-        clearRTV(commandList, rtv, clearColor);
-        clearDepth(commandList, dsv);
+        clearRTV(commandList, _current->_targetHeap->GetCPUDescriptorHandleForHeapStart(), clearColor);
+        clearDepth(commandList, _current->_depthHeap->GetCPUDescriptorHandleForHeapStart());
 
         transitionResource(commandList, _UAVRes->_resource, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
@@ -480,10 +505,10 @@ void RenderCubeExample::onRender(RenderEvent& renderEvent)
 
     // Execute the Compute shader
     {
-        TaskGPU* task = this->current->CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE, _pipelineComputeState);
+        TaskGPU* task = this->_current->CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE, _pipelineComputeState);
         task->SetName("compute");
 
-        ComPtr<ID3D12GraphicsCommandList2> commandList = task->cmd.front();
+        ComPtr<ID3D12GraphicsCommandList2> commandList = task->GetCommandLists().front();
 
         commandList->SetComputeRootSignature(_rootComputeSignature.Get());
         commandList->SetComputeRootShaderResourceView(0, _dynamicData->OffsetGPU(0));
@@ -506,10 +531,10 @@ void RenderCubeExample::onRender(RenderEvent& renderEvent)
 
     // Execute the TriangleRender shader
     {
-        TaskGPU* task = this->current->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, _pipeline.GetPipelineState());
+        TaskGPU* task = this->_current->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, _pipeline.GetPipelineState());
         task->SetName("render");
 
-        ComPtr<ID3D12GraphicsCommandList2> commandList = task->cmd.front();
+        ComPtr<ID3D12GraphicsCommandList2> commandList = task->GetCommandLists().front();
 
         task->AddDependency("clean");
         task->AddDependency("compute");
@@ -526,8 +551,8 @@ void RenderCubeExample::onRender(RenderEvent& renderEvent)
         commandList->RSSetViewports(1, &_viewport);
         commandList->RSSetScissorRects(1, &_scissorRect);
 
-        auto rtv = _window->getCurrentRenderTargetView();
-        auto dsv = _DSVHeap->GetCPUDescriptorHandleForHeapStart();
+        auto rtv = _current->_targetHeap->GetCPUDescriptorHandleForHeapStart();
+        auto dsv = _current->_depthHeap->GetCPUDescriptorHandleForHeapStart();
         commandList->OMSetRenderTargets(1, &rtv, FALSE, &dsv);
 
         XMMATRIX mvpMatrix = XMMatrixMultiply(_camera.View(), _camera.Projection());
@@ -551,48 +576,58 @@ void RenderCubeExample::onRender(RenderEvent& renderEvent)
 
     // Present
     {
-        TaskGPU* task = this->current->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
+        TaskGPU* task = this->_current->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
         task->SetName("present");
 
-        ComPtr<ID3D12GraphicsCommandList2> commandList = task->cmd.front();
+        ComPtr<ID3D12GraphicsCommandList2> commandList = task->GetCommandLists().front();
 
         task->AddDependency("render");
 
-        transitionResource(commandList, backBuffer,
-            D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+        transitionResource(commandList, _current->_swapChainTexture,
+            D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_COPY_DEST);
+
+        transitionResource(commandList, _current->_targetTexture,
+            D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_SOURCE);
+
+        commandList->CopyResource(_current->_swapChainTexture.Get(), _current->_targetTexture.Get());
+
+        transitionResource(commandList, _current->_swapChainTexture,
+            D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PRESENT);
 
         commandList->Close();
     }
 
-    for (auto& task : current->tasks)
+    for (TaskGPU& task : _current->GetTasks())
     {
         std::vector<TaskGPU*> dependencies;
 
         // wait
-        for (auto& t : task.dependency)
-            dependencies.push_back(current->GetTask(t));
+        for (const std::string& dependency : task.GetDependencies())
+            dependencies.push_back(_current->GetTask(dependency));
 
-        for (auto d : dependencies)
-            task.queue->Wait(d->sync->fence.Get(), d->sync->value);
+        for (TaskGPU* d : dependencies)
+            task.GetCommandQueue()->Wait(d->GetFence()->GetFence().Get(), d->GetFenceValue());
 
         std::vector<ID3D12CommandList*> comLists;
-        comLists.reserve(task.cmd.size());
-        for (auto cl : task.cmd)
+        comLists.reserve(task.GetCommandLists().size());
+        for (auto cl : task.GetCommandLists())
         {
             comLists.push_back(cl.Get());
         }
 
-        task.queue->ExecuteCommandLists(comLists.size(), comLists.data());
+        task.GetCommandQueue()->ExecuteCommandLists(comLists.size(), comLists.data());
 
-        if (task.name == "present")
+        if (task.GetName() == "present")
         {
             _window->present2();
-            current->syncFrame = task.sync;
+            _current->SetSyncFrame(task.GetFence());
         }
-        task.queue->Signal(task.sync->fence.Get(), task.sync->value);
+        task.GetCommandQueue()->Signal(task.GetFence()->GetFence().Get(), task.GetFenceValue());
     }
 
-    this->current = current->next;
+    // unlock CPU
+
+    this->_current = _current->Next;
 }
 
 void RenderCubeExample::onKeyPressed(KeyEvent& e)

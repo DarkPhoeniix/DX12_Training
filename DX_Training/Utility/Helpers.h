@@ -72,6 +72,7 @@ namespace Helper
     Json::Value ParseJson(const std::string& filepath);
 
     ID3D12Resource* CreateBuffers(ComPtr<ID3D12Device2> device, EResourceType type, unsigned int size, unsigned int stride);
+    ID3D12Resource* CreateBuffers(ComPtr<ID3D12Device2> device, D3D12_RESOURCE_DESC resourceDesc, D3D12_CLEAR_VALUE* clearValue, D3D12_RESOURCE_STATES state = D3D12_RESOURCE_STATE_COPY_DEST);
     ID3D12Resource* CreateBuffers(ComPtr<ID3D12Device2> device, EResourceType type, unsigned int sizeW, unsigned int sizeH, unsigned int stride, D3D12_RESOURCE_STATES state = D3D12_RESOURCE_STATE_COPY_DEST);
 
     ID3D12Resource* CreateBuffers(ID3D12Heap* pHeap, ComPtr<ID3D12Device2> device, EResourceType type, unsigned int size, unsigned int stride, unsigned int offset);

@@ -44,6 +44,8 @@ public:
     D3D12_CPU_DESCRIPTOR_HANDLE getCurrentRenderTargetView() const;
     ComPtr<ID3D12Resource> getCurrentBackBuffer() const;
 
+    ComPtr<IDXGISwapChain4> GetSwapChain();
+
 protected:
     friend LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 

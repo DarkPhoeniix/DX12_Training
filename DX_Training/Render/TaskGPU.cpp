@@ -1,13 +1,14 @@
 #include "stdafx.h"
 #include "TaskGPU.h"
 
-TaskGPU::TaskGPU(const std::string& name)
-    : _name(name)
-{   }
-
 void TaskGPU::SetCommandQueue(ComPtr<ID3D12CommandQueue> commandQueue)
 {
     _commandQueue = commandQueue;
+}
+
+ComPtr<ID3D12CommandQueue> TaskGPU::GetCommandQueue() const
+{
+    return _commandQueue;
 }
 
 void TaskGPU::AddCommandList(ComPtr<ID3D12GraphicsCommandList2> commandList)
@@ -18,6 +19,21 @@ void TaskGPU::AddCommandList(ComPtr<ID3D12GraphicsCommandList2> commandList)
 std::vector<ComPtr<ID3D12GraphicsCommandList2>> TaskGPU::GetCommandLists() const
 {
     return _commandLists;
+}
+
+void TaskGPU::SetFence(Fence* fence)
+{
+    _fence = fence;
+}
+
+Fence* TaskGPU::GetFence() const
+{
+    return _fence;
+}
+
+UINT64 TaskGPU::GetFenceValue() const
+{
+    return _fence->GetValue();
 }
 
 void TaskGPU::AddDependency(const std::string& taskName)

@@ -5,7 +5,6 @@
 
 #include "Interfaces/IGame.h"
 #include "Render/RenderWindow.h"
-#include "Render/CommandQueue.h"
 #include "Events/KeyEvent.h"
 #include "Events/MouseButtonEvent.h"
 #include "Events/MouseMoveEvent.h"
@@ -387,32 +386,8 @@ ComPtr<ID3D12Device2> Application::getDevice() const
     return _d3d12Device;
 }
 
-std::shared_ptr<CommandQueue> Application::getCommandQueue(D3D12_COMMAND_LIST_TYPE type) const
-{
-    std::shared_ptr<CommandQueue> commandQueue;
-    switch (type)
-    {
-    case D3D12_COMMAND_LIST_TYPE_DIRECT:
-        commandQueue = _directCommandQueue;
-        break;
-    case D3D12_COMMAND_LIST_TYPE_COMPUTE:
-        commandQueue = _computeCommandQueue;
-        break;
-    case D3D12_COMMAND_LIST_TYPE_COPY:
-        commandQueue = _copyCommandQueue;
-        break;
-    default:
-        assert(false && "Invalid command queue type.");
-    }
-
-    return commandQueue;
-}
-
 void Application::flush()
 {
-    _directCommandQueue->flush();
-    _computeCommandQueue->flush();
-    _copyCommandQueue->flush();
 }
 
 ComPtr<ID3D12DescriptorHeap> Application::createDescriptorHeap(UINT numDescriptors, D3D12_DESCRIPTOR_HEAP_TYPE type)
@@ -469,10 +444,6 @@ Application::Application(HINSTANCE)
     }
     if (_d3d12Device)
     {
-        _directCommandQueue = std::make_shared<CommandQueue>(_d3d12Device, D3D12_COMMAND_LIST_TYPE_DIRECT);
-        _computeCommandQueue = std::make_shared<CommandQueue>(_d3d12Device, D3D12_COMMAND_LIST_TYPE_COMPUTE);
-        _copyCommandQueue = std::make_shared<CommandQueue>(_d3d12Device, D3D12_COMMAND_LIST_TYPE_COPY);
-
         _isTearingSupported = checkTearingSupport();
     }
 }

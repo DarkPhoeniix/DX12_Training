@@ -2,7 +2,6 @@
 
 #include "RenderWindow.h"
 #include "Application.h"
-#include "CommandQueue.h"
 #include "Interfaces/IGame.h"
 #include "Events/ResizeEvent.h"
 #include "Events/RenderEvent.h"
@@ -274,10 +273,10 @@ void Window::onResize(ResizeEvent& e)
             _d3d12BackBuffers[i].Reset();
         }
 
-        DXGI_SWAP_CHAIN_DESC swastdafxainDesc = {};
-        Helper::throwIfFailed(_dxgiSwapChain->GetDesc(&swastdafxainDesc));
+        DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
+        Helper::throwIfFailed(_dxgiSwapChain->GetDesc(&swapChainDesc));
         Helper::throwIfFailed(_dxgiSwapChain->ResizeBuffers(BUFFER_COUNT, _width,
-            _height, swastdafxainDesc.BufferDesc.Format, swastdafxainDesc.Flags));
+            _height, swapChainDesc.BufferDesc.Format, swapChainDesc.Flags));
 
         _currentBackBufferIndex = _dxgiSwapChain->GetCurrentBackBufferIndex();
 
@@ -294,7 +293,7 @@ ComPtr<IDXGISwapChain4> Window::createSwapChain()
 {
     Application& app = Application::get();
 
-    ComPtr<IDXGISwapChain4> dxgiSwastdafxain4;
+    ComPtr<IDXGISwapChain4> dxgiSwapChain4;
     ComPtr<IDXGIFactory4> dxgiFactory4;
     UINT createFactoryFlags = 0;
 #if defined(_DEBUG)
@@ -303,26 +302,25 @@ ComPtr<IDXGISwapChain4> Window::createSwapChain()
 
     Helper::throwIfFailed(CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&dxgiFactory4)));
 
-    DXGI_SWAP_CHAIN_DESC1 swastdafxainDesc = {};
-    swastdafxainDesc.Width = _width;
-    swastdafxainDesc.Height = _height;
-    swastdafxainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    swastdafxainDesc.Stereo = FALSE;
-    swastdafxainDesc.SampleDesc = { 1, 0 };
-    swastdafxainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    swastdafxainDesc.BufferCount = BUFFER_COUNT;
-    swastdafxainDesc.Scaling = DXGI_SCALING_STRETCH;
-    swastdafxainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-    swastdafxainDesc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
+    DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
+    swapChainDesc.Width = _width;
+    swapChainDesc.Height = _height;
+    swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    swapChainDesc.Stereo = FALSE;
+    swapChainDesc.SampleDesc = { 1, 0 };
+    swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+    swapChainDesc.BufferCount = BUFFER_COUNT;
+    swapChainDesc.Scaling = DXGI_SCALING_STRETCH;
+    swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+    swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
     // It is recommended to always allow tearing if tearing support is available.
-    swastdafxainDesc.Flags = _isTearingSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
-    ID3D12CommandQueue* pCommandQueue = app.getCommandQueue()->getD3D12CommandQueue().Get();
+    swapChainDesc.Flags = _isTearingSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
 
     ComPtr<IDXGISwapChain1> swapChain1;
     Helper::throwIfFailed(dxgiFactory4->CreateSwapChainForHwnd(
         pShared->queueStream.Get(),
         _hWnd,
-        &swastdafxainDesc,
+        &swapChainDesc,
         nullptr,
         nullptr,
         &swapChain1));
@@ -331,11 +329,11 @@ ComPtr<IDXGISwapChain4> Window::createSwapChain()
     // will be handled manually.
     Helper::throwIfFailed(dxgiFactory4->MakeWindowAssociation(_hWnd, DXGI_MWA_NO_ALT_ENTER));
 
-    Helper::throwIfFailed(swapChain1.As(&dxgiSwastdafxain4));
+    Helper::throwIfFailed(swapChain1.As(&dxgiSwapChain4));
 
-    _currentBackBufferIndex = dxgiSwastdafxain4->GetCurrentBackBufferIndex();
+    _currentBackBufferIndex = dxgiSwapChain4->GetCurrentBackBufferIndex();
 
-    return dxgiSwastdafxain4;
+    return dxgiSwapChain4;
 }
 
 // Update the render target views for the swastdafxain back buffers.
@@ -367,6 +365,11 @@ D3D12_CPU_DESCRIPTOR_HANDLE Window::getCurrentRenderTargetView() const
 ComPtr<ID3D12Resource> Window::getCurrentBackBuffer() const
 {
     return _d3d12BackBuffers[_currentBackBufferIndex];
+}
+
+ComPtr<IDXGISwapChain4> Window::GetSwapChain()
+{
+    return _dxgiSwapChain;
 }
 
 UINT Window::getCurrentBackBufferIndex() const

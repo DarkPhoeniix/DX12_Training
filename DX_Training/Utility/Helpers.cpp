@@ -141,6 +141,36 @@ namespace Helper
 
         return resource;
     }
+
+	ID3D12Resource* CreateBuffers(ComPtr<ID3D12Device2> device, D3D12_RESOURCE_DESC resourceDesc, D3D12_CLEAR_VALUE* clearValue, D3D12_RESOURCE_STATES state)
+	{
+		ID3D12Resource* resource = nullptr;
+
+		D3D12_RESOURCE_STATES startState = state;
+		D3D12_HEAP_PROPERTIES heapDesc = {};
+		{
+			memset(&heapDesc, 0, sizeof(D3D12_HEAP_PROPERTIES));
+
+			heapDesc.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+			heapDesc.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+			heapDesc.CreationNodeMask = 1;
+			heapDesc.VisibleNodeMask = 1;
+			heapDesc.Type = D3D12_HEAP_TYPE_DEFAULT;
+		}
+
+		// need to RTT and DTV
+		//const D3D12_CLEAR_VALUE* clearValue = nullptr;
+		device->CreateCommittedResource(
+			&heapDesc,
+			D3D12_HEAP_FLAG_NONE,
+			&resourceDesc,
+			startState,
+			clearValue, // optimized clear value must be null for this type of resource. used for render targets and depth/stencil buffers
+			IID_PPV_ARGS(&resource));
+
+		return resource;
+	}
+
 	ID3D12Resource* CreateBuffers(ComPtr<ID3D12Device2> device, EResourceType type, unsigned int sizeW, unsigned int sizeH, unsigned int stride, D3D12_RESOURCE_STATES state)
 	{
 		ID3D12Resource* resource = nullptr;

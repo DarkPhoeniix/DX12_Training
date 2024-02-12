@@ -2,7 +2,7 @@
 
 #include "Executor.h"
 
-struct Allocators
+struct AllocatorPool
 {
     void Init(ComPtr<ID3D12Device> device);
 
