@@ -1,24 +1,39 @@
 #include "stdafx.h"
 #include "Resource.h"
 
-Resource::Resource(ResourceDescription resourceDesc, ComPtr<ID3D12Device> device)
-	: _resourceDesc(resourceDesc)
-	, _device(device)
+Resource::Resource(ComPtr<ID3D12Device> device, ResourceDescription resourceDesc)
+	: _device(device)
+	, _resourceDesc(resourceDesc)
 {	}
 
 Resource::~Resource()
 {
-	_resource->Release();
+	if (_resource)
+		_resource->Release();
 }
 
 void Resource::SetResource(ComPtr<ID3D12Resource> resource)
 {
 	_resource = resource;
+	_resourceDesc = ResourceDescription(resource->GetDesc());
 }
 
 ComPtr<ID3D12Resource> Resource::GetResource() const
 {
 	return _resource;
+}
+
+void Resource::SetName(const std::string& name)
+{
+	_name = name;
+
+	std::wstring temp(name.begin(), name.end());
+	_resource->SetName(temp.c_str());
+}
+
+std::string Resource::GetName() const
+{
+	return _name;
 }
 
 void Resource::SetResourceDescription(const ResourceDescription& resourceDesc)
@@ -53,9 +68,9 @@ D3D12_GPU_VIRTUAL_ADDRESS Resource::OffsetGPU(unsigned int offset) const
 	return result;
 }
 
-ComPtr<ID3D12Resource> Resource::CreateCommitedResource()
+ComPtr<ID3D12Resource> Resource::CreateCommitedResource(D3D12_RESOURCE_STATES initialState)
 {
-	ComPtr<ID3D12Resource> resource = nullptr;
+	_initialState = initialState;
 
 	D3D12_HEAP_PROPERTIES heapDesc = {};
 	{
@@ -82,30 +97,32 @@ ComPtr<ID3D12Resource> Resource::CreateCommitedResource()
 	}
 
 	// need to RTT and DSV
-	const D3D12_CLEAR_VALUE* clearValue = nullptr;
+	D3D12_RESOURCE_DESC resourceDesc = _resourceDesc.CreateDXResourceDescription();
+	D3D12_CLEAR_VALUE* clearValue = _resourceDesc.GetClearValue().get();
 	_device->CreateCommittedResource(
 		&heapDesc,
 		D3D12_HEAP_FLAG_NONE,
-		&_resourceDesc.CreateDXResourceDescription(),
+		&resourceDesc,
 		_initialState,
-		_resourceDesc.GetClearValue(), // TODO: check
-		IID_PPV_ARGS(&resource));
+		clearValue, // TODO: check
+		IID_PPV_ARGS(&_resource));
 
-	return resource;
+	return _resource;
 }
 
-ComPtr<ID3D12Resource> Resource::CreatePlacedResource(ComPtr<ID3D12Heap> heap, unsigned int offset)
+ComPtr<ID3D12Resource> Resource::CreatePlacedResource(ComPtr<ID3D12Heap> heap, unsigned int offset, D3D12_RESOURCE_STATES initialState)
 {
-	ComPtr<ID3D12Resource> resource = nullptr;
+	_initialState = initialState;
 
-	const D3D12_CLEAR_VALUE* clearValue = nullptr;
+	D3D12_RESOURCE_DESC resourceDesc = _resourceDesc.CreateDXResourceDescription();
+	D3D12_CLEAR_VALUE* clearValue = _resourceDesc.GetClearValue().get();
 	_device->CreatePlacedResource(
 		heap.Get(),
 		offset,
-		&_resourceDesc.CreateDXResourceDescription(),
+		&resourceDesc,
 		_initialState,
-		_resourceDesc.GetClearValue(), // TODO: check
-		IID_PPV_ARGS(&resource));
+		clearValue, // TODO: check
+		IID_PPV_ARGS(&_resource));
 
-	return resource;
+	return _resource;
 }

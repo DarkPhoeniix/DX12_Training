@@ -28,31 +28,6 @@
 		return (type)((int)x ^ (int)y);\
 	}
 
-enum class EResourceType : int
-{
-    None = 1 << 0,
-
-    // access type 
-    Dynamic = 1 << 1,
-    ReadBack = 1 << 2,
-    Unordered = 1 << 3,
-
-    // kind of resource
-    Buffer = 1 << 4,
-    Texture = 1 << 5,
-    RenderTarget = 1 << 6,
-    DepthTarget = 1 << 7,
-
-    // addition flags
-    StrideAlignment = 1 << 8,
-
-    // acceleration flags
-    Deny_shader_resource = 1 << 9,
-
-    Last = 1 << 10
-};
-BINARY_OPERATION_TO_ENUM(EResourceType);
-
 namespace Helper
 {
     std::string HrToString(HRESULT hr);
@@ -71,11 +46,11 @@ namespace Helper
 
     Json::Value ParseJson(const std::string& filepath);
 
-    ID3D12Resource* CreateBuffers(ComPtr<ID3D12Device2> device, EResourceType type, unsigned int size, unsigned int stride);
-    ID3D12Resource* CreateBuffers(ComPtr<ID3D12Device2> device, D3D12_RESOURCE_DESC resourceDesc, D3D12_CLEAR_VALUE* clearValue, D3D12_RESOURCE_STATES state = D3D12_RESOURCE_STATE_COPY_DEST);
-    ID3D12Resource* CreateBuffers(ComPtr<ID3D12Device2> device, EResourceType type, unsigned int sizeW, unsigned int sizeH, unsigned int stride, D3D12_RESOURCE_STATES state = D3D12_RESOURCE_STATE_COPY_DEST);
+    //ID3D12Resource* CreateBuffers(ComPtr<ID3D12Device2> device, EResourceType type, unsigned int size, unsigned int stride);
+    //ID3D12Resource* CreateBuffers(ComPtr<ID3D12Device2> device, D3D12_RESOURCE_DESC resourceDesc, D3D12_CLEAR_VALUE* clearValue, D3D12_RESOURCE_STATES state = D3D12_RESOURCE_STATE_COPY_DEST);
+    //ID3D12Resource* CreateBuffers(ComPtr<ID3D12Device2> device, EResourceType type, unsigned int sizeW, unsigned int sizeH, unsigned int stride, D3D12_RESOURCE_STATES state = D3D12_RESOURCE_STATE_COPY_DEST);
 
-    ID3D12Resource* CreateBuffers(ID3D12Heap* pHeap, ComPtr<ID3D12Device2> device, EResourceType type, unsigned int size, unsigned int stride, unsigned int offset);
+    //ID3D12Resource* CreateBuffers(ID3D12Heap* pHeap, ComPtr<ID3D12Device2> device, EResourceType type, unsigned int size, unsigned int stride, unsigned int offset);
 }
 
 namespace Math

@@ -28,6 +28,9 @@ BINARY_OPERATION_TO_ENUM(EResourceType);
 class ResourceDescription
 {
 public:
+    ResourceDescription();
+    ResourceDescription(D3D12_RESOURCE_DESC desc);
+
     D3D12_RESOURCE_DESC CreateDXResourceDescription() const;
 
     void SetDimension(D3D12_RESOURCE_DIMENSION dimension);
@@ -54,6 +57,7 @@ public:
     void SetLayout(D3D12_TEXTURE_LAYOUT textureLayout);
     D3D12_TEXTURE_LAYOUT GetLayout() const;
 
+    void AddFlags(D3D12_RESOURCE_FLAGS flags);
     void SetFlags(D3D12_RESOURCE_FLAGS flags);
     D3D12_RESOURCE_FLAGS GetFlags() const;
 
@@ -62,8 +66,12 @@ public:
     EResourceType GetResourceType() const;
     bool IsType(EResourceType type) const;
 
-    void SetClearValue(const DirectX::XMFLOAT3& clearValue);
-    D3D12_CLEAR_VALUE GetClearValue() const;
+    void SetStride(UINT64 stride);
+    UINT64 GetStride() const;
+
+    void SetClearValue(D3D12_CLEAR_VALUE clearValue);
+    void SetClearValue(const DirectX::XMFLOAT4& clearValue);
+    std::shared_ptr<D3D12_CLEAR_VALUE> GetClearValue() const;
 
 protected:
     void UpdateSize(EResourceType type);
@@ -72,6 +80,6 @@ protected:
 private:
     D3D12_RESOURCE_DESC _resourceDescription;
     EResourceType _resourceType;
-    UINT64 _alignment;
-    D3D12_CLEAR_VALUE _clearValue;
+    UINT64 _stride;
+    std::shared_ptr<D3D12_CLEAR_VALUE> _clearValue = nullptr;
 };

@@ -181,8 +181,8 @@
     <ClCompile Include="Render\Resource.cpp" />
     <ClCompile Include="Render\ResourceDescription.cpp" />
     <ClCompile Include="Render\UploadBuffer.cpp" />
-    <ClCompile Include="Resource.cpp" />
     <ClCompile Include="Render\TaskGPU.cpp" />
+    <ClCompile Include="TextureParser.cpp" />
     <ClCompile Include="Utility\PipelineSettings.cpp" />
     <ClCompile Include="Objects\Object.cpp" />
     <ClCompile Include="PoissonDiskDistribution.cpp" />
@@ -222,8 +222,8 @@
     <ClInclude Include="Render\Resource.h" />
     <ClInclude Include="Render\ResourceDescription.h" />
     <ClInclude Include="Render\UploadBuffer.h" />
-    <ClInclude Include="Resource.h" />
     <ClInclude Include="Render\TaskGPU.h" />
+    <ClInclude Include="TextureParser.h" />
     <ClInclude Include="Utility\Defines.h" />
     <ClInclude Include="Utility\PipelineSettings.h" />
     <ClInclude Include="PoissonDiskDistribution.h" />

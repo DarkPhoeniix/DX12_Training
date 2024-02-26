@@ -44,4 +44,4 @@ using namespace Microsoft::WRL;
 #include "Utility/Helpers.h"
 #include "Utility/Logger.h"
 
-#include "Resource.h"
+#include "Render/Resource.h"

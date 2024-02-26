@@ -8,6 +8,8 @@
 class Frame
 {
 public:
+    Frame() = default;
+
     void Init(ComPtr<ID3D12Device2> device, ComPtr<IDXGISwapChain> swapChain);
 
     void SetDirectQueue(ComPtr<ID3D12CommandQueue> directQueue);
@@ -38,9 +40,9 @@ public:
     Frame* Prev = nullptr;
     Frame* Next = nullptr;
 
-    ComPtr<ID3D12Resource> _swapChainTexture;
-    ComPtr<ID3D12Resource> _targetTexture;
-    ComPtr<ID3D12Resource> _depthTexture;
+    Resource _swapChainTexture;
+    Resource _targetTexture;
+    Resource _depthTexture;
 
     ComPtr<ID3D12DescriptorHeap> _targetHeap;
     ComPtr<ID3D12DescriptorHeap> _depthHeap;
