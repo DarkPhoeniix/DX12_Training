@@ -9,6 +9,7 @@
 #include "Model.h"
 
 #include "FencePool.h"
+#include "Scene.h"
 #include "Frame.h"
 
 #include <vector>
@@ -84,7 +85,7 @@ private:
 
     Resource* _dynamicData;
     Resource* _UAVRes;
-    Resource* _readBack;
+    //Resource* _readBack;
     ComPtr<ID3D12Heap> _pHeap;
     ComPtr<ID3D12DescriptorHeap> _descHeap;
 
@@ -95,4 +96,6 @@ private:
     Frame* _current;
     AllocatorPool _allocs;
     FencePool _fencePool;
+
+    Scene _scene;
 };

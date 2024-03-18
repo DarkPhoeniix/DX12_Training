@@ -18,6 +18,8 @@
 #include <random>
 #include <cmath>
 
+#include <DirectXTex/DirectXTex.h>
+
 using namespace DirectX;
 
 extern RenderCubeExample* pShared = nullptr;
@@ -49,7 +51,7 @@ RenderCubeExample::RenderCubeExample(const std::wstring& name, int width, int he
     , _viewport(CD3DX12_VIEWPORT(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height)))
     , _contentLoaded(false)
     , distribution({ -20.0f, -20.0f, -20.0f, 1.0f }, { 20.0f, 20.0f, 20.0f, 1.0f }, 10, 20)
-    , _model("cat1.obj")
+    , _model("cat.obj")
 {
     pShared = this;
 
@@ -166,7 +168,7 @@ bool RenderCubeExample::loadContent()
         heapDesc.Flags = D3D12_HEAP_FLAG_NONE;
         heapDesc.Properties = heapProperties;
         heapDesc.SizeInBytes = 15 * _1MB;
-        Application::get().getDevice()->CreateHeap(&heapDesc, IID_PPV_ARGS(&_pHeap));
+        device->CreateHeap(&heapDesc, IID_PPV_ARGS(&_pHeap));
     }
 
     EResourceType SRVType = EResourceType::Dynamic | EResourceType::Buffer;
@@ -225,7 +227,7 @@ bool RenderCubeExample::loadContent()
 
     {
         desc.SetResourceType(EResourceType::Unordered | EResourceType::Texture);
-        desc.SetSize({ 64, 64 });
+        desc.SetSize({ 1024, 1024 });
         desc.SetStride(sizeof(float) * 4);
 
         _UAVRes = new Resource(device, desc);
@@ -233,7 +235,85 @@ bool RenderCubeExample::loadContent()
         _UAVRes->SetName("UAV texture");
     }
 
-    UINT SRVIncrementSize = Application::get().getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+
+
+    //// Load DDS texture
+    //{
+    //    TexMetadata metadata;
+    //    ScratchImage scratchImage;
+
+    //    Helper::throwIfFailed(LoadFromDDSFile(
+    //        L"dog_tex.dds",
+    //        DDS_FLAGS_NONE,
+    //        &metadata,
+    //        scratchImage));
+
+    //    D3D12_RESOURCE_DESC textureDesc = {};
+    //    switch (metadata.dimension)
+    //    {
+    //    case TEX_DIMENSION_TEXTURE1D:
+    //        textureDesc = CD3DX12_RESOURCE_DESC::Tex1D(
+    //            metadata.format,
+    //            static_cast<UINT64>(metadata.width),
+    //            static_cast<UINT16>(metadata.arraySize));
+    //        break;
+    //    case TEX_DIMENSION_TEXTURE2D:
+    //        textureDesc = CD3DX12_RESOURCE_DESC::Tex2D(
+    //            metadata.format,
+    //            static_cast<UINT64>(metadata.width),
+    //            static_cast<UINT>(metadata.height),
+    //            static_cast<UINT16>(metadata.arraySize));
+    //        break;
+    //    case TEX_DIMENSION_TEXTURE3D:
+    //        textureDesc = CD3DX12_RESOURCE_DESC::Tex3D(
+    //            metadata.format,
+    //            static_cast<UINT64>(metadata.width),
+    //            static_cast<UINT>(metadata.height),
+    //            static_cast<UINT16>(metadata.depth));
+    //        break;
+    //    default:
+    //        throw std::exception("Invalid texture dimension.");
+    //        break;
+    //    }
+
+    //    ResourceDescription desc = textureDesc;
+
+    //    _texture = new Resource(device, desc);
+    //    _texture->CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_DEST);
+    //    _texture->SetName("dog_texture");
+
+    //    std::vector<D3D12_SUBRESOURCE_DATA> subresources(scratchImage.GetImageCount());
+    //    const Image* pImages = scratchImage.GetImages();
+    //    auto& subresource = subresources[0];
+    //    subresource.RowPitch = pImages[0].rowPitch;
+    //    subresource.SlicePitch = pImages[0].slicePitch;
+    //    subresource.pData = pImages[0].pixels;
+    //    UINT64 requiredSize = GetRequiredIntermediateSize(_texture->GetResource().Get(), static_cast<uint32_t>(subresources.size()), 1);
+
+    //    // Create a temporary (intermediate) resource for uploading the subresources
+    //    ComPtr<ID3D12Resource> intermediateResource;
+    //    CD3DX12_HEAP_PROPERTIES heapProp(D3D12_HEAP_TYPE_UPLOAD);
+    //    CD3DX12_RESOURCE_DESC d = CD3DX12_RESOURCE_DESC::Buffer(requiredSize);
+    //    Helper::throwIfFailed(device->CreateCommittedResource(
+    //        &heapProp,
+    //        D3D12_HEAP_FLAG_NONE,
+    //        &d,
+    //        D3D12_RESOURCE_STATE_GENERIC_READ,
+    //        nullptr,
+    //        IID_PPV_ARGS(&intermediateResource)
+    //    ));
+
+    //    UpdateSubresources(commandList.Get(), _texture->GetResource().Get(), intermediateResource.Get(), 0, 0, 1, subresources.data());
+
+    //}
+
+
+
+
+
+
+    UINT SRVIncrementSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
     // UAV setup
     {
@@ -241,10 +321,10 @@ bool RenderCubeExample::loadContent()
         offset.ptr += SRVIncrementSize * 0;
 
         D3D12_UNORDERED_ACCESS_VIEW_DESC _resDesc = {};
-        _resDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        _resDesc.Format = _UAVRes->GetResourceDescription().GetFormat();
         _resDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
         _resDesc.Texture2D.MipSlice = 0;
-        Application::get().getDevice()->CreateUnorderedAccessView(_UAVRes->GetResource().Get(), nullptr, &_resDesc, offset);
+        device->CreateUnorderedAccessView(_UAVRes->GetResource().Get(), nullptr, &_resDesc, offset);
     }
 
     // SRV setup
@@ -253,17 +333,20 @@ bool RenderCubeExample::loadContent()
         offset2.ptr += SRVIncrementSize * 1;
 
         D3D12_SHADER_RESOURCE_VIEW_DESC _resDesc2 = {};
-        _resDesc2.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        _resDesc2.Format = _UAVRes->GetResourceDescription().GetFormat();
         _resDesc2.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
         _resDesc2.Texture2D.MipLevels = 1;
         _resDesc2.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-        Application::get().getDevice()->CreateShaderResourceView(_UAVRes->GetResource().Get(), &_resDesc2, offset2);
+        device->CreateShaderResourceView(_UAVRes->GetResource().Get(), &_resDesc2, offset2);
     }
 
     TaskGPU* task = _current->CreateTask(D3D12_COMMAND_LIST_TYPE_COPY, nullptr);
     task->SetName("Upload Data");
 
     auto commandList = task->GetCommandLists().front();
+
+    _scene.LoadScene("cube.fbx", commandList);
+
 
     ComPtr<ID3D12Resource> intermediateVertexBuffer;
     ComPtr<ID3D12Resource> intermediateIndexBuffer;
@@ -309,7 +392,7 @@ bool RenderCubeExample::loadContent()
     rtvFormats.NumRenderTargets = 1;
     rtvFormats.RTFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 
-    _pipeline.Parse(device.Get(), "RenderPipeline.tech");
+    _pipeline.Parse(device.Get(), "Resources\\RenderPipeline.tech");
 
     // Compute pipeline setup
     {
@@ -338,6 +421,7 @@ bool RenderCubeExample::loadContent()
 
     task->GetCommandQueue()->ExecuteCommandLists(comLists.size(), comLists.data());
     task->GetCommandQueue()->Signal(task->GetFence()->GetFence().Get(), task->GetFenceValue());
+
 
     _contentLoaded = true;
 
@@ -415,7 +499,7 @@ void RenderCubeExample::unloadContent()
         delete _ambient;
         delete _dynamicData;
         delete _UAVRes;
-        delete _readBack;
+        //delete _texture;
 
         //_pHeap->Release(); // TODO: why Release doesn't work? :(
         _descHeap->Release();
@@ -539,8 +623,8 @@ void RenderCubeExample::onRender(RenderEvent& renderEvent)
         commandList->SetComputeRootDescriptorTable(1, offset2);
 
         uint32_t x, y, z;
-        x = 8;//64 / 8;
-        y = 8;//64 / 8;
+        x = 1024 / 8;//64 / 8;
+        y = 1024 / 8;//64 / 8;
         z = 1;
         commandList->Dispatch(x, y, z);
 
@@ -557,14 +641,15 @@ void RenderCubeExample::onRender(RenderEvent& renderEvent)
         task->AddDependency("clean");
         task->AddDependency("compute");
 
+        //transitionResource(commandList, _texture->GetResource(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
         transitionResource(commandList, _UAVRes->GetResource(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
-        //commandList->SetPipelineState(_pipeline.GetPipelineState().Get());
+        commandList->SetPipelineState(_pipeline.GetPipelineState().Get());
         commandList->SetGraphicsRootSignature(_pipeline.GetRootSignature().Get());
 
-        commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-        commandList->IASetVertexBuffers(0, 1, &_vertexBufferView);
-        commandList->IASetIndexBuffer(&_indexBufferView);
+        //commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        //commandList->IASetVertexBuffers(0, 1, &_vertexBufferView);
+        //commandList->IASetIndexBuffer(&_indexBufferView);
 
         commandList->RSSetViewports(1, &_viewport);
         commandList->RSSetScissorRects(1, &_scissorRect);
@@ -587,7 +672,11 @@ void RenderCubeExample::onRender(RenderEvent& renderEvent)
         offset2.ptr += 32 * 1;
         commandList->SetGraphicsRootDescriptorTable(3, offset2);
 
-        commandList->DrawIndexedInstanced(static_cast<UINT>(_model.GetIndices().size()), CUBES_SIZE * CUBES_SIZE, 0, 0, 0);
+        //commandList->DrawIndexedInstanced(static_cast<UINT>(_model.GetIndices().size()), CUBES_SIZE * CUBES_SIZE, 0, 0, 0);
+
+        _scene.Draw(commandList);
+
+        //transitionResource(commandList, _texture->GetResource(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST);
 
         commandList->Close();
     }

@@ -25,6 +25,15 @@ enum class EResourceType : int
 };
 BINARY_OPERATION_TO_ENUM(EResourceType);
 
+enum class ETextureType
+{
+    None,
+    Sampler1D,
+    Sampler2D,
+    Sampler3D,
+    SamplerCube
+};
+
 class ResourceDescription
 {
 public:

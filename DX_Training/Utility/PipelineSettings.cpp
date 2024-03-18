@@ -211,8 +211,8 @@ namespace
 
 void PipelineSettings::Parse(ID3D12Device* device, const std::string& filepath)
 {
-    const std::string pipelineFilepath = "RenderPipeline.tech";
-    Json::Value jsonRoot = Helper::ParseJson(pipelineFilepath);
+    //const std::string pipelineFilepath = "Resources\\RenderPipeline.tech";
+    Json::Value jsonRoot = Helper::ParseJson(filepath);
 
     // Load the vertex shader
     std::string vertexShaderFilepath = jsonRoot["VS"].asString();
@@ -226,9 +226,9 @@ void PipelineSettings::Parse(ID3D12Device* device, const std::string& filepath)
 
     // Create the vertex input layout
     // TODO implement parsing the layout from the "RenderPipeline.tech" 
-    D3D12_INPUT_ELEMENT_DESC inputLayout[3] = {};
-    std::vector<std::string> names(3);
-    for (int i = 0; i < 3; ++i)
+    D3D12_INPUT_ELEMENT_DESC inputLayout[4] = {};
+    std::vector<std::string> names(4);
+    for (int i = 0; i < 4; ++i)
     {
         //inputLayout[i] = {};
         Json::Value layout = jsonRoot["layout"][i];

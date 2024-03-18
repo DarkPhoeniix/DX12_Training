@@ -1,10 +1,12 @@
 #pragma once
 
 using DirectX::XMFLOAT3;
+using DirectX::XMFLOAT2;
 
 struct VertexPosColor
 {
     XMFLOAT3 Position;
+    XMFLOAT2 UV;
     XMFLOAT3 Normal;
     XMFLOAT3 Color;
 };

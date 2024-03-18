@@ -99,6 +99,15 @@
     <ClCompile Include="TextureParser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TextureLoaderDDS.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SceneNode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Utility\Helpers.h">
@@ -212,11 +221,17 @@
     <ClInclude Include="TextureParser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Scene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SceneNode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Resources\TrianglePixelShader.hlsl" />
-    <FxCompile Include="Resources\TriangleVertexShader.hlsl" />
-    <FxCompile Include="Resources\Compute.hlsl" />
+    <FxCompile Include="Shaders\TrianglePixelShader.hlsl" />
+    <FxCompile Include="Shaders\TriangleVertexShader.hlsl" />
+    <FxCompile Include="Shaders\Compute.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\RenderPipeline.blend" />

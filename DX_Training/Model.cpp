@@ -92,7 +92,7 @@ bool Model::ParseFile(const std::string& filepath)
 
     std::vector<XMFLOAT3> vertices;
     std::vector<XMFLOAT3> normals;
-    //std::vector<float2> textures;
+    std::vector<XMFLOAT2> textures;
 
     std::unordered_map< long long, int > avilableIndices;
     std::vector<long long> indices;
@@ -132,7 +132,11 @@ bool Model::ParseFile(const std::string& filepath)
         }
         else if (type == "vt")
         {
-            fin.getline(line, 512);
+            XMFLOAT2 ver;
+            float fPad;
+            fin >> ver.x >> ver.y;
+            textures.push_back(ver);
+            //fin.getline(line, 512);
         }
         else if (type == "g")
         {
@@ -203,7 +207,7 @@ bool Model::ParseFile(const std::string& filepath)
 
             auto& dataVert = _vertices[itStart->second];
             dataVert.Position = vertices[value[0]];
-            //dataVert.uv = textures[value[1]];
+            dataVert.UV = textures[value[1]];
             dataVert.Normal = normals[value[2]];
             dataVert.Color = { 1.0f, 1.0f, 1.0f };
         }
