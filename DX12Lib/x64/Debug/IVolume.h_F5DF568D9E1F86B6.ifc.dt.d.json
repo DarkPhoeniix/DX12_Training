@@ -1,0 +1,13 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "d:\\dx12_samples\\dx12_training\\dx_training\\interfaces\\ivolume.h",
+        "ProvidedModule": "",
+        "Includes": [
+            "d:\\dx12_samples\\dx12_training\\dx_training\\interfaces\\ientity.h",
+            "d:\\dx12_samples\\dx12_training\\dx_training\\components\\icomponent.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}
