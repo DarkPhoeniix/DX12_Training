@@ -1,6 +1,0 @@
-{
-    "FillMode": "D3D12_FILL_MODE_SOLID",
-    "CullMode": "D3D12_CULL_MODE_NONE",
-
-    "DepthClipEnable": true
-}
