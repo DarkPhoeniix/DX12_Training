@@ -21,12 +21,12 @@ struct PixelShaderInput
 SamplerState Sampler : register(s0);
 Texture2D Texture : register(t1);
 
-float3 CalculateAmbient(float3 normal, float3 color)
+float4 CalculateAmbient(float3 normal, float3 color)
 {
     // Convert from [-1, 1] to [0, 1]
     float up = normal.y * 0.5 + 0.5;
     // Calculate the ambient value
-    float3 ambient = Ambient.Down + up * Ambient.Up;
+    float4 ambient = Ambient.Down + up * Ambient.Up;
 
     // Apply the ambient value to the color
     return ambient;
@@ -39,5 +39,5 @@ float4 main(PixelShaderInput IN) : SV_Target
     uv.y = 1 - uv.y;
     //return Texture.Sample(Sampler, uv);
     //return IN.Color;
-    return float4(CalculateAmbient(norm, IN.Color.rgb), 1.0f);
+    return CalculateAmbient(norm, IN.Color.rgb);
 }

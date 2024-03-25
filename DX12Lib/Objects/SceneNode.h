@@ -6,6 +6,8 @@
 
 #include <fbxsdk.h>
 
+class Camera;
+
 class SceneNode : public ISceneNode
 {
 public:
@@ -14,6 +16,7 @@ public:
     ~SceneNode() = default;
 
     void Draw(ComPtr<ID3D12GraphicsCommandList> commandList, const FrustumVolume& frustum) const override;
+    void DrawAABB(ComPtr<ID3D12GraphicsCommandList> commandList, const Camera& camera) const;
 
     const AABBVolume& getAABB() const;
 
@@ -36,5 +39,11 @@ private:
 
     D3D12_VERTEX_BUFFER_VIEW _VBO;
     D3D12_INDEX_BUFFER_VIEW _IBO;
+
+    std::shared_ptr<Resource> _AABBVertexBuffer = nullptr;
+    std::shared_ptr<Resource> _AABBIndexBuffer = nullptr;
+
+    D3D12_VERTEX_BUFFER_VIEW _AABBVBO;
+    D3D12_INDEX_BUFFER_VIEW _AABBIBO;
 };
 

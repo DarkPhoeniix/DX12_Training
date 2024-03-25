@@ -2,18 +2,18 @@
 <Project>
   <ProjectOutputs>
     <ProjectOutput>
-      <FullPath>D:\DX12_Training\x64\Release\DX12Lib.exe</FullPath>
+      <FullPath>D:\Trainings\DX12_Training\DX12_Training\x64\Release\DX12Lib.exe</FullPath>
     </ProjectOutput>
   </ProjectOutputs>
   <ContentFiles>
     <ContentFile>
-      <FullPath>D:\DX12_Training\x64\Release\Compute.cso</FullPath>
+      <FullPath>D:\Trainings\DX12_Training\DX12_Training\x64\Release\Compute.cso</FullPath>
     </ContentFile>
     <ContentFile>
-      <FullPath>D:\DX12_Training\x64\Release\TrianglePixelShader.cso</FullPath>
+      <FullPath>D:\Trainings\DX12_Training\DX12_Training\x64\Release\TrianglePixelShader.cso</FullPath>
     </ContentFile>
     <ContentFile>
-      <FullPath>D:\DX12_Training\x64\Release\TriangleVertexShader.cso</FullPath>
+      <FullPath>D:\Trainings\DX12_Training\DX12_Training\x64\Release\TriangleVertexShader.cso</FullPath>
     </ContentFile>
   </ContentFiles>
   <SatelliteDlls />

@@ -53,6 +53,7 @@ private:
     ComPtr<ID3D12DescriptorHeap> _DSVHeap;
 
     PipelineSettings _pipeline;
+    PipelineSettings _AABBpipeline;
 
     ComPtr<ID3D12RootSignature> _rootComputeSignature;
     ComPtr<ID3D12PipelineState> _pipelineComputeState;

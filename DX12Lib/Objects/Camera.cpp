@@ -16,6 +16,8 @@ Camera::Camera()
 	_up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 	_target = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
 
+	_updateFrustum();
+
 	// Client should adjust to a value that makes sense for application's
 	// unit scale, and the object the camera is attached to--e.g., car, jet,
 	// human walking, etc.
@@ -37,7 +39,7 @@ const XMMATRIX& Camera::Projection() const
 
 const XMMATRIX& Camera::ViewProjection() const
 {
-	return _view * _projection; // TODO: fix warning
+	return _view * _projection;
 }
 
 const XMVECTOR& Camera::Right() const
@@ -199,11 +201,16 @@ void Camera::_buildView()
 		0.0f, 0.0f, 0.0f, 1.0f));
 
 	_frustum.transform = _view;
+	_updateFrustum();
 }
 
 void Camera::_buildProjection()
 {
 	_projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(_fov), _aspectRatio, _nearZ, _farZ);
+	_updateFrustum();
+}
 
-	_frustum.buildFromProjMatrix(ViewProjection());
+void Camera::_updateFrustum()
+{
+	_frustum.buildFromProjMatrix(_view * _projection);
 }

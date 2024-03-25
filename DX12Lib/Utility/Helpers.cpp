@@ -33,6 +33,7 @@ namespace Helper
         }
 
         std::ifstream file(filepath, std::ios_base::binary);
+		file.open(filepath, std::ios_base::binary);
         Json::Value root;
 
         file >> root;

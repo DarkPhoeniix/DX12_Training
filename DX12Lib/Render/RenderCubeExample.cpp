@@ -21,8 +21,6 @@
 #include <random>
 #include <cmath>
 
-#include <DirectXTex/DirectXTex.h>
-
 using namespace DirectX;
 
 extern RenderCubeExample* pShared = nullptr;
@@ -140,7 +138,7 @@ bool RenderCubeExample::loadContent()
 
     // Camera Setup
     {
-        XMVECTOR pos = XMVectorSet(20.0f, 20.0f, -50.0f, 1.0f);
+        XMVECTOR pos = XMVectorSet(0.0f, 0.0f, -50.0f, 1.0f);
         XMVECTOR target = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
         XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
         float aspectRatio = getWidth() / static_cast<float>(getHeight());
@@ -254,7 +252,7 @@ bool RenderCubeExample::loadContent()
 
     auto commandList = task->GetCommandLists().front();
 
-    _scene.LoadScene("t.fbx", commandList);
+    _scene.LoadScene("bowl.fbx", commandList);
 
     commandList->Close();
 
@@ -271,7 +269,8 @@ bool RenderCubeExample::loadContent()
     rtvFormats.NumRenderTargets = 1;
     rtvFormats.RTFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 
-    _pipeline.Parse(device.Get(), "Resources\\RenderPipeline.tech");
+    _pipeline.Parse(device.Get(), "Resources\\TriangleRenderPipeline.tech");
+    _AABBpipeline.Parse(device.Get(), "Resources\\AABBRenderPipeline.tech");
 
     // Compute pipeline setup
     {
@@ -553,6 +552,14 @@ void RenderCubeExample::onRender(RenderEvent& renderEvent)
         commandList->SetGraphicsRootDescriptorTable(3, offset2);
 
         _scene.Draw(commandList, _camera.GetViewFrustum());
+
+
+        commandList->SetPipelineState(_AABBpipeline.GetPipelineState().Get());
+        commandList->SetGraphicsRootSignature(_AABBpipeline.GetRootSignature().Get());
+
+        _scene.DrawAABB(commandList, _camera);
+
+
 
         commandList->Close();
     }

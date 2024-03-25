@@ -211,6 +211,24 @@ namespace
         Logger::Log(LogType::Warning, "Failed to parse " + str + " from the depth stencil description");
         return DEPTH_WRITE_MASK.begin()->second;
     }
+
+    const std::map<std::string, D3D12_PRIMITIVE_TOPOLOGY_TYPE> TOPOLOGY_TYPE =
+    {
+        { "point", D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT},
+        { "line", D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE },
+        { "triangle", D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE }
+    };
+
+    D3D12_PRIMITIVE_TOPOLOGY_TYPE ParseTopologyType(const std::string& str)
+    {
+        auto it = TOPOLOGY_TYPE.find(str);
+        if (it != TOPOLOGY_TYPE.end())
+        {
+            return it->second;
+        }
+        Logger::Log(LogType::Warning, "Failed to parse " + str + " from the topology type description");
+        return TOPOLOGY_TYPE.begin()->second;
+    }
 }
 
 void PipelineSettings::Parse(ID3D12Device* device, const std::string& filepath)
@@ -219,29 +237,46 @@ void PipelineSettings::Parse(ID3D12Device* device, const std::string& filepath)
     Json::Value jsonRoot = Helper::ParseJson(filepath);
 
     // Load the vertex shader
-    std::string vertexShaderFilepath = jsonRoot["VS"].asString();
-    ComPtr<ID3DBlob> vertexShaderBlob;
-    Helper::throwIfFailed(D3DReadFileToBlob(std::wstring(vertexShaderFilepath.begin(), vertexShaderFilepath.end()).c_str(), &vertexShaderBlob));
+    ComPtr<ID3DBlob> vertexShaderBlob = nullptr;
+    if (!jsonRoot["VS"].isNull())
+    {
+        std::string vertexShaderFilepath = jsonRoot["VS"].asString();
+        Helper::throwIfFailed(D3DReadFileToBlob(std::wstring(vertexShaderFilepath.begin(), vertexShaderFilepath.end()).c_str(), &vertexShaderBlob));
+    }
+
+    // Load the geometry shader
+    ComPtr<ID3DBlob> geometryShaderBlob = nullptr;
+    if (!jsonRoot["GS"].isNull())
+    {
+        std::string geometryShaderFilepath = jsonRoot["GS"].asString();
+        Helper::throwIfFailed(D3DReadFileToBlob(std::wstring(geometryShaderFilepath.begin(), geometryShaderFilepath.end()).c_str(), &geometryShaderBlob));
+    }
 
     // Load the pixel shader
-    std::string pixelShaderFilepath = jsonRoot["PS"].asString();
-    ComPtr<ID3DBlob> pixelShaderBlob;
-    Helper::throwIfFailed(D3DReadFileToBlob(std::wstring(pixelShaderFilepath.begin(), pixelShaderFilepath.end()).c_str(), &pixelShaderBlob));
+    ComPtr<ID3DBlob> pixelShaderBlob = nullptr;
+    if (!jsonRoot["PS"].isNull())
+    {
+        std::string pixelShaderFilepath = jsonRoot["PS"].asString();
+        Helper::throwIfFailed(D3DReadFileToBlob(std::wstring(pixelShaderFilepath.begin(), pixelShaderFilepath.end()).c_str(), &pixelShaderBlob));
+    }
 
     // Create the vertex input layout
-    // TODO implement parsing the layout from the "RenderPipeline.tech" 
-    D3D12_INPUT_ELEMENT_DESC inputLayout[4] = {};
-    std::vector<std::string> names(4);
-    for (int i = 0; i < 4; ++i)
+    unsigned int layoutElementsNum = jsonRoot["layout"].size();
+    D3D12_INPUT_ELEMENT_DESC* inputLayout = new D3D12_INPUT_ELEMENT_DESC[layoutElementsNum];
+    std::vector<std::string> names(layoutElementsNum);
+    if (!jsonRoot["layout"].isNull())
     {
-        //inputLayout[i] = {};
-        Json::Value layout = jsonRoot["layout"][i];
-        names[i] = layout["name"].asString();
-        inputLayout[i].SemanticName         = names[i].c_str();
-        inputLayout[i].SemanticIndex        = layout["semanticIndex"].asUInt();
-        inputLayout[i].Format               = ParseFormat(layout["format"].asString());
-        inputLayout[i].AlignedByteOffset    = layout["offset"].asUInt();
-        inputLayout[i].InputSlot            = layout["stream"].asUInt();
+        for (int i = 0; i < 4; ++i)
+        {
+            inputLayout[i] = {};
+            Json::Value layout = jsonRoot["layout"][i];
+            names[i] = layout["name"].asString();
+            inputLayout[i].SemanticName = names[i].c_str();
+            inputLayout[i].SemanticIndex = layout["semanticIndex"].asUInt();
+            inputLayout[i].Format = ParseFormat(layout["format"].asString());
+            inputLayout[i].AlignedByteOffset = layout["offset"].asUInt();
+            inputLayout[i].InputSlot = layout["stream"].asUInt();
+        }
     }
 
     Helper::throwIfFailed(device->CreateRootSignature(0, vertexShaderBlob->GetBufferPointer(),
@@ -258,10 +293,14 @@ void PipelineSettings::Parse(ID3D12Device* device, const std::string& filepath)
     pipelineStateStreamDesc.DepthStencilState = ParseDepthStencilDescription(depthPipelineDescFilepath);
 
     pipelineStateStreamDesc.pRootSignature = _rootSignature.Get();
-    pipelineStateStreamDesc.InputLayout = { inputLayout, _countof(inputLayout) };
-    pipelineStateStreamDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-    pipelineStateStreamDesc.VS = CD3DX12_SHADER_BYTECODE(vertexShaderBlob.Get());
-    pipelineStateStreamDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShaderBlob.Get());
+    pipelineStateStreamDesc.InputLayout = { inputLayout, layoutElementsNum };
+    pipelineStateStreamDesc.PrimitiveTopologyType = ParseTopologyType(jsonRoot["topologyType"].asString());
+    if (vertexShaderBlob)
+        pipelineStateStreamDesc.VS = CD3DX12_SHADER_BYTECODE(vertexShaderBlob.Get());
+    if (geometryShaderBlob)
+        pipelineStateStreamDesc.GS = CD3DX12_SHADER_BYTECODE(geometryShaderBlob.Get());
+    if (pixelShaderBlob)
+        pipelineStateStreamDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShaderBlob.Get());
     pipelineStateStreamDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
     pipelineStateStreamDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
     pipelineStateStreamDesc.NumRenderTargets = 1;
@@ -269,6 +308,8 @@ void PipelineSettings::Parse(ID3D12Device* device, const std::string& filepath)
     pipelineStateStreamDesc.SampleMask = 0xffffffff; // sample mask has to do with multi-sampling. 0xffffffff means point sampling is done
 
     Helper::throwIfFailed(device->CreateGraphicsPipelineState(&pipelineStateStreamDesc, IID_PPV_ARGS(&_pipelineState)));
+
+    delete[] inputLayout;
 }
 
 ComPtr<ID3D12RootSignature> PipelineSettings::GetRootSignature() const

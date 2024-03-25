@@ -56,6 +56,7 @@ protected:
 	// vectors and origin, relative to the world space
 	void _buildView();
 	void _buildProjection();
+	void _updateFrustum();
 
 protected:
 	// Save camera related matrices.

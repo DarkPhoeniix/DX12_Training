@@ -238,11 +238,15 @@
     <FxCompile Include="Shaders\TrianglePixelShader.hlsl" />
     <FxCompile Include="Shaders\TriangleVertexShader.hlsl" />
     <FxCompile Include="Shaders\Compute.hlsl" />
+    <FxCompile Include="Shaders\AABB_vs.hlsl" />
+    <FxCompile Include="Shaders\AABB_gs.hlsl" />
+    <FxCompile Include="Shaders\AABB_ps.hlsl" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\RenderPipeline.blend" />
-    <None Include="Resources\RenderPipeline.depth" />
-    <None Include="Resources\RenderPipeline.raster" />
-    <None Include="Resources\RenderPipeline.tech" />
+    <None Include="Resources\TriangleRenderPipeline.blend" />
+    <None Include="Resources\TriangleRenderPipeline.depth" />
+    <None Include="Resources\TriangleRenderPipeline.raster" />
+    <None Include="Resources\TriangleRenderPipeline.tech" />
+    <None Include="Resources\AABBRenderPipeline.tech" />
   </ItemGroup>
 </Project>

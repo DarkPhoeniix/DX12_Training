@@ -5,6 +5,7 @@
 #include <fbxsdk.h>
 
 class FrustumVolume;
+class Camera;
 
 class Scene
 {
@@ -13,6 +14,7 @@ public:
     ~Scene();
 
     void Draw(ComPtr<ID3D12GraphicsCommandList> commandList, const FrustumVolume& frustum);
+    void DrawAABB(ComPtr<ID3D12GraphicsCommandList> commandList, const Camera& camera);
 
     bool LoadScene(const std::string& name, ComPtr<ID3D12GraphicsCommandList> commandList);
 
