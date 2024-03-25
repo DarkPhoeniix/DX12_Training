@@ -1,0 +1,17 @@
+﻿  RenderCubeExample.cpp
+D:\Trainings\DX12_Training\DX12_Training\DX12Lib\Render\RenderCubeExample.cpp(301,63): warning C4267: 'argument': conversion from 'size_t' to 'UINT', possible loss of data
+D:\Trainings\DX12_Training\DX12_Training\DX12Lib\Render\RenderCubeExample.cpp(603,66): warning C4267: 'argument': conversion from 'size_t' to 'UINT', possible loss of data
+  Generating code
+  6 of 5141 functions ( 0.1%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    9 functions had inline decision re-evaluated but remain unchanged
+  Finished generating code
+JsonCPP.lib(json_value.obj) : warning LNK4099: PDB '' was not found with 'JsonCPP.lib(json_value.obj)' or at ''; linking object as if no debug info
+JsonCPP.lib(json_reader.obj) : warning LNK4099: PDB '' was not found with 'JsonCPP.lib(json_reader.obj)' or at ''; linking object as if no debug info
+JsonCPP.lib(json_writer.obj) : warning LNK4099: PDB '' was not found with 'JsonCPP.lib(json_writer.obj)' or at ''; linking object as if no debug info
+  DX12Lib.vcxproj -> D:\Trainings\DX12_Training\DX12_Training\x64\Release\DX12Lib.exe
+  D:\Trainings\DX12_Training\DX12_Training\DX12Lib\Resources\RenderPipeline.blend
+  D:\Trainings\DX12_Training\DX12_Training\DX12Lib\Resources\RenderPipeline.depth
+  D:\Trainings\DX12_Training\DX12_Training\DX12Lib\Resources\RenderPipeline.raster
+  D:\Trainings\DX12_Training\DX12_Training\DX12Lib\Resources\RenderPipeline.tech
+  4 File(s) copied

@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <ProjectOutputs>
+    <ProjectOutput>
+      <FullPath>D:\Trainings\DX12_Training\DX12_Training\x64\Release\DX12Lib.exe</FullPath>
+    </ProjectOutput>
+  </ProjectOutputs>
+  <ContentFiles>
+    <ContentFile>
+      <FullPath>D:\Trainings\DX12_Training\DX12_Training\x64\Release\Compute.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>D:\Trainings\DX12_Training\DX12_Training\x64\Release\TrianglePixelShader.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>D:\Trainings\DX12_Training\DX12_Training\x64\Release\TriangleVertexShader.cso</FullPath>
+    </ContentFile>
+  </ContentFiles>
+  <SatelliteDlls />
+  <NonRecipeFileRefs />
+</Project>
