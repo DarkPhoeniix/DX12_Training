@@ -3,4 +3,5 @@
 class IVolume
 {
 public:
+    DirectX::XMMATRIX transform;
 };

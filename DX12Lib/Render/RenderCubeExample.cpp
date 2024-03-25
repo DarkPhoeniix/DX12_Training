@@ -254,7 +254,7 @@ bool RenderCubeExample::loadContent()
 
     auto commandList = task->GetCommandLists().front();
 
-    _scene.LoadScene("bowl_t.fbx", commandList);
+    _scene.LoadScene("t.fbx", commandList);
 
     commandList->Close();
 
@@ -552,7 +552,7 @@ void RenderCubeExample::onRender(RenderEvent& renderEvent)
         offset2.ptr += 32 * 1;
         commandList->SetGraphicsRootDescriptorTable(3, offset2);
 
-        _scene.Draw(commandList);
+        _scene.Draw(commandList, _camera.GetViewFrustum());
 
         commandList->Close();
     }

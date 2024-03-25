@@ -2,6 +2,7 @@
 
 #include "Mesh.h"
 #include "Interfaces/ISceneNode.h"
+#include "AABBVolume.h"
 
 #include <fbxsdk.h>
 
@@ -12,7 +13,9 @@ public:
     SceneNode(FbxNode* node, ComPtr<ID3D12GraphicsCommandList> commandList, SceneNode* parent = nullptr);
     ~SceneNode() = default;
 
-    void Draw(ComPtr<ID3D12GraphicsCommandList> commandList) const override;
+    void Draw(ComPtr<ID3D12GraphicsCommandList> commandList, const FrustumVolume& frustum) const override;
+
+    const AABBVolume& getAABB() const;
 
 protected:
     void _UploadData(ComPtr<ID3D12GraphicsCommandList> commandList,
@@ -21,10 +24,11 @@ protected:
         size_t elementSize,
         const void* bufferData,
         D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE);
-    void _DrawCurrentNode(ComPtr<ID3D12GraphicsCommandList> commandList) const;
+    void _DrawCurrentNode(ComPtr<ID3D12GraphicsCommandList> commandList, const FrustumVolume& frustum) const;
 
 private:
     std::shared_ptr<Mesh> _mesh = nullptr;
+    AABBVolume _AABB;
 
     std::shared_ptr<Resource> _modelMatrix = nullptr;
     std::shared_ptr<Resource> _vertexBuffer = nullptr;

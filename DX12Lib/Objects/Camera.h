@@ -1,5 +1,7 @@
 #pragma once
 
+#include "FrustumVolume.h"
+
 class Camera
 {
 public:
@@ -16,6 +18,8 @@ public:
 	const DirectX::XMVECTOR& Right() const;
 	const DirectX::XMVECTOR& Up() const;
 	const DirectX::XMVECTOR& Look() const;
+
+	const FrustumVolume& GetViewFrustum() const;
 
 	// Read/write access to the camera position.
 	DirectX::XMVECTOR& Position();
@@ -65,6 +69,9 @@ protected:
 	DirectX::XMVECTOR _up;
 	DirectX::XMVECTOR _target;
 	DirectX::XMVECTOR _look;
+
+	// Frustum
+	FrustumVolume _frustum;
 
 	// Lens params
 	float _fov;

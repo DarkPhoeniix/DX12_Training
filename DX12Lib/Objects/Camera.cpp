@@ -55,6 +55,11 @@ const XMVECTOR& Camera::Look() const
 	return _look;
 }
 
+const FrustumVolume& Camera::GetViewFrustum() const
+{
+	return _frustum;
+}
+
 XMVECTOR& Camera::Position()
 {
 	return _position;
@@ -192,9 +197,13 @@ void Camera::_buildView()
 		XMVectorGetX(_up), XMVectorGetY(_up), XMVectorGetZ(_up), y, 
 		XMVectorGetX(_look), XMVectorGetY(_look), XMVectorGetZ(_look), z,
 		0.0f, 0.0f, 0.0f, 1.0f));
+
+	_frustum.transform = _view;
 }
 
 void Camera::_buildProjection()
 {
 	_projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(_fov), _aspectRatio, _nearZ, _farZ);
+
+	_frustum.buildFromProjMatrix(ViewProjection());
 }

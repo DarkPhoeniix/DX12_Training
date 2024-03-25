@@ -4,6 +4,7 @@
 #include "Scene.h"
 
 #include "Application.h"
+#include "FrustumVolume.h"
 //#include "TextureLoaderDDS.h"
 
 using namespace DirectX;
@@ -57,10 +58,10 @@ using namespace DirectX;
 //    }
 //}
 
-SceneNode::SceneNode(FbxNode* node, ComPtr<ID3D12GraphicsCommandList> commandList, SceneNode* parent)
+SceneNode::SceneNode(FbxNode* fbxNode, ComPtr<ID3D12GraphicsCommandList> commandList, SceneNode* parent)
 {
     _parent = parent;
-    _name = node->GetName();
+    _name = fbxNode->GetName();
 
     auto device = Application::get().getDevice();
 
@@ -68,7 +69,7 @@ SceneNode::SceneNode(FbxNode* node, ComPtr<ID3D12GraphicsCommandList> commandLis
 
     // Read transform
     {
-        FbxAMatrix transform = node->EvaluateLocalTransform();
+        FbxAMatrix transform = fbxNode->EvaluateLocalTransform();
         _transform = 
         { 
             (float)transform.mData[0][0], (float)transform.mData[0][1], (float)transform.mData[0][2], (float)transform.mData[0][3],
@@ -91,16 +92,21 @@ SceneNode::SceneNode(FbxNode* node, ComPtr<ID3D12GraphicsCommandList> commandLis
     }
 
     // Setup child nodes
-    for (int childIndex = 0; childIndex < node->GetChildCount(); ++childIndex)
+    for (int childIndex = 0; childIndex < fbxNode->GetChildCount(); ++childIndex)
     {
-        auto childNode = std::make_shared<SceneNode>(node->GetChild(childIndex), commandList, this);
+        auto childNode = std::make_shared<SceneNode>(fbxNode->GetChild(childIndex), commandList, this);
         _childNodes.push_back(childNode);
     }
 
     // Setup mesh
-    FbxMesh* fbxMesh = node->GetMesh();
+    FbxMesh* fbxMesh = fbxNode->GetMesh();
     if (!fbxMesh)
         return;
+
+    FbxVector4 min, max, center;
+    fbxNode->EvaluateGlobalBoundingBoxMinMaxCenter(min, max, center);
+    _AABB.min = XMVectorSet(min.mData[0], min.mData[1], min.mData[2], min.mData[3]);
+    _AABB.max = XMVectorSet(max.mData[0], max.mData[1], max.mData[2], max.mData[3]);
 
     if (_mesh = std::make_shared<Mesh>(fbxMesh))
     {
@@ -132,12 +138,17 @@ SceneNode::SceneNode(FbxNode* node, ComPtr<ID3D12GraphicsCommandList> commandLis
     }
 }
 
-void SceneNode::Draw(ComPtr<ID3D12GraphicsCommandList> commandList) const
+void SceneNode::Draw(ComPtr<ID3D12GraphicsCommandList> commandList, const FrustumVolume& frustum) const
 {
     for (const std::shared_ptr<ISceneNode> node : _childNodes)
-        node->Draw(commandList);
+        node->Draw(commandList, frustum);
 
-    _DrawCurrentNode(commandList);
+    _DrawCurrentNode(commandList, frustum);
+}
+
+const AABBVolume& SceneNode::getAABB() const
+{
+    return _AABB;
 }
 
 void SceneNode::_UploadData(ComPtr<ID3D12GraphicsCommandList> commandList, 
@@ -187,10 +198,16 @@ void SceneNode::_UploadData(ComPtr<ID3D12GraphicsCommandList> commandList,
     }
 }
 
-void SceneNode::_DrawCurrentNode(ComPtr<ID3D12GraphicsCommandList> commandList) const
+void SceneNode::_DrawCurrentNode(ComPtr<ID3D12GraphicsCommandList> commandList, const FrustumVolume& frustum) const
 {
     if (!_mesh)
         return;
+
+    if (!intersect(frustum, _AABB))
+    {
+        OutputDebugStringA(std::string("Skipped render: " + _name + "\n").c_str());
+        return;
+    }
 
     XMMATRIX* modelMatrixData = (XMMATRIX*)_modelMatrix->Map();
     *modelMatrixData = GetGlobalTransform();

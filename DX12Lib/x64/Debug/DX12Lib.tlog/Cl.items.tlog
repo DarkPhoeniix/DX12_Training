@@ -1,4 +1,7 @@
+D:\DX12_Training\DX12Lib\Objects\FrustumVolume.cpp;D:\DX12_Training\DX12Lib\x64\Debug\FrustumVolume.obj
+D:\DX12_Training\DX12Lib\Objects\AABBVolume.cpp;D:\DX12_Training\DX12Lib\x64\Debug\AABBVolume.obj
 D:\DX12_Training\DX12Lib\Interfaces\ISceneNode.cpp;D:\DX12_Training\DX12Lib\x64\Debug\ISceneNode.obj
+D:\DX12_Training\DX12Lib\Interfaces\IVolume.cpp;D:\DX12_Training\DX12Lib\x64\Debug\IVolume.obj
 D:\DX12_Training\DX12Lib\Objects\Mesh.cpp;D:\DX12_Training\DX12Lib\x64\Debug\Mesh.obj
 D:\DX12_Training\DX12Lib\Render\FencePool.cpp;D:\DX12_Training\DX12Lib\x64\Debug\FencePool.obj
 D:\DX12_Training\DX12Lib\Render\Fence.cpp;D:\DX12_Training\DX12Lib\x64\Debug\Fence.obj

@@ -3,6 +3,7 @@
 #include "Scene.h"
 
 #include "SceneNode.h"
+#include "FrustumVolume.h"
 
 // Create the FBX SDK memory manager object.
 // The SDK Manager allocates and frees memory
@@ -26,9 +27,9 @@ Scene::~Scene()
         _FBXManager->Destroy();
 }
 
-void Scene::Draw(ComPtr<ID3D12GraphicsCommandList> commandList)
+void Scene::Draw(ComPtr<ID3D12GraphicsCommandList> commandList, const FrustumVolume& frustum)
 {
-    _rootNode->Draw(commandList);
+    _rootNode->Draw(commandList, frustum);
 }
 
 bool Scene::LoadScene(const std::string& name, ComPtr<ID3D12GraphicsCommandList> commandList)

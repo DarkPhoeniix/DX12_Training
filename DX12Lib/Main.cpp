@@ -35,7 +35,7 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstan
     }
 
     {
-        std::shared_ptr<RenderCubeExample> demo = std::make_shared<RenderCubeExample>(L"D3DX12 Render Cube Training", 1280, 720, false); // TODO: vSync here
+        std::shared_ptr<RenderCubeExample> demo = std::make_shared<RenderCubeExample>(L"DX12 Sandbox", 1280, 720, false); // TODO: vSync here
         Application::create(hInstance);
         {
             
