@@ -238,10 +238,7 @@ void SceneNode::_DrawCurrentNode(ComPtr<ID3D12GraphicsCommandList> commandList, 
         return;
 
     if (!intersect(frustum, _AABB))
-    {
-        OutputDebugStringA(std::string("Skipped render: " + _name + "\n").c_str());
         return;
-    }
 
     XMMATRIX* modelMatrixData = (XMMATRIX*)_modelMatrix->Map();
     *modelMatrixData = GetGlobalTransform();

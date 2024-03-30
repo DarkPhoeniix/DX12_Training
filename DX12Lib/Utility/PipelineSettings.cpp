@@ -262,10 +262,11 @@ void PipelineSettings::Parse(ID3D12Device* device, const std::string& filepath)
 
     // Create the vertex input layout
     unsigned int layoutElementsNum = jsonRoot["layout"].size();
-    D3D12_INPUT_ELEMENT_DESC* inputLayout = new D3D12_INPUT_ELEMENT_DESC[layoutElementsNum];
+    D3D12_INPUT_ELEMENT_DESC* inputLayout = nullptr;
     std::vector<std::string> names(layoutElementsNum);
     if (!jsonRoot["layout"].isNull())
     {
+        inputLayout = new D3D12_INPUT_ELEMENT_DESC[layoutElementsNum];
         for (int i = 0; i < 4; ++i)
         {
             inputLayout[i] = {};

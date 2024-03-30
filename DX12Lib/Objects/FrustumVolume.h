@@ -4,12 +4,6 @@
 
 class AABBVolume;
 
-struct Plane
-{
-    DirectX::XMVECTOR normal;
-    float distance;
-};
-
 class FrustumVolume : public IVolume
 {
 public:
@@ -17,10 +11,10 @@ public:
 
     friend bool intersect(const FrustumVolume& frustum, const AABBVolume& aabb);
 
-    Plane leftPlane;
-    Plane rightPlane;
-    Plane bottomPlane;
-    Plane topPlane;
-    Plane nearPlane;
-    Plane farPlane;
+    DirectX::XMVECTOR leftPlane;
+    DirectX::XMVECTOR rightPlane;
+    DirectX::XMVECTOR bottomPlane;
+    DirectX::XMVECTOR topPlane;
+    DirectX::XMVECTOR nearPlane;
+    DirectX::XMVECTOR farPlane;
 };
