@@ -13,7 +13,7 @@
 *.vcxproj.user
 *.opendb
 
-/DX_Training/x64
+/DX12Lib/x64
 /delete_pdb
 /Bin
 /x64
