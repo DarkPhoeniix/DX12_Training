@@ -15,6 +15,7 @@ public:
     using super = IGame;
 
     RenderCubeExample(const std::wstring& name, int width, int height, bool vSync = false);
+    ~RenderCubeExample();
 
     virtual bool loadContent() override;
     virtual void unloadContent() override;
@@ -69,7 +70,6 @@ private:
 
     Resource* _dynamicData;
     Resource* _UAVRes;
-    //Resource* _readBack;
     ComPtr<ID3D12Heap> _pHeap;
     ComPtr<ID3D12DescriptorHeap> _descHeap;
 
@@ -85,4 +85,6 @@ private:
     Base::Blob _blob;
     ComPtr<ID3D12Resource> _intermediateTex;
     Scene _scene;
+
+    Heap _texturesHeap;
 };

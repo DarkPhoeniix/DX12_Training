@@ -13,6 +13,7 @@ public:
     DirectX::XMMATRIX GetGlobalTransform() const;
 
     virtual void Draw(ComPtr<ID3D12GraphicsCommandList> commandList, const FrustumVolume& frustum) const = 0;
+    virtual void DrawAABB(ComPtr<ID3D12GraphicsCommandList> commandList) const = 0;
 
 protected:
     std::string _name;

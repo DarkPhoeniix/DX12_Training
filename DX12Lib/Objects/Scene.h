@@ -14,7 +14,7 @@ public:
     ~Scene();
 
     void Draw(ComPtr<ID3D12GraphicsCommandList> commandList, const FrustumVolume& frustum);
-    void DrawAABB(ComPtr<ID3D12GraphicsCommandList> commandList, const Camera& camera);
+    void DrawAABB(ComPtr<ID3D12GraphicsCommandList> commandList);
 
     bool LoadScene(const std::string& name, ComPtr<ID3D12GraphicsCommandList> commandList);
 

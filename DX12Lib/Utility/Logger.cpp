@@ -48,9 +48,6 @@ void Logger::Log(LogType type, const std::string& message)
     
     std::string output = std::format("{0:%T}", time) + " | " + logType(type) + ": " + message + '\n';
     file << output;
-#if _DEBUG
-    //OutputDebugStringA(output.c_str());
-#endif
 }
 
 void Logger::SetLogLevel(LogType logLevel)

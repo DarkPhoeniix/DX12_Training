@@ -63,12 +63,17 @@ void Frame::ResetGPU()
     _executedTasks = std::move(_currentTasks);
 }
 
+Frame::~Frame()
+{
+}
+
 void Frame::Init(ComPtr<ID3D12Device2> device, ComPtr<IDXGISwapChain> swapChain)
 {
     ComPtr<ID3D12Resource> temp;
     swapChain->GetBuffer(Index, IID_PPV_ARGS(&temp));
 
     _swapChainTexture.SetResource(temp);
+    _swapChainTexture.SetName( std::string("Frame's swapchain resource ") + std::to_string( Index ) );
 
     ResourceDescription desc = _swapChainTexture.GetResourceDescription();
 
@@ -76,7 +81,7 @@ void Frame::Init(ComPtr<ID3D12Device2> device, ComPtr<IDXGISwapChain> swapChain)
     {
         D3D12_CLEAR_VALUE clearValueTexTarget;
         clearValueTexTarget.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        clearValueTexTarget.Color[0] = 0.0f;
+        clearValueTexTarget.Color[0] = 0.0f; 
         clearValueTexTarget.Color[1] = 0.0f;
         clearValueTexTarget.Color[2] = 0.0f;
         clearValueTexTarget.Color[3] = 1.0f;
@@ -84,8 +89,11 @@ void Frame::Init(ComPtr<ID3D12Device2> device, ComPtr<IDXGISwapChain> swapChain)
         desc.AddFlags(D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
         desc.SetClearValue(clearValueTexTarget);
 
-        _targetTexture = Resource(device, desc);
+        //_targetTexture = Resource(device, desc);
+        _targetTexture.setDevice( device );
+        _targetTexture.SetResourceDescription( desc );
         _targetTexture.CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_SOURCE);
+        _targetTexture.SetName( std::string( "Frame RTT" ) + std::to_string( Index ) );
     }
 
     // Create resource for the depth texture
@@ -100,8 +108,11 @@ void Frame::Init(ComPtr<ID3D12Device2> device, ComPtr<IDXGISwapChain> swapChain)
 
         desc.SetClearValue(clearValue);
 
-        _depthTexture = Resource(device, desc);
+        //_depthTexture = Resource(device, desc);
+        _depthTexture.setDevice( device );
+        _depthTexture.SetResourceDescription( desc );
         _depthTexture.CreateCommitedResource(D3D12_RESOURCE_STATE_DEPTH_WRITE);
+        _depthTexture.SetName( std::string( "Frame DSV" ) + std::to_string( Index ));
     }
 
     // Create descriptor heaps

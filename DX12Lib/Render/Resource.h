@@ -18,6 +18,10 @@ public:
     void SetResourceDescription(const ResourceDescription& resourceDesc);
     ResourceDescription GetResourceDescription() const;
 
+    // setter device
+    //
+    void setDevice( ComPtr<ID3D12Device> device );
+
     D3D12_GPU_VIRTUAL_ADDRESS OffsetGPU(unsigned int offset) const;
     void* Map();
 
@@ -33,5 +37,5 @@ private:
     D3D12_RESOURCE_STATES _initialState;
     D3D12_RESOURCE_STATES _currentState;
 
-    ComPtr<ID3D12Device> _device;
+    ComPtr<ID3D12Device> _device= nullptr;
 };

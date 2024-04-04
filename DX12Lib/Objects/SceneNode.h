@@ -13,10 +13,10 @@ class SceneNode : public ISceneNode
 public:
     SceneNode() = default;
     SceneNode(FbxNode* node, ComPtr<ID3D12GraphicsCommandList> commandList, SceneNode* parent = nullptr);
-    ~SceneNode() = default;
+    ~SceneNode();
 
     void Draw(ComPtr<ID3D12GraphicsCommandList> commandList, const FrustumVolume& frustum) const override;
-    void DrawAABB(ComPtr<ID3D12GraphicsCommandList> commandList, const Camera& camera) const;
+    void DrawAABB(ComPtr<ID3D12GraphicsCommandList> commandList) const override;
 
     const AABBVolume& getAABB() const;
 
@@ -45,5 +45,7 @@ private:
 
     D3D12_VERTEX_BUFFER_VIEW _AABBVBO;
     D3D12_INDEX_BUFFER_VIEW _AABBIBO;
+    
+    std::vector<ID3D12Resource*> intermediates;
 };
 

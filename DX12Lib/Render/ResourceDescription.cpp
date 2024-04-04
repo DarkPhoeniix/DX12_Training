@@ -2,8 +2,11 @@
 #include "ResourceDescription.h"
 
 ResourceDescription::ResourceDescription()
+	: _resourceDescription{}
+	, _resourceType( EResourceType::None )
+	, _stride(0)
 {
-	_resourceDescription = D3D12_RESOURCE_DESC();
+	//_resourceDescription = D3D12_RESOURCE_DESC();
 
 	_resourceDescription.Format = DXGI_FORMAT::DXGI_FORMAT_UNKNOWN;
 
@@ -22,8 +25,10 @@ ResourceDescription::ResourceDescription()
 }
 
 ResourceDescription::ResourceDescription(D3D12_RESOURCE_DESC desc)
+	: _resourceDescription(desc)
+	, _resourceType( EResourceType::None )
+	, _stride(0)
 {
-	_resourceDescription = desc;
 }
 
 D3D12_RESOURCE_DESC ResourceDescription::CreateDXResourceDescription() const

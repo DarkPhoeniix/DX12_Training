@@ -1,63 +1,15 @@
+
 #include "stdafx.h"
 
 #include "SceneNode.h"
+
+#include "TextureLoaderDDS.h"
+#include "FrustumVolume.h"
+#include "Application.h"
+#include "Camera.h"
 #include "Scene.h"
 
-#include "Application.h"
-#include "FrustumVolume.h"
-#include "Camera.h"
-//#include "TextureLoaderDDS.h"
-
 using namespace DirectX;
-
-//namespace
-//{
-//    std::string getTextureName(FbxNode* node)
-//    {
-//        std::string name;
-//
-//        int mcount = node->GetSrcObjectCount<FbxSurfaceMaterial>();
-//        for (int index = 0; index < mcount; index++)
-//        {
-//            FbxSurfaceMaterial* material = (FbxSurfaceMaterial*)node->GetSrcObject<FbxSurfaceMaterial>(index);
-//            if (material)
-//            {
-//                // This only gets the material of type sDiffuse, you probably need to traverse all Standard Material Property by its name to get all possible textures.
-//                FbxProperty prop = material->FindProperty(FbxSurfaceMaterial::sDiffuse);
-//
-//                // Check if it's layeredtextures
-//                int layered_texture_count = prop.GetSrcObjectCount<FbxLayeredTexture>();
-//                if (layered_texture_count > 0)
-//                {
-//                    for (int j = 0; j < layered_texture_count; j++)
-//                    {
-//                        FbxLayeredTexture* layered_texture = FbxCast<FbxLayeredTexture>(prop.GetSrcObject<FbxLayeredTexture>(j));
-//                        int lcount = layered_texture->GetSrcObjectCount<FbxTexture>();
-//                        for (int k = 0; k < lcount; k++)
-//                        {
-//                            FbxTexture* texture = FbxCast<FbxTexture>(layered_texture->GetSrcObject<FbxTexture>(k));
-//                            // Then, you can get all the properties of the texture, include its name
-//                            name = texture->GetName();
-//                        }
-//                    }
-//                }
-//                else
-//                {
-//                    // Directly get textures
-//                    int texture_count = prop.GetSrcObjectCount<FbxTexture>();
-//                    for (int j = 0; j < texture_count; j++)
-//                    {
-//                        const FbxTexture* texture = FbxCast<FbxTexture>(prop.GetSrcObject<FbxTexture>(j));
-//                        // Then, you can get all the properties of the texture, include its name
-//                        name = texture->GetName();
-//                    }
-//                }
-//            }
-//        }
-//
-//        return name;
-//    }
-//}
 
 SceneNode::SceneNode(FbxNode* fbxNode, ComPtr<ID3D12GraphicsCommandList> commandList, SceneNode* parent)
 {
@@ -89,7 +41,7 @@ SceneNode::SceneNode(FbxNode* fbxNode, ComPtr<ID3D12GraphicsCommandList> command
 
         _modelMatrix = std::make_shared<Resource>(device, desc);
         _modelMatrix->CreateCommitedResource(D3D12_RESOURCE_STATE_GENERIC_READ);
-        _modelMatrix->SetName(_name + "ModelMatrix");
+        _modelMatrix->SetName(_name + "_ModelMatrix");
     }
 
     // Setup mesh
@@ -112,7 +64,7 @@ SceneNode::SceneNode(FbxNode* fbxNode, ComPtr<ID3D12GraphicsCommandList> command
             //        _AABB.min = XMVectorMin(_AABB.min, vec);
             //        _AABB.max = XMVectorMax(_AABB.max, vec);
             //    }
-
+            //
             //    _AABB.min = XMVector4Transform(_AABB.min, GetGlobalTransform());
             //    _AABB.max = XMVector4Transform(_AABB.max, GetGlobalTransform());
             //}
@@ -153,6 +105,12 @@ SceneNode::SceneNode(FbxNode* fbxNode, ComPtr<ID3D12GraphicsCommandList> command
     }
 }
 
+SceneNode::~SceneNode()
+{
+    for(ID3D12Resource* pinter : intermediates)
+        pinter->Release();
+}
+
 void SceneNode::Draw(ComPtr<ID3D12GraphicsCommandList> commandList, const FrustumVolume& frustum) const
 {
     for (const std::shared_ptr<ISceneNode> node : _childNodes)
@@ -161,18 +119,15 @@ void SceneNode::Draw(ComPtr<ID3D12GraphicsCommandList> commandList, const Frustu
     _DrawCurrentNode(commandList, frustum);
 }
 
-void SceneNode::DrawAABB(ComPtr<ID3D12GraphicsCommandList> commandList, const Camera& camera) const
+void SceneNode::DrawAABB(ComPtr<ID3D12GraphicsCommandList> commandList) const
 {
     for (const std::shared_ptr<ISceneNode> node : _childNodes)
-        ((SceneNode*)node.get())->DrawAABB(commandList, camera);
+        node->DrawAABB(commandList);
 
     if (!_mesh)
         return;
 
     commandList->IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
-
-    XMMATRIX matViewProj = camera.ViewProjection();
-    commandList->SetGraphicsRoot32BitConstants(1, 16, &matViewProj, 0);
 
     commandList->SetGraphicsRoot32BitConstants(0, 3, &_AABB.min.m128_f32, 0);
     commandList->SetGraphicsRoot32BitConstants(0, 3, &_AABB.max.m128_f32, 4);
@@ -209,6 +164,7 @@ void SceneNode::_UploadData(ComPtr<ID3D12GraphicsCommandList> commandList,
 
     CD3DX12_HEAP_PROPERTIES heapTypeUpload(D3D12_HEAP_TYPE_UPLOAD);
     CD3DX12_RESOURCE_DESC buffer = CD3DX12_RESOURCE_DESC::Buffer(bufferSize, flags);
+
     ID3D12Resource* intermediateResource;
 
     if (bufferData)
@@ -220,6 +176,7 @@ void SceneNode::_UploadData(ComPtr<ID3D12GraphicsCommandList> commandList,
             D3D12_RESOURCE_STATE_GENERIC_READ,
             nullptr,
             IID_PPV_ARGS(&intermediateResource)));
+        intermediates.push_back(intermediateResource);
 
         D3D12_SUBRESOURCE_DATA subresourceData = {};
         subresourceData.pData = bufferData;

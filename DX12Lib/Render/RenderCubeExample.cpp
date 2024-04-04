@@ -3,19 +3,17 @@
 
 #include "RenderCubeExample.h"
 
-#include "Application.h"
-#include "Events/KeyEvent.h"
+#include "TextureLoaderDDS.h"
+#include "Events/MouseScrollEvent.h"
 #include "Events/MouseButtonEvent.h"
 #include "Events/MouseMoveEvent.h"
-#include "Events/MouseScrollEvent.h"
 #include "Events/RenderEvent.h"
 #include "Events/ResizeEvent.h"
 #include "Events/UpdateEvent.h"
-
+#include "Events/KeyEvent.h"
+#include "Application.h"
 #include "TaskGPU.h"
 #include "Frame.h"
-
-#include "TextureLoaderDDS.h"
 #include "Blob.h"
 
 #include <random>
@@ -33,9 +31,6 @@ namespace
         XMFLOAT4 Down;
     };
 
-    // TODO: remove later
-    double DELTATIME = 0.0f;
-
     // Clamp a value between a min and max range.
     template<typename T>
     constexpr const T& clamp(const T& val, const T& min, const T& max)
@@ -49,6 +44,7 @@ RenderCubeExample::RenderCubeExample(const std::wstring& name, int width, int he
     , _scissorRect(CD3DX12_RECT(0, 0, LONG_MAX, LONG_MAX))
     , _viewport(CD3DX12_VIEWPORT(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height)))
     , _contentLoaded(false)
+    , _cubeTransformsRes{}
 {
     pShared = this;
 
@@ -67,6 +63,10 @@ RenderCubeExample::RenderCubeExample(const std::wstring& name, int width, int he
         frame.SetAllocatorPool(&_allocs);
         frame.SetFencePool(&_fencePool);
     }
+}
+
+RenderCubeExample::~RenderCubeExample()
+{
 }
 
 void RenderCubeExample::updateBufferResource(
@@ -374,9 +374,16 @@ void RenderCubeExample::unloadContent()
             delete item;
 
         delete _ambient;
+        _ambient = nullptr;
+
         delete _dynamicData;
+        _dynamicData = nullptr;
+
         delete _UAVRes;
+        _UAVRes = nullptr;
+
         delete _tex;
+        _tex = nullptr;
         //delete _texture;
 
         //_pHeap->Release(); // TODO: why Release doesn't work? :(
@@ -557,7 +564,9 @@ void RenderCubeExample::onRender(RenderEvent& renderEvent)
         commandList->SetPipelineState(_AABBpipeline.GetPipelineState().Get());
         commandList->SetGraphicsRootSignature(_AABBpipeline.GetRootSignature().Get());
 
-        _scene.DrawAABB(commandList, _camera);
+        commandList->SetGraphicsRoot32BitConstants(1, sizeof(XMMATRIX) / 4, &viewProjMatrix, 0);
+
+        _scene.DrawAABB(commandList, _camera.GetViewFrustum());
 
 
 

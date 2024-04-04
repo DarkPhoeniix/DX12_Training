@@ -9,6 +9,7 @@ class Frame
 {
 public:
     Frame() = default;
+    ~Frame();
 
     void Init(ComPtr<ID3D12Device2> device, ComPtr<IDXGISwapChain> swapChain);
 

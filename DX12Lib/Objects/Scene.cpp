@@ -33,9 +33,9 @@ void Scene::Draw(ComPtr<ID3D12GraphicsCommandList> commandList, const FrustumVol
     _rootNode->Draw(commandList, frustum);
 }
 
-void Scene::DrawAABB(ComPtr<ID3D12GraphicsCommandList> commandList, const Camera& camera)
+void Scene::DrawAABB(ComPtr<ID3D12GraphicsCommandList> commandList)
 {
-    ((SceneNode*)_rootNode.get())->DrawAABB(commandList, camera);
+    _rootNode->DrawAABB(commandList);
 }
 
 bool Scene::LoadScene(const std::string& name, ComPtr<ID3D12GraphicsCommandList> commandList)

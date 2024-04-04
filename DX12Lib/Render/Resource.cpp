@@ -4,12 +4,17 @@
 Resource::Resource(ComPtr<ID3D12Device> device, ResourceDescription resourceDesc)
 	: _device(device)
 	, _resourceDesc(resourceDesc)
-{	}
+{	
+}
 
 Resource::~Resource()
 {
-	if (_resource)
-		_resource->Release();
+	if( _resource )
+	{
+		//_resource->Release();
+		_resource = nullptr;
+	}
+	this->_device = nullptr; 
 }
 
 void Resource::SetResource(ComPtr<ID3D12Resource> resource)
@@ -56,6 +61,11 @@ void* Resource::Map()
 	_resource->Map(0, &range, &res);
 
 	return res;
+}
+
+void Resource::setDevice( ComPtr<ID3D12Device> device )
+{
+	this->_device = device;
 }
 
 D3D12_GPU_VIRTUAL_ADDRESS Resource::OffsetGPU(unsigned int offset) const
