@@ -5,6 +5,8 @@
 #include "SceneNode.h"
 #include "FrustumVolume.h"
 #include "Camera.h"
+#include "Render/Heap.h"
+#include "Render/DescriptorHeap.h"
 
 // Create the FBX SDK memory manager object.
 // The SDK Manager allocates and frees memory
@@ -36,6 +38,11 @@ void Scene::Draw(ComPtr<ID3D12GraphicsCommandList> commandList, const FrustumVol
 void Scene::DrawAABB(ComPtr<ID3D12GraphicsCommandList> commandList)
 {
     _rootNode->DrawAABB(commandList);
+}
+
+void Scene::UploadTextures(ComPtr<ID3D12GraphicsCommandList> commandList, Heap& heap, DescriptorHeap& descriptorHeap)
+{
+    _rootNode->UploadTextures(commandList, heap, descriptorHeap);
 }
 
 bool Scene::LoadScene(const std::string& name, ComPtr<ID3D12GraphicsCommandList> commandList)

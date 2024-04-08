@@ -8,7 +8,7 @@
 #include "Events/UpdateEvent.h"
 #include "Render/RenderCubeExample.h"
 
-extern RenderCubeExample* pShared;
+extern Renderer* pShared;
 
 Window::Window(HWND hWnd, const std::wstring& windowName, int clientWidth, int clientHeight, bool vSync)
     : _hWnd(hWnd)

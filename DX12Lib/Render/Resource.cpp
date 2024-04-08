@@ -63,6 +63,17 @@ void* Resource::Map()
 	return res;
 }
 
+D3D12_RESOURCE_BARRIER Resource::CreateBarrierAlias(Resource* old) const
+{
+	D3D12_RESOURCE_BARRIER barrier;
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_ALIASING;
+	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	barrier.Aliasing.pResourceBefore = old ? old->GetResource().Get() : nullptr;
+	barrier.Aliasing.pResourceAfter = _resource.Get();
+
+	return barrier;
+}
+
 void Resource::setDevice( ComPtr<ID3D12Device> device )
 {
 	this->_device = device;

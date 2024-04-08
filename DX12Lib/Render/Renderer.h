@@ -9,16 +9,19 @@
 #include "Frame.h"
 #include "Blob.h"
 
-class RenderCubeExample : public IGame
+#include "DescriptorHeap.h"
+#include "Heap.h"
+
+class Renderer : public IGame
 {
 public:
     using super = IGame;
 
-    RenderCubeExample(const std::wstring& name, int width, int height, bool vSync = false);
-    ~RenderCubeExample();
+    Renderer(const std::wstring& name, int width, int height, bool vSync = false);
+    ~Renderer();
 
-    virtual bool loadContent() override;
-    virtual void unloadContent() override;
+    virtual bool LoadContent() override;
+    virtual void UnloadContent() override;
 
 protected:
     void onUpdate(UpdateEvent& e) override;
@@ -86,5 +89,6 @@ private:
     ComPtr<ID3D12Resource> _intermediateTex;
     Scene _scene;
 
-    Heap _texturesHeap;
+    std::shared_ptr<Heap> _texturesHeap;
+    std::shared_ptr<DescriptorHeap> _texturesDescHeap;
 };

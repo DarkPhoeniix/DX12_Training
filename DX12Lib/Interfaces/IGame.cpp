@@ -40,7 +40,7 @@ bool IGame::initialize()
     desc.Type = D3D12_COMMAND_LIST_TYPE_COPY;
     Application::get().getDevice()->CreateCommandQueue(&desc, IID_PPV_ARGS(&queueCopy));
 
-    _window = Application::get().createWindow(_name, _width, _height, _vSync);
+    _window = Application::get().CreateWin32Window(_name, _width, _height, _vSync);
     _window->registerCallbacks(shared_from_this());
     _window->show();
 
@@ -49,7 +49,7 @@ bool IGame::initialize()
 
 void IGame::destroy()
 {
-    Application::get().destroyWindow(_window);
+    Application::get().DestroyWindow(_window);
     _window.reset();
 }
 
@@ -88,5 +88,5 @@ void IGame::onWindowDestroy()
     // If the Window which we are registered to is 
     // destroyed, then any resources which are associated 
     // to the window must be released.
-    unloadContent();
+    UnloadContent();
 }

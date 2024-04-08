@@ -1,7 +1,7 @@
 
 #include "stdafx.h"
 
-#include "RenderCubeExample.h"
+#include "Renderer.h"
 
 #include "TextureLoaderDDS.h"
 #include "Events/MouseScrollEvent.h"
@@ -21,7 +21,7 @@
 
 using namespace DirectX;
 
-extern RenderCubeExample* pShared = nullptr;
+extern Renderer* pShared = nullptr;
 
 namespace
 {
@@ -39,7 +39,7 @@ namespace
     }
 }
 
-RenderCubeExample::RenderCubeExample(const std::wstring& name, int width, int height, bool vSync)
+Renderer::Renderer(const std::wstring& name, int width, int height, bool vSync)
     : super(name, width, height, vSync)
     , _scissorRect(CD3DX12_RECT(0, 0, LONG_MAX, LONG_MAX))
     , _viewport(CD3DX12_VIEWPORT(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height)))
@@ -65,11 +65,11 @@ RenderCubeExample::RenderCubeExample(const std::wstring& name, int width, int he
     }
 }
 
-RenderCubeExample::~RenderCubeExample()
+Renderer::~Renderer()
 {
 }
 
-void RenderCubeExample::updateBufferResource(
+void Renderer::updateBufferResource(
     ComPtr<ID3D12GraphicsCommandList2> commandList,
     ID3D12Resource** destinationResource,
     ID3D12Resource** intermediateResource,
@@ -116,7 +116,7 @@ void RenderCubeExample::updateBufferResource(
     }
 }
 
-bool RenderCubeExample::loadContent()
+bool Renderer::LoadContent()
 {
     auto device = Application::get().getDevice();
 
@@ -222,21 +222,51 @@ bool RenderCubeExample::loadContent()
 
     UINT SRVIncrementSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-    // UAV setup
     {
-        D3D12_CPU_DESCRIPTOR_HANDLE offset = _descHeap->GetCPUDescriptorHandleForHeapStart();
-        offset.ptr += SRVIncrementSize * 0;
+        DescriptorHeapDescription desc;
+        desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+        desc.SetNumDescriptors(32);
+        desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
+        desc.SetNodeMask(0);
 
-        D3D12_UNORDERED_ACCESS_VIEW_DESC _resDesc = {};
-        _resDesc.Format = _UAVRes->GetResourceDescription().GetFormat();
-        _resDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-        _resDesc.Texture2D.MipSlice = 0;
-        device->CreateUnorderedAccessView(_UAVRes->GetResource().Get(), nullptr, &_resDesc, offset);
+        _texturesDescHeap = std::make_shared<DescriptorHeap>(desc);
+        _texturesDescHeap->SetDevice(device);
+        _texturesDescHeap->Create();
     }
+
+    {
+        HeapDescription desc;
+        desc.SetAlignment(D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT);
+        desc.SetCPUPageProperty(D3D12_CPU_PAGE_PROPERTY_UNKNOWN);
+        desc.SetCreationNodeMask(1);
+        desc.SetVisibleNodeMask(1);
+        desc.SetHeapFlags(D3D12_HEAP_FLAG_NONE);
+        desc.SetHeapType(D3D12_HEAP_TYPE_DEFAULT);
+        desc.SetMemoryPoolPreference(D3D12_MEMORY_POOL_UNKNOWN);
+        desc.SetSize(_32MB);
+        
+        _texturesHeap = std::make_shared<Heap>(desc);
+        _texturesHeap->SetDevice(device);
+        _texturesHeap->Create();
+    }
+
+    //_texturesHeap->PlaceResource(*_tex);
+
+    //// UAV setup
+    //{
+    //    D3D12_CPU_DESCRIPTOR_HANDLE offset = _descHeap->GetCPUDescriptorHandleForHeapStart();
+    //    offset.ptr += SRVIncrementSize * 0;
+
+    //    D3D12_UNORDERED_ACCESS_VIEW_DESC _resDesc = {};
+    //    _resDesc.Format = _UAVRes->GetResourceDescription().GetFormat();
+    //    _resDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+    //    _resDesc.Texture2D.MipSlice = 0;
+    //    device->CreateUnorderedAccessView(_UAVRes->GetResource().Get(), nullptr, &_resDesc, offset);
+    //}
 
     // SRV setup
     {
-        D3D12_CPU_DESCRIPTOR_HANDLE offset2 = _descHeap->GetCPUDescriptorHandleForHeapStart();
+        D3D12_CPU_DESCRIPTOR_HANDLE offset2 = _texturesDescHeap->GetHeapStartCPUHandle();
         offset2.ptr += SRVIncrementSize * 1;
 
         D3D12_SHADER_RESOURCE_VIEW_DESC _resDesc2 = {};
@@ -308,7 +338,7 @@ bool RenderCubeExample::loadContent()
     return _contentLoaded;
 }
 
-void RenderCubeExample::resizeDepthBuffer(int width, int height)
+void Renderer::resizeDepthBuffer(int width, int height)
 {
     if (_contentLoaded)
     {
@@ -353,7 +383,7 @@ void RenderCubeExample::resizeDepthBuffer(int width, int height)
     this->_current = &_frames[_window->getCurrentBackBufferIndex()];
 }
 
-void RenderCubeExample::onResize(ResizeEvent& e)
+void Renderer::onResize(ResizeEvent& e)
 {
     if (e.width != super::getWidth() || e.height != getHeight())
     {
@@ -366,7 +396,7 @@ void RenderCubeExample::onResize(ResizeEvent& e)
     }
 }
 
-void RenderCubeExample::unloadContent()
+void Renderer::UnloadContent()
 {
     if (_contentLoaded)
     {
@@ -384,16 +414,14 @@ void RenderCubeExample::unloadContent()
 
         delete _tex;
         _tex = nullptr;
-        //delete _texture;
 
-        //_pHeap->Release(); // TODO: why Release doesn't work? :(
         _descHeap->Release();
     }
 
     _contentLoaded = false;
 }
 
-void RenderCubeExample::onUpdate(UpdateEvent& updateEvent)
+void Renderer::onUpdate(UpdateEvent& updateEvent)
 {
     static uint64_t frameCount = 0;
     static double totalTime = 0.0;
@@ -417,7 +445,7 @@ void RenderCubeExample::onUpdate(UpdateEvent& updateEvent)
 }
 
 // Transition a resource
-void RenderCubeExample::transitionResource(ComPtr<ID3D12GraphicsCommandList2> commandList,
+void Renderer::transitionResource(ComPtr<ID3D12GraphicsCommandList2> commandList,
     ComPtr<ID3D12Resource> resource,
     D3D12_RESOURCE_STATES beforeState, D3D12_RESOURCE_STATES afterState)
 {
@@ -428,19 +456,19 @@ void RenderCubeExample::transitionResource(ComPtr<ID3D12GraphicsCommandList2> co
     commandList->ResourceBarrier(1, &barrier);
 }
 
-void RenderCubeExample::clearRTV(ComPtr<ID3D12GraphicsCommandList2> commandList,
+void Renderer::clearRTV(ComPtr<ID3D12GraphicsCommandList2> commandList,
     D3D12_CPU_DESCRIPTOR_HANDLE rtv, FLOAT* clearColor)
 {
     commandList->ClearRenderTargetView(rtv, clearColor, 0, nullptr);
 }
 
-void RenderCubeExample::clearDepth(ComPtr<ID3D12GraphicsCommandList2> commandList,
+void Renderer::clearDepth(ComPtr<ID3D12GraphicsCommandList2> commandList,
     D3D12_CPU_DESCRIPTOR_HANDLE dsv, FLOAT depth)
 {
     commandList->ClearDepthStencilView(dsv, D3D12_CLEAR_FLAG_DEPTH, depth, 0, 0, nullptr);
 }
 
-void RenderCubeExample::onRender(RenderEvent& renderEvent)
+void Renderer::onRender(RenderEvent& renderEvent)
 {
     super::onRender(renderEvent);
 
@@ -453,7 +481,6 @@ void RenderCubeExample::onRender(RenderEvent& renderEvent)
 
     // Clear the render targets
     {
-        Logger::Log(LogType::Info, "Setting up \"clean\" operation");
         TaskGPU* task = this->_current->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
         task->SetName("clean");
 
@@ -500,7 +527,6 @@ void RenderCubeExample::onRender(RenderEvent& renderEvent)
 
     // Execute the TriangleRender shader
     {
-        Logger::Log(LogType::Info, "Setting up \"render\" operation");
         TaskGPU* task = this->_current->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, _pipeline.GetPipelineState());
         task->SetName("render");
 
@@ -551,12 +577,14 @@ void RenderCubeExample::onRender(RenderEvent& renderEvent)
         commandList->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &viewProjMatrix, 0);
         commandList->SetGraphicsRootConstantBufferView(1, _ambient->OffsetGPU(0));
 
-        ID3D12DescriptorHeap* heaps = { _descHeap.Get() };
+        ID3D12DescriptorHeap* heaps = { _texturesDescHeap->GetDXDescriptorHeap().Get() };
         commandList->SetDescriptorHeaps(1, &heaps);
 
-        D3D12_GPU_DESCRIPTOR_HANDLE offset2 = _descHeap->GetGPUDescriptorHandleForHeapStart();
-        offset2.ptr += 32 * 1;
-        commandList->SetGraphicsRootDescriptorTable(3, offset2);
+        //D3D12_GPU_DESCRIPTOR_HANDLE offset2 = _texturesDescHeap->GetHeapStartGPUHandle();
+        //offset2.ptr += 32 * 1;
+        //commandList->SetGraphicsRootDescriptorTable(3, offset2);
+
+        //_scene.UploadTextures(commandList, *_texturesHeap, *_texturesDescHeap);
 
         _scene.Draw(commandList, _camera.GetViewFrustum());
 
@@ -566,16 +594,13 @@ void RenderCubeExample::onRender(RenderEvent& renderEvent)
 
         commandList->SetGraphicsRoot32BitConstants(1, sizeof(XMMATRIX) / 4, &viewProjMatrix, 0);
 
-        _scene.DrawAABB(commandList, _camera.GetViewFrustum());
-
-
+        _scene.DrawAABB(commandList);
 
         commandList->Close();
     }
 
     // Present
     {
-        Logger::Log(LogType::Info, "Setting up \"present\" operation");
         TaskGPU* task = this->_current->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
         task->SetName("present");
 
@@ -601,7 +626,6 @@ void RenderCubeExample::onRender(RenderEvent& renderEvent)
     {
         std::vector<TaskGPU*> dependencies;
 
-        Logger::Log(LogType::Info, "Waiting for tasks before \"present\"");
         // wait
         for (const std::string& dependency : task.GetDependencies())
             dependencies.push_back(_current->GetTask(dependency));
@@ -620,7 +644,6 @@ void RenderCubeExample::onRender(RenderEvent& renderEvent)
 
         if (task.GetName() == "present")
         {
-            Logger::Log(LogType::Info, "Executing \"present\"");
             _window->present2();
             _current->SetSyncFrame(task.GetFence());
         }
@@ -632,7 +655,7 @@ void RenderCubeExample::onRender(RenderEvent& renderEvent)
     this->_current = _current->Next;
 }
 
-void RenderCubeExample::onKeyPressed(KeyEvent& e)
+void Renderer::onKeyPressed(KeyEvent& e)
 {
     super::onKeyPressed(e);
 
@@ -675,7 +698,7 @@ void RenderCubeExample::onKeyPressed(KeyEvent& e)
     }
 }
 
-void RenderCubeExample::onMouseScroll(MouseScrollEvent& e)
+void Renderer::onMouseScroll(MouseScrollEvent& e)
 {
     //_FoV -= e.scrollDelta;
     //_FoV = clamp(_FoV, 12.0f, 90.0f);
@@ -686,19 +709,19 @@ void RenderCubeExample::onMouseScroll(MouseScrollEvent& e)
     //OutputDebugStringA(buffer);
 }
 
-void RenderCubeExample::onMouseMoved(MouseMoveEvent& e)
+void Renderer::onMouseMoved(MouseMoveEvent& e)
 {
     if ((e.relativeX != 0 || e.relativeY != 0) && _isCameraMoving)
         _camera.Update(e.relativeX, e.relativeY);
 }
 
-void RenderCubeExample::onMouseButtonPressed(MouseButtonEvent& e)
+void Renderer::onMouseButtonPressed(MouseButtonEvent& e)
 {
     if (e.button == MouseButtonEvent::MouseButton::Right)
         _isCameraMoving = true;
 }
 
-void RenderCubeExample::onMouseButtonReleased(MouseButtonEvent& e)
+void Renderer::onMouseButtonReleased(MouseButtonEvent& e)
 {
     if (e.button == MouseButtonEvent::MouseButton::Right)
         _isCameraMoving = false;

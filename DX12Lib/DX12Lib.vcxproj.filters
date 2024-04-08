@@ -42,13 +42,13 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Objects\Camera.cpp">
+    <ClCompile Include="Scene\Camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Utility\PipelineSettings.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Render\RenderCubeExample.cpp">
+    <ClCompile Include="Render\Renderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Render\RenderWindow.cpp">
@@ -87,13 +87,13 @@
     <ClCompile Include="TextureLoaderDDS.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Objects\Scene.cpp">
+    <ClCompile Include="Scene\Scene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Objects\SceneNode.cpp">
+    <ClCompile Include="Scene\SceneNode.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Objects\Mesh.cpp">
+    <ClCompile Include="Scene\Mesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Interfaces\ISceneNode.cpp">
@@ -102,10 +102,37 @@
     <ClCompile Include="Interfaces\IVolume.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Objects\AABBVolume.cpp">
+    <ClCompile Include="Scene\AABBVolume.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Objects\FrustumVolume.cpp">
+    <ClCompile Include="Scene\FrustumVolume.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SwapChain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Device.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\DescriptorHeap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\DescriptorHeapDescription.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Heap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\HeapDescription.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Window\IWindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Input\InputDevice.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Window\Win32Window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -161,13 +188,13 @@
     <ClInclude Include="stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Objects\Camera.h">
+    <ClInclude Include="Scene\Camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Utility\PipelineSettings.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Render\RenderCubeExample.h">
+    <ClInclude Include="Render\Renderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Render\RenderWindow.h">
@@ -206,10 +233,10 @@
     <ClInclude Include="TextureParser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Objects\Scene.h">
+    <ClInclude Include="Scene\Scene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Objects\SceneNode.h">
+    <ClInclude Include="Scene\SceneNode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TextureLoaderDDS.h">
@@ -218,7 +245,7 @@
     <ClInclude Include="Blob.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Objects\Mesh.h">
+    <ClInclude Include="Scene\Mesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Interfaces\ISceneNode.h">
@@ -227,10 +254,49 @@
     <ClInclude Include="Interfaces\IVolume.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Objects\AABBVolume.h">
+    <ClInclude Include="Scene\AABBVolume.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Objects\FrustumVolume.h">
+    <ClInclude Include="Scene\FrustumVolume.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SwapChain.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Device.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\DescriptorHeap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\DescriptorHeapDescription.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Heap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\HeapDescription.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Window\IWindow.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Input\InputDevice.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Input\IInputObserver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Events\IEvent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Events\KeyboardEvent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Events\MouseEvent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Window\Win32Window.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

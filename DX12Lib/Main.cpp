@@ -10,7 +10,7 @@
 
 void ReportLiveObjects()
 {
-    Sleep( 200 );
+    Sleep(200);
     IDXGIDebug* dxgiDebug;
     DXGIGetDebugInterface1(0, IID_PPV_ARGS(&dxgiDebug));
 
@@ -36,15 +36,13 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstan
     }
 
     {
-        std::shared_ptr<RenderCubeExample> demo = std::make_shared<RenderCubeExample>(L"DX12 Sandbox", 1280, 720, false); // TODO: vSync here
-        Application::create(hInstance);
+        std::shared_ptr<Renderer> demo = std::make_shared<Renderer>(L"DX12 Sandbox", 1280, 720, false);
+        Application::Init(hInstance);
         {
-            
             retCode = Application::get().run(demo);
         }
-        int dd = 23;
     }
-    Application::destroy();
+    Application::Destroy();
     ReportLiveObjects();
     //atexit(&ReportLiveObjects);
 

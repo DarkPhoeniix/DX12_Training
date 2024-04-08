@@ -27,8 +27,8 @@ public:
     virtual bool initialize();
     virtual void destroy();
 
-    virtual bool loadContent() = 0;
-    virtual void unloadContent() = 0;
+    virtual bool LoadContent() = 0;
+    virtual void UnloadContent() = 0;
 
 protected:
     friend class Window;

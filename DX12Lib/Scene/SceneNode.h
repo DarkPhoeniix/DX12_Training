@@ -3,10 +3,13 @@
 #include "Mesh.h"
 #include "Interfaces/ISceneNode.h"
 #include "AABBVolume.h"
+#include "Blob.h"
 
 #include <fbxsdk.h>
 
 class Camera;
+class Heap;
+class DescriptorHeap;
 
 class SceneNode : public ISceneNode
 {
@@ -17,6 +20,8 @@ public:
 
     void Draw(ComPtr<ID3D12GraphicsCommandList> commandList, const FrustumVolume& frustum) const override;
     void DrawAABB(ComPtr<ID3D12GraphicsCommandList> commandList) const override;
+
+    void UploadTextures(ComPtr<ID3D12GraphicsCommandList> commandList, Heap& heap, DescriptorHeap& descriptorHeap) override;
 
     const AABBVolume& getAABB() const;
 
@@ -47,5 +52,9 @@ private:
     D3D12_INDEX_BUFFER_VIEW _AABBIBO;
     
     std::vector<ID3D12Resource*> intermediates;
+
+    Resource _texture;
+    Base::Blob _textureBlob;
+    D3D12_GPU_DESCRIPTOR_HANDLE _textureHandle;
 };
 

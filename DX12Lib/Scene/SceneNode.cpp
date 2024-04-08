@@ -8,10 +8,13 @@
 #include "Application.h"
 #include "Camera.h"
 #include "Scene.h"
+#include "Render/Heap.h"
+#include "Render/DescriptorHeap.h"
 
 using namespace DirectX;
 
 SceneNode::SceneNode(FbxNode* fbxNode, ComPtr<ID3D12GraphicsCommandList> commandList, SceneNode* parent)
+    : _texture{}
 {
     _parent = parent;
     _name = fbxNode->GetName();
@@ -47,7 +50,6 @@ SceneNode::SceneNode(FbxNode* fbxNode, ComPtr<ID3D12GraphicsCommandList> command
     // Setup mesh
     if (FbxMesh* fbxMesh = fbxNode->GetMesh())
     {
-
         FbxVector4 min, max, center;
         fbxNode->EvaluateGlobalBoundingBoxMinMaxCenter(min, max, center);
         _AABB.min = XMVectorSet(min.mData[0], min.mData[1], min.mData[2], min.mData[3]);
@@ -55,20 +57,6 @@ SceneNode::SceneNode(FbxNode* fbxNode, ComPtr<ID3D12GraphicsCommandList> command
 
         if (_mesh = std::make_shared<Mesh>(fbxMesh))
         {
-            //{
-            //    _AABB.min = XMVectorSet(FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX);
-            //    _AABB.max = XMVectorSet(FLT_MIN, FLT_MIN, FLT_MIN, FLT_MIN);
-            //    for (auto v : _mesh->getVertices())
-            //    {
-            //        XMVECTOR vec = XMVectorSet(v.Position.x, v.Position.y, v.Position.z, 1.0f);
-            //        _AABB.min = XMVectorMin(_AABB.min, vec);
-            //        _AABB.max = XMVectorMax(_AABB.max, vec);
-            //    }
-            //
-            //    _AABB.min = XMVector4Transform(_AABB.min, GetGlobalTransform());
-            //    _AABB.max = XMVector4Transform(_AABB.max, GetGlobalTransform());
-            //}
-
             if (!_mesh->getVertices().empty())
             {
                 ComPtr<ID3D12Resource> vertexBuffer;
@@ -133,6 +121,49 @@ void SceneNode::DrawAABB(ComPtr<ID3D12GraphicsCommandList> commandList) const
     commandList->SetGraphicsRoot32BitConstants(0, 3, &_AABB.max.m128_f32, 4);
 
     commandList->DrawInstanced(1, 1, 0, 0);
+}
+
+void SceneNode::UploadTextures(ComPtr<ID3D12GraphicsCommandList> commandList, Heap& heap, DescriptorHeap& descriptorHeap)
+{
+    auto device = Application::get().getDevice();
+
+    heap.PlaceResource(_texture);
+
+    auto barrier = _texture.CreateBarrierAlias(nullptr);
+    commandList->ResourceBarrier(1, &barrier);
+
+    CD3DX12_HEAP_PROPERTIES heapTypeUpload(D3D12_HEAP_TYPE_UPLOAD);
+    CD3DX12_RESOURCE_DESC buffer = CD3DX12_RESOURCE_DESC::Buffer(1024 * 1024 * 10, D3D12_RESOURCE_FLAG_NONE);
+
+    ID3D12Resource* intermediateResource;
+    Helper::throwIfFailed(Application::get().getDevice()->CreateCommittedResource(
+        &heapTypeUpload,
+        D3D12_HEAP_FLAG_NONE,
+        &buffer,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&intermediateResource)));
+    intermediates.push_back(intermediateResource);
+
+    D3D12_SUBRESOURCE_DATA subresources = {};
+    subresources.pData = _textureBlob.get();
+    subresources.RowPitch = 1024 * 4;
+    subresources.SlicePitch = subresources.RowPitch * 1024;
+
+    UpdateSubresources(commandList.Get(), _texture.GetResource().Get(), intermediateResource, 0, 0, 1, &subresources);
+
+    D3D12_CPU_DESCRIPTOR_HANDLE handleOffset = descriptorHeap.GetHeapStartCPUHandle();
+    handleOffset.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * descriptorHeap.GetFreeHandleIndex();
+
+    D3D12_SHADER_RESOURCE_VIEW_DESC _resDesc2 = {};
+    _resDesc2.Format = _texture.GetResourceDescription().GetFormat();
+    _resDesc2.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    _resDesc2.Texture2D.MipLevels = 1;
+    _resDesc2.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    device->CreateShaderResourceView(_texture.GetResource().Get(), &_resDesc2, handleOffset);
+
+    for (const std::shared_ptr<ISceneNode> node : _childNodes)
+        node->UploadTextures(commandList, heap, descriptorHeap);
 }
 
 const AABBVolume& SceneNode::getAABB() const
