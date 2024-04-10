@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Interfaces/ISceneNode.h"
+#include "ISceneNode.h"
 
 #include <fbxsdk.h>
 

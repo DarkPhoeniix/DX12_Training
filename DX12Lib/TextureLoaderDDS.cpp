@@ -500,7 +500,7 @@ namespace TextureLoader
 
     void _LoadDDS(const std::string& pFullPath, Resource*& pResource, Base::Blob& memGPU)
     {
-        ComPtr<ID3D12Device> device = Application::get().getDevice();
+        ComPtr<ID3D12Device> device = Application::Get().getDevice();
 
         unsigned int sizeFile = getSize(pFullPath);
 

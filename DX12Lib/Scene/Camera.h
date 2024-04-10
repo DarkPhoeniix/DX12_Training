@@ -1,6 +1,6 @@
 #pragma once
 
-#include "FrustumVolume.h"
+#include "Volumes/FrustumVolume.h"
 
 class Camera
 {

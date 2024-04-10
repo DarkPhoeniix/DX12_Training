@@ -1,18 +1,22 @@
 #pragma once
 
-#include "Event.h"
+#include "IEvent.h"
 
-class RenderEvent : public Event
+namespace Core
 {
-public:
-    typedef Event base;
+    namespace Input
+    {
+        class RenderEvent : public IEvent
+        {
+        public:
+            RenderEvent(double fDeltaTime, double fTotalTime)
+                : elapsedTime(fDeltaTime)
+                , totalTime(fTotalTime)
+            {   }
 
-    RenderEvent(double fDeltaTime, double fTotalTime)
-        : elapsedTime(fDeltaTime)
-        , totalTime(fTotalTime)
-    {   }
-
-    double elapsedTime;
-    double totalTime;
-    unsigned int frameIndex;
-};
+            double elapsedTime;
+            double totalTime;
+            unsigned int frameIndex;
+        };
+    } // namespace Input
+} // namespace Core

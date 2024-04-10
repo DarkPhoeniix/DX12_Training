@@ -1,7 +1,9 @@
 
 #include "stdafx.h"
 
-#include "Renderer.h"
+#include "DXRenderer.h"
+
+#include "Device.h"
 
 #include "TextureLoaderDDS.h"
 #include "Events/MouseScrollEvent.h"
@@ -20,8 +22,9 @@
 #include <cmath>
 
 using namespace DirectX;
+using namespace Core;
 
-extern Renderer* pShared = nullptr;
+extern DXRenderer* pShared = nullptr;
 
 namespace
 {
@@ -39,7 +42,7 @@ namespace
     }
 }
 
-Renderer::Renderer(const std::wstring& name, int width, int height, bool vSync)
+DXRenderer::DXRenderer(const std::wstring& name, int width, int height, bool vSync)
     : super(name, width, height, vSync)
     , _scissorRect(CD3DX12_RECT(0, 0, LONG_MAX, LONG_MAX))
     , _viewport(CD3DX12_VIEWPORT(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height)))
@@ -65,19 +68,25 @@ Renderer::Renderer(const std::wstring& name, int width, int height, bool vSync)
     }
 }
 
-Renderer::~Renderer()
+DXRenderer::DXRenderer(HWND windowHandle)
+    : _scissorRect(CD3DX12_RECT(0, 0, LONG_MAX, LONG_MAX))
+    , _viewport(CD3DX12_VIEWPORT(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height)))
+    , _contentLoaded(false)
+    , _cubeTransformsRes{}
+    , _DXDevice(Device::GetDevice())
+{   }
+
+DXRenderer::~DXRenderer()
 {
 }
 
-void Renderer::updateBufferResource(
+void DXRenderer::updateBufferResource(
     ComPtr<ID3D12GraphicsCommandList2> commandList,
     ID3D12Resource** destinationResource,
     ID3D12Resource** intermediateResource,
     size_t numElements, size_t elementSize, const void* bufferData,
     D3D12_RESOURCE_FLAGS flags)
 {
-    auto device = Application::get().getDevice();
-
     size_t bufferSize = numElements * elementSize;
 
     CD3DX12_HEAP_PROPERTIES heapTypeDefault(D3D12_HEAP_TYPE_DEFAULT);
@@ -97,7 +106,7 @@ void Renderer::updateBufferResource(
 
     if (bufferData)
     {
-        Helper::throwIfFailed(device->CreateCommittedResource(
+        Helper::throwIfFailed(_DXDevice->CreateCommittedResource(
             &heapTypeUpload,
             D3D12_HEAP_FLAG_NONE,
             &buffer,
@@ -116,14 +125,14 @@ void Renderer::updateBufferResource(
     }
 }
 
-bool Renderer::LoadContent()
+bool DXRenderer::LoadContent()
 {
-    auto device = Application::get().getDevice();
+    ID3D12Device* device = Device::GetDevice();
 
     this->_current = &_frames[_window->getCurrentBackBufferIndex()];
 
-    _allocs.Init(device);
-    _fencePool.Init(device);
+    _allocs.Init(_DXDevice);
+    _fencePool.Init(_DXDevice);
 
     for (int i = 0; i < 3; ++i)
     {
@@ -133,7 +142,7 @@ bool Renderer::LoadContent()
         frame.SetComputeQueue(queueCompute);
         frame.SetCopyQueue(queueCopy);
 
-        frame.Init(device, _window->GetSwapChain());
+        frame.Init(_DXDevice, _window->GetSwapChain());
     }
 
     // Camera Setup
@@ -165,7 +174,7 @@ bool Renderer::LoadContent()
         heapDesc.Flags = D3D12_HEAP_FLAG_NONE;
         heapDesc.Properties = heapProperties;
         heapDesc.SizeInBytes = 15 * _1MB;
-        device->CreateHeap(&heapDesc, IID_PPV_ARGS(&_pHeap));
+        _DXDevice->CreateHeap(&heapDesc, IID_PPV_ARGS(&_pHeap));
     }
 
     EResourceType SRVType = EResourceType::Dynamic | EResourceType::Buffer;
@@ -176,7 +185,7 @@ bool Renderer::LoadContent()
     desc.SetSize({ sizeof(Ambient), 1 });
     desc.SetStride(1);
     desc.SetFormat(DXGI_FORMAT::DXGI_FORMAT_UNKNOWN);
-    _ambient = new Resource(device, desc);
+    _ambient = new Resource(_DXDevice, desc);
     _ambient->CreateCommitedResource();
     _ambient->SetName("_ambient");
 
@@ -192,14 +201,14 @@ bool Renderer::LoadContent()
         descHeapDesc.NumDescriptors = 32;
         descHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 
-        device->CreateDescriptorHeap(&descHeapDesc, IID_PPV_ARGS(&_descHeap));
+        _DXDevice->CreateDescriptorHeap(&descHeapDesc, IID_PPV_ARGS(&_descHeap));
     }
 
     {
         desc.SetResourceType(EResourceType::Dynamic | EResourceType::Buffer);
         desc.SetSize({ 2, 1 });
         desc.SetStride(sizeof(XMFLOAT2));
-        _dynamicData = new Resource(device, desc);
+        _dynamicData = new Resource(_DXDevice, desc);
         _dynamicData->CreateCommitedResource();
         _dynamicData->SetName("_dynamicData");
 
@@ -213,14 +222,14 @@ bool Renderer::LoadContent()
         desc.SetSize({ 1024, 1024 });
         desc.SetStride(sizeof(float) * 4);
 
-        _UAVRes = new Resource(device, desc);
+        _UAVRes = new Resource(_DXDevice, desc);
         _UAVRes->CreateCommitedResource(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
         _UAVRes->SetName("UAV texture");
     }
 
     TextureLoader::_LoadDDS("dog_tex1.dds", _tex, _blob);
 
-    UINT SRVIncrementSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    UINT SRVIncrementSize = _DXDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
     {
         DescriptorHeapDescription desc;
@@ -230,7 +239,7 @@ bool Renderer::LoadContent()
         desc.SetNodeMask(0);
 
         _texturesDescHeap = std::make_shared<DescriptorHeap>(desc);
-        _texturesDescHeap->SetDevice(device);
+        _texturesDescHeap->SetDevice(_DXDevice);
         _texturesDescHeap->Create();
     }
 
@@ -246,7 +255,7 @@ bool Renderer::LoadContent()
         desc.SetSize(_32MB);
         
         _texturesHeap = std::make_shared<Heap>(desc);
-        _texturesHeap->SetDevice(device);
+        _texturesHeap->SetDevice(_DXDevice);
         _texturesHeap->Create();
     }
 
@@ -338,17 +347,17 @@ bool Renderer::LoadContent()
     return _contentLoaded;
 }
 
-void Renderer::resizeDepthBuffer(int width, int height)
+void DXRenderer::resizeDepthBuffer(int width, int height)
 {
     if (_contentLoaded)
     {
         // Flush any GPU commands that might be referencing the depth buffer.
-        Application::get().flush();
+        Application::Get().flush();
 
         width = std::max(1, width);
         height = std::max(1, height);
 
-        auto device = Application::get().getDevice();
+        auto device = Application::Get().getDevice();
 
         // Resize screen dependent resources.
         // Create a depth buffer.
@@ -383,7 +392,7 @@ void Renderer::resizeDepthBuffer(int width, int height)
     this->_current = &_frames[_window->getCurrentBackBufferIndex()];
 }
 
-void Renderer::onResize(ResizeEvent& e)
+void DXRenderer::onResize(ResizeEvent& e)
 {
     if (e.width != super::getWidth() || e.height != getHeight())
     {
@@ -396,7 +405,7 @@ void Renderer::onResize(ResizeEvent& e)
     }
 }
 
-void Renderer::UnloadContent()
+void DXRenderer::UnloadContent()
 {
     if (_contentLoaded)
     {
@@ -421,12 +430,12 @@ void Renderer::UnloadContent()
     _contentLoaded = false;
 }
 
-void Renderer::onUpdate(UpdateEvent& updateEvent)
+void DXRenderer::OnUpdate(UpdateEvent& updateEvent)
 {
     static uint64_t frameCount = 0;
     static double totalTime = 0.0;
 
-    super::onUpdate(updateEvent);
+    //super::OnUpdate(updateEvent);
 
     totalTime += updateEvent.elapsedTime;
     frameCount++;
@@ -445,7 +454,7 @@ void Renderer::onUpdate(UpdateEvent& updateEvent)
 }
 
 // Transition a resource
-void Renderer::transitionResource(ComPtr<ID3D12GraphicsCommandList2> commandList,
+void DXRenderer::transitionResource(ComPtr<ID3D12GraphicsCommandList2> commandList,
     ComPtr<ID3D12Resource> resource,
     D3D12_RESOURCE_STATES beforeState, D3D12_RESOURCE_STATES afterState)
 {
@@ -456,21 +465,21 @@ void Renderer::transitionResource(ComPtr<ID3D12GraphicsCommandList2> commandList
     commandList->ResourceBarrier(1, &barrier);
 }
 
-void Renderer::clearRTV(ComPtr<ID3D12GraphicsCommandList2> commandList,
+void DXRenderer::clearRTV(ComPtr<ID3D12GraphicsCommandList2> commandList,
     D3D12_CPU_DESCRIPTOR_HANDLE rtv, FLOAT* clearColor)
 {
     commandList->ClearRenderTargetView(rtv, clearColor, 0, nullptr);
 }
 
-void Renderer::clearDepth(ComPtr<ID3D12GraphicsCommandList2> commandList,
+void DXRenderer::clearDepth(ComPtr<ID3D12GraphicsCommandList2> commandList,
     D3D12_CPU_DESCRIPTOR_HANDLE dsv, FLOAT depth)
 {
     commandList->ClearDepthStencilView(dsv, D3D12_CLEAR_FLAG_DEPTH, depth, 0, 0, nullptr);
 }
 
-void Renderer::onRender(RenderEvent& renderEvent)
+void DXRenderer::OnRender(RenderEvent& renderEvent)
 {
-    super::onRender(renderEvent);
+    //super::onRender(renderEvent);
 
     // WAIT CPU
 
@@ -540,7 +549,7 @@ void Renderer::onRender(RenderEvent& renderEvent)
             CD3DX12_HEAP_PROPERTIES heapTypeUpload(D3D12_HEAP_TYPE_UPLOAD);
             CD3DX12_RESOURCE_DESC buffer = CD3DX12_RESOURCE_DESC::Buffer(1024 * 1024 * 10, D3D12_RESOURCE_FLAG_NONE);
 
-            Helper::throwIfFailed(Application::get().getDevice()->CreateCommittedResource(
+            Helper::throwIfFailed(Application::Get().getDevice()->CreateCommittedResource(
                 &heapTypeUpload,
                 D3D12_HEAP_FLAG_NONE,
                 &buffer,
@@ -655,7 +664,7 @@ void Renderer::onRender(RenderEvent& renderEvent)
     this->_current = _current->Next;
 }
 
-void Renderer::onKeyPressed(KeyEvent& e)
+void DXRenderer::onKeyPressed(KeyEvent& e)
 {
     super::onKeyPressed(e);
 
@@ -681,7 +690,7 @@ void Renderer::onKeyPressed(KeyEvent& e)
     switch (e.key)
     {
     case KeyCode::Escape:
-        Application::get().quit(0);
+        Application::Get().Quit(0);
         break;
     case KeyCode::Enter:        // TODO: looks weird
         if (e.alt)
@@ -698,7 +707,7 @@ void Renderer::onKeyPressed(KeyEvent& e)
     }
 }
 
-void Renderer::onMouseScroll(MouseScrollEvent& e)
+void DXRenderer::onMouseScroll(MouseScrollEvent& e)
 {
     //_FoV -= e.scrollDelta;
     //_FoV = clamp(_FoV, 12.0f, 90.0f);
@@ -709,19 +718,19 @@ void Renderer::onMouseScroll(MouseScrollEvent& e)
     //OutputDebugStringA(buffer);
 }
 
-void Renderer::onMouseMoved(MouseMoveEvent& e)
+void DXRenderer::onMouseMoved(MouseMoveEvent& e)
 {
     if ((e.relativeX != 0 || e.relativeY != 0) && _isCameraMoving)
         _camera.Update(e.relativeX, e.relativeY);
 }
 
-void Renderer::onMouseButtonPressed(MouseButtonEvent& e)
+void DXRenderer::onMouseButtonPressed(MouseButtonEvent& e)
 {
     if (e.button == MouseButtonEvent::MouseButton::Right)
         _isCameraMoving = true;
 }
 
-void Renderer::onMouseButtonReleased(MouseButtonEvent& e)
+void DXRenderer::onMouseButtonReleased(MouseButtonEvent& e)
 {
     if (e.button == MouseButtonEvent::MouseButton::Right)
         _isCameraMoving = false;

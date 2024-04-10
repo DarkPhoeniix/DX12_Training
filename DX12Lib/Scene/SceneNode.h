@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Mesh.h"
-#include "Interfaces/ISceneNode.h"
-#include "AABBVolume.h"
 #include "Blob.h"
+#include "Scene/Mesh.h"
+#include "Scene/ISceneNode.h"
+#include "Volumes/AABBVolume.h"
 
 #include <fbxsdk.h>
 

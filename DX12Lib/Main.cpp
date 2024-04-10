@@ -2,7 +2,7 @@
 #include "stdafx.h"
 
 #include "Application.h"
-#include "Render/RenderCubeExample.h"
+#include "Render/DXRenderer.h"
 
 #include <dxgidebug.h>
 
@@ -36,10 +36,10 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstan
     }
 
     {
-        std::shared_ptr<Renderer> demo = std::make_shared<Renderer>(L"DX12 Sandbox", 1280, 720, false);
+        std::shared_ptr<DXRenderer> demo = std::make_shared<DXRenderer>(L"DX12 Sandbox", 1280, 720, false);
         Application::Init(hInstance);
         {
-            retCode = Application::get().run(demo);
+            retCode = Application::Get().run(demo);
         }
     }
     Application::Destroy();

@@ -2,11 +2,11 @@
 
 #include "Scene.h"
 
-#include "SceneNode.h"
-#include "FrustumVolume.h"
-#include "Camera.h"
+#include "Scene/SceneNode.h"
+#include "Scene/Camera.h"
 #include "Render/Heap.h"
 #include "Render/DescriptorHeap.h"
+#include "Volumes/FrustumVolume.h"
 
 // Create the FBX SDK memory manager object.
 // The SDK Manager allocates and frees memory

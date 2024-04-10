@@ -49,7 +49,7 @@ D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetHeapStartGPUHandle()
 D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetResourceCPUHandle(UINT index)
 {
     if (!_device)
-        Logger::Log(LogType::Error, "Device is nullptr when trying to get CPU descriptor handle increment size");
+        Logger::Log(LogType::Error, "Device is nullptr when trying to Get CPU descriptor handle increment size");
 
     D3D12_CPU_DESCRIPTOR_HANDLE handle = _descriptorHeap->GetCPUDescriptorHandleForHeapStart();
     handle.ptr += _heapIncrementSize * index;
@@ -60,16 +60,16 @@ D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetResourceCPUHandle(UINT index)
 D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetResourceCPUHandle(Resource* resource)
 {
     if (!_device)
-        Logger::Log(LogType::Error, "Device is nullptr when trying to get CPU descriptor handle increment size");
+        Logger::Log(LogType::Error, "Device is nullptr when trying to Get CPU descriptor handle increment size");
 
     if (!resource)
-        Logger::Log(LogType::Error, "Trying to get CPU handle for nullptr resource");
+        Logger::Log(LogType::Error, "Trying to Get CPU handle for nullptr resource");
 
     auto result = std::find_if(_resourceIndex.begin(), _resourceIndex.end(), [resource](const auto& pair) { return pair.second == resource; });
     UINT index = (result != _resourceIndex.end()) ? result->first : (UINT)-1;
 
     if (index == (UINT)-1)
-        Logger::Log(LogType::Error, "Trying to get invalid resource CPU handle from descriptor heap");
+        Logger::Log(LogType::Error, "Trying to Get invalid resource CPU handle from descriptor heap");
 
     D3D12_CPU_DESCRIPTOR_HANDLE handle = _descriptorHeap->GetCPUDescriptorHandleForHeapStart();
     handle.ptr += _heapIncrementSize * index;
@@ -80,7 +80,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetResourceCPUHandle(Resource* resou
 D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetResourceGPUHandle(UINT index)
 {
     if (!_device)
-        Logger::Log(LogType::Error, "Device is nullptr when trying to get GPU descriptor handle increment size");
+        Logger::Log(LogType::Error, "Device is nullptr when trying to Get GPU descriptor handle increment size");
 
     D3D12_GPU_DESCRIPTOR_HANDLE handle = _descriptorHeap->GetGPUDescriptorHandleForHeapStart();
     handle.ptr += _heapIncrementSize * index;
@@ -91,16 +91,16 @@ D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetResourceGPUHandle(UINT index)
 D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetResourceGPUHandle(Resource* resource)
 {
     if (!_device)
-        Logger::Log(LogType::Error, "Device is nullptr when trying to get GPU descriptor handle increment size");
+        Logger::Log(LogType::Error, "Device is nullptr when trying to Get GPU descriptor handle increment size");
 
     if (!resource)
-        Logger::Log(LogType::Error, "Trying to get GPU handle for nullptr resource");
+        Logger::Log(LogType::Error, "Trying to Get GPU handle for nullptr resource");
 
     auto result = std::find_if(_resourceIndex.begin(), _resourceIndex.end(), [resource](const auto& pair) { return pair.second == resource; });
     UINT index = (result != _resourceIndex.end()) ? result->first : (UINT)-1;
 
     if (index == (UINT)-1)
-        Logger::Log(LogType::Error, "Trying to get invalid resource GPU handle from descriptor heap");
+        Logger::Log(LogType::Error, "Trying to Get invalid resource GPU handle from descriptor heap");
 
     D3D12_GPU_DESCRIPTOR_HANDLE handle = _descriptorHeap->GetGPUDescriptorHandleForHeapStart();
     handle.ptr += _heapIncrementSize * index;

@@ -4,12 +4,11 @@
 #include "SceneNode.h"
 
 #include "TextureLoaderDDS.h"
-#include "FrustumVolume.h"
-#include "Application.h"
-#include "Camera.h"
-#include "Scene.h"
+#include "Scene/Camera.h"
+#include "Scene/Scene.h"
 #include "Render/Heap.h"
 #include "Render/DescriptorHeap.h"
+#include "Volumes/FrustumVolume.h"
 
 using namespace DirectX;
 
@@ -19,7 +18,7 @@ SceneNode::SceneNode(FbxNode* fbxNode, ComPtr<ID3D12GraphicsCommandList> command
     _parent = parent;
     _name = fbxNode->GetName();
 
-    auto device = Application::get().getDevice();
+    auto device = Application::Get().getDevice();
 
     Logger::Log(LogType::Info, "Parsing node " + _name);
 
@@ -125,7 +124,7 @@ void SceneNode::DrawAABB(ComPtr<ID3D12GraphicsCommandList> commandList) const
 
 void SceneNode::UploadTextures(ComPtr<ID3D12GraphicsCommandList> commandList, Heap& heap, DescriptorHeap& descriptorHeap)
 {
-    auto device = Application::get().getDevice();
+    auto device = Application::Get().getDevice();
 
     heap.PlaceResource(_texture);
 
@@ -136,7 +135,7 @@ void SceneNode::UploadTextures(ComPtr<ID3D12GraphicsCommandList> commandList, He
     CD3DX12_RESOURCE_DESC buffer = CD3DX12_RESOURCE_DESC::Buffer(1024 * 1024 * 10, D3D12_RESOURCE_FLAG_NONE);
 
     ID3D12Resource* intermediateResource;
-    Helper::throwIfFailed(Application::get().getDevice()->CreateCommittedResource(
+    Helper::throwIfFailed(Application::Get().getDevice()->CreateCommittedResource(
         &heapTypeUpload,
         D3D12_HEAP_FLAG_NONE,
         &buffer,
@@ -178,7 +177,7 @@ void SceneNode::_UploadData(ComPtr<ID3D12GraphicsCommandList> commandList,
     const void* bufferData,
     D3D12_RESOURCE_FLAGS flags)
 {
-    auto device = Application::get().getDevice();
+    auto device = Application::Get().getDevice();
 
     size_t bufferSize = numElements * elementSize;
 

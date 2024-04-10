@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Interfaces/IVolume.h"
+#include "IVolume.h"
 
 class AABBVolume;
 

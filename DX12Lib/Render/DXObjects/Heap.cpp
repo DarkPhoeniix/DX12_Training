@@ -1,7 +1,6 @@
 #include "stdafx.h"
-#include "Heap.h"
 
-#include "Application.h"
+#include "Heap.h"
 
 Heap::Heap()
     : _heap(nullptr)

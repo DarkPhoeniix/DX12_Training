@@ -1,7 +1,7 @@
 #pragma once
 
-class Window;
-class IGame;
+class Win32Window;
+class DXRenderer;
 
 class Application
 {
@@ -9,27 +9,22 @@ public:
     Application(const Application&) = delete;
     Application& operator=(const Application&) = delete;
 
-    std::shared_ptr<Window> CreateWin32Window(const std::wstring& windowName, int clientWidth, int clientHeight, bool vSync = true);
-    void DestroyWindow(const std::wstring& windowName);
-    void DestroyWindow(std::shared_ptr<Window> window);
+    void Init(HINSTANCE hInstance);
+    int Run(std::shared_ptr<DXRenderer> pApp);
+    void Quit(int exitCode = 0);
 
-    std::shared_ptr<Window> getWindowByName(const std::wstring& windowName);
+    static Application& Get();
 
-    int run(std::shared_ptr<IGame> pGame);
-    void quit(int exitCode = 0);
-
-    void flush();
-
-    static void Init(HINSTANCE hInstance);
-    static void Destroy();
-
-    static Application& get();
-
-protected:
-    Application(HINSTANCE hIntance);
-    virtual ~Application();
+    static std::shared_ptr<Win32Window> CreateWin32Window(int width, int height, const std::wstring& title, bool vSync);
 
 private:
+    Application(HINSTANCE hInstance);
+    ~Application();
+
+    friend LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+
     // The application instance handle that this application was created with.
     HINSTANCE _hInstance;
+
+    static Application* _appInstance;
 };

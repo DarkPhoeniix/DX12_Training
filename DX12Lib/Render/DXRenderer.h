@@ -1,37 +1,36 @@
 #pragma once
 
-#include "Interfaces/IGame.h"
 #include "RenderWindow.h"
-#include "Objects/Camera.h"
-#include "Utility/PipelineSettings.h"
+#include "Scene/Camera.h"
 #include "FencePool.h"
-#include "Objects/Scene.h"
+#include "Scene/Scene.h"
 #include "Frame.h"
 #include "Blob.h"
+#include "Utility/PipelineSettings.h"
+#include "Window/IWindowEventListener.h"
 
 #include "DescriptorHeap.h"
 #include "Heap.h"
 
-class Renderer : public IGame
+class DXRenderer : public Core::IWindowEventListener
 {
 public:
-    using super = IGame;
+    DXRenderer(HWND windowHandle);
+    ~DXRenderer();
 
-    Renderer(const std::wstring& name, int width, int height, bool vSync = false);
-    ~Renderer();
+    virtual bool LoadContent();
+    virtual void UnloadContent();
 
-    virtual bool LoadContent() override;
-    virtual void UnloadContent() override;
+    virtual void OnUpdate(UpdateEvent& e) override;
+    virtual void OnRender(RenderEvent& e) override;
+    virtual void OnKeyPressed(KeyEvent& e) override;
+    virtual void OnKeyReleased(KeyEvent& e) override;
+    virtual void OnMouseMoved(MouseMoveEvent& e) override;
+    virtual void OnMouseButtonPressed(MouseButtonEvent& e) override;
+    virtual void OnMouseButtonReleased(MouseButtonEvent& e) override;
+    virtual void OnMouseScroll(MouseScrollEvent& e) override;
 
-protected:
-    void onUpdate(UpdateEvent& e) override;
-    void onRender(RenderEvent& e) override;
-    void onKeyPressed(KeyEvent& e) override;
-    void onMouseScroll(MouseScrollEvent& e) override;
-    void onMouseMoved(MouseMoveEvent& e) override;
-    void onMouseButtonPressed(MouseButtonEvent& e) override;
-    void onMouseButtonReleased(MouseButtonEvent& e) override;
-    void onResize(ResizeEvent& e) override;
+    virtual void onResize(ResizeEvent& e);
 
 private:
     void transitionResource(ComPtr<ID3D12GraphicsCommandList2> commandList,
@@ -91,4 +90,10 @@ private:
 
     std::shared_ptr<Heap> _texturesHeap;
     std::shared_ptr<DescriptorHeap> _texturesDescHeap;
+
+
+
+
+
+    ID3D12Device2* _DXDevice;
 };
