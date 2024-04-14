@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Blob.h"
 #include "Scene/Mesh.h"
 #include "Scene/ISceneNode.h"
-#include "Volumes/AABBVolume.h"
+#include "Scene/Volumes/AABBVolume.h"
+#include "Utility/Blob.h"
 
 #include <fbxsdk.h>
 
@@ -15,8 +15,11 @@ class SceneNode : public ISceneNode
 {
 public:
     SceneNode() = default;
-    SceneNode(FbxNode* node, ComPtr<ID3D12GraphicsCommandList> commandList, SceneNode* parent = nullptr);
+    SceneNode(FbxNode* node, ComPtr<ID3D12GraphicsCommandList> commandList, ComPtr<ID3D12Device2> device = nullptr, SceneNode* parent = nullptr);
     ~SceneNode();
+
+    void SetDevice(ComPtr<ID3D12Device2> device);
+    ComPtr<ID3D12Device2> GetDevice() const;
 
     void Draw(ComPtr<ID3D12GraphicsCommandList> commandList, const FrustumVolume& frustum) const override;
     void DrawAABB(ComPtr<ID3D12GraphicsCommandList> commandList) const override;
@@ -56,5 +59,7 @@ private:
     Resource _texture;
     Base::Blob _textureBlob;
     D3D12_GPU_DESCRIPTOR_HANDLE _textureHandle;
+
+    ComPtr<ID3D12Device2> _DXDevice;
 };
 

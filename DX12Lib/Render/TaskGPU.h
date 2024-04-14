@@ -1,10 +1,13 @@
 #pragma once
 
-#include "Fence.h"
+#include "DXObjects/Fence.h"
 
 class TaskGPU
 {
 public:
+    TaskGPU();
+    ~TaskGPU();
+
     void AddCommandList(ComPtr<ID3D12GraphicsCommandList2>);
     std::vector<ComPtr<ID3D12GraphicsCommandList2>> GetCommandLists() const;
 
@@ -13,6 +16,7 @@ public:
 
     void SetFence(Fence* fence);
     Fence* GetFence() const;
+    ID3D12Fence* GetDXFence() const;
     UINT64 GetFenceValue() const;
 
     void AddDependency(const std::string& taskName);

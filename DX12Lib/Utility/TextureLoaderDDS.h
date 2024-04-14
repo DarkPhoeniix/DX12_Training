@@ -1,10 +1,8 @@
 #pragma once
 
-#include "Application.h"
-#include "Render/Resource.h"
-#include "Blob.h"
+#include "Utility/Blob.h"
 
-#include <string>
+class Resource;
 
 namespace TextureLoader
 {

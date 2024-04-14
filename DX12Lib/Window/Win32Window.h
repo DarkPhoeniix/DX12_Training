@@ -1,13 +1,14 @@
 #pragma once
 
-#include "IWindowEventListener.h"
+#include "Utility/HighResolutionClock.h"
+#include "Window/IWindowEventListener.h"
 
 namespace Core
 {
     class Win32Window
     {
     public:
-        Win32Window(HWND windowHandle, int width, int height, const std::wstring& title, bool vSync = false);
+        Win32Window(HINSTANCE hInstance, int width, int height, const std::wstring& title, bool vSync = false);
         virtual ~Win32Window() = default;
 
         HWND GetWindowHandle() const;
@@ -31,8 +32,6 @@ namespace Core
         void RemoveEventListener();
 
         LRESULT WindowProcCallback(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
-
-        static std::shared_ptr<Win32Window> CreateWin32Window(int width, int height, const std::wstring& title, bool vSync);
 
     protected:
         HWND _windowHandle;

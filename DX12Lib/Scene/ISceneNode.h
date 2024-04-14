@@ -7,7 +7,8 @@ class Heap;
 class ISceneNode
 {
 public:
-    virtual ~ISceneNode() = default;
+    ISceneNode(const std::string& name, ISceneNode* parent = nullptr);
+    virtual ~ISceneNode();
 
     DirectX::XMMATRIX GetLocalTransform() const;
     void SetLocalTransform(const DirectX::XMMATRIX& transform);

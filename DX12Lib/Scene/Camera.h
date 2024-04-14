@@ -1,6 +1,9 @@
 #pragma once
 
+#include "Scene/Viewport.h"
 #include "Volumes/FrustumVolume.h"
+
+// TODO: refactor Camera
 
 class Camera
 {
@@ -10,7 +13,6 @@ public:
 	// at the world space origin.
 	Camera();
 
-	// Read only accessor functions.
 	const DirectX::XMMATRIX& View() const;
 	const DirectX::XMMATRIX& Projection() const;
 	const DirectX::XMMATRIX& ViewProjection() const;
@@ -21,20 +23,20 @@ public:
 
 	const FrustumVolume& GetViewFrustum() const;
 
-	// Read/write access to the camera position.
 	DirectX::XMVECTOR& Position();
 
-	// Our implementation of D3DXMatrixLookAtLH
 	void LookAt(DirectX::XMVECTOR& pos, DirectX::XMVECTOR& target, DirectX::XMVECTOR& up);
 
-	// Perspective projection parameters.
-	void SetLens(float fov, float aspect, float nearZ, float farZ);
+	void SetViewport(const Viewport& viewport);
+	Viewport GetViewport() const;
+
+	CD3DX12_VIEWPORT GetDXViewport() const;
+	CD3DX12_RECT GetDXScissorRectangle() const;
+
+	void SetLens(float fov, float nearZ, float farZ);
 
 	void SetFOV(float fov);
 	float GetFOV() const;
-
-	void SetAspectRatio(float aspectRatio);
-	float GetAspectRatio() const;
 
 	void SetNearZ(float nearZ);
 	float GetNearZ() const;
@@ -42,12 +44,9 @@ public:
 	void SetFarZ(float farZ);
 	float GetFarZ() const;
 
-	// Sets the camera speed.
 	void SetSpeed(float s);
 	float GetSpeed() const;
 
-	// Updates the camera's basis vectors and origin, relative to 
-	// the world space, based in user input.
 	void Update(DirectX::XMVECTOR direction);
 	void Update(int pitch, int yaw);
 
@@ -74,9 +73,10 @@ protected:
 	// Frustum
 	FrustumVolume _frustum;
 
+	Viewport _viewport;
+
 	// Lens params
 	float _fov;
-	float _aspectRatio;
 	float _nearZ;
 	float _farZ;
 

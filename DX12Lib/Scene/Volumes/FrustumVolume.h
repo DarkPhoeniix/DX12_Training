@@ -1,6 +1,6 @@
 #pragma once
 
-#include "IVolume.h"
+#include "Scene/Volumes/IVolume.h"
 
 class AABBVolume;
 
@@ -17,4 +17,6 @@ public:
     DirectX::XMVECTOR topPlane;
     DirectX::XMVECTOR nearPlane;
     DirectX::XMVECTOR farPlane;
+
+    std::vector<DirectX::XMVECTOR*> planes;
 };

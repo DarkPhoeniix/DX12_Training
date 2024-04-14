@@ -3,10 +3,10 @@
 
 #include "Application.h"
 #include "Render/DXRenderer.h"
+#include "Window/Win32Window.h"
 
 #include <dxgidebug.h>
-
-#include "pathcch.h"
+#include <pathcch.h>
 
 void ReportLiveObjects()
 {
@@ -36,15 +36,15 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstan
     }
 
     {
-        std::shared_ptr<DXRenderer> demo = std::make_shared<DXRenderer>(L"DX12 Sandbox", 1280, 720, false);
         Application::Init(hInstance);
+        std::shared_ptr<Core::Win32Window> mainWindow = Application::CreateWin32Window(1280, 720, L"DX12 Sandbox");
+        std::shared_ptr<DXRenderer> demo = std::make_shared<DXRenderer>(mainWindow->GetWindowHandle());
         {
-            retCode = Application::Get().run(demo);
+            retCode = Application::Get().Run(demo);
         }
     }
-    Application::Destroy();
+
     ReportLiveObjects();
-    //atexit(&ReportLiveObjects);
 
     return retCode;
 }

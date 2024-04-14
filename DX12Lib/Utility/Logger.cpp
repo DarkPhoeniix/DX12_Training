@@ -40,14 +40,18 @@ LogType Logger::_logLevel = LogType::Info | LogType::Warning | LogType::Error;
 LogType Logger::_logLevel = LogType::Warning | LogType::Error;
 #endif
 
+Logger& Logger::Instance()
+{
+    static Logger logger;
+    return logger;
+}
+
 void Logger::Log(LogType type, const std::string& message)
 {
     std::chrono::time_point<std::chrono::system_clock> time = std::chrono::zoned_time(std::chrono::current_zone(), std::chrono::system_clock::now()).get_sys_time();
 
-    std::ofstream file(LOG_FILEPATH, std::ios_base::app);
-    
     std::string output = std::format("{0:%T}", time) + " | " + logType(type) + ": " + message + '\n';
-    file << output;
+    Instance()._logFile << output;
 }
 
 void Logger::SetLogLevel(LogType logLevel)
@@ -58,4 +62,14 @@ void Logger::SetLogLevel(LogType logLevel)
 LogType Logger::GetLogLevel()
 {
     return _logLevel;
+}
+
+Logger::Logger()
+    : _logFile(LOG_FILEPATH, std::ios_base::app)
+{
+}
+
+Logger::~Logger()
+{
+    _logFile.close();
 }

@@ -15,15 +15,29 @@ namespace Core
     using Input::MouseButtonEvent;
     using Input::ResizeEvent;
 
-    Win32Window::Win32Window(HWND windowHandle, int width, int height, const std::wstring& title, bool vSync)
-        : _windowHandle(windowHandle)
-        , _eventListener(nullptr)
+    Win32Window::Win32Window(HINSTANCE hInstance, int width, int height, const std::wstring& title, bool vSync)
+        : _eventListener(nullptr)
         , _vSync(vSync)
         , _title(title)
         , _width(width)
         , _height(height)
         , _fullscreen(false)
-    {   }
+    {
+        RECT windowRect = { 0, 0, width, height };
+        AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
+
+        _windowHandle = CreateWindowW(L"DX12WindowClass", title.c_str(),
+            WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
+            windowRect.right - windowRect.left,
+            windowRect.bottom - windowRect.top,
+            nullptr, nullptr, hInstance, this);
+
+        if (!_windowHandle)
+        {
+            MessageBoxA(NULL, "Could not create the render window.", "Error", MB_OK | MB_ICONERROR);
+            return;
+        }
+    }
 
     void Win32Window::Show()
     {
@@ -43,28 +57,6 @@ namespace Core
     void Win32Window::RemoveEventListener()
     {
         _eventListener = nullptr;
-    }
-
-    std::shared_ptr<Win32Window> Win32Window::CreateWin32Window(int width, int height, const std::wstring& title, bool vSync)
-    {
-        RECT windowRect = { 0, 0, width, height };
-        AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
-
-        HWND handleWindow = CreateWindowW(L"DX12WindowClass", title.c_str(),
-            WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
-            windowRect.right - windowRect.left,
-            windowRect.bottom - windowRect.top,
-            nullptr, nullptr, nullptr, nullptr);
-
-        if (!handleWindow)
-        {
-            MessageBoxA(NULL, "Could not create the render window.", "Error", MB_OK | MB_ICONERROR);
-            return nullptr;
-        }
-
-        std::shared_ptr<Win32Window> pApp = std::make_shared<Win32Window>(handleWindow, width, height, title, vSync);
-
-        return pApp;
     }
 
     HWND Win32Window::GetWindowHandle() const
@@ -122,23 +114,14 @@ namespace Core
         static IWindowEventListener* listener = nullptr;
         if (!listener)
         {
-            listener = (IWindowEventListener*)(((LPCREATESTRUCT)lParam)->lpCreateParams);
+            //listener = (IWindowEventListener*)(((LPCREATESTRUCT)lParam)->lpCreateParams);
+            listener = _eventListener;
         }
 
         if (listener)
         {
             switch (message)
             {
-            //case WM_PAINT:
-            //{
-            //    // Delta time will be filled in by the Window.
-            //    UpdateEvent updateEventArgs(0.0f, 0.0f);
-            //    listener->OnUpdate(updateEventArgs);
-            //    RenderEvent renderEventArgs(0.0f, 0.0f);
-            //    // Delta time will be filled in by the Window.
-            //    listener->OnRender(renderEventArgs);
-            //}
-            //break;
             case WM_SIZE:
             {
                 int width = ((int)(short)LOWORD(lParam));

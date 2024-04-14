@@ -3,14 +3,8 @@
 #include <stdio.h>
 #include <cstring>
 
+#pragma warning(disable : 4995 4996 26439)
 
-#ifndef IPHONE
-//disable some warnings in visual studio
-//
-#pragma warning ( disable : 4995 4996 26439 )
-
-
-#endif
 namespace Base
 {
 	class Blob

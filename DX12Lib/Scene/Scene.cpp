@@ -2,10 +2,11 @@
 
 #include "Scene.h"
 
+#include "DXObjects/Device.h"
+#include "DXObjects/Heap.h"
+#include "DXObjects/DescriptorHeap.h"
 #include "Scene/SceneNode.h"
 #include "Scene/Camera.h"
-#include "Render/Heap.h"
-#include "Render/DescriptorHeap.h"
 #include "Volumes/FrustumVolume.h"
 
 // Create the FBX SDK memory manager object.
@@ -15,8 +16,6 @@ FbxManager* Scene::_FBXManager = FbxManager::Create();
 
 Scene::Scene()
 {
-    //_FBXManager = FbxManager::Create();
-
     // create an IOSettings object
     FbxIOSettings* ios = FbxIOSettings::Create(_FBXManager, IOSROOT);
     _FBXManager->SetIOSettings(ios);
@@ -27,7 +26,9 @@ Scene::Scene()
 Scene::~Scene()
 {
     if (_FBXManager) 
+    {
         _FBXManager->Destroy();
+    }
 }
 
 void Scene::Draw(ComPtr<ID3D12GraphicsCommandList> commandList, const FrustumVolume& frustum)
@@ -81,13 +82,7 @@ bool Scene::LoadScene(const std::string& name, ComPtr<ID3D12GraphicsCommandList>
     // Import the scene
     lStatus = lImporter->Import(_scene);
 
-    auto num = _scene->GetMemberCount();
-    auto n1= _scene->GetTextureCount();
-
-    for (int i = 0; i < _scene->GetRootNode()->GetChild(0)->GetMaterialCount(); ++i)
-        auto t = _scene->GetRootNode()->GetChild(0)->GetMaterial(i)->GetTypeName();
-    
-    _rootNode = std::make_shared<SceneNode>(_scene->GetRootNode(), commandList); // TODO: remove child(0)
+    _rootNode = std::make_shared<SceneNode>(_scene->GetRootNode(), commandList, Core::Device::GetDXDevice());
 
     // Destroy the importer
     lImporter->Destroy();

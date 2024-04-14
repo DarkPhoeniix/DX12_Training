@@ -1,14 +1,16 @@
 #pragma once
 
-class PipelineSettings
+// TODO: Implement parsing of Compute graphics pipeline
+
+class RootSignature
 {
 public:
-    void Parse(ID3D12Device* device, const std::string& filepath);
-
     ComPtr<ID3D12RootSignature> GetRootSignature() const;
     ComPtr<ID3D12PipelineState> GetPipelineState() const;
 
     bool IsGraphicsPipeline() const;
+
+    void Parse(ComPtr<ID3D12Device2> device, const std::string& filepath);
 
     static D3D12_BLEND_DESC ParseBlendDescription(const std::string& filepath);
     static D3D12_RASTERIZER_DESC ParseRasterizerDescription(const std::string& filepath);

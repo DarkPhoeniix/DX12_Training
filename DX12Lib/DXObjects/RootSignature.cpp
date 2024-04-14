@@ -1,6 +1,6 @@
 #include "stdafx.h"
 
-#include "PipelineSettings.h"
+#include "RootSignature.h"
 
 #include <fstream>
 
@@ -231,9 +231,23 @@ namespace
     }
 }
 
-void PipelineSettings::Parse(ID3D12Device* device, const std::string& filepath)
+ComPtr<ID3D12RootSignature> RootSignature::GetRootSignature() const
 {
-    //const std::string pipelineFilepath = "Resources\\RenderPipeline.tech";
+    return _rootSignature;
+}
+
+ComPtr<ID3D12PipelineState> RootSignature::GetPipelineState() const
+{
+    return _pipelineState;
+}
+
+bool RootSignature::IsGraphicsPipeline() const
+{
+    return _isGraphicsPipeline;
+}
+
+void RootSignature::Parse(ComPtr<ID3D12Device2> device, const std::string& filepath)
+{
     Json::Value jsonRoot = Helper::ParseJson(filepath);
 
     // Load the vertex shader
@@ -267,7 +281,7 @@ void PipelineSettings::Parse(ID3D12Device* device, const std::string& filepath)
     if (!jsonRoot["layout"].isNull())
     {
         inputLayout = new D3D12_INPUT_ELEMENT_DESC[layoutElementsNum];
-        for (int i = 0; i < 4; ++i)
+        for (int i = 0; i < 4; ++i) // TODO: why not layoutElementsNum?
         {
             inputLayout[i] = {};
             Json::Value layout = jsonRoot["layout"][i];
@@ -313,22 +327,7 @@ void PipelineSettings::Parse(ID3D12Device* device, const std::string& filepath)
     delete[] inputLayout;
 }
 
-ComPtr<ID3D12RootSignature> PipelineSettings::GetRootSignature() const
-{
-    return _rootSignature;
-}
-
-ComPtr<ID3D12PipelineState> PipelineSettings::GetPipelineState() const
-{
-    return _pipelineState;
-}
-
-bool PipelineSettings::IsGraphicsPipeline() const
-{
-    return _isGraphicsPipeline;
-}
-
-D3D12_BLEND_DESC PipelineSettings::ParseBlendDescription(const std::string& filepath)
+D3D12_BLEND_DESC RootSignature::ParseBlendDescription(const std::string& filepath)
 {
     Json::Value root = Helper::ParseJson(filepath);
     Json::Value renderTargets = root["RenderTargets"];
@@ -356,7 +355,7 @@ D3D12_BLEND_DESC PipelineSettings::ParseBlendDescription(const std::string& file
     return description;
 }
 
-D3D12_RASTERIZER_DESC PipelineSettings::ParseRasterizerDescription(const std::string& filepath)
+D3D12_RASTERIZER_DESC RootSignature::ParseRasterizerDescription(const std::string& filepath)
 {
     Json::Value root = Helper::ParseJson(filepath);
 
@@ -368,7 +367,7 @@ D3D12_RASTERIZER_DESC PipelineSettings::ParseRasterizerDescription(const std::st
     return description;
 }
 
-D3D12_DEPTH_STENCIL_DESC PipelineSettings::ParseDepthStencilDescription(const std::string& filepath)
+D3D12_DEPTH_STENCIL_DESC RootSignature::ParseDepthStencilDescription(const std::string& filepath)
 {
     Json::Value root = Helper::ParseJson(filepath);
 

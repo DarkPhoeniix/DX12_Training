@@ -1,7 +1,9 @@
 #include "stdafx.h"
 
-#include "TextureLoaderDDS.h"
-#include "Blob.h"
+#include "DXObjects/Resource.h"
+#include "DXObjects/Device.h"
+#include "Utility/TextureLoaderDDS.h"
+#include "Utility/Blob.h"
 
 #include <fstream>
 #include <sys/types.h>
@@ -500,7 +502,7 @@ namespace TextureLoader
 
     void _LoadDDS(const std::string& pFullPath, Resource*& pResource, Base::Blob& memGPU)
     {
-        ComPtr<ID3D12Device> device = Application::Get().getDevice();
+        ComPtr<ID3D12Device2> device = Core::Device::GetDXDevice();
 
         unsigned int sizeFile = getSize(pFullPath);
 
@@ -976,7 +978,8 @@ namespace TextureLoader
         //desc.SetArraySize( static_cast< unsigned int >( ( tdepth > 1 ) ? tdepth : arraySize ) );
 
 
-        pResource = new Resource(device, desc);
+        pResource = new Resource(desc);
+        pResource->SetDevice(device);
         //pResource->SetSamperType(resDim);
 
         pResource->CreateCommitedResource();

@@ -5,8 +5,8 @@
 HighResolutionClock::HighResolutionClock()
     : _deltaTime(0)
     , _totalTime(0)
+    , _startTime(std::chrono::high_resolution_clock::now())
 {
-    _startTime = std::chrono::high_resolution_clock::now();
 }
 
 void HighResolutionClock::tick()

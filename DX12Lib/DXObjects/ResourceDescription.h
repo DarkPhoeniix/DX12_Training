@@ -38,9 +38,7 @@ class ResourceDescription
 {
 public:
     ResourceDescription();
-    ResourceDescription(D3D12_RESOURCE_DESC desc);
-
-    D3D12_RESOURCE_DESC CreateDXResourceDescription() const;
+    ResourceDescription(const D3D12_RESOURCE_DESC& description);
 
     void SetDimension(D3D12_RESOURCE_DIMENSION dimension);
     D3D12_RESOURCE_DIMENSION GetDimension() const;
@@ -66,8 +64,8 @@ public:
     void SetLayout(D3D12_TEXTURE_LAYOUT textureLayout);
     D3D12_TEXTURE_LAYOUT GetLayout() const;
 
-    void AddFlags(D3D12_RESOURCE_FLAGS flags);
     void SetFlags(D3D12_RESOURCE_FLAGS flags);
+    void AddFlags(D3D12_RESOURCE_FLAGS flags);
     D3D12_RESOURCE_FLAGS GetFlags() const;
 
     void SetResourceType(EResourceType type);
@@ -82,13 +80,14 @@ public:
     void SetClearValue(const DirectX::XMFLOAT4& clearValue);
     std::shared_ptr<D3D12_CLEAR_VALUE> GetClearValue() const;
 
-protected:
+    D3D12_RESOURCE_DESC CreateDXResourceDescription() const;
+
+private:
     void UpdateSize(EResourceType type);
     void UpdateFlags(EResourceType type);
 
-private:
     D3D12_RESOURCE_DESC _resourceDescription;
     EResourceType _resourceType;
     UINT64 _stride;
-    std::shared_ptr<D3D12_CLEAR_VALUE> _clearValue = nullptr;
+    std::shared_ptr<D3D12_CLEAR_VALUE> _clearValue;
 };

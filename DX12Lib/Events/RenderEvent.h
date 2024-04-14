@@ -9,9 +9,10 @@ namespace Core
         class RenderEvent : public IEvent
         {
         public:
-            RenderEvent(double fDeltaTime, double fTotalTime)
+            RenderEvent(double fDeltaTime, double fTotalTime, unsigned int frameIndex)
                 : elapsedTime(fDeltaTime)
                 , totalTime(fTotalTime)
+                , frameIndex(frameIndex)
             {   }
 
             double elapsedTime;

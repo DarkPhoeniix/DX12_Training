@@ -4,6 +4,18 @@
 
 using namespace DirectX;
 
+ISceneNode::ISceneNode(const std::string& name, ISceneNode* parent)
+    : _name(name)
+    , _parent(parent)
+    , _transform{}
+{
+}
+
+ISceneNode::~ISceneNode()
+{
+    _parent = nullptr;
+}
+
 XMMATRIX ISceneNode::GetLocalTransform() const
 {
     return _transform;

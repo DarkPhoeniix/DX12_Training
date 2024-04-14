@@ -1,13 +1,13 @@
 #include "stdafx.h"
+
 #include "ResourceDescription.h"
 
 ResourceDescription::ResourceDescription()
 	: _resourceDescription{}
-	, _resourceType( EResourceType::None )
+	, _resourceType(EResourceType::None)
 	, _stride(0)
+	, _clearValue(nullptr)
 {
-	//_resourceDescription = D3D12_RESOURCE_DESC();
-
 	_resourceDescription.Format = DXGI_FORMAT::DXGI_FORMAT_UNKNOWN;
 
 	_resourceDescription.Flags = D3D12_RESOURCE_FLAG_NONE;
@@ -24,16 +24,12 @@ ResourceDescription::ResourceDescription()
 	_resourceDescription.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 }
 
-ResourceDescription::ResourceDescription(D3D12_RESOURCE_DESC desc)
-	: _resourceDescription(desc)
-	, _resourceType( EResourceType::None )
+ResourceDescription::ResourceDescription(const D3D12_RESOURCE_DESC& description)
+	: _resourceDescription(description)
+	, _resourceType(EResourceType::None)
 	, _stride(0)
+	, _clearValue(nullptr)
 {
-}
-
-D3D12_RESOURCE_DESC ResourceDescription::CreateDXResourceDescription() const
-{
-    return _resourceDescription;
 }
 
 void ResourceDescription::SetDimension(D3D12_RESOURCE_DIMENSION dimension)
@@ -118,14 +114,14 @@ D3D12_TEXTURE_LAYOUT ResourceDescription::GetLayout() const
     return _resourceDescription.Layout;
 }
 
+void ResourceDescription::SetFlags(D3D12_RESOURCE_FLAGS flags)
+{
+	_resourceDescription.Flags = flags;
+}
+
 void ResourceDescription::AddFlags(D3D12_RESOURCE_FLAGS flags)
 {
 	_resourceDescription.Flags |= flags;
-}
-
-void ResourceDescription::SetFlags(D3D12_RESOURCE_FLAGS flags)
-{
-    _resourceDescription.Flags = flags;
 }
 
 D3D12_RESOURCE_FLAGS ResourceDescription::GetFlags() const
@@ -183,7 +179,6 @@ void ResourceDescription::SetClearValue(D3D12_CLEAR_VALUE clearValue)
 
 void ResourceDescription::SetClearValue(const DirectX::XMFLOAT4& clearValue)
 {
-	// TODO: clear here
 	_clearValue->Color[0] = clearValue.x;
 	_clearValue->Color[1] = clearValue.y;
 	_clearValue->Color[2] = clearValue.z;
@@ -193,6 +188,11 @@ void ResourceDescription::SetClearValue(const DirectX::XMFLOAT4& clearValue)
 std::shared_ptr<D3D12_CLEAR_VALUE> ResourceDescription::GetClearValue() const
 {
 	return _clearValue;
+}
+
+D3D12_RESOURCE_DESC ResourceDescription::CreateDXResourceDescription() const
+{
+	return _resourceDescription;
 }
 
 void ResourceDescription::UpdateSize(EResourceType type)

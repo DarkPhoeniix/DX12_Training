@@ -6,26 +6,26 @@ public:
     HeapDescription();
     ~HeapDescription() = default;
 
-    UINT64 GetAlignment() const;
     void SetAlignment(UINT64 alignment);
+    UINT64 GetAlignment() const;
 
-    D3D12_HEAP_FLAGS GetHeapFlags() const;
     void SetHeapFlags(D3D12_HEAP_FLAGS heapFlags);
+    D3D12_HEAP_FLAGS GetHeapFlags() const;
 
-    UINT64 GetSize() const;
     void SetSize(UINT64 size);
+    UINT64 GetSize() const;
 
-    D3D12_CPU_PAGE_PROPERTY GetCPUPageProperty() const;
     void SetCPUPageProperty(D3D12_CPU_PAGE_PROPERTY property);
+    D3D12_CPU_PAGE_PROPERTY GetCPUPageProperty() const;
 
-    D3D12_MEMORY_POOL GetMemoryPoolPreference() const;
     void SetMemoryPoolPreference(D3D12_MEMORY_POOL memPoolPreference);
+    D3D12_MEMORY_POOL GetMemoryPoolPreference() const;
 
-    UINT GetCreationNodeMask() const;
     void SetCreationNodeMask(UINT nodeMask);
+    UINT GetCreationNodeMask() const;
 
-    UINT GetVisibleNodeMask() const;
     void SetVisibleNodeMask(UINT nodeMask);
+    UINT GetVisibleNodeMask() const;
 
     D3D12_HEAP_TYPE GetHeapType() const;
     void SetHeapType(D3D12_HEAP_TYPE heapType);

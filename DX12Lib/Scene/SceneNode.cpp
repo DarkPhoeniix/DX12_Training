@@ -3,23 +3,26 @@
 
 #include "SceneNode.h"
 
-#include "TextureLoaderDDS.h"
+#include "DXObjects/Heap.h"
+#include "DXObjects/DescriptorHeap.h"
 #include "Scene/Camera.h"
 #include "Scene/Scene.h"
-#include "Render/Heap.h"
-#include "Render/DescriptorHeap.h"
+#include "Utility/TextureLoaderDDS.h"
 #include "Volumes/FrustumVolume.h"
 
 using namespace DirectX;
 
-SceneNode::SceneNode(FbxNode* fbxNode, ComPtr<ID3D12GraphicsCommandList> commandList, SceneNode* parent)
-    : _texture{}
+SceneNode::SceneNode(FbxNode* fbxNode, ComPtr<ID3D12GraphicsCommandList> commandList, ComPtr<ID3D12Device2> device, SceneNode* parent)
+    : ISceneNode(fbxNode->GetName(), parent)
+    , _texture{}
+    , _DXDevice(device)
+    , _AABB{}
+    , _AABBVBO{}
+    , _AABBIBO{}
+    , _VBO{}
+    , _IBO{}
+    , _textureHandle{}
 {
-    _parent = parent;
-    _name = fbxNode->GetName();
-
-    auto device = Application::Get().getDevice();
-
     Logger::Log(LogType::Info, "Parsing node " + _name);
 
     // Read transform
@@ -41,7 +44,8 @@ SceneNode::SceneNode(FbxNode* fbxNode, ComPtr<ID3D12GraphicsCommandList> command
         desc.SetStride(1);
         desc.SetFormat(DXGI_FORMAT::DXGI_FORMAT_UNKNOWN);
 
-        _modelMatrix = std::make_shared<Resource>(device, desc);
+        _modelMatrix = std::make_shared<Resource>(desc);
+        _modelMatrix->SetDevice(_DXDevice);
         _modelMatrix->CreateCommitedResource(D3D12_RESOURCE_STATE_GENERIC_READ);
         _modelMatrix->SetName(_name + "_ModelMatrix");
     }
@@ -61,7 +65,8 @@ SceneNode::SceneNode(FbxNode* fbxNode, ComPtr<ID3D12GraphicsCommandList> command
                 ComPtr<ID3D12Resource> vertexBuffer;
                 _UploadData(commandList, &vertexBuffer, _mesh->getVertices().size(), sizeof(VertexData), _mesh->getVertices().data());
                 _vertexBuffer = std::make_shared<Resource>();
-                _vertexBuffer->SetResource(vertexBuffer);
+                _vertexBuffer->SetDevice(_DXDevice);
+                _vertexBuffer->InitFromDXResource(vertexBuffer);
                 _vertexBuffer->SetName(_name + "_VB");
 
                 _VBO.BufferLocation = _vertexBuffer->OffsetGPU(0);
@@ -74,7 +79,8 @@ SceneNode::SceneNode(FbxNode* fbxNode, ComPtr<ID3D12GraphicsCommandList> command
                 ComPtr<ID3D12Resource> indexBuffer;
                 _UploadData(commandList, &indexBuffer, _mesh->getIndices().size(), sizeof(UINT), _mesh->getIndices().data());
                 _indexBuffer = std::make_shared<Resource>();
-                _indexBuffer->SetResource(indexBuffer);
+                _indexBuffer->SetDevice(_DXDevice);
+                _indexBuffer->InitFromDXResource(indexBuffer);
                 _indexBuffer->SetName(_name + "_IB");
 
                 _IBO.BufferLocation = _indexBuffer->OffsetGPU(0);
@@ -87,21 +93,37 @@ SceneNode::SceneNode(FbxNode* fbxNode, ComPtr<ID3D12GraphicsCommandList> command
     // Setup child nodes
     for (int childIndex = 0; childIndex < fbxNode->GetChildCount(); ++childIndex)
     {
-        auto childNode = std::make_shared<SceneNode>(fbxNode->GetChild(childIndex), commandList, this);
+        auto childNode = std::make_shared<SceneNode>(fbxNode->GetChild(childIndex), commandList, _DXDevice, this);
         _childNodes.push_back(childNode);
     }
 }
 
 SceneNode::~SceneNode()
 {
-    for(ID3D12Resource* pinter : intermediates)
-        pinter->Release();
+    for(ID3D12Resource* intermediate : intermediates)
+    {
+        intermediate->Release();
+    }
+
+    _DXDevice = nullptr;
+}
+
+void SceneNode::SetDevice(ComPtr<ID3D12Device2> device)
+{
+    _DXDevice = device;
+}
+
+ComPtr<ID3D12Device2> SceneNode::GetDevice() const
+{
+    return _DXDevice;
 }
 
 void SceneNode::Draw(ComPtr<ID3D12GraphicsCommandList> commandList, const FrustumVolume& frustum) const
 {
     for (const std::shared_ptr<ISceneNode> node : _childNodes)
+    {
         node->Draw(commandList, frustum);
+    }
 
     _DrawCurrentNode(commandList, frustum);
 }
@@ -109,10 +131,14 @@ void SceneNode::Draw(ComPtr<ID3D12GraphicsCommandList> commandList, const Frustu
 void SceneNode::DrawAABB(ComPtr<ID3D12GraphicsCommandList> commandList) const
 {
     for (const std::shared_ptr<ISceneNode> node : _childNodes)
+    {
         node->DrawAABB(commandList);
+    }
 
     if (!_mesh)
+    {
         return;
+    }
 
     commandList->IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
 
@@ -124,8 +150,6 @@ void SceneNode::DrawAABB(ComPtr<ID3D12GraphicsCommandList> commandList) const
 
 void SceneNode::UploadTextures(ComPtr<ID3D12GraphicsCommandList> commandList, Heap& heap, DescriptorHeap& descriptorHeap)
 {
-    auto device = Application::Get().getDevice();
-
     heap.PlaceResource(_texture);
 
     auto barrier = _texture.CreateBarrierAlias(nullptr);
@@ -135,7 +159,7 @@ void SceneNode::UploadTextures(ComPtr<ID3D12GraphicsCommandList> commandList, He
     CD3DX12_RESOURCE_DESC buffer = CD3DX12_RESOURCE_DESC::Buffer(1024 * 1024 * 10, D3D12_RESOURCE_FLAG_NONE);
 
     ID3D12Resource* intermediateResource;
-    Helper::throwIfFailed(Application::Get().getDevice()->CreateCommittedResource(
+    Helper::throwIfFailed(_DXDevice->CreateCommittedResource(
         &heapTypeUpload,
         D3D12_HEAP_FLAG_NONE,
         &buffer,
@@ -149,20 +173,22 @@ void SceneNode::UploadTextures(ComPtr<ID3D12GraphicsCommandList> commandList, He
     subresources.RowPitch = 1024 * 4;
     subresources.SlicePitch = subresources.RowPitch * 1024;
 
-    UpdateSubresources(commandList.Get(), _texture.GetResource().Get(), intermediateResource, 0, 0, 1, &subresources);
+    UpdateSubresources(commandList.Get(), _texture.GetDXResource().Get(), intermediateResource, 0, 0, 1, &subresources);
 
     D3D12_CPU_DESCRIPTOR_HANDLE handleOffset = descriptorHeap.GetHeapStartCPUHandle();
-    handleOffset.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * descriptorHeap.GetFreeHandleIndex();
+    handleOffset.ptr += _DXDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * descriptorHeap.GetFreeHandleIndex();
 
     D3D12_SHADER_RESOURCE_VIEW_DESC _resDesc2 = {};
     _resDesc2.Format = _texture.GetResourceDescription().GetFormat();
     _resDesc2.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
     _resDesc2.Texture2D.MipLevels = 1;
     _resDesc2.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    device->CreateShaderResourceView(_texture.GetResource().Get(), &_resDesc2, handleOffset);
+    _DXDevice->CreateShaderResourceView(_texture.GetDXResource().Get(), &_resDesc2, handleOffset);
 
     for (const std::shared_ptr<ISceneNode> node : _childNodes)
+    {
         node->UploadTextures(commandList, heap, descriptorHeap);
+    }
 }
 
 const AABBVolume& SceneNode::getAABB() const
@@ -177,14 +203,12 @@ void SceneNode::_UploadData(ComPtr<ID3D12GraphicsCommandList> commandList,
     const void* bufferData,
     D3D12_RESOURCE_FLAGS flags)
 {
-    auto device = Application::Get().getDevice();
-
     size_t bufferSize = numElements * elementSize;
 
     CD3DX12_HEAP_PROPERTIES heapTypeDefault(D3D12_HEAP_TYPE_DEFAULT);
     CD3DX12_RESOURCE_DESC bufferWithFlags = CD3DX12_RESOURCE_DESC::Buffer(bufferSize, flags);
 
-    Helper::throwIfFailed(device->CreateCommittedResource(
+    Helper::throwIfFailed(_DXDevice->CreateCommittedResource(
         &heapTypeDefault,
         D3D12_HEAP_FLAG_NONE,
         &bufferWithFlags,
@@ -199,7 +223,7 @@ void SceneNode::_UploadData(ComPtr<ID3D12GraphicsCommandList> commandList,
 
     if (bufferData)
     {
-        Helper::throwIfFailed(device->CreateCommittedResource(
+        Helper::throwIfFailed(_DXDevice->CreateCommittedResource(
             &heapTypeUpload,
             D3D12_HEAP_FLAG_NONE,
             &buffer,
@@ -222,10 +246,14 @@ void SceneNode::_UploadData(ComPtr<ID3D12GraphicsCommandList> commandList,
 void SceneNode::_DrawCurrentNode(ComPtr<ID3D12GraphicsCommandList> commandList, const FrustumVolume& frustum) const
 {
     if (!_mesh)
+    {
         return;
+    }
 
     if (!intersect(frustum, _AABB))
+    {
         return;
+    }
 
     XMMATRIX* modelMatrixData = (XMMATRIX*)_modelMatrix->Map();
     *modelMatrixData = GetGlobalTransform();

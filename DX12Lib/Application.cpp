@@ -1,10 +1,9 @@
-
 #include "stdafx.h"
 
 #include "Application.h"
 
-#include "Render/DXRenderer.h"
-#include "Window/Win32Window.h"
+#include "DXObjects/SwapChain.h"
+#include "DXObjects/Device.h"
 #include "Events/KeyEvent.h"
 #include "Events/MouseButtonEvent.h"
 #include "Events/MouseMoveEvent.h"
@@ -12,10 +11,16 @@
 #include "Events/RenderEvent.h"
 #include "Events/ResizeEvent.h"
 #include "Events/UpdateEvent.h"
+#include "Render/DXRenderer.h"
+#include "Window/Win32Window.h"
+
+using namespace Core;
 
 namespace
 {
     constexpr wchar_t WINDOW_CLASS_NAME[] = L"DX12WindowClass";
+
+    static Application* _appInstance;
 
     // Convert the message ID into a MouseButton ID
     Core::Input::MouseButtonEvent::MouseButton DecodeMouseButton(UINT messageID)
@@ -50,31 +55,52 @@ namespace
     }
 }
 
-Application& Application::Get()
+LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    return *_appInstance;
-}
-
-std::shared_ptr<Win32Window> Application::CreateWin32Window(int width, int height, const std::wstring& title, bool vSync)
-{
-    RECT windowRect = { 0, 0, width, height };
-    AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
-
-    HWND hWnd = CreateWindowW(WINDOW_CLASS_NAME, title.c_str(),
-        WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
-        windowRect.right - windowRect.left,
-        windowRect.bottom - windowRect.top,
-        nullptr, nullptr, _hInstance, nullptr);
-
-    if (!hWnd)
+    switch (message)
     {
-        MessageBoxA(NULL, "Could not create the render window.", "Error", MB_OK | MB_ICONERROR);
-        return nullptr;
+    case WM_CREATE:
+    {
+        // passing pointer for Win32Window into USERDATA section
+        // by some unknown reason, it can be missed by default
+        CREATESTRUCTA* pCreation = reinterpret_cast<CREATESTRUCTA*>(lParam);
+        SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)pCreation->lpCreateParams);
+
+    }
+    break;
     }
 
-    std::shared_ptr<Win32Window> pWindow = std::make_shared<Win32Window>(hWnd, title, width, height, vSync);
+    Core::Win32Window* window = (Core::Win32Window*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
-    return pWindow;
+    if (window)
+    {
+        LRESULT result = window->WindowProcCallback(hwnd, message, wParam, lParam);
+        if (result != -1)
+        {
+            return result;
+        }
+    }
+
+    return DefWindowProc(hwnd, message, wParam, lParam);
+}
+
+Application::Application(HINSTANCE hInstance)
+    : _hInstance(hInstance)
+    , _DXDevice(Core::Device::GetDXDevice())
+    , _currentFrame(&_frames[0])
+{
+    _RegisterWindowClass(hInstance);
+}
+
+Application::~Application()
+{
+    if (_appInstance)
+    {
+        delete _appInstance;
+    }
+
+    _appInstance = nullptr;
+    _DXDevice = nullptr;
 }
 
 void Application::Init(HINSTANCE hInstance)
@@ -84,8 +110,34 @@ void Application::Init(HINSTANCE hInstance)
 
 int Application::Run(std::shared_ptr<DXRenderer> pApp)
 {
-    if (!pApp->LoadContent()) return 1;
+    _swapChain.Init(_win32Window);
 
+    _allocs.Init(_DXDevice);
+    _fencePool.Init(_DXDevice);
+
+    for (int i = 0; i < 3; ++i)
+    {
+        Frame& frame = _frames[i];
+        frame.Index = i;
+        frame.Next = &_frames[(i + 1) % 3];
+        frame.Prev = &_frames[(i + 3 - 1) % 3];
+
+        frame.SetDXDevice(_DXDevice);
+        frame.SetDirectQueue(Core::Device::GetStreamQueue());
+        frame.SetComputeQueue(Core::Device::GetComputeQueue());
+        frame.SetCopyQueue(Core::Device::GetCopyQueue());
+
+        frame.SetSyncFrame(nullptr);
+        frame.SetAllocatorPool(&_allocs);
+        frame.SetFencePool(&_fencePool);
+
+        frame.Init(_swapChain);
+    }
+
+    if (!pApp->LoadContent(_currentFrame->CreateTask(D3D12_COMMAND_LIST_TYPE_COPY, nullptr)))
+    {
+        return 1;
+    }
 
     MSG msg = { 0 };
     while (msg.message != WM_QUIT)
@@ -95,12 +147,12 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
-        else
-        {
-            pApp->OnUpdate();
-            pApp->OnRender();
-        }
-        
+
+        _UpdateCall(pApp);
+        _RenderCall(pApp);
+
+        _ExecuteFrameTasks();
+        _currentFrame = _currentFrame->Next;
     }
 
     pApp->UnloadContent();
@@ -113,16 +165,29 @@ void Application::Quit(int exitCode)
     PostQuitMessage(exitCode);
 }
 
-Application::Application(HINSTANCE hInstance)
-    : _hInstance(hInstance)
+Application& Application::Get()
+{
+    if (!_appInstance)
+    {
+        Logger::Log(LogType::Error, "Application is uninitialized");
+    }
+
+    return *_appInstance;
+}
+
+std::shared_ptr<Core::Win32Window> Application::CreateWin32Window(int width, int height, const std::wstring& title, bool vSync)
+{
+    std::shared_ptr<Core::Win32Window> pWindow = std::make_shared<Core::Win32Window>(Get()._hInstance, width, height, title, vSync);
+    Get()._win32Window = pWindow;
+
+    pWindow->Show();
+
+    return pWindow;
+}
+
+void Application::_RegisterWindowClass(HINSTANCE hInstance)
 {
     SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
-
-#if defined(_DEBUG)
-    ComPtr<ID3D12Debug> debugInterface;
-    Helper::throwIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&debugInterface)));
-    debugInterface->EnableDebugLayer();
-#endif
 
     WNDCLASSEXW wndClass = { 0 };
 
@@ -138,40 +203,58 @@ Application::Application(HINSTANCE hInstance)
     //wndClass.hIconSm = LoadIcon(_hInstance, MAKEINTRESOURCE(APP_ICON));
 
     if (!RegisterClassExW(&wndClass))
+    {
         MessageBoxA(NULL, "Unable to register the window class.", "Error", MB_OK | MB_ICONERROR);
+    }
 }
 
-Application::~Application()
+void Application::_UpdateCall(std::shared_ptr<DXRenderer> pApp)
 {
-    if (_appInstance)
-        delete _appInstance;
+    _updateClock.tick();
 
-    _appInstance = nullptr;
+    Input::UpdateEvent updateEvent(_updateClock.getDeltaSeconds(), _updateClock.getTotalSeconds(), _currentFrame->Index);
+    pApp->OnUpdate(updateEvent);
 }
 
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+void Application::_RenderCall(std::shared_ptr<DXRenderer> pApp)
 {
-    Core::Win32Window* window = (Core::Win32Window*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    _renderClock.tick();
 
-    switch (message)
+    Input::RenderEvent renderEvent(_updateClock.getDeltaSeconds(), _updateClock.getTotalSeconds(), _currentFrame->Index);
+    pApp->OnRender(renderEvent, *_currentFrame);
+}
+
+void Application::_ExecuteFrameTasks()
+{
+    for (TaskGPU& task : _currentFrame->GetTasks())
     {
-    case WM_CREATE:
-    {
-        // passing pointer for Win32Window into USERDATA section
-        // by some unknown reason, it can be missed by default
-        CREATESTRUCTA* pCreation = reinterpret_cast<CREATESTRUCTA*>(lParam);
-        SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)pCreation->lpCreateParams);
+        std::vector<TaskGPU*> dependencies;
 
-    }
-    break;
-    }
+        // wait
+        for (const std::string& dependency : task.GetDependencies())
+        {
+            dependencies.push_back(_currentFrame->GetTask(dependency));
+        }
 
-    if (window)
-    {
-        LRESULT result = window->WindowProcCallback(hwnd, message, wParam, lParam);
-        if (result != -1)
-            return result;
-    }
+        for (TaskGPU* d : dependencies)
+        {
+            task.GetCommandQueue()->Wait(d->GetFence()->GetFence().Get(), d->GetFenceValue());
+        }
 
-    return DefWindowProc(hwnd, message, wParam, lParam);
+        std::vector<ID3D12CommandList*> frameCommandLists;
+        frameCommandLists.reserve(task.GetCommandLists().size());
+        for (auto cl : task.GetCommandLists())
+        {
+            frameCommandLists.push_back(cl.Get());
+        }
+
+        task.GetCommandQueue()->ExecuteCommandLists(frameCommandLists.size(), frameCommandLists.data());
+
+        if (task.GetName() == "present")
+        {
+            _swapChain.Present();
+            _currentFrame->SetSyncFrame(task.GetFence());
+        }
+        task.GetCommandQueue()->Signal(task.GetDXFence(), task.GetFenceValue());
+    }
 }

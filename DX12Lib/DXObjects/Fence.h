@@ -3,7 +3,7 @@
 struct Fence
 {
 public:
-    void Init(ComPtr<ID3D12Device> device);
+    void Init(ComPtr<ID3D12Device2> device);
 
     void Wait();
 

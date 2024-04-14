@@ -1,9 +1,23 @@
 #include "stdafx.h"
+
 #include "Resource.h"
 
-Resource::Resource(ComPtr<ID3D12Device> device, ResourceDescription resourceDesc)
-	: _device(device)
+Resource::Resource()
+	: _resource(nullptr)
+	, _resourceDesc{}
+	, _currentState(D3D12_RESOURCE_STATE_COMMON)
+	, _initialState(D3D12_RESOURCE_STATE_COMMON)
+	, _DXDevice(nullptr)
+{
+
+}
+
+Resource::Resource(ResourceDescription resourceDesc)
+	: _resource(nullptr)
 	, _resourceDesc(resourceDesc)
+	, _currentState(D3D12_RESOURCE_STATE_COMMON)
+	, _initialState(D3D12_RESOURCE_STATE_COMMON)
+	, _DXDevice(nullptr)
 {	
 }
 
@@ -11,19 +25,26 @@ Resource::~Resource()
 {
 	if( _resource )
 	{
-		//_resource->Release();
 		_resource = nullptr;
 	}
-	this->_device = nullptr; 
+	
+	_DXDevice = nullptr; 
 }
 
-void Resource::SetResource(ComPtr<ID3D12Resource> resource)
+void Resource::InitFromDXResource(ComPtr<ID3D12Resource> resource)
 {
 	_resource = resource;
-	_resourceDesc = ResourceDescription(resource->GetDesc());
+	_resourceDesc = resource->GetDesc();
+	_initialState = D3D12_RESOURCE_STATE_COMMON;
+	_currentState = D3D12_RESOURCE_STATE_COMMON;
 }
 
-ComPtr<ID3D12Resource> Resource::GetResource() const
+ComPtr<ID3D12Resource> Resource::GetDXResource() const
+{
+	return _resource;
+}
+
+ComPtr<ID3D12Resource>& Resource::GetDXResource()
 {
 	return _resource;
 }
@@ -68,22 +89,30 @@ D3D12_RESOURCE_BARRIER Resource::CreateBarrierAlias(Resource* old) const
 	D3D12_RESOURCE_BARRIER barrier;
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_ALIASING;
 	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	barrier.Aliasing.pResourceBefore = old ? old->GetResource().Get() : nullptr;
+	barrier.Aliasing.pResourceBefore = old ? old->GetDXResource().Get() : nullptr;
 	barrier.Aliasing.pResourceAfter = _resource.Get();
 
 	return barrier;
 }
 
-void Resource::setDevice( ComPtr<ID3D12Device> device )
+void Resource::SetDevice(ComPtr<ID3D12Device2> device)
 {
-	this->_device = device;
+	_DXDevice = device;
+}
+
+ComPtr<ID3D12Device2> Resource::GetDevice() const
+{
+	return _DXDevice;
 }
 
 D3D12_GPU_VIRTUAL_ADDRESS Resource::OffsetGPU(unsigned int offset) const
 {
-	//assert(!this->_resource && "impossible to get GPU pointer in empty resource");
+	if (!_resource)
+	{
+		Logger::Log(LogType::Error, "Trying to get GPU pointer in empty resource");
+	}
 
-	D3D12_GPU_VIRTUAL_ADDRESS result = this->_resource->GetGPUVirtualAddress();
+	D3D12_GPU_VIRTUAL_ADDRESS result = _resource->GetGPUVirtualAddress();
 	result += offset;
 
 	return result;
@@ -120,7 +149,7 @@ ComPtr<ID3D12Resource> Resource::CreateCommitedResource(D3D12_RESOURCE_STATES in
 	// need to RTT and DSV
 	D3D12_RESOURCE_DESC resourceDesc = _resourceDesc.CreateDXResourceDescription();
 	D3D12_CLEAR_VALUE* clearValue = _resourceDesc.GetClearValue().get();
-	_device->CreateCommittedResource(
+	_DXDevice->CreateCommittedResource(
 		&heapDesc,
 		D3D12_HEAP_FLAG_NONE,
 		&resourceDesc,
@@ -137,7 +166,7 @@ ComPtr<ID3D12Resource> Resource::CreatePlacedResource(ComPtr<ID3D12Heap> heap, u
 
 	D3D12_RESOURCE_DESC resourceDesc = _resourceDesc.CreateDXResourceDescription();
 	D3D12_CLEAR_VALUE* clearValue = _resourceDesc.GetClearValue().get();
-	_device->CreatePlacedResource(
+	_DXDevice->CreatePlacedResource(
 		heap.Get(),
 		offset,
 		&resourceDesc,

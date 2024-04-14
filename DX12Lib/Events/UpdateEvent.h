@@ -9,9 +9,10 @@ namespace Core
         class UpdateEvent : public IEvent
         {
         public:
-            UpdateEvent(double fDeltaTime, double fTotalTime)
+            UpdateEvent(double fDeltaTime, double fTotalTime, unsigned int frameIndex)
                 : elapsedTime(fDeltaTime)
                 , totalTime(fTotalTime)
+                , frameIndex(frameIndex)
             {   }
 
             double elapsedTime;

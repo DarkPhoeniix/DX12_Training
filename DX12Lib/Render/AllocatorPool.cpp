@@ -1,11 +1,14 @@
 #include "stdafx.h"
+
 #include "AllocatorPool.h"
 
-void AllocatorPool::Init(ComPtr<ID3D12Device> device)
+void AllocatorPool::Init(ComPtr<ID3D12Device2> device)
 {
-    Make(device, streams, 32, D3D12_COMMAND_LIST_TYPE_DIRECT);
-    Make(device, computes, 32, D3D12_COMMAND_LIST_TYPE_COMPUTE);
-    Make(device, copies, 4, D3D12_COMMAND_LIST_TYPE_COPY);
+    _DXDevice = device;
+
+    Make(streams, 32, D3D12_COMMAND_LIST_TYPE_DIRECT);
+    Make(computes, 32, D3D12_COMMAND_LIST_TYPE_COMPUTE);
+    Make(copies, 4, D3D12_COMMAND_LIST_TYPE_COPY);
 }
 
 Executor* AllocatorPool::Obtain(D3D12_COMMAND_LIST_TYPE type)
@@ -35,13 +38,14 @@ Executor* AllocatorPool::Obtain(D3D12_COMMAND_LIST_TYPE type)
     return nullptr;
 }
 
-void AllocatorPool::Make(ComPtr<ID3D12Device> device, std::vector<Executor>& vecExec, unsigned int size, D3D12_COMMAND_LIST_TYPE type)
+void AllocatorPool::Make(std::vector<Executor>& vecExec, unsigned int size, D3D12_COMMAND_LIST_TYPE type)
 {
     vecExec.resize(size);
 
     for (auto& exec : vecExec)
     {
-        exec.Allocate(device, type);
+        exec.SetDevice(_DXDevice);
+        exec.Allocate(type);
         exec.SetFree(true);
     }
 }

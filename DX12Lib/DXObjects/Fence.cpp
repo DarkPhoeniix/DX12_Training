@@ -1,7 +1,8 @@
 #include "stdafx.h"
+
 #include "Fence.h"
 
-void Fence::Init(ComPtr<ID3D12Device> device)
+void Fence::Init(ComPtr<ID3D12Device2> device)
 {
     _fenceValue = 0;
 

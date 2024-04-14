@@ -9,6 +9,9 @@ public:
     DescriptorHeap(const DescriptorHeapDescription& description);
     ~DescriptorHeap();
 
+    void SetDescription(const DescriptorHeapDescription& description);
+    const DescriptorHeapDescription& GetDescription() const;
+
     void Create();
 
     D3D12_CPU_DESCRIPTOR_HANDLE GetHeapStartCPUHandle();
@@ -24,7 +27,8 @@ public:
 
     ComPtr<ID3D12DescriptorHeap> GetDXDescriptorHeap() const;
 
-    void SetDevice(ComPtr<ID3D12Device> device);
+    void SetDevice(ComPtr<ID3D12Device2> device);
+    ComPtr<ID3D12Device2> GetDevice() const;
 
 private:
     ComPtr<ID3D12DescriptorHeap> _descriptorHeap;
@@ -34,5 +38,5 @@ private:
 
     UINT _heapIncrementSize;
 
-    ComPtr<ID3D12Device> _device;
+    ComPtr<ID3D12Device2> _DXDevice;
 };

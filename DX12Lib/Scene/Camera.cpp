@@ -5,26 +5,20 @@
 using namespace DirectX;
 
 Camera::Camera()
+	: _view(XMMatrixIdentity())
+	, _projection(XMMatrixIdentity())
+	, _viewProjection(XMMatrixIdentity())
+	, _position(XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f))
+	, _look(XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f))
+	, _right(XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f))
+	, _up(XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f))
+	, _target(XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f))
+	, _viewport()
+	, _speed(100.0f)
+	, _prevX(1280)
+	, _prevY(720)
 {
-	_view = XMMatrixIdentity();
-	_projection = XMMatrixIdentity();
-	_viewProjection = XMMatrixIdentity();
-
-	_position = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
-	_look = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
-	_right = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
-	_up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-	_target = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
-
 	_updateFrustum();
-
-	// Client should adjust to a value that makes sense for application's
-	// unit scale, and the object the camera is attached to--e.g., car, jet,
-	// human walking, etc.
-	_speed = 100.0f;
-
-	_prevX = 1280; // TODO: whyyy???
-	_prevY = 720;
 }
 
 const XMMATRIX& Camera::View() const
@@ -82,10 +76,29 @@ void Camera::LookAt(XMVECTOR& pos, XMVECTOR& target, XMVECTOR& up)
 	_buildView();
 }
 
-void Camera::SetLens(float fov, float aspect, float nearZ, float farZ)
+void Camera::SetViewport(const Viewport& viewport)
+{
+	_viewport = viewport;
+}
+
+Viewport Camera::GetViewport() const
+{
+	return _viewport;
+}
+
+CD3DX12_VIEWPORT Camera::GetDXViewport() const
+{
+	return _viewport.GetDXViewport();
+}
+
+CD3DX12_RECT Camera::GetDXScissorRectangle() const
+{
+	return _viewport.GetScissorRectangle();
+}
+
+void Camera::SetLens(float fov, float nearZ, float farZ)
 {
 	_fov = fov;
-	_aspectRatio = aspect;
 	_nearZ = nearZ;
 	_farZ = farZ;
 
@@ -102,18 +115,6 @@ void Camera::SetFOV(float fov)
 float Camera::GetFOV() const
 {
 	return _fov;
-}
-
-void Camera::SetAspectRatio(float aspectRatio)
-{
-	_aspectRatio = aspectRatio;
-
-	_buildProjection();
-}
-
-float Camera::GetAspectRatio() const
-{
-	return _aspectRatio;
 }
 
 void Camera::SetNearZ(float nearZ)
@@ -206,7 +207,7 @@ void Camera::_buildView()
 
 void Camera::_buildProjection()
 {
-	_projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(_fov), _aspectRatio, _nearZ, _farZ);
+	_projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(_fov), _viewport.GetAspectRatio(), _nearZ, _farZ);
 	_updateFrustum();
 }
 

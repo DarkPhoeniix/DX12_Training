@@ -1,34 +1,43 @@
 #include "stdafx.h"
+
 #include "DescriptorHeap.h"
 
 DescriptorHeap::DescriptorHeap()
     : _descriptorHeap(nullptr)
     , _descriptorHeapDescription{}
     , _heapIncrementSize(0)
-    , _device(nullptr)
-{
-}
+    , _DXDevice(nullptr)
+{   }
 
 DescriptorHeap::DescriptorHeap(const DescriptorHeapDescription& description)
     : _descriptorHeap(nullptr)
     , _descriptorHeapDescription(description)
     , _heapIncrementSize(0)
-    , _device(nullptr)
-{
-}
+    , _DXDevice(nullptr)
+{   }
 
 DescriptorHeap::~DescriptorHeap()
 {
     _descriptorHeap = nullptr;
-    _device = nullptr;
+    _DXDevice = nullptr;
+}
+
+void DescriptorHeap::SetDescription(const DescriptorHeapDescription& description)
+{
+    _descriptorHeapDescription = description;
+}
+
+const DescriptorHeapDescription& DescriptorHeap::GetDescription() const
+{
+    return _descriptorHeapDescription;
 }
 
 void DescriptorHeap::Create()
 {
-    if (!_device)
+    if (!_DXDevice)
         Logger::Log(LogType::Error, "Device is nullptr when trying to create descriptor heap");
 
-    _device->CreateDescriptorHeap(&_descriptorHeapDescription.GetDXDescription(), IID_PPV_ARGS(&_descriptorHeap));
+    _DXDevice->CreateDescriptorHeap(&_descriptorHeapDescription.GetDXDescription(), IID_PPV_ARGS(&_descriptorHeap));
 
     for (UINT i = 0; i < _descriptorHeapDescription.GetNumDescriptors(); ++i)
     {
@@ -48,7 +57,7 @@ D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetHeapStartGPUHandle()
 
 D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetResourceCPUHandle(UINT index)
 {
-    if (!_device)
+    if (!_DXDevice)
         Logger::Log(LogType::Error, "Device is nullptr when trying to Get CPU descriptor handle increment size");
 
     D3D12_CPU_DESCRIPTOR_HANDLE handle = _descriptorHeap->GetCPUDescriptorHandleForHeapStart();
@@ -59,7 +68,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetResourceCPUHandle(UINT index)
 
 D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetResourceCPUHandle(Resource* resource)
 {
-    if (!_device)
+    if (!_DXDevice)
         Logger::Log(LogType::Error, "Device is nullptr when trying to Get CPU descriptor handle increment size");
 
     if (!resource)
@@ -79,7 +88,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetResourceCPUHandle(Resource* resou
 
 D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetResourceGPUHandle(UINT index)
 {
-    if (!_device)
+    if (!_DXDevice)
         Logger::Log(LogType::Error, "Device is nullptr when trying to Get GPU descriptor handle increment size");
 
     D3D12_GPU_DESCRIPTOR_HANDLE handle = _descriptorHeap->GetGPUDescriptorHandleForHeapStart();
@@ -90,7 +99,7 @@ D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetResourceGPUHandle(UINT index)
 
 D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetResourceGPUHandle(Resource* resource)
 {
-    if (!_device)
+    if (!_DXDevice)
         Logger::Log(LogType::Error, "Device is nullptr when trying to Get GPU descriptor handle increment size");
 
     if (!resource)
@@ -129,7 +138,12 @@ ComPtr<ID3D12DescriptorHeap> DescriptorHeap::GetDXDescriptorHeap() const
     return _descriptorHeap;
 }
 
-void DescriptorHeap::SetDevice(ComPtr<ID3D12Device> device)
+void DescriptorHeap::SetDevice(ComPtr<ID3D12Device2> device)
 {
-    _device = device;
+    _DXDevice = device;
+}
+
+ComPtr<ID3D12Device2> DescriptorHeap::GetDevice() const
+{
+    return _DXDevice;
 }
