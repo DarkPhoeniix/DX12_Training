@@ -1,18 +1,23 @@
 #pragma once
 
-#include "Event.h"
+#include "IEvent.h"
 
-class UpdateEvent : public Event
+namespace Core
 {
-public:
-    typedef Event base;
+    namespace Input
+    {
+        class UpdateEvent : public IEvent
+        {
+        public:
+            UpdateEvent(double fDeltaTime, double fTotalTime, unsigned int frameIndex)
+                : elapsedTime(fDeltaTime)
+                , totalTime(fTotalTime)
+                , frameIndex(frameIndex)
+            {   }
 
-    UpdateEvent(double fDeltaTime, double fTotalTime)
-        : elapsedTime(fDeltaTime)
-        , totalTime(fTotalTime)
-    {   }
-
-    double elapsedTime;
-    double totalTime;
-    unsigned int frameIndex;
-};
+            double elapsedTime;
+            double totalTime;
+            unsigned int frameIndex;
+        };
+    } // namespace Input
+} // namespace Core

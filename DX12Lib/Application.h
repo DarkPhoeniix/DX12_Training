@@ -1,8 +1,12 @@
 #pragma once
 
-class Window;
-class CommandQueue;
-class IGame;
+#include "DXObjects/SwapChain.h"
+#include "Render/AllocatorPool.h"
+#include "Render/FencePool.h"
+#include "Render/Frame.h"
+
+class Win32Window;
+class DXRenderer;
 
 class Application
 {
@@ -10,42 +14,40 @@ public:
     Application(const Application&) = delete;
     Application& operator=(const Application&) = delete;
 
-    std::shared_ptr<Window> createWindow(const std::wstring& windowName, int clientWidth, int clientHeight, bool vSync = true);
-    void destroyWindow(const std::wstring& windowName);
-    void destroyWindow(std::shared_ptr<Window> window);
+    static void Init(HINSTANCE hInstance);
+    int Run(std::shared_ptr<DXRenderer> pApp);
+    void Quit(int exitCode = 0);
 
-    std::shared_ptr<Window> getWindowByName(const std::wstring& windowName);
+    static Application& Get();
 
-    bool isTearingSupported() const;
-
-    static void create(HINSTANCE hInstance);
-    static void destroy();
-    static Application& get();
-    int run(std::shared_ptr<IGame> pGame);
-    void quit(int exitCode = 0);
-
-    ComPtr<ID3D12Device2> getDevice() const;
-
-    void flush();
-
-    ComPtr<ID3D12DescriptorHeap> createDescriptorHeap(UINT numDescriptors, D3D12_DESCRIPTOR_HEAP_TYPE type);
-    UINT getDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE type) const;
-
-protected:
-    Application(HINSTANCE hIntance);
-    virtual ~Application();
-
-    ComPtr<ID3D12Device2> createDevice(ComPtr<IDXGIAdapter4> adapter);
-    ComPtr<IDXGIAdapter4> getAdapter(bool bUseWarp);
-
-    bool checkTearingSupport();
+    static std::shared_ptr<Core::Win32Window> CreateWin32Window(int width, int height, const std::wstring& title, bool vSync = false);
 
 private:
+    Application(HINSTANCE hInstance);
+    ~Application();
+
+    void _RegisterWindowClass(HINSTANCE hInstance);
+
+    void _UpdateCall(std::shared_ptr<DXRenderer> pApp);
+    void _RenderCall(std::shared_ptr<DXRenderer> pApp);
+    void _ExecuteFrameTasks();
+
+    friend LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+
     // The application instance handle that this application was created with.
     HINSTANCE _hInstance;
 
-    ComPtr<ID3D12Device2> _d3d12Device;
-    ComPtr<IDXGIAdapter4> _dxgiAdapter;
+    ComPtr<ID3D12Device2> _DXDevice;
+    std::shared_ptr<Core::Win32Window> _win32Window;
+    SwapChain _swapChain;
 
-    bool _isTearingSupported;
+    Frame _frames[3];
+    Frame* _currentFrame;
+
+    AllocatorPool _allocs;
+    FencePool _fencePool;
+
+    HighResolutionClock _updateClock;
+    HighResolutionClock _renderClock;
+    uint64_t _frameCounter;
 };

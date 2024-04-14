@@ -2,15 +2,16 @@
 #include "stdafx.h"
 
 #include "Application.h"
-#include "Render/RenderCubeExample.h"
+#include "Render/DXRenderer.h"
+#include "Window/Win32Window.h"
 
 #include <dxgidebug.h>
-
-#include "pathcch.h"
+#include <pathcch.h>
 
 void ReportLiveObjects()
 {
-    IDXGIDebug1* dxgiDebug;
+    Sleep(200);
+    IDXGIDebug* dxgiDebug;
     DXGIGetDebugInterface1(0, IID_PPV_ARGS(&dxgiDebug));
 
     dxgiDebug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_FLAGS(DXGI_DEBUG_RLO_DETAIL | DXGI_DEBUG_RLO_IGNORE_INTERNAL));
@@ -35,15 +36,15 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstan
     }
 
     {
-        std::shared_ptr<RenderCubeExample> demo = std::make_shared<RenderCubeExample>(L"DX12 Sandbox", 1280, 720, false); // TODO: vSync here
-        Application::create(hInstance);
+        Application::Init(hInstance);
+        std::shared_ptr<Core::Win32Window> mainWindow = Application::CreateWin32Window(1280, 720, L"DX12 Sandbox");
+        std::shared_ptr<DXRenderer> demo = std::make_shared<DXRenderer>(mainWindow->GetWindowHandle());
         {
-            
-            retCode = Application::get().run(demo);
-        }}
-    Application::destroy();
+            retCode = Application::Get().Run(demo);
+        }
+    }
 
-    atexit(&ReportLiveObjects);
+    ReportLiveObjects();
 
     return retCode;
 }

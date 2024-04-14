@@ -21,19 +21,13 @@
     <ClCompile Include="Utility\Helpers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Interfaces\IRenderWindow.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Application.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Interfaces\IGame.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Utility\HighResolutionClock.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="PoissonDiskDistribution.cpp">
+    <ClCompile Include="Utility\PoissonDiskDistribution.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Utility\Logger.cpp">
@@ -42,19 +36,13 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Objects\Camera.cpp">
+    <ClCompile Include="Scene\Camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Utility\PipelineSettings.cpp">
+    <ClCompile Include="DXObjects\RootSignature.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Render\RenderCubeExample.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\RenderWindow.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\UploadBuffer.cpp">
+    <ClCompile Include="Render\DXRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Render\Frame.cpp">
@@ -69,43 +57,67 @@
     <ClCompile Include="Render\AllocatorPool.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Render\Fence.cpp">
+    <ClCompile Include="DXObjects\Fence.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Render\FencePool.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Render\Resource.cpp">
+    <ClCompile Include="DXObjects\Resource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Render\ResourceDescription.cpp">
+    <ClCompile Include="DXObjects\ResourceDescription.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TextureParser.cpp">
+    <ClCompile Include="Utility\TextureLoaderDDS.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TextureLoaderDDS.cpp">
+    <ClCompile Include="Scene\Scene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Objects\Scene.cpp">
+    <ClCompile Include="Scene\SceneNode.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Objects\SceneNode.cpp">
+    <ClCompile Include="Scene\Mesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Objects\Mesh.cpp">
+    <ClCompile Include="Scene\ISceneNode.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Interfaces\ISceneNode.cpp">
+    <ClCompile Include="Scene\Volumes\FrustumVolume.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Interfaces\IVolume.cpp">
+    <ClCompile Include="DXObjects\SwapChain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Objects\AABBVolume.cpp">
+    <ClCompile Include="DXObjects\Device.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Objects\FrustumVolume.cpp">
+    <ClCompile Include="DXObjects\DescriptorHeap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DXObjects\DescriptorHeapDescription.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DXObjects\Heap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DXObjects\HeapDescription.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Input\InputDevice.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Window\Win32Window.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DXObjects\CommandList.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Viewport.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DXObjects\Texture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -113,16 +125,10 @@
     <ClInclude Include="Utility\Helpers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Interfaces\IRenderWindow.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Application.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Utility\KeyCodes.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Events\Event.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Events\KeyEvent.h">
@@ -146,13 +152,10 @@
     <ClInclude Include="Events\UpdateEvent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Interfaces\IGame.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Utility\HighResolutionClock.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PoissonDiskDistribution.h">
+    <ClInclude Include="Utility\PoissonDiskDistribution.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Utility\Logger.h">
@@ -161,19 +164,13 @@
     <ClInclude Include="stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Objects\Camera.h">
+    <ClInclude Include="Scene\Camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Utility\PipelineSettings.h">
+    <ClInclude Include="DXObjects\RootSignature.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Render\RenderCubeExample.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\RenderWindow.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\UploadBuffer.h">
+    <ClInclude Include="Render\DXRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Utility\Defines.h">
@@ -191,46 +188,85 @@
     <ClInclude Include="Render\AllocatorPool.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Render\Fence.h">
+    <ClInclude Include="DXObjects\Fence.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Render\FencePool.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Render\Resource.h">
+    <ClInclude Include="DXObjects\Resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Render\ResourceDescription.h">
+    <ClInclude Include="DXObjects\ResourceDescription.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TextureParser.h">
+    <ClInclude Include="Scene\Scene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Objects\Scene.h">
+    <ClInclude Include="Scene\SceneNode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Objects\SceneNode.h">
+    <ClInclude Include="Utility\TextureLoaderDDS.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TextureLoaderDDS.h">
+    <ClInclude Include="Utility\Blob.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Blob.h">
+    <ClInclude Include="Scene\Mesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Objects\Mesh.h">
+    <ClInclude Include="Scene\ISceneNode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Interfaces\ISceneNode.h">
+    <ClInclude Include="Scene\Volumes\IVolume.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Interfaces\IVolume.h">
+    <ClInclude Include="Scene\Volumes\AABBVolume.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Objects\AABBVolume.h">
+    <ClInclude Include="Scene\Volumes\FrustumVolume.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Objects\FrustumVolume.h">
+    <ClInclude Include="DXObjects\SwapChain.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DXObjects\Device.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DXObjects\DescriptorHeap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DXObjects\DescriptorHeapDescription.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DXObjects\Heap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DXObjects\HeapDescription.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Input\InputDevice.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Input\IInputObserver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Events\IEvent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Window\Win32Window.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Window\IWindowEventListener.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DXObjects\CommandList.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Viewport.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DXObjects\Texture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

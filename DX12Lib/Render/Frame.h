@@ -1,44 +1,51 @@
 #pragma once
 
-#include "AllocatorPool.h"
-#include "Executor.h"
-#include "TaskGPU.h"
-#include "FencePool.h"
+#include "Render/AllocatorPool.h"
+#include "Render/Executor.h"
+#include "Render/TaskGPU.h"
+#include "Render/FencePool.h"
+
+// TODO: refactor the Frame class
+
+class SwapChain;
 
 class Frame
 {
 public:
-    Frame() = default;
+    Frame();
+    ~Frame();
 
-    void Init(ComPtr<ID3D12Device2> device, ComPtr<IDXGISwapChain> swapChain);
-
-    void SetDirectQueue(ComPtr<ID3D12CommandQueue> directQueue);
-    ComPtr<ID3D12CommandQueue> GetDirectQueue() const;
-
-    void SetComputeQueue(ComPtr<ID3D12CommandQueue> computeQueue);
-    ComPtr<ID3D12CommandQueue> GetComputeQueue() const;
-
-    void SetCopyQueue(ComPtr<ID3D12CommandQueue> copyQueue);
-    ComPtr<ID3D12CommandQueue> GetCopyQueue() const;
-
-    void SetAllocatorPool(AllocatorPool* allocatorPool);
-
-    void SetFencePool(FencePool* fencePool);
-
-    void SetSyncFrame(Fence* syncFrame);
-    Fence* GetSyncFrame() const;
+    void Init(const SwapChain& swapChain);
 
     TaskGPU* CreateTask(D3D12_COMMAND_LIST_TYPE type, ComPtr<ID3D12PipelineState> pipelineState);
-
-    TaskGPU* GetTask(const std::string& name);
-    std::vector<TaskGPU> GetTasks() const;
 
     void WaitCPU();
     void ResetGPU();
 
-    unsigned int Index = 0;
-    Frame* Prev = nullptr;
-    Frame* Next = nullptr;
+    void SetDirectQueue(ID3D12CommandQueue* directQueue);
+    ID3D12CommandQueue* GetDirectQueue() const;
+
+    void SetComputeQueue(ID3D12CommandQueue* computeQueue);
+    ID3D12CommandQueue* GetComputeQueue() const;
+
+    void SetCopyQueue(ID3D12CommandQueue* copyQueue);
+    ID3D12CommandQueue* GetCopyQueue() const;
+
+    void SetDXDevice(ComPtr<ID3D12Device2> device);
+
+    void SetAllocatorPool(AllocatorPool* allocatorPool);
+    void SetFencePool(FencePool* fencePool);
+    void SetDXDevice(ID3D12Device2* DXDevice);
+
+    void SetSyncFrame(Fence* syncFrame);
+    Fence* GetSyncFrame() const;
+
+    TaskGPU* GetTask(const std::string& name);
+    std::vector<TaskGPU> GetTasks() const;
+
+    unsigned int Index;
+    Frame* Prev;
+    Frame* Next;
 
     Resource _swapChainTexture;
     Resource _targetTexture;
@@ -51,13 +58,15 @@ private:
     std::vector<Executor*> _currentTasks;
     std::vector<Executor*> _executedTasks;
 
-    ComPtr<ID3D12CommandQueue> _queueStream;
-    ComPtr<ID3D12CommandQueue> _queueCompute;
-    ComPtr<ID3D12CommandQueue> _queueCopy;
+    ID3D12CommandQueue* _queueStream;
+    ID3D12CommandQueue* _queueCompute;
+    ID3D12CommandQueue* _queueCopy;
 
     AllocatorPool* _allocatorPool;
     FencePool* _fencePool;
-    Fence* _syncFrame = nullptr;
+    Fence* _syncFrame;
 
     std::vector<TaskGPU> _tasks;
+
+    ComPtr<ID3D12Device2> _DXDevice;
 };

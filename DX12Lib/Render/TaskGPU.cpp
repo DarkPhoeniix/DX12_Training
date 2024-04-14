@@ -1,6 +1,18 @@
 #include "stdafx.h"
 #include "TaskGPU.h"
 
+TaskGPU::TaskGPU()
+    : _commandQueue(nullptr)
+    , _fence(nullptr)
+{
+}
+
+TaskGPU::~TaskGPU()
+{
+    _commandQueue = nullptr;
+    _fence = nullptr;
+}
+
 void TaskGPU::SetCommandQueue(ComPtr<ID3D12CommandQueue> commandQueue)
 {
     _commandQueue = commandQueue;
@@ -29,6 +41,11 @@ void TaskGPU::SetFence(Fence* fence)
 Fence* TaskGPU::GetFence() const
 {
     return _fence;
+}
+
+ID3D12Fence* TaskGPU::GetDXFence() const
+{
+    return _fence->GetFence().Get();
 }
 
 UINT64 TaskGPU::GetFenceValue() const

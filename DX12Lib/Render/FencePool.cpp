@@ -2,7 +2,7 @@
 
 #include "FencePool.h"
 
-void FencePool::Init(ComPtr<ID3D12Device> device)
+void FencePool::Init(ComPtr<ID3D12Device2> device)
 {
     fences.resize(32 + 32 + 4); // Direct + Compute + Copy
 
