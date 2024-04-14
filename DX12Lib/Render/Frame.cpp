@@ -66,7 +66,7 @@ void Frame::Init(const SwapChain& swapChain)
         _targetTexture.SetDevice(_DXDevice);
         _targetTexture.SetResourceDescription(desc);
         _targetTexture.CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_SOURCE);
-        _targetTexture.SetName(std::string("Frame RTT") + std::to_string(Index));
+        _targetTexture.SetName(std::string("Frame RTT ") + std::to_string(Index));
     }
 
     // Create resource for the depth texture

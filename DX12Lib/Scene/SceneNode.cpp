@@ -14,7 +14,7 @@ using namespace DirectX;
 
 SceneNode::SceneNode(FbxNode* fbxNode, ComPtr<ID3D12GraphicsCommandList> commandList, ComPtr<ID3D12Device2> device, SceneNode* parent)
     : ISceneNode(fbxNode->GetName(), parent)
-    , _texture{}
+    , _resource{}
     , _DXDevice(device)
     , _AABB{}
     , _AABBVBO{}
@@ -150,45 +150,45 @@ void SceneNode::DrawAABB(ComPtr<ID3D12GraphicsCommandList> commandList) const
 
 void SceneNode::UploadTextures(ComPtr<ID3D12GraphicsCommandList> commandList, Heap& heap, DescriptorHeap& descriptorHeap)
 {
-    heap.PlaceResource(_texture);
+    //heap.PlaceResource(_resource);
 
-    auto barrier = _texture.CreateBarrierAlias(nullptr);
-    commandList->ResourceBarrier(1, &barrier);
+    //auto barrier = _resource.CreateBarrierAlias(nullptr);
+    //commandList->ResourceBarrier(1, &barrier);
 
-    CD3DX12_HEAP_PROPERTIES heapTypeUpload(D3D12_HEAP_TYPE_UPLOAD);
-    CD3DX12_RESOURCE_DESC buffer = CD3DX12_RESOURCE_DESC::Buffer(1024 * 1024 * 10, D3D12_RESOURCE_FLAG_NONE);
+    //CD3DX12_HEAP_PROPERTIES heapTypeUpload(D3D12_HEAP_TYPE_UPLOAD);
+    //CD3DX12_RESOURCE_DESC buffer = CD3DX12_RESOURCE_DESC::Buffer(1024 * 1024 * 10, D3D12_RESOURCE_FLAG_NONE);
 
-    ID3D12Resource* intermediateResource;
-    Helper::throwIfFailed(_DXDevice->CreateCommittedResource(
-        &heapTypeUpload,
-        D3D12_HEAP_FLAG_NONE,
-        &buffer,
-        D3D12_RESOURCE_STATE_GENERIC_READ,
-        nullptr,
-        IID_PPV_ARGS(&intermediateResource)));
-    intermediates.push_back(intermediateResource);
+    //ID3D12Resource* intermediateResource;
+    //Helper::throwIfFailed(_DXDevice->CreateCommittedResource(
+    //    &heapTypeUpload,
+    //    D3D12_HEAP_FLAG_NONE,
+    //    &buffer,
+    //    D3D12_RESOURCE_STATE_GENERIC_READ,
+    //    nullptr,
+    //    IID_PPV_ARGS(&intermediateResource)));
+    //intermediates.push_back(intermediateResource);
 
-    D3D12_SUBRESOURCE_DATA subresources = {};
-    subresources.pData = _textureBlob.get();
-    subresources.RowPitch = 1024 * 4;
-    subresources.SlicePitch = subresources.RowPitch * 1024;
+    //D3D12_SUBRESOURCE_DATA subresources = {};
+    //subresources.pData = _textureBlob.get();
+    //subresources.RowPitch = 1024 * 4;
+    //subresources.SlicePitch = subresources.RowPitch * 1024;
 
-    UpdateSubresources(commandList.Get(), _texture.GetDXResource().Get(), intermediateResource, 0, 0, 1, &subresources);
+    //UpdateSubresources(commandList.Get(), _resource.GetDXResource().Get(), intermediateResource, 0, 0, 1, &subresources);
 
-    D3D12_CPU_DESCRIPTOR_HANDLE handleOffset = descriptorHeap.GetHeapStartCPUHandle();
-    handleOffset.ptr += _DXDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * descriptorHeap.GetFreeHandleIndex();
+    //D3D12_CPU_DESCRIPTOR_HANDLE handleOffset = descriptorHeap.GetHeapStartCPUHandle();
+    //handleOffset.ptr += _DXDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * descriptorHeap.GetFreeHandleIndex();
 
-    D3D12_SHADER_RESOURCE_VIEW_DESC _resDesc2 = {};
-    _resDesc2.Format = _texture.GetResourceDescription().GetFormat();
-    _resDesc2.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    _resDesc2.Texture2D.MipLevels = 1;
-    _resDesc2.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    _DXDevice->CreateShaderResourceView(_texture.GetDXResource().Get(), &_resDesc2, handleOffset);
+    //D3D12_SHADER_RESOURCE_VIEW_DESC _resDesc2 = {};
+    //_resDesc2.Format = _resource.GetResourceDescription().GetFormat();
+    //_resDesc2.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    //_resDesc2.Texture2D.MipLevels = 1;
+    //_resDesc2.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    //_DXDevice->CreateShaderResourceView(_resource.GetDXResource().Get(), &_resDesc2, handleOffset);
 
-    for (const std::shared_ptr<ISceneNode> node : _childNodes)
-    {
-        node->UploadTextures(commandList, heap, descriptorHeap);
-    }
+    //for (const std::shared_ptr<ISceneNode> node : _childNodes)
+    //{
+    //    node->UploadTextures(commandList, heap, descriptorHeap);
+    //}
 }
 
 const AABBVolume& SceneNode::getAABB() const

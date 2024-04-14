@@ -42,8 +42,7 @@ void SwapChain::Init(std::shared_ptr<Core::Win32Window> window)
 
     DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
     Helper::throwIfFailed(_dxgiSwapChain->GetDesc(&swapChainDesc));
-    Helper::throwIfFailed(_dxgiSwapChain->ResizeBuffers(BACK_BUFFER_COUNT, _width,
-        _height, swapChainDesc.BufferDesc.Format, swapChainDesc.Flags));
+    Helper::throwIfFailed(_dxgiSwapChain->ResizeBuffers(BACK_BUFFER_COUNT, _width, _height, swapChainDesc.BufferDesc.Format, swapChainDesc.Flags));
 
     _currentBackBufferIndex = _dxgiSwapChain->GetCurrentBackBufferIndex();
 

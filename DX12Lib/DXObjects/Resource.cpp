@@ -52,9 +52,6 @@ ComPtr<ID3D12Resource>& Resource::GetDXResource()
 void Resource::SetName(const std::string& name)
 {
 	_name = name;
-
-	std::wstring temp(name.begin(), name.end());
-	_resource->SetName(temp.c_str());
 }
 
 std::string Resource::GetName() const
@@ -157,6 +154,9 @@ ComPtr<ID3D12Resource> Resource::CreateCommitedResource(D3D12_RESOURCE_STATES in
 		clearValue, // TODO: check
 		IID_PPV_ARGS(&_resource));
 
+	std::wstring temp(_name.begin(), _name.end());
+	_resource->SetName(temp.c_str());
+
 	return _resource;
 }
 
@@ -173,6 +173,9 @@ ComPtr<ID3D12Resource> Resource::CreatePlacedResource(ComPtr<ID3D12Heap> heap, u
 		_initialState,
 		clearValue, // TODO: check
 		IID_PPV_ARGS(&_resource));
+
+	std::wstring temp(_name.begin(), _name.end());
+	_resource->SetName(temp.c_str());
 
 	return _resource;
 }

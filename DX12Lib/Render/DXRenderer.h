@@ -3,6 +3,7 @@
 #include "DXObjects/Heap.h"
 #include "DXObjects/DescriptorHeap.h"
 #include "DXObjects/RootSignature.h"
+#include "DXObjects/Texture.h"
 #include "Scene/Camera.h"
 #include "Scene/Scene.h"
 #include "Render/Frame.h"
@@ -34,12 +35,6 @@ private:
         ComPtr<ID3D12Resource> resource,
         D3D12_RESOURCE_STATES beforeState, D3D12_RESOURCE_STATES afterState);
 
-    void clearRTV(ComPtr<ID3D12GraphicsCommandList2> commandList,
-        D3D12_CPU_DESCRIPTOR_HANDLE rtv, FLOAT* clearColor);
-
-    void clearDepth(ComPtr<ID3D12GraphicsCommandList2> commandList,
-        D3D12_CPU_DESCRIPTOR_HANDLE dsv, FLOAT depth = 1.0f);
-
     ComPtr<ID3D12Device2> _DXDevice;
     HWND _windowHandle;
 
@@ -49,6 +44,8 @@ private:
     RootSignature _AABBpipeline;
 
     Resource* _ambient;
+    DescriptorHeap _texDescHeap;
+    std::shared_ptr<Texture> _tex;
 
     Scene _scene;
     Camera _camera;

@@ -44,7 +44,7 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
 
     // Camera Setup
     {
-        XMVECTOR pos = XMVectorSet(0.0f, 40.0f, -50.0f, 1.0f);
+        XMVECTOR pos = XMVectorSet(-30.0f, 40.0f, -50.0f, 1.0f);
         XMVECTOR target = XMVectorSet(0.0f, 10.0f, 0.0f, 1.0f);
         XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
@@ -80,9 +80,24 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
     // Load scene
     {
         loadTask->SetName("Upload Data");
-
         auto commandList = loadTask->GetCommandLists().front();
-        _scene.LoadScene("bowl.fbx", commandList);
+
+        _scene.LoadScene("dog_t.fbx", commandList);
+
+        DescriptorHeapDescription desc;
+        desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
+        desc.SetNumDescriptors(1);
+        desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+        desc.SetNodeMask(1);
+        _texDescHeap.SetDescription(desc);
+        _texDescHeap.SetDevice(_DXDevice);
+        _texDescHeap.Create("Textures descriptor heap");
+
+        _tex = Texture::LoadFromFile("dog_tex.dds");
+        _tex->SetDXDevice(_DXDevice);
+        _tex->SetDescriptorHeap(&_texDescHeap);
+        _tex->UploadToGPU(commandList);
+
         commandList->Close();
 
         std::vector<ID3D12CommandList*> comLists;
@@ -160,18 +175,6 @@ void DXRenderer::transitionResource(ComPtr<ID3D12GraphicsCommandList2> commandLi
     commandList->ResourceBarrier(1, &barrier);
 }
 
-void DXRenderer::clearRTV(ComPtr<ID3D12GraphicsCommandList2> commandList,
-    D3D12_CPU_DESCRIPTOR_HANDLE rtv, FLOAT* clearColor)
-{
-    commandList->ClearRenderTargetView(rtv, clearColor, 0, nullptr);
-}
-
-void DXRenderer::clearDepth(ComPtr<ID3D12GraphicsCommandList2> commandList,
-    D3D12_CPU_DESCRIPTOR_HANDLE dsv, FLOAT depth)
-{
-    commandList->ClearDepthStencilView(dsv, D3D12_CLEAR_FLAG_DEPTH, depth, 0, 0, nullptr);
-}
-
 void DXRenderer::OnRender(Input::RenderEvent& renderEvent, Frame& frame)
 {
     frame.WaitCPU();
@@ -218,6 +221,11 @@ void DXRenderer::OnRender(Input::RenderEvent& renderEvent, Frame& frame)
         XMMATRIX viewProjMatrix = XMMatrixMultiply(_camera.View(), _camera.Projection());
         commandList->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &viewProjMatrix, 0);
         commandList->SetGraphicsRootConstantBufferView(1, _ambient->OffsetGPU(0));
+
+        ID3D12DescriptorHeap* heaps = { _texDescHeap.GetDXDescriptorHeap().Get()};
+        commandList->SetDescriptorHeaps(1, &heaps);
+
+        commandList->SetGraphicsRootDescriptorTable(3, _texDescHeap.GetResourceGPUHandle(_tex.get()));
 
         _scene.Draw(commandList, _camera.GetViewFrustum());
 

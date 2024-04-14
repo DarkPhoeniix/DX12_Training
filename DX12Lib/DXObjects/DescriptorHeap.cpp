@@ -2,18 +2,18 @@
 
 #include "DescriptorHeap.h"
 
-DescriptorHeap::DescriptorHeap()
+DescriptorHeap::DescriptorHeap(ComPtr<ID3D12Device2> device)
     : _descriptorHeap(nullptr)
     , _descriptorHeapDescription{}
     , _heapIncrementSize(0)
-    , _DXDevice(nullptr)
+    , _DXDevice(device)
 {   }
 
-DescriptorHeap::DescriptorHeap(const DescriptorHeapDescription& description)
+DescriptorHeap::DescriptorHeap(const DescriptorHeapDescription& description, ComPtr<ID3D12Device2> device)
     : _descriptorHeap(nullptr)
     , _descriptorHeapDescription(description)
     , _heapIncrementSize(0)
-    , _DXDevice(nullptr)
+    , _DXDevice(device)
 {   }
 
 DescriptorHeap::~DescriptorHeap()
@@ -22,27 +22,36 @@ DescriptorHeap::~DescriptorHeap()
     _DXDevice = nullptr;
 }
 
-void DescriptorHeap::SetDescription(const DescriptorHeapDescription& description)
-{
-    _descriptorHeapDescription = description;
-}
-
-const DescriptorHeapDescription& DescriptorHeap::GetDescription() const
-{
-    return _descriptorHeapDescription;
-}
-
-void DescriptorHeap::Create()
+void DescriptorHeap::Create(const std::string& name)
 {
     if (!_DXDevice)
+    {
         Logger::Log(LogType::Error, "Device is nullptr when trying to create descriptor heap");
+    }
 
     _DXDevice->CreateDescriptorHeap(&_descriptorHeapDescription.GetDXDescription(), IID_PPV_ARGS(&_descriptorHeap));
+
+    _name = name;
+    std::wstring tmp(_name.begin(), _name.end());
+    _descriptorHeap->SetName(tmp.c_str());
 
     for (UINT i = 0; i < _descriptorHeapDescription.GetNumDescriptors(); ++i)
     {
         _resourceIndex[i] = nullptr;
     }
+}
+
+void DescriptorHeap::PlaceResource(Resource* resource)
+{
+    for (auto& [index, res] : _resourceIndex)
+    {
+        if (!res)
+        {
+            _resourceIndex[index] = resource;
+        }
+    }
+
+    Logger::Log(LogType::Error, "Descriptor heap " + _name + " doesn't have free desriptors");
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetHeapStartCPUHandle()
@@ -55,43 +64,27 @@ D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetHeapStartGPUHandle()
     return _descriptorHeap->GetGPUDescriptorHandleForHeapStart();
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetResourceCPUHandle(UINT index)
-{
-    if (!_DXDevice)
-        Logger::Log(LogType::Error, "Device is nullptr when trying to Get CPU descriptor handle increment size");
-
-    D3D12_CPU_DESCRIPTOR_HANDLE handle = _descriptorHeap->GetCPUDescriptorHandleForHeapStart();
-    handle.ptr += _heapIncrementSize * index;
-
-    return handle;
-}
-
 D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetResourceCPUHandle(Resource* resource)
 {
     if (!_DXDevice)
+    {
         Logger::Log(LogType::Error, "Device is nullptr when trying to Get CPU descriptor handle increment size");
+    }
 
     if (!resource)
+    {
         Logger::Log(LogType::Error, "Trying to Get CPU handle for nullptr resource");
+    }
 
     auto result = std::find_if(_resourceIndex.begin(), _resourceIndex.end(), [resource](const auto& pair) { return pair.second == resource; });
     UINT index = (result != _resourceIndex.end()) ? result->first : (UINT)-1;
 
     if (index == (UINT)-1)
+    {
         Logger::Log(LogType::Error, "Trying to Get invalid resource CPU handle from descriptor heap");
+    }
 
     D3D12_CPU_DESCRIPTOR_HANDLE handle = _descriptorHeap->GetCPUDescriptorHandleForHeapStart();
-    handle.ptr += _heapIncrementSize * index;
-
-    return handle;
-}
-
-D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetResourceGPUHandle(UINT index)
-{
-    if (!_DXDevice)
-        Logger::Log(LogType::Error, "Device is nullptr when trying to Get GPU descriptor handle increment size");
-
-    D3D12_GPU_DESCRIPTOR_HANDLE handle = _descriptorHeap->GetGPUDescriptorHandleForHeapStart();
     handle.ptr += _heapIncrementSize * index;
 
     return handle;
@@ -117,20 +110,14 @@ D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetResourceGPUHandle(Resource* resou
     return handle;
 }
 
-UINT DescriptorHeap::GetFreeHandleIndex() const
+void DescriptorHeap::SetDescription(const DescriptorHeapDescription& description)
 {
-    UINT result = (UINT)-1;
+    _descriptorHeapDescription = description;
+}
 
-    for (const auto& [index, resource] : _resourceIndex)
-    {
-        if (!resource)
-        {
-            result = index;
-            break;
-        }
-    }
-
-    return result;
+const DescriptorHeapDescription& DescriptorHeap::GetDescription() const
+{
+    return _descriptorHeapDescription;
 }
 
 ComPtr<ID3D12DescriptorHeap> DescriptorHeap::GetDXDescriptorHeap() const

@@ -56,7 +56,7 @@ private:
     
     std::vector<ID3D12Resource*> intermediates;
 
-    Resource _texture;
+    Resource _resource;
     Base::Blob _textureBlob;
     D3D12_GPU_DESCRIPTOR_HANDLE _textureHandle;
 
