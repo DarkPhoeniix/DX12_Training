@@ -4,19 +4,17 @@
 
 namespace Core
 {
-    namespace Input
+    namespace Events
     {
         class MouseMoveEvent : public IEvent
         {
         public:
-            MouseMoveEvent(bool leftButton, bool middleButton, bool rightButton, bool control, bool shift, int x, int y)
-                : leftButton(leftButton)
-                , middleButton(middleButton)
-                , rightButton(rightButton)
-                , control(control)
-                , shift(shift)
-                , x(x)
-                , y(y)
+            MouseMoveEvent()
+                : leftButton(false)
+                , middleButton(false)
+                , rightButton(false)
+                , x(0)
+                , y(0)
                 , relativeX(0)
                 , relativeY(0)
             {   }
@@ -24,8 +22,6 @@ namespace Core
             bool leftButton;    // Is the left mouse button down?
             bool middleButton;  // Is the middle mouse button down?
             bool rightButton;   // Is the right mouse button down?
-            bool control;       // Is the CTRL key down?
-            bool shift;         // Is the Shift key down?
 
             int x;              // The X-position of the cursor relative to the upper-left corner of the client area.
             int y;              // The Y-position of the cursor relative to the upper-left corner of the client area.

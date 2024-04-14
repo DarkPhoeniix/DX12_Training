@@ -69,9 +69,6 @@
     <ClCompile Include="DXObjects\ResourceDescription.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Utility\TextureLoaderDDS.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Scene\Scene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -126,9 +123,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Application.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Utility\KeyCodes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Events\KeyEvent.h">
@@ -206,12 +200,6 @@
     <ClInclude Include="Scene\SceneNode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Utility\TextureLoaderDDS.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Utility\Blob.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Scene\Mesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -267,6 +255,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DXObjects\Texture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\KeyCodes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\DirectInputKeyCodes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

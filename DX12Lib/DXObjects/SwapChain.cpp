@@ -82,7 +82,7 @@ UINT SwapChain::Present()
     return _currentBackBufferIndex;
 }
 
-void SwapChain::OnResize(Core::Input::ResizeEvent& e)
+void SwapChain::OnResize(Core::Events::ResizeEvent& e)
 {
     if (_width != e.width || _height != e.height)
     {

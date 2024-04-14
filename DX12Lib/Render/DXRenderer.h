@@ -7,11 +7,9 @@
 #include "Scene/Camera.h"
 #include "Scene/Scene.h"
 #include "Render/Frame.h"
-#include "Render/FencePool.h"
-#include "Utility/Blob.h"
 #include "Window/IWindowEventListener.h"
 
-class DXRenderer : public Core::IWindowEventListener
+class DXRenderer : public Core::Events::IWindowEventListener
 {
 public:
     DXRenderer(HWND windowHandle);
@@ -20,15 +18,15 @@ public:
     virtual bool LoadContent(TaskGPU* loadTask);
     virtual void UnloadContent();
 
-    virtual void OnUpdate(Core::Input::UpdateEvent& e) override;
-    virtual void OnRender(Core::Input::RenderEvent& e, Frame& frame) override;
-    virtual void OnKeyPressed(Core::Input::KeyEvent& e) override;
-    virtual void OnKeyReleased(Core::Input::KeyEvent& e) override {}
-    virtual void OnMouseMoved(Core::Input::MouseMoveEvent& e) override;
-    virtual void OnMouseButtonPressed(Core::Input::MouseButtonEvent& e) override;
-    virtual void OnMouseButtonReleased(Core::Input::MouseButtonEvent& e) override;
-    virtual void OnMouseScroll(Core::Input::MouseScrollEvent& e) override;
-    virtual void OnResize(Core::Input::ResizeEvent& e) override;
+    virtual void OnUpdate(Core::Events::UpdateEvent& e) override;
+    virtual void OnRender(Core::Events::RenderEvent& e, Frame& frame) override;
+    virtual void OnKeyPressed(Core::Events::KeyEvent& e) override;
+    virtual void OnKeyReleased(Core::Events::KeyEvent& e) override {}
+    virtual void OnMouseMoved(Core::Events::MouseMoveEvent& e) override;
+    virtual void OnMouseButtonPressed(Core::Events::MouseButtonEvent& e) override;
+    virtual void OnMouseButtonReleased(Core::Events::MouseButtonEvent& e) override;
+    virtual void OnMouseScroll(Core::Events::MouseScrollEvent& e) override;
+    virtual void OnResize(Core::Events::ResizeEvent& e) override;
 
 private:
     void transitionResource(ComPtr<ID3D12GraphicsCommandList2> commandList,

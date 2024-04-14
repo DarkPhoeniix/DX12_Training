@@ -2,7 +2,7 @@
 
 namespace Core
 {
-    namespace Input
+    namespace Events
     {
         class IEvent
         {

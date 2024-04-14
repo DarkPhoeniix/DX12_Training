@@ -7,7 +7,6 @@
 #include "DXObjects/DescriptorHeap.h"
 #include "Scene/Camera.h"
 #include "Scene/Scene.h"
-#include "Utility/TextureLoaderDDS.h"
 #include "Volumes/FrustumVolume.h"
 
 using namespace DirectX;

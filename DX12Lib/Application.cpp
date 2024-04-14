@@ -11,6 +11,7 @@
 #include "Events/RenderEvent.h"
 #include "Events/ResizeEvent.h"
 #include "Events/UpdateEvent.h"
+#include "Input/InputDevice.h"
 #include "Render/DXRenderer.h"
 #include "Window/Win32Window.h"
 
@@ -22,37 +23,37 @@ namespace
 
     static Application* _appInstance;
 
-    // Convert the message ID into a MouseButton ID
-    Core::Input::MouseButtonEvent::MouseButton DecodeMouseButton(UINT messageID)
-    {
-        Core::Input::MouseButtonEvent::MouseButton mouseButton = Core::Input::MouseButtonEvent::None;
-        switch (messageID)
-        {
-        case WM_LBUTTONDOWN:
-        case WM_LBUTTONUP:
-        case WM_LBUTTONDBLCLK:
-        {
-            mouseButton = Core::Input::MouseButtonEvent::Left;
-        }
-        break;
-        case WM_RBUTTONDOWN:
-        case WM_RBUTTONUP:
-        case WM_RBUTTONDBLCLK:
-        {
-            mouseButton = Core::Input::MouseButtonEvent::Right;
-        }
-        break;
-        case WM_MBUTTONDOWN:
-        case WM_MBUTTONUP:
-        case WM_MBUTTONDBLCLK:
-        {
-            mouseButton = Core::Input::MouseButtonEvent::Middle;
-        }
-        break;
-        }
+    //// Convert the message ID into a MouseButton ID
+    //Core::Input::MouseButtonEvent::MouseButton DecodeMouseButton(UINT messageID)
+    //{
+    //    Core::Input::MouseButtonEvent::MouseButton mouseButton = Core::Input::MouseButtonEvent::None;
+    //    switch (messageID)
+    //    {
+    //    case WM_LBUTTONDOWN:
+    //    case WM_LBUTTONUP:
+    //    case WM_LBUTTONDBLCLK:
+    //    {
+    //        mouseButton = Core::Input::MouseButtonEvent::Left;
+    //    }
+    //    break;
+    //    case WM_RBUTTONDOWN:
+    //    case WM_RBUTTONUP:
+    //    case WM_RBUTTONDBLCLK:
+    //    {
+    //        mouseButton = Core::Input::MouseButtonEvent::Right;
+    //    }
+    //    break;
+    //    case WM_MBUTTONDOWN:
+    //    case WM_MBUTTONUP:
+    //    case WM_MBUTTONDBLCLK:
+    //    {
+    //        mouseButton = Core::Input::MouseButtonEvent::Middle;
+    //    }
+    //    break;
+    //    }
 
-        return mouseButton;
-    }
+    //    return mouseButton;
+    //}
 }
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -134,6 +135,8 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
         frame.Init(_swapChain);
     }
 
+    Events::InputDevice::Instance().AddInputObserver(pApp.get());
+
     if (!pApp->LoadContent(_currentFrame->CreateTask(D3D12_COMMAND_LIST_TYPE_COPY, nullptr)))
     {
         return 1;
@@ -147,6 +150,8 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
+
+        Events::InputDevice::Instance().PollEvents();
 
         _UpdateCall(pApp);
         _RenderCall(pApp);
@@ -212,7 +217,7 @@ void Application::_UpdateCall(std::shared_ptr<DXRenderer> pApp)
 {
     _updateClock.tick();
 
-    Input::UpdateEvent updateEvent(_updateClock.getDeltaSeconds(), _updateClock.getTotalSeconds(), _currentFrame->Index);
+    Events::UpdateEvent updateEvent(_updateClock.getDeltaSeconds(), _updateClock.getTotalSeconds(), _currentFrame->Index);
     pApp->OnUpdate(updateEvent);
 }
 
@@ -220,7 +225,7 @@ void Application::_RenderCall(std::shared_ptr<DXRenderer> pApp)
 {
     _renderClock.tick();
 
-    Input::RenderEvent renderEvent(_updateClock.getDeltaSeconds(), _updateClock.getTotalSeconds(), _currentFrame->Index);
+    Events::RenderEvent renderEvent(_updateClock.getDeltaSeconds(), _updateClock.getTotalSeconds(), _currentFrame->Index);
     pApp->OnRender(renderEvent, *_currentFrame);
 }
 

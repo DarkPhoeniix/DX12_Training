@@ -4,7 +4,7 @@
 
 namespace Core
 {
-    namespace Input
+    namespace Events
     {
         class ResizeEvent : public IEvent
         {

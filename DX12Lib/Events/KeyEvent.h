@@ -1,35 +1,20 @@
 #pragma once
 
-#include "IEvent.h"
+#include "Events/IEvent.h"
+#include "Utility/DirectInputKeyCodes.h"
 
 namespace Core
 {
-    namespace Input
+    namespace Events
     {
         class KeyEvent : public IEvent
         {
         public:
-            enum KeyState
-            {
-                Released = 0,
-                Pressed = 1
-            };
-
-            KeyEvent(KeyCode::Key key, unsigned int c, KeyState state, bool control, bool shift, bool alt)
-                : key(key)
-                , character(c)
-                , state(state)
-                , control(control)
-                , shift(shift)
-                , alt(alt)
+            KeyEvent(DIKeyCode keyCode)
+                : keyCode(keyCode)
             {   }
 
-            KeyCode::Key key;           // The Key Code that was pressed or released.
-            unsigned int character;     // The 32-bit character code that was pressed. This value will be 0 if it is a non-printable character.
-            KeyState state;             // Was the key pressed or released?
-            bool control;               // Is the Control modifier pressed
-            bool shift;                 // Is the Shift modifier pressed
-            bool alt;                   // Is the Alt modifier pressed
+            DIKeyCode keyCode;
         };
     } // namespace Input
 } // namespace Core
