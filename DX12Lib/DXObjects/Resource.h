@@ -19,9 +19,6 @@ public:
     void SetResourceDescription(const ResourceDescription& resourceDesc);
     ResourceDescription GetResourceDescription() const;
 
-    void SetDevice(ComPtr<ID3D12Device2> device);
-    ComPtr<ID3D12Device2> GetDevice() const;
-
     D3D12_GPU_VIRTUAL_ADDRESS OffsetGPU(unsigned int offset) const;
     void* Map();
 
@@ -31,6 +28,8 @@ public:
     ComPtr<ID3D12Resource> CreatePlacedResource(ComPtr<ID3D12Heap> heap, unsigned int offset, D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_COPY_DEST);
 
 protected:
+    ComPtr<ID3D12Device2> _DXDevice;
+
     ComPtr<ID3D12Resource> _resource;
     std::string _name;
 
@@ -38,6 +37,4 @@ protected:
 
     D3D12_RESOURCE_STATES _initialState;
     D3D12_RESOURCE_STATES _currentState;
-
-    ComPtr<ID3D12Device2> _DXDevice;
 };

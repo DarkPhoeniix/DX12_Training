@@ -9,7 +9,7 @@ HighResolutionClock::HighResolutionClock()
 {
 }
 
-void HighResolutionClock::tick()
+void HighResolutionClock::Tick()
 {
     auto t1 = std::chrono::high_resolution_clock::now();
     _deltaTime = t1 - _startTime;
@@ -17,48 +17,48 @@ void HighResolutionClock::tick()
     _startTime = t1;
 }
 
-void HighResolutionClock::reset()
+void HighResolutionClock::Reset()
 {
     _startTime = std::chrono::high_resolution_clock::now();
     _deltaTime = std::chrono::high_resolution_clock::duration();
     _totalTime = std::chrono::high_resolution_clock::duration();
 }
 
-double HighResolutionClock::getDeltaNanoseconds() const
+double HighResolutionClock::GetDeltaNanoseconds() const
 {
     return static_cast<double>(_deltaTime.count());
 }
-double HighResolutionClock::getDeltaMicroseconds() const
+double HighResolutionClock::GetDeltaMicroseconds() const
 {
     return _deltaTime.count() * 1e-3;
 }
 
-double HighResolutionClock::getDeltaMilliseconds() const
+double HighResolutionClock::GetDeltaMilliseconds() const
 {
     return _deltaTime.count() * 1e-6;
 }
 
-double HighResolutionClock::getDeltaSeconds() const
+double HighResolutionClock::GetDeltaSeconds() const
 {
     return _deltaTime.count() * 1e-9;
 }
 
-double HighResolutionClock::getTotalNanoseconds() const
+double HighResolutionClock::GetTotalNanoseconds() const
 {
     return static_cast<double>(_totalTime.count());
 }
 
-double HighResolutionClock::getTotalMicroseconds() const
+double HighResolutionClock::GetTotalMicroseconds() const
 {
     return _totalTime.count() * 1e-3;
 }
 
-double HighResolutionClock::getTotalMilliSeconds() const
+double HighResolutionClock::GetTotalMilliSeconds() const
 {
     return _totalTime.count() * 1e-6;
 }
 
-double HighResolutionClock::getTotalSeconds() const
+double HighResolutionClock::GetTotalSeconds() const
 {
     return _totalTime.count() * 1e-9;
 }

@@ -3,32 +3,28 @@
 #include "Resource.h"
 
 Resource::Resource()
-	: _resource(nullptr)
+	: _DXDevice(Core::Device::GetDXDevice())
+	, _resource(nullptr)
 	, _resourceDesc{}
 	, _currentState(D3D12_RESOURCE_STATE_COMMON)
 	, _initialState(D3D12_RESOURCE_STATE_COMMON)
-	, _DXDevice(nullptr)
 {
 
 }
 
 Resource::Resource(ResourceDescription resourceDesc)
-	: _resource(nullptr)
+	: _DXDevice(Core::Device::GetDXDevice())
+	, _resource(nullptr)
 	, _resourceDesc(resourceDesc)
 	, _currentState(D3D12_RESOURCE_STATE_COMMON)
 	, _initialState(D3D12_RESOURCE_STATE_COMMON)
-	, _DXDevice(nullptr)
 {	
 }
 
 Resource::~Resource()
 {
-	if( _resource )
-	{
-		_resource = nullptr;
-	}
-	
 	_DXDevice = nullptr; 
+	_resource = nullptr;
 }
 
 void Resource::InitFromDXResource(ComPtr<ID3D12Resource> resource)
@@ -90,16 +86,6 @@ D3D12_RESOURCE_BARRIER Resource::CreateBarrierAlias(Resource* old) const
 	barrier.Aliasing.pResourceAfter = _resource.Get();
 
 	return barrier;
-}
-
-void Resource::SetDevice(ComPtr<ID3D12Device2> device)
-{
-	_DXDevice = device;
-}
-
-ComPtr<ID3D12Device2> Resource::GetDevice() const
-{
-	return _DXDevice;
 }
 
 D3D12_GPU_VIRTUAL_ADDRESS Resource::OffsetGPU(unsigned int offset) const

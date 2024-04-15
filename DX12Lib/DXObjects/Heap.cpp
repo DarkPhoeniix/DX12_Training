@@ -2,38 +2,24 @@
 
 #include "Heap.h"
 
-#include "DXObjects/Resource.h"
-
 Heap::Heap()
-    : _heap(nullptr)
+    : _DXDevice(Core::Device::GetDXDevice())
+    , _heap(nullptr)
     , _heapDescription()
     , _resourceOffset(0)
-    , _DXDevice(nullptr)
 {   }
 
 Heap::Heap(const HeapDescription& heapDescription)
-    : _heap(nullptr)
+    : _DXDevice(Core::Device::GetDXDevice())
+    , _heap(nullptr)
     , _heapDescription(heapDescription)
     , _resourceOffset(0)
-    , _DXDevice(nullptr)
 {   }
 
 Heap::~Heap()
 {
-    if (_heap)
-        _heap = nullptr;
-
     _DXDevice = nullptr;
-}
-
-void Heap::SetDevice(ComPtr<ID3D12Device2> device)
-{
-    _DXDevice = device;
-}
-
-ComPtr<ID3D12Device2> Heap::GetDevice() const
-{
-    return _DXDevice;
+    _heap = nullptr;
 }
 
 void Heap::Create()

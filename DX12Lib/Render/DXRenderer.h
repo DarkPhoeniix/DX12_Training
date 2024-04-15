@@ -8,7 +8,6 @@
 #include "Scene/Scene.h"
 #include "Render/Frame.h"
 #include "Render/FencePool.h"
-#include "Utility/Blob.h"
 #include "Window/IWindowEventListener.h"
 
 class DXRenderer : public Core::IWindowEventListener
@@ -27,8 +26,6 @@ public:
     virtual void OnMouseMoved(Core::Input::MouseMoveEvent& e) override;
     virtual void OnMouseButtonPressed(Core::Input::MouseButtonEvent& e) override;
     virtual void OnMouseButtonReleased(Core::Input::MouseButtonEvent& e) override;
-    virtual void OnMouseScroll(Core::Input::MouseScrollEvent& e) override;
-    virtual void OnResize(Core::Input::ResizeEvent& e) override;
 
 private:
     void transitionResource(ComPtr<ID3D12GraphicsCommandList2> commandList,
@@ -43,7 +40,8 @@ private:
     RootSignature _pipeline;
     RootSignature _AABBpipeline;
 
-    Resource* _ambient;
+    std::shared_ptr<Resource> _ambient;
+
     DescriptorHeap _texDescHeap;
     std::shared_ptr<Texture> _tex;
 

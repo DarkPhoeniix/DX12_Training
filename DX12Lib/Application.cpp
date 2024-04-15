@@ -3,7 +3,6 @@
 #include "Application.h"
 
 #include "DXObjects/SwapChain.h"
-#include "DXObjects/Device.h"
 #include "Events/KeyEvent.h"
 #include "Events/MouseButtonEvent.h"
 #include "Events/MouseMoveEvent.h"
@@ -210,17 +209,17 @@ void Application::_RegisterWindowClass(HINSTANCE hInstance)
 
 void Application::_UpdateCall(std::shared_ptr<DXRenderer> pApp)
 {
-    _updateClock.tick();
+    _updateClock.Tick();
 
-    Input::UpdateEvent updateEvent(_updateClock.getDeltaSeconds(), _updateClock.getTotalSeconds(), _currentFrame->Index);
+    Input::UpdateEvent updateEvent(_updateClock.GetDeltaSeconds(), _updateClock.GetTotalSeconds(), _currentFrame->Index);
     pApp->OnUpdate(updateEvent);
 }
 
 void Application::_RenderCall(std::shared_ptr<DXRenderer> pApp)
 {
-    _renderClock.tick();
+    _renderClock.Tick();
 
-    Input::RenderEvent renderEvent(_updateClock.getDeltaSeconds(), _updateClock.getTotalSeconds(), _currentFrame->Index);
+    Input::RenderEvent renderEvent(_updateClock.GetDeltaSeconds(), _updateClock.GetTotalSeconds(), _currentFrame->Index);
     pApp->OnRender(renderEvent, *_currentFrame);
 }
 

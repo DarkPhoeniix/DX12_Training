@@ -2,11 +2,24 @@
 
 #include "Fence.h"
 
-void Fence::Init(ComPtr<ID3D12Device2> device)
+Fence::Fence()
+    : _fence(nullptr)
+    , _fenceValue(0)
+    , _DXDevice(Core::Device::GetDXDevice())
+{
+}
+
+Fence::~Fence()
+{
+    _fence = nullptr;
+    _DXDevice = nullptr;
+}
+
+void Fence::Init()
 {
     _fenceValue = 0;
 
-    device->CreateFence(_fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&_fence));
+    _DXDevice->CreateFence(_fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&_fence));
     _eventOnCompletion = ::CreateEvent(NULL, FALSE, FALSE, NULL);
 }
 

@@ -18,8 +18,6 @@ public:
     void Draw(ComPtr<ID3D12GraphicsCommandList> commandList, const FrustumVolume& frustum);
     void DrawAABB(ComPtr<ID3D12GraphicsCommandList> commandList);
 
-    void UploadTextures(ComPtr<ID3D12GraphicsCommandList> commandList, Heap& heap, DescriptorHeap& descriptorHeap);
-
     bool LoadScene(const std::string& name, ComPtr<ID3D12GraphicsCommandList> commandList);
 
 private:

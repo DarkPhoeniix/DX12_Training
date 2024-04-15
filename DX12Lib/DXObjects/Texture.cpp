@@ -2,8 +2,6 @@
 
 #include "Texture.h"
 
-#include "DXObjects/Device.h"
-
 #include <filesystem>
 
 using namespace DirectX;
@@ -81,16 +79,6 @@ void Texture::SetDescriptorHeap(DescriptorHeap* descriptorHeap)
 DescriptorHeap* Texture::GetDescriptorHeap() const
 {
     return _descritptorHeap;
-}
-
-void Texture::SetDXDevice(ComPtr<ID3D12Device2> device)
-{
-    _DXDevice = device;
-}
-
-ComPtr<ID3D12Device2> Texture::GetDXDevice() const
-{
-    return _DXDevice;
 }
 
 std::shared_ptr<Texture> Texture::LoadFromFile(const std::string& filepath)

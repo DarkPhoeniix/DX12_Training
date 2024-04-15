@@ -8,7 +8,7 @@ void FencePool::Init(ComPtr<ID3D12Device2> device)
 
     for (Fence& fence : fences)
     {
-        fence.Init(device);
+        fence.Init();
         fence.SetFree(true);
     }
 }

@@ -2,7 +2,6 @@
 
 #include "Scene.h"
 
-#include "DXObjects/Device.h"
 #include "DXObjects/Heap.h"
 #include "DXObjects/DescriptorHeap.h"
 #include "Scene/SceneNode.h"
@@ -41,11 +40,6 @@ void Scene::DrawAABB(ComPtr<ID3D12GraphicsCommandList> commandList)
     _rootNode->DrawAABB(commandList);
 }
 
-void Scene::UploadTextures(ComPtr<ID3D12GraphicsCommandList> commandList, Heap& heap, DescriptorHeap& descriptorHeap)
-{
-    _rootNode->UploadTextures(commandList, heap, descriptorHeap);
-}
-
 bool Scene::LoadScene(const std::string& name, ComPtr<ID3D12GraphicsCommandList> commandList)
 {
     bool lStatus;
@@ -82,7 +76,7 @@ bool Scene::LoadScene(const std::string& name, ComPtr<ID3D12GraphicsCommandList>
     // Import the scene
     lStatus = lImporter->Import(_scene);
 
-    _rootNode = std::make_shared<SceneNode>(_scene->GetRootNode(), commandList, Core::Device::GetDXDevice());
+    _rootNode = std::make_shared<SceneNode>(_scene->GetRootNode(), commandList);
 
     // Destroy the importer
     lImporter->Destroy();

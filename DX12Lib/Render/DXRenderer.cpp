@@ -2,7 +2,6 @@
 
 #include "DXRenderer.h"
 
-#include "DXObjects/Device.h"
 #include "Events/MouseScrollEvent.h"
 #include "Events/MouseButtonEvent.h"
 #include "Events/MouseMoveEvent.h"
@@ -11,8 +10,6 @@
 #include "Events/UpdateEvent.h"
 #include "Events/KeyEvent.h"
 #include "Render/TaskGPU.h"
-#include "Utility/Blob.h"
-#include "Utility/TextureLoaderDDS.h"
 
 using namespace DirectX;
 using namespace Core;
@@ -27,20 +24,21 @@ namespace
 }
 
 DXRenderer::DXRenderer(HWND windowHandle)
-    : _windowHandle(windowHandle)
+    : _DXDevice(Device::GetDXDevice())
+    , _windowHandle(windowHandle)
     , _contentLoaded(false)
     , _ambient(nullptr)
-    , _DXDevice(Device::GetDXDevice())
 {   }
 
 DXRenderer::~DXRenderer()
 {
+    _DXDevice = nullptr;
 }
 
 bool DXRenderer::LoadContent(TaskGPU* loadTask)
 {
-    _pipeline.Parse(_DXDevice.Get(), "Resources\\TriangleRenderPipeline.tech");
-    _AABBpipeline.Parse(_DXDevice.Get(), "Resources\\AABBRenderPipeline.tech");
+    _pipeline.Parse("Resources\\TriangleRenderPipeline.tech");
+    _AABBpipeline.Parse("Resources\\AABBRenderPipeline.tech");
 
     // Camera Setup
     {
@@ -67,8 +65,7 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
         desc.SetSize({ sizeof(Ambient), 1 });
         desc.SetStride(1);
         desc.SetFormat(DXGI_FORMAT::DXGI_FORMAT_UNKNOWN);
-        _ambient = new Resource(desc);
-        _ambient->SetDevice(_DXDevice);
+        _ambient = std::make_shared<Resource>(desc);
         _ambient->CreateCommitedResource();
         _ambient->SetName("_ambient");
 
@@ -90,11 +87,9 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
         desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
         desc.SetNodeMask(1);
         _texDescHeap.SetDescription(desc);
-        _texDescHeap.SetDevice(_DXDevice);
         _texDescHeap.Create("Textures descriptor heap");
 
         _tex = Texture::LoadFromFile("dog_tex.dds");
-        _tex->SetDXDevice(_DXDevice);
         _tex->SetDescriptorHeap(&_texDescHeap);
         _tex->UploadToGPU(commandList);
 
@@ -115,28 +110,8 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
     return _contentLoaded;
 }
 
-void DXRenderer::OnResize(Input::ResizeEvent& e)
-{
-    // TODO: not implemented
-    //if (e.width != super::getWidth() || e.height != getHeight())
-    //{
-    //    super::onResize(e);
-
-    //    _viewport = CD3DX12_VIEWPORT(0.0f, 0.0f,
-    //        static_cast<float>(e.width), static_cast<float>(e.height));
-
-    //    resizeDepthBuffer(e.width, e.height);
-    //}
-}
-
 void DXRenderer::UnloadContent()
 {
-    if (_contentLoaded)
-    {
-        delete _ambient;
-        _ambient = nullptr;
-    }
-
     _contentLoaded = false;
 }
 
@@ -152,11 +127,10 @@ void DXRenderer::OnUpdate(Input::UpdateEvent& updateEvent)
 
     if (totalTime > 1.0)
     {
-        double fps = frameCount / totalTime;
+        int fps = frameCount / totalTime;
 
-        char buffer[512];
-        sprintf_s(buffer, "FPS: %f\n", fps);
-        OutputDebugStringA(buffer);
+        std::wstring tmp(L"FPS: " + std::to_wstring(fps));
+        ::SetWindowText(_windowHandle, tmp.c_str());
 
         frameCount = 0;
         totalTime = 0.0;
@@ -297,17 +271,6 @@ void DXRenderer::OnKeyPressed(Input::KeyEvent& e)
     case KeyCode::Space:
         break;
     }
-}
-
-void DXRenderer::OnMouseScroll(Input::MouseScrollEvent& e)
-{
-    //_FoV -= e.scrollDelta;
-    //_FoV = clamp(_FoV, 12.0f, 90.0f);
-    //camera.SetFOV(_FoV);
-
-    //char buffer[256];
-    //sprintf_s(buffer, "FoV: %f\n", _FoV);
-    //OutputDebugStringA(buffer);
 }
 
 void DXRenderer::OnMouseMoved(Input::MouseMoveEvent& e)

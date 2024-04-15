@@ -5,19 +5,18 @@ class HighResolutionClock
 public:
     HighResolutionClock();
 
-    void tick();
+    void Tick();
+    void Reset();
 
-    void reset();
+    double GetDeltaNanoseconds() const;
+    double GetDeltaMicroseconds() const;
+    double GetDeltaMilliseconds() const;
+    double GetDeltaSeconds() const;
 
-    double getDeltaNanoseconds() const;
-    double getDeltaMicroseconds() const;
-    double getDeltaMilliseconds() const;
-    double getDeltaSeconds() const;
-
-    double getTotalNanoseconds() const;
-    double getTotalMicroseconds() const;
-    double getTotalMilliSeconds() const;
-    double getTotalSeconds() const;
+    double GetTotalNanoseconds() const;
+    double GetTotalMicroseconds() const;
+    double GetTotalMilliSeconds() const;
+    double GetTotalSeconds() const;
 
 private:
     std::chrono::high_resolution_clock::time_point _startTime;

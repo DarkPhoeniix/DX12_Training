@@ -2,18 +2,18 @@
 
 #include "DescriptorHeap.h"
 
-DescriptorHeap::DescriptorHeap(ComPtr<ID3D12Device2> device)
+DescriptorHeap::DescriptorHeap()
     : _descriptorHeap(nullptr)
     , _descriptorHeapDescription{}
     , _heapIncrementSize(0)
-    , _DXDevice(device)
+    , _DXDevice(Core::Device::GetDXDevice())
 {   }
 
-DescriptorHeap::DescriptorHeap(const DescriptorHeapDescription& description, ComPtr<ID3D12Device2> device)
+DescriptorHeap::DescriptorHeap(const DescriptorHeapDescription& description)
     : _descriptorHeap(nullptr)
     , _descriptorHeapDescription(description)
     , _heapIncrementSize(0)
-    , _DXDevice(device)
+    , _DXDevice(Core::Device::GetDXDevice())
 {   }
 
 DescriptorHeap::~DescriptorHeap()
@@ -123,14 +123,4 @@ const DescriptorHeapDescription& DescriptorHeap::GetDescription() const
 ComPtr<ID3D12DescriptorHeap> DescriptorHeap::GetDXDescriptorHeap() const
 {
     return _descriptorHeap;
-}
-
-void DescriptorHeap::SetDevice(ComPtr<ID3D12Device2> device)
-{
-    _DXDevice = device;
-}
-
-ComPtr<ID3D12Device2> DescriptorHeap::GetDevice() const
-{
-    return _DXDevice;
 }

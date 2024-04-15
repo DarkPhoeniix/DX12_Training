@@ -63,7 +63,6 @@ void Frame::Init(const SwapChain& swapChain)
         desc.AddFlags(D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
         desc.SetClearValue(clearValueTexTarget);
 
-        _targetTexture.SetDevice(_DXDevice);
         _targetTexture.SetResourceDescription(desc);
         _targetTexture.CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_SOURCE);
         _targetTexture.SetName(std::string("Frame RTT ") + std::to_string(Index));
@@ -83,7 +82,6 @@ void Frame::Init(const SwapChain& swapChain)
 
         desc.SetClearValue(clearValue);
 
-        _depthTexture.SetDevice(_DXDevice);
         _depthTexture.SetResourceDescription(desc);
         _depthTexture.CreateCommitedResource(D3D12_RESOURCE_STATE_DEPTH_WRITE);
         _depthTexture.SetName(std::string("Frame DSV ") + std::to_string( Index));

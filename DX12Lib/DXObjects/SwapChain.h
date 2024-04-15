@@ -24,8 +24,6 @@ public:
 
     void OnResize(Core::Input::ResizeEvent& e) override;
 
-    void SetDXDevice(ComPtr<ID3D12Device2> device);
-
 private:
     ComPtr<IDXGISwapChain4> CreateSwapChain();
     bool CheckTearingSupport() const;

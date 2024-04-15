@@ -246,8 +246,10 @@ bool RootSignature::IsGraphicsPipeline() const
     return _isGraphicsPipeline;
 }
 
-void RootSignature::Parse(ComPtr<ID3D12Device2> device, const std::string& filepath)
+void RootSignature::Parse(const std::string& filepath)
 {
+    auto device = Core::Device::GetDXDevice();
+
     Json::Value jsonRoot = Helper::ParseJson(filepath);
 
     // Load the vertex shader
