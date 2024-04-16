@@ -8,7 +8,11 @@ namespace Core
         Device(const Device& copy) = delete;
         Device operator=(const Device& copy) = delete;
 
-        static Device& Instance();
+        static void Init();
+        static void Destroy();
+
+        static Device* Instance();
+
         static ComPtr<ID3D12Device2> GetDXDevice();
 
         static ID3D12CommandQueue* GetComputeQueue();
@@ -29,5 +33,7 @@ namespace Core
         ComPtr<ID3D12CommandQueue> _queueCompute;
         ComPtr<ID3D12CommandQueue> _queueStream;
         ComPtr<ID3D12CommandQueue> _queueCopy;
+
+        static Device* _instance;
     };
 } // namespace Core

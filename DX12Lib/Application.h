@@ -11,14 +11,14 @@ class DXRenderer;
 class Application
 {
 public:
-    Application(const Application&) = delete;
-    Application& operator=(const Application&) = delete;
+    Application(const Application& copy) = delete;
+    Application& operator=(const Application& copy) = delete;
 
     static void Init(HINSTANCE hInstance);
     int Run(std::shared_ptr<DXRenderer> pApp);
-    void Quit(int exitCode = 0);
+    static void Quit(int exitCode = 0);
 
-    static Application& Get();
+    static Application* Instance();
 
     static std::shared_ptr<Core::Win32Window> CreateWin32Window(int width, int height, const std::wstring& title, bool vSync = false);
 
@@ -50,4 +50,6 @@ private:
     HighResolutionClock _updateClock;
     HighResolutionClock _renderClock;
     uint64_t _frameCounter;
+
+    static Application* _instance;
 };

@@ -20,9 +20,9 @@ using namespace Core;
 namespace
 {
     constexpr wchar_t WINDOW_CLASS_NAME[] = L"DX12WindowClass";
-
-    static Application* _appInstance;
 }
+
+Application* Application::_instance = nullptr;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -55,32 +55,27 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPara
 
 Application::Application(HINSTANCE hInstance)
     : _hInstance(hInstance)
-    , _DXDevice(Core::Device::GetDXDevice())
     , _currentFrame(&_frames[0])
 {
+    _DXDevice = Core::Device::GetDXDevice();
+
     _RegisterWindowClass(hInstance);
 }
 
 Application::~Application()
 {
-    if (_appInstance)
-    {
-        delete _appInstance;
-    }
-
-    _appInstance = nullptr;
     _DXDevice = nullptr;
 }
 
 void Application::Init(HINSTANCE hInstance)
 {
-    _appInstance = new Application(hInstance);
+    Device::Init();
+    _instance = new Application(hInstance);
 }
 
 int Application::Run(std::shared_ptr<DXRenderer> pApp)
 {
     _swapChain.Init(_win32Window);
-
     _allocs.Init(_DXDevice);
     _fencePool.Init(_DXDevice);
 
@@ -140,23 +135,25 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
 
 void Application::Quit(int exitCode)
 {
+    Device::Destroy();
     PostQuitMessage(exitCode);
+
+    if (_instance)
+    {
+        delete _instance;
+    }
+    _instance = nullptr;
 }
 
-Application& Application::Get()
+Application* Application::Instance()
 {
-    if (!_appInstance)
-    {
-        Logger::Log(LogType::Error, "Application is uninitialized");
-    }
-
-    return *_appInstance;
+    return _instance;
 }
 
 std::shared_ptr<Core::Win32Window> Application::CreateWin32Window(int width, int height, const std::wstring& title, bool vSync)
 {
-    std::shared_ptr<Core::Win32Window> pWindow = std::make_shared<Core::Win32Window>(Get()._hInstance, width, height, title, vSync);
-    Get()._win32Window = pWindow;
+    std::shared_ptr<Core::Win32Window> pWindow = std::make_shared<Core::Win32Window>(Instance()->_hInstance, width, height, title, vSync);
+    Instance()->_win32Window = pWindow;
 
     pWindow->Show();
 

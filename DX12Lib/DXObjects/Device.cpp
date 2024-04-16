@@ -16,30 +16,51 @@ namespace Core
         }
     }
 
-    Device& Device::Instance()
+    Device* Device::_instance = nullptr;
+
+    void Device::Init()
     {
-        static Device device;
-        return device;
+        if (_instance)
+        {
+            Logger::Log(LogType::Warning, "Device has already been initialized");
+        }
+        else
+        {
+            _instance = new Device();
+        }
+    }
+
+    void Device::Destroy()
+    {
+        if (_instance)
+            delete _instance;
+
+        _instance = nullptr;
+    }
+
+    Device* Device::Instance()
+    {
+        return _instance;
     }
 
     ComPtr<ID3D12Device2> Device::GetDXDevice()
     {
-        return Instance()._device;
+        return _instance->_device;
     }
 
     ID3D12CommandQueue* Device::GetStreamQueue()
     {
-        return Instance()._queueStream.Get();
+        return _instance->_queueStream.Get();
     }
 
     ID3D12CommandQueue* Device::GetComputeQueue()
     {
-        return Instance()._queueCompute.Get();
+        return _instance->_queueCompute.Get();
     }
 
     ID3D12CommandQueue* Device::GetCopyQueue()
     {
-        return Instance()._queueCopy.Get();
+        return _instance->_queueCopy.Get();
     }
 
     Device::Device()

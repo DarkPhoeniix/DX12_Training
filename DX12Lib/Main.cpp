@@ -41,8 +41,9 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstan
         std::shared_ptr<DXRenderer> demo = std::make_shared<DXRenderer>(mainWindow->GetWindowHandle());
         mainWindow->AddEventListener(demo.get());
         {
-            retCode = Application::Get().Run(demo);
+            retCode = Application::Instance()->Run(demo);
         }
+        Application::Quit();
     }
 
     ReportLiveObjects();
