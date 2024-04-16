@@ -11,7 +11,9 @@
 #include "Events/RenderEvent.h"
 #include "Events/ResizeEvent.h"
 #include "Events/UpdateEvent.h"
+#include "Input/InputDevice.h"
 #include "Render/DXRenderer.h"
+#include "Utility/Resources.h"
 #include "Window/Win32Window.h"
 
 using namespace Core;
@@ -19,41 +21,9 @@ using namespace Core;
 namespace
 {
     constexpr wchar_t WINDOW_CLASS_NAME[] = L"DX12WindowClass";
-
-    static Application* _appInstance;
-
-    // Convert the message ID into a MouseButton ID
-    Core::Input::MouseButtonEvent::MouseButton DecodeMouseButton(UINT messageID)
-    {
-        Core::Input::MouseButtonEvent::MouseButton mouseButton = Core::Input::MouseButtonEvent::None;
-        switch (messageID)
-        {
-        case WM_LBUTTONDOWN:
-        case WM_LBUTTONUP:
-        case WM_LBUTTONDBLCLK:
-        {
-            mouseButton = Core::Input::MouseButtonEvent::Left;
-        }
-        break;
-        case WM_RBUTTONDOWN:
-        case WM_RBUTTONUP:
-        case WM_RBUTTONDBLCLK:
-        {
-            mouseButton = Core::Input::MouseButtonEvent::Right;
-        }
-        break;
-        case WM_MBUTTONDOWN:
-        case WM_MBUTTONUP:
-        case WM_MBUTTONDBLCLK:
-        {
-            mouseButton = Core::Input::MouseButtonEvent::Middle;
-        }
-        break;
-        }
-
-        return mouseButton;
-    }
 }
+
+Application* Application::_instance = nullptr;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -86,32 +56,27 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPara
 
 Application::Application(HINSTANCE hInstance)
     : _hInstance(hInstance)
-    , _DXDevice(Core::Device::GetDXDevice())
     , _currentFrame(&_frames[0])
 {
+    _DXDevice = Core::Device::GetDXDevice();
+
     _RegisterWindowClass(hInstance);
 }
 
 Application::~Application()
 {
-    if (_appInstance)
-    {
-        delete _appInstance;
-    }
-
-    _appInstance = nullptr;
     _DXDevice = nullptr;
 }
 
 void Application::Init(HINSTANCE hInstance)
 {
-    _appInstance = new Application(hInstance);
+    Device::Init();
+    _instance = new Application(hInstance);
 }
 
 int Application::Run(std::shared_ptr<DXRenderer> pApp)
 {
     _swapChain.Init(_win32Window);
-
     _allocs.Init(_DXDevice);
     _fencePool.Init(_DXDevice);
 
@@ -134,6 +99,8 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
         frame.Init(_swapChain);
     }
 
+    Events::InputDevice::Instance().AddInputObserver(pApp.get());
+
     if (!pApp->LoadContent(_currentFrame->CreateTask(D3D12_COMMAND_LIST_TYPE_COPY, nullptr)))
     {
         return 1;
@@ -148,11 +115,18 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
             DispatchMessage(&msg);
         }
 
+        Events::InputDevice::Instance().PollEvents();
+
         _UpdateCall(pApp);
         _RenderCall(pApp);
 
         _ExecuteFrameTasks();
         _currentFrame = _currentFrame->Next;
+    }
+
+    for (Frame& frame : _frames)
+    {
+        frame.WaitCPU();
     }
 
     pApp->UnloadContent();
@@ -162,23 +136,25 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
 
 void Application::Quit(int exitCode)
 {
+    Device::Destroy();
     PostQuitMessage(exitCode);
+
+    if (_instance)
+    {
+        delete _instance;
+    }
+    _instance = nullptr;
 }
 
-Application& Application::Get()
+Application* Application::Instance()
 {
-    if (!_appInstance)
-    {
-        Logger::Log(LogType::Error, "Application is uninitialized");
-    }
-
-    return *_appInstance;
+    return _instance;
 }
 
 std::shared_ptr<Core::Win32Window> Application::CreateWin32Window(int width, int height, const std::wstring& title, bool vSync)
 {
-    std::shared_ptr<Core::Win32Window> pWindow = std::make_shared<Core::Win32Window>(Get()._hInstance, width, height, title, vSync);
-    Get()._win32Window = pWindow;
+    std::shared_ptr<Core::Win32Window> pWindow = std::make_shared<Core::Win32Window>(Instance()->_hInstance, width, height, title, vSync);
+    Instance()->_win32Window = pWindow;
 
     pWindow->Show();
 
@@ -196,11 +172,11 @@ void Application::_RegisterWindowClass(HINSTANCE hInstance)
     wndClass.lpfnWndProc = &WindowProc;
     wndClass.hInstance = hInstance;
     wndClass.hCursor = LoadCursor(nullptr, IDC_ARROW);
-    //wndClass.hIcon = LoadIcon(_hInstance, MAKEINTRESOURCE(APP_ICON));
+    wndClass.hIcon = LoadIcon(_hInstance, MAKEINTRESOURCE(IDI_ICON1));
     wndClass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     wndClass.lpszMenuName = nullptr;
     wndClass.lpszClassName = WINDOW_CLASS_NAME;
-    //wndClass.hIconSm = LoadIcon(_hInstance, MAKEINTRESOURCE(APP_ICON));
+    wndClass.hIconSm = LoadIcon(_hInstance, MAKEINTRESOURCE(IDI_ICON1));
 
     if (!RegisterClassExW(&wndClass))
     {
@@ -212,7 +188,7 @@ void Application::_UpdateCall(std::shared_ptr<DXRenderer> pApp)
 {
     _updateClock.tick();
 
-    Input::UpdateEvent updateEvent(_updateClock.getDeltaSeconds(), _updateClock.getTotalSeconds(), _currentFrame->Index);
+    Events::UpdateEvent updateEvent(_updateClock.getDeltaSeconds(), _updateClock.getTotalSeconds(), _currentFrame->Index);
     pApp->OnUpdate(updateEvent);
 }
 
@@ -220,7 +196,7 @@ void Application::_RenderCall(std::shared_ptr<DXRenderer> pApp)
 {
     _renderClock.tick();
 
-    Input::RenderEvent renderEvent(_updateClock.getDeltaSeconds(), _updateClock.getTotalSeconds(), _currentFrame->Index);
+    Events::RenderEvent renderEvent(_updateClock.getDeltaSeconds(), _updateClock.getTotalSeconds(), _currentFrame->Index);
     pApp->OnRender(renderEvent, *_currentFrame);
 }
 

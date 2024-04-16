@@ -28,7 +28,7 @@ namespace Core
         void Show();
         void Hide();
 
-        void AddEventListener(IWindowEventListener* listener);
+        void AddEventListener(Events::IWindowEventListener* listener);
         void RemoveEventListener();
 
         LRESULT WindowProcCallback(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
@@ -36,7 +36,7 @@ namespace Core
     protected:
         HWND _windowHandle;
 
-        IWindowEventListener* _eventListener;
+        Events::IWindowEventListener* _eventListener;
 
         std::wstring _title;
         int _width;

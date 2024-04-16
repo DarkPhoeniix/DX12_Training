@@ -4,7 +4,7 @@
 
 namespace Core
 {
-    namespace Input
+    namespace Events
     {
         class UpdateEvent : public IEvent
         {
@@ -19,5 +19,5 @@ namespace Core
             double totalTime;
             unsigned int frameIndex;
         };
-    } // namespace Input
+    } // namespace Events
 } // namespace Core

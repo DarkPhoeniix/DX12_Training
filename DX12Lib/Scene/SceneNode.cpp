@@ -5,9 +5,7 @@
 
 #include "DXObjects/Heap.h"
 #include "DXObjects/DescriptorHeap.h"
-#include "Scene/Camera.h"
 #include "Scene/Scene.h"
-#include "Utility/TextureLoaderDDS.h"
 #include "Volumes/FrustumVolume.h"
 
 using namespace DirectX;
@@ -250,7 +248,7 @@ void SceneNode::_DrawCurrentNode(ComPtr<ID3D12GraphicsCommandList> commandList, 
         return;
     }
 
-    if (!intersect(frustum, _AABB))
+    if (!Intersect(frustum, _AABB))
     {
         return;
     }

@@ -12,17 +12,20 @@ class Frame;
 
 namespace Core
 {
-    class IWindowEventListener
+    namespace Events
     {
-    public:
-        virtual void OnUpdate(Input::UpdateEvent& e) {}
-        virtual void OnRender(Input::RenderEvent& e, Frame& frame) {}
-        virtual void OnKeyPressed(Input::KeyEvent& e) {}
-        virtual void OnKeyReleased(Input::KeyEvent& e) {}
-        virtual void OnMouseMoved(Input::MouseMoveEvent& e) {}
-        virtual void OnMouseButtonPressed(Input::MouseButtonEvent& e) {}
-        virtual void OnMouseButtonReleased(Input::MouseButtonEvent& e) {}
-        virtual void OnMouseScroll(Input::MouseScrollEvent& e) {}
-        virtual void OnResize(Input::ResizeEvent& e) {}
-    };
-}
+        class IWindowEventListener
+        {
+        public:
+            virtual void OnUpdate(UpdateEvent& e) {}
+            virtual void OnRender(RenderEvent& e, Frame& frame) {}
+            virtual void OnKeyPressed(KeyEvent& e) {}
+            virtual void OnKeyReleased(KeyEvent& e) {}
+            virtual void OnMouseMoved(MouseMoveEvent& e) {}
+            virtual void OnMouseButtonPressed(MouseButtonEvent& e) {}
+            virtual void OnMouseButtonReleased(MouseButtonEvent& e) {}
+            virtual void OnMouseScroll(MouseScrollEvent& e) {}
+            virtual void OnResize(ResizeEvent& e) {}
+        };
+    } // namespace Events
+} // namespace Core

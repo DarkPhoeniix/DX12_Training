@@ -1,9 +1,8 @@
 #pragma once
 
-#include "Scene/Mesh.h"
 #include "Scene/ISceneNode.h"
+#include "Scene/Mesh.h"
 #include "Scene/Volumes/AABBVolume.h"
-#include "Utility/Blob.h"
 
 #include <fbxsdk.h>
 
@@ -57,7 +56,6 @@ private:
     std::vector<ID3D12Resource*> intermediates;
 
     Resource _resource;
-    Base::Blob _textureBlob;
     D3D12_GPU_DESCRIPTOR_HANDLE _textureHandle;
 
     ComPtr<ID3D12Device2> _DXDevice;
