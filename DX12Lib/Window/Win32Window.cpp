@@ -10,10 +10,10 @@
 
 namespace Core
 {
-    using Input::MouseMoveEvent;
-    using Input::MouseScrollEvent;
-    using Input::MouseButtonEvent;
-    using Input::ResizeEvent;
+    using Events::MouseMoveEvent;
+    using Events::MouseScrollEvent;
+    using Events::MouseButtonEvent;
+    using Events::ResizeEvent;
 
     Win32Window::Win32Window(HINSTANCE hInstance, int width, int height, const std::wstring& title, bool vSync)
         : _eventListener(nullptr)
@@ -49,7 +49,7 @@ namespace Core
         ::ShowWindow(_windowHandle, SW_HIDE);
     }
 
-    void Win32Window::AddEventListener(IWindowEventListener* listener)
+    void Win32Window::AddEventListener(Events::IWindowEventListener* listener)
     {
         _eventListener = listener;
     }
@@ -111,10 +111,9 @@ namespace Core
 
     LRESULT Win32Window::WindowProcCallback(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
-        static IWindowEventListener* listener = nullptr;
+        static Events::IWindowEventListener* listener = nullptr;
         if (!listener)
         {
-            //listener = (IWindowEventListener*)(((LPCREATESTRUCT)lParam)->lpCreateParams);
             listener = _eventListener;
         }
 
@@ -129,21 +128,6 @@ namespace Core
 
                 ResizeEvent resizeEventArgs(width, height);
                 listener->OnResize(resizeEventArgs);
-            }
-            break;
-            case WM_MOUSEMOVE:
-            {
-                bool lButton = (wParam & MK_LBUTTON) != 0;
-                bool rButton = (wParam & MK_RBUTTON) != 0;
-                bool mButton = (wParam & MK_MBUTTON) != 0;
-                bool shift = (wParam & MK_SHIFT) != 0;
-                bool control = (wParam & MK_CONTROL) != 0;
-
-                int x = ((int)(short)LOWORD(lParam));
-                int y = ((int)(short)HIWORD(lParam));
-
-                MouseMoveEvent mouseMotionEventArgs(lButton, mButton, rButton, control, shift, x, y);
-                listener->OnMouseMoved(mouseMotionEventArgs);
             }
             break;
             case WM_DESTROY:

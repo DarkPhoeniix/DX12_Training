@@ -3,6 +3,7 @@
 #include "DXObjects/Texture.h"
 #include "Scene/Mesh.h"
 #include "Scene/ISceneNode.h"
+#include "Scene/Mesh.h"
 #include "Scene/Volumes/AABBVolume.h"
 
 #include <fbxsdk.h>

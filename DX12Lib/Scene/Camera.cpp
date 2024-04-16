@@ -4,6 +4,11 @@
 
 using namespace DirectX;
 
+namespace
+{
+	constexpr float CAMERA_MOVEMENT_SPEED = 0.05f;
+}
+
 Camera::Camera()
 	: _view(XMMatrixIdentity())
 	, _projection(XMMatrixIdentity())
@@ -153,8 +158,8 @@ float Camera::GetSpeed() const
 
 void Camera::Update(XMVECTOR direction)
 {
-	_position += direction * 0.5f;
-	_target += direction * 0.5f;
+	_position += direction * CAMERA_MOVEMENT_SPEED;
+	_target += direction * CAMERA_MOVEMENT_SPEED;
 
 	// Rebuild the view matrix to reflect changes.
 	_buildView();
@@ -213,5 +218,5 @@ void Camera::_buildProjection()
 
 void Camera::_updateFrustum()
 {
-	_frustum.buildFromProjMatrix(_view * _projection);
+	_frustum.BuildFromProjMatrix(_view * _projection);
 }

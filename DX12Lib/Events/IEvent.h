@@ -2,7 +2,7 @@
 
 namespace Core
 {
-    namespace Input
+    namespace Events
     {
         class IEvent
         {
@@ -10,5 +10,5 @@ namespace Core
             virtual ~IEvent()
             {   }
         };
-    }
-}
+    } // namespace Events
+} // namespace Core

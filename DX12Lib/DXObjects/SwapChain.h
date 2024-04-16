@@ -5,11 +5,11 @@
 #include "Window/IWindowEventListener.h"
 #include "Window/Win32Window.h"
 
-class Core::Input::ResizeEvent;
+class Core::Events::ResizeEvent;
 
 constexpr UINT BACK_BUFFER_COUNT = 3;
 
-class SwapChain : public Core::IWindowEventListener
+class SwapChain : public Core::Events::IWindowEventListener
 {
 public:
     SwapChain();
@@ -22,7 +22,7 @@ public:
     void UpdateRenderTargetViews();
     UINT Present();
 
-    void OnResize(Core::Input::ResizeEvent& e) override;
+    void OnResize(Core::Events::ResizeEvent& e) override;
 
 private:
     ComPtr<IDXGISwapChain4> CreateSwapChain();

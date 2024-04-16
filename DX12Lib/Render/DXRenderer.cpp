@@ -116,7 +116,7 @@ void DXRenderer::UnloadContent()
     _contentLoaded = false;
 }
 
-void DXRenderer::OnUpdate(Input::UpdateEvent& updateEvent)
+void DXRenderer::OnUpdate(Events::UpdateEvent& updateEvent)
 {
     static uint64_t frameCount = 0;
     static double totalTime = 0.0;
@@ -130,8 +130,8 @@ void DXRenderer::OnUpdate(Input::UpdateEvent& updateEvent)
     {
         int fps = frameCount / totalTime;
 
-        std::wstring tmp(L"FPS: " + std::to_wstring(fps));
-        ::SetWindowText(_windowHandle, tmp.c_str());
+        std::wstring fpsText = L"FPS: " + std::to_wstring(fps);
+        ::SetWindowText(_windowHandle, fpsText.c_str());
 
         frameCount = 0;
         totalTime = 0.0;
@@ -150,7 +150,7 @@ void DXRenderer::transitionResource(ComPtr<ID3D12GraphicsCommandList2> commandLi
     commandList->ResourceBarrier(1, &barrier);
 }
 
-void DXRenderer::OnRender(Input::RenderEvent& renderEvent, Frame& frame)
+void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
 {
     frame.WaitCPU();
     frame.ResetGPU();
@@ -197,10 +197,10 @@ void DXRenderer::OnRender(Input::RenderEvent& renderEvent, Frame& frame)
         commandList->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &viewProjMatrix, 0);
         commandList->SetGraphicsRootConstantBufferView(1, _ambient->OffsetGPU(0));
 
-        ID3D12DescriptorHeap* heaps = { _texDescHeap.GetDXDescriptorHeap().Get()};
-        commandList->SetDescriptorHeaps(1, &heaps);
+        //ID3D12DescriptorHeap* heaps = { _texDescHeap.GetDXDescriptorHeap().Get()};
+        //commandList->SetDescriptorHeaps(1, &heaps);
 
-        commandList->SetGraphicsRootDescriptorTable(3, _texDescHeap.GetResourceGPUHandle(_tex.get()));
+        //commandList->SetGraphicsRootDescriptorTable(3, _texDescHeap.GetResourceGPUHandle(_tex.get()));
 
         _scene.Draw(commandList, _camera.GetViewFrustum());
 
@@ -233,61 +233,60 @@ void DXRenderer::OnRender(Input::RenderEvent& renderEvent, Frame& frame)
     }
 }
 
-void DXRenderer::OnKeyPressed(Input::KeyEvent& e)
+void DXRenderer::OnKeyPressed(Events::KeyEvent& e)
 {
     XMVECTOR dir = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
-    if (e.key == KeyCode::W)
+    if (e.keyCode == DIKeyCode::DIK_W)
     {
         dir += _camera.Look();
     }
-    if (e.key == KeyCode::S)
+    if (e.keyCode == DIKeyCode::DIK_S)
     {
         dir -= _camera.Look();
     }
-    if (e.key == KeyCode::D)
+    if (e.keyCode == DIKeyCode::DIK_D)
     {
         dir += _camera.Right();
     }
-    if (e.key == KeyCode::A)
+    if (e.keyCode == DIKeyCode::DIK_A)
     {
         dir -= _camera.Right();
     }
     _camera.Update(dir);
 
-    switch (e.key)
+    switch (e.keyCode)
     {
-    case KeyCode::Escape:
-        //Application::Get().Quit(0);
-        break;
-    case KeyCode::Enter:        // TODO: looks weird
-        if (e.alt)
-        {
-    case KeyCode::F11:
-        //_window->toggleFullscreen();
-        break;
-        }
-    case KeyCode::V:
-        //_window->toggleVSync();
-        break;
-    case KeyCode::Space:
+    case DIKeyCode::DIK_ESCAPE:
+        ::SendMessage(_windowHandle, WM_DESTROY, 0, 0);
         break;
     }
 }
 
-void DXRenderer::OnMouseMoved(Input::MouseMoveEvent& e)
+void DXRenderer::OnMouseScroll(Events::MouseScrollEvent& e)
+{
+    //_FoV -= e.scrollDelta;
+    //_FoV = clamp(_FoV, 12.0f, 90.0f);
+    //camera.SetFOV(_FoV);
+
+    //char buffer[256];
+    //sprintf_s(buffer, "FoV: %f\n", _FoV);
+    //OutputDebugStringA(buffer);
+}
+
+void DXRenderer::OnMouseMoved(Events::MouseMoveEvent& e)
 {
     if ((e.relativeX != 0 || e.relativeY != 0) && _isCameraMoving)
         _camera.Update(e.relativeX, e.relativeY);
 }
 
-void DXRenderer::OnMouseButtonPressed(Input::MouseButtonEvent& e)
+void DXRenderer::OnMouseButtonPressed(Events::MouseButtonEvent& e)
 {
-    if (e.button == Input::MouseButtonEvent::MouseButton::Right)
+    if (e.rightButton)
         _isCameraMoving = true;
 }
 
-void DXRenderer::OnMouseButtonReleased(Input::MouseButtonEvent& e)
+void DXRenderer::OnMouseButtonReleased(Events::MouseButtonEvent& e)
 {
-    if (e.button == Input::MouseButtonEvent::MouseButton::Right)
+    if (!e.rightButton)
         _isCameraMoving = false;
 }
