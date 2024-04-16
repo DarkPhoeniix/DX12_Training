@@ -1,20 +1,19 @@
 #pragma once
 
+#include "DXObjects/Texture.h"
 #include "Scene/Mesh.h"
 #include "Scene/ISceneNode.h"
 #include "Scene/Volumes/AABBVolume.h"
 
 #include <fbxsdk.h>
 
-class Camera;
-class Heap;
-class DescriptorHeap;
+class Scene;
 
 class SceneNode : public ISceneNode
 {
 public:
     SceneNode();
-    SceneNode(FbxNode* node, ComPtr<ID3D12GraphicsCommandList> commandList, SceneNode* parent = nullptr);
+    SceneNode(FbxNode* node, ComPtr<ID3D12GraphicsCommandList> commandList, Scene* scene, SceneNode* parent = nullptr);
     ~SceneNode();
 
     void Draw(ComPtr<ID3D12GraphicsCommandList> commandList, const FrustumVolume& frustum) const override;
@@ -36,6 +35,8 @@ private:
 
     std::shared_ptr<Mesh> _mesh;
     AABBVolume _AABB;
+
+    std::shared_ptr<Texture> _texture;
 
     std::shared_ptr<Resource> _modelMatrix;
     std::shared_ptr<Resource> _vertexBuffer;

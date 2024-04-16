@@ -36,7 +36,7 @@ void Texture::UploadToGPU(ComPtr<ID3D12GraphicsCommandList2> commandList)
         return;
     }
 
-    CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_DEST);
+    //CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_DEST);
     SetName(_name);
 
     std::vector<D3D12_SUBRESOURCE_DATA> subresources(_scratchImage.GetImageCount());

@@ -28,6 +28,7 @@ DXRenderer::DXRenderer(HWND windowHandle)
     , _windowHandle(windowHandle)
     , _contentLoaded(false)
     , _ambient(nullptr)
+    , _isCameraMoving(false)
 {   }
 
 DXRenderer::~DXRenderer()
@@ -79,19 +80,19 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
         loadTask->SetName("Upload Data");
         auto commandList = loadTask->GetCommandLists().front();
 
-        _scene.LoadScene("dog_t.fbx", commandList);
+        _scene.LoadScene("bowl.fbx", commandList);
 
-        DescriptorHeapDescription desc;
-        desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
-        desc.SetNumDescriptors(1);
-        desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-        desc.SetNodeMask(1);
-        _texDescHeap.SetDescription(desc);
-        _texDescHeap.Create("Textures descriptor heap");
+        //DescriptorHeapDescription desc;
+        //desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
+        //desc.SetNumDescriptors(1);
+        //desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+        //desc.SetNodeMask(1);
+        //_texDescHeap.SetDescription(desc);
+        //_texDescHeap.Create("Textures descriptor heap");
 
-        _tex = Texture::LoadFromFile("dog_tex.dds");
-        _tex->SetDescriptorHeap(&_texDescHeap);
-        _tex->UploadToGPU(commandList);
+        //_tex = Texture::LoadFromFile("dog_tex.dds");
+        //_tex->SetDescriptorHeap(&_texDescHeap);
+        //_tex->UploadToGPU(commandList);
 
         commandList->Close();
 

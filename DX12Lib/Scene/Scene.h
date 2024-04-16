@@ -2,12 +2,15 @@
 
 #include "ISceneNode.h"
 
+#include "DXObjects/Heap.h"
+#include "DXObjects/DescriptorHeap.h"
+
 #include <fbxsdk.h>
 
 class FrustumVolume;
-class Camera;
 class Heap;
 class DescriptorHeap;
+class Texture;
 
 class Scene
 {
@@ -21,9 +24,14 @@ public:
     bool LoadScene(const std::string& name, ComPtr<ID3D12GraphicsCommandList> commandList);
 
 private:
+    void _UploadTexture(Texture* texture, ComPtr<ID3D12GraphicsCommandList2> commandList);
+
     static FbxManager* _FBXManager;
     FbxScene* _scene;
 
     std::shared_ptr<ISceneNode> _rootNode;
+
+    Heap _texturesHeap;
+    DescriptorHeap _texturesDescHeap;
 };
 

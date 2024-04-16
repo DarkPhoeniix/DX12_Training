@@ -3,18 +3,34 @@
 
 #include "SceneNode.h"
 
-#include "DXObjects/Heap.h"
-#include "DXObjects/DescriptorHeap.h"
-#include "Scene/Camera.h"
+#include "DXObjects/Texture.h"
 #include "Scene/Scene.h"
 #include "Volumes/FrustumVolume.h"
 
 using namespace DirectX;
 
+namespace
+{
+    XMMATRIX GetNodeLocalTransform(FbxNode* fbxNode)
+    {
+        FbxAMatrix fbxTransform = fbxNode->EvaluateLocalTransform();
+        XMMATRIX transform =
+        {
+            (float)fbxTransform.mData[0][0], (float)fbxTransform.mData[0][1], (float)fbxTransform.mData[0][2], (float)fbxTransform.mData[0][3],
+            (float)fbxTransform.mData[1][0], (float)fbxTransform.mData[1][1], (float)fbxTransform.mData[1][2], (float)fbxTransform.mData[1][3],
+            (float)fbxTransform.mData[2][0], (float)fbxTransform.mData[2][1], (float)fbxTransform.mData[2][2], (float)fbxTransform.mData[2][3],
+            (float)fbxTransform.mData[3][0], (float)fbxTransform.mData[3][1], (float)fbxTransform.mData[3][2], (float)fbxTransform.mData[3][3],
+        };
+
+        return transform;
+    }
+}
+
 SceneNode::SceneNode()
-    : ISceneNode("")
+    : ISceneNode()
     , _DXDevice(Core::Device::GetDXDevice())
     , _mesh(nullptr)
+    , _texture(nullptr)
     , _vertexBuffer(nullptr)
     , _indexBuffer(nullptr)
     , _modelMatrix(nullptr)
@@ -28,10 +44,11 @@ SceneNode::SceneNode()
 {
 }
 
-SceneNode::SceneNode(FbxNode* fbxNode, ComPtr<ID3D12GraphicsCommandList> commandList, SceneNode* parent)
-    : ISceneNode(fbxNode->GetName(), parent)
+SceneNode::SceneNode(FbxNode* fbxNode, ComPtr<ID3D12GraphicsCommandList> commandList, Scene* scene, SceneNode* parent)
+    : ISceneNode(fbxNode->GetName(), scene, parent)
     , _DXDevice(Core::Device::GetDXDevice())
     , _mesh(nullptr)
+    , _texture(nullptr)
     , _vertexBuffer(nullptr)
     , _indexBuffer(nullptr)
     , _modelMatrix(nullptr)
@@ -47,14 +64,7 @@ SceneNode::SceneNode(FbxNode* fbxNode, ComPtr<ID3D12GraphicsCommandList> command
 
     // Read transform
     {
-        FbxAMatrix transform = fbxNode->EvaluateLocalTransform();
-        _transform = 
-        { 
-            (float)transform.mData[0][0], (float)transform.mData[0][1], (float)transform.mData[0][2], (float)transform.mData[0][3],
-            (float)transform.mData[1][0], (float)transform.mData[1][1], (float)transform.mData[1][2], (float)transform.mData[1][3],
-            (float)transform.mData[2][0], (float)transform.mData[2][1], (float)transform.mData[2][2], (float)transform.mData[2][3],
-            (float)transform.mData[3][0], (float)transform.mData[3][1], (float)transform.mData[3][2], (float)transform.mData[3][3],
-        };
+        _transform = GetNodeLocalTransform(fbxNode);
 
         EResourceType SRVType = EResourceType::Dynamic | EResourceType::Buffer;
 
@@ -107,10 +117,35 @@ SceneNode::SceneNode(FbxNode* fbxNode, ComPtr<ID3D12GraphicsCommandList> command
         }
     }
 
+    // Setup texture
+    {
+        std::string texName;
+        int materialCount = fbxNode->GetSrcObjectCount<FbxSurfaceMaterial>();
+        if (materialCount > 0)
+        {
+            FbxSurfaceMaterial* material = (FbxSurfaceMaterial*)fbxNode->GetSrcObject<FbxSurfaceMaterial>(0);
+            if (material)
+            {
+                FbxProperty prop = material->FindProperty(FbxSurfaceMaterial::sDiffuse);
+
+                // Check if it's layeredtextures
+                int layeredTextureCount = prop.GetSrcObjectCount<FbxFileTexture>();
+                if (layeredTextureCount > 0)
+                {
+                    FbxFileTexture* texture = prop.GetSrcObject<FbxFileTexture>(0);
+                    texName = (const char*)(FbxPathUtils::GetFileName(texture->GetFileName()));
+                }
+            }
+        }
+
+        if (!texName.empty())
+            _texture = Texture::LoadFromFile(texName);
+    }
+
     // Setup child nodes
     for (int childIndex = 0; childIndex < fbxNode->GetChildCount(); ++childIndex)
     {
-        auto childNode = std::make_shared<SceneNode>(fbxNode->GetChild(childIndex), commandList, this);
+        auto childNode = std::make_shared<SceneNode>(fbxNode->GetChild(childIndex), commandList, scene, this);
         _childNodes.push_back(childNode);
     }
 }
@@ -119,17 +154,10 @@ SceneNode::~SceneNode()
 {
     _DXDevice = nullptr;
 
-    _mesh = nullptr;
-    _vertexBuffer = nullptr;
-    _indexBuffer = nullptr;
-
-    _modelMatrix = nullptr;
-
-    _AABBVertexBuffer = nullptr;
-    _AABBIndexBuffer = nullptr;
-
     for (ID3D12Resource* intermediate : intermediates)
     {
+        if (intermediate)
+            delete intermediate;
         intermediate = nullptr;
     }
 }
