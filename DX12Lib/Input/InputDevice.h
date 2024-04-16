@@ -4,6 +4,8 @@
 
 #include <dinput.h>
 
+class MouseButtonEvent;
+
 namespace Core
 {
     namespace Events
@@ -31,12 +33,17 @@ namespace Core
             void _NotifyKeyPressed(DIKeyCode keyCode);
             void _NotifyKeyReleased(DIKeyCode keyCode);
 
+            void _NotifyMouseButtonPressed();
+            void _NotifyMouseButtonReleased();
+            void _NotifyMouseMoved(int relativeX, int relativeY);
+            void _NotifyMouseScrolled(int relativeZ);
+
             LPDIRECTINPUT8 _directInput;
             LPDIRECTINPUTDEVICE8 _keyboardDevice;
             LPDIRECTINPUTDEVICE8 _mouseDevice;
 
-            LPDIMOUSESTATE2 _prevMouseState;
-            LPDIMOUSESTATE2 _currentMouseState;
+            DIMOUSESTATE _prevMouseState;
+            DIMOUSESTATE _currentMouseState;
 
             BYTE _prevKeyboardState[256];
             BYTE _currentKeyboardState[256];

@@ -10,31 +10,61 @@ namespace Core
         {
             // Poll keyboard state
             {
-                _keyboardDevice->Poll();
                 for (int i = 0; i < 256; ++i)
                 {
                     _prevKeyboardState[i] = _currentKeyboardState[i];
                 }
                 _keyboardDevice->GetDeviceState(sizeof(_currentKeyboardState), _currentKeyboardState);
 
+                bool keyPressed = false;
+                bool keyReleased = false;
                 for (int i = 0; i < 256; ++i)
                 {
-                    if (_currentKeyboardState[i] || (_prevKeyboardState[i] != _currentKeyboardState[i]))
+                    keyPressed = _currentKeyboardState[i] || (_prevKeyboardState[i] != _currentKeyboardState[i]);
+                    keyReleased = !_currentKeyboardState[i] && (_prevKeyboardState[i] != _currentKeyboardState[i]);
+
+                    if (keyPressed)
                     {
-                        _NotifyKeyPressed((DIKeyCode)(i));
+                        _NotifyKeyPressed((DIKeyCode)i);
                     }
-                    else if (!_currentKeyboardState[i] && (_prevKeyboardState[i] != _currentKeyboardState[i]))
+                    else if (keyReleased)
                     {
-                        _NotifyKeyReleased((DIKeyCode)_currentKeyboardState[i]);
+                        _NotifyKeyReleased((DIKeyCode)i);
                     }
                 }
             }
 
             // Poll mouse state
             {
-                _mouseDevice->Poll();
                 _prevMouseState = _currentMouseState;
-                _mouseDevice->GetDeviceState(sizeof(_currentMouseState), _currentMouseState);
+                HRESULT ok = _mouseDevice->GetDeviceState(sizeof(_currentMouseState), &_currentMouseState);
+
+                bool LMBPressed = _currentMouseState.rgbButtons[0] && (_prevMouseState.rgbButtons[0] != _currentMouseState.rgbButtons[0]);
+                bool LMBReleased = !_currentMouseState.rgbButtons[0] && (_prevMouseState.rgbButtons[0] != _currentMouseState.rgbButtons[0]);
+                bool RMBPressed = _currentMouseState.rgbButtons[1] && (_prevMouseState.rgbButtons[1] != _currentMouseState.rgbButtons[1]);
+                bool RMBReleased = !_currentMouseState.rgbButtons[1] && (_prevMouseState.rgbButtons[1] != _currentMouseState.rgbButtons[1]);
+                bool MMBPressed = _currentMouseState.rgbButtons[2] && (_prevMouseState.rgbButtons[2] != _currentMouseState.rgbButtons[2]);
+                bool MMBReleased = !_currentMouseState.rgbButtons[2] && (_prevMouseState.rgbButtons[2] != _currentMouseState.rgbButtons[2]);
+                int x = _currentMouseState.lX;
+                int y = _currentMouseState.lY;
+                int z = _currentMouseState.lZ;
+
+                if (LMBPressed || RMBPressed || MMBPressed)
+                {
+                    _NotifyMouseButtonPressed();
+                }
+                else if (LMBReleased || RMBReleased || MMBReleased)
+                {
+                    _NotifyMouseButtonReleased();
+                }
+                else if ((x != 0) || (y != 0))
+                {
+                    _NotifyMouseMoved(x, y);
+                }
+                else if (z != 0)
+                {
+                    _NotifyMouseScrolled(z);
+                }
             }
         }
 
@@ -107,7 +137,7 @@ namespace Core
                 Logger::Log(LogType::Error, "Failed to create mouse input device device");
             }
 
-            _mouseDevice->SetDataFormat(&c_dfDIMouse2);
+            _mouseDevice->SetDataFormat(&c_dfDIMouse);
             _mouseDevice->SetCooperativeLevel(NULL, DISCL_FOREGROUND | DISCL_EXCLUSIVE);
             _mouseDevice->Acquire();
         }
@@ -127,6 +157,46 @@ namespace Core
             for (IWindowEventListener* listener : _inputListeners)
             {
                 listener->OnKeyReleased(keyEvent);
+            }
+        }
+
+        void InputDevice::_NotifyMouseButtonPressed()
+        {
+            MouseButtonEvent mouseButtonEvent(_currentMouseState.rgbButtons[0], _currentMouseState.rgbButtons[2], _currentMouseState.rgbButtons[1], 0, 0);
+            for (IWindowEventListener* listener : _inputListeners)
+            {
+                listener->OnMouseButtonPressed(mouseButtonEvent);
+            }
+        }
+
+        void InputDevice::_NotifyMouseButtonReleased()
+        {
+            MouseButtonEvent mouseButtonEvent(_currentMouseState.rgbButtons[0], _currentMouseState.rgbButtons[2], _currentMouseState.rgbButtons[1], 0, 0);
+            for (IWindowEventListener* listener : _inputListeners)
+            {
+                listener->OnMouseButtonReleased(mouseButtonEvent);
+            }
+        }
+
+        void InputDevice::_NotifyMouseMoved(int relativeX, int relativeY)
+        {
+            MouseMoveEvent mouseMoveEvent;
+            mouseMoveEvent.relativeX = relativeX;
+            mouseMoveEvent.relativeY = relativeY;
+
+            for (IWindowEventListener* listener : _inputListeners)
+            {
+                listener->OnMouseMoved(mouseMoveEvent);
+            }
+        }
+
+        void InputDevice::_NotifyMouseScrolled(int relativeZ)
+        {
+            MouseScrollEvent mouseScrollEvent(relativeZ);
+
+            for (IWindowEventListener* listener : _inputListeners)
+            {
+                listener->OnMouseScroll(mouseScrollEvent);
             }
         }
     } // namespace Input

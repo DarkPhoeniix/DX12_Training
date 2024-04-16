@@ -22,38 +22,6 @@ namespace
     constexpr wchar_t WINDOW_CLASS_NAME[] = L"DX12WindowClass";
 
     static Application* _appInstance;
-
-    //// Convert the message ID into a MouseButton ID
-    //Core::Input::MouseButtonEvent::MouseButton DecodeMouseButton(UINT messageID)
-    //{
-    //    Core::Input::MouseButtonEvent::MouseButton mouseButton = Core::Input::MouseButtonEvent::None;
-    //    switch (messageID)
-    //    {
-    //    case WM_LBUTTONDOWN:
-    //    case WM_LBUTTONUP:
-    //    case WM_LBUTTONDBLCLK:
-    //    {
-    //        mouseButton = Core::Input::MouseButtonEvent::Left;
-    //    }
-    //    break;
-    //    case WM_RBUTTONDOWN:
-    //    case WM_RBUTTONUP:
-    //    case WM_RBUTTONDBLCLK:
-    //    {
-    //        mouseButton = Core::Input::MouseButtonEvent::Right;
-    //    }
-    //    break;
-    //    case WM_MBUTTONDOWN:
-    //    case WM_MBUTTONUP:
-    //    case WM_MBUTTONDBLCLK:
-    //    {
-    //        mouseButton = Core::Input::MouseButtonEvent::Middle;
-    //    }
-    //    break;
-    //    }
-
-    //    return mouseButton;
-    //}
 }
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -158,6 +126,11 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
 
         _ExecuteFrameTasks();
         _currentFrame = _currentFrame->Next;
+    }
+
+    for (Frame& frame : _frames)
+    {
+        frame.WaitCPU();
     }
 
     pApp->UnloadContent();

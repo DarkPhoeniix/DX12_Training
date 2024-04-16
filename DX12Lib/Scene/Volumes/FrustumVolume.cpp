@@ -8,12 +8,12 @@ using namespace DirectX;
 
 namespace
 {
-    bool intersectWithPlane(XMVECTOR plane, AABBVolume aabb)
+    bool IntersectWithPlane(const XMVECTOR& plane, const AABBVolume& aabb)
     {
         bool result = true;
 
-        XMVECTOR aabbCenter = (aabb.max + aabb.min) / 2.0f;
-        XMVECTOR aabbHalfSize = (aabb.max - aabb.min) / 2.0f;
+        XMVECTOR aabbCenter = (aabb.max + aabb.min) * 0.5f;
+        XMVECTOR aabbHalfSize = (aabb.max - aabb.min) * 0.5f;
 
         float rg = abs(XMVectorGetX(plane) * XMVectorGetX(aabbHalfSize))
                  + abs(XMVectorGetY(plane) * XMVectorGetY(aabbHalfSize))
@@ -28,62 +28,62 @@ namespace
     }
 }
 
-void FrustumVolume::buildFromProjMatrix(const DirectX::XMMATRIX projectionMatrix)
+void FrustumVolume::BuildFromProjMatrix(const DirectX::XMMATRIX projectionMatrix)
 {
     // Calculate left plane of frustum.
-    leftPlane = XMVectorSet(projectionMatrix.r[0].m128_f32[3] + projectionMatrix.r[0].m128_f32[0],
+    planes[0] = XMVectorSet(projectionMatrix.r[0].m128_f32[3] + projectionMatrix.r[0].m128_f32[0],
                             projectionMatrix.r[1].m128_f32[3] + projectionMatrix.r[1].m128_f32[0],
                             projectionMatrix.r[2].m128_f32[3] + projectionMatrix.r[2].m128_f32[0],
                             projectionMatrix.r[3].m128_f32[3] + projectionMatrix.r[3].m128_f32[0]);
-    leftPlane = XMPlaneNormalize(leftPlane);
-    planes.push_back(&leftPlane);
+    planes[0] = XMPlaneNormalize(planes[0]);
+    leftPlane = &planes[0];
 
     // Calculate right plane of frustum.
-    rightPlane = XMVectorSet(projectionMatrix.r[0].m128_f32[3] - projectionMatrix.r[0].m128_f32[0],
-                             projectionMatrix.r[1].m128_f32[3] - projectionMatrix.r[1].m128_f32[0],
-                             projectionMatrix.r[2].m128_f32[3] - projectionMatrix.r[2].m128_f32[0],
-                             projectionMatrix.r[3].m128_f32[3] - projectionMatrix.r[3].m128_f32[0]);
-    rightPlane = XMPlaneNormalize(rightPlane);
-    planes.push_back(&rightPlane);
+    planes[1] = XMVectorSet(projectionMatrix.r[0].m128_f32[3] - projectionMatrix.r[0].m128_f32[0],
+                            projectionMatrix.r[1].m128_f32[3] - projectionMatrix.r[1].m128_f32[0],
+                            projectionMatrix.r[2].m128_f32[3] - projectionMatrix.r[2].m128_f32[0],
+                            projectionMatrix.r[3].m128_f32[3] - projectionMatrix.r[3].m128_f32[0]);
+    planes[1] = XMPlaneNormalize(planes[1]);
+    rightPlane = &planes[1];
 
     // Calculate bottom plane of frustum.
-    bottomPlane = XMVectorSet(projectionMatrix.r[0].m128_f32[3] + projectionMatrix.r[0].m128_f32[1],
-                              projectionMatrix.r[1].m128_f32[3] + projectionMatrix.r[1].m128_f32[1],
-                              projectionMatrix.r[2].m128_f32[3] + projectionMatrix.r[2].m128_f32[1],
-                              projectionMatrix.r[3].m128_f32[3] + projectionMatrix.r[3].m128_f32[1]);
-    bottomPlane = XMPlaneNormalize(bottomPlane);
-    planes.push_back(&bottomPlane);
+    planes[2] = XMVectorSet(projectionMatrix.r[0].m128_f32[3] + projectionMatrix.r[0].m128_f32[1],
+                            projectionMatrix.r[1].m128_f32[3] + projectionMatrix.r[1].m128_f32[1],
+                            projectionMatrix.r[2].m128_f32[3] + projectionMatrix.r[2].m128_f32[1],
+                            projectionMatrix.r[3].m128_f32[3] + projectionMatrix.r[3].m128_f32[1]);
+    planes[2] = XMPlaneNormalize(planes[2]);
+    bottomPlane = &planes[2];
 
     // Calculate top plane of frustum.
-    topPlane = XMVectorSet(projectionMatrix.r[0].m128_f32[3] - projectionMatrix.r[0].m128_f32[1],
-                           projectionMatrix.r[1].m128_f32[3] - projectionMatrix.r[1].m128_f32[1],
-                           projectionMatrix.r[2].m128_f32[3] - projectionMatrix.r[2].m128_f32[1],
-                           projectionMatrix.r[3].m128_f32[3] - projectionMatrix.r[3].m128_f32[1]);
-    topPlane = XMPlaneNormalize(topPlane);
-    planes.push_back(&topPlane);
+    planes[3] = XMVectorSet(projectionMatrix.r[0].m128_f32[3] - projectionMatrix.r[0].m128_f32[1],
+                            projectionMatrix.r[1].m128_f32[3] - projectionMatrix.r[1].m128_f32[1],
+                            projectionMatrix.r[2].m128_f32[3] - projectionMatrix.r[2].m128_f32[1],
+                            projectionMatrix.r[3].m128_f32[3] - projectionMatrix.r[3].m128_f32[1]);
+    planes[3] = XMPlaneNormalize(planes[3]);
+    topPlane = &planes[3];
 
     // Calculate near plane of frustum.
-    nearPlane = XMVectorSet(projectionMatrix.r[0].m128_f32[3] + projectionMatrix.r[0].m128_f32[2],
+    planes[4] = XMVectorSet(projectionMatrix.r[0].m128_f32[3] + projectionMatrix.r[0].m128_f32[2],
                             projectionMatrix.r[1].m128_f32[3] + projectionMatrix.r[1].m128_f32[2],
                             projectionMatrix.r[2].m128_f32[3] + projectionMatrix.r[2].m128_f32[2],
                             projectionMatrix.r[3].m128_f32[3] + projectionMatrix.r[3].m128_f32[2]);
-    nearPlane = XMPlaneNormalize(nearPlane);
-    planes.push_back(&nearPlane);
+    planes[4] = XMPlaneNormalize(planes[4]);
+    nearPlane = &planes[4];
 
     // Calculate far plane of frustum.
-    farPlane = XMVectorSet(projectionMatrix.r[0].m128_f32[3] - projectionMatrix.r[0].m128_f32[2],
-                           projectionMatrix.r[1].m128_f32[3] - projectionMatrix.r[1].m128_f32[2],
-                           projectionMatrix.r[2].m128_f32[3] - projectionMatrix.r[2].m128_f32[2],
-                           projectionMatrix.r[3].m128_f32[3] - projectionMatrix.r[3].m128_f32[2]);
-    farPlane = XMPlaneNormalize(farPlane);
-    planes.push_back(&farPlane);
+    planes[5] = XMVectorSet(projectionMatrix.r[0].m128_f32[3] - projectionMatrix.r[0].m128_f32[2],
+                            projectionMatrix.r[1].m128_f32[3] - projectionMatrix.r[1].m128_f32[2],
+                            projectionMatrix.r[2].m128_f32[3] - projectionMatrix.r[2].m128_f32[2],
+                            projectionMatrix.r[3].m128_f32[3] - projectionMatrix.r[3].m128_f32[2]);
+    planes[5] = XMPlaneNormalize(planes[5]);
+    farPlane = &planes[5];
 }
 
-bool intersect(const FrustumVolume& frustum, const AABBVolume& aabb)
+bool Intersect(const FrustumVolume& frustum, const AABBVolume& aabb)
 {
-    for (XMVECTOR* plane : frustum.planes)
+    for (const XMVECTOR& plane : frustum.planes)
     {
-        if (!intersectWithPlane(*plane, aabb))
+        if (!IntersectWithPlane(plane, aabb))
         {
             return false;
         }

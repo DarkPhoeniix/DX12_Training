@@ -29,6 +29,7 @@ DXRenderer::DXRenderer(HWND windowHandle)
     , _contentLoaded(false)
     , _ambient(nullptr)
     , _DXDevice(Device::GetDXDevice())
+    , _isCameraMoving(false)
 {   }
 
 DXRenderer::~DXRenderer()
@@ -276,24 +277,12 @@ void DXRenderer::OnKeyPressed(Events::KeyEvent& e)
     }
     _camera.Update(dir);
 
-    //switch (e.key)
-    //{
-    //case KeyCode::Escape:
-    //    //Application::Get().Quit(0);
-    //    break;
-    //case KeyCode::Enter:        // TODO: looks weird
-    //    if (e.alt)
-    //    {
-    //case KeyCode::F11:
-    //    //_window->toggleFullscreen();
-    //    break;
-    //    }
-    //case KeyCode::V:
-    //    //_window->toggleVSync();
-    //    break;
-    //case KeyCode::Space:
-    //    break;
-    //}
+    switch (e.keyCode)
+    {
+    case DIKeyCode::DIK_ESCAPE:
+        ::SendMessage(_windowHandle, WM_DESTROY, 0, 0);
+        break;
+    }
 }
 
 void DXRenderer::OnMouseScroll(Events::MouseScrollEvent& e)
@@ -315,12 +304,12 @@ void DXRenderer::OnMouseMoved(Events::MouseMoveEvent& e)
 
 void DXRenderer::OnMouseButtonPressed(Events::MouseButtonEvent& e)
 {
-    if (e.button == Events::MouseButtonEvent::MouseButton::Right)
+    if (e.rightButton)
         _isCameraMoving = true;
 }
 
 void DXRenderer::OnMouseButtonReleased(Events::MouseButtonEvent& e)
 {
-    if (e.button == Events::MouseButtonEvent::MouseButton::Right)
+    if (!e.rightButton)
         _isCameraMoving = false;
 }

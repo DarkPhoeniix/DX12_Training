@@ -218,5 +218,5 @@ void Camera::_buildProjection()
 
 void Camera::_updateFrustum()
 {
-	_frustum.buildFromProjMatrix(_view * _projection);
+	_frustum.BuildFromProjMatrix(_view * _projection);
 }

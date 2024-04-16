@@ -249,7 +249,7 @@ void SceneNode::_DrawCurrentNode(ComPtr<ID3D12GraphicsCommandList> commandList, 
         return;
     }
 
-    if (!intersect(frustum, _AABB))
+    if (!Intersect(frustum, _AABB))
     {
         return;
     }
