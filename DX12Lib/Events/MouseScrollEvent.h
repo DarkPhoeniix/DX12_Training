@@ -15,5 +15,5 @@ namespace Core
 
             float scrollDelta;
         };
-    } // namespace Input
+    } // namespace Events
 } // namespace Core

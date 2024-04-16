@@ -14,7 +14,7 @@ namespace Core
 
             Logger::Log(LogType::Info, "Enabled DX Debug Layer");
         }
-    }
+    } // namespace
 
     Device* Device::_instance = nullptr;
 
@@ -33,7 +33,9 @@ namespace Core
     void Device::Destroy()
     {
         if (_instance)
+        {
             delete _instance;
+        }
 
         _instance = nullptr;
     }

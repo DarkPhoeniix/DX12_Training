@@ -17,5 +17,5 @@ namespace Core
             int width;      // The new width of the window
             int height;     // The new height of the window
         };
-    } // namespace Input
+    } // namespace Events
 } // namespace Core

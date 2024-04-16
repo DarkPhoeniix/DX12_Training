@@ -24,5 +24,5 @@ namespace Core
             int x;                  // The X-position of the cursor relative to the upper-left corner of the client area.
             int y;                  // The Y-position of the cursor relative to the upper-left corner of the client area.
         };
-    } // namespace Input
+    } // namespace Events
 } // namespace Core

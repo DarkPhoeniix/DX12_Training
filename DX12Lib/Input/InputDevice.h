@@ -4,8 +4,6 @@
 
 #include <dinput.h>
 
-class MouseButtonEvent;
-
 namespace Core
 {
     namespace Events
@@ -50,5 +48,5 @@ namespace Core
 
             std::vector<IWindowEventListener*> _inputListeners;
         };
-    } // namespace Input
+    } // namespace Events
 } // namespace Core

@@ -19,5 +19,5 @@ namespace Core
             double totalTime;
             unsigned int frameIndex;
         };
-    } // namespace Input
+    } // namespace Events
 } // namespace Core

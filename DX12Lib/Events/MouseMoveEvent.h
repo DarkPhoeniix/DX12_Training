@@ -28,5 +28,5 @@ namespace Core
             int relativeX;           // How far the mouse moved since the last event.
             int relativeY;           // How far the mouse moved since the last event.
         };
-    } // namespace Input
+    } // namespace Events
 } // namespace Core

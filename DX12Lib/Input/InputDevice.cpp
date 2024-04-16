@@ -199,5 +199,5 @@ namespace Core
                 listener->OnMouseScroll(mouseScrollEvent);
             }
         }
-    } // namespace Input
+    } // namespace Events
 } // namespace Core

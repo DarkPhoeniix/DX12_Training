@@ -16,5 +16,5 @@ namespace Core
 
             DIKeyCode keyCode;
         };
-    } // namespace Input
+    } // namespace Events
 } // namespace Core

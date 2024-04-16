@@ -10,5 +10,5 @@ namespace Core
             virtual ~IEvent()
             {   }
         };
-    }
-}
+    } // namespace Events
+} // namespace Core

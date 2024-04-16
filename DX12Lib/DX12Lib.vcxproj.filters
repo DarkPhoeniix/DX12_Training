@@ -236,9 +236,6 @@
     <ClInclude Include="Input\InputDevice.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Input\IInputObserver.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Events\IEvent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -263,6 +260,12 @@
     <ClInclude Include="Utility\DirectInputKeyCodes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Utility\Resources.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resource1.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\TrianglePixelShader.hlsl" />
@@ -278,5 +281,21 @@
     <None Include="Resources\TriangleRenderPipeline.raster" />
     <None Include="Resources\TriangleRenderPipeline.tech" />
     <None Include="Resources\AABBRenderPipeline.tech" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resource.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\x64\Debug\dxapp.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icon1.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\dxapp.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

@@ -13,6 +13,7 @@
 #include "Events/UpdateEvent.h"
 #include "Input/InputDevice.h"
 #include "Render/DXRenderer.h"
+#include "Utility/Resources.h"
 #include "Window/Win32Window.h"
 
 using namespace Core;
@@ -171,11 +172,11 @@ void Application::_RegisterWindowClass(HINSTANCE hInstance)
     wndClass.lpfnWndProc = &WindowProc;
     wndClass.hInstance = hInstance;
     wndClass.hCursor = LoadCursor(nullptr, IDC_ARROW);
-    //wndClass.hIcon = LoadIcon(_hInstance, MAKEINTRESOURCE(APP_ICON));
+    wndClass.hIcon = LoadIcon(_hInstance, MAKEINTRESOURCE(IDI_ICON1));
     wndClass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     wndClass.lpszMenuName = nullptr;
     wndClass.lpszClassName = WINDOW_CLASS_NAME;
-    //wndClass.hIconSm = LoadIcon(_hInstance, MAKEINTRESOURCE(APP_ICON));
+    wndClass.hIconSm = LoadIcon(_hInstance, MAKEINTRESOURCE(IDI_ICON1));
 
     if (!RegisterClassExW(&wndClass))
     {
