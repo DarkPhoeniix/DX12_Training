@@ -25,7 +25,8 @@ public:
     virtual void OnMouseMoved(Core::Events::MouseMoveEvent& e) override;
     virtual void OnMouseButtonPressed(Core::Events::MouseButtonEvent& e) override;
     virtual void OnMouseButtonReleased(Core::Events::MouseButtonEvent& e) override;
-    virtual void OnMouseScroll(Core::Events::MouseScrollEvent& e) override;
+    virtual void OnMouseScroll(Core::Events::MouseScrollEvent& e) override {}
+    virtual void OnResize(Core::Events::ResizeEvent& e) override {}
 
 private:
     void transitionResource(ComPtr<ID3D12GraphicsCommandList2> commandList,

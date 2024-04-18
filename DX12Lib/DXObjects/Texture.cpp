@@ -11,6 +11,7 @@ namespace
     const std::string DDS_EXTENSION = ".dds";
     const std::string HDR_EXTENSION = ".hdr";
     const std::string TGA_EXTENSION = ".tga";
+    const std::string ERROR_TEXTURE = "Error.dds";
 }
 
 Texture::Texture()
@@ -28,7 +29,7 @@ Texture::~Texture()
     _descritptorHeap = nullptr;
 }
 
-void Texture::UploadToGPU(ComPtr<ID3D12GraphicsCommandList2> commandList)
+void Texture::UploadToGPU(ComPtr<ID3D12GraphicsCommandList> commandList)
 {
     if (!_descritptorHeap)
     {
@@ -81,12 +82,51 @@ DescriptorHeap* Texture::GetDescriptorHeap() const
     return _descritptorHeap;
 }
 
-std::shared_ptr<Texture> Texture::LoadFromFile(const std::string& filepath)
+std::shared_ptr<Texture> Texture::CreateTexture(ComPtr<ID3D12Device2> DXDevice, const DirectX::XMVECTOR& color)
+{
+    std::shared_ptr<Texture> texture = std::make_shared<Texture>();
+
+    TexMetadata metadata = {};
+    metadata.width = 4;
+    metadata.height = 4;
+    metadata.depth = 1;
+    metadata.arraySize = 1;
+    metadata.mipLevels = 1;
+    metadata.dimension = TEX_DIMENSION_TEXTURE2D;
+    metadata.format = DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;
+
+    Image image;
+    image.width = 4;
+    image.height = 4;
+    image.rowPitch = 16;
+    image.slicePitch = 64;
+    image.format = DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;
+    image.pixels = new uint8_t[4 * 4 * 4];
+    for (int i = 0; i < 64; i += 4)
+    {
+        image.pixels[i]     = XMVectorGetZ(color);
+        image.pixels[i + 1] = XMVectorGetY(color);
+        image.pixels[i + 2] = XMVectorGetX(color);
+        image.pixels[i + 3] = XMVectorGetW(color);
+    }
+
+    ComPtr<ID3D12Resource> res;
+    ::CreateTexture(DXDevice.Get(), metadata, &res);
+    texture->InitFromDXResource(res);
+    texture->_metadata = metadata;
+    texture->_scratchImage.InitializeFromImage(image);
+
+    return texture;
+}
+
+std::shared_ptr<Texture> Texture::LoadFromFile(std::string filepath)
 {
     std::filesystem::path path(filepath);
     if (!std::filesystem::exists(path))
     {
         Logger::Log(LogType::Error, "Texture \"" + filepath + "\" doesn't exist");
+        filepath = std::string(ERROR_TEXTURE);
+        path = filepath;
     }
 
     std::wstring wFilepath(filepath.begin(), filepath.end());
@@ -96,6 +136,7 @@ std::shared_ptr<Texture> Texture::LoadFromFile(const std::string& filepath)
 
     HRESULT hr = S_OK;
     TexMetadata& metadata = texture->_metadata;
+    auto ext = path.extension();
     if (path.extension() == DDS_EXTENSION)
     {
         hr = LoadFromDDSFile(wFilepath.c_str(), DDS_FLAGS_FORCE_RGB, &metadata, texture->_scratchImage);
@@ -146,6 +187,14 @@ std::shared_ptr<Texture> Texture::LoadFromFile(const std::string& filepath)
         Logger::Log(LogType::Error, "Invalid dimension in \"" + filepath + "\" texture");
         return nullptr;
     }
+
+    auto sz = texture->_scratchImage.GetPixelsSize();
+    auto p1 = texture->_scratchImage.GetPixels()[0];
+    auto p2 = texture->_scratchImage.GetPixels()[1];
+    auto p3 = texture->_scratchImage.GetPixels()[2];
+    auto p4 = texture->_scratchImage.GetPixels()[3];
+    auto p5 = texture->_scratchImage.GetPixels()[4];
+    auto p6 = texture->_scratchImage.GetPixels()[5];
 
     texture->_resourceDesc = textureDesc;
 

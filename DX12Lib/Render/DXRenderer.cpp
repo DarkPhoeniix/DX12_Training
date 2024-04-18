@@ -80,7 +80,7 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
         loadTask->SetName("Upload Data");
         auto commandList = loadTask->GetCommandLists().front();
 
-        _scene.LoadScene("bowl.fbx", commandList);
+        _scene.LoadScene("bowl_tex.fbx", commandList);
 
         //DescriptorHeapDescription desc;
         //desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
@@ -260,17 +260,6 @@ void DXRenderer::OnKeyPressed(Events::KeyEvent& e)
         ::SendMessage(_windowHandle, WM_DESTROY, 0, 0);
         break;
     }
-}
-
-void DXRenderer::OnMouseScroll(Events::MouseScrollEvent& e)
-{
-    //_FoV -= e.scrollDelta;
-    //_FoV = clamp(_FoV, 12.0f, 90.0f);
-    //camera.SetFOV(_FoV);
-
-    //char buffer[256];
-    //sprintf_s(buffer, "FoV: %f\n", _FoV);
-    //OutputDebugStringA(buffer);
 }
 
 void DXRenderer::OnMouseMoved(Events::MouseMoveEvent& e)

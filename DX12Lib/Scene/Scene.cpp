@@ -24,7 +24,7 @@ Scene::Scene()
         HeapDescription desc;
         desc.SetHeapType(D3D12_HEAP_TYPE_DEFAULT);
         desc.SetHeapFlags(D3D12_HEAP_FLAG_ALLOW_ALL_BUFFERS_AND_TEXTURES);
-        desc.SetSize(_32MB);
+        desc.SetSize(_256MB);
         desc.SetMemoryPoolPreference(D3D12_MEMORY_POOL_UNKNOWN);
         desc.SetCPUPageProperty(D3D12_CPU_PAGE_PROPERTY_UNKNOWN);
         desc.SetVisibleNodeMask(1);
@@ -56,6 +56,9 @@ Scene::~Scene()
 
 void Scene::Draw(ComPtr<ID3D12GraphicsCommandList> commandList, const FrustumVolume& frustum)
 {
+    ID3D12DescriptorHeap* heaps = { _texturesDescHeap.GetDXDescriptorHeap().Get()};
+    commandList->SetDescriptorHeaps(1, &heaps);
+
     _rootNode->Draw(commandList, frustum);
 }
 
@@ -108,7 +111,7 @@ bool Scene::LoadScene(const std::string& name, ComPtr<ID3D12GraphicsCommandList>
     return lStatus;
 }
 
-void Scene::_UploadTexture(Texture* texture, ComPtr<ID3D12GraphicsCommandList2> commandList)
+void Scene::_UploadTexture(Texture* texture, ComPtr<ID3D12GraphicsCommandList> commandList)
 {
     _texturesHeap.PlaceResource(*texture);
 

@@ -263,7 +263,7 @@
     <ClInclude Include="Utility\Resources.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Resources\resource1.h">
+    <ClInclude Include="resource1.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -283,12 +283,15 @@
     <None Include="Resources\AABBRenderPipeline.tech" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Resources\Resource.rc">
+    <ResourceCompile Include="Resource.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\x64\Debug\dxapp.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icon1.ico">
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="Resources\dxapp.ico">

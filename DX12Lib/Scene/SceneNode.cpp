@@ -24,6 +24,56 @@ namespace
 
         return transform;
     }
+
+    std::string GetDiffuseTextureName(FbxNode* fbxNode)
+    {
+        std::string name;
+
+        if (FbxSurfaceMaterial* material = fbxNode->GetMaterial(0))
+        {
+            FbxProperty prop = material->FindProperty(FbxSurfaceMaterial::sDiffuse);
+            if (prop.GetSrcObjectCount<FbxFileTexture>() > 0)
+            {
+                FbxFileTexture* texture = prop.GetSrcObject<FbxFileTexture>(0);
+                if (texture)
+                {
+                    name = (const char*)(FbxPathUtils::GetFileName(texture->GetFileName()));
+                }
+            }
+        }
+
+        return name;
+    }
+
+    // TODO: This doesn't work >=(
+    DirectX::XMVECTOR GetDiffudeColor(FbxNode* fbxNode)
+    {
+        DirectX::XMVECTOR color = { 1.0f, 0.0f, 1.0f, 1.0f };
+
+        if (FbxNodeAttribute* attribute = fbxNode->GetNodeAttribute())
+        {
+            color = {
+                (float)fbxNode->GetNodeAttribute()->Color.Get()[0],
+                (float)fbxNode->GetNodeAttribute()->Color.Get()[1],
+                (float)fbxNode->GetNodeAttribute()->Color.Get()[2],
+                1.0f
+            };
+        }
+        
+        char f;
+        if (FbxSurfacePhong* material = (FbxSurfacePhong*)fbxNode->GetMaterial(0))
+        {
+                color = {
+                    (float)material->sDiffuse[0],
+                    (float)material->sDiffuse[1],
+                    (float)material->sDiffuse[2],
+                    1.0f
+                };
+               f= *material->sDiffuseFactor;
+        }
+
+        return color;
+    }
 }
 
 SceneNode::SceneNode()
@@ -118,28 +168,14 @@ SceneNode::SceneNode(FbxNode* fbxNode, ComPtr<ID3D12GraphicsCommandList> command
     }
 
     // Setup texture
+    if (_mesh)
     {
-        std::string texName;
-        int materialCount = fbxNode->GetSrcObjectCount<FbxSurfaceMaterial>();
-        if (materialCount > 0)
+        std::string textureName = GetDiffuseTextureName(fbxNode);
+        if (_texture = Texture::LoadFromFile(textureName))
         {
-            FbxSurfaceMaterial* material = (FbxSurfaceMaterial*)fbxNode->GetSrcObject<FbxSurfaceMaterial>(0);
-            if (material)
-            {
-                FbxProperty prop = material->FindProperty(FbxSurfaceMaterial::sDiffuse);
-
-                // Check if it's layeredtextures
-                int layeredTextureCount = prop.GetSrcObjectCount<FbxFileTexture>();
-                if (layeredTextureCount > 0)
-                {
-                    FbxFileTexture* texture = prop.GetSrcObject<FbxFileTexture>(0);
-                    texName = (const char*)(FbxPathUtils::GetFileName(texture->GetFileName()));
-                }
-            }
+            _texture->UploadToGPU(commandList);
+            _scene->_UploadTexture(_texture.get(), commandList);
         }
-
-        if (!texName.empty())
-            _texture = Texture::LoadFromFile(texName);
     }
 
     // Setup child nodes
@@ -255,6 +291,9 @@ void SceneNode::_DrawCurrentNode(ComPtr<ID3D12GraphicsCommandList> commandList, 
     {
         return;
     }
+
+    if (_texture)
+        commandList->SetGraphicsRootDescriptorTable(3, _scene->_texturesDescHeap.GetResourceGPUHandle(_texture.get()));
 
     XMMATRIX* modelMatrixData = (XMMATRIX*)_modelMatrix->Map();
     *modelMatrixData = GetGlobalTransform();

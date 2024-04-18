@@ -35,6 +35,8 @@ void DescriptorHeap::Create(const std::string& name)
     std::wstring tmp(_name.begin(), _name.end());
     _descriptorHeap->SetName(tmp.c_str());
 
+    _heapIncrementSize = _DXDevice->GetDescriptorHandleIncrementSize(_descriptorHeapDescription.GetType());
+
     for (UINT i = 0; i < _descriptorHeapDescription.GetNumDescriptors(); ++i)
     {
         _resourceIndex[i] = nullptr;
@@ -48,6 +50,7 @@ void DescriptorHeap::PlaceResource(Resource* resource)
         if (!res)
         {
             _resourceIndex[index] = resource;
+            return;
         }
     }
 
