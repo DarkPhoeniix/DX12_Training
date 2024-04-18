@@ -190,10 +190,8 @@ SceneNode::~SceneNode()
 {
     _DXDevice = nullptr;
 
-    for (ID3D12Resource* intermediate : intermediates)
+    for (ComPtr<ID3D12Resource> intermediate : intermediates)
     {
-        if (intermediate)
-            delete intermediate;
         intermediate = nullptr;
     }
 }
@@ -256,7 +254,7 @@ void SceneNode::_UploadData(ComPtr<ID3D12GraphicsCommandList> commandList,
     CD3DX12_HEAP_PROPERTIES heapTypeUpload(D3D12_HEAP_TYPE_UPLOAD);
     CD3DX12_RESOURCE_DESC buffer = CD3DX12_RESOURCE_DESC::Buffer(bufferSize, flags);
 
-    ID3D12Resource* intermediateResource;
+    ComPtr<ID3D12Resource> intermediateResource;
 
     if (bufferData)
     {
@@ -275,7 +273,7 @@ void SceneNode::_UploadData(ComPtr<ID3D12GraphicsCommandList> commandList,
         subresourceData.SlicePitch = subresourceData.RowPitch;
 
         UpdateSubresources(commandList.Get(),
-            *destinationResource, intermediateResource,
+            *destinationResource, intermediateResource.Get(),
             0, 0, 1, &subresourceData);
     }
 }
@@ -293,7 +291,9 @@ void SceneNode::_DrawCurrentNode(ComPtr<ID3D12GraphicsCommandList> commandList, 
     }
 
     if (_texture)
+    {
         commandList->SetGraphicsRootDescriptorTable(3, _scene->_texturesDescHeap.GetResourceGPUHandle(_texture.get()));
+    }
 
     XMMATRIX* modelMatrixData = (XMMATRIX*)_modelMatrix->Map();
     *modelMatrixData = GetGlobalTransform();

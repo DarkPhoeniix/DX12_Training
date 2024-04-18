@@ -51,6 +51,6 @@ private:
     D3D12_VERTEX_BUFFER_VIEW _AABBVBO;
     D3D12_INDEX_BUFFER_VIEW _AABBIBO;
     
-    std::vector<ID3D12Resource*> intermediates;
+    std::vector<ComPtr<ID3D12Resource>> intermediates;
 };
 

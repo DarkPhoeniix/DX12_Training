@@ -41,7 +41,9 @@ XMMATRIX ISceneNode::GetGlobalTransform() const
 {
     XMMATRIX globalTransform = _transform;
     if (_parent)
+    {
         globalTransform *= _parent->GetLocalTransform();
+    }
 
     return globalTransform;
 }
