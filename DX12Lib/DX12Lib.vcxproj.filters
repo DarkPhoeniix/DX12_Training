@@ -108,7 +108,7 @@
     <ClCompile Include="Window\Win32Window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DXObjects\CommandList.cpp">
+    <ClCompile Include="DXObjects\GraphicsCommandList.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Scene\Viewport.cpp">
@@ -245,7 +245,7 @@
     <ClInclude Include="Window\IWindowEventListener.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="DXObjects\CommandList.h">
+    <ClInclude Include="DXObjects\GraphicsCommandList.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Scene\Viewport.h">

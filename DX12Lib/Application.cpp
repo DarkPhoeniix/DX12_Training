@@ -76,8 +76,8 @@ void Application::Init(HINSTANCE hInstance)
 int Application::Run(std::shared_ptr<DXRenderer> pApp)
 {
     _swapChain.Init(_win32Window);
-    _allocs.Init(_DXDevice);
-    _fencePool.Init(_DXDevice);
+    _allocs.Init();
+    _fencePool.Init();
 
     for (int i = 0; i < 3; ++i)
     {
@@ -85,11 +85,6 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
         frame.Index = i;
         frame.Next = &_frames[(i + 1) % 3];
         frame.Prev = &_frames[(i + 3 - 1) % 3];
-
-        frame.SetDXDevice(_DXDevice);
-        frame.SetDirectQueue(Core::Device::GetStreamQueue());
-        frame.SetComputeQueue(Core::Device::GetComputeQueue());
-        frame.SetCopyQueue(Core::Device::GetCopyQueue());
 
         frame.SetSyncFrame(nullptr);
         frame.SetAllocatorPool(&_allocs);
@@ -220,7 +215,7 @@ void Application::_ExecuteFrameTasks()
         frameCommandLists.reserve(task.GetCommandLists().size());
         for (auto cl : task.GetCommandLists())
         {
-            frameCommandLists.push_back(cl.Get());
+            frameCommandLists.push_back(cl->GetDXCommandList().Get());
         }
 
         task.GetCommandQueue()->ExecuteCommandLists(frameCommandLists.size(), frameCommandLists.data());

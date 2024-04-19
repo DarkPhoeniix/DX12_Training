@@ -2,20 +2,25 @@
 
 #include "DXObjects/Fence.h"
 
+namespace Core
+{
+    class GraphicsCommandList;
+} // namespace Core
+
 class TaskGPU
 {
 public:
     TaskGPU();
     ~TaskGPU();
 
-    void AddCommandList(ComPtr<ID3D12GraphicsCommandList2>);
-    std::vector<ComPtr<ID3D12GraphicsCommandList2>> GetCommandLists() const;
+    void AddCommandList(Core::GraphicsCommandList* commandList);
+    std::vector<Core::GraphicsCommandList*> GetCommandLists() const;
 
     void SetCommandQueue(ComPtr<ID3D12CommandQueue> commandQueue);
     ComPtr<ID3D12CommandQueue> GetCommandQueue() const;
 
-    void SetFence(Fence* fence);
-    Fence* GetFence() const;
+    void SetFence(Core::Fence* fence);
+    Core::Fence* GetFence() const;
     ID3D12Fence* GetDXFence() const;
     UINT64 GetFenceValue() const;
 
@@ -26,10 +31,10 @@ public:
     const std::string& GetName() const;
 
 private:
-    std::vector<ComPtr<ID3D12GraphicsCommandList2>> _commandLists;
+    std::vector<Core::GraphicsCommandList*> _commandLists;
     ComPtr<ID3D12CommandQueue> _commandQueue;
 
-    Fence* _fence = nullptr;
+    Core::Fence* _fence = nullptr;
     std::vector<std::string> _dependencies;
 
     std::string _name;

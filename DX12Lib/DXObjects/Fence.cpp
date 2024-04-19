@@ -2,59 +2,64 @@
 
 #include "Fence.h"
 
-Fence::Fence()
-    : _fence(nullptr)
-    , _fenceValue(0)
-    , _DXDevice(Core::Device::GetDXDevice())
+namespace Core
 {
-}
-
-Fence::~Fence()
-{
-    _fence = nullptr;
-    _DXDevice = nullptr;
-}
-
-void Fence::Init()
-{
-    _fenceValue = 0;
-
-    _DXDevice->CreateFence(_fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&_fence));
-    _eventOnCompletion = ::CreateEvent(NULL, FALSE, FALSE, NULL);
-}
-
-void Fence::Wait()
-{
-    if (_fence->GetCompletedValue() >= _fenceValue)
+    Fence::Fence()
+        : _fence(nullptr)
+        , _fenceValue(0)
+        , _DXDevice(Core::Device::GetDXDevice())
+        , _isFree(true)
+        , _eventOnCompletion{}
     {
-        return;
     }
 
-    this->_fence->SetEventOnCompletion(_fenceValue, _eventOnCompletion);
-    ::WaitForSingleObject(_eventOnCompletion, DWORD_MAX);
-}
+    Fence::~Fence()
+    {
+        _fence = nullptr;
+        _DXDevice = nullptr;
+    }
 
-ComPtr<ID3D12Fence> Fence::GetFence()
-{
-    return _fence;
-}
+    void Fence::Init()
+    {
+        _fenceValue = 0;
 
-void Fence::SetValue(UINT64 fenceValue)
-{
-    _fenceValue = fenceValue;
-}
+        _DXDevice->CreateFence(_fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&_fence));
+        _eventOnCompletion = ::CreateEvent(NULL, FALSE, FALSE, NULL);
+    }
 
-UINT64 Fence::GetValue() const
-{
-    return _fenceValue;
-}
+    void Fence::Wait()
+    {
+        if (_fence->GetCompletedValue() >= _fenceValue)
+        {
+            return;
+        }
 
-void Fence::SetFree(bool isFree)
-{
-    _isFree = isFree;
-}
+        this->_fence->SetEventOnCompletion(_fenceValue, _eventOnCompletion);
+        ::WaitForSingleObject(_eventOnCompletion, DWORD_MAX);
+    }
 
-bool Fence::IsFree() const
-{
-    return _isFree;
-}
+    ComPtr<ID3D12Fence> Fence::GetFence()
+    {
+        return _fence;
+    }
+
+    void Fence::SetValue(UINT64 fenceValue)
+    {
+        _fenceValue = fenceValue;
+    }
+
+    UINT64 Fence::GetValue() const
+    {
+        return _fenceValue;
+    }
+
+    void Fence::SetFree(bool isFree)
+    {
+        _isFree = isFree;
+    }
+
+    bool Fence::IsFree() const
+    {
+        return _isFree;
+    }
+} // namespace Core

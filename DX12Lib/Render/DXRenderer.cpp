@@ -2,6 +2,7 @@
 
 #include "DXRenderer.h"
 
+#include "DXObjects/GraphicsCommandList.h"
 #include "Events/MouseScrollEvent.h"
 #include "Events/MouseButtonEvent.h"
 #include "Events/MouseMoveEvent.h"
@@ -78,21 +79,9 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
     // Load scene
     {
         loadTask->SetName("Upload Data");
-        auto commandList = loadTask->GetCommandLists().front();
+        Core::GraphicsCommandList* commandList = loadTask->GetCommandLists().front();
 
-        _scene.LoadScene("bowl_tex.fbx", commandList);
-
-        //DescriptorHeapDescription desc;
-        //desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
-        //desc.SetNumDescriptors(1);
-        //desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-        //desc.SetNodeMask(1);
-        //_texDescHeap.SetDescription(desc);
-        //_texDescHeap.Create("Textures descriptor heap");
-
-        //_tex = Texture::LoadFromFile("dog_tex.dds");
-        //_tex->SetDescriptorHeap(&_texDescHeap);
-        //_tex->UploadToGPU(commandList);
+        _scene.LoadScene("bowl_tex.fbx", *commandList);
 
         commandList->Close();
 
@@ -100,7 +89,7 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
         comLists.reserve(loadTask->GetCommandLists().size());
         for (auto cl : loadTask->GetCommandLists())
         {
-            comLists.push_back(cl.Get());
+            comLists.push_back(cl->GetDXCommandList().Get());
         }
 
         loadTask->GetCommandQueue()->ExecuteCommandLists(comLists.size(), comLists.data());
@@ -138,18 +127,6 @@ void DXRenderer::OnUpdate(Events::UpdateEvent& updateEvent)
     }
 }
 
-// Transition a resource
-void DXRenderer::transitionResource(ComPtr<ID3D12GraphicsCommandList2> commandList,
-    ComPtr<ID3D12Resource> resource,
-    D3D12_RESOURCE_STATES beforeState, D3D12_RESOURCE_STATES afterState)
-{
-    CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-        resource.Get(),
-        beforeState, afterState);
-
-    commandList->ResourceBarrier(1, &barrier);
-}
-
 void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
 {
     frame.WaitCPU();
@@ -163,53 +140,43 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
         task->SetName("clean");
 
-        ComPtr<ID3D12GraphicsCommandList2> commandList = task->GetCommandLists().front();
+        Core::GraphicsCommandList* commandList = task->GetCommandLists().front();
 
-        transitionResource(commandList, frame._targetTexture.GetDXResource(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
+        commandList->TransitionBarrier(frame._targetTexture, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
         FLOAT clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
-        commandList->ClearRenderTargetView(rtv, clearColor, 0, nullptr);
-        commandList->ClearDepthStencilView(dsv, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+        commandList->ClearRTV(rtv, clearColor);
+        commandList->ClearDSV(dsv, D3D12_CLEAR_FLAG_DEPTH);
 
         commandList->Close();
     }
 
     // Execute the TriangleRender shader
     {
-        TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, _pipeline.GetPipelineState());
+        TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, &_pipeline);
         task->SetName("render");
         task->AddDependency("clean");
 
-        ComPtr<ID3D12GraphicsCommandList2> commandList = task->GetCommandLists().front();
+        Core::GraphicsCommandList* commandList = task->GetCommandLists().front();
 
-        commandList->SetPipelineState(_pipeline.GetPipelineState().Get());
-        commandList->SetGraphicsRootSignature(_pipeline.GetRootSignature().Get());
+        commandList->SetPipelineState(_pipeline);
+        commandList->SetGraphicsRootSignature(_pipeline);
 
-        CD3DX12_VIEWPORT viewport = _camera.GetDXViewport();
-        CD3DX12_RECT scissorRect = _camera.GetDXScissorRectangle();
-        commandList->RSSetViewports(1, &viewport);
-        commandList->RSSetScissorRects(1, &scissorRect);
-
-        commandList->OMSetRenderTargets(1, &rtv, FALSE, &dsv);
+        commandList->SetViewport(_camera.GetViewport());
+        commandList->SetRenderTarget(rtv, dsv);
 
         XMMATRIX viewProjMatrix = XMMatrixMultiply(_camera.View(), _camera.Projection());
-        commandList->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &viewProjMatrix, 0);
-        commandList->SetGraphicsRootConstantBufferView(1, _ambient->OffsetGPU(0));
+        commandList->SetConstants(0, sizeof(XMMATRIX) / 4, &viewProjMatrix);
+        commandList->SetCBV(1, _ambient->OffsetGPU(0));
 
-        //ID3D12DescriptorHeap* heaps = { _texDescHeap.GetDXDescriptorHeap().Get()};
-        //commandList->SetDescriptorHeaps(1, &heaps);
+        _scene.Draw(*commandList, _camera.GetViewFrustum());
 
-        //commandList->SetGraphicsRootDescriptorTable(3, _texDescHeap.GetResourceGPUHandle(_tex.get()));
+        commandList->SetPipelineState(_AABBpipeline);
+        commandList->SetGraphicsRootSignature(_AABBpipeline);
+        commandList->SetConstants(1, sizeof(XMMATRIX) / 4, &viewProjMatrix);
 
-        _scene.Draw(commandList, _camera.GetViewFrustum());
-
-        commandList->SetPipelineState(_AABBpipeline.GetPipelineState().Get());
-        commandList->SetGraphicsRootSignature(_AABBpipeline.GetRootSignature().Get());
-
-        commandList->SetGraphicsRoot32BitConstants(1, sizeof(XMMATRIX) / 4, &viewProjMatrix, 0);
-
-        _scene.DrawAABB(commandList);
+        _scene.DrawAABB(*commandList);
 
         commandList->Close();
     }
@@ -219,15 +186,12 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
         task->SetName("present");
         task->AddDependency("render");
+        Core::GraphicsCommandList* commandList = task->GetCommandLists().front();
 
-        ComPtr<ID3D12GraphicsCommandList2> commandList = task->GetCommandLists().front();
-
-        transitionResource(commandList, frame._swapChainTexture.GetDXResource(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_COPY_DEST);
-        transitionResource(commandList, frame._targetTexture.GetDXResource(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_SOURCE);
-
-        commandList->CopyResource(frame._swapChainTexture.GetDXResource().Get(), frame._targetTexture.GetDXResource().Get());
-
-        transitionResource(commandList, frame._swapChainTexture.GetDXResource(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PRESENT);
+        commandList->TransitionBarrier(frame._swapChainTexture, D3D12_RESOURCE_STATE_COPY_DEST);
+        commandList->TransitionBarrier(frame._targetTexture, D3D12_RESOURCE_STATE_COPY_SOURCE);
+        commandList->CopyResource(frame._targetTexture, frame._swapChainTexture);
+        commandList->TransitionBarrier(frame._swapChainTexture, D3D12_RESOURCE_STATE_PRESENT);
 
         commandList->Close();
     }

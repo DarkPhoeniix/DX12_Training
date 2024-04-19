@@ -6,41 +6,43 @@
 #include "Window/Win32Window.h"
 
 class Core::Events::ResizeEvent;
-
-constexpr UINT BACK_BUFFER_COUNT = 3;
-
-class SwapChain : public Core::Events::IWindowEventListener
+namespace Core
 {
-public:
-    SwapChain();
-    ~SwapChain();
+    constexpr UINT BACK_BUFFER_COUNT = 3;
 
-    void Init(std::shared_ptr<Core::Win32Window> window);
+    class SwapChain : public Core::Events::IWindowEventListener
+    {
+    public:
+        SwapChain();
+        ~SwapChain();
 
-    void GetBuffer(unsigned int index, Resource& resource) const;
+        void Init(std::shared_ptr<Core::Win32Window> window);
 
-    void UpdateRenderTargetViews();
-    UINT Present();
+        void GetBuffer(unsigned int index, Resource& resource) const;
 
-    void OnResize(Core::Events::ResizeEvent& e) override;
+        void UpdateRenderTargetViews();
+        UINT Present();
 
-private:
-    ComPtr<IDXGISwapChain4> CreateSwapChain();
-    bool CheckTearingSupport() const;
+        void OnResize(Core::Events::ResizeEvent& e) override;
 
-    ComPtr<ID3D12Device2> _DXDevice;
+    private:
+        ComPtr<IDXGISwapChain4> CreateSwapChain();
+        bool CheckTearingSupport() const;
 
-    ComPtr<IDXGISwapChain4> _dxgiSwapChain;
-    DescriptorHeap _RTVDescriptorHeap;
-    UINT _RTVDescriptorSize;
+        ComPtr<ID3D12Device2> _DXDevice;
 
-    Resource _backBuffers[BACK_BUFFER_COUNT];
-    UINT _currentBackBufferIndex;
+        ComPtr<IDXGISwapChain4> _dxgiSwapChain;
+        DescriptorHeap _RTVDescriptorHeap;
+        UINT _RTVDescriptorSize;
 
-    HWND _windowHandle;
-    int _width;
-    int _height;
+        Resource _backBuffers[BACK_BUFFER_COUNT];
+        UINT _currentBackBufferIndex;
 
-    bool _vSync;
-    bool _tearingSupport;
-};
+        HWND _windowHandle;
+        int _width;
+        int _height;
+
+        bool _vSync;
+        bool _tearingSupport;
+    };
+} // namespace Core

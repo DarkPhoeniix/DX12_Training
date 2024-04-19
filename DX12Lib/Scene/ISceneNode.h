@@ -2,6 +2,10 @@
 
 class FrustumVolume;
 class Scene;
+namespace Core
+{
+    class GraphicsCommandList;
+} // namespace Core
 
 class ISceneNode
 {
@@ -15,8 +19,8 @@ public:
 
     DirectX::XMMATRIX GetGlobalTransform() const;
 
-    virtual void Draw(ComPtr<ID3D12GraphicsCommandList> commandList, const FrustumVolume& frustum) const = 0;
-    virtual void DrawAABB(ComPtr<ID3D12GraphicsCommandList> commandList) const = 0;
+    virtual void Draw(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum) const = 0;
+    virtual void DrawAABB(Core::GraphicsCommandList& commandList) const = 0;
 
 protected:
     friend Scene;

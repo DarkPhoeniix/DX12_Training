@@ -4,7 +4,7 @@
 
 struct AllocatorPool
 {
-    void Init(ComPtr<ID3D12Device2> device);
+    void Init();
 
     Executor* Obtain(D3D12_COMMAND_LIST_TYPE type);
 

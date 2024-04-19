@@ -45,4 +45,4 @@ namespace Core
         bool _vSync;
         bool _fullscreen;
     };
-}
+} // namespace Core

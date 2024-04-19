@@ -4,6 +4,7 @@
 #include "SceneNode.h"
 
 #include "DXObjects/Texture.h"
+#include "DXObjects/GraphicsCommandList.h"
 #include "Scene/Scene.h"
 #include "Volumes/FrustumVolume.h"
 
@@ -94,7 +95,7 @@ SceneNode::SceneNode()
 {
 }
 
-SceneNode::SceneNode(FbxNode* fbxNode, ComPtr<ID3D12GraphicsCommandList> commandList, Scene* scene, SceneNode* parent)
+SceneNode::SceneNode(FbxNode* fbxNode, Core::GraphicsCommandList& commandList, Scene* scene, SceneNode* parent)
     : ISceneNode(fbxNode->GetName(), scene, parent)
     , _DXDevice(Core::Device::GetDXDevice())
     , _mesh(nullptr)
@@ -116,15 +117,15 @@ SceneNode::SceneNode(FbxNode* fbxNode, ComPtr<ID3D12GraphicsCommandList> command
     {
         _transform = GetNodeLocalTransform(fbxNode);
 
-        EResourceType SRVType = EResourceType::Dynamic | EResourceType::Buffer;
+        Core::EResourceType SRVType = Core::EResourceType::Dynamic | Core::EResourceType::Buffer;
 
-        ResourceDescription desc;
+        Core::ResourceDescription desc;
         desc.SetResourceType(SRVType);
         desc.SetSize({ sizeof(XMMATRIX), 1 });
         desc.SetStride(1);
         desc.SetFormat(DXGI_FORMAT::DXGI_FORMAT_UNKNOWN);
 
-        _modelMatrix = std::make_shared<Resource>(desc);
+        _modelMatrix = std::make_shared<Core::Resource>(desc);
         _modelMatrix->CreateCommitedResource(D3D12_RESOURCE_STATE_GENERIC_READ);
         _modelMatrix->SetName(_name + "_ModelMatrix");
     }
@@ -143,7 +144,7 @@ SceneNode::SceneNode(FbxNode* fbxNode, ComPtr<ID3D12GraphicsCommandList> command
             {
                 ComPtr<ID3D12Resource> vertexBuffer;
                 _UploadData(commandList, &vertexBuffer, _mesh->getVertices().size(), sizeof(VertexData), _mesh->getVertices().data());
-                _vertexBuffer = std::make_shared<Resource>();
+                _vertexBuffer = std::make_shared<Core::Resource>();
                 _vertexBuffer->InitFromDXResource(vertexBuffer);
                 _vertexBuffer->SetName(_name + "_VB");
 
@@ -156,7 +157,7 @@ SceneNode::SceneNode(FbxNode* fbxNode, ComPtr<ID3D12GraphicsCommandList> command
             {
                 ComPtr<ID3D12Resource> indexBuffer;
                 _UploadData(commandList, &indexBuffer, _mesh->getIndices().size(), sizeof(UINT), _mesh->getIndices().data());
-                _indexBuffer = std::make_shared<Resource>();
+                _indexBuffer = std::make_shared<Core::Resource>();
                 _indexBuffer->InitFromDXResource(indexBuffer);
                 _indexBuffer->SetName(_name + "_IB");
 
@@ -170,10 +171,11 @@ SceneNode::SceneNode(FbxNode* fbxNode, ComPtr<ID3D12GraphicsCommandList> command
     // Setup texture
     if (_mesh)
     {
+        Core::GraphicsCommandList comList(commandList);
         std::string textureName = GetDiffuseTextureName(fbxNode);
-        if (_texture = Texture::LoadFromFile(textureName))
+        if (_texture = Core::Texture::LoadFromFile(textureName))
         {
-            _texture->UploadToGPU(commandList);
+            _texture->UploadToGPU(comList);
             _scene->_UploadTexture(_texture.get(), commandList);
         }
     }
@@ -196,7 +198,7 @@ SceneNode::~SceneNode()
     }
 }
 
-void SceneNode::Draw(ComPtr<ID3D12GraphicsCommandList> commandList, const FrustumVolume& frustum) const
+void SceneNode::Draw(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum) const
 {
     for (const std::shared_ptr<ISceneNode> node : _childNodes)
     {
@@ -206,7 +208,7 @@ void SceneNode::Draw(ComPtr<ID3D12GraphicsCommandList> commandList, const Frustu
     _DrawCurrentNode(commandList, frustum);
 }
 
-void SceneNode::DrawAABB(ComPtr<ID3D12GraphicsCommandList> commandList) const
+void SceneNode::DrawAABB(Core::GraphicsCommandList& commandList) const
 {
     for (const std::shared_ptr<ISceneNode> node : _childNodes)
     {
@@ -218,12 +220,12 @@ void SceneNode::DrawAABB(ComPtr<ID3D12GraphicsCommandList> commandList) const
         return;
     }
 
-    commandList->IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
+    commandList.SetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
 
-    commandList->SetGraphicsRoot32BitConstants(0, 3, &_AABB.min.m128_f32, 0);
-    commandList->SetGraphicsRoot32BitConstants(0, 3, &_AABB.max.m128_f32, 4);
+    commandList.SetConstants(0, 3, &_AABB.min.m128_f32, 0);
+    commandList.SetConstants(0, 3, &_AABB.max.m128_f32, 4);
 
-    commandList->DrawInstanced(1, 1, 0, 0);
+    commandList.Draw(1);
 }
 
 const AABBVolume& SceneNode::GetAABB() const
@@ -231,7 +233,7 @@ const AABBVolume& SceneNode::GetAABB() const
     return _AABB;
 }
 
-void SceneNode::_UploadData(ComPtr<ID3D12GraphicsCommandList> commandList, 
+void SceneNode::_UploadData(Core::GraphicsCommandList& commandList,
                             ID3D12Resource** destinationResource,
                             size_t numElements, 
                             size_t elementSize, 
@@ -272,13 +274,13 @@ void SceneNode::_UploadData(ComPtr<ID3D12GraphicsCommandList> commandList,
         subresourceData.RowPitch = bufferSize;
         subresourceData.SlicePitch = subresourceData.RowPitch;
 
-        UpdateSubresources(commandList.Get(),
+        UpdateSubresources(commandList.GetDXCommandList().Get(),
             *destinationResource, intermediateResource.Get(),
             0, 0, 1, &subresourceData);
     }
 }
 
-void SceneNode::_DrawCurrentNode(ComPtr<ID3D12GraphicsCommandList> commandList, const FrustumVolume& frustum) const
+void SceneNode::_DrawCurrentNode(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum) const
 {
     if (!_mesh)
     {
@@ -292,16 +294,16 @@ void SceneNode::_DrawCurrentNode(ComPtr<ID3D12GraphicsCommandList> commandList, 
 
     if (_texture)
     {
-        commandList->SetGraphicsRootDescriptorTable(3, _scene->_texturesDescHeap.GetResourceGPUHandle(_texture.get()));
+        commandList.SetDescriptorTable(3, _scene->_texturesDescHeap.GetResourceGPUHandle(_texture.get()));
     }
 
     XMMATRIX* modelMatrixData = (XMMATRIX*)_modelMatrix->Map();
     *modelMatrixData = GetGlobalTransform();
-    commandList->SetGraphicsRootShaderResourceView(2, _modelMatrix->OffsetGPU(0));
+    commandList.SetSRV(2, _modelMatrix->OffsetGPU(0));
 
-    commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    commandList->IASetVertexBuffers(0, 1, &_VBO);
-    commandList->IASetIndexBuffer(&_IBO);
+    commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    commandList.SetVertexBuffer(0, _VBO);
+    commandList.SetIndexBuffer(_IBO);
 
-    commandList->DrawIndexedInstanced(static_cast<UINT>(_mesh->getIndices().size()), 1, 0, 0, 0);
+    commandList.DrawIndexed(_mesh->getIndices().size());
 }

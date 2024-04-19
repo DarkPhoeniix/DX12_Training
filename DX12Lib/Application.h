@@ -39,7 +39,7 @@ private:
 
     ComPtr<ID3D12Device2> _DXDevice;
     std::shared_ptr<Core::Win32Window> _win32Window;
-    SwapChain _swapChain;
+    Core::SwapChain _swapChain;
 
     Frame _frames[3];
     Frame* _currentFrame;

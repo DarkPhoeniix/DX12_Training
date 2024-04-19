@@ -19,23 +19,23 @@ public:
     Scene();
     ~Scene();
 
-    void Draw(ComPtr<ID3D12GraphicsCommandList> commandList, const FrustumVolume& frustum);
-    void DrawAABB(ComPtr<ID3D12GraphicsCommandList> commandList);
+    void Draw(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum);
+    void DrawAABB(Core::GraphicsCommandList& commandList);
 
-    bool LoadScene(const std::string& name, ComPtr<ID3D12GraphicsCommandList> commandList);
+    bool LoadScene(const std::string& name, Core::GraphicsCommandList& commandList);
 
     friend class ISceneNode;
     friend class SceneNode;
 
 private:
-    void _UploadTexture(Texture* texture, ComPtr<ID3D12GraphicsCommandList> commandList);
+    void _UploadTexture(Core::Texture* texture, Core::GraphicsCommandList& commandList);
 
     static FbxManager* _FBXManager;
     FbxScene* _scene;
 
     std::shared_ptr<ISceneNode> _rootNode;
 
-    Heap _texturesHeap;
-    DescriptorHeap _texturesDescHeap;
+    Core::Heap _texturesHeap;
+    Core::DescriptorHeap _texturesDescHeap;
 };
 

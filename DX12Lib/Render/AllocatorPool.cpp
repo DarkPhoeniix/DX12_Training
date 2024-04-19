@@ -2,9 +2,9 @@
 
 #include "AllocatorPool.h"
 
-void AllocatorPool::Init(ComPtr<ID3D12Device2> device)
+void AllocatorPool::Init()
 {
-    _DXDevice = device;
+    _DXDevice = Core::Device::GetDXDevice();
 
     Make(streams, 32, D3D12_COMMAND_LIST_TYPE_DIRECT);
     Make(computes, 32, D3D12_COMMAND_LIST_TYPE_COMPUTE);
@@ -44,7 +44,6 @@ void AllocatorPool::Make(std::vector<Executor>& vecExec, unsigned int size, D3D1
 
     for (auto& exec : vecExec)
     {
-        exec.SetDevice(_DXDevice);
         exec.Allocate(type);
         exec.SetFree(true);
     }
