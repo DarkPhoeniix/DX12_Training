@@ -2,9 +2,7 @@
 
 #include "Scene.h"
 
-#include "DXObjects/Device.h"
-#include "DXObjects/Heap.h"
-#include "DXObjects/DescriptorHeap.h"
+#include "DXObjects/Texture.h"
 #include "Scene/SceneNode.h"
 #include "Scene/Camera.h"
 #include "Volumes/FrustumVolume.h"
@@ -21,6 +19,31 @@ Scene::Scene()
     _FBXManager->SetIOSettings(ios);
 
     _scene = FbxScene::Create(_FBXManager, "");
+    
+    {
+        HeapDescription desc;
+        desc.SetHeapType(D3D12_HEAP_TYPE_DEFAULT);
+        desc.SetHeapFlags(D3D12_HEAP_FLAG_ALLOW_ALL_BUFFERS_AND_TEXTURES);
+        desc.SetSize(_256MB * 4);
+        desc.SetMemoryPoolPreference(D3D12_MEMORY_POOL_UNKNOWN);
+        desc.SetCPUPageProperty(D3D12_CPU_PAGE_PROPERTY_UNKNOWN);
+        desc.SetVisibleNodeMask(1);
+        desc.SetCreationNodeMask(1);
+
+        _texturesHeap.SetDescription(desc);
+        _texturesHeap.Create();
+    }
+
+    {
+        DescriptorHeapDescription desc;
+        desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+        desc.SetNumDescriptors(32);
+        desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
+        desc.SetNodeMask(1);
+
+        _texturesDescHeap.SetDescription(desc);
+        _texturesDescHeap.Create("Textures Descriptor Heap");
+    }
 }
 
 Scene::~Scene()
@@ -33,17 +56,15 @@ Scene::~Scene()
 
 void Scene::Draw(ComPtr<ID3D12GraphicsCommandList> commandList, const FrustumVolume& frustum)
 {
+    ID3D12DescriptorHeap* heaps = { _texturesDescHeap.GetDXDescriptorHeap().Get()};
+    commandList->SetDescriptorHeaps(1, &heaps);
+
     _rootNode->Draw(commandList, frustum);
 }
 
 void Scene::DrawAABB(ComPtr<ID3D12GraphicsCommandList> commandList)
 {
     _rootNode->DrawAABB(commandList);
-}
-
-void Scene::UploadTextures(ComPtr<ID3D12GraphicsCommandList> commandList, Heap& heap, DescriptorHeap& descriptorHeap)
-{
-    _rootNode->UploadTextures(commandList, heap, descriptorHeap);
 }
 
 bool Scene::LoadScene(const std::string& name, ComPtr<ID3D12GraphicsCommandList> commandList)
@@ -82,10 +103,18 @@ bool Scene::LoadScene(const std::string& name, ComPtr<ID3D12GraphicsCommandList>
     // Import the scene
     lStatus = lImporter->Import(_scene);
 
-    _rootNode = std::make_shared<SceneNode>(_scene->GetRootNode(), commandList, Core::Device::GetDXDevice());
+    _rootNode = std::make_shared<SceneNode>(_scene->GetRootNode(), commandList, this);
 
     // Destroy the importer
     lImporter->Destroy();
 
     return lStatus;
+}
+
+void Scene::_UploadTexture(Texture* texture, ComPtr<ID3D12GraphicsCommandList> commandList)
+{
+    _texturesHeap.PlaceResource(*texture);
+
+    texture->SetDescriptorHeap(&_texturesDescHeap);
+    texture->UploadToGPU(commandList);
 }

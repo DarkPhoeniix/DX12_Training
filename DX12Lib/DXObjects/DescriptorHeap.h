@@ -5,8 +5,8 @@
 class DescriptorHeap
 {
 public:
-    DescriptorHeap(ComPtr<ID3D12Device2> device = nullptr);
-    DescriptorHeap(const DescriptorHeapDescription& description, ComPtr<ID3D12Device2> device = nullptr);
+    DescriptorHeap();
+    DescriptorHeap(const DescriptorHeapDescription& description);
     ~DescriptorHeap();
 
     void Create(const std::string& name = "");
@@ -20,9 +20,6 @@ public:
 
     void SetDescription(const DescriptorHeapDescription& description);
     const DescriptorHeapDescription& GetDescription() const;
-
-    void SetDevice(ComPtr<ID3D12Device2> device);
-    ComPtr<ID3D12Device2> GetDevice() const;
 
     ComPtr<ID3D12DescriptorHeap> GetDXDescriptorHeap() const;
 

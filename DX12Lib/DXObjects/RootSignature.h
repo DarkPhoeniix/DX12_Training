@@ -10,7 +10,7 @@ public:
 
     bool IsGraphicsPipeline() const;
 
-    void Parse(ComPtr<ID3D12Device2> device, const std::string& filepath);
+    void Parse(const std::string& filepath);
 
     static D3D12_BLEND_DESC ParseBlendDescription(const std::string& filepath);
     static D3D12_RASTERIZER_DESC ParseRasterizerDescription(const std::string& filepath);

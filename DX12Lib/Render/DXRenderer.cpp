@@ -2,7 +2,6 @@
 
 #include "DXRenderer.h"
 
-#include "DXObjects/Device.h"
 #include "Events/MouseScrollEvent.h"
 #include "Events/MouseButtonEvent.h"
 #include "Events/MouseMoveEvent.h"
@@ -25,21 +24,22 @@ namespace
 }
 
 DXRenderer::DXRenderer(HWND windowHandle)
-    : _windowHandle(windowHandle)
+    : _DXDevice(Device::GetDXDevice())
+    , _windowHandle(windowHandle)
     , _contentLoaded(false)
     , _ambient(nullptr)
-    , _DXDevice(Device::GetDXDevice())
     , _isCameraMoving(false)
 {   }
 
 DXRenderer::~DXRenderer()
 {
+    _DXDevice = nullptr;
 }
 
 bool DXRenderer::LoadContent(TaskGPU* loadTask)
 {
-    _pipeline.Parse(_DXDevice.Get(), "Resources\\TriangleRenderPipeline.tech");
-    _AABBpipeline.Parse(_DXDevice.Get(), "Resources\\AABBRenderPipeline.tech");
+    _pipeline.Parse("Resources\\TriangleRenderPipeline.tech");
+    _AABBpipeline.Parse("Resources\\AABBRenderPipeline.tech");
 
     // Camera Setup
     {
@@ -66,8 +66,7 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
         desc.SetSize({ sizeof(Ambient), 1 });
         desc.SetStride(1);
         desc.SetFormat(DXGI_FORMAT::DXGI_FORMAT_UNKNOWN);
-        _ambient = new Resource(desc);
-        _ambient->SetDevice(_DXDevice);
+        _ambient = std::make_shared<Resource>(desc);
         _ambient->CreateCommitedResource();
         _ambient->SetName("_ambient");
 
@@ -81,21 +80,7 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
         loadTask->SetName("Upload Data");
         auto commandList = loadTask->GetCommandLists().front();
 
-        _scene.LoadScene("dog_t.fbx", commandList);
-
-        DescriptorHeapDescription desc;
-        desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
-        desc.SetNumDescriptors(1);
-        desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-        desc.SetNodeMask(1);
-        _texDescHeap.SetDescription(desc);
-        _texDescHeap.SetDevice(_DXDevice);
-        _texDescHeap.Create("Textures descriptor heap");
-
-        _tex = Texture::LoadFromFile("dog_tex.dds");
-        _tex->SetDXDevice(_DXDevice);
-        _tex->SetDescriptorHeap(&_texDescHeap);
-        _tex->UploadToGPU(commandList);
+        _scene.LoadScene("Book.fbx", commandList);
 
         commandList->Close();
 
@@ -114,28 +99,8 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
     return _contentLoaded;
 }
 
-void DXRenderer::OnResize(Events::ResizeEvent& e)
-{
-    // TODO: not implemented
-    //if (e.width != super::getWidth() || e.height != getHeight())
-    //{
-    //    super::onResize(e);
-
-    //    _viewport = CD3DX12_VIEWPORT(0.0f, 0.0f,
-    //        static_cast<float>(e.width), static_cast<float>(e.height));
-
-    //    resizeDepthBuffer(e.width, e.height);
-    //}
-}
-
 void DXRenderer::UnloadContent()
 {
-    if (_contentLoaded)
-    {
-        delete _ambient;
-        _ambient = nullptr;
-    }
-
     _contentLoaded = false;
 }
 
@@ -220,10 +185,10 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         commandList->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &viewProjMatrix, 0);
         commandList->SetGraphicsRootConstantBufferView(1, _ambient->OffsetGPU(0));
 
-        ID3D12DescriptorHeap* heaps = { _texDescHeap.GetDXDescriptorHeap().Get()};
-        commandList->SetDescriptorHeaps(1, &heaps);
+        //ID3D12DescriptorHeap* heaps = { _texDescHeap.GetDXDescriptorHeap().Get()};
+        //commandList->SetDescriptorHeaps(1, &heaps);
 
-        commandList->SetGraphicsRootDescriptorTable(3, _texDescHeap.GetResourceGPUHandle(_tex.get()));
+        //commandList->SetGraphicsRootDescriptorTable(3, _texDescHeap.GetResourceGPUHandle(_tex.get()));
 
         _scene.Draw(commandList, _camera.GetViewFrustum());
 
@@ -283,17 +248,6 @@ void DXRenderer::OnKeyPressed(Events::KeyEvent& e)
         ::SendMessage(_windowHandle, WM_DESTROY, 0, 0);
         break;
     }
-}
-
-void DXRenderer::OnMouseScroll(Events::MouseScrollEvent& e)
-{
-    //_FoV -= e.scrollDelta;
-    //_FoV = clamp(_FoV, 12.0f, 90.0f);
-    //camera.SetFOV(_FoV);
-
-    //char buffer[256];
-    //sprintf_s(buffer, "FoV: %f\n", _FoV);
-    //OutputDebugStringA(buffer);
 }
 
 void DXRenderer::OnMouseMoved(Events::MouseMoveEvent& e)

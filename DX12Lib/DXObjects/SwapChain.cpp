@@ -2,8 +2,6 @@
 
 #include "SwapChain.h"
 
-#include "Device.h"
-
 SwapChain::SwapChain()
     : _DXDevice(Core::Device::GetDXDevice())
     , _dxgiSwapChain{}
@@ -21,13 +19,13 @@ SwapChain::SwapChain()
     desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_NONE);
     desc.SetNodeMask(0);
 
-    _RTVDescriptorHeap.SetDevice(_DXDevice);
     _RTVDescriptorHeap.SetDescription(desc);
     _RTVDescriptorHeap.Create();
 }
 
 SwapChain::~SwapChain()
 {
+    _DXDevice = nullptr;
     _dxgiSwapChain = nullptr;
 }
 
@@ -104,11 +102,6 @@ void SwapChain::OnResize(Core::Events::ResizeEvent& e)
 
         UpdateRenderTargetViews();
     }
-}
-
-void SwapChain::SetDXDevice(ComPtr<ID3D12Device2> device)
-{
-    _DXDevice = device;
 }
 
 ComPtr<IDXGISwapChain4> SwapChain::CreateSwapChain()

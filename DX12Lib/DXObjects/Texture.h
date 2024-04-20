@@ -10,15 +10,13 @@ public:
     Texture();
     ~Texture();
 
-    void UploadToGPU(ComPtr<ID3D12GraphicsCommandList2> commandList);
+    void UploadToGPU(ComPtr<ID3D12GraphicsCommandList> commandList);
 
     void SetDescriptorHeap(DescriptorHeap* descriptorHeap);
     DescriptorHeap* GetDescriptorHeap() const;
 
-    void SetDXDevice(ComPtr<ID3D12Device2> device);
-    ComPtr<ID3D12Device2> GetDXDevice() const;
-
-    static std::shared_ptr<Texture> LoadFromFile(const std::string& filepath);
+    static std::shared_ptr<Texture> CreateTexture(ComPtr<ID3D12Device2> DXDevice, const DirectX::XMVECTOR& color);
+    static std::shared_ptr<Texture> LoadFromFile(std::string filepath);
 
 private:
     ComPtr<ID3D12Resource> _intermediateResource;

@@ -58,4 +58,15 @@ namespace Math
     {
         return AlignUpWithMask(value, alignment - 1);
     }
+
+	template<typename T>
+	inline T Clamp(const T lhs, const T min, const T max)
+	{
+		if (lhs < min)
+			return min;
+		else if (lhs > max)
+			return max;
+		else
+			return lhs;
+	}
 }

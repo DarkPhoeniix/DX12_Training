@@ -2,8 +2,6 @@
 
 #include "Texture.h"
 
-#include "DXObjects/Device.h"
-
 #include <filesystem>
 
 using namespace DirectX;
@@ -13,6 +11,7 @@ namespace
     const std::string DDS_EXTENSION = ".dds";
     const std::string HDR_EXTENSION = ".hdr";
     const std::string TGA_EXTENSION = ".tga";
+    const std::string ERROR_TEXTURE = "Error.dds";
 }
 
 Texture::Texture()
@@ -30,7 +29,7 @@ Texture::~Texture()
     _descritptorHeap = nullptr;
 }
 
-void Texture::UploadToGPU(ComPtr<ID3D12GraphicsCommandList2> commandList)
+void Texture::UploadToGPU(ComPtr<ID3D12GraphicsCommandList> commandList)
 {
     if (!_descritptorHeap)
     {
@@ -38,7 +37,7 @@ void Texture::UploadToGPU(ComPtr<ID3D12GraphicsCommandList2> commandList)
         return;
     }
 
-    CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_DEST);
+    //CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_DEST);
     SetName(_name);
 
     std::vector<D3D12_SUBRESOURCE_DATA> subresources(_scratchImage.GetImageCount());
@@ -83,22 +82,50 @@ DescriptorHeap* Texture::GetDescriptorHeap() const
     return _descritptorHeap;
 }
 
-void Texture::SetDXDevice(ComPtr<ID3D12Device2> device)
+std::shared_ptr<Texture> Texture::CreateTexture(ComPtr<ID3D12Device2> DXDevice, const DirectX::XMVECTOR& color)
 {
-    _DXDevice = device;
+    std::shared_ptr<Texture> texture = std::make_shared<Texture>();
+
+    TexMetadata metadata = {};
+    metadata.width = 4;
+    metadata.height = 4;
+    metadata.depth = 1;
+    metadata.arraySize = 1;
+    metadata.mipLevels = 1;
+    metadata.dimension = TEX_DIMENSION_TEXTURE2D;
+    metadata.format = DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;
+
+    Image image;
+    image.width = 4;
+    image.height = 4;
+    image.rowPitch = 16;
+    image.slicePitch = 64;
+    image.format = DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;
+    image.pixels = new uint8_t[4 * 4 * 4];
+    for (int i = 0; i < 64; i += 4)
+    {
+        image.pixels[i]     = XMVectorGetZ(color); // B
+        image.pixels[i + 1] = XMVectorGetY(color); // G
+        image.pixels[i + 2] = XMVectorGetX(color); // R
+        image.pixels[i + 3] = XMVectorGetW(color); // A
+    }
+
+    ComPtr<ID3D12Resource> res;
+    ::CreateTexture(DXDevice.Get(), metadata, &res);
+    texture->InitFromDXResource(res);
+    texture->_metadata = metadata;
+    texture->_scratchImage.InitializeFromImage(image);
+
+    return texture;
 }
 
-ComPtr<ID3D12Device2> Texture::GetDXDevice() const
-{
-    return _DXDevice;
-}
-
-std::shared_ptr<Texture> Texture::LoadFromFile(const std::string& filepath)
+std::shared_ptr<Texture> Texture::LoadFromFile(std::string filepath)
 {
     std::filesystem::path path(filepath);
     if (!std::filesystem::exists(path))
     {
         Logger::Log(LogType::Error, "Texture \"" + filepath + "\" doesn't exist");
+        return nullptr;
     }
 
     std::wstring wFilepath(filepath.begin(), filepath.end());
@@ -108,6 +135,7 @@ std::shared_ptr<Texture> Texture::LoadFromFile(const std::string& filepath)
 
     HRESULT hr = S_OK;
     TexMetadata& metadata = texture->_metadata;
+    auto ext = path.extension();
     if (path.extension() == DDS_EXTENSION)
     {
         hr = LoadFromDDSFile(wFilepath.c_str(), DDS_FLAGS_FORCE_RGB, &metadata, texture->_scratchImage);

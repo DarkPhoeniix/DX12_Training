@@ -3,7 +3,10 @@
 struct Fence
 {
 public:
-    void Init(ComPtr<ID3D12Device2> device);
+    Fence();
+    ~Fence();
+
+    void Init();
 
     void Wait();
 
@@ -16,6 +19,8 @@ public:
     bool IsFree() const;
 
 private:
+    ComPtr<ID3D12Device2> _DXDevice;
+
     ComPtr<ID3D12Fence> _fence;
     UINT64 _fenceValue = 0;
     HANDLE _eventOnCompletion;

@@ -45,4 +45,5 @@ using namespace Microsoft::WRL;
 #include "Utility/Helpers.h"
 #include "Utility/Logger.h"
 
+#include "DXObjects/Device.h"
 #include "DXObjects/Resource.h"

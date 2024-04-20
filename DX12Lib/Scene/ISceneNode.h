@@ -1,13 +1,13 @@
 #pragma once
 
 class FrustumVolume;
-class DescriptorHeap;
-class Heap;
+class Scene;
 
 class ISceneNode
 {
 public:
-    ISceneNode(const std::string& name, ISceneNode* parent = nullptr);
+    ISceneNode();
+    ISceneNode(const std::string& name, Scene* scene, ISceneNode* parent = nullptr);
     virtual ~ISceneNode();
 
     DirectX::XMMATRIX GetLocalTransform() const;
@@ -18,13 +18,14 @@ public:
     virtual void Draw(ComPtr<ID3D12GraphicsCommandList> commandList, const FrustumVolume& frustum) const = 0;
     virtual void DrawAABB(ComPtr<ID3D12GraphicsCommandList> commandList) const = 0;
 
-    virtual void UploadTextures(ComPtr<ID3D12GraphicsCommandList> commandList, Heap& heap, DescriptorHeap& descriptorHeap) = 0;
-
 protected:
+    friend Scene;
+
     std::string _name;
 
-    ISceneNode* _parent = nullptr;
-    std::vector<std::shared_ptr<ISceneNode>> _childNodes = {};
+    Scene* _scene;
+    ISceneNode* _parent;
+    std::vector<std::shared_ptr<ISceneNode>> _childNodes;
 
     DirectX::XMMATRIX _transform;
 };
