@@ -2,7 +2,7 @@
 
 #include "GraphicsCommandList.h"
 
-#include "DXObjects/Resource.h"
+#include "DXObjects/DescriptorHeap.h"
 #include "DXObjects/RootSignature.h"
 #include "Scene/Viewport.h"
 
@@ -13,7 +13,7 @@ namespace Core
     {
     }
 
-    GraphicsCommandList::GraphicsCommandList(ComPtr<ID3D12GraphicsCommandList2> DXCommandList)
+    GraphicsCommandList::GraphicsCommandList(ComPtr<ID3D12GraphicsCommandList> DXCommandList)
         : _commandList(DXCommandList)
     {
     }
@@ -23,47 +23,63 @@ namespace Core
         _commandList = nullptr;
     }
 
-    D3D12_COMMAND_LIST_TYPE Core::GraphicsCommandList::GetCommandListType() const
+    D3D12_COMMAND_LIST_TYPE GraphicsCommandList::GetCommandListType() const
     {
         return _commandList->GetType();
     }
 
-    ComPtr<ID3D12GraphicsCommandList2> Core::GraphicsCommandList::GetDXCommandList() const
+    ComPtr<ID3D12GraphicsCommandList> GraphicsCommandList::GetDXCommandList() const
     {
         return _commandList;
     }
 
-    void Core::GraphicsCommandList::TransitionBarrier(const std::shared_ptr<Resource>& resource, D3D12_RESOURCE_STATES stateAfter, UINT subresource, bool flushBarriers)
+    ComPtr<ID3D12GraphicsCommandList>& GraphicsCommandList::GetDXCommandList()
     {
-        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(resource->GetDXResource().Get(), resource->GetCurrentState(), stateAfter, subresource);
-        _commandList->ResourceBarrier(1, &barrier);
+        return _commandList;
     }
 
-    void Core::GraphicsCommandList::AliasingBarrier(const std::shared_ptr<Resource>& beforeResource, const std::shared_ptr<Resource>& afterResource, bool flushBarriers)
+    void GraphicsCommandList::TransitionBarrier(Resource& resource, D3D12_RESOURCE_STATES stateAfter, UINT subresource, bool flushBarriers)
+    {
+        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(resource.GetDXResource().Get(), resource.GetCurrentState(), stateAfter, subresource);
+        _commandList->ResourceBarrier(1, &barrier);
+        resource.SetCurrentState(stateAfter);
+    }
+
+    void GraphicsCommandList::AliasingBarrier(const std::shared_ptr<Resource>& beforeResource, const std::shared_ptr<Resource>& afterResource, bool flushBarriers)
     {
         CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Aliasing(beforeResource->GetDXResource().Get(), afterResource->GetDXResource().Get());
         _commandList->ResourceBarrier(1, &barrier);
     }
 
-    void Core::GraphicsCommandList::CopyResource(const std::shared_ptr<Resource>& dstRes, const std::shared_ptr<Resource>& srcRes)
+    void GraphicsCommandList::CopyResource(Resource& sourceResource, Resource& destinationResource)
     {
-        TransitionBarrier(dstRes, D3D12_RESOURCE_STATE_COPY_DEST);
-        TransitionBarrier(srcRes, D3D12_RESOURCE_STATE_COPY_SOURCE);
+        //TransitionBarrier(destinationResource, D3D12_RESOURCE_STATE_COPY_DEST);
+        //TransitionBarrier(sourceResource, D3D12_RESOURCE_STATE_COPY_SOURCE);
 
-        _commandList->CopyResource(dstRes->GetDXResource().Get(), srcRes->GetDXResource().Get());
+        _commandList->CopyResource(destinationResource.GetDXResource().Get(), sourceResource.GetDXResource().Get());
     }
 
-    void Core::GraphicsCommandList::SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY primitiveTopology)
+    void GraphicsCommandList::SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY primitiveTopology)
     {
         _commandList->IASetPrimitiveTopology(primitiveTopology);
     }
 
-    void Core::GraphicsCommandList::SetVertexBuffer(uint32_t slot, const D3D12_VERTEX_BUFFER_VIEW& vertexBufferView)
+    void GraphicsCommandList::SetVertexBuffer(uint32_t slot, const D3D12_VERTEX_BUFFER_VIEW& vertexBufferView)
     {
         _commandList->IASetVertexBuffers(slot, 1, &vertexBufferView);
     }
 
-    void Core::GraphicsCommandList::SetViewport(const Viewport& viewport)
+    void GraphicsCommandList::SetIndexBuffer(const D3D12_INDEX_BUFFER_VIEW& indexBufferView)
+    {
+        _commandList->IASetIndexBuffer(&indexBufferView);
+    }
+
+    void GraphicsCommandList::SetRenderTarget(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetDescriptor, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilDescriptor)
+    {
+        _commandList->OMSetRenderTargets(1, &renderTargetDescriptor, FALSE, &depthStencilDescriptor);
+    }
+
+    void GraphicsCommandList::SetViewport(const Viewport& viewport)
     {
         CD3DX12_VIEWPORT vp = viewport.GetDXViewport();
         CD3DX12_RECT scissorRect = viewport.GetScissorRectangle();
@@ -71,23 +87,90 @@ namespace Core
         _commandList->RSSetScissorRects(1, &scissorRect);
     }
 
-    void Core::GraphicsCommandList::SetPipelineState(const std::shared_ptr<RootSignature>& rootSignature)
+    void GraphicsCommandList::SetPipelineState(const RootSignature& rootSignature)
     {
-        _commandList->SetPipelineState(rootSignature->GetPipelineState().Get());
+        _commandList->SetPipelineState(rootSignature.GetPipelineState().Get());
     }
 
-    void Core::GraphicsCommandList::SetGraphicsRootSignature(const std::shared_ptr<RootSignature>& rootSignature)
+    void GraphicsCommandList::SetGraphicsRootSignature(const RootSignature& rootSignature)
     {
-        _commandList->SetGraphicsRootSignature(rootSignature->GetRootSignature().Get());
+        _commandList->SetGraphicsRootSignature(rootSignature.GetRootSignature().Get());
     }
 
-    void Core::GraphicsCommandList::Draw(uint32_t vertexCount, uint32_t instanceCount, uint32_t startVertex, uint32_t startInstance)
+    void GraphicsCommandList::ClearRTV(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetView, const FLOAT color[4], Viewport* viewport)
+    {
+        UINT numRects = viewport ? 1 : 0;
+        CD3DX12_RECT* rect = nullptr;
+        if (viewport)
+        {
+            *rect = viewport->GetScissorRectangle();
+        }
+        _commandList->ClearRenderTargetView(renderTargetView, color, numRects, rect);
+    }
+
+    void GraphicsCommandList::ClearDSV(D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, D3D12_CLEAR_FLAGS clearFlags, FLOAT depth, UINT8 stencil, Viewport* viewport)
+    {
+        UINT numRects = viewport ? 1 : 0;
+        CD3DX12_RECT* rect = nullptr;
+        if (viewport)
+        {
+            *rect = viewport->GetScissorRectangle();
+        }
+        _commandList->ClearDepthStencilView(depthStencilView, clearFlags, depth, stencil, numRects, rect);
+    }
+
+    void GraphicsCommandList::Draw(uint32_t vertexCount, uint32_t instanceCount, uint32_t startVertex, uint32_t startInstance)
     {
         _commandList->DrawInstanced(vertexCount, instanceCount, startVertex, startInstance);
     }
 
-    void Core::GraphicsCommandList::DrawIndexed(uint32_t indexCount, uint32_t instanceCount, uint32_t startIndex, int32_t baseVertex, uint32_t startInstance)
+    void GraphicsCommandList::DrawIndexed(uint32_t indexCount, uint32_t instanceCount, uint32_t startIndex, int32_t baseVertex, uint32_t startInstance)
     {
         _commandList->DrawIndexedInstanced(indexCount, instanceCount, startIndex, baseVertex, startInstance);
+    }
+
+    void GraphicsCommandList::SetDescriptorHeaps(const std::vector<ID3D12DescriptorHeap*> descriptorHeaps)
+    {
+        _commandList->SetDescriptorHeaps(descriptorHeaps.size(), descriptorHeaps.data());
+    }
+
+    void GraphicsCommandList::SetConstant(UINT index, UINT data, UINT offset)
+    {   
+        _commandList->SetGraphicsRoot32BitConstant(index, data, offset);
+    }
+
+    void GraphicsCommandList::SetConstants(UINT index, UINT numValues, const void* data, UINT offset)
+    {
+        _commandList->SetGraphicsRoot32BitConstants(index, numValues, data, offset);
+    }
+
+    void GraphicsCommandList::SetCBV(UINT index, D3D12_GPU_VIRTUAL_ADDRESS bufferLocation)
+    {
+        _commandList->SetGraphicsRootConstantBufferView(index, bufferLocation);
+    }
+
+    void GraphicsCommandList::SetSRV(UINT index, D3D12_GPU_VIRTUAL_ADDRESS bufferLocation)
+    {
+        _commandList->SetGraphicsRootShaderResourceView(index, bufferLocation);
+    }
+
+    void GraphicsCommandList::SetUAV(UINT index, D3D12_GPU_VIRTUAL_ADDRESS bufferLocation)
+    {
+        _commandList->SetGraphicsRootUnorderedAccessView(index, bufferLocation);
+    }
+
+    void GraphicsCommandList::SetDescriptorTable(UINT index, D3D12_GPU_DESCRIPTOR_HANDLE descriptor)
+    {
+        _commandList->SetGraphicsRootDescriptorTable(index, descriptor);
+    }
+
+    void GraphicsCommandList::Reset(ID3D12CommandAllocator* commandAllocator, ID3D12PipelineState* pipelineState)
+    {
+        _commandList->Reset(commandAllocator, pipelineState);
+    }
+
+    void GraphicsCommandList::Close()
+    {
+        _commandList->Close();
     }
 } // namespace Core

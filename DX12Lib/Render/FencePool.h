@@ -5,10 +5,10 @@
 class FencePool
 {
 public:
-    void Init(ComPtr<ID3D12Device2> device);
+    void Init();
 
-    Fence* Obtain();
+    Core::Fence* Obtain();
 
 private:
-    std::vector<Fence> fences;
+    std::vector<Core::Fence> fences;
 };

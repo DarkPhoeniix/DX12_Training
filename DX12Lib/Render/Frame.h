@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DXObjects/SwapChain.h"
 #include "Render/AllocatorPool.h"
 #include "Render/Executor.h"
 #include "Render/TaskGPU.h"
@@ -7,7 +8,10 @@
 
 // TODO: refactor the Frame class
 
-class SwapChain;
+namespace Core
+{
+    class RootSignature;
+} // namespace Core
 
 class Frame
 {
@@ -15,30 +19,18 @@ public:
     Frame();
     ~Frame();
 
-    void Init(const SwapChain& swapChain);
+    void Init(const Core::SwapChain& swapChain);
 
-    TaskGPU* CreateTask(D3D12_COMMAND_LIST_TYPE type, ComPtr<ID3D12PipelineState> pipelineState);
+    TaskGPU* CreateTask(D3D12_COMMAND_LIST_TYPE type, Core::RootSignature* rootSignature);
 
     void WaitCPU();
     void ResetGPU();
 
-    void SetDirectQueue(ID3D12CommandQueue* directQueue);
-    ID3D12CommandQueue* GetDirectQueue() const;
-
-    void SetComputeQueue(ID3D12CommandQueue* computeQueue);
-    ID3D12CommandQueue* GetComputeQueue() const;
-
-    void SetCopyQueue(ID3D12CommandQueue* copyQueue);
-    ID3D12CommandQueue* GetCopyQueue() const;
-
-    void SetDXDevice(ComPtr<ID3D12Device2> device);
-
     void SetAllocatorPool(AllocatorPool* allocatorPool);
     void SetFencePool(FencePool* fencePool);
-    void SetDXDevice(ID3D12Device2* DXDevice);
 
-    void SetSyncFrame(Fence* syncFrame);
-    Fence* GetSyncFrame() const;
+    void SetSyncFrame(Core::Fence* syncFrame);
+    Core::Fence* GetSyncFrame() const;
 
     TaskGPU* GetTask(const std::string& name);
     std::vector<TaskGPU> GetTasks() const;
@@ -47,9 +39,9 @@ public:
     Frame* Prev;
     Frame* Next;
 
-    Resource _swapChainTexture;
-    Resource _targetTexture;
-    Resource _depthTexture;
+    Core::Resource _swapChainTexture;
+    Core::Resource _targetTexture;
+    Core::Resource _depthTexture;
 
     ComPtr<ID3D12DescriptorHeap> _targetHeap;
     ComPtr<ID3D12DescriptorHeap> _depthHeap;
@@ -64,7 +56,7 @@ private:
 
     AllocatorPool* _allocatorPool;
     FencePool* _fencePool;
-    Fence* _syncFrame;
+    Core::Fence* _syncFrame;
 
     std::vector<TaskGPU> _tasks;
 

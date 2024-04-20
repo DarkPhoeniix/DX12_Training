@@ -29,24 +29,21 @@ public:
     virtual void OnResize(Core::Events::ResizeEvent& e) override {}
 
 private:
-    void transitionResource(ComPtr<ID3D12GraphicsCommandList2> commandList,
-        ComPtr<ID3D12Resource> resource,
-        D3D12_RESOURCE_STATES beforeState, D3D12_RESOURCE_STATES afterState);
-
     ComPtr<ID3D12Device2> _DXDevice;
     HWND _windowHandle;
 
-    bool _contentLoaded;
+    Core::RootSignature _pipeline;
+    Core::RootSignature _AABBpipeline;
 
-    RootSignature _pipeline;
-    RootSignature _AABBpipeline;
+    std::shared_ptr<Core::Resource> _ambient;
 
-    std::shared_ptr<Resource> _ambient;
-
-    DescriptorHeap _texDescHeap;
-    std::shared_ptr<Texture> _tex;
+    Core::DescriptorHeap _texDescHeap;
+    std::shared_ptr<Core::Texture> _tex;
 
     Scene _scene;
     Camera _camera;
     bool _isCameraMoving;
+    float _deltaTime;
+
+    bool _contentLoaded;
 };

@@ -1,29 +1,32 @@
 #pragma once
 
-struct Fence
+namespace Core
 {
-public:
-    Fence();
-    ~Fence();
+    class Fence
+    {
+    public:
+        Fence();
+        ~Fence();
 
-    void Init();
+        void Init();
 
-    void Wait();
+        void Wait();
 
-    ComPtr<ID3D12Fence> GetFence();
+        ComPtr<ID3D12Fence> GetFence();
 
-    void SetValue(UINT64 fenceValue);
-    UINT64 GetValue() const;
+        void SetValue(UINT64 fenceValue);
+        UINT64 GetValue() const;
 
-    void SetFree(bool isFree);
-    bool IsFree() const;
+        void SetFree(bool isFree);
+        bool IsFree() const;
 
-private:
-    ComPtr<ID3D12Device2> _DXDevice;
+    private:
+        ComPtr<ID3D12Device2> _DXDevice;
 
-    ComPtr<ID3D12Fence> _fence;
-    UINT64 _fenceValue = 0;
-    HANDLE _eventOnCompletion;
+        ComPtr<ID3D12Fence> _fence;
+        UINT64 _fenceValue;
+        HANDLE _eventOnCompletion;
 
-    bool _isFree = true;
-};
+        bool _isFree;
+    };
+} // namespace Core

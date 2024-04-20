@@ -4,24 +4,29 @@
 #include "DXObjects/Resource.h"
 #include "DirectXTex/DirectXTex.h"
 
-class Texture : public Resource
+namespace Core
 {
-public:
-    Texture();
-    ~Texture();
+    class GraphicsCommandList;
 
-    void UploadToGPU(ComPtr<ID3D12GraphicsCommandList> commandList);
+    class Texture : public Resource
+    {
+    public:
+        Texture();
+        ~Texture();
 
-    void SetDescriptorHeap(DescriptorHeap* descriptorHeap);
-    DescriptorHeap* GetDescriptorHeap() const;
+        void UploadToGPU(GraphicsCommandList& commandList);
 
-    static std::shared_ptr<Texture> CreateTexture(ComPtr<ID3D12Device2> DXDevice, const DirectX::XMVECTOR& color);
-    static std::shared_ptr<Texture> LoadFromFile(std::string filepath);
+        void SetDescriptorHeap(DescriptorHeap* descriptorHeap);
+        DescriptorHeap* GetDescriptorHeap() const;
 
-private:
-    ComPtr<ID3D12Resource> _intermediateResource;
-    DirectX::ScratchImage _scratchImage;
-    DirectX::TexMetadata _metadata;
+        static std::shared_ptr<Texture> CreateTexture(const DirectX::XMVECTOR& color);
+        static std::shared_ptr<Texture> LoadFromFile(std::string filepath);
 
-    DescriptorHeap* _descritptorHeap;
-};
+    private:
+        ComPtr<ID3D12Resource> _intermediateResource;
+        DirectX::ScratchImage _scratchImage;
+        DirectX::TexMetadata _metadata;
+
+        DescriptorHeap* _descritptorHeap;
+    };
+} // namespace Core

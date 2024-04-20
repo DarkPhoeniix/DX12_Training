@@ -2,8 +2,10 @@
 
 #include "Frame.h"
 
-#include "DXObjects/SwapChain.h"
+#include "DXObjects/GraphicsCommandList.h"
 #include "DXObjects/Fence.h"
+#include "DXObjects/SwapChain.h"
+#include "DXObjects/RootSignature.h"
 
 Frame::Frame()
     : Index(0)
@@ -14,14 +16,14 @@ Frame::Frame()
     , _depthTexture{}
     , _currentTasks{}
     , _executedTasks{}
-    , _queueCompute(nullptr)
-    , _queueStream(nullptr)
-    , _queueCopy(nullptr)
+    , _queueCompute(Core::Device::GetComputeQueue())
+    , _queueStream(Core::Device::GetStreamQueue())
+    , _queueCopy(Core::Device::GetCopyQueue())
     , _allocatorPool(nullptr)
     , _fencePool(nullptr)
     , _syncFrame(nullptr)
     , _tasks{}
-    , _DXDevice(nullptr)
+    , _DXDevice(Core::Device::GetDXDevice())
 {
 }
 
@@ -44,14 +46,14 @@ Frame::~Frame()
     _DXDevice = nullptr;
 }
 
-void Frame::Init(const SwapChain& swapChain)
+void Frame::Init(const Core::SwapChain& swapChain)
 {
     swapChain.GetBuffer(Index, _swapChainTexture);
     _swapChainTexture.SetName(std::string("Frame's swapchain resource ") + std::to_string(Index));
 
     // Create resource for the target texture
     {
-        ResourceDescription desc = _swapChainTexture.GetResourceDescription();
+        Core::ResourceDescription desc = _swapChainTexture.GetResourceDescription();
 
         D3D12_CLEAR_VALUE clearValueTexTarget;
         clearValueTexTarget.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -70,7 +72,7 @@ void Frame::Init(const SwapChain& swapChain)
 
     // Create resource for the depth texture
     {
-        ResourceDescription desc = _swapChainTexture.GetResourceDescription();
+        Core::ResourceDescription desc = _swapChainTexture.GetResourceDescription();
 
         desc.SetFlags(D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
         desc.SetFormat(DXGI_FORMAT_D32_FLOAT);
@@ -119,12 +121,12 @@ void Frame::Init(const SwapChain& swapChain)
     }
 }
 
-TaskGPU* Frame::CreateTask(D3D12_COMMAND_LIST_TYPE type, ComPtr<ID3D12PipelineState> pipelineState)
+TaskGPU* Frame::CreateTask(D3D12_COMMAND_LIST_TYPE type, Core::RootSignature* rootSignature)
 {
     Executor* exec = _allocatorPool->Obtain(type);
     _currentTasks.push_back(exec);
 
-    exec->Reset(pipelineState);
+    exec->Reset(rootSignature);
     exec->SetFree(false);
 
     _tasks.push_back({});
@@ -142,9 +144,9 @@ TaskGPU* Frame::CreateTask(D3D12_COMMAND_LIST_TYPE type, ComPtr<ID3D12PipelineSt
         task->SetCommandQueue(_queueCopy);
     }
 
-    task->AddCommandList(exec->GetCommandList().Get());
+    task->AddCommandList(exec->GetCommandList());
 
-    Fence* taskFence = _fencePool->Obtain();
+    Core::Fence* taskFence = _fencePool->Obtain();
     task->SetFence(taskFence);
     taskFence->SetFree(false);
     taskFence->SetValue(taskFence->GetValue() + 1);
@@ -179,41 +181,6 @@ void Frame::ResetGPU()
     _executedTasks = std::move(_currentTasks);
 }
 
-void Frame::SetDirectQueue(ID3D12CommandQueue* directQueue)
-{
-    _queueStream = directQueue;
-}
-
-ID3D12CommandQueue* Frame::GetDirectQueue() const
-{
-    return _queueStream;
-}
-
-void Frame::SetComputeQueue(ID3D12CommandQueue* computeQueue)
-{
-    _queueCompute = computeQueue;
-}
-
-ID3D12CommandQueue* Frame::GetComputeQueue() const
-{
-    return _queueCompute;
-}
-
-void Frame::SetCopyQueue(ID3D12CommandQueue* copyQueue)
-{
-    _queueCopy = copyQueue;
-}
-
-ID3D12CommandQueue* Frame::GetCopyQueue() const
-{
-    return _queueCopy;
-}
-
-void Frame::SetDXDevice(ComPtr<ID3D12Device2> device)
-{
-    _DXDevice = device;
-}
-
 void Frame::SetAllocatorPool(AllocatorPool* allocatorPool)
 {
     _allocatorPool = allocatorPool;
@@ -222,11 +189,6 @@ void Frame::SetAllocatorPool(AllocatorPool* allocatorPool)
 void Frame::SetFencePool(FencePool* fencePool)
 {
     _fencePool = fencePool;
-}
-
-void Frame::SetDXDevice(ID3D12Device2* DXDevice)
-{
-    _DXDevice = DXDevice;
 }
 
 TaskGPU* Frame::GetTask(const std::string& name)
@@ -247,12 +209,12 @@ std::vector<TaskGPU> Frame::GetTasks() const
     return _tasks;
 }
 
-void Frame::SetSyncFrame(Fence* syncFrame)
+void Frame::SetSyncFrame(Core::Fence* syncFrame)
 {
     _syncFrame = syncFrame;
 }
 
-Fence* Frame::GetSyncFrame() const
+Core::Fence* Frame::GetSyncFrame() const
 {
     return _syncFrame;
 }

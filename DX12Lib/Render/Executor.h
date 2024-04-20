@@ -1,5 +1,12 @@
 #pragma once
 
+#include "DXObjects/GraphicsCommandList.h"
+
+namespace Core
+{
+    class RootSignature;
+} // namespace Core
+
 class Executor
 {
 public:
@@ -7,20 +14,18 @@ public:
     ~Executor();
 
     void Allocate(D3D12_COMMAND_LIST_TYPE type);
-    void Reset(ComPtr<ID3D12PipelineState> pipeline = nullptr);
+    void Reset(Core::RootSignature* rootSignature = nullptr);
 
     void SetFree(bool isFree);
     bool IsFree() const;
 
-    void SetDevice(ComPtr<ID3D12Device2> device);
-    ComPtr<ID3D12Device2> GetDevice() const;
-
-    ComPtr<ID3D12GraphicsCommandList2> GetCommandList() const;
+    Core::GraphicsCommandList* GetCommandList();
 
 private:
-    bool _isFree = true;
-    ComPtr<ID3D12CommandAllocator> _allocator;
-    ComPtr<ID3D12GraphicsCommandList2> _commandList;
-
     ComPtr<ID3D12Device2> _DXDevice;
+
+    ComPtr<ID3D12CommandAllocator> _allocator;
+    Core::GraphicsCommandList _commandList;
+
+    bool _isFree = true;
 };

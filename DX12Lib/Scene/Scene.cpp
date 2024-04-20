@@ -3,6 +3,7 @@
 #include "Scene.h"
 
 #include "DXObjects/Texture.h"
+#include "DXObjects/GraphicsCommandList.h"
 #include "Scene/SceneNode.h"
 #include "Scene/Camera.h"
 #include "Volumes/FrustumVolume.h"
@@ -21,7 +22,7 @@ Scene::Scene()
     _scene = FbxScene::Create(_FBXManager, "");
     
     {
-        HeapDescription desc;
+        Core::HeapDescription desc;
         desc.SetHeapType(D3D12_HEAP_TYPE_DEFAULT);
         desc.SetHeapFlags(D3D12_HEAP_FLAG_ALLOW_ALL_BUFFERS_AND_TEXTURES);
         desc.SetSize(_256MB * 4);
@@ -35,7 +36,7 @@ Scene::Scene()
     }
 
     {
-        DescriptorHeapDescription desc;
+        Core::DescriptorHeapDescription desc;
         desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
         desc.SetNumDescriptors(32);
         desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
@@ -54,20 +55,19 @@ Scene::~Scene()
     }
 }
 
-void Scene::Draw(ComPtr<ID3D12GraphicsCommandList> commandList, const FrustumVolume& frustum)
+void Scene::Draw(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum)
 {
-    ID3D12DescriptorHeap* heaps = { _texturesDescHeap.GetDXDescriptorHeap().Get()};
-    commandList->SetDescriptorHeaps(1, &heaps);
+    commandList.SetDescriptorHeaps({ _texturesDescHeap.GetDXDescriptorHeap().Get() });
 
     _rootNode->Draw(commandList, frustum);
 }
 
-void Scene::DrawAABB(ComPtr<ID3D12GraphicsCommandList> commandList)
+void Scene::DrawAABB(Core::GraphicsCommandList& commandList)
 {
     _rootNode->DrawAABB(commandList);
 }
 
-bool Scene::LoadScene(const std::string& name, ComPtr<ID3D12GraphicsCommandList> commandList)
+bool Scene::LoadScene(const std::string& name, Core::GraphicsCommandList& commandList)
 {
     bool lStatus;
 
@@ -111,10 +111,11 @@ bool Scene::LoadScene(const std::string& name, ComPtr<ID3D12GraphicsCommandList>
     return lStatus;
 }
 
-void Scene::_UploadTexture(Texture* texture, ComPtr<ID3D12GraphicsCommandList> commandList)
+void Scene::_UploadTexture(Core::Texture* texture, Core::GraphicsCommandList& commandList)
 {
     _texturesHeap.PlaceResource(*texture);
 
     texture->SetDescriptorHeap(&_texturesDescHeap);
-    texture->UploadToGPU(commandList);
+    Core::GraphicsCommandList cl(commandList);
+    texture->UploadToGPU(cl);
 }

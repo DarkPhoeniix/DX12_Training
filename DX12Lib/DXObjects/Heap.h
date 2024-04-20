@@ -2,26 +2,29 @@
 
 #include "HeapDescription.h"
 
-class Resource;
-
-class Heap
+namespace Core
 {
-public:
-    Heap();
-    Heap(const HeapDescription& heapDescription);
-    ~Heap();
+    class Resource;
 
-    void Create();
-    void PlaceResource(Resource& resource, UINT64 offset = (UINT64)-1);
+    class Heap
+    {
+    public:
+        Heap();
+        Heap(const HeapDescription& heapDescription);
+        ~Heap();
 
-    void SetDescription(const HeapDescription& description);
-    HeapDescription GetDescription() const;
+        void Create();
+        void PlaceResource(Resource& resource, UINT64 offset = (UINT64)-1);
 
-private:
-    ComPtr<ID3D12Device2> _DXDevice;
+        void SetDescription(const HeapDescription& description);
+        HeapDescription GetDescription() const;
 
-    ComPtr<ID3D12Heap> _heap;
-    HeapDescription _heapDescription;
+    private:
+        ComPtr<ID3D12Device2> _DXDevice;
 
-    UINT64 _resourceOffset;
-};
+        ComPtr<ID3D12Heap> _heap;
+        HeapDescription _heapDescription;
+
+        UINT64 _resourceOffset;
+    };
+} // namespace Core

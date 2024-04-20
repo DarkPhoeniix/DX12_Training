@@ -1,5 +1,8 @@
 #include "stdafx.h"
+
 #include "TaskGPU.h"
+
+#include "DXObjects/GraphicsCommandList.h"
 
 TaskGPU::TaskGPU()
     : _commandQueue(nullptr)
@@ -23,22 +26,22 @@ ComPtr<ID3D12CommandQueue> TaskGPU::GetCommandQueue() const
     return _commandQueue;
 }
 
-void TaskGPU::AddCommandList(ComPtr<ID3D12GraphicsCommandList2> commandList)
+void TaskGPU::AddCommandList(Core::GraphicsCommandList* commandList)
 {
     _commandLists.push_back(commandList);
 }
 
-std::vector<ComPtr<ID3D12GraphicsCommandList2>> TaskGPU::GetCommandLists() const
+std::vector<Core::GraphicsCommandList*> TaskGPU::GetCommandLists() const
 {
     return _commandLists;
 }
 
-void TaskGPU::SetFence(Fence* fence)
+void TaskGPU::SetFence(Core::Fence* fence)
 {
     _fence = fence;
 }
 
-Fence* TaskGPU::GetFence() const
+Core::Fence* TaskGPU::GetFence() const
 {
     return _fence;
 }

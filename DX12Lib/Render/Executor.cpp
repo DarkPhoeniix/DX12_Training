@@ -1,38 +1,38 @@
 #include "stdafx.h"
+
 #include "Executor.h"
 
 Executor::Executor()
     : _allocator(nullptr)
     , _commandList(nullptr)
-    , _DXDevice(nullptr)
+    , _DXDevice(Core::Device::GetDXDevice())
 {
 }
 
 Executor::~Executor()
 {
     _allocator = nullptr;
-    _commandList = nullptr;
     _DXDevice = nullptr;
 }
 
 void Executor::Allocate(D3D12_COMMAND_LIST_TYPE type)
 {
     _DXDevice->CreateCommandAllocator(type, IID_PPV_ARGS(&_allocator));
-    _DXDevice->CreateCommandList(0, type, _allocator.Get(), nullptr, IID_PPV_ARGS(&_commandList));
-    _commandList->Close();
+    _DXDevice->CreateCommandList(0, type, _allocator.Get(), nullptr, IID_PPV_ARGS(&_commandList.GetDXCommandList()));
+    _commandList.Close();
 }
 
-void Executor::Reset(ComPtr<ID3D12PipelineState> pipeline)
+void Executor::Reset(Core::RootSignature* rootSignature)
 {
     //if (isFree)
     //{
     //    return;
     //}
 
-    ID3D12PipelineState* pState = pipeline ? pipeline.Get() : nullptr;
+    ID3D12PipelineState* pipelineState = rootSignature ? rootSignature->GetPipelineState().Get() : nullptr;
 
     _allocator->Reset();
-    _commandList->Reset(_allocator.Get(), pState);
+    _commandList.Reset(_allocator.Get(), pipelineState);
 }
 
 void Executor::SetFree(bool isFree)
@@ -45,17 +45,7 @@ bool Executor::IsFree() const
     return _isFree;
 }
 
-void Executor::SetDevice(ComPtr<ID3D12Device2> device)
+Core::GraphicsCommandList* Executor::GetCommandList()
 {
-    _DXDevice = device;
-}
-
-ComPtr<ID3D12Device2> Executor::GetDevice() const
-{
-    return _DXDevice;
-}
-
-ComPtr<ID3D12GraphicsCommandList2> Executor::GetCommandList() const
-{
-    return _commandList;
+    return &_commandList;
 }
