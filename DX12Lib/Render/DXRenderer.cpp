@@ -30,6 +30,7 @@ DXRenderer::DXRenderer(HWND windowHandle)
     , _contentLoaded(false)
     , _ambient(nullptr)
     , _isCameraMoving(false)
+    , _deltaTime(0.0f)
 {   }
 
 DXRenderer::~DXRenderer()
@@ -81,7 +82,7 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
         loadTask->SetName("Upload Data");
         Core::GraphicsCommandList* commandList = loadTask->GetCommandLists().front();
 
-        _scene.LoadScene("bowl_tex.fbx", *commandList);
+        _scene.LoadScene("Book.fbx", *commandList);
 
         commandList->Close();
 
@@ -125,6 +126,8 @@ void DXRenderer::OnUpdate(Events::UpdateEvent& updateEvent)
         frameCount = 0;
         totalTime = 0.0;
     }
+
+    _deltaTime = updateEvent.elapsedTime;
 }
 
 void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
@@ -202,19 +205,19 @@ void DXRenderer::OnKeyPressed(Events::KeyEvent& e)
     XMVECTOR dir = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
     if (e.keyCode == DIKeyCode::DIK_W)
     {
-        dir += _camera.Look();
+        dir += _camera.Look() * _deltaTime * 200.0f;
     }
     if (e.keyCode == DIKeyCode::DIK_S)
     {
-        dir -= _camera.Look();
+        dir -= _camera.Look() * _deltaTime * 200.0f;
     }
     if (e.keyCode == DIKeyCode::DIK_D)
     {
-        dir += _camera.Right();
+        dir += _camera.Right() * _deltaTime * 200.0f;
     }
     if (e.keyCode == DIKeyCode::DIK_A)
     {
-        dir -= _camera.Right();
+        dir -= _camera.Right() * _deltaTime * 200.0f;
     }
     _camera.Update(dir);
 

@@ -25,7 +25,7 @@ Scene::Scene()
         Core::HeapDescription desc;
         desc.SetHeapType(D3D12_HEAP_TYPE_DEFAULT);
         desc.SetHeapFlags(D3D12_HEAP_FLAG_ALLOW_ALL_BUFFERS_AND_TEXTURES);
-        desc.SetSize(_256MB);
+        desc.SetSize(_256MB * 4);
         desc.SetMemoryPoolPreference(D3D12_MEMORY_POOL_UNKNOWN);
         desc.SetCPUPageProperty(D3D12_CPU_PAGE_PROPERTY_UNKNOWN);
         desc.SetVisibleNodeMask(1);

@@ -109,10 +109,10 @@ namespace Core
         image.pixels = new uint8_t[4 * 4 * 4];
         for (int i = 0; i < 64; i += 4)
         {
-            image.pixels[i] = XMVectorGetZ(color);
-            image.pixels[i + 1] = XMVectorGetY(color);
-            image.pixels[i + 2] = XMVectorGetX(color);
-            image.pixels[i + 3] = XMVectorGetW(color);
+            image.pixels[i] =     XMVectorGetZ(color); // B
+            image.pixels[i + 1] = XMVectorGetY(color); // G
+            image.pixels[i + 2] = XMVectorGetX(color); // R
+            image.pixels[i + 3] = XMVectorGetW(color); // A
         }
 
         ComPtr<ID3D12Resource> res;
@@ -193,15 +193,7 @@ namespace Core
             return nullptr;
         }
 
-        auto sz = texture->_scratchImage.GetPixelsSize();
-        auto p1 = texture->_scratchImage.GetPixels()[0];
-        auto p2 = texture->_scratchImage.GetPixels()[1];
-        auto p3 = texture->_scratchImage.GetPixels()[2];
-        auto p4 = texture->_scratchImage.GetPixels()[3];
-        auto p5 = texture->_scratchImage.GetPixels()[4];
-        auto p6 = texture->_scratchImage.GetPixels()[5];
-
-        texture->_resourceDesc = textureDesc;
+    texture->_resourceDesc = textureDesc;
 
         return texture;
     }

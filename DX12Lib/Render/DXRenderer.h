@@ -43,6 +43,7 @@ private:
     Scene _scene;
     Camera _camera;
     bool _isCameraMoving;
+    float _deltaTime;
 
     bool _contentLoaded;
 };
