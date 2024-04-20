@@ -13,7 +13,7 @@ namespace Core
     {
     }
 
-    GraphicsCommandList::GraphicsCommandList(ComPtr<ID3D12GraphicsCommnadList2> DXCommandList)
+    GraphicsCommandList::GraphicsCommandList(ComPtr<ID3D12GraphicsCommandList2> DXCommandList)
         : _commandList(DXCommandList)
     {
     }

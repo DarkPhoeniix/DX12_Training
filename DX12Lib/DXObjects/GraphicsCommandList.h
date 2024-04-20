@@ -10,7 +10,7 @@ namespace Core
     {
     public:
         GraphicsCommandList();
-        GraphicsCommandList(ComPtr<ID3D12GraphicsCommnadList2> DXCommandList);
+        GraphicsCommandList(ComPtr<ID3D12GraphicsCommandList2> DXCommandList);
         ~GraphicsCommandList();
 
         D3D12_COMMAND_LIST_TYPE GetCommandListType() const;

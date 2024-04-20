@@ -80,19 +80,7 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
         loadTask->SetName("Upload Data");
         auto commandList = loadTask->GetCommandLists().front();
 
-        _scene.LoadScene("bowl_tex.fbx", commandList);
-
-        //DescriptorHeapDescription desc;
-        //desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
-        //desc.SetNumDescriptors(1);
-        //desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-        //desc.SetNodeMask(1);
-        //_texDescHeap.SetDescription(desc);
-        //_texDescHeap.Create("Textures descriptor heap");
-
-        //_tex = Texture::LoadFromFile("dog_tex.dds");
-        //_tex->SetDescriptorHeap(&_texDescHeap);
-        //_tex->UploadToGPU(commandList);
+        _scene.LoadScene("Book.fbx", commandList);
 
         commandList->Close();
 

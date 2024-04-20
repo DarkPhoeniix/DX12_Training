@@ -19,6 +19,8 @@ public:
     void SetResourceDescription(const ResourceDescription& resourceDesc);
     ResourceDescription GetResourceDescription() const;
 
+    D3D12_RESOURCE_STATES GetCurrentState() const;
+
     D3D12_GPU_VIRTUAL_ADDRESS OffsetGPU(unsigned int offset) const;
     void* Map();
 

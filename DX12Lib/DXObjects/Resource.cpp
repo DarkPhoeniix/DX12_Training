@@ -65,6 +65,11 @@ ResourceDescription Resource::GetResourceDescription() const
 	return _resourceDesc;
 }
 
+D3D12_RESOURCE_STATES Resource::GetCurrentState() const
+{
+	return _currentState;
+}
+
 void* Resource::Map()
 {
 	void* res = nullptr;
