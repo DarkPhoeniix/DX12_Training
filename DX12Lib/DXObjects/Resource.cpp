@@ -106,10 +106,7 @@ namespace Core
 
 	D3D12_GPU_VIRTUAL_ADDRESS Resource::OffsetGPU(unsigned int offset) const
 	{
-		if (!_resource)
-		{
-			Logger::Log(LogType::Error, "Trying to get GPU pointer in empty resource");
-		}
+		ASSERT(_resource, "Trying to get GPU pointer for an nullptr resource");
 
 		D3D12_GPU_VIRTUAL_ADDRESS result = _resource->GetGPUVirtualAddress();
 		result += offset;

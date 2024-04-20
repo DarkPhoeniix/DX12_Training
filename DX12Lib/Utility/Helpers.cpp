@@ -25,12 +25,7 @@ namespace Helper
 
     Json::Value ParseJson(const std::string& filepath)
     {
-        if (!std::filesystem::exists(filepath))
-        {
-            Logger::Log(LogType::Error, "Failed to load " + filepath);
-
-            return {};
-        }
+        ASSERT(std::filesystem::exists(filepath), "Failed to load " + filepath);
 
         std::ifstream file(filepath, std::ios_base::binary);
 		file.open(filepath, std::ios_base::binary);

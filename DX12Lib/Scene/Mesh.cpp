@@ -14,11 +14,7 @@ namespace
 
     void readNormal(FbxMesh* fbxMesh, int controlPointIndex, int vertexIndex, XMFLOAT3& outNormal)
     {
-        if (fbxMesh->GetElementNormalCount() < 1)
-        {
-            Logger::Log(LogType::Error, "Invalid normals number");
-            throw std::exception("Invalid Normal Number");
-        }
+        ASSERT((fbxMesh->GetElementNormalCount() >= 1), "Invalid normals number");
 
         FbxGeometryElementNormal* vertexNormal = fbxMesh->GetElementNormal(0);
         switch (vertexNormal->GetMappingMode())

@@ -88,10 +88,7 @@ namespace Core
         {
             // Create a DirectInput device
             HRESULT result = DirectInput8Create(GetModuleHandle(NULL), DIRECTINPUT_VERSION, IID_IDirectInput8, (VOID**)&_directInput, NULL);
-            if (FAILED(result))
-            {
-                Logger::Log(LogType::Error, "Failed to create DirectInput device");
-            }
+            ASSERT(SUCCEEDED(result), "Failed to create DirectInput device");
 
             _CreateKeyboardDevice();
             _CreateMouseDevice();
@@ -118,10 +115,7 @@ namespace Core
         {
             HRESULT result = _directInput->CreateDevice(GUID_SysKeyboard, &_keyboardDevice, NULL);
 
-            if (FAILED(result))
-            {
-                Logger::Log(LogType::Error, "Failed to create keyboard input device device");
-            }
+            ASSERT(SUCCEEDED(result), "Failed to create keyboard input device device");
 
             _keyboardDevice->SetDataFormat(&c_dfDIKeyboard);
             _keyboardDevice->SetCooperativeLevel(NULL, DISCL_FOREGROUND | DISCL_EXCLUSIVE);
@@ -132,10 +126,7 @@ namespace Core
         {
             HRESULT result = _directInput->CreateDevice(GUID_SysMouse, &_mouseDevice, NULL);
 
-            if (FAILED(result))
-            {
-                Logger::Log(LogType::Error, "Failed to create mouse input device device");
-            }
+            ASSERT(SUCCEEDED(result), "Failed to create mouse input device device");
 
             _mouseDevice->SetDataFormat(&c_dfDIMouse);
             _mouseDevice->SetCooperativeLevel(NULL, DISCL_FOREGROUND | DISCL_EXCLUSIVE);

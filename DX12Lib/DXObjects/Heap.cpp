@@ -26,20 +26,14 @@ namespace Core
 
     void Heap::Create()
     {
-        if (!_DXDevice)
-        {
-            Logger::Log(LogType::Error, "Device is nullptr when creating a heap");
-        }
+        ASSERT(_DXDevice, "Device is nullptr when creating a heap");
 
         _DXDevice->CreateHeap(&_heapDescription.GetDXHeapDescription(), IID_PPV_ARGS(&_heap));
     }
 
     void Heap::PlaceResource(Resource& resource, UINT64 offset)
     {
-        if (!_DXDevice)
-        {
-            Logger::Log(LogType::Error, "Device is nullptr when placing resource in a heap");
-        }
+        ASSERT(_DXDevice, "Device is nullptr when placing resource in a heap");
 
         bool isDefaultHeapOffset = (offset == (UINT64)-1);
         if (isDefaultHeapOffset)

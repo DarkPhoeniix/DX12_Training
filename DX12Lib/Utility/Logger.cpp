@@ -24,6 +24,44 @@ namespace
     }
 }
 
+namespace AssertUtility
+{
+    bool AssertFunction(bool statement, const std::string& message)
+    {
+        if (!statement)
+        {
+            Logger::Log(LogType::Error, message);
+#if defined(_DEBUG)
+            OutputDebugStringA(message.c_str());
+#endif
+        }
+        return !statement;
+    }
+
+    bool LogWarningFunction(bool statement, const std::string& message)
+    {
+        if (!statement)
+        {
+            Logger::Log(LogType::Warning, message);
+#if defined(_DEBUG)
+            OutputDebugStringA(message.c_str());
+#endif
+        }
+        return !statement;
+    }
+
+    bool LogInfoFunction(bool statement, const std::string& message)
+    {
+#if defined(_DEBUG)
+        if (!statement)
+        {
+            Logger::Log(LogType::Info, message);
+        }
+#endif
+        return !statement;
+    }
+}
+
 LogType operator&(LogType lhs, LogType rhs)
 {
     return static_cast<LogType>(static_cast<int>(lhs) & static_cast<int>(rhs));
