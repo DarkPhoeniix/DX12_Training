@@ -35,13 +35,7 @@ namespace Core
 
     void Texture::UploadToGPU(GraphicsCommandList& commandList)
     {
-        if (!_descritptorHeap)
-        {
-            Logger::Log(LogType::Error, "Invalid descriptor heap for texture " + _name);
-            return;
-        }
-
-        SetName(_name);
+        ASSERT(_descritptorHeap, "Invalid descriptor heap for texture " + _name);
 
         std::vector<D3D12_SUBRESOURCE_DATA> subresources(_scratchImage.GetImageCount());
         const Image* pImages = _scratchImage.GetImages();
@@ -127,9 +121,8 @@ namespace Core
     std::shared_ptr<Texture> Texture::LoadFromFile(std::string filepath)
     {
         std::filesystem::path path(filepath);
-        if (!std::filesystem::exists(path))
+        if (ASSERT(std::filesystem::exists(path), "Texture \"" + filepath + "\" doesn't exist. Using " + ERROR_TEXTURE))
         {
-            Logger::Log(LogType::Error, "Texture \"" + filepath + "\" doesn't exist");
             filepath = std::string(ERROR_TEXTURE);
             path = filepath;
         }
@@ -159,9 +152,8 @@ namespace Core
             hr = LoadFromWICFile(wFilepath.c_str(), WIC_FLAGS_FORCE_RGB, &metadata, texture->_scratchImage);
         }
 
-        if (hr != S_OK)
+        if (ASSERT((hr == S_OK), "Failed to load \"" + filepath + "\" texture"))
         {
-            Logger::Log(LogType::Error, "Failed to load \"" + filepath + "\" texture");
             return nullptr;
         }
 

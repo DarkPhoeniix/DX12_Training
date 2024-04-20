@@ -195,7 +195,6 @@ SceneNode::SceneNode(FbxNode* fbxNode, Core::GraphicsCommandList& commandList, S
         std::string textureName = GetDiffuseTextureName(fbxNode);
         if (_texture = Core::Texture::LoadFromFile(textureName))
         {
-            _texture->UploadToGPU(comList);
             _scene->_UploadTexture(_texture.get(), commandList);
         }
     }
