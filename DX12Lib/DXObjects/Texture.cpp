@@ -57,7 +57,6 @@ namespace Core
 
         UpdateSubresources(commandList.GetDXCommandList().Get(), _resource.Get(), _intermediateResource.Get(), 0, 0, subresources.size(), subresources.data());
 
-        _descritptorHeap->PlaceResource(this);
         D3D12_CPU_DESCRIPTOR_HANDLE CPUHandle = _descritptorHeap->GetResourceCPUHandle(this);
 
         D3D12_SHADER_RESOURCE_VIEW_DESC SRVDesc = {};

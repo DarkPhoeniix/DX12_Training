@@ -24,13 +24,12 @@ namespace Core
         _DXDevice = nullptr;
     }
 
-    void DescriptorHeap::Create(const std::string& name)
+    void DescriptorHeap::Create()
     {
         ASSERT(_DXDevice, "Device is nullptr when trying to create descriptor heap");
 
         _DXDevice->CreateDescriptorHeap(&_descriptorHeapDescription.GetDXDescription(), IID_PPV_ARGS(&_descriptorHeap));
 
-        _name = name;
         std::wstring tmp(_name.begin(), _name.end());
         _descriptorHeap->SetName(tmp.c_str());
 
@@ -99,6 +98,13 @@ namespace Core
         return handle;
     }
 
+    UINT DescriptorHeap::GetResourceIndex(Resource* resource)
+    {
+        auto result = std::find_if(_resourceIndex.begin(), _resourceIndex.end(), [resource](const auto& pair) { return pair.second == resource; });
+        ASSERT(result != _resourceIndex.end(), "Trying to Get invalid resource Index from descriptor heap");
+        return result->first;
+    }
+
     void DescriptorHeap::SetDescription(const DescriptorHeapDescription& description)
     {
         _descriptorHeapDescription = description;
@@ -107,6 +113,21 @@ namespace Core
     const DescriptorHeapDescription& DescriptorHeap::GetDescription() const
     {
         return _descriptorHeapDescription;
+    }
+
+    void DescriptorHeap::SetName(const std::string& name)
+    {
+        _name = name;
+        if (_descriptorHeap)
+        {
+            std::wstring tmp(_name.cbegin(), _name.cend());
+            _descriptorHeap->SetName(tmp.c_str());
+        }
+    }
+
+    const std::string& DescriptorHeap::GetName() const
+    {
+        return _name;
     }
 
     ComPtr<ID3D12DescriptorHeap> DescriptorHeap::GetDXDescriptorHeap() const

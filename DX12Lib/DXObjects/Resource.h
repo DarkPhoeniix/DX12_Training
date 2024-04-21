@@ -9,7 +9,7 @@ namespace Core
     public:
         Resource();
         Resource(ResourceDescription resourceDesc);
-        ~Resource();
+        virtual ~Resource();
 
         void InitFromDXResource(ComPtr<ID3D12Resource> resource);
         ComPtr<ID3D12Resource> GetDXResource() const;

@@ -103,7 +103,7 @@ LogType Logger::GetLogLevel()
 }
 
 Logger::Logger()
-    : _logFile(LOG_FILEPATH, std::ios_base::app)
+    : _logFile(LOG_FILEPATH, std::ios_base::trunc)
 {
 }
 

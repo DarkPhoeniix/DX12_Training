@@ -11,7 +11,7 @@ namespace Core
         DescriptorHeap(const DescriptorHeapDescription& description);
         ~DescriptorHeap();
 
-        void Create(const std::string& name = "");
+        void Create();
         void PlaceResource(Resource* resource);
 
         D3D12_CPU_DESCRIPTOR_HANDLE GetHeapStartCPUHandle();
@@ -19,9 +19,13 @@ namespace Core
 
         D3D12_CPU_DESCRIPTOR_HANDLE GetResourceCPUHandle(Resource* resource);
         D3D12_GPU_DESCRIPTOR_HANDLE GetResourceGPUHandle(Resource* resource);
+        UINT GetResourceIndex(Resource* resource);
 
         void SetDescription(const DescriptorHeapDescription& description);
         const DescriptorHeapDescription& GetDescription() const;
+
+        void SetName(const std::string& name);
+        const std::string& GetName() const;
 
         ComPtr<ID3D12DescriptorHeap> GetDXDescriptorHeap() const;
 

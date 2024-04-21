@@ -313,7 +313,7 @@ void SceneNode::_DrawCurrentNode(Core::GraphicsCommandList& commandList, const F
 
     if (_texture)
     {
-        commandList.SetDescriptorTable(3, _scene->_texturesDescHeap.GetResourceGPUHandle(_texture.get()));
+        commandList.SetDescriptorTable(3, _scene->_texturesTable->GetResourceGPUHandle(_texture->GetName()));
     }
 
     XMMATRIX* modelMatrixData = (XMMATRIX*)_modelMatrix->Map();
