@@ -99,6 +99,13 @@ namespace Core
         return handle;
     }
 
+    UINT DescriptorHeap::GetResourceIndex(Resource* resource)
+    {
+        auto result = std::find_if(_resourceIndex.begin(), _resourceIndex.end(), [resource](const auto& pair) { return pair.second == resource; });
+        ASSERT(result != _resourceIndex.end(), "Trying to Get invalid resource Index from descriptor heap");
+        return result->first;
+    }
+
     void DescriptorHeap::SetDescription(const DescriptorHeapDescription& description)
     {
         _descriptorHeapDescription = description;

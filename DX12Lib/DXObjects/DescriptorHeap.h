@@ -19,6 +19,7 @@ namespace Core
 
         D3D12_CPU_DESCRIPTOR_HANDLE GetResourceCPUHandle(Resource* resource);
         D3D12_GPU_DESCRIPTOR_HANDLE GetResourceGPUHandle(Resource* resource);
+        UINT GetResourceIndex(Resource* resource);
 
         void SetDescription(const DescriptorHeapDescription& description);
         const DescriptorHeapDescription& GetDescription() const;

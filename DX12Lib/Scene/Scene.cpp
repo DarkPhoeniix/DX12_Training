@@ -22,28 +22,22 @@ Scene::Scene()
     _scene = FbxScene::Create(_FBXManager, "");
     
     {
-        Core::HeapDescription desc;
-        desc.SetHeapType(D3D12_HEAP_TYPE_DEFAULT);
-        desc.SetHeapFlags(D3D12_HEAP_FLAG_ALLOW_ALL_BUFFERS_AND_TEXTURES);
-        desc.SetSize(_256MB * 4);
-        desc.SetMemoryPoolPreference(D3D12_MEMORY_POOL_UNKNOWN);
-        desc.SetCPUPageProperty(D3D12_CPU_PAGE_PROPERTY_UNKNOWN);
-        desc.SetVisibleNodeMask(1);
-        desc.SetCreationNodeMask(1);
+        Core::HeapDescription heapDesc;
+        heapDesc.SetHeapType(D3D12_HEAP_TYPE_DEFAULT);
+        heapDesc.SetHeapFlags(D3D12_HEAP_FLAG_ALLOW_ALL_BUFFERS_AND_TEXTURES);
+        heapDesc.SetSize(_256MB * 4);
+        heapDesc.SetMemoryPoolPreference(D3D12_MEMORY_POOL_UNKNOWN);
+        heapDesc.SetCPUPageProperty(D3D12_CPU_PAGE_PROPERTY_UNKNOWN);
+        heapDesc.SetVisibleNodeMask(1);
+        heapDesc.SetCreationNodeMask(1);
 
-        _texturesHeap.SetDescription(desc);
-        _texturesHeap.Create();
-    }
+        Core::DescriptorHeapDescription descriptorHeapDesc;
+        descriptorHeapDesc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+        descriptorHeapDesc.SetNumDescriptors(32);
+        descriptorHeapDesc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
+        descriptorHeapDesc.SetNodeMask(1);
 
-    {
-        Core::DescriptorHeapDescription desc;
-        desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-        desc.SetNumDescriptors(32);
-        desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
-        desc.SetNodeMask(1);
-
-        _texturesDescHeap.SetDescription(desc);
-        _texturesDescHeap.Create("Textures Descriptor Heap");
+        _texturesTable = std::make_shared<Core::ResourceTable>(descriptorHeapDesc, heapDesc);
     }
 }
 
@@ -57,7 +51,7 @@ Scene::~Scene()
 
 void Scene::Draw(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum)
 {
-    commandList.SetDescriptorHeaps({ _texturesDescHeap.GetDXDescriptorHeap().Get() });
+    commandList.SetDescriptorHeaps({ _texturesTable->GetDescriptorHeap().GetDXDescriptorHeap().Get()});
 
     _rootNode->Draw(commandList, frustum);
 }
@@ -113,9 +107,9 @@ bool Scene::LoadScene(const std::string& name, Core::GraphicsCommandList& comman
 
 void Scene::_UploadTexture(Core::Texture* texture, Core::GraphicsCommandList& commandList)
 {
-    _texturesHeap.PlaceResource(*texture);
-
-    texture->SetDescriptorHeap(&_texturesDescHeap);
-    Core::GraphicsCommandList cl(commandList);
-    texture->UploadToGPU(cl);
+    if ((Core::Texture*)_texturesTable->AddResource(texture))
+    {
+        texture->SetDescriptorHeap(&_texturesTable->GetDescriptorHeap());
+        texture->UploadToGPU(commandList);
+    }
 }

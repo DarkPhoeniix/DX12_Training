@@ -4,7 +4,7 @@
 #include "SceneNode.h"
 
 #include "DXObjects/Heap.h"
-#include "DXObjects/DescriptorHeap.h"
+#include "DXObjects/ResourceTable.h"
 
 #include <fbxsdk.h>
 
@@ -35,7 +35,6 @@ private:
 
     std::shared_ptr<ISceneNode> _rootNode;
 
-    Core::Heap _texturesHeap;
-    Core::DescriptorHeap _texturesDescHeap;
+    std::shared_ptr<Core::ResourceTable> _texturesTable;
 };
 
