@@ -8,7 +8,13 @@ struct AmbientDesc
     float4 Down;
 };
 
-ConstantBuffer<AmbientDesc> Ambient : register(b1);
+struct Tex
+{
+    bool HasTexture;
+};
+
+ConstantBuffer<Tex> Text : register(b1);
+ConstantBuffer<AmbientDesc> Ambient : register(b2);
 
 struct PixelShaderInput
 {
@@ -37,7 +43,10 @@ float4 main(PixelShaderInput IN) : SV_Target
     float3 norm = normalize(IN.Normal);
     float2 uv = IN.Texture;
     uv.y = 1 - uv.y;
-    return Texture.Sample(Sampler, uv);
-    //return IN.Color;
+    
+    if (Text.HasTexture)
+        return Texture.Sample(Sampler, uv);
+    else
+        return IN.Color;
     //return CalculateAmbient(norm, IN.Color.rgb);
 }

@@ -88,7 +88,7 @@ namespace
                     std::to_string((double)info[0] * 255) + ", " + 
                     std::to_string((double)info[1] * 255) + ", " + 
                     std::to_string((double)info[2] * 255) + '\n';
-                OutputDebugStringA(colorStr.c_str());
+                //OutputDebugStringA(colorStr.c_str());
                 color = { (float)info[0] * 255, (float)info[1] * 255, (float)info[2] * 255, 1.0f };
             }
         }
@@ -313,12 +313,17 @@ void SceneNode::_DrawCurrentNode(Core::GraphicsCommandList& commandList, const F
 
     if (_texture)
     {
-        commandList.SetDescriptorTable(3, _scene->_texturesTable->GetResourceGPUHandle(_texture->GetName()));
+        commandList.SetConstant(1, true);
+        commandList.SetDescriptorTable(4, _scene->_texturesTable->GetResourceGPUHandle(_texture->GetName()));
+    }
+    else
+    {
+        commandList.SetConstant(1, false);
     }
 
     XMMATRIX* modelMatrixData = (XMMATRIX*)_modelMatrix->Map();
     *modelMatrixData = GetGlobalTransform();
-    commandList.SetSRV(2, _modelMatrix->OffsetGPU(0));
+    commandList.SetSRV(3, _modelMatrix->OffsetGPU(0));
 
     commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     commandList.SetVertexBuffer(0, _VBO);

@@ -82,7 +82,7 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
         loadTask->SetName("Upload Data");
         Core::GraphicsCommandList* commandList = loadTask->GetCommandLists().front();
 
-        _scene.LoadScene("Book.fbx", *commandList);
+        _scene.LoadScene("FruitBowl.fbx", *commandList);
 
         commandList->Close();
 
@@ -171,7 +171,7 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
 
         XMMATRIX viewProjMatrix = XMMatrixMultiply(_camera.View(), _camera.Projection());
         commandList->SetConstants(0, sizeof(XMMATRIX) / 4, &viewProjMatrix);
-        commandList->SetCBV(1, _ambient->OffsetGPU(0));
+        commandList->SetCBV(2, _ambient->OffsetGPU(0));
 
         _scene.Draw(*commandList, _camera.GetViewFrustum());
 

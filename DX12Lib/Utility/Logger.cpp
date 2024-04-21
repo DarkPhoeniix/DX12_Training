@@ -32,7 +32,7 @@ namespace AssertUtility
         {
             Logger::Log(LogType::Error, message);
 #if defined(_DEBUG)
-            OutputDebugStringA(message.c_str());
+            OutputDebugStringA((message + "\n").c_str());
 #endif
         }
         return !statement;
@@ -44,7 +44,7 @@ namespace AssertUtility
         {
             Logger::Log(LogType::Warning, message);
 #if defined(_DEBUG)
-            OutputDebugStringA(message.c_str());
+            OutputDebugStringA((message + "\n").c_str());
 #endif
         }
         return !statement;
@@ -103,7 +103,7 @@ LogType Logger::GetLogLevel()
 }
 
 Logger::Logger()
-    : _logFile(LOG_FILEPATH, std::ios_base::trunc)
+    : _logFile(LOG_FILEPATH)
 {
 }
 

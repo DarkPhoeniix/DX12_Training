@@ -122,8 +122,7 @@ namespace Core
         std::filesystem::path path(filepath);
         if (ASSERT(std::filesystem::exists(path), "Texture \"" + filepath + "\" doesn't exist. Using " + ERROR_TEXTURE))
         {
-            filepath = std::string(ERROR_TEXTURE);
-            path = filepath;
+            return nullptr;
         }
 
         std::wstring wFilepath(filepath.begin(), filepath.end());

@@ -12,7 +12,8 @@
 		"DENY_DOMAIN_SHADER_ROOT_ACCESS " \
 	"), " \
     "RootConstants(num32BitConstants=16, b0, visibility=SHADER_VISIBILITY_ALL), " \
-    "CBV(b1, visibility=SHADER_VISIBILITY_ALL), " \
+    "RootConstants(num32BitConstants=1, b1, visibility=SHADER_VISIBILITY_ALL), " \
+    "CBV(b2, visibility=SHADER_VISIBILITY_ALL), " \
 	"SRV(t0, visibility=SHADER_VISIBILITY_ALL), " \
     "DescriptorTable(SRV(t1),visibility=SHADER_VISIBILITY_PIXEL)," \
     "StaticSampler(s0," \
@@ -47,7 +48,7 @@ struct VertexPosColor
 struct VertexShaderOutput
 {
     float4 Position : SV_Position;
-    float3 Normal : Normal;
+    float3 Normal : NORMAL;
     float4 Color : COLOR;
     float2 Texture : TEXCOORD;
 };
