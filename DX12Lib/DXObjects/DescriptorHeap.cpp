@@ -24,13 +24,12 @@ namespace Core
         _DXDevice = nullptr;
     }
 
-    void DescriptorHeap::Create(const std::string& name)
+    void DescriptorHeap::Create()
     {
         ASSERT(_DXDevice, "Device is nullptr when trying to create descriptor heap");
 
         _DXDevice->CreateDescriptorHeap(&_descriptorHeapDescription.GetDXDescription(), IID_PPV_ARGS(&_descriptorHeap));
 
-        _name = name;
         std::wstring tmp(_name.begin(), _name.end());
         _descriptorHeap->SetName(tmp.c_str());
 
@@ -114,6 +113,21 @@ namespace Core
     const DescriptorHeapDescription& DescriptorHeap::GetDescription() const
     {
         return _descriptorHeapDescription;
+    }
+
+    void DescriptorHeap::SetName(const std::string& name)
+    {
+        _name = name;
+        if (_descriptorHeap)
+        {
+            std::wstring tmp(_name.cbegin(), _name.cend());
+            _descriptorHeap->SetName(tmp.c_str());
+        }
+    }
+
+    const std::string& DescriptorHeap::GetName() const
+    {
+        return _name;
     }
 
     ComPtr<ID3D12DescriptorHeap> DescriptorHeap::GetDXDescriptorHeap() const

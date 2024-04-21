@@ -25,7 +25,7 @@ Scene::Scene()
         Core::HeapDescription heapDesc;
         heapDesc.SetHeapType(D3D12_HEAP_TYPE_DEFAULT);
         heapDesc.SetHeapFlags(D3D12_HEAP_FLAG_ALLOW_ALL_BUFFERS_AND_TEXTURES);
-        heapDesc.SetSize(_256MB * 4);
+        heapDesc.SetSize(_256MB);
         heapDesc.SetMemoryPoolPreference(D3D12_MEMORY_POOL_UNKNOWN);
         heapDesc.SetCPUPageProperty(D3D12_CPU_PAGE_PROPERTY_UNKNOWN);
         heapDesc.SetVisibleNodeMask(1);
@@ -107,7 +107,7 @@ bool Scene::LoadScene(const std::string& name, Core::GraphicsCommandList& comman
 
 void Scene::_UploadTexture(Core::Texture* texture, Core::GraphicsCommandList& commandList)
 {
-    if ((Core::Texture*)_texturesTable->AddResource(texture))
+    if (_texturesTable->AddResource(texture))
     {
         texture->SetDescriptorHeap(&_texturesTable->GetDescriptorHeap());
         texture->UploadToGPU(commandList);

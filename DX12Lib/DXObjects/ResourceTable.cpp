@@ -8,9 +8,11 @@ namespace Core
         : _numDescriptors(descriptorHeapDesc.GetNumDescriptors())
     {
         _heap.SetDescription(heapDesc);
+        _heap.SetName("Heap of resource table");
         _heap.Create();
 
         _descriptorHeap.SetDescription(descriptorHeapDesc);
+        _descriptorHeap.SetName("Descriptor heap of resource table");
         _descriptorHeap.Create();
     }
 

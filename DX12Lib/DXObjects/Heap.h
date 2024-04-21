@@ -19,6 +19,9 @@ namespace Core
         void SetDescription(const HeapDescription& description);
         HeapDescription GetDescription() const;
 
+        void SetName(const std::string& name);
+        const std::string& GetName() const;
+
     private:
         ComPtr<ID3D12Device2> _DXDevice;
 
@@ -26,5 +29,7 @@ namespace Core
         HeapDescription _heapDescription;
 
         UINT64 _resourceOffset;
+
+        std::string _name;
     };
 } // namespace Core

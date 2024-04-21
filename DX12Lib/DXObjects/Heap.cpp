@@ -29,6 +29,8 @@ namespace Core
         ASSERT(_DXDevice, "Device is nullptr when creating a heap");
 
         _DXDevice->CreateHeap(&_heapDescription.GetDXHeapDescription(), IID_PPV_ARGS(&_heap));
+        std::wstring tmp(_name.cbegin(), _name.cend());
+        _heap->SetName(tmp.c_str());
     }
 
     void Heap::PlaceResource(Resource& resource, UINT64 offset)
@@ -55,5 +57,20 @@ namespace Core
     HeapDescription Heap::GetDescription() const
     {
         return _heapDescription;
+    }
+
+    void Heap::SetName(const std::string& name)
+    {
+        _name = name;
+        if (_heap)
+        {
+            std::wstring tmp(_name.cbegin(), _name.cend());
+            _heap->SetName(tmp.c_str());
+        }
+    }
+
+    const std::string& Heap::GetName() const
+    {
+        return _name;
     }
 } // namespace Core
