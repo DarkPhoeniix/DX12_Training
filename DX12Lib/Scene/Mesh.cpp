@@ -71,10 +71,97 @@ namespace
         }
     }
 
-    void readColor(fbxsdk::FbxMesh* fbxMesh, XMFLOAT4& outColor)
+    void readColor(fbxsdk::FbxMesh* fbxMesh, int polygonIndex, int controlPointIndex, int vertexIndex, XMFLOAT4& outColor)
     {
-        // TODO: Parse vertex color from FBX
         outColor = { 0.5f, 0.5f, 0.5f, 1.0f };
+
+        FbxSurfaceLambert* mat = nullptr;
+        for (int l = 0; l < fbxMesh->GetElementMaterialCount(); l++)
+        {
+            FbxGeometryElementMaterial* leVtxc = fbxMesh->GetElementMaterial(l);
+
+            auto mapM = leVtxc->GetMappingMode();
+            switch (leVtxc->GetMappingMode())
+            {
+            default:
+                break;
+            case FbxGeometryElement::eByControlPoint:
+                OutputDebugStringA("eByControlPoint\n");
+                switch (leVtxc->GetReferenceMode())
+                {
+                case FbxGeometryElement::eDirect:
+                {
+                    //DisplayColor(header, leVtxc->GetDirectArray().GetAt(controlPointIndex));
+                    //fbxColor = leVtxc->GetDirectArray().GetAt(controlPointIndex);
+                    //std::string str = "Color: " + std::to_string(fbxColor.mRed) + ", " + std::to_string(fbxColor.mGreen) + ", " + std::to_string(fbxColor.mBlue) + "\n";
+                    //OutputDebugStringA(str.c_str());
+                }
+                    break;
+                case FbxGeometryElement::eIndexToDirect:
+                {
+                    int id = leVtxc->GetIndexArray().GetAt(controlPointIndex);
+                    //DisplayColor(header, leVtxc->GetDirectArray().GetAt(id));
+                    //fbxColor = leVtxc->GetDirectArray().GetAt(id);
+                    //std::string str = "Color: " + std::to_string(fbxColor.mRed) + ", " + std::to_string(fbxColor.mGreen) + ", " + std::to_string(fbxColor.mBlue) + "\n";
+                    //OutputDebugStringA(str.c_str());
+                }
+                break;
+                default:
+                    break; // other reference modes not shown here!
+                }
+                break;
+
+            case FbxGeometryElement::eByPolygonVertex:
+            {
+                OutputDebugStringA("eByPolygonVertex\n");
+                switch (leVtxc->GetReferenceMode())
+                {
+                case FbxGeometryElement::eDirect:
+                {
+                    //DisplayColor(header, leVtxc->GetDirectArray().GetAt(vertexId));
+
+                    //fbxColor = leVtxc->GetDirectArray().GetAt(vertexIndex);
+                    //std::string str = "Color: " + std::to_string(fbxColor.mRed) + ", " + std::to_string(fbxColor.mGreen) + ", " + std::to_string(fbxColor.mBlue) + "\n";
+                    //OutputDebugStringA(str.c_str());
+                }
+                    break;
+                case FbxGeometryElement::eIndexToDirect:
+                {
+                    int id = leVtxc->GetIndexArray().GetAt(vertexIndex);
+                    //DisplayColor(header, leVtxc->GetDirectArray().GetAt(id));
+                    //fbxColor = leVtxc->GetDirectArray().GetAt(id);
+                    //std::string str = "Color: " + std::to_string(fbxColor.mRed) + ", " + std::to_string(fbxColor.mGreen) + ", " + std::to_string(fbxColor.mBlue) + "\n";
+                    //OutputDebugStringA(str.c_str());
+                }
+                break;
+                default:
+                    break; // other reference modes not shown here!
+                }
+            }
+            break;
+
+            case FbxGeometryElement::eByPolygon:
+            {
+                mat = (FbxSurfaceLambert*)fbxMesh->GetNode()->GetMaterial(leVtxc->GetIndexArray().GetAt(polygonIndex));
+                auto amb = mat->Ambient;
+                //std::string str = "Color: " + std::to_string(mat->Diffuse.Get()[0]) + ", " + std::to_string(mat->Diffuse.Get()[1]) + ", " + std::to_string(mat->Diffuse.Get()[2]) + "\n";
+                //OutputDebugStringA(str.c_str());
+                //OutputDebugStringA("ByPolygon\n");
+                break;
+            }
+            case FbxGeometryElement::eAllSame:   // doesn't make much sense for UVs
+            {
+                mat = (FbxSurfaceLambert*)fbxMesh->GetNode()->GetMaterial(0);
+                auto amb = mat->Ambient;
+                //OutputDebugStringA("AllSame\n");
+            }
+            case FbxGeometryElement::eNone:       // doesn't make much sense for UVs
+                break;
+            }
+        }
+
+        if (mat)
+        outColor = { (float)mat->Diffuse.Get()[0], (float)mat->Diffuse.Get()[1], (float)mat->Diffuse.Get()[2], (float)mat->Diffuse.Get()[3] };
     }
 
     void readUV(fbxsdk::FbxMesh* fbxMesh, int vertexIndex, int uvIndex, XMFLOAT2& outUV) {
@@ -148,7 +235,7 @@ Mesh::Mesh(FbxMesh* fbxMesh)
 
                 readPosition(fbxMesh, polygonIndex, vertexIndex, vertex.Position);
                 readNormal(fbxMesh, fbxMesh->GetPolygonVertex(polygonIndex, vertexIndex), vertexAbsoluteIndex, vertex.Normal);
-                readColor(fbxMesh, vertex.Color);
+                readColor(fbxMesh, polygonIndex, fbxMesh->GetPolygonVertex(polygonIndex, vertexIndex), vertexAbsoluteIndex, vertex.Color);
                 readUV(fbxMesh, vertexIndex, fbxMesh->GetTextureUVIndex(polygonIndex, vertexIndex), vertex.UV);
 
                 _rawVertexData.push_back(vertex);
