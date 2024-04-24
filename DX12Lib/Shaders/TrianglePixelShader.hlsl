@@ -70,4 +70,6 @@ float4 main(PixelShaderInput IN) : SV_Target
     l.direction = normalize(float3(-0.5, 1, -0.5));
     l.color = float3(1.0, 1.0, 1.0);
     color = (CalculateAmbience() + CalculateDiffuse(norm, l)) * color;
+    
+    return float4(color, 1.0);
 }
