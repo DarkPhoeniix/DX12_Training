@@ -13,6 +13,12 @@ struct Tex
     bool HasTexture;
 };
 
+struct DirectionalLight
+{
+    float3 direction;
+    float3 color;
+};
+
 ConstantBuffer<Tex> Text : register(b1);
 ConstantBuffer<AmbientDesc> Ambient : register(b2);
 
@@ -24,16 +30,10 @@ struct PixelShaderInput
     float2 Texture : TEXCOORD;
 };
 
-struct DirLight
-{
-    float3 direction;
-    float3 color;
-};
-
 SamplerState Sampler : register(s0);
 Texture2D Texture : register(t1);
 
-float4 CalculateAmbient(float3 normal, float3 color)
+float4 CalculateSemiAmbient(float3 normal, float3 color)
 {
     // Convert from [-1, 1] to [0, 1]
     float up = normal.y * 0.5 + 0.5;
@@ -44,12 +44,12 @@ float4 CalculateAmbient(float3 normal, float3 color)
     return ambient;
 }
 
-float3 CalculateAmbience()
+float3 CalculateAmbience(DirectionalLight light)
 {
-    return 0.1;
+    return 0.1 * light.color;
 }
 
-float3 CalculateDiffuse(float3 norm, DirLight light)
+float3 CalculateDiffuse(float3 norm, DirectionalLight light)
 {
     return max(dot(norm, light.direction), 0.0) * light.color;
 }
@@ -57,19 +57,23 @@ float3 CalculateDiffuse(float3 norm, DirLight light)
 float4 main(PixelShaderInput IN) : SV_Target
 {
     float3 norm = normalize(IN.Normal);
-    float2 uv = IN.Texture;
-    uv.y = 1 - uv.y;
     
     float3 color;
     if (Text.HasTexture)
+    {
+        float2 uv = IN.Texture;
+        uv.y = 1 - uv.y;
         color = Texture.Sample(Sampler, uv);
+    }
     else
+    {
         color = IN.Color;
+    }
     
-    DirLight l;
-    l.direction = normalize(float3(-0.5, 1, -0.5));
-    l.color = float3(1.0, 1.0, 1.0);
-    color = (CalculateAmbience() + CalculateDiffuse(norm, l)) * color;
+    DirectionalLight dirLight;
+    dirLight.direction = normalize(float3(-0.5, 1, -0.5));
+    dirLight.color = float3(1.0, 1.0, 1.0);
+    color = (CalculateAmbience(dirLight) + CalculateDiffuse(norm, dirLight)) * color;
     
     return float4(color, 1.0);
 }
