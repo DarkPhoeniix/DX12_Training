@@ -4,16 +4,15 @@
 **/src/packages
 **/src/bin
 **/src/obj
+**/delete_pdb
 **/.vs
 
-*.hlsl.h
-**/Build_VS16
 **/Build
 
 *.vcxproj.user
 *.opendb
 
+/ThirdParty/jsoncpp/Bin
 /DX12Lib/x64
-/delete_pdb
 /Bin
 /x64

@@ -35,8 +35,7 @@ namespace
             FbxProperty prop = material->FindProperty(FbxSurfaceMaterial::sDiffuse);
             if (prop.GetSrcObjectCount<FbxFileTexture>() > 0)
             {
-                FbxFileTexture* texture = prop.GetSrcObject<FbxFileTexture>(0);
-                if (texture)
+                if (FbxFileTexture* texture = prop.GetSrcObject<FbxFileTexture>(0))
                 {
                     name = (const char*)(FbxPathUtils::GetFileName(texture->GetFileName()));
                 }
@@ -44,56 +43,6 @@ namespace
         }
 
         return name;
-    }
-
-    // TODO: This doesn't work >=(
-    DirectX::XMVECTOR GetDiffudeColor(FbxNode* fbxNode)
-    {
-        DirectX::XMVECTOR color = { 1.0f, 0.0f, 1.0f, 1.0f };
-
-        //if (FbxNodeAttribute* attribute = fbxNode->GetNodeAttribute())
-        //{
-        //    color = {
-        //        (float)fbxNode->GetNodeAttribute()->Color.Get()[0],
-        //        (float)fbxNode->GetNodeAttribute()->Color.Get()[1],
-        //        (float)fbxNode->GetNodeAttribute()->Color.Get()[2],
-        //        1.0f
-        //    };
-        //}
-        //
-        //char f;
-        //if (FbxSurfacePhong* material = (FbxSurfacePhong*)fbxNode->GetMaterial(0))
-        //{
-        //        color = {
-        //            (float)material->sDiffuse[0],
-        //            (float)material->sDiffuse[1],
-        //            (float)material->sDiffuse[2],
-        //            1.0f
-        //        };
-        //       f= *material->sDiffuseFactor;
-        //}
-
-
-        for (int i = 0; i < fbxNode->GetMaterialCount(); ++i)
-        {
-            FbxSurfaceMaterial* material = fbxNode->GetMaterial(i);
-            if (material->GetClassId().Is(FbxSurfaceLambert::ClassId))
-            {
-                FbxSurfaceLambert* lam = (FbxSurfaceLambert*)material;
-
-                FbxPropertyT<FbxDouble3> p = lam->Diffuse;
-                FbxDouble3 info = p.Get();
-                
-                std::string colorStr = std::string(fbxNode->GetName()) + " - Color: " + 
-                    std::to_string((double)info[0] * 255) + ", " + 
-                    std::to_string((double)info[1] * 255) + ", " + 
-                    std::to_string((double)info[2] * 255) + '\n';
-                //OutputDebugStringA(colorStr.c_str());
-                color = { (float)info[0] * 255, (float)info[1] * 255, (float)info[2] * 255, 1.0f };
-            }
-        }
-
-        return color;
     }
 }
 
