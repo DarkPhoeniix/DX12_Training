@@ -19,9 +19,6 @@ struct DirectionalLight
     float3 color;
 };
 
-ConstantBuffer<Tex> Text : register(b1);
-ConstantBuffer<AmbientDesc> Ambient : register(b2);
-
 struct PixelShaderInput
 {
     float4 Position : SV_Position;
@@ -30,29 +27,15 @@ struct PixelShaderInput
     float2 Texture : TEXCOORD;
 };
 
+ConstantBuffer<Tex> Text : register(b1);
+ConstantBuffer<AmbientDesc> Ambient : register(b2);
+
 SamplerState Sampler : register(s0);
 Texture2D Texture : register(t1);
 
-float4 CalculateSemiAmbient(float3 normal, float3 color)
-{
-    // Convert from [-1, 1] to [0, 1]
-    float up = normal.y * 0.5 + 0.5;
-    // Calculate the ambient value
-    float4 ambient = Ambient.Down + up * Ambient.Up;
-
-    // Apply the ambient value to the color
-    return ambient;
-}
-
-float3 CalculateAmbience(DirectionalLight light)
-{
-    return 0.1 * light.color;
-}
-
-float3 CalculateDiffuse(float3 norm, DirectionalLight light)
-{
-    return max(dot(norm, light.direction), 0.0) * light.color;
-}
+float4 CalculateSemiAmbient(float3 normal, float3 color);
+float3 CalculateAmbient(DirectionalLight light);
+float3 CalculateDiffuse(float3 norm, DirectionalLight light);
 
 float4 main(PixelShaderInput IN) : SV_Target
 {
@@ -73,7 +56,30 @@ float4 main(PixelShaderInput IN) : SV_Target
     DirectionalLight dirLight;
     dirLight.direction = normalize(float3(-0.5, 1, -0.5));
     dirLight.color = float3(1.0, 1.0, 1.0);
-    color = (CalculateAmbience(dirLight) + CalculateDiffuse(norm, dirLight)) * color;
+    color = (CalculateAmbient(dirLight) + CalculateDiffuse(norm, dirLight)) * color;
     
     return float4(color, 1.0);
+}
+
+float4 CalculateSemiAmbient(float3 normal, float3 color)
+{
+    // Convert from [-1, 1] to [0, 1]
+    float up = normal.y * 0.5 + 0.5;
+    // Calculate the ambient value
+    float4 ambient = Ambient.Down + up * Ambient.Up;
+
+    // Apply the ambient value to the color
+    return ambient;
+}
+
+float3 CalculateAmbient(DirectionalLight light)
+{
+    return 0.1 * light.color;
+}
+
+float3 CalculateDiffuse(float3 norm, DirectionalLight light)
+{
+    float3 lightDirection = normalize(light.direction);
+    float diffuseFactor = max(dot(norm, lightDirection), 0.0f);
+    return light.color * diffuseFactor;
 }
