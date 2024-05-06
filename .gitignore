@@ -15,4 +15,4 @@
 /ThirdParty/jsoncpp/Bin
 /DX12Lib/x64
 /Bin
-/x64
+**/x64
