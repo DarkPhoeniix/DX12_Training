@@ -13,13 +13,15 @@ class SceneNode : public ISceneNode
 {
 public:
     SceneNode();
-    SceneNode(FbxNode* node, Core::GraphicsCommandList& commandList, Scene* scene, SceneNode* parent = nullptr);
+    SceneNode(Scene* scene, SceneNode* parent = nullptr);
     ~SceneNode();
 
     void Draw(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum) const override;
     void DrawAABB(Core::GraphicsCommandList& commandList) const override;
 
     const AABBVolume& GetAABB() const;
+
+    void LoadNode(const std::string& filepath, Core::GraphicsCommandList& commandList) override;
 
 protected:
     void _UploadData(Core::GraphicsCommandList& commandList,

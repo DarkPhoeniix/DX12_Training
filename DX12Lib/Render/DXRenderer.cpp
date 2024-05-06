@@ -46,7 +46,7 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
     // Camera Setup
     {
         XMVECTOR pos = XMVectorSet(-30.0f, 40.0f, -50.0f, 1.0f);
-        XMVECTOR target = XMVectorSet(0.0f, 10.0f, 0.0f, 1.0f);
+        XMVECTOR target = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
         XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
         RECT windowSize;
@@ -82,7 +82,7 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
         loadTask->SetName("Upload Data");
         Core::GraphicsCommandList* commandList = loadTask->GetCommandLists().front();
 
-        _scene.LoadScene("FruitBowl.fbx", *commandList);
+        _scene.LoadScene("WallFruitBowl\\WallFruitBowl.scene", *commandList);
 
         commandList->Close();
 

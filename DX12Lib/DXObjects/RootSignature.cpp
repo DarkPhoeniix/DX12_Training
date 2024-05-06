@@ -258,7 +258,7 @@ namespace Core
         ComPtr<ID3DBlob> vertexShaderBlob = nullptr;
         if (!jsonRoot["VS"].isNull())
         {
-            std::string vertexShaderFilepath = jsonRoot["VS"].asString();
+            std::string vertexShaderFilepath = jsonRoot["VS"].asCString();
             Helper::throwIfFailed(D3DReadFileToBlob(std::wstring(vertexShaderFilepath.begin(), vertexShaderFilepath.end()).c_str(), &vertexShaderBlob));
         }
 
@@ -266,7 +266,7 @@ namespace Core
         ComPtr<ID3DBlob> geometryShaderBlob = nullptr;
         if (!jsonRoot["GS"].isNull())
         {
-            std::string geometryShaderFilepath = jsonRoot["GS"].asString();
+            std::string geometryShaderFilepath = jsonRoot["GS"].asCString();
             Helper::throwIfFailed(D3DReadFileToBlob(std::wstring(geometryShaderFilepath.begin(), geometryShaderFilepath.end()).c_str(), &geometryShaderBlob));
         }
 
@@ -274,7 +274,7 @@ namespace Core
         ComPtr<ID3DBlob> pixelShaderBlob = nullptr;
         if (!jsonRoot["PS"].isNull())
         {
-            std::string pixelShaderFilepath = jsonRoot["PS"].asString();
+            std::string pixelShaderFilepath = jsonRoot["PS"].asCString();
             Helper::throwIfFailed(D3DReadFileToBlob(std::wstring(pixelShaderFilepath.begin(), pixelShaderFilepath.end()).c_str(), &pixelShaderBlob));
         }
 
@@ -289,10 +289,10 @@ namespace Core
             {
                 inputLayout[i] = {};
                 Json::Value layout = jsonRoot["layout"][i];
-                names[i] = layout["name"].asString();
+                names[i] = layout["name"].asCString();
                 inputLayout[i].SemanticName = names[i].c_str();
                 inputLayout[i].SemanticIndex = layout["semanticIndex"].asUInt();
-                inputLayout[i].Format = ParseFormat(layout["format"].asString());
+                inputLayout[i].Format = ParseFormat(layout["format"].asCString());
                 inputLayout[i].AlignedByteOffset = layout["offset"].asUInt();
                 inputLayout[i].InputSlot = layout["stream"].asUInt();
             }
@@ -301,9 +301,9 @@ namespace Core
         Helper::throwIfFailed(device->CreateRootSignature(0, vertexShaderBlob->GetBufferPointer(),
             vertexShaderBlob->GetBufferSize(), IID_PPV_ARGS(&_rootSignature)));
 
-        const std::string blendPipelineDescFilepath = jsonRoot["blend"].asString();
-        const std::string rasterPipelineDescFilepath = jsonRoot["raster"].asString();
-        const std::string depthPipelineDescFilepath = jsonRoot["depth"].asString();
+        const std::string blendPipelineDescFilepath = jsonRoot["blend"].asCString();
+        const std::string rasterPipelineDescFilepath = jsonRoot["raster"].asCString();
+        const std::string depthPipelineDescFilepath = jsonRoot["depth"].asCString();
 
         D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineStateStreamDesc = {};
 
@@ -313,7 +313,7 @@ namespace Core
 
         pipelineStateStreamDesc.pRootSignature = _rootSignature.Get();
         pipelineStateStreamDesc.InputLayout = { inputLayout, layoutElementsNum };
-        pipelineStateStreamDesc.PrimitiveTopologyType = ParseTopologyType(jsonRoot["topologyType"].asString());
+        pipelineStateStreamDesc.PrimitiveTopologyType = ParseTopologyType(jsonRoot["topologyType"].asCString());
         if (vertexShaderBlob)
             pipelineStateStreamDesc.VS = CD3DX12_SHADER_BYTECODE(vertexShaderBlob.Get());
         if (geometryShaderBlob)
@@ -342,18 +342,18 @@ namespace Core
         {
             Json::Value target = root["RenderTargets"][i];
             description.RenderTarget[i].BlendEnable = target["BlendEnable"].asBool();
-            description.RenderTarget[i].SrcBlend = ParseBlend(target["SrcBlend"].asString());
-            description.RenderTarget[i].DestBlend = ParseBlend(target["DestBlend"].asString());
-            description.RenderTarget[i].BlendOp = ParseBlendOp(target["BlendOp"].asString());
+            description.RenderTarget[i].SrcBlend = ParseBlend(target["SrcBlend"].asCString());
+            description.RenderTarget[i].DestBlend = ParseBlend(target["DestBlend"].asCString());
+            description.RenderTarget[i].BlendOp = ParseBlendOp(target["BlendOp"].asCString());
 
-            description.RenderTarget[i].SrcBlendAlpha = ParseBlend(target["SrcBlendAlpha"].asString());
-            description.RenderTarget[i].DestBlendAlpha = ParseBlend(target["DestBlendAlpha"].asString());
-            description.RenderTarget[i].BlendOpAlpha = ParseBlendOp(target["BlendOpAlpha"].asString());
+            description.RenderTarget[i].SrcBlendAlpha = ParseBlend(target["SrcBlendAlpha"].asCString());
+            description.RenderTarget[i].DestBlendAlpha = ParseBlend(target["DestBlendAlpha"].asCString());
+            description.RenderTarget[i].BlendOpAlpha = ParseBlendOp(target["BlendOpAlpha"].asCString());
 
-            description.RenderTarget[i].RenderTargetWriteMask = ParseColorWriteEnable(target["RenderTargetWriteMask"].asString());
+            description.RenderTarget[i].RenderTargetWriteMask = ParseColorWriteEnable(target["RenderTargetWriteMask"].asCString());
 
             description.RenderTarget[i].LogicOpEnable = target["LogicOpEnable"].asBool();
-            description.RenderTarget[i].LogicOp = ParseLogicOp(target["LogicOp"].asString());
+            description.RenderTarget[i].LogicOp = ParseLogicOp(target["LogicOp"].asCString());
         }
 
         return description;
@@ -364,8 +364,8 @@ namespace Core
         Json::Value root = Helper::ParseJson(filepath);
 
         D3D12_RASTERIZER_DESC description = {};
-        description.FillMode = ParseFillMode(root["FillMode"].asString());
-        description.CullMode = ParseCullMode(root["CullMode"].asString());
+        description.FillMode = ParseFillMode(root["FillMode"].asCString());
+        description.CullMode = ParseCullMode(root["CullMode"].asCString());
         description.DepthClipEnable = root["DepthClipEnable"].asBool();
 
         return description;
@@ -377,8 +377,8 @@ namespace Core
 
         D3D12_DEPTH_STENCIL_DESC description = {};
         description.DepthEnable = root["DepthEnable"].asBool();
-        description.DepthFunc = ParseComparisonFunc(root["DepthFunc"].asString());
-        description.DepthWriteMask = ParseDepthWriteMask(root["DepthWriteMask"].asString());
+        description.DepthFunc = ParseComparisonFunc(root["DepthFunc"].asCString());
+        description.DepthWriteMask = ParseDepthWriteMask(root["DepthWriteMask"].asCString());
         description.StencilEnable = root["StencilEnable"].asBool();
 
         return description;

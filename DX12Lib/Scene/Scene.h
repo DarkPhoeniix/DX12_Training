@@ -22,7 +22,7 @@ public:
     void Draw(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum);
     void DrawAABB(Core::GraphicsCommandList& commandList);
 
-    bool LoadScene(const std::string& name, Core::GraphicsCommandList& commandList);
+    bool LoadScene(const std::string& filepath, Core::GraphicsCommandList& commandList);
 
     friend class ISceneNode;
     friend class SceneNode;
@@ -33,8 +33,10 @@ private:
     static FbxManager* _FBXManager;
     FbxScene* _scene;
 
-    std::shared_ptr<ISceneNode> _rootNode;
+    std::vector<std::shared_ptr<ISceneNode>> _rootNodes;
 
     std::shared_ptr<Core::ResourceTable> _texturesTable;
+
+    std::string _name;
 };
 
