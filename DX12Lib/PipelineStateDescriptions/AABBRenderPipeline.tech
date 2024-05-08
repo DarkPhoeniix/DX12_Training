@@ -5,9 +5,9 @@
 
 	"topologyType": "point",
 
-	"blend": "Resources\\TriangleRenderPipeline.blend",
-	"raster": "Resources\\TriangleRenderPipeline.raster",
-	"depth": "Resources\\TriangleRenderPipeline.depth",
+	"blend": "PipelineStateDescriptions\\TriangleRenderPipeline.blend",
+	"raster": "PipelineStateDescriptions\\TriangleRenderPipeline.raster",
+	"depth": "PipelineStateDescriptions\\TriangleRenderPipeline.depth",
 
 	"RenderTargets": [
 		"BackBuffer"

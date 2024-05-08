@@ -1,13 +1,13 @@
 {
-	"type": "RenderTriangleTechnique",
+	"type": "DepthPretestTechnique",
 
 	"isGraphicsPipeline": true,
 
 	"topologyType": "triangle",
 
-	"blend": "Resources\\TriangleRenderPipeline.blend",
-	"raster": "Resources\\TriangleRenderPipeline.raster",
-	"depth": "Resources\\TriangleRenderPipeline.depth",
+	"blend": "PipelineStateDescriptions\\DepthPretestPipeline.blend",
+	"raster": "PipelineStateDescriptions\\TriangleRenderPipeline.raster",
+	"depth": "PipelineStateDescriptions\\DepthPretestPipeline.depth",
 
 	"RenderTargets": [
 		"BackBuffer"
@@ -44,6 +44,5 @@
 		}
 	],
 
-	"VS": "TriangleVertexShader.cso",
-	"PS": "TrianglePixelShader.cso"
+	"VS": "TriangleVertexShader.cso"
 }

@@ -40,8 +40,9 @@ DXRenderer::~DXRenderer()
 
 bool DXRenderer::LoadContent(TaskGPU* loadTask)
 {
-    _pipeline.Parse("Resources\\TriangleRenderPipeline.tech");
-    _AABBpipeline.Parse("Resources\\AABBRenderPipeline.tech");
+    _depthPretestPipeline.Parse("PipelineStateDescriptions\\DepthPretestPipeline.tech");
+    _renderPipeline.Parse("PipelineStateDescriptions\\TriangleRenderPipeline.tech");
+    _AABBpipeline.Parse("PipelineStateDescriptions\\AABBRenderPipeline.tech");
 
     // Camera Setup
     {
@@ -155,16 +156,39 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         commandList->Close();
     }
 
-    // Execute the TriangleRender shader
+    // Execute depth pre-test 
     {
-        TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, &_pipeline);
-        task->SetName("render");
+        TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, &_depthPretestPipeline);
+        task->SetName("depth pre-test");
         task->AddDependency("clean");
 
         Core::GraphicsCommandList* commandList = task->GetCommandLists().front();
 
-        commandList->SetPipelineState(_pipeline);
-        commandList->SetGraphicsRootSignature(_pipeline);
+        commandList->SetPipelineState(_depthPretestPipeline);
+        commandList->SetGraphicsRootSignature(_depthPretestPipeline);
+
+        commandList->SetViewport(_camera.GetViewport());
+        commandList->SetRenderTarget(rtv, dsv);
+
+        XMMATRIX viewProjMatrix = XMMatrixMultiply(_camera.View(), _camera.Projection());
+        commandList->SetConstants(0, sizeof(XMMATRIX) / 4, &viewProjMatrix);
+        commandList->SetCBV(2, _ambient->OffsetGPU(0));
+
+        _scene.Draw(*commandList, _camera.GetViewFrustum());
+
+        commandList->Close();
+    }
+
+    // Execute the TriangleRender shader
+    {
+        TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, &_renderPipeline);
+        task->SetName("render");
+        task->AddDependency("depth pre-test");
+
+        Core::GraphicsCommandList* commandList = task->GetCommandLists().front();
+
+        commandList->SetPipelineState(_renderPipeline);
+        commandList->SetGraphicsRootSignature(_renderPipeline);
 
         commandList->SetViewport(_camera.GetViewport());
         commandList->SetRenderTarget(rtv, dsv);

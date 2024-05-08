@@ -288,11 +288,14 @@
     <FxCompile Include="Shaders\AABB_ps.hlsl" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\TriangleRenderPipeline.blend" />
-    <None Include="Resources\TriangleRenderPipeline.depth" />
-    <None Include="Resources\TriangleRenderPipeline.raster" />
-    <None Include="Resources\TriangleRenderPipeline.tech" />
-    <None Include="Resources\AABBRenderPipeline.tech" />
+    <None Include="PipelineStateDescriptions\TriangleRenderPipeline.blend" />
+    <None Include="PipelineStateDescriptions\TriangleRenderPipeline.depth" />
+    <None Include="PipelineStateDescriptions\TriangleRenderPipeline.raster" />
+    <None Include="PipelineStateDescriptions\TriangleRenderPipeline.tech" />
+    <None Include="PipelineStateDescriptions\AABBRenderPipeline.tech" />
+    <None Include="PipelineStateDescriptions\DepthPretestPipeline.tech" />
+    <None Include="PipelineStateDescriptions\DepthPretestPipeline.depth" />
+    <None Include="PipelineStateDescriptions\DepthPretestPipeline.blend" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc">
