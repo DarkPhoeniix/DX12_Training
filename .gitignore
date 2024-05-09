@@ -1,5 +1,8 @@
 ﻿
 **/bin/x64
+**/bin
+**/Release
+**/Debug
 **/obj/x64
 **/src/packages
 **/src/bin
