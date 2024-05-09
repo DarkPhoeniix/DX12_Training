@@ -288,27 +288,16 @@
     <FxCompile Include="Shaders\AABB_ps.hlsl" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="PipelineStateDescriptions\TriangleRenderPipeline.blend" />
-    <None Include="PipelineStateDescriptions\TriangleRenderPipeline.depth" />
-    <None Include="PipelineStateDescriptions\TriangleRenderPipeline.raster" />
-    <None Include="PipelineStateDescriptions\TriangleRenderPipeline.tech" />
-    <None Include="PipelineStateDescriptions\AABBRenderPipeline.tech" />
-    <None Include="PipelineStateDescriptions\DepthPretestPipeline.tech" />
-    <None Include="PipelineStateDescriptions\DepthPretestPipeline.depth" />
-    <None Include="PipelineStateDescriptions\DepthPretestPipeline.blend" />
+    <None Include="PipelineDescriptions\AABBRenderPipeline.tech" />
+    <None Include="PipelineDescriptions\DepthPretestPipeline.blend" />
+    <None Include="PipelineDescriptions\DepthPretestPipeline.depth" />
+    <None Include="PipelineDescriptions\DepthPretestPipeline.tech" />
+    <None Include="PipelineDescriptions\TriangleRenderPipeline.blend" />
+    <None Include="PipelineDescriptions\TriangleRenderPipeline.depth" />
+    <None Include="PipelineDescriptions\TriangleRenderPipeline.raster" />
+    <None Include="PipelineDescriptions\TriangleRenderPipeline.tech" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Resource.rc">
-      <Filter>Resource Files</Filter>
-    </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="..\x64\Debug\dxapp.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="icon1.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
     <Image Include="Resources\dxapp.ico">
       <Filter>Resource Files</Filter>
     </Image>

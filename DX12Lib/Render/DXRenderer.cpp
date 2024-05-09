@@ -40,9 +40,9 @@ DXRenderer::~DXRenderer()
 
 bool DXRenderer::LoadContent(TaskGPU* loadTask)
 {
-    _depthPretestPipeline.Parse("PipelineStateDescriptions\\DepthPretestPipeline.tech");
-    _renderPipeline.Parse("PipelineStateDescriptions\\TriangleRenderPipeline.tech");
-    _AABBpipeline.Parse("PipelineStateDescriptions\\AABBRenderPipeline.tech");
+    _depthPretestPipeline.Parse("PipelineDescriptions\\DepthPretestPipeline.tech");
+    _renderPipeline.Parse("PipelineDescriptions\\TriangleRenderPipeline.tech");
+    _AABBpipeline.Parse("PipelineDescriptions\\AABBRenderPipeline.tech");
 
     // Camera Setup
     {
