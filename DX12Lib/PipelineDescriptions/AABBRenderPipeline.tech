@@ -7,7 +7,7 @@
 
 	"blend": "PipelineDescriptions\\TriangleRenderPipeline.blend",
 	"raster": "PipelineDescriptions\\TriangleRenderPipeline.raster",
-	"depth": "PipelineDescriptions\\TriangleRenderPipeline.depth",
+	"depth": "PipelineDescriptions\\AABBRenderPipeline.depth",
 
 	"RenderTargets": [
 		"BackBuffer"

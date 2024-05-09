@@ -305,6 +305,7 @@
     <None Include="PipelineDescriptions\OcclusionCullingPipeline.blend" />
     <None Include="PipelineDescriptions\OcclusionCullingPipeline.tech" />
     <None Include="packages.config" />
+    <None Include="PipelineDescriptions\AABBRenderPipeline.depth" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\dxapp.ico">

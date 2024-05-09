@@ -123,6 +123,8 @@ void SceneNode::DrawAABB(Core::GraphicsCommandList& commandList) const
         return;
     }
 
+    commandList.SetPredication(nullptr, 0, D3D12_PREDICATION_OP_EQUAL_ZERO);
+
     commandList.SetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
 
     commandList.SetConstants(0, 3, &_AABB.min.m128_f32, 0);
