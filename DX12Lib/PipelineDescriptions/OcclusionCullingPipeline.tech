@@ -1,13 +1,13 @@
 {
-	"type": "DepthPretestTechnique",
+	"type": "OcclusionCullingTechnique",
 
 	"isGraphicsPipeline": true,
 
 	"topologyType": "triangle",
 
-	"blend": "PipelineDescriptions\\DepthPretestPipeline.blend",
+	"blend": "PipelineDescriptions\\OcclusionCullingPipeline.blend",
 	"raster": "PipelineDescriptions\\TriangleRenderPipeline.raster",
-	"depth": "PipelineDescriptions\\DepthPretestPipeline.depth",
+	"depth": "PipelineDescriptions\\TriangleRenderPipeline.depth",
 
 	"RenderTargets": [
 		"BackBuffer"
@@ -44,5 +44,6 @@
 		}
 	],
 
-	"VS": "TriangleVertexShader.cso"
+	"VS": "TriangleVertexShader.cso",
+	"PS": "TrianglePixelShader.cso"
 }

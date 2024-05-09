@@ -5,9 +5,9 @@
 
 	"topologyType": "triangle",
 
-	"blend": "PipelineStateDescriptions\\TriangleRenderPipeline.blend",
-	"raster": "PipelineStateDescriptions\\TriangleRenderPipeline.raster",
-	"depth": "PipelineStateDescriptions\\TriangleRenderPipeline.depth",
+	"blend": "PipelineDescriptions\\TriangleRenderPipeline.blend",
+	"raster": "PipelineDescriptions\\TriangleRenderPipeline.raster",
+	"depth": "PipelineDescriptions\\TriangleRenderPipeline.depth",
 
 	"RenderTargets": [
 		"BackBuffer"

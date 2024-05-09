@@ -2,7 +2,7 @@
     "DepthEnable": true,
 
     "DepthFunc": "D3D12_COMPARISON_FUNC_LESS_EQUAL",
-    "DepthWriteMask": "D3D12_DEPTH_WRITE_MASK_NONE",
+    "DepthWriteMask": "D3D12_DEPTH_WRITE_MASK_ZERO",
 
     "StencilEnable": false
 }
