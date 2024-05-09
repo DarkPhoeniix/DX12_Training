@@ -28,6 +28,8 @@ using namespace Microsoft::WRL;
 // Required preprocessor definition when using FBX SDK dynamic library
 #define FBXSDK_SHARED
 
+#include <pix3.h>
+
 #include <json/json.h>
 #include <algorithm>
 #include <assert.h>

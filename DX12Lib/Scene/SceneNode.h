@@ -16,6 +16,7 @@ public:
     SceneNode(Scene* scene, SceneNode* parent = nullptr);
     ~SceneNode();
 
+    void RunOcclusion(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum) const override;
     void Draw(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum) const override;
     void DrawAABB(Core::GraphicsCommandList& commandList) const override;
 

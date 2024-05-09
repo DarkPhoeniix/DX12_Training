@@ -33,6 +33,7 @@ private:
     HWND _windowHandle;
 
     Core::RootSignature _depthPretestPipeline;
+    Core::RootSignature _occlusionPipeline;
     Core::RootSignature _renderPipeline;
     Core::RootSignature _AABBpipeline;
 

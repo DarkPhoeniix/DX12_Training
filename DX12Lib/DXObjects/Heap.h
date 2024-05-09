@@ -22,6 +22,8 @@ namespace Core
         void SetName(const std::string& name);
         const std::string& GetName() const;
 
+        ComPtr<ID3D12Heap> GetDXHeap() const;
+
     private:
         ComPtr<ID3D12Device2> _DXDevice;
 

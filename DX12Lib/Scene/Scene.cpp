@@ -26,10 +26,20 @@ Scene::Scene()
     descriptorHeapDesc.SetNodeMask(1);
 
     _texturesTable = std::make_shared<Core::ResourceTable>(descriptorHeapDesc, heapDesc);
+
+    _occlusionQuery.Create();
 }
 
 Scene::~Scene()
 {   }
+
+void Scene::RunOcclusion(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum)
+{
+    for (auto& node : _rootNodes)
+    {
+        node->RunOcclusion(commandList, frustum);
+    }
+}
 
 void Scene::Draw(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum)
 {

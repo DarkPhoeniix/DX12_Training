@@ -91,6 +91,16 @@ SceneNode::~SceneNode()
     }
 }
 
+void SceneNode::RunOcclusion(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum) const
+{
+    for (const std::shared_ptr<ISceneNode> node : _childNodes)
+    {
+        node->RunOcclusion(commandList, frustum);
+    }
+
+    _scene->_occlusionQuery.Run(this, commandList, frustum);
+}
+
 void SceneNode::Draw(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum) const
 {
     for (const std::shared_ptr<ISceneNode> node : _childNodes)
@@ -277,6 +287,8 @@ void SceneNode::_DrawCurrentNode(Core::GraphicsCommandList& commandList, const F
 
     if (_texture)
     {
+        commandList.SetDescriptorHeaps({ _scene->_texturesTable->GetDescriptorHeap().GetDXDescriptorHeap().Get() });
+
         commandList.SetConstant(1, true);
         commandList.SetDescriptorTable(4, _scene->_texturesTable->GetResourceGPUHandle(_texture->GetName()));
     }
@@ -284,6 +296,8 @@ void SceneNode::_DrawCurrentNode(Core::GraphicsCommandList& commandList, const F
     {
         commandList.SetConstant(1, false);
     }
+
+    _scene->_occlusionQuery.SetPredication(this, commandList);
 
     XMMATRIX* modelMatrixData = (XMMATRIX*)_modelMatrix->Map();
     *modelMatrixData = GetGlobalTransform();

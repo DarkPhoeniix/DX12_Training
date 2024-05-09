@@ -17,6 +17,8 @@ using namespace Core;
 
 namespace
 {
+    constexpr float MOVE_SPEED = 200.0f;
+
     struct Ambient
     {
         XMFLOAT4 Up;
@@ -41,6 +43,7 @@ DXRenderer::~DXRenderer()
 bool DXRenderer::LoadContent(TaskGPU* loadTask)
 {
     _depthPretestPipeline.Parse("PipelineDescriptions\\DepthPretestPipeline.tech");
+    _occlusionPipeline.Parse("PipelineDescriptions\\OcclusionCullingPipeline.tech");
     _renderPipeline.Parse("PipelineDescriptions\\TriangleRenderPipeline.tech");
     _AABBpipeline.Parse("PipelineDescriptions\\AABBRenderPipeline.tech");
 
@@ -83,7 +86,7 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
         loadTask->SetName("Upload Data");
         Core::GraphicsCommandList* commandList = loadTask->GetCommandLists().front();
 
-        _scene.LoadScene("WallFruitBowl\\WallFruitBowl.scene", *commandList);
+        _scene.LoadScene("TestCube\\TestCube.scene", *commandList);
 
         commandList->Close();
 
@@ -145,6 +148,7 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         task->SetName("clean");
 
         Core::GraphicsCommandList* commandList = task->GetCommandLists().front();
+        PIXBeginEvent(commandList->GetDXCommandList().Get(), 1, "Clean");
 
         commandList->TransitionBarrier(frame._targetTexture, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
@@ -153,16 +157,18 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         commandList->ClearRTV(rtv, clearColor);
         commandList->ClearDSV(dsv, D3D12_CLEAR_FLAG_DEPTH);
 
+        PIXEndEvent(commandList->GetDXCommandList().Get());
         commandList->Close();
     }
 
     // Execute depth pre-test 
     {
         TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, &_depthPretestPipeline);
-        task->SetName("depth pre-test");
+        task->SetName("depth-test");
         task->AddDependency("clean");
 
         Core::GraphicsCommandList* commandList = task->GetCommandLists().front();
+        PIXBeginEvent(commandList->GetDXCommandList().Get(), 2, "Depth test");
 
         commandList->SetPipelineState(_depthPretestPipeline);
         commandList->SetGraphicsRootSignature(_depthPretestPipeline);
@@ -176,6 +182,32 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
 
         _scene.Draw(*commandList, _camera.GetViewFrustum());
 
+        PIXEndEvent(commandList->GetDXCommandList().Get());
+        commandList->Close();
+    }
+
+    // Execute occlusion culling
+    {
+        TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, &_occlusionPipeline);
+        task->SetName("occlusion");
+        task->AddDependency("depth-test");
+
+        Core::GraphicsCommandList* commandList = task->GetCommandLists().front();
+        PIXBeginEvent(commandList->GetDXCommandList().Get(), 3, "Occlusion culling");
+
+        commandList->SetPipelineState(_occlusionPipeline);
+        commandList->SetGraphicsRootSignature(_occlusionPipeline);
+
+        commandList->SetViewport(_camera.GetViewport());
+        commandList->SetRenderTarget(rtv, dsv);
+
+        XMMATRIX viewProjMatrix = XMMatrixMultiply(_camera.View(), _camera.Projection());
+        commandList->SetConstants(0, sizeof(XMMATRIX) / 4, &viewProjMatrix);
+        commandList->SetCBV(2, _ambient->OffsetGPU(0));
+
+        _scene.RunOcclusion(*commandList, _camera.GetViewFrustum());
+
+        PIXEndEvent(commandList->GetDXCommandList().Get());
         commandList->Close();
     }
 
@@ -183,9 +215,10 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
     {
         TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, &_renderPipeline);
         task->SetName("render");
-        task->AddDependency("depth pre-test");
+        task->AddDependency("occlusion");
 
         Core::GraphicsCommandList* commandList = task->GetCommandLists().front();
+        PIXBeginEvent(commandList->GetDXCommandList().Get(), 4, "Render");
 
         commandList->SetPipelineState(_renderPipeline);
         commandList->SetGraphicsRootSignature(_renderPipeline);
@@ -205,6 +238,7 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
 
         _scene.DrawAABB(*commandList);
 
+        PIXEndEvent(commandList->GetDXCommandList().Get());
         commandList->Close();
     }
 
@@ -213,13 +247,16 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
         task->SetName("present");
         task->AddDependency("render");
+
         Core::GraphicsCommandList* commandList = task->GetCommandLists().front();
+        PIXBeginEvent(commandList->GetDXCommandList().Get(), 5, "Present");
 
         commandList->TransitionBarrier(frame._swapChainTexture, D3D12_RESOURCE_STATE_COPY_DEST);
         commandList->TransitionBarrier(frame._targetTexture, D3D12_RESOURCE_STATE_COPY_SOURCE);
         commandList->CopyResource(frame._targetTexture, frame._swapChainTexture);
         commandList->TransitionBarrier(frame._swapChainTexture, D3D12_RESOURCE_STATE_PRESENT);
 
+        PIXEndEvent(commandList->GetDXCommandList().Get());
         commandList->Close();
     }
 }
@@ -229,19 +266,19 @@ void DXRenderer::OnKeyPressed(Events::KeyEvent& e)
     XMVECTOR dir = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
     if (e.keyCode == DIKeyCode::DIK_W)
     {
-        dir += _camera.Look() * _deltaTime * 200.0f;
+        dir += _camera.Look() * _deltaTime * MOVE_SPEED;
     }
     if (e.keyCode == DIKeyCode::DIK_S)
     {
-        dir -= _camera.Look() * _deltaTime * 200.0f;
+        dir -= _camera.Look() * _deltaTime * MOVE_SPEED;
     }
     if (e.keyCode == DIKeyCode::DIK_D)
     {
-        dir += _camera.Right() * _deltaTime * 200.0f;
+        dir += _camera.Right() * _deltaTime * MOVE_SPEED;
     }
     if (e.keyCode == DIKeyCode::DIK_A)
     {
-        dir -= _camera.Right() * _deltaTime * 200.0f;
+        dir -= _camera.Right() * _deltaTime * MOVE_SPEED;
     }
     _camera.Update(dir);
 

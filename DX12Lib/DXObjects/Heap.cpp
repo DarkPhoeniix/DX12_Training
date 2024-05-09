@@ -73,4 +73,9 @@ namespace Core
     {
         return _name;
     }
+
+    ComPtr<ID3D12Heap> Heap::GetDXHeap() const
+    {
+        return _heap;
+    }
 } // namespace Core

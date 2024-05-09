@@ -123,6 +123,9 @@
     <ClCompile Include="DXObjects\ResourceTable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DXObjects\OcclusionQuery.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Utility\Helpers.h">
@@ -278,6 +281,9 @@
     <ClInclude Include="DXObjects\ResourceTable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="DXObjects\OcclusionQuery.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\TrianglePixelShader.hlsl" />
@@ -296,9 +302,18 @@
     <None Include="PipelineDescriptions\TriangleRenderPipeline.depth" />
     <None Include="PipelineDescriptions\TriangleRenderPipeline.raster" />
     <None Include="PipelineDescriptions\TriangleRenderPipeline.tech" />
+    <None Include="PipelineDescriptions\OcclusionCullingPipeline.blend" />
+    <None Include="PipelineDescriptions\OcclusionCullingPipeline.tech" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\dxapp.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\x64\Debug\dxapp.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icon1.ico">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
