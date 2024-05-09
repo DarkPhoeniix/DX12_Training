@@ -13,9 +13,6 @@
 /.cache/
 
 # MSVC project files:
-*.sln
-*.vcxproj
-*.filters
 *.user
 *.sdf
 *.opensdf

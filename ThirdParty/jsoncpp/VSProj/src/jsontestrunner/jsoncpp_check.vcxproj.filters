@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="D:\DX12_Training\ThirdParty\jsoncpp\VSProj\CMakeFiles\cc25170cdef1108503be2b1df833939d\jsoncpp_check.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="D:\DX12_Training\ThirdParty\jsoncpp\src\jsontestrunner\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="D:\DX12_Training\ThirdParty\jsoncpp\VSProj\src\jsontestrunner\CMakeFiles\jsoncpp_check" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{E6D5EA86-B82C-34F1-8E93-1E298AE7D114}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
