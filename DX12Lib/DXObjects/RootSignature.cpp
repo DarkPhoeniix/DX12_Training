@@ -280,31 +280,31 @@ namespace Core
         }
 
         // Create the vertex input layout
-        unsigned int layoutElementsNum = jsonRoot["layout"].size();
+        unsigned int layoutElementsNum = jsonRoot["Layout"].size();
         D3D12_INPUT_ELEMENT_DESC* inputLayout = nullptr;
         std::vector<std::string> names(layoutElementsNum);
-        if (!jsonRoot["layout"].isNull())
+        if (!jsonRoot["Layout"].isNull())
         {
             inputLayout = new D3D12_INPUT_ELEMENT_DESC[layoutElementsNum];
-            for (int i = 0; i < 4; ++i) // TODO: why not layoutElementsNum?
+            for (int i = 0; i < layoutElementsNum; ++i)
             {
                 inputLayout[i] = {};
-                Json::Value layout = jsonRoot["layout"][i];
-                names[i] = layout["name"].asCString();
+                Json::Value layout = jsonRoot["Layout"][i];
+                names[i] = layout["Name"].asCString();
                 inputLayout[i].SemanticName = names[i].c_str();
-                inputLayout[i].SemanticIndex = layout["semanticIndex"].asUInt();
-                inputLayout[i].Format = ParseFormat(layout["format"].asCString());
-                inputLayout[i].AlignedByteOffset = layout["offset"].asUInt();
-                inputLayout[i].InputSlot = layout["stream"].asUInt();
+                inputLayout[i].SemanticIndex = layout["SemanticIndex"].asUInt();
+                inputLayout[i].Format = ParseFormat(layout["Format"].asCString());
+                inputLayout[i].AlignedByteOffset = layout["Offset"].asUInt();
+                inputLayout[i].InputSlot = layout["Stream"].asUInt();
             }
         }
 
         Helper::throwIfFailed(device->CreateRootSignature(0, vertexShaderBlob->GetBufferPointer(),
             vertexShaderBlob->GetBufferSize(), IID_PPV_ARGS(&_rootSignature)));
 
-        const std::string blendPipelineDescFilepath = jsonRoot["blend"].asCString();
-        const std::string rasterPipelineDescFilepath = jsonRoot["raster"].asCString();
-        const std::string depthPipelineDescFilepath = jsonRoot["depth"].asCString();
+        const std::string blendPipelineDescFilepath = jsonRoot["Blend"].asCString();
+        const std::string rasterPipelineDescFilepath = jsonRoot["Raster"].asCString();
+        const std::string depthPipelineDescFilepath = jsonRoot["Depth"].asCString();
 
         D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineStateStreamDesc = {};
 
@@ -314,16 +314,26 @@ namespace Core
 
         pipelineStateStreamDesc.pRootSignature = _rootSignature.Get();
         pipelineStateStreamDesc.InputLayout = { inputLayout, layoutElementsNum };
-        pipelineStateStreamDesc.PrimitiveTopologyType = ParseTopologyType(jsonRoot["topologyType"].asCString());
+        pipelineStateStreamDesc.PrimitiveTopologyType = ParseTopologyType(jsonRoot["TopologyType"].asCString());
         if (vertexShaderBlob)
+        {
             pipelineStateStreamDesc.VS = CD3DX12_SHADER_BYTECODE(vertexShaderBlob.Get());
+        }
         if (geometryShaderBlob)
+        {
             pipelineStateStreamDesc.GS = CD3DX12_SHADER_BYTECODE(geometryShaderBlob.Get());
+        }
         if (pixelShaderBlob)
+        {
             pipelineStateStreamDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShaderBlob.Get());
+        }
         pipelineStateStreamDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
-        pipelineStateStreamDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-        pipelineStateStreamDesc.NumRenderTargets = 1;
+        Json::Value renderTargets = jsonRoot["RenderTargets"];
+        pipelineStateStreamDesc.NumRenderTargets = renderTargets.size();
+        for (int i = 0; i < renderTargets.size(); ++i)
+        {
+            pipelineStateStreamDesc.RTVFormats[i] = DXGI_FORMAT_R8G8B8A8_UNORM;
+        }
         pipelineStateStreamDesc.SampleDesc.Count = 1; // must be the same sample description as the swapChain and depth/stencil buffer
         pipelineStateStreamDesc.SampleMask = 0xffffffff; // sample mask has to do with multi-sampling. 0xffffffff means point sampling is done
 

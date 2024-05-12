@@ -1,49 +1,46 @@
 {
-	"type": "OcclusionCullingTechnique",
+	"Type": "OcclusionCullingTechnique",
 
-	"isGraphicsPipeline": true,
+	"IsGraphicsPipeline": true,
 
-	"topologyType": "triangle",
+	"TopologyType": "triangle",
 
-	"blend": "PipelineDescriptions\\OcclusionCullingPipeline.blend",
-	"raster": "PipelineDescriptions\\TriangleRenderPipeline.raster",
-	"depth": "PipelineDescriptions\\TriangleRenderPipeline.depth",
+	"Blend": "PipelineDescriptions\\OcclusionCullingPipeline.blend",
+	"Raster": "PipelineDescriptions\\TriangleRenderPipeline.raster",
+	"Depth": "PipelineDescriptions\\TriangleRenderPipeline.depth",
 
-	"RenderTargets": [
-		"BackBuffer"
-	],
-	"depthBuffer": "BackBufferDepth",
-	"layout": [
+	"RenderTargets": [],
+	"DepthBuffer": "BackBufferDepth",
+	"Layout": [
 		{
-			"name": "POSITION",
-			"stream": 0,
-			"offset": 0,
-			"format": "float3",
-			"semanticIndex": 0
+			"Name": "POSITION",
+			"Stream": 0,
+			"Offset": 0,
+			"Format": "float3",
+			"SemanticIndex": 0
 		},
 		{
-			"name": "NORMAL",
-			"stream": 0,
-			"offset": 12,
-			"format": "float3",
-			"semanticIndex": 0
+			"Name": "NORMAL",
+			"Stream": 0,
+			"Offset": 12,
+			"Format": "float3",
+			"SemanticIndex": 0
 		},
 		{
-			"name": "COLOR",
-			"stream": 0,
-			"offset": 24,
-			"format": "float4",
-			"semanticIndex": 0
+			"Name": "COLOR",
+			"Stream": 0,
+			"Offset": 24,
+			"Format": "float4",
+			"SemanticIndex": 0
 		},
 		{
-			"name": "TEXCOORD",
-			"stream": 0,
-			"offset": 40,
-			"format": "float2",
-			"semanticIndex": 0
+			"Name": "TEXCOORD",
+			"Stream": 0,
+			"Offset": 40,
+			"Format": "float2",
+			"SemanticIndex": 0
 		}
 	],
 
-	"VS": "TriangleVertexShader.cso",
-	"PS": "TrianglePixelShader.cso"
+	"VS": "TriangleVS.cso"
 }
