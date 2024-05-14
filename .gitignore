@@ -22,3 +22,6 @@
 
 !/ThirdParty/jsoncpp/lib/Debug
 !/ThirdParty/jsoncpp/lib/Release
+
+!/ThirdParty/fbxsdk/lib/Debug
+!/ThirdParty/fbxsdk/lib/Release
