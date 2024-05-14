@@ -19,3 +19,6 @@
 /DX12Lib/x64
 /Bin
 **/x64
+
+!/ThirdParty/jsoncpp/lib/Debug
+!/ThirdParty/jsoncpp/lib/Release
