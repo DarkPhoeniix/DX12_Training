@@ -101,6 +101,8 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
         loadTask->GetCommandQueue()->Signal(loadTask->GetFence()->GetFence().Get(), loadTask->GetFenceValue());
     }
 
+    Sleep(2000);
+
     _contentLoaded = true;
     return _contentLoaded;
 }
@@ -114,8 +116,6 @@ void DXRenderer::OnUpdate(Events::UpdateEvent& updateEvent)
 {
     static uint64_t frameCount = 0;
     static double totalTime = 0.0;
-
-    //super::OnUpdate(updateEvent);
 
     totalTime += updateEvent.elapsedTime;
     frameCount++;
@@ -174,7 +174,7 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         commandList->SetGraphicsRootSignature(_depthPretestPipeline);
 
         commandList->SetViewport(_camera.GetViewport());
-        commandList->SetRenderTarget(rtv, dsv);
+        commandList->SetRenderTarget(&rtv, &dsv);
 
         XMMATRIX viewProjMatrix = XMMatrixMultiply(_camera.View(), _camera.Projection());
         commandList->SetConstants(0, sizeof(XMMATRIX) / 4, &viewProjMatrix);
@@ -199,7 +199,7 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         commandList->SetGraphicsRootSignature(_occlusionPipeline);
 
         commandList->SetViewport(_camera.GetViewport());
-        commandList->SetRenderTarget(rtv, dsv);
+        commandList->SetRenderTarget(&rtv, &dsv);
 
         XMMATRIX viewProjMatrix = XMMatrixMultiply(_camera.View(), _camera.Projection());
         commandList->SetConstants(0, sizeof(XMMATRIX) / 4, &viewProjMatrix);
@@ -224,7 +224,7 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         commandList->SetGraphicsRootSignature(_renderPipeline);
 
         commandList->SetViewport(_camera.GetViewport());
-        commandList->SetRenderTarget(rtv, dsv);
+        commandList->SetRenderTarget(&rtv, &dsv);
 
         XMMATRIX viewProjMatrix = XMMatrixMultiply(_camera.View(), _camera.Projection());
         commandList->SetConstants(0, sizeof(XMMATRIX) / 4, &viewProjMatrix);
@@ -232,11 +232,13 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
 
         _scene.Draw(*commandList, _camera.GetViewFrustum());
 
+#if defined(_DEBUG)
         commandList->SetPipelineState(_AABBpipeline);
         commandList->SetGraphicsRootSignature(_AABBpipeline);
         commandList->SetConstants(1, sizeof(XMMATRIX) / 4, &viewProjMatrix);
 
         _scene.DrawAABB(*commandList);
+#endif
 
         PIXEndEvent(commandList->GetDXCommandList().Get());
         commandList->Close();
@@ -293,17 +295,23 @@ void DXRenderer::OnKeyPressed(Events::KeyEvent& e)
 void DXRenderer::OnMouseMoved(Events::MouseMoveEvent& e)
 {
     if ((e.relativeX != 0 || e.relativeY != 0) && _isCameraMoving)
+    {
         _camera.Update(e.relativeX, e.relativeY);
+    }
 }
 
 void DXRenderer::OnMouseButtonPressed(Events::MouseButtonEvent& e)
 {
     if (e.rightButton)
+    {
         _isCameraMoving = true;
+    }
 }
 
 void DXRenderer::OnMouseButtonReleased(Events::MouseButtonEvent& e)
 {
     if (!e.rightButton)
+    {
         _isCameraMoving = false;
+    }
 }

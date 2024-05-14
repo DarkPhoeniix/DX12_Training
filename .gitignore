@@ -15,7 +15,7 @@
 *.vcxproj.user
 *.opendb
 
-/ThirdParty/jsoncpp/Bin
+/ThirdParty/jsoncpp/source
 /DX12Lib/x64
 /Bin
 **/x64

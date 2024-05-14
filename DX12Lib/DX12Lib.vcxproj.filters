@@ -286,8 +286,8 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Shaders\TrianglePixelShader.hlsl" />
-    <FxCompile Include="Shaders\TriangleVertexShader.hlsl" />
+    <FxCompile Include="Shaders\TrianglePS.hlsl" />
+    <FxCompile Include="Shaders\TriangleVS.hlsl" />
     <FxCompile Include="Shaders\Compute.hlsl" />
     <FxCompile Include="Shaders\AABB_vs.hlsl" />
     <FxCompile Include="Shaders\AABB_gs.hlsl" />
@@ -306,6 +306,7 @@
     <None Include="PipelineDescriptions\OcclusionCullingPipeline.tech" />
     <None Include="packages.config" />
     <None Include="PipelineDescriptions\AABBRenderPipeline.depth" />
+    <None Include="Resource.aps" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\dxapp.ico">
@@ -317,5 +318,10 @@
     <Image Include="icon1.ico">
       <Filter>Resource Files</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resource.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

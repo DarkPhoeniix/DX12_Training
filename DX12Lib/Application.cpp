@@ -95,7 +95,8 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
 
     Events::InputDevice::Instance().AddInputObserver(pApp.get());
 
-    if (!pApp->LoadContent(_currentFrame->CreateTask(D3D12_COMMAND_LIST_TYPE_COPY, nullptr)))
+    TaskGPU* uploadTask = _currentFrame->CreateTask(D3D12_COMMAND_LIST_TYPE_COPY, nullptr);
+    if (!pApp->LoadContent(uploadTask))
     {
         return 1;
     }

@@ -104,9 +104,10 @@ namespace Core
         _commandList->IASetIndexBuffer(&indexBufferView);
     }
 
-    void GraphicsCommandList::SetRenderTarget(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetDescriptor, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilDescriptor)
+    void GraphicsCommandList::SetRenderTarget(D3D12_CPU_DESCRIPTOR_HANDLE* renderTargetDescriptor, D3D12_CPU_DESCRIPTOR_HANDLE* depthStencilDescriptor)
     {
-        _commandList->OMSetRenderTargets(1, &renderTargetDescriptor, FALSE, &depthStencilDescriptor);
+        UINT numTargets = renderTargetDescriptor ? 1 : 0;
+        _commandList->OMSetRenderTargets(numTargets, renderTargetDescriptor, FALSE, depthStencilDescriptor);
     }
 
     void GraphicsCommandList::SetViewport(const Viewport& viewport)

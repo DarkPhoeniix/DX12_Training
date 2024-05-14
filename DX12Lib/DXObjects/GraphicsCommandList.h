@@ -36,7 +36,7 @@ namespace Core
         void SetIndexBuffer(const D3D12_INDEX_BUFFER_VIEW& indexBufferView);
 
         // Output Merger
-        void SetRenderTarget(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetDescriptor, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilDescriptor);
+        void SetRenderTarget(D3D12_CPU_DESCRIPTOR_HANDLE* renderTargetDescriptor, D3D12_CPU_DESCRIPTOR_HANDLE* depthStencilDescriptor);
 
         // Rasterizator State
         void SetViewport(const Viewport& viewport);
