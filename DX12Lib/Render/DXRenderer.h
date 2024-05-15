@@ -32,8 +32,6 @@ private:
     ComPtr<ID3D12Device2> _DXDevice;
     HWND _windowHandle;
 
-    Core::RootSignature _depthPretestPipeline;
-    Core::RootSignature _occlusionPipeline;
     Core::RootSignature _renderPipeline;
     Core::RootSignature _AABBpipeline;
 
