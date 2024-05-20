@@ -37,6 +37,7 @@ float4 CalculateSemiAmbient(float3 normal, float3 color);
 float3 CalculateAmbient(DirectionalLight light);
 float3 CalculateDiffuse(float3 norm, DirectionalLight light);
 
+[earlydepthstencil]
 float4 main(PixelShaderInput IN) : SV_Target
 {
     float3 norm = normalize(IN.Normal);
