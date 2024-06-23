@@ -26,7 +26,7 @@ namespace
         return transform;
     }
 
-    std::string GetDiffuseTextureName(FbxNode* fbxNode)
+    std::string GetAlbedoTextureName(FbxNode* fbxNode)
     {
         std::string name;
 
@@ -50,7 +50,8 @@ SceneNode::SceneNode()
     : ISceneNode()
     , _DXDevice(Core::Device::GetDXDevice())
     , _mesh(nullptr)
-    , _texture(nullptr)
+    , _albedoTexture(nullptr)
+    , _normalTexture(nullptr)
     , _vertexBuffer(nullptr)
     , _indexBuffer(nullptr)
     , _modelMatrix(nullptr)
@@ -68,7 +69,8 @@ SceneNode::SceneNode(Scene* scene, SceneNode* parent)
     : ISceneNode(scene, parent)
     , _DXDevice(Core::Device::GetDXDevice())
     , _mesh(nullptr)
-    , _texture(nullptr)
+    , _albedoTexture(nullptr)
+    , _normalTexture(nullptr)
     , _vertexBuffer(nullptr)
     , _indexBuffer(nullptr)
     , _modelMatrix(nullptr)
@@ -155,9 +157,6 @@ void SceneNode::LoadNode(const std::string& filepath, Core::GraphicsCommandList&
         root["Transform"]["r3"]["x"].asFloat(), root["Transform"]["r3"]["y"].asFloat(), root["Transform"]["r3"]["z"].asFloat(), root["Transform"]["r3"]["w"].asFloat()
     );
 
-    _AABB.min = XMVectorSet(root["AABB"]["Min"]["x"].asFloat(), root["AABB"]["Min"]["y"].asFloat(), root["AABB"]["Min"]["z"].asFloat(), root["AABB"]["Min"]["w"].asFloat());
-    _AABB.max = XMVectorSet(root["AABB"]["Max"]["x"].asFloat(), root["AABB"]["Max"]["y"].asFloat(), root["AABB"]["Max"]["z"].asFloat(), root["AABB"]["Max"]["w"].asFloat());
-
     if (!root["Mesh"].isNull())
     {
         _mesh = std::make_shared<Mesh>();
@@ -169,9 +168,13 @@ void SceneNode::LoadNode(const std::string& filepath, Core::GraphicsCommandList&
         std::ifstream inMat(_scene->_name + '\\' + root["Material"].asCString(), std::ios_base::in | std::ios_base::binary);
         Json::Value mat;
         inMat >> mat;
-        if (_texture = std::move(Core::Texture::LoadFromFile(mat["Diffuse"].asCString())))
+        if (_albedoTexture = std::move(Core::Texture::LoadFromFile(mat["Albedo"].asCString())))
         {
-            _scene->_UploadTexture(_texture.get(), commandList);
+            _scene->_UploadTexture(_albedoTexture.get(), commandList);
+        }
+        if (_normalTexture = std::move(Core::Texture::LoadFromFile(mat["Normal"].asCString())))
+        {
+            _scene->_UploadTexture(_normalTexture.get(), commandList);
         }
     }
 
@@ -287,12 +290,12 @@ void SceneNode::_DrawCurrentNode(Core::GraphicsCommandList& commandList, const F
         return;
     }
 
-    if (_texture)
+    if (_albedoTexture)
     {
         commandList.SetDescriptorHeaps({ _scene->_texturesTable->GetDescriptorHeap().GetDXDescriptorHeap().Get() });
 
         commandList.SetConstant(1, true);
-        commandList.SetDescriptorTable(4, _scene->_texturesTable->GetResourceGPUHandle(_texture->GetName()));
+        commandList.SetDescriptorTable(4, _scene->_texturesTable->GetResourceGPUHandle(_albedoTexture->GetName()));
     }
     else
     {

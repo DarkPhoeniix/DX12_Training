@@ -1,22 +1,73 @@
-#include "stdafx.h"
+#include "pch.h"
 
-#include "Mesh.h"
+#include "Helpers.h"
 
 using namespace DirectX;
 
-namespace
+namespace FbxHelpers
 {
-    void readPosition(FbxMesh* fbxMesh, int polygonIndex, int vertexIndex, XMFLOAT3& outPosition)
+    XMMATRIX GetNodeLocalTransform(FbxNode* fbxNode)
     {
-        FbxVector4 position = fbxMesh->GetControlPointAt(fbxMesh->GetPolygonVertex(polygonIndex, vertexIndex));
-        outPosition = { (float)position.mData[0], (float)position.mData[1], (float)position.mData[2] };
+        FbxAMatrix fbxTransform = fbxNode->EvaluateLocalTransform();
+        XMMATRIX transform =
+        {
+            (float)fbxTransform.mData[0][0], (float)fbxTransform.mData[0][1], (float)fbxTransform.mData[0][2], (float)fbxTransform.mData[0][3],
+            (float)fbxTransform.mData[1][0], (float)fbxTransform.mData[1][1], (float)fbxTransform.mData[1][2], (float)fbxTransform.mData[1][3],
+            (float)fbxTransform.mData[2][0], (float)fbxTransform.mData[2][1], (float)fbxTransform.mData[2][2], (float)fbxTransform.mData[2][3],
+            (float)fbxTransform.mData[3][0], (float)fbxTransform.mData[3][1], (float)fbxTransform.mData[3][2], (float)fbxTransform.mData[3][3],
+        };
+
+        return transform;
     }
 
-    void readNormal(FbxMesh* fbxMesh, int controlPointIndex, int vertexIndex, XMFLOAT3& outNormal)
+    std::string GetAlbedoTextureName(FbxNode* fbxNode)
     {
-        ASSERT((fbxMesh->GetElementNormalCount() >= 1), "Invalid normals number");
+        std::string name;
 
+        if (FbxSurfaceMaterial* material = fbxNode->GetMaterial(0))
+        {
+            FbxProperty prop = material->FindProperty(FbxSurfaceMaterial::sDiffuse);
+            if (prop.GetSrcObjectCount<FbxFileTexture>() > 0)
+            {
+                if (FbxFileTexture* texture = prop.GetSrcObject<FbxFileTexture>(0))
+                {
+                    name = (const char*)(FbxPathUtils::GetFileName(texture->GetFileName()));
+                }
+            }
+        }
+
+        return name;
+    }
+
+    std::string GetNormalTextureName(FbxNode* fbxNode)
+    {
+        std::string name;
+
+        if (FbxSurfaceMaterial* material = fbxNode->GetMaterial(0))
+        {
+            FbxProperty prop = material->FindProperty(FbxSurfaceMaterial::sNormalMap);
+            if (prop.GetSrcObjectCount<FbxFileTexture>() > 0)
+            {
+                if (FbxFileTexture* texture = prop.GetSrcObject<FbxFileTexture>(0))
+                {
+                    name = (const char*)(FbxPathUtils::GetFileName(texture->GetFileName()));
+                }
+            }
+        }
+
+        return name;
+    }
+
+    void ReadPosition(FbxMesh* fbxMesh, int polygonIndex, int vertexIndex, XMVECTOR& outPosition)
+    {
+        FbxVector4 position = fbxMesh->GetControlPointAt(fbxMesh->GetPolygonVertex(polygonIndex, vertexIndex));
+        outPosition = XMVectorSet((float)position.mData[0], (float)position.mData[1], (float)position.mData[2], (float)position.mData[3]);
+    }
+
+    void ReadNormal(FbxMesh* fbxMesh, int controlPointIndex, int vertexIndex, XMVECTOR& outNormal)
+    {
         FbxGeometryElementNormal* vertexNormal = fbxMesh->GetElementNormal(0);
+        XMFLOAT4 norm;
         switch (vertexNormal->GetMappingMode())
         {
         case FbxGeometryElement::eByControlPoint:
@@ -24,18 +75,25 @@ namespace
             {
             case FbxGeometryElement::eDirect:
             {
-                outNormal.x = static_cast<float>(vertexNormal->GetDirectArray().GetAt(controlPointIndex).mData[0]);
-                outNormal.y = static_cast<float>(vertexNormal->GetDirectArray().GetAt(controlPointIndex).mData[1]);
-                outNormal.z = static_cast<float>(vertexNormal->GetDirectArray().GetAt(controlPointIndex).mData[2]);
+                norm = {
+                    static_cast<float>(vertexNormal->GetDirectArray().GetAt(controlPointIndex).mData[0]),
+                    static_cast<float>(vertexNormal->GetDirectArray().GetAt(controlPointIndex).mData[1]),
+                    static_cast<float>(vertexNormal->GetDirectArray().GetAt(controlPointIndex).mData[2]),
+                    static_cast<float>(vertexNormal->GetDirectArray().GetAt(controlPointIndex).mData[3])
+                };
             }
             break;
 
             case FbxGeometryElement::eIndexToDirect:
             {
                 int index = vertexNormal->GetIndexArray().GetAt(controlPointIndex);
-                outNormal.x = static_cast<float>(vertexNormal->GetDirectArray().GetAt(index).mData[0]);
-                outNormal.y = static_cast<float>(vertexNormal->GetDirectArray().GetAt(index).mData[1]);
-                outNormal.z = static_cast<float>(vertexNormal->GetDirectArray().GetAt(index).mData[2]);
+
+                norm = {
+                    static_cast<float>(vertexNormal->GetDirectArray().GetAt(index).mData[0]),
+                    static_cast<float>(vertexNormal->GetDirectArray().GetAt(index).mData[1]),
+                    static_cast<float>(vertexNormal->GetDirectArray().GetAt(index).mData[2]),
+                    static_cast<float>(vertexNormal->GetDirectArray().GetAt(index).mData[3])
+                };
             }
             break;
 
@@ -49,18 +107,25 @@ namespace
             {
             case FbxGeometryElement::eDirect:
             {
-                outNormal.x = static_cast<float>(vertexNormal->GetDirectArray().GetAt(vertexIndex).mData[0]);
-                outNormal.y = static_cast<float>(vertexNormal->GetDirectArray().GetAt(vertexIndex).mData[1]);
-                outNormal.z = static_cast<float>(vertexNormal->GetDirectArray().GetAt(vertexIndex).mData[2]);
+                norm = {
+                    static_cast<float>(vertexNormal->GetDirectArray().GetAt(vertexIndex).mData[0]),
+                    static_cast<float>(vertexNormal->GetDirectArray().GetAt(vertexIndex).mData[1]),
+                    static_cast<float>(vertexNormal->GetDirectArray().GetAt(vertexIndex).mData[2]),
+                    static_cast<float>(vertexNormal->GetDirectArray().GetAt(vertexIndex).mData[3])
+                };
             }
             break;
 
             case FbxGeometryElement::eIndexToDirect:
             {
                 int index = vertexNormal->GetIndexArray().GetAt(vertexIndex);
-                outNormal.x = static_cast<float>(vertexNormal->GetDirectArray().GetAt(index).mData[0]);
-                outNormal.y = static_cast<float>(vertexNormal->GetDirectArray().GetAt(index).mData[1]);
-                outNormal.z = static_cast<float>(vertexNormal->GetDirectArray().GetAt(index).mData[2]);
+
+                norm = {
+                    static_cast<float>(vertexNormal->GetDirectArray().GetAt(index).mData[0]),
+                    static_cast<float>(vertexNormal->GetDirectArray().GetAt(index).mData[1]),
+                    static_cast<float>(vertexNormal->GetDirectArray().GetAt(index).mData[2]),
+                    static_cast<float>(vertexNormal->GetDirectArray().GetAt(index).mData[3])
+                };
             }
             break;
 
@@ -69,9 +134,11 @@ namespace
             }
             break;
         }
+
+        outNormal = XMVectorSet(norm.x, norm.y, norm.z, norm.w);
     }
 
-    void readColor(fbxsdk::FbxMesh* fbxMesh, int polygonIndex, int controlPointIndex, int vertexIndex, XMFLOAT4& outColor)
+    void ReadColor(fbxsdk::FbxMesh* fbxMesh, int polygonIndex, int controlPointIndex, int vertexIndex, XMVECTOR& outColor)
     {
         outColor = { 0.5f, 0.5f, 0.5f, 1.0f };
 
@@ -161,7 +228,14 @@ namespace
         }
 
         if (mat)
-            outColor = { (float)mat->Diffuse.Get()[0], (float)mat->Diffuse.Get()[1], (float)mat->Diffuse.Get()[2], (float)mat->Diffuse.Get()[3] };
+        {
+            outColor = XMVectorSet(
+                (float)mat->Diffuse.Get()[0],
+                (float)mat->Diffuse.Get()[1],
+                (float)mat->Diffuse.Get()[2],
+                (float)mat->Diffuse.Get()[3]
+            );
+        }
     }
 
     void ReadUV(fbxsdk::FbxMesh* fbxMesh, int vertexIndex, int uvIndex, XMFLOAT2& outUV) {
@@ -212,85 +286,6 @@ namespace
             }
             break;
         }
-        }
-    }
-}
-
-const std::vector<VertexData>& Mesh::getVertices() const
-{
-    return _rawVertexData;
-}
-
-const std::vector<UINT>& Mesh::getIndices() const
-{
-    return _rawIndexData;
-}
-
-void Mesh::LoadMesh(const std::string& filepath)
-{
-    std::vector<XMFLOAT3> points;
-    std::vector<XMFLOAT3> normals;
-    std::vector<XMFLOAT4> colors;
-    std::vector<XMFLOAT2> UVs;
-    UINT64 index = 0;
-
-    std::string input;
-    std::ifstream in(filepath, std::ios_base::in);
-    while (!in.eof())
-    {
-        input = "";
-        in >> input;
-
-        if (input == "")
-        {
-            char line[512];
-            in.getline(line, 512);
-        }
-        else if (input == "v")
-        {
-            XMFLOAT3 v;
-            float w;
-            in >> v.x >> v.y >> v.z >> w;
-            points.push_back({ v.x, v.y, v.z });
-        }
-        else if (input == "vn")
-        {
-            XMFLOAT3 vn;
-            float w;
-            in >> vn.x >> vn.y >> vn.z >> w;
-            normals.push_back({ vn.x, vn.y, vn.z });
-        }
-        else if (input == "vc")
-        {
-            float r, g, b, a;
-            float w;
-            in >> r >> g >> b >> a;
-            colors.push_back({ r, g, b, a });
-        }
-        else if (input == "vt")
-        {
-            float u, v, w;
-            in >> u >> v >> w;
-            UVs.push_back({ u, v });
-        }
-        else if (input == "f")
-        {
-            char sym;
-            UINT64 v, vn, vt;
-
-            for (int i = 0; i < 3; ++i)
-            {
-                in >> v >> sym >> vn >> sym >> vt;
-                
-                VertexData vertex;
-                vertex.Position = points[v];
-                vertex.Normal = normals[vn];
-                vertex.Color = colors[v];
-                vertex.UV = UVs[vt];
-
-                _rawVertexData.push_back(vertex);
-                _rawIndexData.push_back(index++);
-            }
         }
     }
 }

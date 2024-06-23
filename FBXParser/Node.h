@@ -5,10 +5,8 @@ class Node
 public:
     std::string GetName() const;
 
-    const std::vector<std::shared_ptr<Node>>& GetChildren() const;
-
     DirectX::XMMATRIX GetTransform() const;
-    std::pair<DirectX::XMVECTOR, DirectX::XMVECTOR> GetAABB() const;
+    const std::vector<std::shared_ptr<Node>>& GetChildren() const;
 
     const std::vector<DirectX::XMVECTOR>& GetVertices() const;
     const std::vector<DirectX::XMVECTOR>& GetNormals() const;
@@ -16,7 +14,8 @@ public:
     const std::vector<DirectX::XMFLOAT2>& GetUVs() const;
     const std::vector<UINT64>& GetIndices() const;
 
-    std::string GetTextureName() const;
+    std::string GetAlbedoTextureName() const;
+    std::string GetNormalTextureName() const;
 
     bool Parse(FbxNode* fbxNode);
 
@@ -31,10 +30,8 @@ private:
 
     std::string _name;
 
-    std::vector<std::shared_ptr<Node>> _children;
-
     DirectX::XMMATRIX _transform;
-    std::pair<DirectX::XMVECTOR, DirectX::XMVECTOR> _aabb;
+    std::vector<std::shared_ptr<Node>> _children;
 
     std::vector<DirectX::XMVECTOR> _vertices;
     std::vector<DirectX::XMVECTOR> _normals;
@@ -42,5 +39,6 @@ private:
     std::vector<DirectX::XMFLOAT2> _UVs;
     std::vector<UINT64> _indices;
 
-    std::string _textureName;
+    std::string _albedoTextureName;
+    std::string _normalTextureName;
 };

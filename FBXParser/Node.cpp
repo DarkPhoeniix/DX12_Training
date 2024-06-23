@@ -1,283 +1,14 @@
 #include "pch.h"
+
 #include "Node.h"
 
+#include "Helpers.h"
+
 using namespace DirectX;
-
-namespace
-{
-    XMMATRIX GetNodeLocalTransform(FbxNode* fbxNode)
-    {
-        FbxAMatrix fbxTransform = fbxNode->EvaluateLocalTransform();
-        XMMATRIX transform =
-        {
-            (float)fbxTransform.mData[0][0], (float)fbxTransform.mData[0][1], (float)fbxTransform.mData[0][2], (float)fbxTransform.mData[0][3],
-            (float)fbxTransform.mData[1][0], (float)fbxTransform.mData[1][1], (float)fbxTransform.mData[1][2], (float)fbxTransform.mData[1][3],
-            (float)fbxTransform.mData[2][0], (float)fbxTransform.mData[2][1], (float)fbxTransform.mData[2][2], (float)fbxTransform.mData[2][3],
-            (float)fbxTransform.mData[3][0], (float)fbxTransform.mData[3][1], (float)fbxTransform.mData[3][2], (float)fbxTransform.mData[3][3],
-        };
-
-        return transform;
-    }
-
-    std::string GetDiffuseTextureName(FbxNode* fbxNode)
-    {
-        std::string name;
-
-        if (FbxSurfaceMaterial* material = fbxNode->GetMaterial(0))
-        {
-            FbxProperty prop = material->FindProperty(FbxSurfaceMaterial::sDiffuse);
-            if (prop.GetSrcObjectCount<FbxFileTexture>() > 0)
-            {
-                if (FbxFileTexture* texture = prop.GetSrcObject<FbxFileTexture>(0))
-                {
-                    name = (const char*)(FbxPathUtils::GetFileName(texture->GetFileName()));
-                }
-            }
-        }
-
-        return name;
-    }
-
-    void ReadPosition(FbxMesh* fbxMesh, int polygonIndex, int vertexIndex, XMVECTOR& outPosition)
-    {
-        FbxVector4 position = fbxMesh->GetControlPointAt(fbxMesh->GetPolygonVertex(polygonIndex, vertexIndex));
-        outPosition = XMVectorSet((float)position.mData[0], (float)position.mData[1], (float)position.mData[2], (float)position.mData[3]);
-    }
-
-    void ReadNormal(FbxMesh* fbxMesh, int controlPointIndex, int vertexIndex, XMVECTOR& outNormal)
-    {
-        FbxGeometryElementNormal* vertexNormal = fbxMesh->GetElementNormal(0);
-        XMFLOAT4 norm;
-        switch (vertexNormal->GetMappingMode())
-        {
-        case FbxGeometryElement::eByControlPoint:
-            switch (vertexNormal->GetReferenceMode())
-            {
-            case FbxGeometryElement::eDirect:
-            {
-                norm = {
-                    static_cast<float>(vertexNormal->GetDirectArray().GetAt(controlPointIndex).mData[0]),
-                    static_cast<float>(vertexNormal->GetDirectArray().GetAt(controlPointIndex).mData[1]),
-                    static_cast<float>(vertexNormal->GetDirectArray().GetAt(controlPointIndex).mData[2]),
-                    static_cast<float>(vertexNormal->GetDirectArray().GetAt(controlPointIndex).mData[3])
-                };
-            }
-            break;
-
-            case FbxGeometryElement::eIndexToDirect:
-            {
-                int index = vertexNormal->GetIndexArray().GetAt(controlPointIndex);
-
-                norm = {
-                    static_cast<float>(vertexNormal->GetDirectArray().GetAt(index).mData[0]),
-                    static_cast<float>(vertexNormal->GetDirectArray().GetAt(index).mData[1]),
-                    static_cast<float>(vertexNormal->GetDirectArray().GetAt(index).mData[2]),
-                    static_cast<float>(vertexNormal->GetDirectArray().GetAt(index).mData[3])
-                };
-            }
-            break;
-
-            default:
-                throw std::exception("Invalid Reference");
-            }
-            break;
-
-        case FbxGeometryElement::eByPolygonVertex:
-            switch (vertexNormal->GetReferenceMode())
-            {
-            case FbxGeometryElement::eDirect:
-            {
-                norm = {
-                    static_cast<float>(vertexNormal->GetDirectArray().GetAt(vertexIndex).mData[0]),
-                    static_cast<float>(vertexNormal->GetDirectArray().GetAt(vertexIndex).mData[1]),
-                    static_cast<float>(vertexNormal->GetDirectArray().GetAt(vertexIndex).mData[2]),
-                    static_cast<float>(vertexNormal->GetDirectArray().GetAt(vertexIndex).mData[3])
-                };
-            }
-            break;
-
-            case FbxGeometryElement::eIndexToDirect:
-            {
-                int index = vertexNormal->GetIndexArray().GetAt(vertexIndex);
-
-                norm = {
-                    static_cast<float>(vertexNormal->GetDirectArray().GetAt(index).mData[0]),
-                    static_cast<float>(vertexNormal->GetDirectArray().GetAt(index).mData[1]),
-                    static_cast<float>(vertexNormal->GetDirectArray().GetAt(index).mData[2]),
-                    static_cast<float>(vertexNormal->GetDirectArray().GetAt(index).mData[3])
-                };
-            }
-            break;
-
-            default:
-                throw std::exception("Invalid Reference");
-            }
-            break;
-        }
-
-        outNormal = XMVectorSet(norm.x, norm.y, norm.z, norm.w);
-    }
-
-    void ReadColor(fbxsdk::FbxMesh* fbxMesh, int polygonIndex, int controlPointIndex, int vertexIndex, XMVECTOR& outColor)
-    {
-        outColor = { 0.5f, 0.5f, 0.5f, 1.0f };
-
-        FbxSurfaceLambert* mat = nullptr;
-        for (int l = 0; l < fbxMesh->GetElementMaterialCount(); l++)
-        {
-            FbxGeometryElementMaterial* leVtxc = fbxMesh->GetElementMaterial(l);
-
-            auto mapM = leVtxc->GetMappingMode();
-            switch (leVtxc->GetMappingMode())
-            {
-            default:
-                break;
-            case FbxGeometryElement::eByControlPoint:
-                OutputDebugStringA("eByControlPoint\n");
-                switch (leVtxc->GetReferenceMode())
-                {
-                case FbxGeometryElement::eDirect:
-                {
-                    //DisplayColor(header, leVtxc->GetDirectArray().GetAt(controlPointIndex));
-                    //fbxColor = leVtxc->GetDirectArray().GetAt(controlPointIndex);
-                    //std::string str = "Color: " + std::to_string(fbxColor.mRed) + ", " + std::to_string(fbxColor.mGreen) + ", " + std::to_string(fbxColor.mBlue) + "\n";
-                    //OutputDebugStringA(str.c_str());
-                }
-                break;
-                case FbxGeometryElement::eIndexToDirect:
-                {
-                    int id = leVtxc->GetIndexArray().GetAt(controlPointIndex);
-                    //DisplayColor(header, leVtxc->GetDirectArray().GetAt(id));
-                    //fbxColor = leVtxc->GetDirectArray().GetAt(id);
-                    //std::string str = "Color: " + std::to_string(fbxColor.mRed) + ", " + std::to_string(fbxColor.mGreen) + ", " + std::to_string(fbxColor.mBlue) + "\n";
-                    //OutputDebugStringA(str.c_str());
-                }
-                break;
-                default:
-                    break; // other reference modes not shown here!
-                }
-                break;
-
-            case FbxGeometryElement::eByPolygonVertex:
-            {
-                OutputDebugStringA("eByPolygonVertex\n");
-                switch (leVtxc->GetReferenceMode())
-                {
-                case FbxGeometryElement::eDirect:
-                {
-                    //DisplayColor(header, leVtxc->GetDirectArray().GetAt(vertexId));
-
-                    //fbxColor = leVtxc->GetDirectArray().GetAt(vertexIndex);
-                    //std::string str = "Color: " + std::to_string(fbxColor.mRed) + ", " + std::to_string(fbxColor.mGreen) + ", " + std::to_string(fbxColor.mBlue) + "\n";
-                    //OutputDebugStringA(str.c_str());
-                }
-                break;
-                case FbxGeometryElement::eIndexToDirect:
-                {
-                    int id = leVtxc->GetIndexArray().GetAt(vertexIndex);
-                    //DisplayColor(header, leVtxc->GetDirectArray().GetAt(id));
-                    //fbxColor = leVtxc->GetDirectArray().GetAt(id);
-                    //std::string str = "Color: " + std::to_string(fbxColor.mRed) + ", " + std::to_string(fbxColor.mGreen) + ", " + std::to_string(fbxColor.mBlue) + "\n";
-                    //OutputDebugStringA(str.c_str());
-                }
-                break;
-                default:
-                    break; // other reference modes not shown here!
-                }
-            }
-            break;
-
-            case FbxGeometryElement::eByPolygon:
-            {
-                mat = (FbxSurfaceLambert*)fbxMesh->GetNode()->GetMaterial(leVtxc->GetIndexArray().GetAt(polygonIndex));
-                auto amb = mat->Ambient;
-                //std::string str = "Color: " + std::to_string(mat->Diffuse.Get()[0]) + ", " + std::to_string(mat->Diffuse.Get()[1]) + ", " + std::to_string(mat->Diffuse.Get()[2]) + "\n";
-                //OutputDebugStringA(str.c_str());
-                //OutputDebugStringA("ByPolygon\n");
-                break;
-            }
-            case FbxGeometryElement::eAllSame:   // doesn't make much sense for UVs
-            {
-                mat = (FbxSurfaceLambert*)fbxMesh->GetNode()->GetMaterial(0);
-                auto amb = mat->Ambient;
-                //OutputDebugStringA("AllSame\n");
-            }
-            case FbxGeometryElement::eNone:       // doesn't make much sense for UVs
-                break;
-            }
-        }
-
-        if (mat)
-        {
-            outColor = XMVectorSet(
-                (float)mat->Diffuse.Get()[0],
-                (float)mat->Diffuse.Get()[1],
-                (float)mat->Diffuse.Get()[2],
-                (float)mat->Diffuse.Get()[3]
-            );
-        }
-    }
-
-    void readUV(fbxsdk::FbxMesh* fbxMesh, int vertexIndex, int uvIndex, XMFLOAT2& outUV) {
-
-        fbxsdk::FbxLayerElementUV* pFbxLayerElementUV = fbxMesh->GetLayer(0)->GetUVs();
-
-        if (pFbxLayerElementUV == nullptr) {
-            return;
-        }
-
-        switch (pFbxLayerElementUV->GetMappingMode()) {
-        case FbxLayerElementUV::eByControlPoint:
-        {
-            switch (pFbxLayerElementUV->GetReferenceMode()) {
-            case FbxLayerElementUV::eDirect:
-            {
-                fbxsdk::FbxVector2 fbxUv = pFbxLayerElementUV->GetDirectArray().GetAt(vertexIndex);
-
-                outUV.x = fbxUv.mData[0];
-                outUV.y = fbxUv.mData[1];
-
-                break;
-            }
-            case FbxLayerElementUV::eIndexToDirect:
-            {
-                int id = pFbxLayerElementUV->GetIndexArray().GetAt(vertexIndex);
-                fbxsdk::FbxVector2 fbxUv = pFbxLayerElementUV->GetDirectArray().GetAt(id);
-
-                outUV.x = fbxUv.mData[0];
-                outUV.y = fbxUv.mData[1];
-
-                break;
-            }
-            }
-            break;
-        }
-        case FbxLayerElementUV::eByPolygonVertex:
-        {
-            switch (pFbxLayerElementUV->GetReferenceMode()) {
-                // Always enters this part for the example model
-            case FbxLayerElementUV::eDirect:
-            case FbxLayerElementUV::eIndexToDirect:
-            {
-                outUV.x = pFbxLayerElementUV->GetDirectArray().GetAt(uvIndex).mData[0];
-                outUV.y = pFbxLayerElementUV->GetDirectArray().GetAt(uvIndex).mData[1];
-                break;
-            }
-            }
-            break;
-        }
-        }
-    }
-}
 
 std::string Node::GetName() const
 {
     return _name;
-}
-
-const std::vector<std::shared_ptr<Node>>& Node::GetChildren() const
-{
-    return _children;
 }
 
 DirectX::XMMATRIX Node::GetTransform() const
@@ -285,9 +16,9 @@ DirectX::XMMATRIX Node::GetTransform() const
     return _transform;
 }
 
-std::pair<DirectX::XMVECTOR, DirectX::XMVECTOR> Node::GetAABB() const
+const std::vector<std::shared_ptr<Node>>& Node::GetChildren() const
 {
-    return _aabb;
+    return _children;
 }
 
 const std::vector<DirectX::XMVECTOR>& Node::GetVertices() const
@@ -315,29 +46,29 @@ const std::vector<UINT64>& Node::GetIndices() const
     return _indices;
 }
 
-std::string Node::GetTextureName() const
+std::string Node::GetAlbedoTextureName() const
 {
-    return _textureName;
+    return _albedoTextureName;
+}
+
+std::string Node::GetNormalTextureName() const
+{
+    return _normalTextureName;
 }
 
 bool Node::Parse(FbxNode* fbxNode)
 {
     _name = fbxNode->GetName();
 
-    _transform = GetNodeLocalTransform(fbxNode);
+    _transform = FbxHelpers::GetNodeLocalTransform(fbxNode);
 
     // Setup mesh
     if (FbxMesh* fbxMesh = fbxNode->GetMesh())
     {
-        FbxVector4 min, max, center;
-
-        fbxNode->EvaluateGlobalBoundingBoxMinMaxCenter(min, max, center);
-        _aabb.first = XMVectorSet(min.mData[0], min.mData[1], min.mData[2], min.mData[3]);
-        _aabb.second = XMVectorSet(max.mData[0], max.mData[1], max.mData[2], max.mData[3]);
-
         ParseMesh(fbxMesh);
 
-        _textureName = GetDiffuseTextureName(fbxNode);
+        _albedoTextureName = FbxHelpers::GetAlbedoTextureName(fbxNode);
+        _normalTextureName = FbxHelpers::GetNormalTextureName(fbxNode);
     }
 
     // Setup child nodes
@@ -399,18 +130,6 @@ bool Node::Save(const std::string& path) const
     jsonTransform["r3"]["w"] = XMVectorGetW(_transform.r[3]);
     jsonRoot["Transform"] = jsonTransform;
 
-    // Save AABB data
-    Json::Value jsonAABB;
-    jsonAABB["Min"]["x"] = XMVectorGetX(_aabb.first);
-    jsonAABB["Min"]["y"] = XMVectorGetY(_aabb.first);
-    jsonAABB["Min"]["z"] = XMVectorGetZ(_aabb.first);
-    jsonAABB["Min"]["w"] = XMVectorGetW(_aabb.first);
-    jsonAABB["Max"]["x"] = XMVectorGetX(_aabb.second);
-    jsonAABB["Max"]["y"] = XMVectorGetY(_aabb.second);
-    jsonAABB["Max"]["z"] = XMVectorGetZ(_aabb.second);
-    jsonAABB["Max"]["w"] = XMVectorGetW(_aabb.second);
-    jsonRoot["AABB"] = jsonAABB;
-
     for (const auto& node : _children)
     {
         node->Save(path);
@@ -469,7 +188,8 @@ bool Node::SaveMaterial(const std::string& path) const
     std::ofstream out(path, std::fstream::out | std::ios_base::binary);
 
     Json::Value jsonMaterial;
-    jsonMaterial["Diffuse"] = _textureName.c_str();
+    jsonMaterial["Albedo"] = _albedoTextureName.c_str();
+    jsonMaterial["Normal"] = _normalTextureName.c_str();
 
     Json::StreamWriterBuilder builder;
     const std::unique_ptr<Json::StreamWriter> writer(builder.newStreamWriter());
@@ -491,10 +211,10 @@ bool Node::ParseMesh(FbxMesh* fbxMesh)
             XMVECTOR color;
             XMFLOAT2 uv;
 
-            ReadPosition(fbxMesh, polygonIndex, vertexIndex, position);
-            ReadNormal(fbxMesh, fbxMesh->GetPolygonVertex(polygonIndex, vertexIndex), vertexAbsoluteIndex, normal);
-            ReadColor(fbxMesh, polygonIndex, fbxMesh->GetPolygonVertex(polygonIndex, vertexIndex), vertexAbsoluteIndex, color);
-            readUV(fbxMesh, vertexIndex, fbxMesh->GetTextureUVIndex(polygonIndex, vertexIndex), uv);
+            FbxHelpers::ReadPosition(fbxMesh, polygonIndex, vertexIndex, position);
+            FbxHelpers::ReadNormal(fbxMesh, fbxMesh->GetPolygonVertex(polygonIndex, vertexIndex), vertexAbsoluteIndex, normal);
+            FbxHelpers::ReadColor(fbxMesh, polygonIndex, fbxMesh->GetPolygonVertex(polygonIndex, vertexIndex), vertexAbsoluteIndex, color);
+            FbxHelpers::ReadUV(fbxMesh, vertexIndex, fbxMesh->GetTextureUVIndex(polygonIndex, vertexIndex), uv);
 
             _vertices.push_back(position);
             _normals.push_back(XMVector3Normalize(normal));

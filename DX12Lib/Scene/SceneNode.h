@@ -39,7 +39,8 @@ private:
     std::shared_ptr<Mesh> _mesh;
     AABBVolume _AABB;
 
-    std::shared_ptr<Core::Texture> _texture;
+    std::shared_ptr<Core::Texture> _albedoTexture;
+    std::shared_ptr<Core::Texture> _normalTexture;
 
     std::shared_ptr<Core::Resource> _modelMatrix;
     std::shared_ptr<Core::Resource> _vertexBuffer;
