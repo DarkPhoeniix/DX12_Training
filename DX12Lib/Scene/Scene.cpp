@@ -8,101 +8,75 @@
 #include "Scene/Camera.h"
 #include "Volumes/FrustumVolume.h"
 
-// Create the FBX SDK memory manager object.
-// The SDK Manager allocates and frees memory
-// for almost all the classes in the SDK.
-FbxManager* Scene::_FBXManager = FbxManager::Create();
-
 Scene::Scene()
 {
-    // create an IOSettings object
-    FbxIOSettings* ios = FbxIOSettings::Create(_FBXManager, IOSROOT);
-    _FBXManager->SetIOSettings(ios);
+    Core::HeapDescription heapDesc;
+    heapDesc.SetHeapType(D3D12_HEAP_TYPE_DEFAULT);
+    heapDesc.SetHeapFlags(D3D12_HEAP_FLAG_ALLOW_ALL_BUFFERS_AND_TEXTURES);
+    heapDesc.SetSize(_256MB);
+    heapDesc.SetMemoryPoolPreference(D3D12_MEMORY_POOL_UNKNOWN);
+    heapDesc.SetCPUPageProperty(D3D12_CPU_PAGE_PROPERTY_UNKNOWN);
+    heapDesc.SetVisibleNodeMask(1);
+    heapDesc.SetCreationNodeMask(1);
 
-    _scene = FbxScene::Create(_FBXManager, "");
-    
-    {
-        Core::HeapDescription heapDesc;
-        heapDesc.SetHeapType(D3D12_HEAP_TYPE_DEFAULT);
-        heapDesc.SetHeapFlags(D3D12_HEAP_FLAG_ALLOW_ALL_BUFFERS_AND_TEXTURES);
-        heapDesc.SetSize(_256MB);
-        heapDesc.SetMemoryPoolPreference(D3D12_MEMORY_POOL_UNKNOWN);
-        heapDesc.SetCPUPageProperty(D3D12_CPU_PAGE_PROPERTY_UNKNOWN);
-        heapDesc.SetVisibleNodeMask(1);
-        heapDesc.SetCreationNodeMask(1);
+    Core::DescriptorHeapDescription descriptorHeapDesc;
+    descriptorHeapDesc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    descriptorHeapDesc.SetNumDescriptors(32);
+    descriptorHeapDesc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
+    descriptorHeapDesc.SetNodeMask(1);
 
-        Core::DescriptorHeapDescription descriptorHeapDesc;
-        descriptorHeapDesc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-        descriptorHeapDesc.SetNumDescriptors(32);
-        descriptorHeapDesc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
-        descriptorHeapDesc.SetNodeMask(1);
+    _texturesTable = std::make_shared<Core::ResourceTable>(descriptorHeapDesc, heapDesc);
 
-        _texturesTable = std::make_shared<Core::ResourceTable>(descriptorHeapDesc, heapDesc);
-    }
+    _occlusionQuery.Create();
 }
 
 Scene::~Scene()
+{   }
+
+void Scene::RunOcclusion(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum)
 {
-    if (_FBXManager) 
+    for (auto& node : _rootNodes)
     {
-        _FBXManager->Destroy();
+        node->RunOcclusion(commandList, frustum);
     }
 }
 
 void Scene::Draw(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum)
 {
-    commandList.SetDescriptorHeaps({ _texturesTable->GetDescriptorHeap().GetDXDescriptorHeap().Get()});
+    commandList.SetDescriptorHeaps({ _texturesTable->GetDescriptorHeap().GetDXDescriptorHeap().Get() });
 
-    _rootNode->Draw(commandList, frustum);
+    for (auto& node : _rootNodes)
+    {
+        node->Draw(commandList, frustum);
+    }
 }
 
 void Scene::DrawAABB(Core::GraphicsCommandList& commandList)
 {
-    _rootNode->DrawAABB(commandList);
+    for (auto& node : _rootNodes)
+    {
+        node->DrawAABB(commandList);
+    }
 }
 
-bool Scene::LoadScene(const std::string& name, Core::GraphicsCommandList& commandList)
+bool Scene::LoadScene(const std::string& filepath, Core::GraphicsCommandList& commandList)
 {
-    bool lStatus;
+    std::ifstream in(filepath, std::ios_base::in | std::ios_base::binary);
 
-    // Create an importer.
-    FbxImporter* lImporter = FbxImporter::Create(_FBXManager, "");
+    Json::Value root;
+    in >> root;
 
-    // Initialize the importer by providing a filename.
-    bool lImportStatus = lImporter->Initialize(name.c_str(), -1, _FBXManager->GetIOSettings());
-    //lImporter->SetEmbeddingExtractionFolder("Res");
+    _name = root["Name"].asCString();
 
-    if (!lImportStatus)
+    Json::Value nodes = root["Nodes"];
+    for (int i = 0; i < nodes.size(); ++i)
     {
-        // Destroy the importer
-        lImporter->Destroy();
-        return false;
+        std::shared_ptr<SceneNode> node = std::make_shared<SceneNode>(this);
+        node->LoadNode(_name + '\\' + nodes[i].asCString(), commandList);
+        _rootNodes.push_back(node);
     }
 
-    if (lImporter->IsFBX())
-    {
-        // Set the import states. By default, the import states are always set to 
-        // true. The code below shows how to change these states.
-        (*(_FBXManager->GetIOSettings())).SetBoolProp(IMP_FBX_MATERIAL, true);
-        (*(_FBXManager->GetIOSettings())).SetBoolProp(IMP_FBX_TEXTURE, true);
-        (*(_FBXManager->GetIOSettings())).SetBoolProp(IMP_FBX_LINK, true);
-        (*(_FBXManager->GetIOSettings())).SetBoolProp(IMP_FBX_SHAPE, true);
-        (*(_FBXManager->GetIOSettings())).SetBoolProp(IMP_FBX_GOBO, true);
-        (*(_FBXManager->GetIOSettings())).SetBoolProp(IMP_FBX_ANIMATION, true);
-        (*(_FBXManager->GetIOSettings())).SetBoolProp(IMP_FBX_GLOBAL_SETTINGS, true);
-    }
-
-    this->_scene = FbxScene::Create(this->_FBXManager, "Scene");
-
-    // Import the scene
-    lStatus = lImporter->Import(_scene);
-
-    _rootNode = std::make_shared<SceneNode>(_scene->GetRootNode(), commandList, this);
-
-    // Destroy the importer
-    lImporter->Destroy();
-
-    return lStatus;
+    return true;
 }
 
 void Scene::_UploadTexture(Core::Texture* texture, Core::GraphicsCommandList& commandList)

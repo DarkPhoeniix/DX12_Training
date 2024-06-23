@@ -64,8 +64,8 @@ SceneNode::SceneNode()
 {
 }
 
-SceneNode::SceneNode(FbxNode* fbxNode, Core::GraphicsCommandList& commandList, Scene* scene, SceneNode* parent)
-    : ISceneNode(fbxNode->GetName(), scene, parent)
+SceneNode::SceneNode(Scene* scene, SceneNode* parent)
+    : ISceneNode(scene, parent)
     , _DXDevice(Core::Device::GetDXDevice())
     , _mesh(nullptr)
     , _texture(nullptr)
@@ -79,82 +79,7 @@ SceneNode::SceneNode(FbxNode* fbxNode, Core::GraphicsCommandList& commandList, S
     , _AABBIBO{}
     , _VBO{}
     , _IBO{}
-{
-    Logger::Log(LogType::Info, "Parsing node " + _name);
-
-    // Read transform
-    {
-        _transform = GetNodeLocalTransform(fbxNode);
-
-        Core::EResourceType SRVType = Core::EResourceType::Dynamic | Core::EResourceType::Buffer;
-
-        Core::ResourceDescription desc;
-        desc.SetResourceType(SRVType);
-        desc.SetSize({ sizeof(XMMATRIX), 1 });
-        desc.SetStride(1);
-        desc.SetFormat(DXGI_FORMAT::DXGI_FORMAT_UNKNOWN);
-
-        _modelMatrix = std::make_shared<Core::Resource>(desc);
-        _modelMatrix->CreateCommitedResource(D3D12_RESOURCE_STATE_GENERIC_READ);
-        _modelMatrix->SetName(_name + "_ModelMatrix");
-    }
-
-    // Setup mesh
-    if (FbxMesh* fbxMesh = fbxNode->GetMesh())
-    {
-        FbxVector4 min, max, center;
-        fbxNode->EvaluateGlobalBoundingBoxMinMaxCenter(min, max, center);
-        _AABB.min = XMVectorSet(min.mData[0], min.mData[1], min.mData[2], min.mData[3]);
-        _AABB.max = XMVectorSet(max.mData[0], max.mData[1], max.mData[2], max.mData[3]);
-
-        if (_mesh = std::make_shared<Mesh>(fbxMesh))
-        {
-            if (!_mesh->getVertices().empty())
-            {
-                ComPtr<ID3D12Resource> vertexBuffer;
-                _UploadData(commandList, &vertexBuffer, _mesh->getVertices().size(), sizeof(VertexData), _mesh->getVertices().data());
-                _vertexBuffer = std::make_shared<Core::Resource>();
-                _vertexBuffer->InitFromDXResource(vertexBuffer);
-                _vertexBuffer->SetName(_name + "_VB");
-
-                _VBO.BufferLocation = _vertexBuffer->OffsetGPU(0);
-                _VBO.SizeInBytes = static_cast<UINT>(_mesh->getVertices().size() * sizeof(_mesh->getVertices()[0]));
-                _VBO.StrideInBytes = sizeof(VertexData);
-            }
-
-            if (!_mesh->getIndices().empty())
-            {
-                ComPtr<ID3D12Resource> indexBuffer;
-                _UploadData(commandList, &indexBuffer, _mesh->getIndices().size(), sizeof(UINT), _mesh->getIndices().data());
-                _indexBuffer = std::make_shared<Core::Resource>();
-                _indexBuffer->InitFromDXResource(indexBuffer);
-                _indexBuffer->SetName(_name + "_IB");
-
-                _IBO.BufferLocation = _indexBuffer->OffsetGPU(0);
-                _IBO.Format = DXGI_FORMAT_R32_UINT;
-                _IBO.SizeInBytes = static_cast<UINT>(_mesh->getIndices().size() * sizeof(_mesh->getIndices()[0]));
-            }
-        }
-    }
-
-    // Setup texture
-    if (_mesh)
-    {
-        Core::GraphicsCommandList comList(commandList);
-        std::string textureName = GetDiffuseTextureName(fbxNode);
-        if (_texture = Core::Texture::LoadFromFile(textureName))
-        {
-            _scene->_UploadTexture(_texture.get(), commandList);
-        }
-    }
-
-    // Setup child nodes
-    for (int childIndex = 0; childIndex < fbxNode->GetChildCount(); ++childIndex)
-    {
-        auto childNode = std::make_shared<SceneNode>(fbxNode->GetChild(childIndex), commandList, scene, this);
-        _childNodes.push_back(childNode);
-    }
-}
+{   }
 
 SceneNode::~SceneNode()
 {
@@ -164,6 +89,16 @@ SceneNode::~SceneNode()
     {
         intermediate = nullptr;
     }
+}
+
+void SceneNode::RunOcclusion(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum) const
+{
+    for (const std::shared_ptr<ISceneNode> node : _childNodes)
+    {
+        node->RunOcclusion(commandList, frustum);
+    }
+
+    _scene->_occlusionQuery.Run(this, commandList, frustum);
 }
 
 void SceneNode::Draw(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum) const
@@ -188,6 +123,8 @@ void SceneNode::DrawAABB(Core::GraphicsCommandList& commandList) const
         return;
     }
 
+    commandList.SetPredication(nullptr, 0, D3D12_PREDICATION_OP_EQUAL_ZERO);
+
     commandList.SetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
 
     commandList.SetConstants(0, 3, &_AABB.min.m128_f32, 0);
@@ -201,12 +138,102 @@ const AABBVolume& SceneNode::GetAABB() const
     return _AABB;
 }
 
+void SceneNode::LoadNode(const std::string& filepath, Core::GraphicsCommandList& commandList)
+{
+    Logger::Log(LogType::Info, "Parsing node " + filepath);
+
+    std::ifstream in(filepath, std::ios_base::in | std::ios_base::binary);
+    Json::Value root;
+    in >> root;
+
+    _name = root["Name"].asCString();
+
+    _transform = XMMatrixSet(
+        root["Transform"]["r0"]["x"].asFloat(), root["Transform"]["r0"]["y"].asFloat(), root["Transform"]["r0"]["z"].asFloat(), root["Transform"]["r0"]["w"].asFloat(),
+        root["Transform"]["r1"]["x"].asFloat(), root["Transform"]["r1"]["y"].asFloat(), root["Transform"]["r1"]["z"].asFloat(), root["Transform"]["r1"]["w"].asFloat(),
+        root["Transform"]["r2"]["x"].asFloat(), root["Transform"]["r2"]["y"].asFloat(), root["Transform"]["r2"]["z"].asFloat(), root["Transform"]["r2"]["w"].asFloat(),
+        root["Transform"]["r3"]["x"].asFloat(), root["Transform"]["r3"]["y"].asFloat(), root["Transform"]["r3"]["z"].asFloat(), root["Transform"]["r3"]["w"].asFloat()
+    );
+
+    _AABB.min = XMVectorSet(root["AABB"]["Min"]["x"].asFloat(), root["AABB"]["Min"]["y"].asFloat(), root["AABB"]["Min"]["z"].asFloat(), root["AABB"]["Min"]["w"].asFloat());
+    _AABB.max = XMVectorSet(root["AABB"]["Max"]["x"].asFloat(), root["AABB"]["Max"]["y"].asFloat(), root["AABB"]["Max"]["z"].asFloat(), root["AABB"]["Max"]["w"].asFloat());
+
+    if (!root["Mesh"].isNull())
+    {
+        _mesh = std::make_shared<Mesh>();
+        _mesh->LoadMesh(_scene->_name + '\\' + root["Mesh"].asCString());
+    }
+
+    if (!root["Material"].isNull())
+    {
+        std::ifstream inMat(_scene->_name + '\\' + root["Material"].asCString(), std::ios_base::in | std::ios_base::binary);
+        Json::Value mat;
+        inMat >> mat;
+        if (_texture = std::move(Core::Texture::LoadFromFile(mat["Diffuse"].asCString())))
+        {
+            _scene->_UploadTexture(_texture.get(), commandList);
+        }
+    }
+
+    auto children = root["Nodes"];
+    for (int i = 0; i < children.size(); ++i)
+    {
+        std::shared_ptr<SceneNode> child = std::make_shared<SceneNode>(_scene, this);
+        child->LoadNode(_scene->_name + '\\' + children[i].asCString(), commandList);
+        _childNodes.push_back(child);
+    }
+
+    {
+        Core::EResourceType SRVType = Core::EResourceType::Dynamic | Core::EResourceType::Buffer;
+
+        Core::ResourceDescription desc;
+        desc.SetResourceType(SRVType);
+        desc.SetSize({ sizeof(XMMATRIX), 1 });
+        desc.SetStride(1);
+        desc.SetFormat(DXGI_FORMAT::DXGI_FORMAT_UNKNOWN);
+
+        _modelMatrix = std::make_shared<Core::Resource>(desc);
+        _modelMatrix->CreateCommitedResource(D3D12_RESOURCE_STATE_GENERIC_READ);
+        _modelMatrix->SetName(_name + "_ModelMatrix");
+    }
+
+
+    if (_mesh)
+    {
+        if (!_mesh->getVertices().empty())
+        {
+            ComPtr<ID3D12Resource> vertexBuffer;
+            _UploadData(commandList, &vertexBuffer, _mesh->getVertices().size(), sizeof(VertexData), _mesh->getVertices().data());
+            _vertexBuffer = std::make_shared<Core::Resource>();
+            _vertexBuffer->InitFromDXResource(vertexBuffer);
+            _vertexBuffer->SetName(_name + "_VB");
+
+            _VBO.BufferLocation = _vertexBuffer->OffsetGPU(0);
+            _VBO.SizeInBytes = static_cast<UINT>(_mesh->getVertices().size() * sizeof(_mesh->getVertices()[0]));
+            _VBO.StrideInBytes = sizeof(VertexData);
+        }
+
+        if (!_mesh->getIndices().empty())
+        {
+            ComPtr<ID3D12Resource> indexBuffer;
+            _UploadData(commandList, &indexBuffer, _mesh->getIndices().size(), sizeof(UINT), _mesh->getIndices().data());
+            _indexBuffer = std::make_shared<Core::Resource>();
+            _indexBuffer->InitFromDXResource(indexBuffer);
+            _indexBuffer->SetName(_name + "_IB");
+
+            _IBO.BufferLocation = _indexBuffer->OffsetGPU(0);
+            _IBO.Format = DXGI_FORMAT_R32_UINT;
+            _IBO.SizeInBytes = static_cast<UINT>(_mesh->getIndices().size() * sizeof(_mesh->getIndices()[0]));
+        }
+    }
+}
+
 void SceneNode::_UploadData(Core::GraphicsCommandList& commandList,
-                            ID3D12Resource** destinationResource,
-                            size_t numElements, 
-                            size_t elementSize, 
-                            const void* bufferData,
-                            D3D12_RESOURCE_FLAGS flags)
+    ID3D12Resource** destinationResource,
+    size_t numElements,
+    size_t elementSize,
+    const void* bufferData,
+    D3D12_RESOURCE_FLAGS flags)
 {
     size_t bufferSize = numElements * elementSize;
 
@@ -262,6 +289,8 @@ void SceneNode::_DrawCurrentNode(Core::GraphicsCommandList& commandList, const F
 
     if (_texture)
     {
+        commandList.SetDescriptorHeaps({ _scene->_texturesTable->GetDescriptorHeap().GetDXDescriptorHeap().Get() });
+
         commandList.SetConstant(1, true);
         commandList.SetDescriptorTable(4, _scene->_texturesTable->GetResourceGPUHandle(_texture->GetName()));
     }
@@ -269,6 +298,8 @@ void SceneNode::_DrawCurrentNode(Core::GraphicsCommandList& commandList, const F
     {
         commandList.SetConstant(1, false);
     }
+
+    _scene->_occlusionQuery.SetPredication(this, commandList);
 
     XMMATRIX* modelMatrixData = (XMMATRIX*)_modelMatrix->Map();
     *modelMatrixData = GetGlobalTransform();

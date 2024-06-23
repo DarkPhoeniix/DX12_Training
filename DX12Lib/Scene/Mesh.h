@@ -13,10 +13,13 @@ struct VertexData
 class Mesh
 {
 public:
-    Mesh(FbxMesh* fbxMesh);
+    Mesh() = default;
+    ~Mesh() = default;
 
     const std::vector<VertexData>& getVertices() const;
     const std::vector<UINT>& getIndices() const;
+
+    void LoadMesh(const std::string& filepath);
 
 private:
     std::vector<VertexData> _rawVertexData;

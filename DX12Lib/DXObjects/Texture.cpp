@@ -162,21 +162,24 @@ namespace Core
             textureDesc = CD3DX12_RESOURCE_DESC::Tex1D(
                 metadata.format,
                 static_cast<UINT64>(metadata.width),
-                static_cast<UINT16>(metadata.arraySize));
+                static_cast<UINT16>(metadata.arraySize),
+                metadata.mipLevels);
             break;
         case TEX_DIMENSION_TEXTURE2D:
             textureDesc = CD3DX12_RESOURCE_DESC::Tex2D(
                 metadata.format,
                 static_cast<UINT64>(metadata.width),
                 static_cast<UINT>(metadata.height),
-                static_cast<UINT16>(metadata.arraySize));
+                static_cast<UINT16>(metadata.arraySize),
+                metadata.mipLevels);
             break;
         case TEX_DIMENSION_TEXTURE3D:
             textureDesc = CD3DX12_RESOURCE_DESC::Tex3D(
                 metadata.format,
                 static_cast<UINT64>(metadata.width),
                 static_cast<UINT>(metadata.height),
-                static_cast<UINT16>(metadata.depth));
+                static_cast<UINT16>(metadata.depth),
+                metadata.mipLevels);
             break;
         default:
             Logger::Log(LogType::Error, "Invalid dimension in \"" + filepath + "\" texture");

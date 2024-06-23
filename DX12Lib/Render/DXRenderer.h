@@ -4,6 +4,7 @@
 #include "DXObjects/DescriptorHeap.h"
 #include "DXObjects/RootSignature.h"
 #include "DXObjects/Texture.h"
+#include "DXObjects/StatisticsQuery.h"
 #include "Scene/Camera.h"
 #include "Scene/Scene.h"
 #include "Render/Frame.h"
@@ -32,7 +33,7 @@ private:
     ComPtr<ID3D12Device2> _DXDevice;
     HWND _windowHandle;
 
-    Core::RootSignature _pipeline;
+    Core::RootSignature _renderPipeline;
     Core::RootSignature _AABBpipeline;
 
     std::shared_ptr<Core::Resource> _ambient;
@@ -46,4 +47,8 @@ private:
     float _deltaTime;
 
     bool _contentLoaded;
+
+#if defined(_DEBUG)
+    Core::StatisticsQuery _statsQuery;
+#endif
 };

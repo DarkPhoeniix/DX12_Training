@@ -5,11 +5,9 @@
 
 #include "DXObjects/Heap.h"
 #include "DXObjects/ResourceTable.h"
-
-#include <fbxsdk.h>
+#include "DXObjects/OcclusionQuery.h"
 
 class FrustumVolume;
-class Heap;
 class DescriptorHeap;
 class Texture;
 
@@ -19,10 +17,11 @@ public:
     Scene();
     ~Scene();
 
+    void RunOcclusion(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum);
     void Draw(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum);
     void DrawAABB(Core::GraphicsCommandList& commandList);
 
-    bool LoadScene(const std::string& name, Core::GraphicsCommandList& commandList);
+    bool LoadScene(const std::string& filepath, Core::GraphicsCommandList& commandList);
 
     friend class ISceneNode;
     friend class SceneNode;
@@ -33,8 +32,11 @@ private:
     static FbxManager* _FBXManager;
     FbxScene* _scene;
 
-    std::shared_ptr<ISceneNode> _rootNode;
+    std::vector<std::shared_ptr<ISceneNode>> _rootNodes;
 
     std::shared_ptr<Core::ResourceTable> _texturesTable;
+    Core::OcclusionQuery _occlusionQuery;
+
+    std::string _name;
 };
 

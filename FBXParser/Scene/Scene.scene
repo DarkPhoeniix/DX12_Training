@@ -1,0 +1,11 @@
+{
+	"Name" : "Scene",
+	"Nodes" : 
+	[
+		{
+			"Material" : "Cube.mat",
+			"Mesh" : "Cube.mesh",
+			"Name" : "Cube"
+		}
+	]
+}

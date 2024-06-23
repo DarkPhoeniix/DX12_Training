@@ -96,7 +96,7 @@ namespace
                     //std::string str = "Color: " + std::to_string(fbxColor.mRed) + ", " + std::to_string(fbxColor.mGreen) + ", " + std::to_string(fbxColor.mBlue) + "\n";
                     //OutputDebugStringA(str.c_str());
                 }
-                    break;
+                break;
                 case FbxGeometryElement::eIndexToDirect:
                 {
                     int id = leVtxc->GetIndexArray().GetAt(controlPointIndex);
@@ -124,7 +124,7 @@ namespace
                     //std::string str = "Color: " + std::to_string(fbxColor.mRed) + ", " + std::to_string(fbxColor.mGreen) + ", " + std::to_string(fbxColor.mBlue) + "\n";
                     //OutputDebugStringA(str.c_str());
                 }
-                    break;
+                break;
                 case FbxGeometryElement::eIndexToDirect:
                 {
                     int id = leVtxc->GetIndexArray().GetAt(vertexIndex);
@@ -161,7 +161,7 @@ namespace
         }
 
         if (mat)
-        outColor = { (float)mat->Diffuse.Get()[0], (float)mat->Diffuse.Get()[1], (float)mat->Diffuse.Get()[2], (float)mat->Diffuse.Get()[3] };
+            outColor = { (float)mat->Diffuse.Get()[0], (float)mat->Diffuse.Get()[1], (float)mat->Diffuse.Get()[2], (float)mat->Diffuse.Get()[3] };
     }
 
     void readUV(fbxsdk::FbxMesh* fbxMesh, int vertexIndex, int uvIndex, XMFLOAT2& outUV) {
@@ -216,35 +216,6 @@ namespace
     }
 }
 
-Mesh::Mesh(FbxMesh* fbxMesh)
-{
-    size_t verticesCount = fbxMesh->GetControlPointsCount();
-    _rawVertexData.reserve(verticesCount);
-
-    {
-        size_t polygonCount = fbxMesh->GetPolygonCount();
-        size_t indexCount = polygonCount * 3; // polygons can be only triangles
-        _rawIndexData.reserve(indexCount);
-
-        for (int polygonIndex = 0; polygonIndex < polygonCount; ++polygonIndex)
-        {
-            for (int vertexIndex = 0; vertexIndex < fbxMesh->GetPolygonSize(polygonIndex); ++vertexIndex)
-            {
-                int vertexAbsoluteIndex = polygonIndex * 3 + vertexIndex;
-                VertexData vertex;
-
-                readPosition(fbxMesh, polygonIndex, vertexIndex, vertex.Position);
-                readNormal(fbxMesh, fbxMesh->GetPolygonVertex(polygonIndex, vertexIndex), vertexAbsoluteIndex, vertex.Normal);
-                readColor(fbxMesh, polygonIndex, fbxMesh->GetPolygonVertex(polygonIndex, vertexIndex), vertexAbsoluteIndex, vertex.Color);
-                readUV(fbxMesh, vertexIndex, fbxMesh->GetTextureUVIndex(polygonIndex, vertexIndex), vertex.UV);
-
-                _rawVertexData.push_back(vertex);
-                _rawIndexData.push_back(vertexAbsoluteIndex);
-            }
-        }
-    }
-}
-
 const std::vector<VertexData>& Mesh::getVertices() const
 {
     return _rawVertexData;
@@ -253,4 +224,73 @@ const std::vector<VertexData>& Mesh::getVertices() const
 const std::vector<UINT>& Mesh::getIndices() const
 {
     return _rawIndexData;
+}
+
+void Mesh::LoadMesh(const std::string& filepath)
+{
+    std::vector<XMFLOAT3> points;
+    std::vector<XMFLOAT3> normals;
+    std::vector<XMFLOAT4> colors;
+    std::vector<XMFLOAT2> UVs;
+    UINT64 index = 0;
+
+    std::string input;
+    std::ifstream in(filepath, std::ios_base::in);
+    while (!in.eof())
+    {
+        input = "";
+        in >> input;
+
+        if (input == "")
+        {
+            char line[512];
+            in.getline(line, 512);
+        }
+        else if (input == "v")
+        {
+            XMFLOAT3 v;
+            float w;
+            in >> v.x >> v.y >> v.z >> w;
+            points.push_back({ v.x, v.y, v.z });
+        }
+        else if (input == "vn")
+        {
+            XMFLOAT3 vn;
+            float w;
+            in >> vn.x >> vn.y >> vn.z >> w;
+            normals.push_back({ vn.x, vn.y, vn.z });
+        }
+        else if (input == "vc")
+        {
+            float r, g, b, a;
+            float w;
+            in >> r >> g >> b >> a;
+            colors.push_back({ r, g, b, a });
+        }
+        else if (input == "vt")
+        {
+            float u, v, w;
+            in >> u >> v >> w;
+            UVs.push_back({ u, v });
+        }
+        else if (input == "f")
+        {
+            char sym;
+            UINT64 v, vn, vt;
+
+            for (int i = 0; i < 3; ++i)
+            {
+                in >> v >> sym >> vn >> sym >> vt;
+                
+                VertexData vertex;
+                vertex.Position = points[v];
+                vertex.Normal = normals[vn];
+                vertex.Color = colors[v];
+                vertex.UV = UVs[vt];
+
+                _rawVertexData.push_back(vertex);
+                _rawIndexData.push_back(index++);
+            }
+        }
+    }
 }

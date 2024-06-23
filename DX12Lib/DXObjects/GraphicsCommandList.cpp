@@ -4,6 +4,7 @@
 
 #include "DXObjects/DescriptorHeap.h"
 #include "DXObjects/RootSignature.h"
+#include "DXObjects/Heap.h"
 #include "Scene/Viewport.h"
 
 namespace Core
@@ -36,6 +37,35 @@ namespace Core
     ComPtr<ID3D12GraphicsCommandList>& GraphicsCommandList::GetDXCommandList()
     {
         return _commandList;
+    }
+
+    void GraphicsCommandList::SetPredication(Resource* buffer, UINT64 offset, D3D12_PREDICATION_OP operation)
+    {
+        if (buffer)
+        {
+            _commandList->SetPredication(buffer->GetDXResource().Get(), offset, operation);
+        }
+        else
+        {
+            _commandList->SetPredication(nullptr, offset, operation);
+        }
+    }
+
+    void GraphicsCommandList::BeginQuery(ComPtr<ID3D12QueryHeap> queryHeap, D3D12_QUERY_TYPE type, UINT64 index)
+    {
+        // TODO: implement QueryHeap class
+        _commandList->BeginQuery(queryHeap.Get(), type, index);
+    }
+
+    void GraphicsCommandList::ResolveQueryData(ComPtr<ID3D12QueryHeap> queryHeap, D3D12_QUERY_TYPE type, UINT64 index, Resource& destination, UINT64 offset)
+    {
+        _commandList->ResolveQueryData(queryHeap.Get(), type, index, 1, destination.GetDXResource().Get(), offset);
+    }
+
+    void GraphicsCommandList::EndQuery(ComPtr<ID3D12QueryHeap> queryHeap, D3D12_QUERY_TYPE type, UINT64 index)
+    {
+        // TODO: implement QueryHeap class
+        _commandList->EndQuery(queryHeap.Get(), type, index);
     }
 
     void GraphicsCommandList::TransitionBarrier(Resource& resource, D3D12_RESOURCE_STATES stateAfter, UINT subresource, bool flushBarriers)
@@ -74,9 +104,10 @@ namespace Core
         _commandList->IASetIndexBuffer(&indexBufferView);
     }
 
-    void GraphicsCommandList::SetRenderTarget(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetDescriptor, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilDescriptor)
+    void GraphicsCommandList::SetRenderTarget(D3D12_CPU_DESCRIPTOR_HANDLE* renderTargetDescriptor, D3D12_CPU_DESCRIPTOR_HANDLE* depthStencilDescriptor)
     {
-        _commandList->OMSetRenderTargets(1, &renderTargetDescriptor, FALSE, &depthStencilDescriptor);
+        UINT numTargets = renderTargetDescriptor ? 1 : 0;
+        _commandList->OMSetRenderTargets(numTargets, renderTargetDescriptor, FALSE, depthStencilDescriptor);
     }
 
     void GraphicsCommandList::SetViewport(const Viewport& viewport)

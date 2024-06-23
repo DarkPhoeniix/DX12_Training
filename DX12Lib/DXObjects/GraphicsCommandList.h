@@ -3,6 +3,7 @@
 #include "DXObjects/RootSignature.h"
 
 class Viewport;
+class Heap;
 
 namespace Core
 {
@@ -18,6 +19,12 @@ namespace Core
         ComPtr<ID3D12GraphicsCommandList> GetDXCommandList() const;
         ComPtr<ID3D12GraphicsCommandList>& GetDXCommandList();
 
+        void SetPredication(Resource* buffer, UINT64 offset, D3D12_PREDICATION_OP operation);
+
+        void BeginQuery(ComPtr<ID3D12QueryHeap> queryHeap, D3D12_QUERY_TYPE type, UINT64 index);
+        void ResolveQueryData(ComPtr<ID3D12QueryHeap> queryHeap, D3D12_QUERY_TYPE type, UINT64 index, Resource& destination, UINT64 offset);
+        void EndQuery(ComPtr<ID3D12QueryHeap> queryHeap, D3D12_QUERY_TYPE type, UINT64 index);
+
         void TransitionBarrier(Resource& resource, D3D12_RESOURCE_STATES stateAfter, UINT subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES, bool flushBarriers = false);
         void AliasingBarrier(const std::shared_ptr<Resource> & = nullptr, const std::shared_ptr<Resource>& afterResource = nullptr, bool flushBarriers = false);
 
@@ -29,7 +36,7 @@ namespace Core
         void SetIndexBuffer(const D3D12_INDEX_BUFFER_VIEW& indexBufferView);
 
         // Output Merger
-        void SetRenderTarget(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetDescriptor, D3D12_CPU_DESCRIPTOR_HANDLE depthStencilDescriptor);
+        void SetRenderTarget(D3D12_CPU_DESCRIPTOR_HANDLE* renderTargetDescriptor, D3D12_CPU_DESCRIPTOR_HANDLE* depthStencilDescriptor);
 
         // Rasterizator State
         void SetViewport(const Viewport& viewport);

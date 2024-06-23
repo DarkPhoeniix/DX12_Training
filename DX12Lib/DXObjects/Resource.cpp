@@ -93,17 +93,6 @@ namespace Core
 		return res;
 	}
 
-	D3D12_RESOURCE_BARRIER Resource::CreateBarrierAlias(Resource* old) const
-	{
-		D3D12_RESOURCE_BARRIER barrier;
-		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_ALIASING;
-		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		barrier.Aliasing.pResourceBefore = old ? old->GetDXResource().Get() : nullptr;
-		barrier.Aliasing.pResourceAfter = _resource.Get();
-
-		return barrier;
-	}
-
 	D3D12_GPU_VIRTUAL_ADDRESS Resource::OffsetGPU(unsigned int offset) const
 	{
 		ASSERT(_resource, "Trying to get GPU pointer for an nullptr resource");

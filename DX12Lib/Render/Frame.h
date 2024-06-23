@@ -21,7 +21,7 @@ public:
 
     void Init(const Core::SwapChain& swapChain);
 
-    TaskGPU* CreateTask(D3D12_COMMAND_LIST_TYPE type, Core::RootSignature* rootSignature);
+    TaskGPU* CreateTask(D3D12_COMMAND_LIST_TYPE type, Core::RootSignature* rootSignature = nullptr);
 
     void WaitCPU();
     void ResetGPU();

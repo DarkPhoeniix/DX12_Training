@@ -12,12 +12,11 @@ ISceneNode::ISceneNode()
 {
 }
 
-ISceneNode::ISceneNode(const std::string& name, Scene* scene, ISceneNode* parent)
+ISceneNode::ISceneNode(Scene* scene, ISceneNode* parent)
     : _scene(scene)
-    , _name(name)
     , _parent(parent)
     , _childNodes{}
-    , _transform{}
+    , _transform(XMMatrixIdentity())
 {
 }
 

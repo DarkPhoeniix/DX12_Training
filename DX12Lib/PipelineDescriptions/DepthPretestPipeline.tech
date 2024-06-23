@@ -1,0 +1,46 @@
+{
+	"Type": "DepthPretestTechnique",
+
+	"IsGraphicsPipeline": true,
+
+	"TopologyType": "triangle",
+
+	"Blend": "PipelineDescriptions\\DepthPretestPipeline.blend",
+	"Raster": "PipelineDescriptions\\TriangleRenderPipeline.raster",
+	"Depth": "PipelineDescriptions\\DepthPretestPipeline.depth",
+
+	"RenderTargets": [],
+	"DepthBuffer": "BackBufferDepth",
+	"Layout": [
+		{
+			"Name": "POSITION",
+			"Stream": 0,
+			"Offset": 0,
+			"Format": "float3",
+			"SemanticIndex": 0
+		},
+		{
+			"Name": "NORMAL",
+			"Stream": 0,
+			"Offset": 12,
+			"Format": "float3",
+			"SemanticIndex": 0
+		},
+		{
+			"Name": "COLOR",
+			"Stream": 0,
+			"Offset": 24,
+			"Format": "float4",
+			"SemanticIndex": 0
+		},
+		{
+			"Name": "TEXCOORD",
+			"Stream": 0,
+			"Offset": 40,
+			"Format": "float2",
+			"SemanticIndex": 0
+		}
+	],
+
+	"VS": "TriangleVS.cso"
+}

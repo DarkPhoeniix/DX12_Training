@@ -27,8 +27,6 @@ namespace Core
         D3D12_GPU_VIRTUAL_ADDRESS OffsetGPU(unsigned int offset) const;
         void* Map();
 
-        D3D12_RESOURCE_BARRIER CreateBarrierAlias(Resource* old) const;
-
         ComPtr<ID3D12Resource> CreateCommitedResource(D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_COPY_DEST);
         ComPtr<ID3D12Resource> CreatePlacedResource(ComPtr<ID3D12Heap> heap, unsigned int offset, D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_COPY_DEST);
 

@@ -1,5 +1,8 @@
 ﻿
 **/bin/x64
+**/bin
+**/Release
+**/Debug
 **/obj/x64
 **/src/packages
 **/src/bin
@@ -12,7 +15,13 @@
 *.vcxproj.user
 *.opendb
 
-/ThirdParty/jsoncpp/Bin
+/ThirdParty/jsoncpp/source
 /DX12Lib/x64
 /Bin
-/x64
+**/x64
+
+!/ThirdParty/jsoncpp/lib/Debug
+!/ThirdParty/jsoncpp/lib/Release
+
+!/ThirdParty/fbxsdk/lib/Debug
+!/ThirdParty/fbxsdk/lib/Release

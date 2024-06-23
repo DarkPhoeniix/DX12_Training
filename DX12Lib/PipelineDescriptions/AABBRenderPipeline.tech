@@ -1,0 +1,21 @@
+{
+	"Type": "RenderAABBTechnique",
+
+	"IsGraphicsPipeline": true,
+
+	"TopologyType": "point",
+
+	"Blend": "PipelineDescriptions\\TriangleRenderPipeline.blend",
+	"Raster": "PipelineDescriptions\\TriangleRenderPipeline.raster",
+	"Depth": "PipelineDescriptions\\AABBRenderPipeline.depth",
+
+	"RenderTargets": [
+		"BackBuffer"
+	],
+	"DepthBuffer": "BackBufferDepth",
+	"Layout": null,
+
+	"VS": "AABB_vs.cso",
+	"GS": "AABB_gs.cso",
+	"PS": "AABB_ps.cso"
+}

@@ -188,11 +188,14 @@ namespace Core
 
         desc.Type = D3D12_COMMAND_LIST_TYPE_COMPUTE;
         _device->CreateCommandQueue(&desc, IID_PPV_ARGS(&_queueCompute));
+        _queueCompute->SetName(L"Compute Queue");
 
         desc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
         _device->CreateCommandQueue(&desc, IID_PPV_ARGS(&_queueStream));
+        _queueStream->SetName(L"Stream Queue");
 
         desc.Type = D3D12_COMMAND_LIST_TYPE_COPY;
         _device->CreateCommandQueue(&desc, IID_PPV_ARGS(&_queueCopy));
+        _queueCopy->SetName(L"Copy Queue");
     }
 } // namespace Core
