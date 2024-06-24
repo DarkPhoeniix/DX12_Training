@@ -2,8 +2,6 @@
 	"Name" : "Wyvern",
 	"Nodes" : 
 	[
-		"Point.node",
-		"Armature.001.node",
-		"Wyrm2.node"
+		"Armature.001.node"
 	]
 }
