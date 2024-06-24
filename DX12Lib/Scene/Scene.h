@@ -17,7 +17,6 @@ public:
     Scene();
     ~Scene();
 
-    void RunOcclusion(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum);
     void Draw(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum);
     void DrawAABB(Core::GraphicsCommandList& commandList);
 
@@ -33,9 +32,7 @@ private:
     FbxScene* _scene;
 
     std::vector<std::shared_ptr<ISceneNode>> _rootNodes;
-
     std::shared_ptr<Core::ResourceTable> _texturesTable;
-    Core::OcclusionQuery _occlusionQuery;
 
     std::string _name;
 };

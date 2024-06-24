@@ -55,7 +55,7 @@ float4 main(PixelShaderInput IN) : SV_Target
     }
     
     DirectionalLight dirLight;
-    dirLight.direction = normalize(float3(-0.5, 1, -0.5));
+    dirLight.direction = normalize(float3(0.5, 0.7, -0.3));
     dirLight.color = float3(1.0, 1.0, 1.0);
     color = (CalculateAmbient(dirLight) + CalculateDiffuse(norm, dirLight)) * color;
     

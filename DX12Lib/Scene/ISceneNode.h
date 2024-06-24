@@ -14,12 +14,11 @@ public:
     ISceneNode(Scene* scene, ISceneNode* parent = nullptr);
     virtual ~ISceneNode();
 
+    DirectX::XMMATRIX GetGlobalTransform() const;
+
     DirectX::XMMATRIX GetLocalTransform() const;
     void SetLocalTransform(const DirectX::XMMATRIX& transform);
 
-    DirectX::XMMATRIX GetGlobalTransform() const;
-
-    virtual void RunOcclusion(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum) const = 0;
     virtual void Draw(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum) const = 0;
     virtual void DrawAABB(Core::GraphicsCommandList& commandList) const = 0;
 

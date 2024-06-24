@@ -88,7 +88,7 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
         loadTask->SetName("Upload Data");
         Core::GraphicsCommandList* commandList = loadTask->GetCommandLists().front();
 
-        _scene.LoadScene("TestCube\\TestCube.scene", *commandList);
+        _scene.LoadScene("Wyvern\\Wyvern.scene", *commandList);
 
         commandList->Close();
 

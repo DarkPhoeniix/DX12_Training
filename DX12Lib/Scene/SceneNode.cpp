@@ -12,37 +12,49 @@ using namespace DirectX;
 
 namespace
 {
-    XMMATRIX GetNodeLocalTransform(FbxNode* fbxNode)
+    AABBVolume CalculateAABB(Mesh* mesh)
     {
-        FbxAMatrix fbxTransform = fbxNode->EvaluateLocalTransform();
-        XMMATRIX transform =
+        AABBVolume aabb;
+
+        aabb.min = XMVectorSet(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+        aabb.max = XMVectorSet(-std::numeric_limits<float>::max(), -std::numeric_limits<float>::max(), -std::numeric_limits<float>::max(), -std::numeric_limits<float>::max());
+
+        if (!mesh)
         {
-            (float)fbxTransform.mData[0][0], (float)fbxTransform.mData[0][1], (float)fbxTransform.mData[0][2], (float)fbxTransform.mData[0][3],
-            (float)fbxTransform.mData[1][0], (float)fbxTransform.mData[1][1], (float)fbxTransform.mData[1][2], (float)fbxTransform.mData[1][3],
-            (float)fbxTransform.mData[2][0], (float)fbxTransform.mData[2][1], (float)fbxTransform.mData[2][2], (float)fbxTransform.mData[2][3],
-            (float)fbxTransform.mData[3][0], (float)fbxTransform.mData[3][1], (float)fbxTransform.mData[3][2], (float)fbxTransform.mData[3][3],
-        };
+            return aabb;
+        }
 
-        return transform;
-    }
-
-    std::string GetAlbedoTextureName(FbxNode* fbxNode)
-    {
-        std::string name;
-
-        if (FbxSurfaceMaterial* material = fbxNode->GetMaterial(0))
+        for (const VertexData& vertex : mesh->getVertices())
         {
-            FbxProperty prop = material->FindProperty(FbxSurfaceMaterial::sDiffuse);
-            if (prop.GetSrcObjectCount<FbxFileTexture>() > 0)
+            if (vertex.Position.x < XMVectorGetX(aabb.min))
             {
-                if (FbxFileTexture* texture = prop.GetSrcObject<FbxFileTexture>(0))
-                {
-                    name = (const char*)(FbxPathUtils::GetFileName(texture->GetFileName()));
-                }
+                XMVectorSetX(aabb.min, vertex.Position.x);
+            }
+            else if (vertex.Position.x > XMVectorGetX(aabb.max))
+            {
+                XMVectorSetX(aabb.max, vertex.Position.x);
+            }
+
+            if (vertex.Position.y < XMVectorGetY(aabb.min))
+            {
+                XMVectorSetY(aabb.min, vertex.Position.x);
+            }
+            else if (vertex.Position.y > XMVectorGetY(aabb.max))
+            {
+                XMVectorSetY(aabb.max, vertex.Position.y);
+            }
+
+            if (vertex.Position.z < XMVectorGetZ(aabb.min))
+            {
+                XMVectorSetZ(aabb.min, vertex.Position.z);
+            }
+            else if (vertex.Position.z > XMVectorGetZ(aabb.max))
+            {
+                XMVectorSetZ(aabb.max, vertex.Position.z);
             }
         }
 
-        return name;
+        return aabb;
     }
 }
 
@@ -55,11 +67,7 @@ SceneNode::SceneNode()
     , _vertexBuffer(nullptr)
     , _indexBuffer(nullptr)
     , _modelMatrix(nullptr)
-    , _AABBVertexBuffer(nullptr)
-    , _AABBIndexBuffer(nullptr)
     , _AABB{}
-    , _AABBVBO{}
-    , _AABBIBO{}
     , _VBO{}
     , _IBO{}
 {
@@ -74,11 +82,7 @@ SceneNode::SceneNode(Scene* scene, SceneNode* parent)
     , _vertexBuffer(nullptr)
     , _indexBuffer(nullptr)
     , _modelMatrix(nullptr)
-    , _AABBVertexBuffer(nullptr)
-    , _AABBIndexBuffer(nullptr)
     , _AABB{}
-    , _AABBVBO{}
-    , _AABBIBO{}
     , _VBO{}
     , _IBO{}
 {   }
@@ -91,16 +95,6 @@ SceneNode::~SceneNode()
     {
         intermediate = nullptr;
     }
-}
-
-void SceneNode::RunOcclusion(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum) const
-{
-    for (const std::shared_ptr<ISceneNode> node : _childNodes)
-    {
-        node->RunOcclusion(commandList, frustum);
-    }
-
-    _scene->_occlusionQuery.Run(this, commandList, frustum);
 }
 
 void SceneNode::Draw(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum) const
@@ -156,6 +150,8 @@ void SceneNode::LoadNode(const std::string& filepath, Core::GraphicsCommandList&
         root["Transform"]["r2"]["x"].asFloat(), root["Transform"]["r2"]["y"].asFloat(), root["Transform"]["r2"]["z"].asFloat(), root["Transform"]["r2"]["w"].asFloat(),
         root["Transform"]["r3"]["x"].asFloat(), root["Transform"]["r3"]["y"].asFloat(), root["Transform"]["r3"]["z"].asFloat(), root["Transform"]["r3"]["w"].asFloat()
     );
+
+    _AABB = CalculateAABB(_mesh.get());
 
     if (!root["Mesh"].isNull())
     {
@@ -301,8 +297,6 @@ void SceneNode::_DrawCurrentNode(Core::GraphicsCommandList& commandList, const F
     {
         commandList.SetConstant(1, false);
     }
-
-    _scene->_occlusionQuery.SetPredication(this, commandList);
 
     XMMATRIX* modelMatrixData = (XMMATRIX*)_modelMatrix->Map();
     *modelMatrixData = GetGlobalTransform();

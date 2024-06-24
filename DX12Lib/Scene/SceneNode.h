@@ -16,7 +16,6 @@ public:
     SceneNode(Scene* scene, SceneNode* parent = nullptr);
     ~SceneNode();
 
-    void RunOcclusion(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum) const override;
     void Draw(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum) const override;
     void DrawAABB(Core::GraphicsCommandList& commandList) const override;
 
@@ -48,12 +47,6 @@ private:
 
     D3D12_VERTEX_BUFFER_VIEW _VBO;
     D3D12_INDEX_BUFFER_VIEW _IBO;
-
-    std::shared_ptr<Core::Resource> _AABBVertexBuffer;
-    std::shared_ptr<Core::Resource> _AABBIndexBuffer;
-
-    D3D12_VERTEX_BUFFER_VIEW _AABBVBO;
-    D3D12_INDEX_BUFFER_VIEW _AABBIBO;
     
     std::vector<ComPtr<ID3D12Resource>> intermediates;
 };

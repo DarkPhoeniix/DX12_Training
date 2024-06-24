@@ -26,6 +26,20 @@ ISceneNode::~ISceneNode()
     _parent = nullptr;
 }
 
+XMMATRIX ISceneNode::GetGlobalTransform() const
+{
+    XMMATRIX globalTransform = _transform;
+
+    ISceneNode* parent = _parent;
+    while (parent)
+    {
+        globalTransform *= _parent->GetLocalTransform();
+        parent = parent->_parent;
+    }
+
+    return globalTransform;
+}
+
 XMMATRIX ISceneNode::GetLocalTransform() const
 {
     return _transform;
@@ -34,15 +48,4 @@ XMMATRIX ISceneNode::GetLocalTransform() const
 void ISceneNode::SetLocalTransform(const XMMATRIX& transform)
 {
     _transform = transform;
-}
-
-XMMATRIX ISceneNode::GetGlobalTransform() const
-{
-    XMMATRIX globalTransform = _transform;
-    if (_parent)
-    {
-        globalTransform *= _parent->GetLocalTransform();
-    }
-
-    return globalTransform;
 }
