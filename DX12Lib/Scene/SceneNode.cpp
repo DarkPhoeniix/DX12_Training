@@ -290,17 +290,13 @@ void SceneNode::_DrawCurrentNode(Core::GraphicsCommandList& commandList, const F
     {
         commandList.SetDescriptorHeaps({ _scene->_texturesTable->GetDescriptorHeap().GetDXDescriptorHeap().Get() });
 
-        commandList.SetConstant(1, true);
-        commandList.SetDescriptorTable(4, _scene->_texturesTable->GetResourceGPUHandle(_albedoTexture->GetName()));
-    }
-    else
-    {
-        commandList.SetConstant(1, false);
+        commandList.SetDescriptorTable(3, _scene->_texturesTable->GetResourceGPUHandle(_albedoTexture->GetName()));
+        commandList.SetDescriptorTable(4, _scene->_texturesTable->GetResourceGPUHandle(_normalTexture->GetName()));
     }
 
     XMMATRIX* modelMatrixData = (XMMATRIX*)_modelMatrix->Map();
     *modelMatrixData = GetGlobalTransform();
-    commandList.SetSRV(3, _modelMatrix->OffsetGPU(0));
+    commandList.SetSRV(1, _modelMatrix->OffsetGPU(0));
 
     commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     commandList.SetVertexBuffer(0, _VBO);

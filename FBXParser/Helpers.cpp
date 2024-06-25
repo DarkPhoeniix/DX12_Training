@@ -288,4 +288,81 @@ namespace FbxHelpers
         }
         }
     }
+
+    void ReadTangent(fbxsdk::FbxMesh* fbxMesh, int controlPointIndex, int vertexIndex, DirectX::XMVECTOR& outTangent)
+    {
+        if (FbxLayerElementTangent* pFbxLayerElementTangent = fbxMesh->GetLayer(0)->GetTangents())
+        {
+            XMFLOAT4 tangent;
+
+            switch (pFbxLayerElementTangent->GetMappingMode())
+            {
+            case FbxGeometryElement::eByControlPoint:
+                switch (pFbxLayerElementTangent->GetReferenceMode())
+                {
+                case FbxGeometryElement::eDirect:
+                {
+                    tangent = {
+                        static_cast<float>(pFbxLayerElementTangent->GetDirectArray().GetAt(controlPointIndex).mData[0]),
+                        static_cast<float>(pFbxLayerElementTangent->GetDirectArray().GetAt(controlPointIndex).mData[1]),
+                        static_cast<float>(pFbxLayerElementTangent->GetDirectArray().GetAt(controlPointIndex).mData[2]),
+                        static_cast<float>(pFbxLayerElementTangent->GetDirectArray().GetAt(controlPointIndex).mData[3])
+                    };
+                }
+                break;
+
+                case FbxGeometryElement::eIndexToDirect:
+                {
+                    int index = pFbxLayerElementTangent->GetIndexArray().GetAt(controlPointIndex);
+
+                    tangent = {
+                        static_cast<float>(pFbxLayerElementTangent->GetDirectArray().GetAt(index).mData[0]),
+                        static_cast<float>(pFbxLayerElementTangent->GetDirectArray().GetAt(index).mData[1]),
+                        static_cast<float>(pFbxLayerElementTangent->GetDirectArray().GetAt(index).mData[2]),
+                        static_cast<float>(pFbxLayerElementTangent->GetDirectArray().GetAt(index).mData[3])
+                    };
+                }
+                break;
+
+                default:
+                    throw std::exception("Invalid Reference");
+                }
+                break;
+
+            case FbxGeometryElement::eByPolygonVertex:
+                switch (pFbxLayerElementTangent->GetReferenceMode())
+                {
+                case FbxGeometryElement::eDirect:
+                {
+                    tangent = {
+                        static_cast<float>(pFbxLayerElementTangent->GetDirectArray().GetAt(vertexIndex).mData[0]),
+                        static_cast<float>(pFbxLayerElementTangent->GetDirectArray().GetAt(vertexIndex).mData[1]),
+                        static_cast<float>(pFbxLayerElementTangent->GetDirectArray().GetAt(vertexIndex).mData[2]),
+                        static_cast<float>(pFbxLayerElementTangent->GetDirectArray().GetAt(vertexIndex).mData[3])
+                    };
+                }
+                break;
+
+                case FbxGeometryElement::eIndexToDirect:
+                {
+                    int index = pFbxLayerElementTangent->GetIndexArray().GetAt(vertexIndex);
+
+                    tangent = {
+                        static_cast<float>(pFbxLayerElementTangent->GetDirectArray().GetAt(index).mData[0]),
+                        static_cast<float>(pFbxLayerElementTangent->GetDirectArray().GetAt(index).mData[1]),
+                        static_cast<float>(pFbxLayerElementTangent->GetDirectArray().GetAt(index).mData[2]),
+                        static_cast<float>(pFbxLayerElementTangent->GetDirectArray().GetAt(index).mData[3])
+                    };
+                }
+                break;
+
+                default:
+                    throw std::exception("Invalid Reference");
+                }
+                break;
+            }
+
+            outTangent = XMVectorSet(tangent.x, tangent.y, tangent.z, tangent.w);
+        }
+    }
 }

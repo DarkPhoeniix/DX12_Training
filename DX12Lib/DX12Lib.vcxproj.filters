@@ -129,6 +129,9 @@
     <ClCompile Include="DXObjects\StatisticsQuery.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Scene\Light\DirectionalLight.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Utility\Helpers.h">
@@ -290,6 +293,9 @@
     <ClInclude Include="DXObjects\StatisticsQuery.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Scene\Light\DirectionalLight.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\TrianglePS.hlsl" />
@@ -313,6 +319,8 @@
     <None Include="packages.config" />
     <None Include="PipelineDescriptions\AABBRenderPipeline.depth" />
     <None Include="Resource.aps" />
+    <None Include="Shaders\SemiAmbientLighting.hlsli" />
+    <None Include="Shaders\LambertLighting.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\dxapp.ico">

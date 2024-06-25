@@ -200,7 +200,8 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
 
         XMMATRIX viewProjMatrix = XMMatrixMultiply(_camera.View(), _camera.Projection());
         commandList->SetConstants(0, sizeof(XMMATRIX) / 4, &viewProjMatrix);
-        commandList->SetCBV(2, _ambient->OffsetGPU(0));
+        commandList->SetCBV(2, )
+        
 
         _scene.Draw(*commandList, _camera.GetViewFrustum());
 
@@ -218,6 +219,7 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         PIXEndEvent(commandList->GetDXCommandList().Get());
         commandList->Close();
     }
+
     // Present
     {
         TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);

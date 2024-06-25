@@ -232,6 +232,7 @@ void Mesh::LoadMesh(const std::string& filepath)
     std::vector<XMFLOAT3> normals;
     std::vector<XMFLOAT4> colors;
     std::vector<XMFLOAT2> UVs;
+    std::vector<XMFLOAT3> tangents;
     UINT64 index = 0;
 
     std::string input;
@@ -251,14 +252,14 @@ void Mesh::LoadMesh(const std::string& filepath)
             XMFLOAT3 v;
             float w;
             in >> v.x >> v.y >> v.z >> w;
-            points.push_back({ v.x, v.y, v.z });
+            points.push_back(v);
         }
         else if (input == "vn")
         {
             XMFLOAT3 vn;
             float w;
             in >> vn.x >> vn.y >> vn.z >> w;
-            normals.push_back({ vn.x, vn.y, vn.z });
+            normals.push_back(vn);
         }
         else if (input == "vc")
         {
@@ -272,6 +273,13 @@ void Mesh::LoadMesh(const std::string& filepath)
             float u, v, w;
             in >> u >> v >> w;
             UVs.push_back({ u, v });
+        }
+        else if (input == "vtan")
+        {
+            XMFLOAT3 tangent;
+            float w;
+            in >> tangent.x >> tangent.y >> tangent.z >> w;
+            tangents.push_back(tangent);
         }
         else if (input == "f")
         {
@@ -287,6 +295,7 @@ void Mesh::LoadMesh(const std::string& filepath)
                 vertex.Normal = normals[vn];
                 vertex.Color = colors[v];
                 vertex.UV = UVs[vt];
+                vertex.Tangent = tangents[vt];
 
                 _rawVertexData.push_back(vertex);
                 _rawIndexData.push_back(index++);

@@ -12,10 +12,10 @@
 		"DENY_DOMAIN_SHADER_ROOT_ACCESS " \
 	"), " \
     "RootConstants(num32BitConstants=16, b0, visibility=SHADER_VISIBILITY_ALL), " \
-    "RootConstants(num32BitConstants=1, b1, visibility=SHADER_VISIBILITY_ALL), " \
-    "CBV(b2, visibility=SHADER_VISIBILITY_ALL), " \
 	"SRV(t0, visibility=SHADER_VISIBILITY_ALL), " \
+    "CBV(b1, visibility=SHADER_VISIBILITY_PIXEL), " \
     "DescriptorTable(SRV(t1),visibility=SHADER_VISIBILITY_PIXEL)," \
+    "DescriptorTable(SRV(t2),visibility=SHADER_VISIBILITY_PIXEL)," \
     "StaticSampler(s0," \
         "addressU = TEXTURE_ADDRESS_MIRROR," \
         "addressV = TEXTURE_ADDRESS_MIRROR," \
@@ -29,11 +29,11 @@ struct ConstantsDesc
 
 struct ModelDesc
 {
-    row_major matrix Model;
+    row_major matrix Transform;
 };
 
 ConstantBuffer<ConstantsDesc> Constants : register(b0);
-StructuredBuffer<ModelDesc> ModelSRV_CB : register(t0);
+StructuredBuffer<ModelDesc> Model : register(t0);
 
 struct VertexPosColor
 {
@@ -41,6 +41,7 @@ struct VertexPosColor
     float3 Normal : NORMAL;
     float4 Color : COLOR;
     float2 Texture : TEXCOORD;
+    float3 Tangent : TANGENT;
     
     uint sv_instance : SV_InstanceID;
 };
@@ -51,18 +52,22 @@ struct VertexShaderOutput
     float3 Normal : NORMAL;
     float4 Color : COLOR;
     float2 Texture : TEXCOORD;
+    float3 Tangent : TANGENT;
 };
 
 [RootSignature(Sprite_RootSig)]
 VertexShaderOutput main(VertexPosColor IN)
 {
     VertexShaderOutput OUT;
+    
+    row_major matrix modelTransform = Model[IN.sv_instance].Transform;
+    float4 worldPosition = mul(float4(IN.Position, 1.0f), modelTransform);
 
-    float4 worldPosition = mul(float4(IN.Position, 1.0f), ModelSRV_CB[IN.sv_instance].Model);
     OUT.Position = mul(worldPosition, Constants.ViewProj);
-    OUT.Normal = mul(float4(IN.Normal, 0.0f), ModelSRV_CB[IN.sv_instance].Model).xyz;
+    OUT.Normal = mul(float4(IN.Normal, 0.0f), modelTransform).xyz;
     OUT.Color = IN.Color;
     OUT.Texture = IN.Texture;
+    OUT.Tangent = IN.Tangent;
 
     return OUT;
 }
