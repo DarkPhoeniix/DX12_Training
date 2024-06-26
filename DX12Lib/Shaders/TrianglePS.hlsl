@@ -4,13 +4,13 @@
 
 #include "LambertLighting.hlsli"
 
-struct DirectionalLightDesc
+struct LightDesc
 {
     float4 direction;
     float4 color;
 };
 
-ConstantBuffer<DirectionalLightDesc> DirectionalLight : register(b1);
+ConstantBuffer<LightDesc> Light : register(b1);
 Texture2D Albedo : register(t1);
 Texture2D NormalMap : register(t2);
 
@@ -28,6 +28,8 @@ SamplerState Sampler : register(s0);
 [earlydepthstencil]
 float4 main(PixelShaderInput IN) : SV_Target
 {
+    IN.Normal = normalize(IN.Normal);
+    
     // Sample textures
     float2 uv = IN.Texture;
     uv.y = 1 - uv.y;
@@ -41,7 +43,7 @@ float4 main(PixelShaderInput IN) : SV_Target
     // Transform the normal
     float3 finalNormal = normalize(mul(textureNormal.xyz, TBN));
 
-    float3 color = CalculateAmbient(textureAlbedo) + CalculateDiffuse(finalNormal, IN.Color, DirectionalLight.direction.xyz, DirectionalLight.color);
+    float3 color = CalculateAmbient(textureAlbedo) + CalculateDiffuse(finalNormal, textureAlbedo, normalize(Light.direction.xyz), Light.color);
     
-    return textureAlbedo;
+    return float4(color, 1.0f);
 }

@@ -186,7 +186,7 @@ namespace Core
             return nullptr;
         }
 
-    texture->_resourceDesc = textureDesc;
+        texture->_resourceDesc = textureDesc;
 
         return texture;
     }

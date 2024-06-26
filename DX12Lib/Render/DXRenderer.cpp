@@ -33,6 +33,7 @@ DXRenderer::DXRenderer(HWND windowHandle)
     , _ambient(nullptr)
     , _isCameraMoving(false)
     , _deltaTime(0.0f)
+    , _light(nullptr)
 {   }
 
 DXRenderer::~DXRenderer()
@@ -71,16 +72,16 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
 
         ResourceDescription desc;
         desc.SetResourceType(CBVType);
-        desc.SetSize({ sizeof(Ambient), 1 });
+        desc.SetSize({ sizeof(DirectionalLight), 1 });
         desc.SetStride(1);
         desc.SetFormat(DXGI_FORMAT::DXGI_FORMAT_UNKNOWN);
-        _ambient = std::make_shared<Resource>(desc);
-        _ambient->CreateCommitedResource();
-        _ambient->SetName("_ambient");
+        _light = std::make_shared<Resource>(desc);
+        _light->CreateCommitedResource();
+        _light->SetName("_light");
 
-        Ambient* val = (Ambient*)_ambient->Map();
-        val->Up = { 0.0f, 0.8f, 0.7f, 1.0f };
-        val->Down = { 0.3f, 0.0f, 0.3f, 1.0f };
+        DirectionalLight* val = (DirectionalLight*)_light->Map();
+        val->SetDirection(XMVectorSet(0.5f, -0.8f, 0.3f, 1.0f));
+        val->SetColor(XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f));
     }
 
     // Load scene
@@ -103,7 +104,7 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
         loadTask->GetCommandQueue()->Signal(loadTask->GetFence()->GetFence().Get(), loadTask->GetFenceValue());
     }
 
-    Sleep(2000);
+    Sleep(1000);
 
     _contentLoaded = true;
     return _contentLoaded;
@@ -200,8 +201,8 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
 
         XMMATRIX viewProjMatrix = XMMatrixMultiply(_camera.View(), _camera.Projection());
         commandList->SetConstants(0, sizeof(XMMATRIX) / 4, &viewProjMatrix);
-        commandList->SetCBV(2, )
         
+        commandList->SetCBV(2, _light->OffsetGPU(0));
 
         _scene.Draw(*commandList, _camera.GetViewFrustum());
 

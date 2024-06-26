@@ -151,13 +151,13 @@ void SceneNode::LoadNode(const std::string& filepath, Core::GraphicsCommandList&
         root["Transform"]["r3"]["x"].asFloat(), root["Transform"]["r3"]["y"].asFloat(), root["Transform"]["r3"]["z"].asFloat(), root["Transform"]["r3"]["w"].asFloat()
     );
 
-    _AABB = CalculateAABB(_mesh.get());
-
     if (!root["Mesh"].isNull())
     {
         _mesh = std::make_shared<Mesh>();
         _mesh->LoadMesh(_scene->_name + '\\' + root["Mesh"].asCString());
     }
+
+    _AABB = CalculateAABB(_mesh.get());
 
     if (!root["Material"].isNull())
     {
@@ -291,7 +291,7 @@ void SceneNode::_DrawCurrentNode(Core::GraphicsCommandList& commandList, const F
         commandList.SetDescriptorHeaps({ _scene->_texturesTable->GetDescriptorHeap().GetDXDescriptorHeap().Get() });
 
         commandList.SetDescriptorTable(3, _scene->_texturesTable->GetResourceGPUHandle(_albedoTexture->GetName()));
-        commandList.SetDescriptorTable(4, _scene->_texturesTable->GetResourceGPUHandle(_normalTexture->GetName()));
+        commandList.SetDescriptorTable(4, _scene->_texturesTable->GetResourceGPUHandle(_normalTexture->GetName())); 
     }
 
     XMMATRIX* modelMatrixData = (XMMATRIX*)_modelMatrix->Map();

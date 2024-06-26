@@ -11,6 +11,8 @@
 #include "Render/Frame.h"
 #include "Window/IWindowEventListener.h"
 
+#include "Scene/Light/DirectionalLight.h"
+
 class DXRenderer : public Core::Events::IWindowEventListener
 {
 public:
@@ -43,7 +45,7 @@ private:
     std::shared_ptr<Core::Texture> _tex;
 
     Scene _scene;
-    DirectionalLight _light;
+    std::shared_ptr<Core::Resource> _light;
     Camera _camera;
     bool _isCameraMoving;
     float _deltaTime;

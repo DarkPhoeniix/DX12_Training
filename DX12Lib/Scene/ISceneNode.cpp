@@ -29,12 +29,9 @@ ISceneNode::~ISceneNode()
 XMMATRIX ISceneNode::GetGlobalTransform() const
 {
     XMMATRIX globalTransform = _transform;
-
-    ISceneNode* parent = _parent;
-    while (parent)
+    if (_parent)
     {
-        globalTransform *= _parent->GetLocalTransform();
-        parent = parent->_parent;
+        globalTransform *= _parent->GetGlobalTransform();
     }
 
     return globalTransform;
