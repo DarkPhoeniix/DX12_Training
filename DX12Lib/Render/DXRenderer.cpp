@@ -104,8 +104,6 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
         loadTask->GetCommandQueue()->Signal(loadTask->GetFence()->GetFence().Get(), loadTask->GetFenceValue());
     }
 
-    Sleep(1000);
-
     _contentLoaded = true;
     return _contentLoaded;
 }

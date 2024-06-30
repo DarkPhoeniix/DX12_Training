@@ -62,7 +62,7 @@ namespace Core
         D3D12_SHADER_RESOURCE_VIEW_DESC SRVDesc = {};
         SRVDesc.Format = _resourceDesc.GetFormat();
         SRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D; // TODO: Only 2D textures supported
-        SRVDesc.Texture2D.MipLevels = 1;
+        SRVDesc.Texture2D.MipLevels = _resourceDesc.GetMipLevels();
         SRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
         _DXDevice->CreateShaderResourceView(_resource.Get(), &SRVDesc, CPUHandle);
@@ -135,7 +135,7 @@ namespace Core
         auto ext = path.extension();
         if (path.extension() == DDS_EXTENSION)
         {
-            hr = LoadFromDDSFile(wFilepath.c_str(), DDS_FLAGS_FORCE_RGB, &metadata, texture->_scratchImage);
+            hr = LoadFromDDSFile(wFilepath.c_str(), DDS_FLAGS_NONE, &metadata, texture->_scratchImage);
         }
         else if (path.extension() == HDR_EXTENSION)
         {

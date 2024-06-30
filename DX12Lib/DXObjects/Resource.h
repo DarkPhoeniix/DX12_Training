@@ -24,6 +24,8 @@ namespace Core
         void SetCurrentState(D3D12_RESOURCE_STATES state);
         D3D12_RESOURCE_STATES GetCurrentState() const;
 
+        const D3D12_RESOURCE_ALLOCATION_INFO& GetAllocationInfo() const;
+
         D3D12_GPU_VIRTUAL_ADDRESS OffsetGPU(unsigned int offset) const;
         void* Map();
 
@@ -40,5 +42,7 @@ namespace Core
 
         D3D12_RESOURCE_STATES _initialState;
         D3D12_RESOURCE_STATES _currentState;
+
+        D3D12_RESOURCE_ALLOCATION_INFO _allocationInfo;
     };
 } // namespace Core
