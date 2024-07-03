@@ -264,7 +264,6 @@ void Mesh::LoadMesh(const std::string& filepath)
         else if (input == "vc")
         {
             float r, g, b, a;
-            float w;
             in >> r >> g >> b >> a;
             colors.push_back({ r, g, b, a });
         }

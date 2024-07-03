@@ -298,8 +298,8 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Shaders\TrianglePS.hlsl" />
-    <FxCompile Include="Shaders\TriangleVS.hlsl" />
+    <FxCompile Include="Shaders\Mesh_ps.hlsl" />
+    <FxCompile Include="Shaders\Mesh_vs.hlsl" />
     <FxCompile Include="Shaders\TestTextureGen.hlsl" />
     <FxCompile Include="Shaders\AABB_vs.hlsl" />
     <FxCompile Include="Shaders\AABB_gs.hlsl" />
@@ -321,7 +321,8 @@
     <None Include="Resource.aps" />
     <None Include="Shaders\SemiAmbientLighting.hlsli" />
     <None Include="Shaders\LambertLighting.hlsli" />
-    <None Include="Shaders\TriangleRootSig.hlsli" />
+    <None Include="Shaders\Mesh_rootsig.hlsli" />
+    <None Include="Shaders\AABB_rootsig.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\dxapp.ico">

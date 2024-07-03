@@ -125,7 +125,7 @@ void DXRenderer::OnUpdate(Events::UpdateEvent& updateEvent)
 
     if (totalTime > 1.0)
     {
-        int fps = frameCount / totalTime;
+        int fps = (int)(frameCount / totalTime);
 
         std::wstring fpsText = L"FPS: " + std::to_wstring(fps);
         ::SetWindowText(_windowHandle, fpsText.c_str());
@@ -157,8 +157,8 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
     frame.WaitCPU();
     frame.ResetGPU();
 
-    auto rtv = frame._targetHeap->GetCPUDescriptorHandleForHeapStart();
-    auto dsv = frame._depthHeap->GetCPUDescriptorHandleForHeapStart();
+    D3D12_CPU_DESCRIPTOR_HANDLE rtv = frame._targetHeap->GetCPUDescriptorHandleForHeapStart();
+    D3D12_CPU_DESCRIPTOR_HANDLE dsv = frame._depthHeap->GetCPUDescriptorHandleForHeapStart();
 
     // Clear render targets
     {

@@ -2,7 +2,13 @@
 // The Pixel Shader (PS) stage takes the interpolated per-vertex values from
 // the rasterizer stage and produces one (or more) per-pixel color values.
 
-#include "Lighting.hlsli"
+#include "LambertLighting.hlsli"
+
+struct LightDesc
+{
+    float4 direction;
+    float4 color;
+};
 
 ConstantBuffer<LightDesc> Light : register(b1);
 Texture2D Albedo : register(t1);
@@ -17,7 +23,8 @@ struct PixelShaderInput
     float3 Tangent : TANGENT;
 };
 
-SamplerState Sampler : register(s0);
+SamplerState AlbedoSampler : register(s0);
+SamplerState NormalSampler : register(s1);
 
 [earlydepthstencil]
 float4 main(PixelShaderInput IN) : SV_Target
@@ -26,9 +33,9 @@ float4 main(PixelShaderInput IN) : SV_Target
     
     // Sample textures
     float2 uv = IN.Texture;
-    uv.y = 1 - uv.y;
-    float4 textureAlbedo = Albedo.Sample(Sampler, uv);
-    float4 textureNormal = NormalMap.Sample(Sampler, uv);
+    uv.y = 1.0f - uv.y;
+    float4 textureAlbedo = Albedo.Sample(AlbedoSampler, uv);
+    float4 textureNormal = NormalMap.Sample(NormalSampler, uv);
     
     // Calculate the TBN matrix
     float3 bitangent = cross(IN.Normal, IN.Tangent);
@@ -37,7 +44,8 @@ float4 main(PixelShaderInput IN) : SV_Target
     // Transform the normal
     float3 finalNormal = normalize(mul(textureNormal.xyz, TBN));
 
-    float3 color = CalculateAmbient(textureAlbedo) + CalculateDiffuse(finalNormal, textureAlbedo, normalize(Light.direction.xyz), Light.color);
+    float4 color = CalculateAmbient(textureAlbedo) + CalculateDiffuse(finalNormal, textureAlbedo, normalize(Light.direction.xyz), Light.color);
     
-    return float4(color, 1.0f);
+    return float4(color.rgb, textureAlbedo.w);
+
 }
