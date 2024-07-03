@@ -134,7 +134,7 @@ namespace Core
         CD3DX12_RECT* rect = nullptr;
         if (viewport)
         {
-            rect = &viewport->GetScissorRectangle();
+            *rect = viewport->GetScissorRectangle();
         }
         _commandList->ClearRenderTargetView(renderTargetView, color, numRects, rect);
     }
@@ -145,7 +145,7 @@ namespace Core
         CD3DX12_RECT* rect = nullptr;
         if (viewport)
         {
-            rect = &viewport->GetScissorRectangle();
+            *rect = viewport->GetScissorRectangle();
         }
         _commandList->ClearDepthStencilView(depthStencilView, clearFlags, depth, stencil, numRects, rect);
     }
