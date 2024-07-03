@@ -45,7 +45,7 @@ namespace Core
 
         resource.CreatePlacedResource(_heap, offset);
 
-        unsigned int size = resource.GetResourceDescription().GetSize().x * resource.GetResourceDescription().GetSize().y;
+        unsigned int size = resource.GetAllocationInfo().SizeInBytes;
         _resourceOffset += Math::AlignUp(size, D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT);
     }
 

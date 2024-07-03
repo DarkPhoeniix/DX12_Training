@@ -37,6 +37,7 @@ private:
     std::vector<DirectX::XMVECTOR> _normals;
     std::vector<DirectX::XMVECTOR> _colors;
     std::vector<DirectX::XMFLOAT2> _UVs;
+    std::vector<DirectX::XMVECTOR> _tangents;
     std::vector<UINT64> _indices;
 
     std::string _albedoTextureName;

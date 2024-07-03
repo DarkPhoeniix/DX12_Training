@@ -7,8 +7,11 @@
 #include "DXObjects/StatisticsQuery.h"
 #include "Scene/Camera.h"
 #include "Scene/Scene.h"
+#include "Scene/Light/DirectionalLight.h"
 #include "Render/Frame.h"
 #include "Window/IWindowEventListener.h"
+
+#include "Scene/Light/DirectionalLight.h"
 
 class DXRenderer : public Core::Events::IWindowEventListener
 {
@@ -42,6 +45,7 @@ private:
     std::shared_ptr<Core::Texture> _tex;
 
     Scene _scene;
+    std::shared_ptr<Core::Resource> _light;
     Camera _camera;
     bool _isCameraMoving;
     float _deltaTime;

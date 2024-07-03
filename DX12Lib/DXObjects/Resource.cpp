@@ -81,6 +81,11 @@ namespace Core
 		return _currentState;
 	}
 
+	const D3D12_RESOURCE_ALLOCATION_INFO& Resource::GetAllocationInfo() const
+	{
+		return _allocationInfo;
+	}
+
 	void* Resource::Map()
 	{
 		void* res = nullptr;
@@ -140,7 +145,7 @@ namespace Core
 			D3D12_HEAP_FLAG_NONE,
 			&resourceDesc,
 			_initialState,
-			clearValue, // TODO: check
+			clearValue,
 			IID_PPV_ARGS(&_resource));
 
 		std::wstring temp(_name.begin(), _name.end());
@@ -155,12 +160,15 @@ namespace Core
 
 		D3D12_RESOURCE_DESC resourceDesc = _resourceDesc.CreateDXResourceDescription();
 		D3D12_CLEAR_VALUE* clearValue = _resourceDesc.GetClearValue().get();
+
+		_allocationInfo = _DXDevice->GetResourceAllocationInfo(0, 1, &resourceDesc);
+
 		_DXDevice->CreatePlacedResource(
 			heap.Get(),
 			offset,
 			&resourceDesc,
 			_initialState,
-			clearValue, // TODO: check
+			clearValue,
 			IID_PPV_ARGS(&_resource));
 
 		std::wstring temp(_name.begin(), _name.end());

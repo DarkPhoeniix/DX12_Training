@@ -1,43 +1,12 @@
 {
-	"AABB" : 
-	{
-		"Max" : 
-		{
-			"w" : 0.0,
-			"x" : 14.042799949645996,
-			"y" : 28.208047866821289,
-			"z" : 13.948345184326172
-		},
-		"Min" : 
-		{
-			"w" : 0.0,
-			"x" : -14.254310607910156,
-			"y" : 0.13405784964561462,
-			"z" : -14.355616569519043
-		}
-	},
 	"Material" : "fruit_bowl.mat",
 	"Mesh" : "fruit_bowl.mesh",
 	"Name" : "fruit_bowl",
 	"Nodes" : 
 	[
-		"Apple.001.node",
-		"Apple.002.node",
-		"Strawberry.003.node",
-		"Strawberry.001.node",
-		"Strawberry.004.node",
-		"Banana.002.node",
-		"Banana.001.node",
-		"Orange.005.node",
-		"Orange.001.node",
-		"Orange.002.node",
-		"Orange.003.node",
-		"Orange.004.node",
-		"Pear1.002.node",
-		"Pear1.001.node",
-		"Pear2.001.node",
-		"Pear2.002.node",
-		"Strawberry.002.node"
+		"layer1.node",
+		"layer2.node",
+		"layer3.node"
 	],
 	"Transform" : 
 	{
@@ -65,9 +34,9 @@
 		"r3" : 
 		{
 			"w" : 1.0,
-			"x" : -0.10451376438140869,
-			"y" : 6.8537502288818359,
-			"z" : -0.2054886668920517
+			"x" : 0.0,
+			"y" : 0.0,
+			"z" : 0.0
 		}
 	}
 }

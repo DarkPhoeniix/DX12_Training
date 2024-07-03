@@ -75,7 +75,7 @@ namespace Core
 
         void InputDevice::RemoveInputObserver(IWindowEventListener* observer)
         {
-            std::remove(_inputListeners.begin(), _inputListeners.end(), observer);
+            std::erase(_inputListeners, observer);
         }
 
         InputDevice& InputDevice::Instance()

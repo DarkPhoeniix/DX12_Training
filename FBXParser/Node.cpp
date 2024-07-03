@@ -172,6 +172,11 @@ bool Node::SaveMesh(const std::string& path) const
         out << "vt " << uv.x << ' ' << uv.y << " 0" << '\n';
     }
 
+    for (const auto& tan : _tangents)
+    {
+        out << "vtan " << XMVectorGetX(tan) << ' ' << XMVectorGetY(tan) << ' ' << XMVectorGetZ(tan) << ' ' << XMVectorGetW(tan) << '\n';
+    }
+
     for (int i = 0; i < _indices.size(); i += 3)
     {
         out << "f " <<
@@ -200,6 +205,8 @@ bool Node::SaveMaterial(const std::string& path) const
 
 bool Node::ParseMesh(FbxMesh* fbxMesh)
 {
+    fbxMesh->GenerateTangentsDataForAllUVSets();
+
     for (int polygonIndex = 0; polygonIndex < fbxMesh->GetPolygonCount(); ++polygonIndex)
     {
         for (int vertexIndex = 0; vertexIndex < fbxMesh->GetPolygonSize(polygonIndex); ++vertexIndex)
@@ -210,16 +217,19 @@ bool Node::ParseMesh(FbxMesh* fbxMesh)
             XMVECTOR normal;
             XMVECTOR color;
             XMFLOAT2 uv;
+            XMVECTOR tangent;
 
             FbxHelpers::ReadPosition(fbxMesh, polygonIndex, vertexIndex, position);
             FbxHelpers::ReadNormal(fbxMesh, fbxMesh->GetPolygonVertex(polygonIndex, vertexIndex), vertexAbsoluteIndex, normal);
             FbxHelpers::ReadColor(fbxMesh, polygonIndex, fbxMesh->GetPolygonVertex(polygonIndex, vertexIndex), vertexAbsoluteIndex, color);
             FbxHelpers::ReadUV(fbxMesh, vertexIndex, fbxMesh->GetTextureUVIndex(polygonIndex, vertexIndex), uv);
+            FbxHelpers::ReadTangent(fbxMesh, fbxMesh->GetPolygonVertex(polygonIndex, vertexIndex), vertexAbsoluteIndex, tangent);
 
             _vertices.push_back(position);
             _normals.push_back(XMVector3Normalize(normal));
             _colors.push_back(color);
             _UVs.push_back(uv);
+            _tangents.push_back(tangent);
             _indices.push_back(vertexAbsoluteIndex);
         }
     }
