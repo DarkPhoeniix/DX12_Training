@@ -41,6 +41,13 @@
 			"Offset": 40,
 			"Format": "float2",
 			"SemanticIndex": 0
+		},
+		{
+			"Name": "TANGENT",
+			"Stream": 0,
+			"Offset": 48,
+			"Format": "float3",
+			"SemanticIndex": 0
 		}
 	],
 

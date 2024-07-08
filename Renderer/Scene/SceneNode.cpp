@@ -151,13 +151,13 @@ void SceneNode::LoadNode(const std::string& filepath, Core::GraphicsCommandList&
         root["Transform"]["r3"]["x"].asFloat(), root["Transform"]["r3"]["y"].asFloat(), root["Transform"]["r3"]["z"].asFloat(), root["Transform"]["r3"]["w"].asFloat()
     );
 
-    _AABB = CalculateAABB(_mesh.get());
-
     if (!root["Mesh"].isNull())
     {
         _mesh = std::make_shared<Mesh>();
         _mesh->LoadMesh(_scene->_name + '\\' + root["Mesh"].asCString());
     }
+
+    _AABB = CalculateAABB(_mesh.get());
 
     if (!root["Material"].isNull())
     {
@@ -290,17 +290,13 @@ void SceneNode::_DrawCurrentNode(Core::GraphicsCommandList& commandList, const F
     {
         commandList.SetDescriptorHeaps({ _scene->_texturesTable->GetDescriptorHeap().GetDXDescriptorHeap().Get() });
 
-        commandList.SetConstant(1, true);
-        commandList.SetDescriptorTable(4, _scene->_texturesTable->GetResourceGPUHandle(_albedoTexture->GetName()));
-    }
-    else
-    {
-        commandList.SetConstant(1, false);
+        commandList.SetDescriptorTable(5, _scene->_texturesTable->GetResourceGPUHandle(_albedoTexture->GetName()));
+        commandList.SetDescriptorTable(6, _scene->_texturesTable->GetResourceGPUHandle(_normalTexture->GetName())); 
     }
 
     XMMATRIX* modelMatrixData = (XMMATRIX*)_modelMatrix->Map();
     *modelMatrixData = GetGlobalTransform();
-    commandList.SetSRV(3, _modelMatrix->OffsetGPU(0));
+    commandList.SetSRV(1, _modelMatrix->OffsetGPU(0));
 
     commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     commandList.SetVertexBuffer(0, _VBO);

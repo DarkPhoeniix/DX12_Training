@@ -37,8 +37,8 @@ namespace Core
 
     void OcclusionQuery::Run(const ISceneNode* node, GraphicsCommandList& commandList, const FrustumVolume& frustum)
     {
-        int index = _queryResources.size();
-        for (int i = 0; i < _queryResources.size(); ++i)
+        size_t index = _queryResources.size();
+        for (size_t i = 0; i < _queryResources.size(); ++i)
         {
             if (_queryResources[i] == node)
             {
@@ -59,7 +59,7 @@ namespace Core
 
     void OcclusionQuery::SetPredication(const ISceneNode* node, GraphicsCommandList& commandList)
     {
-        for (int i = 0; i < _queryResources.size(); ++i)
+        for (size_t i = 0; i < _queryResources.size(); ++i)
         {
             if (_queryResources[i] == node)
             {

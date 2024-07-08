@@ -1,7 +1,7 @@
 #pragma once
 
-#include "DXObjects/Texture.h"
 #include "Scene/Mesh.h"
+#include "Scene/Material.h"
 #include "Scene/ISceneNode.h"
 #include "Scene/Volumes/AABBVolume.h"
 
@@ -38,6 +38,7 @@ private:
     std::shared_ptr<Mesh> _mesh;
     AABBVolume _AABB;
 
+    Material _material;
     std::shared_ptr<Core::Texture> _albedoTexture;
     std::shared_ptr<Core::Texture> _normalTexture;
 

@@ -201,12 +201,12 @@ namespace Core
 	{
 		if (type & EResourceType::Buffer)
 		{
-			unsigned int rowBytes = _resourceDescription.Width;
+			UINT64 rowBytes = _resourceDescription.Width;
 
 			if (type & EResourceType::StrideAlignment)
 			{
 				// calculate width of buffer
-				unsigned int alligned = _stride;
+				UINT64 alligned = _stride;
 				if (type & EResourceType::Dynamic)
 				{
 					alligned = (_stride + 255) & ~255;
