@@ -5,6 +5,7 @@
 #include "Render/Executor.h"
 #include "Render/TaskGPU.h"
 #include "Render/FencePool.h"
+#include "DXObjects/DescriptorHeap.h"
 
 // TODO: refactor the Frame class
 
@@ -45,6 +46,8 @@ public:
 
     ComPtr<ID3D12DescriptorHeap> _targetHeap;
     ComPtr<ID3D12DescriptorHeap> _depthHeap;
+
+    Core::DescriptorHeap _postFXDescHeap;
 
 private:
     std::vector<Executor*> _currentTasks;
