@@ -12,6 +12,8 @@
 #include "Events/KeyEvent.h"
 #include "Render/TaskGPU.h"
 
+#include "GUI/GUI.h"
+
 using namespace DirectX;
 using namespace Core;
 
@@ -238,31 +240,49 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         commandList->Close();
     }
 
-    {
+    //{
 
+    //    TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
+    //    task->SetName("postfx");
+    //    task->AddDependency("render");
+
+    //    Core::GraphicsCommandList* commandList = task->GetCommandLists().front();
+    //    PIXBeginEvent(commandList->GetDXCommandList().Get(), 4, "Render");
+
+    //    commandList->GetDXCommandList()->SetPipelineState(_postFXPipeState.Get());
+    //    commandList->GetDXCommandList()->SetComputeRootSignature(_postFXRootSig.Get());
+
+
+    //    commandList->TransitionBarrier(frame._targetTexture, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+
+
+    //    commandList->SetDescriptorHeaps({ frame._postFXDescHeap.GetDXDescriptorHeap().Get() });
+
+    //    commandList->GetDXCommandList()->SetComputeRootDescriptorTable(0, frame._postFXDescHeap.GetHeapStartGPUHandle());
+
+    //    const UINT x = 1280 / 2;
+    //    const UINT y = 720 / 2;
+    //    commandList->GetDXCommandList()->Dispatch(x, y, 1);
+
+    //    commandList->TransitionBarrier(frame._targetTexture, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+    //    PIXEndEvent(commandList->GetDXCommandList().Get());
+    //    commandList->Close();
+    //}
+
+    //GUI
+    {
         TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
-        task->SetName("postfx");
+        task->SetName("gui");
         task->AddDependency("render");
 
         Core::GraphicsCommandList* commandList = task->GetCommandLists().front();
-        PIXBeginEvent(commandList->GetDXCommandList().Get(), 4, "Render");
+        PIXBeginEvent(commandList->GetDXCommandList().Get(), 4, "GUI");
 
-        commandList->GetDXCommandList()->SetPipelineState(_postFXPipeState.Get());
-        commandList->GetDXCommandList()->SetComputeRootSignature(_postFXRootSig.Get());
+        commandList->SetViewport(_camera.GetViewport());
+        commandList->SetRenderTarget(&rtv, &dsv);
 
-
-        commandList->TransitionBarrier(frame._targetTexture, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-
-
-        commandList->SetDescriptorHeaps({ frame._postFXDescHeap.GetDXDescriptorHeap().Get() });
-
-        commandList->GetDXCommandList()->SetComputeRootDescriptorTable(0, frame._postFXDescHeap.GetHeapStartGPUHandle());
-
-        const UINT x = 1280 / 2;
-        const UINT y = 720 / 2;
-        commandList->GetDXCommandList()->Dispatch(x, y, 1);
-
-        commandList->TransitionBarrier(frame._targetTexture, D3D12_RESOURCE_STATE_RENDER_TARGET);
+        GUI::Render(*commandList);
 
         PIXEndEvent(commandList->GetDXCommandList().Get());
         commandList->Close();
@@ -272,7 +292,7 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
     {
         TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
         task->SetName("present");
-        task->AddDependency("postfx");
+        task->AddDependency("gui");
 
         Core::GraphicsCommandList* commandList = task->GetCommandLists().front();
         PIXBeginEvent(commandList->GetDXCommandList().Get(), 5, "Present");
