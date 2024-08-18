@@ -15,6 +15,8 @@
 #include "Utility/Resources.h"
 #include "Window/Win32Window.h"
 
+#include "GUI/GUI.h"
+
 using namespace Core;
 
 namespace
@@ -26,6 +28,8 @@ Application* Application::_instance = nullptr;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    GUI_WndProc(hwnd, message, wParam, lParam);
+
     switch (message)
     {
     case WM_CREATE:
@@ -95,6 +99,8 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
 
     Events::InputDevice::Instance().AddInputObserver(pApp.get());
 
+    GUI::Init(_win32Window->GetWindowHandle(), _swapChain);
+
     TaskGPU* uploadTask = _currentFrame->CreateTask(D3D12_COMMAND_LIST_TYPE_COPY, nullptr);
     if (!pApp->LoadContent(uploadTask))
     {
@@ -111,6 +117,8 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
         }
 
         Events::InputDevice::Instance().PollEvents();
+
+        GUI::NewFrame();
 
         _UpdateCall(pApp);
         _RenderCall(pApp);
@@ -131,6 +139,8 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
 
 void Application::Quit(int exitCode)
 {
+    GUI::Destroy();
+
     Device::Destroy();
     PostQuitMessage(exitCode);
 
