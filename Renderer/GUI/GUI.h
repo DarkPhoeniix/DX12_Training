@@ -25,5 +25,5 @@ private:
     // TODO: fix live DXDevice, change singleton
     static GUI& Instance();
 
-    Core::DescriptorHeap _srvDescriptorHeap;
+    Core::DescriptorHeap* _srvDescriptorHeap;
 };

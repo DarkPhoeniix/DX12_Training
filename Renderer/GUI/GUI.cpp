@@ -17,7 +17,7 @@ LRESULT GUI_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     {
         return true;
     }
-
+    // Doubtful, but okay
     return S_OK;
 }
 
@@ -28,14 +28,15 @@ void GUI::Init(HWND windowHandle, const Core::SwapChain& swapChain)
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
     // Setup Platform/Renderer backends
     ImGui_ImplWin32_Init(windowHandle);
-    ImGui_ImplDX12_Init(Core::Device::GetDXDevice().Get(), Core::BACK_BUFFER_COUNT, swapChain.GetDescription().BufferDesc.Format,
-        Instance()._srvDescriptorHeap.GetDXDescriptorHeap().Get(),
-        Instance()._srvDescriptorHeap.GetHeapStartCPUHandle(),
-        Instance()._srvDescriptorHeap.GetHeapStartGPUHandle());
+    ImGui_ImplDX12_Init(Core::Device::GetDXDevice().Get(), 
+                        Core::BACK_BUFFER_COUNT, 
+                        swapChain.GetDescription().BufferDesc.Format,
+                        Instance()._srvDescriptorHeap->GetDXDescriptorHeap().Get(),
+                        Instance()._srvDescriptorHeap->GetHeapStartCPUHandle(),
+                        Instance()._srvDescriptorHeap->GetHeapStartGPUHandle());
 }
 
 void GUI::NewFrame()
@@ -50,7 +51,7 @@ void GUI::NewFrame()
 void GUI::Render(Core::GraphicsCommandList& commandList)
 {
     ImGui::Render();
-    commandList.SetDescriptorHeaps({ Instance()._srvDescriptorHeap.GetDXDescriptorHeap().Get() });
+    commandList.SetDescriptorHeaps({ Instance()._srvDescriptorHeap->GetDXDescriptorHeap().Get() });
     ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList.GetDXCommandList().Get());
 }
 
@@ -59,6 +60,8 @@ void GUI::Destroy()
     ImGui_ImplDX12_Shutdown();
     ImGui_ImplWin32_Shutdown();
     ImGui::DestroyContext();
+
+    delete Instance()._srvDescriptorHeap;
 }
 
 GUI::GUI()
@@ -67,9 +70,11 @@ GUI::GUI()
     desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
     desc.SetNumDescriptors(1);
-    _srvDescriptorHeap.SetDescription(desc);
-    _srvDescriptorHeap.Create();
-    _srvDescriptorHeap.SetName("GUI SRV descriptor heap");
+
+    _srvDescriptorHeap = new Core::DescriptorHeap;
+    _srvDescriptorHeap->SetDescription(desc);
+    _srvDescriptorHeap->Create();
+    _srvDescriptorHeap->SetName("GUI SRV descriptor heap");
 }
 
 GUI::~GUI()
