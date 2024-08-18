@@ -39,6 +39,9 @@ private:
     Core::RootSignature _renderPipeline;
     Core::RootSignature _AABBpipeline;
 
+    ComPtr<ID3D12RootSignature> _postFXRootSig;
+    ComPtr<ID3D12PipelineState> _postFXPipeState;
+
     std::shared_ptr<Core::Resource> _ambient;
 
     Core::DescriptorHeap _texDescHeap;

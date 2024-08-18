@@ -119,6 +119,27 @@ void Frame::Init(const Core::SwapChain& swapChain)
         depthStencilDesc.Texture2D.MipSlice = 0;
         _DXDevice->CreateDepthStencilView(_depthTexture.GetDXResource().Get(), &depthStencilDesc, _depthHeap->GetCPUDescriptorHandleForHeapStart());
     }
+
+
+    {
+        Core::DescriptorHeapDescription desc = {};
+        desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+        desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
+        desc.SetNumDescriptors(1);
+        desc.SetNodeMask(0);
+
+        _postFXDescHeap.SetDescription(desc);
+        _postFXDescHeap.Create();
+
+        D3D12_CPU_DESCRIPTOR_HANDLE CPUHandle = _postFXDescHeap.GetHeapStartCPUHandle();
+
+        D3D12_UNORDERED_ACCESS_VIEW_DESC UAVDesc = {};
+        UAVDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+        UAVDesc.Texture2D.MipSlice = 0;
+
+        _DXDevice->CreateUnorderedAccessView(_targetTexture.GetDXResource().Get(), nullptr, &UAVDesc, CPUHandle);
+    }
 }
 
 TaskGPU* Frame::CreateTask(D3D12_COMMAND_LIST_TYPE type, Core::RootSignature* rootSignature)

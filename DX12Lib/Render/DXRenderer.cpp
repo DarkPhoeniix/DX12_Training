@@ -46,6 +46,25 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
     _renderPipeline.Parse("PipelineDescriptions\\TriangleRenderPipeline.tech");
     _AABBpipeline.Parse("PipelineDescriptions\\AABBRenderPipeline.tech");
 
+
+    // TODO: rework
+    {
+        ComPtr<ID3DBlob> computeShaderBlob = nullptr;
+        Helper::throwIfFailed(D3DReadFileToBlob(L"NegativePostFX_cs.cso", &computeShaderBlob));
+
+        D3D12_INPUT_ELEMENT_DESC* inputLayout = nullptr;
+
+        D3D12_COMPUTE_PIPELINE_STATE_DESC pipelineStateStreamDesc = {};
+
+        Helper::throwIfFailed(_DXDevice->CreateRootSignature(0, computeShaderBlob->GetBufferPointer(),
+            computeShaderBlob->GetBufferSize(), IID_PPV_ARGS(&_postFXRootSig)));
+
+        pipelineStateStreamDesc.CS = CD3DX12_SHADER_BYTECODE(computeShaderBlob.Get());
+
+        Helper::throwIfFailed(_DXDevice->CreateComputePipelineState(&pipelineStateStreamDesc, IID_PPV_ARGS(&_postFXPipeState)));
+    }
+
+
 #if defined(_DEBUG)
     _statsQuery.Create();
 #endif
@@ -219,11 +238,41 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         commandList->Close();
     }
 
+    {
+
+        TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
+        task->SetName("postfx");
+        task->AddDependency("render");
+
+        Core::GraphicsCommandList* commandList = task->GetCommandLists().front();
+        PIXBeginEvent(commandList->GetDXCommandList().Get(), 4, "Render");
+
+        commandList->GetDXCommandList()->SetPipelineState(_postFXPipeState.Get());
+        commandList->GetDXCommandList()->SetComputeRootSignature(_postFXRootSig.Get());
+
+
+        commandList->TransitionBarrier(frame._targetTexture, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+
+
+        commandList->SetDescriptorHeaps({ frame._postFXDescHeap.GetDXDescriptorHeap().Get() });
+
+        commandList->GetDXCommandList()->SetComputeRootDescriptorTable(0, frame._postFXDescHeap.GetHeapStartGPUHandle());
+
+        const UINT x = 1280 / 2;
+        const UINT y = 720 / 2;
+        commandList->GetDXCommandList()->Dispatch(x, y, 1);
+
+        commandList->TransitionBarrier(frame._targetTexture, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+        PIXEndEvent(commandList->GetDXCommandList().Get());
+        commandList->Close();
+    }
+
     // Present
     {
         TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
         task->SetName("present");
-        task->AddDependency("render");
+        task->AddDependency("postfx");
 
         Core::GraphicsCommandList* commandList = task->GetCommandLists().front();
         PIXBeginEvent(commandList->GetDXCommandList().Get(), 5, "Present");

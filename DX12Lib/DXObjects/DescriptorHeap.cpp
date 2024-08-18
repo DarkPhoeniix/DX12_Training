@@ -66,6 +66,13 @@ namespace Core
         return _descriptorHeap->GetGPUDescriptorHandleForHeapStart();
     }
 
+    D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetHeapGPUHandle(size_t offset)
+    {
+        D3D12_GPU_DESCRIPTOR_HANDLE handle = _descriptorHeap->GetGPUDescriptorHandleForHeapStart();
+        handle.ptr += offset * _heapIncrementSize;
+        return handle;
+    }
+
     D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetResourceCPUHandle(Resource* resource)
     {
         ASSERT(_DXDevice, "Device is nullptr when trying to Get CPU descriptor handle increment size");
