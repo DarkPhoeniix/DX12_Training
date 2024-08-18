@@ -5,14 +5,14 @@
 namespace Core
 {
     StatisticsQuery::StatisticsQuery()
-        : _DXDevice(Core::Device::GetDXDevice())
-        , _statQueryHeap(nullptr)
+        : _statQueryHeap(nullptr)
+        , _statisticsData(nullptr)
     {
     }
 
     StatisticsQuery::~StatisticsQuery()
     {
-        _DXDevice = nullptr;
+        _statisticsData = nullptr;
         _statQueryHeap = nullptr;
     }
 
@@ -21,14 +21,14 @@ namespace Core
         D3D12_QUERY_HEAP_DESC queryHeapDesc = {};
         queryHeapDesc.Count = 1;
         queryHeapDesc.Type = D3D12_QUERY_HEAP_TYPE_PIPELINE_STATISTICS;
-        _DXDevice->CreateQueryHeap(&queryHeapDesc, IID_PPV_ARGS(&_statQueryHeap));
+        Device::GetDXDevice()->CreateQueryHeap(&queryHeapDesc, IID_PPV_ARGS(&_statQueryHeap));
 
         D3D12_RESOURCE_DESC desc(CD3DX12_RESOURCE_DESC::Buffer(sizeof(D3D12_QUERY_DATA_PIPELINE_STATISTICS)));
         _statResource.SetResourceDescription(ResourceDescription(desc));
         ComPtr<ID3D12Resource> res;
 
         CD3DX12_HEAP_PROPERTIES heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK);
-        _DXDevice->CreateCommittedResource(
+        Device::GetDXDevice()->CreateCommittedResource(
             &heapProp,
             D3D12_HEAP_FLAG_NONE,
             &desc,
@@ -54,9 +54,9 @@ namespace Core
         commandList.ResolveQueryData(_statQueryHeap, D3D12_QUERY_TYPE_PIPELINE_STATISTICS, 0, _statResource, 0);
     }
 
-    D3D12_QUERY_DATA_PIPELINE_STATISTICS StatisticsQuery::GetStatistics()
+    const D3D12_QUERY_DATA_PIPELINE_STATISTICS& StatisticsQuery::GetStatistics()
     {
-        D3D12_QUERY_DATA_PIPELINE_STATISTICS* stat = (D3D12_QUERY_DATA_PIPELINE_STATISTICS*)_statResource.Map();
-        return *stat;
+        _statisticsData = (D3D12_QUERY_DATA_PIPELINE_STATISTICS*)_statResource.Map();
+        return *_statisticsData;
     }
 } // namespace Core

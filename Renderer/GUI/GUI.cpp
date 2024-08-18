@@ -5,10 +5,6 @@
 #include "DXObjects/GraphicsCommandList.h"
 #include "DXObjects/SwapChain.h"
 
-#include "imgui.h"
-#include "backends/imgui_impl_win32.h"
-#include "backends/imgui_impl_dx12.h"
-
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 LRESULT GUI_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -45,7 +41,6 @@ void GUI::NewFrame()
     ImGui_ImplDX12_NewFrame();
     ImGui_ImplWin32_NewFrame();
     ImGui::NewFrame();
-    ImGui::ShowDemoWindow(); // Show demo window! :)
 }
 
 void GUI::Render(Core::GraphicsCommandList& commandList)

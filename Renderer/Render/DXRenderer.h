@@ -54,8 +54,4 @@ private:
     float _deltaTime;
 
     bool _contentLoaded;
-
-#if defined(_DEBUG)
-    Core::StatisticsQuery _statsQuery;
-#endif
 };

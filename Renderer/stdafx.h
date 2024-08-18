@@ -42,6 +42,10 @@ using namespace Microsoft::WRL;
 #include <vector>
 #include <map>
 
+#include <imgui.h>
+#include <backends/imgui_impl_win32.h>
+#include <backends/imgui_impl_dx12.h>
+
 #include "Utility/KeyCodes.h"
 #include "Utility/Defines.h"
 #include "Utility/Helpers.h"
