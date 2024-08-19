@@ -218,11 +218,9 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         if (ImGui::Begin("Debug Info"), true, ImGuiWindowFlags_AlwaysAutoResize)
         {
             ImGui::SetWindowPos({ 0, 0 });
+            ImGui::SetWindowSize({ 0, 0 });
 
-            std::string fps = std::to_string(DebugInfo::GetFPS());
-            double msPerFrame = DebugInfo::GetMsPerFrame();
-
-            ImGui::Text(std::format("FPS: {} ({:.3f} ms)", fps, msPerFrame).c_str());
+            ImGui::Text("FPS: %i (%.03f ms)", DebugInfo::GetFPS(), DebugInfo::GetMsPerFrame());
 
             if (ImGui::CollapsingHeader("Pipeline statistics"))
             {
@@ -237,9 +235,13 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
             {
                 ImGuiIO& io = ImGui::GetIO();
                 if (ImGui::IsMousePosValid())
+                {
                     ImGui::Text("Mouse pos: (%g, %g)", io.MousePos.x, io.MousePos.y);
+                }
                 else
+                {
                     ImGui::Text("Mouse pos: <INVALID>");
+                }
                 ImGui::Text("Mouse delta: (%g, %g)", io.MouseDelta.x, io.MouseDelta.y);
                 ImGui::Text("Mouse down:");
                 for (int i = 0; i < IM_ARRAYSIZE(io.MouseDown); i++) 
