@@ -11,6 +11,7 @@
 #include "Events/UpdateEvent.h"
 #include "Events/KeyEvent.h"
 #include "Render/TaskGPU.h"
+#include "Utility/DebugInfo.h"
 
 #include "GUI/GUI.h"
 
@@ -48,7 +49,6 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
     _renderPipeline.Parse("PipelineDescriptions\\TriangleRenderPipeline.tech");
     _AABBpipeline.Parse("PipelineDescriptions\\AABBRenderPipeline.tech");
 
-
     // TODO: rework
     {
         ComPtr<ID3DBlob> computeShaderBlob = nullptr;
@@ -65,11 +65,6 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
 
         Helper::throwIfFailed(_DXDevice->CreateComputePipelineState(&pipelineStateStreamDesc, IID_PPV_ARGS(&_postFXPipeState)));
     }
-
-
-#if defined(_DEBUG)
-    _statsQuery.Create();
-#endif
 
     // Camera Setup
     {
@@ -136,39 +131,7 @@ void DXRenderer::UnloadContent()
 
 void DXRenderer::OnUpdate(Events::UpdateEvent& updateEvent)
 {
-    static uint64_t frameCount = 0;
-    static double totalTime = 0.0;
-    static double totalTimeStat = 0.0;
-
-    totalTime += updateEvent.elapsedTime;
-    totalTimeStat += updateEvent.elapsedTime;
-    frameCount++;
-
-    if (totalTime > 1.0)
-    {
-        int fps = (int)(frameCount / totalTime);
-
-        std::wstring fpsText = L"FPS: " + std::to_wstring(fps);
-        ::SetWindowText(_windowHandle, fpsText.c_str());
-
-        frameCount = 0;
-        totalTime = 0.0;
-    }
-
-    if (totalTimeStat > 5.0)
-    {
-        totalTimeStat = 0.0;
-
-#if defined(_DEBUG)
-        D3D12_QUERY_DATA_PIPELINE_STATISTICS stat = _statsQuery.GetStatistics();
-        std::string d = "Primitives rendered: " + std::to_string(stat.IAPrimitives) + "\n";
-        OutputDebugStringA(d.c_str());
-        d = "VS invocs: " + std::to_string(stat.VSInvocations) + "\n";
-        OutputDebugStringA(d.c_str());
-        d = "PS invocs: " + std::to_string(stat.PSInvocations) + "\n";
-        OutputDebugStringA(d.c_str());
-#endif
-    }
+    DebugInfo::Update(updateEvent);
 
     _deltaTime = updateEvent.elapsedTime;
 }
@@ -210,8 +173,9 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         PIXBeginEvent(commandList->GetDXCommandList().Get(), 4, "Render");
 
 #if defined(_DEBUG)
-        _statsQuery.BeginQuery(*commandList);
+        DebugInfo::StartStatCollecting(*commandList);
 #endif
+
         commandList->SetPipelineState(_renderPipeline);
         commandList->SetGraphicsRootSignature(_renderPipeline);
 
@@ -226,8 +190,7 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         _scene.Draw(*commandList, _camera.GetViewFrustum());
 
 #if defined(_DEBUG)
-        _statsQuery.EndQuery(*commandList);
-        _statsQuery.ResolveQueryData(*commandList);
+        DebugInfo::EndStatCollecting(*commandList);
 
         commandList->SetPipelineState(_AABBpipeline);
         commandList->SetGraphicsRootSignature(_AABBpipeline);
@@ -240,36 +203,6 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         commandList->Close();
     }
 
-    //{
-
-    //    TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
-    //    task->SetName("postfx");
-    //    task->AddDependency("render");
-
-    //    Core::GraphicsCommandList* commandList = task->GetCommandLists().front();
-    //    PIXBeginEvent(commandList->GetDXCommandList().Get(), 4, "Render");
-
-    //    commandList->GetDXCommandList()->SetPipelineState(_postFXPipeState.Get());
-    //    commandList->GetDXCommandList()->SetComputeRootSignature(_postFXRootSig.Get());
-
-
-    //    commandList->TransitionBarrier(frame._targetTexture, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-
-
-    //    commandList->SetDescriptorHeaps({ frame._postFXDescHeap.GetDXDescriptorHeap().Get() });
-
-    //    commandList->GetDXCommandList()->SetComputeRootDescriptorTable(0, frame._postFXDescHeap.GetHeapStartGPUHandle());
-
-    //    const UINT x = 1280 / 2;
-    //    const UINT y = 720 / 2;
-    //    commandList->GetDXCommandList()->Dispatch(x, y, 1);
-
-    //    commandList->TransitionBarrier(frame._targetTexture, D3D12_RESOURCE_STATE_RENDER_TARGET);
-
-    //    PIXEndEvent(commandList->GetDXCommandList().Get());
-    //    commandList->Close();
-    //}
-
     //GUI
     {
         TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
@@ -277,10 +210,58 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         task->AddDependency("render");
 
         Core::GraphicsCommandList* commandList = task->GetCommandLists().front();
-        PIXBeginEvent(commandList->GetDXCommandList().Get(), 4, "GUI");
+        PIXBeginEvent(commandList->GetDXCommandList().Get(), 7, "GUI");
 
         commandList->SetViewport(_camera.GetViewport());
         commandList->SetRenderTarget(&rtv, &dsv);
+
+        if (ImGui::Begin("Debug Info"), true, ImGuiWindowFlags_AlwaysAutoResize)
+        {
+            ImGui::SetWindowPos({ 0, 0 });
+            ImGui::SetWindowSize({ 0, 0 });
+
+            ImGui::Text("FPS: %i (%.03f ms)", DebugInfo::GetFPS(), DebugInfo::GetMsPerFrame());
+
+            if (ImGui::CollapsingHeader("Pipeline statistics"))
+            {
+                D3D12_QUERY_DATA_PIPELINE_STATISTICS stats = DebugInfo::GetPipelineStatisctics();
+                ImGui::Text(std::string("Primitives: " + std::to_string(stats.IAPrimitives)).c_str());
+                ImGui::Text(std::string("VS invocs: " + std::to_string(stats.VSInvocations)).c_str());
+                ImGui::Text(std::string("GS invocs: " + std::to_string(stats.GSInvocations)).c_str());
+                ImGui::Text(std::string("PS invocs: " + std::to_string(stats.PSInvocations)).c_str());
+            }
+
+            if (ImGui::CollapsingHeader("Inputs"))
+            {
+                ImGuiIO& io = ImGui::GetIO();
+                if (ImGui::IsMousePosValid())
+                {
+                    ImGui::Text("Mouse pos: (%g, %g)", io.MousePos.x, io.MousePos.y);
+                }
+                else
+                {
+                    ImGui::Text("Mouse pos: <INVALID>");
+                }
+                ImGui::Text("Mouse delta: (%g, %g)", io.MouseDelta.x, io.MouseDelta.y);
+                ImGui::Text("Mouse down:");
+                for (int i = 0; i < IM_ARRAYSIZE(io.MouseDown); i++) 
+                {
+                    if (ImGui::IsMouseDown(i))
+                    {
+                        ImGui::SameLine();
+                        ImGui::Text("b%d (%.02f secs)", i, io.MouseDownDuration[i]);
+                    }
+                }
+
+                struct funcs { static bool IsLegacyNativeDupe(ImGuiKey key) { return key >= 0 && key < 512 && ImGui::GetIO().KeyMap[key] != -1; } }; // Hide Native<>ImGuiKey duplicates when both exists in the array
+                ImGuiKey start_key = (ImGuiKey)0;
+
+                ImGui::Text("Keys down:");         for (ImGuiKey key = start_key; key < ImGuiKey_NamedKey_END; key = (ImGuiKey)(key + 1)) { if (funcs::IsLegacyNativeDupe(key) || !ImGui::IsKeyDown(key)) continue; ImGui::SameLine(); ImGui::Text((key < ImGuiKey_NamedKey_BEGIN) ? "\"%s\"" : "\"%s\" %d", ImGui::GetKeyName(key), key); }
+                ImGui::Text("Keys mods: %s%s%s%s", io.KeyCtrl ? "CTRL " : "", io.KeyShift ? "SHIFT " : "", io.KeyAlt ? "ALT " : "", io.KeySuper ? "SUPER " : "");
+                ImGui::Text("Chars queue:");       for (int i = 0; i < io.InputQueueCharacters.Size; i++) { ImWchar c = io.InputQueueCharacters[i]; ImGui::SameLine();  ImGui::Text("\'%c\' (0x%04X)", (c > ' ' && c <= 255) ? (char)c : '?', c); } // FIXME: We should convert 'c' to UTF-8 here but the functions are not public.
+            }
+        }
+        ImGui::End();
 
         GUI::Render(*commandList);
 
