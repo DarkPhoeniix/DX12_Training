@@ -12,12 +12,12 @@ using namespace DirectX;
 
 namespace
 {
-    AABBVolume CalculateAABB(Mesh* mesh)
+    AABBVolume CalculateAABB(Mesh* mesh, const XMMATRIX& localTransform)
     {
         AABBVolume aabb;
 
-        aabb.min = XMVectorSet(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
-        aabb.max = XMVectorSet(-std::numeric_limits<float>::max(), -std::numeric_limits<float>::max(), -std::numeric_limits<float>::max(), -std::numeric_limits<float>::max());
+        XMFLOAT4 min(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), 1.0f);
+        XMFLOAT4 max(-std::numeric_limits<float>::max(), -std::numeric_limits<float>::max(), -std::numeric_limits<float>::max(), 1.0f);
 
         if (!mesh)
         {
@@ -26,33 +26,36 @@ namespace
 
         for (const VertexData& vertex : mesh->getVertices())
         {
-            if (vertex.Position.x < XMVectorGetX(aabb.min))
+            if (vertex.Position.x < min.x)
             {
-                XMVectorSetX(aabb.min, vertex.Position.x);
+                min.x = vertex.Position.x;
             }
-            else if (vertex.Position.x > XMVectorGetX(aabb.max))
+            else if (vertex.Position.x > max.x)
             {
-                XMVectorSetX(aabb.max, vertex.Position.x);
-            }
-
-            if (vertex.Position.y < XMVectorGetY(aabb.min))
-            {
-                XMVectorSetY(aabb.min, vertex.Position.x);
-            }
-            else if (vertex.Position.y > XMVectorGetY(aabb.max))
-            {
-                XMVectorSetY(aabb.max, vertex.Position.y);
+                max.x = vertex.Position.x;
             }
 
-            if (vertex.Position.z < XMVectorGetZ(aabb.min))
+            if (vertex.Position.y < min.y)
             {
-                XMVectorSetZ(aabb.min, vertex.Position.z);
+                min.y = vertex.Position.y;
             }
-            else if (vertex.Position.z > XMVectorGetZ(aabb.max))
+            else if (vertex.Position.y > max.y)
             {
-                XMVectorSetZ(aabb.max, vertex.Position.z);
+                max.y = vertex.Position.y;
+            }
+
+            if (vertex.Position.z < min.z)
+            {
+                min.z = vertex.Position.z;
+            }
+            else if (vertex.Position.z > max.z)
+            {
+                max.z = vertex.Position.z;
             }
         }
+
+        aabb.min = DirectX::XMLoadFloat4(&min);
+        aabb.max = DirectX::XMLoadFloat4(&max);
 
         return aabb;
     }
@@ -123,8 +126,12 @@ void SceneNode::DrawAABB(Core::GraphicsCommandList& commandList) const
 
     commandList.SetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
 
-    commandList.SetConstants(0, 3, &_AABB.min.m128_f32, 0);
-    commandList.SetConstants(0, 3, &_AABB.max.m128_f32, 4);
+    XMMATRIX tr = GetGlobalTransform();
+    XMVECTOR min = XMVector4Transform(_AABB.min, tr);
+    XMVECTOR max = XMVector4Transform(_AABB.max, tr);
+
+    commandList.SetConstants(0, 3, &min.m128_f32, 0);
+    commandList.SetConstants(0, 3, &max.m128_f32, 4);
 
     commandList.Draw(1);
 }
@@ -157,7 +164,7 @@ void SceneNode::LoadNode(const std::string& filepath, Core::GraphicsCommandList&
         _mesh->LoadMesh(_scene->_name + '\\' + root["Mesh"].asCString());
     }
 
-    _AABB = CalculateAABB(_mesh.get());
+    _AABB = CalculateAABB(_mesh.get(), _transform);
 
     if (!root["Material"].isNull())
     {
