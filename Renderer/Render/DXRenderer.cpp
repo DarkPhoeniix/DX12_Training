@@ -172,9 +172,9 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         Core::GraphicsCommandList* commandList = task->GetCommandLists().front();
         PIXBeginEvent(commandList->GetDXCommandList().Get(), 4, "Render");
 
-#if defined(_DEBUG)
+//#if defined(_DEBUG)
         DebugInfo::StartStatCollecting(*commandList);
-#endif
+//#endif
 
         commandList->SetPipelineState(_renderPipeline);
         commandList->SetGraphicsRootSignature(_renderPipeline);
@@ -189,15 +189,15 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
 
         _scene.Draw(*commandList, _camera.GetViewFrustum());
 
-#if defined(_DEBUG)
-        DebugInfo::EndStatCollecting(*commandList);
-
+//#if defined(_DEBUG)
         commandList->SetPipelineState(_AABBpipeline);
         commandList->SetGraphicsRootSignature(_AABBpipeline);
         commandList->SetConstants(1, sizeof(XMMATRIX) / 4, &viewProjMatrix);
 
         _scene.DrawAABB(*commandList);
-#endif
+
+        DebugInfo::EndStatCollecting(*commandList);
+//#endif
 
         PIXEndEvent(commandList->GetDXCommandList().Get());
         commandList->Close();

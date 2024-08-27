@@ -33,8 +33,6 @@ namespace Core
         ComPtr<ID3D12Resource> CreatePlacedResource(ComPtr<ID3D12Heap> heap, unsigned int offset, D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_COPY_DEST);
 
     protected:
-        ComPtr<ID3D12Device2> _DXDevice;
-
         ComPtr<ID3D12Resource> _resource;
         std::string _name;
 

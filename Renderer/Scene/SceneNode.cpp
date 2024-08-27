@@ -1,4 +1,3 @@
-
 #include "stdafx.h"
 
 #include "SceneNode.h"
@@ -8,10 +7,47 @@
 #include "Scene/Scene.h"
 #include "Volumes/FrustumVolume.h"
 
+#include <filesystem>
+
 using namespace DirectX;
 
 namespace
 {
+    XMMATRIX ParseTransformationMatrix(const Json::Value& transform)
+    {
+        // TODO: this func is ugly, rework later
+        XMMATRIX matrix = XMMatrixIdentity();
+
+        int sz = transform["Transform"].size();
+        Json::Value val;
+        for (int i = 0; i < sz; ++i)
+        {
+            val = transform["Transform"][std::format("r{}", i).c_str()];
+            std::stringstream iss(val.asCString());
+            float value = 0;
+
+            XMFLOAT4 r;
+            iss >> r.x >> r.y >> r.z >> r.w;
+
+            matrix.r[i] = XMLoadFloat4(&r);
+        }
+
+        return matrix;
+    }
+
+    Mesh* ParseMesh(const std::string& filepath)
+    {
+        if (ASSERT(std::filesystem::exists(std::filesystem::path(filepath)), std::format("Failed to parse mesh from {}", filepath)))
+        {
+            return nullptr;
+        }
+
+        Mesh* output = new Mesh();
+        output->LoadMesh(filepath);
+
+        return output;
+    }
+
     AABBVolume CalculateAABB(Mesh* mesh, const XMMATRIX& localTransform)
     {
         AABBVolume aabb;
@@ -145,51 +181,43 @@ void SceneNode::LoadNode(const std::string& filepath, Core::GraphicsCommandList&
 {
     Logger::Log(LogType::Info, "Parsing node " + filepath);
 
+    if (ASSERT(std::filesystem::exists(std::filesystem::path(filepath)), std::format("Failed to parse a node from {}", filepath)))
+    {
+        return;
+    }
+
     std::ifstream in(filepath, std::ios_base::in | std::ios_base::binary);
     Json::Value root;
     in >> root;
 
     _name = root["Name"].asCString();
 
-    _transform = XMMatrixSet(
-        root["Transform"]["r0"]["x"].asFloat(), root["Transform"]["r0"]["y"].asFloat(), root["Transform"]["r0"]["z"].asFloat(), root["Transform"]["r0"]["w"].asFloat(),
-        root["Transform"]["r1"]["x"].asFloat(), root["Transform"]["r1"]["y"].asFloat(), root["Transform"]["r1"]["z"].asFloat(), root["Transform"]["r1"]["w"].asFloat(),
-        root["Transform"]["r2"]["x"].asFloat(), root["Transform"]["r2"]["y"].asFloat(), root["Transform"]["r2"]["z"].asFloat(), root["Transform"]["r2"]["w"].asFloat(),
-        root["Transform"]["r3"]["x"].asFloat(), root["Transform"]["r3"]["y"].asFloat(), root["Transform"]["r3"]["z"].asFloat(), root["Transform"]["r3"]["w"].asFloat()
-    );
+    _transform = ParseTransformationMatrix(root);
 
-    if (!root["Mesh"].isNull())
+    if (*root["Mesh"].asCString())
     {
-        _mesh = std::make_shared<Mesh>();
-        _mesh->LoadMesh(_scene->_name + '\\' + root["Mesh"].asCString());
+        _mesh = std::shared_ptr<Mesh>(ParseMesh(_scene->_name + '\\' + root["Mesh"].asCString()));
+        _AABB = CalculateAABB(_mesh.get(), _transform);
     }
 
-    _AABB = CalculateAABB(_mesh.get(), _transform);
-
-    if (!root["Material"].isNull())
+    _material = nullptr;
+    if (*root["Material"].asCString())
     {
-        std::ifstream inMat(_scene->_name + '\\' + root["Material"].asCString(), std::ios_base::in | std::ios_base::binary);
-        Json::Value mat;
-        inMat >> mat;
-        if (_albedoTexture = std::move(Core::Texture::LoadFromFile(mat["Albedo"].asCString())))
-        {
-            _scene->_UploadTexture(_albedoTexture.get(), commandList);
-        }
-        if (_normalTexture = std::move(Core::Texture::LoadFromFile(mat["Normal"].asCString())))
-        {
-            _scene->_UploadTexture(_normalTexture.get(), commandList);
-        }
+        _material = std::shared_ptr<Material>(Material::LoadMaterial(_scene->_name + '\\' + root["Material"].asCString()));
+        _scene->_UploadTexture(&_material->Albedo(), commandList);
+        _scene->_UploadTexture(&_material->NormalMap(), commandList);
     }
 
-    auto children = root["Nodes"];
-    for (int i = 0; i < children.size(); ++i)
+    for (auto& node : root["Nodes"])
     {
         std::shared_ptr<SceneNode> child = std::make_shared<SceneNode>(_scene, this);
-        child->LoadNode(_scene->_name + '\\' + children[i].asCString(), commandList);
+        child->LoadNode(_scene->_name + '\\' + node.asCString(), commandList);
         _childNodes.push_back(child);
     }
 
     {
+        // TODO: move node's transform resource to heap
+
         Core::EResourceType SRVType = Core::EResourceType::Dynamic | Core::EResourceType::Buffer;
 
         Core::ResourceDescription desc;
@@ -293,12 +321,12 @@ void SceneNode::_DrawCurrentNode(Core::GraphicsCommandList& commandList, const F
         return;
     }
 
-    if (_albedoTexture)
+    if (_material)
     {
         commandList.SetDescriptorHeaps({ _scene->_texturesTable->GetDescriptorHeap().GetDXDescriptorHeap().Get() });
 
-        commandList.SetDescriptorTable(3, _scene->_texturesTable->GetResourceGPUHandle(_albedoTexture->GetName()));
-        commandList.SetDescriptorTable(4, _scene->_texturesTable->GetResourceGPUHandle(_normalTexture->GetName())); 
+        commandList.SetDescriptorTable(3, _scene->_texturesTable->GetResourceGPUHandle(_material->Albedo().GetName()));
+        commandList.SetDescriptorTable(4, _scene->_texturesTable->GetResourceGPUHandle(_material->NormalMap().GetName())); 
     }
 
     XMMATRIX* modelMatrixData = (XMMATRIX*)_modelMatrix->Map();

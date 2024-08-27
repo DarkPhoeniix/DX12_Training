@@ -2,6 +2,7 @@
 
 #include "DXObjects/Texture.h"
 #include "Scene/Mesh.h"
+#include "Scene/Material.h"
 #include "Scene/ISceneNode.h"
 #include "Scene/Volumes/AABBVolume.h"
 
@@ -36,6 +37,7 @@ private:
     ComPtr<ID3D12Device2> _DXDevice;
 
     std::shared_ptr<Mesh> _mesh;
+    std::shared_ptr<Material> _material;
     AABBVolume _AABB;
 
     std::shared_ptr<Core::Texture> _albedoTexture;
