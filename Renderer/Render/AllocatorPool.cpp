@@ -4,8 +4,6 @@
 
 void AllocatorPool::Init()
 {
-    _DXDevice = Core::Device::GetDXDevice();
-
     Make(streams, 32, D3D12_COMMAND_LIST_TYPE_DIRECT);
     Make(computes, 32, D3D12_COMMAND_LIST_TYPE_COMPUTE);
     Make(copies, 4, D3D12_COMMAND_LIST_TYPE_COPY);

@@ -4,29 +4,46 @@
 
 #include "LambertLighting.hlsli"
 
+struct SceneDesc
+{
+    float4 eyePosition;
+    float4 eyeDirection;
+    
+    uint directionalLightsNum;
+    uint pointLightsNum;
+};
+
 struct LightDesc
 {
     float4 direction;
     float4 color;
 };
 
-ConstantBuffer<LightDesc> Light : register(b1);
-Texture2D Albedo : register(t1);
-Texture2D NormalMap : register(t2);
+struct ModelDesc
+{
+    uint AlbedoTextureIndex;
+    uint NormalTextureIndex;
+    uint MetalnessTextureIndex;
+};
 
 struct PixelShaderInput
 {
     float4 Position : SV_Position;
-    float3 Normal : NORMAL;
-    float4 Color : COLOR;
-    float2 Texture : TEXCOORD;
-    float3 Tangent : TANGENT;
+    float3 Normal   : NORMAL;
+    float4 Color    : COLOR;
+    float2 Texture  : TEXCOORD;
+    float3 Tangent  : TANGENT;
 };
 
-SamplerState AlbedoSampler : register(s0);
-SamplerState NormalSampler : register(s1);
+ConstantBuffer<SceneDesc> Scene : register(b1);
+ConstantBuffer<LightDesc> Light : register(b2);
 
-[earlydepthstencil]
+ModelDesc Model                 : register(t1);
+Texture2D Materials[]           : register(t2);
+
+SamplerState AlbedoSampler      : register(s0);
+SamplerState PointSampler       : register(s1);
+
 float4 main(PixelShaderInput IN) : SV_Target
 {
     IN.Normal = normalize(IN.Normal);
@@ -34,8 +51,9 @@ float4 main(PixelShaderInput IN) : SV_Target
     // Sample textures
     float2 uv = IN.Texture;
     uv.y = 1.0f - uv.y;
-    float4 textureAlbedo = Albedo.Sample(AlbedoSampler, uv);
-    float4 textureNormal = NormalMap.Sample(NormalSampler, uv);
+    float4 textureAlbedo    = Materials[Model.AlbedoTextureIndex].Sample(AlbedoSampler, uv);
+    float4 textureNormal    = Materials[Model.NormalTextureIndex].Sample(PointSampler, uv);
+    float4 textureMetalness = Materials[Model.MetalnessTextureIndex].Sample(PointSampler, uv);
     
     // Calculate the TBN matrix
     float3 bitangent = cross(IN.Normal, IN.Tangent);
@@ -44,8 +62,10 @@ float4 main(PixelShaderInput IN) : SV_Target
     // Transform the normal
     float3 finalNormal = normalize(mul(textureNormal.xyz, TBN));
 
-    float4 color = CalculateAmbient(textureAlbedo) + CalculateDiffuse(finalNormal, textureAlbedo, normalize(Light.direction.xyz), Light.color);
+    float4 ambient = CalculateAmbient(textureAlbedo);
+    float4 diffuse = CalculateDiffuse(finalNormal, textureAlbedo, normalize(Light.direction.xyz), Light.color);
+    
+    float4 color = ambient + diffuse;
     
     return float4(color.rgb, textureAlbedo.w);
-
 }

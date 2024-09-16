@@ -99,7 +99,6 @@ namespace
 
 SceneNode::SceneNode()
     : ISceneNode()
-    , _DXDevice(Core::Device::GetDXDevice())
     , _mesh(nullptr)
     , _albedoTexture(nullptr)
     , _normalTexture(nullptr)
@@ -114,7 +113,6 @@ SceneNode::SceneNode()
 
 SceneNode::SceneNode(Scene* scene, SceneNode* parent)
     : ISceneNode(scene, parent)
-    , _DXDevice(Core::Device::GetDXDevice())
     , _mesh(nullptr)
     , _albedoTexture(nullptr)
     , _normalTexture(nullptr)
@@ -128,8 +126,6 @@ SceneNode::SceneNode(Scene* scene, SceneNode* parent)
 
 SceneNode::~SceneNode()
 {
-    _DXDevice = nullptr;
-
     for (ComPtr<ID3D12Resource> intermediate : intermediates)
     {
         intermediate = nullptr;
@@ -203,9 +199,8 @@ void SceneNode::LoadNode(const std::string& filepath, Core::GraphicsCommandList&
     _material = nullptr;
     if (*root["Material"].asCString())
     {
-        _material = std::shared_ptr<Material>(Material::LoadMaterial(_scene->_name + '\\' + root["Material"].asCString()));
-        _scene->_UploadTexture(&_material->Albedo(), commandList);
-        _scene->_UploadTexture(&_material->NormalMap(), commandList);
+        _material = std::shared_ptr<Material>(Material::LoadFromFile(_scene->_name + '\\' + root["Material"].asCString()));
+        _material->UploadToGPU(commandList, _scene->_texturesTable.get());
     }
 
     for (auto& node : root["Nodes"])
@@ -274,7 +269,7 @@ void SceneNode::_UploadData(Core::GraphicsCommandList& commandList,
     CD3DX12_HEAP_PROPERTIES heapTypeDefault(D3D12_HEAP_TYPE_DEFAULT);
     CD3DX12_RESOURCE_DESC bufferWithFlags = CD3DX12_RESOURCE_DESC::Buffer(bufferSize, flags);
 
-    Helper::throwIfFailed(_DXDevice->CreateCommittedResource(
+    Helper::throwIfFailed(Core::Device::GetDXDevice()->CreateCommittedResource(
         &heapTypeDefault,
         D3D12_HEAP_FLAG_NONE,
         &bufferWithFlags,
@@ -285,11 +280,11 @@ void SceneNode::_UploadData(Core::GraphicsCommandList& commandList,
     CD3DX12_HEAP_PROPERTIES heapTypeUpload(D3D12_HEAP_TYPE_UPLOAD);
     CD3DX12_RESOURCE_DESC buffer = CD3DX12_RESOURCE_DESC::Buffer(bufferSize, flags);
 
-    ComPtr<ID3D12Resource> intermediateResource;
-
     if (bufferData)
     {
-        Helper::throwIfFailed(_DXDevice->CreateCommittedResource(
+        ComPtr<ID3D12Resource> intermediateResource = nullptr;
+
+        Helper::throwIfFailed(Core::Device::GetDXDevice()->CreateCommittedResource(
             &heapTypeUpload,
             D3D12_HEAP_FLAG_NONE,
             &buffer,
@@ -325,8 +320,7 @@ void SceneNode::_DrawCurrentNode(Core::GraphicsCommandList& commandList, const F
     {
         commandList.SetDescriptorHeaps({ _scene->_texturesTable->GetDescriptorHeap().GetDXDescriptorHeap().Get() });
 
-        commandList.SetDescriptorTable(3, _scene->_texturesTable->GetResourceGPUHandle(_material->Albedo().GetName()));
-        commandList.SetDescriptorTable(4, _scene->_texturesTable->GetResourceGPUHandle(_material->NormalMap().GetName())); 
+        commandList.SetDescriptorTable(5, _scene->_texturesTable->GetDescriptorHeap().GetHeapStartGPUHandle());
     }
 
     XMMATRIX* modelMatrixData = (XMMATRIX*)_modelMatrix->Map();

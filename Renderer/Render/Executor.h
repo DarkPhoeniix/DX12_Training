@@ -22,8 +22,6 @@ public:
     Core::GraphicsCommandList* GetCommandList();
 
 private:
-    ComPtr<ID3D12Device2> _DXDevice;
-
     ComPtr<ID3D12CommandAllocator> _allocator;
     Core::GraphicsCommandList _commandList;
 

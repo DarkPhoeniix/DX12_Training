@@ -3,18 +3,29 @@
 #include "DXObjects/Heap.h"
 #include "DXObjects/Texture.h"
 
+namespace Core
+{
+    class GraphicsCommandList;
+    class ResourceTable;
+} // namespace Core
+
 class Material
 {
 public:
-    const Core::Texture& Albedo() const;
-    Core::Texture& Albedo();
+    Core::Texture* Albedo() const;
+    Core::Texture* NormalMap() const;
+    Core::Texture* Metalness() const;
 
-    const Core::Texture& NormalMap() const;
-    Core::Texture& NormalMap();
+    UINT AlbedoIndex(Core::ResourceTable* resourceTable) const;
+    UINT NormalMapIndex(Core::ResourceTable* resourceTable) const;
+    UINT MetalnessIndex(Core::ResourceTable* resourceTable) const;
 
-    static Material* LoadMaterial(const std::string& filepath);
+    void UploadToGPU(Core::GraphicsCommandList& commandList, Core::ResourceTable* resourceTable);
+
+    static Material* LoadFromFile(const std::string& filepath);
 
 private:
     std::shared_ptr<Core::Texture> _albedoTexture;
     std::shared_ptr<Core::Texture> _normalTexture;
+    std::shared_ptr<Core::Texture> _metalnessTexture;
 };

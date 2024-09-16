@@ -16,15 +16,16 @@ struct ModelDesc
 };
 
 ConstantBuffer<ConstantsDesc> Constants : register(b0);
-StructuredBuffer<ModelDesc> Model : register(t0);
+
+StructuredBuffer<ModelDesc> Model       : register(t0);
 
 struct VertexPosColor
 {
     float3 Position : POSITION;
-    float3 Normal : NORMAL;
-    float4 Color : COLOR;
-    float2 Texture : TEXCOORD;
-    float3 Tangent : TANGENT;
+    float3 Normal   : NORMAL;
+    float4 Color    : COLOR;
+    float2 Texture  : TEXCOORD;
+    float3 Tangent  : TANGENT;
     
     uint sv_instance : SV_InstanceID;
 };
@@ -32,10 +33,10 @@ struct VertexPosColor
 struct VertexShaderOutput
 {
     float4 Position : SV_Position;
-    float3 Normal : NORMAL;
-    float4 Color : COLOR;
-    float2 Texture : TEXCOORD;
-    float3 Tangent : TANGENT;
+    float3 Normal   : NORMAL;
+    float4 Color    : COLOR;
+    float2 Texture  : TEXCOORD;
+    float3 Tangent  : TANGENT;
 };
 
 [RootSignature(Sprite_RootSig)]

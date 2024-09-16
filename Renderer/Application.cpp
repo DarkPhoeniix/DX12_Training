@@ -12,6 +12,7 @@
 #include "Events/UpdateEvent.h"
 #include "Input/InputDevice.h"
 #include "Render/DXRenderer.h"
+#include "Utility/DebugInfo.h"
 #include "Utility/Resources.h"
 #include "Window/Win32Window.h"
 
@@ -61,19 +62,17 @@ Application::Application(HINSTANCE hInstance)
     : _hInstance(hInstance)
     , _currentFrame(&_frames[0])
 {
-    _DXDevice = Core::Device::GetDXDevice();
-
     _RegisterWindowClass(hInstance);
 }
 
 Application::~Application()
 {
-    _DXDevice = nullptr;
 }
 
 void Application::Init(HINSTANCE hInstance)
 {
     Device::Init();
+    DebugInfo::Init();
     _instance = new Application(hInstance);
 }
 
@@ -141,6 +140,7 @@ void Application::Quit(int exitCode)
 {
     GUI::Destroy();
 
+    DebugInfo::Destroy();
     Device::Destroy();
     PostQuitMessage(exitCode);
 

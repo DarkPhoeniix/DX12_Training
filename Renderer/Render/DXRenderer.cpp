@@ -30,8 +30,7 @@ namespace
 }
 
 DXRenderer::DXRenderer(HWND windowHandle)
-    : _DXDevice(Device::GetDXDevice())
-    , _windowHandle(windowHandle)
+    : _windowHandle(windowHandle)
     , _contentLoaded(false)
     , _ambient(nullptr)
     , _isCameraMoving(false)
@@ -41,7 +40,6 @@ DXRenderer::DXRenderer(HWND windowHandle)
 
 DXRenderer::~DXRenderer()
 {
-    _DXDevice = nullptr;
 }
 
 bool DXRenderer::LoadContent(TaskGPU* loadTask)
@@ -58,12 +56,12 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
 
         D3D12_COMPUTE_PIPELINE_STATE_DESC pipelineStateStreamDesc = {};
 
-        Helper::throwIfFailed(_DXDevice->CreateRootSignature(0, computeShaderBlob->GetBufferPointer(),
+        Helper::throwIfFailed(Core::Device::GetDXDevice()->CreateRootSignature(0, computeShaderBlob->GetBufferPointer(),
             computeShaderBlob->GetBufferSize(), IID_PPV_ARGS(&_postFXRootSig)));
 
         pipelineStateStreamDesc.CS = CD3DX12_SHADER_BYTECODE(computeShaderBlob.Get());
 
-        Helper::throwIfFailed(_DXDevice->CreateComputePipelineState(&pipelineStateStreamDesc, IID_PPV_ARGS(&_postFXPipeState)));
+        Helper::throwIfFailed(Core::Device::GetDXDevice()->CreateComputePipelineState(&pipelineStateStreamDesc, IID_PPV_ARGS(&_postFXPipeState)));
     }
 
     // Camera Setup

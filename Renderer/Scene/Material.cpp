@@ -2,38 +2,71 @@
 
 #include "Material.h"
 
-const Core::Texture& Material::Albedo() const
+#include "DXObjects/ResourceTable.h"
+
+Core::Texture* Material::Albedo() const
 {
-    return *_albedoTexture;
+    return _albedoTexture.get();
 }
 
-Core::Texture& Material::Albedo()
+Core::Texture* Material::NormalMap() const
 {
-    return *_albedoTexture;
+    return _normalTexture.get();
 }
 
-const Core::Texture& Material::NormalMap() const
+Core::Texture* Material::Metalness() const
 {
-    return *_normalTexture;
+    return _metalnessTexture.get();
 }
 
-Core::Texture& Material::NormalMap()
+UINT Material::AlbedoIndex(Core::ResourceTable* resourceTable) const
 {
-    return *_normalTexture;
+    return resourceTable->GetResourceIndex(_albedoTexture->GetName());
 }
 
-Material* Material::LoadMaterial(const std::string& filepath)
+UINT Material::NormalMapIndex(Core::ResourceTable* resourceTable) const
 {
-    // TODO: assert
+    return resourceTable->GetResourceIndex(_normalTexture->GetName());
+}
+
+UINT Material::MetalnessIndex(Core::ResourceTable* resourceTable) const
+{
+    return resourceTable->GetResourceIndex(_metalnessTexture->GetName());
+}
+
+void Material::UploadToGPU(Core::GraphicsCommandList& commandList, Core::ResourceTable* resourceTable)
+{
+    ASSERT(resourceTable, "Resource table is nullptr");
+
+    if (resourceTable->AddResource(_albedoTexture.get()))
+    {
+        _albedoTexture->SetDescriptorHeap(&resourceTable->GetDescriptorHeap());
+        _albedoTexture->UploadToGPU(commandList);
+    }
+
+    if (resourceTable->AddResource(_normalTexture.get()))
+    {
+        _normalTexture->SetDescriptorHeap(&resourceTable->GetDescriptorHeap());
+        _normalTexture->UploadToGPU(commandList);
+    }
+}
+
+Material* Material::LoadFromFile(const std::string& filepath)
+{
+    if (ASSERT(std::filesystem::exists(filepath), std::format("Material doesn't exist: {}", filepath)))
+    {
+        return nullptr;
+    }
 
     std::ifstream file(filepath, std::ios_base::in | std::ios_base::binary);
-    Json::Value mat;
-    file >> mat;
+    Json::Value materialData;
+    file >> materialData;
 
     Material* material = new Material();
 
-    material->_albedoTexture = Core::Texture::LoadFromFile(mat["Albedo"].asCString());
-    material->_normalTexture = Core::Texture::LoadFromFile(mat["Normal"].asCString());
+    material->_albedoTexture    = Core::Texture::LoadFromFile(materialData["Albedo"].asCString());
+    material->_normalTexture    = Core::Texture::LoadFromFile(materialData["Normal"].asCString());
+    //material->_metalnessTexture = Core::Texture::LoadFromFile(materialData["Metalness"].asCString());
 
     return material;
 }

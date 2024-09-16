@@ -21,8 +21,6 @@ namespace Core
         bool IsFree() const;
 
     private:
-        ComPtr<ID3D12Device2> _DXDevice;
-
         ComPtr<ID3D12Fence> _fence;
         UINT64 _fenceValue;
         HANDLE _eventOnCompletion;

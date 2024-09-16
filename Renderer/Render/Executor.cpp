@@ -5,20 +5,18 @@
 Executor::Executor()
     : _allocator(nullptr)
     , _commandList(nullptr)
-    , _DXDevice(Core::Device::GetDXDevice())
 {
 }
 
 Executor::~Executor()
 {
     _allocator = nullptr;
-    _DXDevice = nullptr;
 }
 
 void Executor::Allocate(D3D12_COMMAND_LIST_TYPE type)
 {
-    _DXDevice->CreateCommandAllocator(type, IID_PPV_ARGS(&_allocator));
-    _DXDevice->CreateCommandList(0, type, _allocator.Get(), nullptr, IID_PPV_ARGS(&_commandList.GetDXCommandList()));
+    Core::Device::GetDXDevice()->CreateCommandAllocator(type, IID_PPV_ARGS(&_allocator));
+    Core::Device::GetDXDevice()->CreateCommandList(0, type, _allocator.Get(), nullptr, IID_PPV_ARGS(&_commandList.GetDXCommandList()));
     _commandList.Close();
 }
 

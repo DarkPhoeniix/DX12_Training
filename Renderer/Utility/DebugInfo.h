@@ -11,6 +11,9 @@ namespace Core::Events
 class DebugInfo
 {
 public:
+    static void Init();
+    static void Destroy();
+
     static void Update(Core::Events::UpdateEvent& updateEvent);
     
     static void StartStatCollecting(Core::GraphicsCommandList& commandList);
@@ -29,4 +32,6 @@ private:
     Core::StatisticsQuery _statisticsQuery;
     int _fps;
     double _msPerFrame;
+
+    static DebugInfo* _instance;
 };
