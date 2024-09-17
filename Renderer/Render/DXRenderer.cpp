@@ -82,10 +82,10 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
 
     // Setup semi-ambient light parameters
     {
-        EResourceType CBVType = EResourceType::Dynamic | EResourceType::Buffer | EResourceType::StrideAlignment;
+        EResourceType SRVType = EResourceType::Dynamic | EResourceType::Buffer;
 
         ResourceDescription desc;
-        desc.SetResourceType(CBVType);
+        desc.SetResourceType(SRVType);
         desc.SetSize({ sizeof(DirectionalLight), 1 });
         desc.SetStride(1);
         desc.SetFormat(DXGI_FORMAT::DXGI_FORMAT_UNKNOWN);
@@ -104,6 +104,8 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
         Core::GraphicsCommandList* commandList = loadTask->GetCommandLists().front();
 
         _scene.LoadScene("Wyvern\\Wyvern.scene", *commandList);
+
+        _scene.SetCamera(_camera);
 
         commandList->Close();
 
@@ -170,9 +172,9 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         Core::GraphicsCommandList* commandList = task->GetCommandLists().front();
         PIXBeginEvent(commandList->GetDXCommandList().Get(), 4, "Render");
 
-//#if defined(_DEBUG)
+#if defined(_DEBUG)
         DebugInfo::StartStatCollecting(*commandList);
-//#endif
+#endif
 
         commandList->SetPipelineState(_renderPipeline);
         commandList->SetGraphicsRootSignature(_renderPipeline);
@@ -180,22 +182,19 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         commandList->SetViewport(_camera.GetViewport());
         commandList->SetRenderTarget(&rtv, &dsv);
 
-        XMMATRIX viewProjMatrix = XMMatrixMultiply(_camera.View(), _camera.Projection());
-        commandList->SetConstants(0, sizeof(XMMATRIX) / 4, &viewProjMatrix);
-        
-        commandList->SetCBV(2, _light->OffsetGPU(0));
+        commandList->SetSRV(2, _light->OffsetGPU(0));
 
         _scene.Draw(*commandList, _camera.GetViewFrustum());
 
-//#if defined(_DEBUG)
+#if defined(_DEBUG)
         commandList->SetPipelineState(_AABBpipeline);
         commandList->SetGraphicsRootSignature(_AABBpipeline);
-        commandList->SetConstants(1, sizeof(XMMATRIX) / 4, &viewProjMatrix);
+        commandList->SetConstants(1, sizeof(XMMATRIX) / 4, &_camera.ViewProjection());
 
         _scene.DrawAABB(*commandList);
 
         DebugInfo::EndStatCollecting(*commandList);
-//#endif
+#endif
 
         PIXEndEvent(commandList->GetDXCommandList().Get());
         commandList->Close();

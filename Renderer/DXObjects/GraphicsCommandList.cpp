@@ -130,6 +130,7 @@ namespace Core
 
     void GraphicsCommandList::ClearRTV(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetView, const FLOAT color[4], Viewport* viewport)
     {
+        // TODO: fix this ugly code
         UINT numRects = viewport ? 1 : 0;
         CD3DX12_RECT* rect = nullptr;
         if (viewport)
@@ -141,6 +142,7 @@ namespace Core
 
     void GraphicsCommandList::ClearDSV(D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, D3D12_CLEAR_FLAGS clearFlags, FLOAT depth, UINT8 stencil, Viewport* viewport)
     {
+        // TODO: fix this ugly code
         UINT numRects = viewport ? 1 : 0;
         CD3DX12_RECT* rect = nullptr;
         if (viewport)

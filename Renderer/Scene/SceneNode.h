@@ -42,6 +42,7 @@ private:
     std::shared_ptr<Core::Texture> _normalTexture;
 
     std::shared_ptr<Core::Resource> _modelMatrix;
+    std::shared_ptr<Core::Resource> _modelDesc;
     std::shared_ptr<Core::Resource> _vertexBuffer;
     std::shared_ptr<Core::Resource> _indexBuffer;
 

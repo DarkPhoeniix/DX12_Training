@@ -2,28 +2,13 @@
 // The Pixel Shader (PS) stage takes the interpolated per-vertex values from
 // the rasterizer stage and produces one (or more) per-pixel color values.
 
+#include "Common.hlsli"
 #include "LambertLighting.hlsli"
-
-struct SceneDesc
-{
-    float4 eyePosition;
-    float4 eyeDirection;
-    
-    uint directionalLightsNum;
-    uint pointLightsNum;
-};
 
 struct LightDesc
 {
-    float4 direction;
-    float4 color;
-};
-
-struct ModelDesc
-{
-    uint AlbedoTextureIndex;
-    uint NormalTextureIndex;
-    uint MetalnessTextureIndex;
+    float4 Direction;
+    float4 Color;
 };
 
 struct PixelShaderInput
@@ -35,14 +20,11 @@ struct PixelShaderInput
     float3 Tangent  : TANGENT;
 };
 
-ConstantBuffer<SceneDesc> Scene : register(b1);
-ConstantBuffer<LightDesc> Light : register(b2);
+StructuredBuffer<LightDesc> Lights  : register(t0);
+Texture2D Materials[]               : register(t1);
 
-ModelDesc Model                 : register(t1);
-Texture2D Materials[]           : register(t2);
-
-SamplerState AlbedoSampler      : register(s0);
-SamplerState PointSampler       : register(s1);
+SamplerState AlbedoSampler          : register(s0);
+SamplerState PointSampler           : register(s1);
 
 float4 main(PixelShaderInput IN) : SV_Target
 {
@@ -63,7 +45,7 @@ float4 main(PixelShaderInput IN) : SV_Target
     float3 finalNormal = normalize(mul(textureNormal.xyz, TBN));
 
     float4 ambient = CalculateAmbient(textureAlbedo);
-    float4 diffuse = CalculateDiffuse(finalNormal, textureAlbedo, normalize(Light.direction.xyz), Light.color);
+    float4 diffuse = CalculateDiffuse(finalNormal, textureAlbedo, normalize(Lights[0].Direction.xyz), Lights[0].Color);
     
     float4 color = ambient + diffuse;
     

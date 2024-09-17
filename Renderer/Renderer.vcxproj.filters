@@ -389,6 +389,7 @@
     <None Include="Shaders\Mesh_rootsig.hlsli" />
     <None Include="Shaders\AABB_rootsig.hlsli" />
     <None Include="Shaders\PostFX_rootsig.hlsli" />
+    <None Include="Shaders\Common.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\dxapp.ico">

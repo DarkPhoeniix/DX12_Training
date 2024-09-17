@@ -13,6 +13,15 @@ using namespace DirectX;
 
 namespace
 {
+    struct ModelDesc
+    {
+        XMMATRIX Transform = XMMatrixIdentity();
+
+        UINT AlbedoTextureIndex     = -1;
+        UINT NormalMapTextureIndex  = -1;
+        UINT MetalnessTextureIndex  = -1;
+    };
+
     XMMATRIX ParseTransformationMatrix(const Json::Value& transform)
     {
         // TODO: this func is ugly, rework later
@@ -52,7 +61,7 @@ namespace
     {
         AABBVolume aabb;
 
-        XMFLOAT4 min(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), 1.0f);
+        XMFLOAT4 min( std::numeric_limits<float>::max(),  std::numeric_limits<float>::max(),  std::numeric_limits<float>::max(), 1.0f);
         XMFLOAT4 max(-std::numeric_limits<float>::max(), -std::numeric_limits<float>::max(), -std::numeric_limits<float>::max(), 1.0f);
 
         if (!mesh)
@@ -105,6 +114,7 @@ SceneNode::SceneNode()
     , _vertexBuffer(nullptr)
     , _indexBuffer(nullptr)
     , _modelMatrix(nullptr)
+    , _modelDesc(nullptr)
     , _AABB{}
     , _VBO{}
     , _IBO{}
@@ -119,6 +129,7 @@ SceneNode::SceneNode(Scene* scene, SceneNode* parent)
     , _vertexBuffer(nullptr)
     , _indexBuffer(nullptr)
     , _modelMatrix(nullptr)
+    , _modelDesc(nullptr)
     , _AABB{}
     , _VBO{}
     , _IBO{}
@@ -213,10 +224,8 @@ void SceneNode::LoadNode(const std::string& filepath, Core::GraphicsCommandList&
     {
         // TODO: move node's transform resource to heap
 
-        Core::EResourceType SRVType = Core::EResourceType::Dynamic | Core::EResourceType::Buffer;
-
         Core::ResourceDescription desc;
-        desc.SetResourceType(SRVType);
+        desc.SetResourceType(Core::EResourceType::Dynamic | Core::EResourceType::Buffer);
         desc.SetSize({ sizeof(XMMATRIX), 1 });
         desc.SetStride(1);
         desc.SetFormat(DXGI_FORMAT::DXGI_FORMAT_UNKNOWN);
@@ -224,6 +233,13 @@ void SceneNode::LoadNode(const std::string& filepath, Core::GraphicsCommandList&
         _modelMatrix = std::make_shared<Core::Resource>(desc);
         _modelMatrix->CreateCommitedResource(D3D12_RESOURCE_STATE_GENERIC_READ);
         _modelMatrix->SetName(_name + "_ModelMatrix");
+
+        desc.AddResourceType(Core::EResourceType::StrideAlignment);
+        desc.SetSize({ sizeof(ModelDesc), 1 });
+
+        _modelDesc = std::make_shared<Core::Resource>(desc);
+        _modelDesc->CreateCommitedResource(D3D12_RESOURCE_STATE_GENERIC_READ);
+        _modelDesc->SetName(_name + "_ModelDesc");
     }
 
 
@@ -311,6 +327,7 @@ void SceneNode::_DrawCurrentNode(Core::GraphicsCommandList& commandList, const F
         return;
     }
 
+    // Frustum culling
     if (!Intersect(frustum, _AABB))
     {
         return;
@@ -318,14 +335,15 @@ void SceneNode::_DrawCurrentNode(Core::GraphicsCommandList& commandList, const F
 
     if (_material)
     {
-        commandList.SetDescriptorHeaps({ _scene->_texturesTable->GetDescriptorHeap().GetDXDescriptorHeap().Get() });
-
-        commandList.SetDescriptorTable(5, _scene->_texturesTable->GetDescriptorHeap().GetHeapStartGPUHandle());
+        commandList.SetDescriptorTable(3, _scene->_texturesTable->GetDescriptorHeap().GetHeapStartGPUHandle());
     }
 
-    XMMATRIX* modelMatrixData = (XMMATRIX*)_modelMatrix->Map();
-    *modelMatrixData = GetGlobalTransform();
-    commandList.SetSRV(1, _modelMatrix->OffsetGPU(0));
+    ModelDesc* modelData = (ModelDesc*)_modelDesc->Map();
+    modelData->Transform = GetGlobalTransform();
+    modelData->AlbedoTextureIndex = _material->AlbedoIndex(_scene->_texturesTable.get());
+    modelData->NormalMapTextureIndex = _material->NormalMapIndex(_scene->_texturesTable.get());
+    modelData->MetalnessTextureIndex = -1;
+    commandList.SetCBV(1, _modelDesc->OffsetGPU(0));
 
     commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     commandList.SetVertexBuffer(0, _VBO);
