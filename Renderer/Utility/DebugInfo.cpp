@@ -4,6 +4,25 @@
 
 #include "Events/UpdateEvent.h"
 
+DebugInfo* DebugInfo::_instance = nullptr;
+
+void DebugInfo::Init()
+{
+    if (!_instance)
+    {
+        _instance = new DebugInfo;
+    }
+}
+
+void DebugInfo::Destroy()
+{
+    if (_instance)
+    {
+        delete _instance;
+    }
+    _instance = nullptr;
+}
+
 void DebugInfo::Update(Core::Events::UpdateEvent& updateEvent)
 {
     static uint64_t frameCount = 0;
@@ -61,6 +80,6 @@ DebugInfo::~DebugInfo()
 
 DebugInfo& DebugInfo::Instance()
 {
-    static DebugInfo instance;
-    return instance;
+    ASSERT(_instance, "DebugInfo instance not created");
+    return *_instance;
 }

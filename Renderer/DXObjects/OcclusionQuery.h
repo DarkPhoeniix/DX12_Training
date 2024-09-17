@@ -20,8 +20,6 @@ namespace Core
         void SetPredication(const ISceneNode* node, GraphicsCommandList& commandList);
 
     private:
-        ComPtr<ID3D12Device2> _DXDevice;
-
         ComPtr<ID3D12QueryHeap> _queryHeap;
         std::vector<const ISceneNode*> _queryResources;
         std::vector<Resource> _queryResults;

@@ -5,52 +5,40 @@
 
 #include "Mesh_rootsig.hlsli"
 
-struct ConstantsDesc
-{
-    row_major float4x4 ViewProj;
-};
+#include "Common.hlsli"
 
-struct ModelDesc
-{
-    row_major matrix Transform;
-};
-
-ConstantBuffer<ConstantsDesc> Constants : register(b0);
-StructuredBuffer<ModelDesc> Model : register(t0);
-
-struct VertexPosColor
+struct VSInput
 {
     float3 Position : POSITION;
-    float3 Normal : NORMAL;
-    float4 Color : COLOR;
-    float2 Texture : TEXCOORD;
-    float3 Tangent : TANGENT;
+    float3 Normal   : NORMAL;
+    float4 Color    : COLOR;
+    float2 Texture  : TEXCOORD;
+    float3 Tangent  : TANGENT;
     
     uint sv_instance : SV_InstanceID;
 };
 
-struct VertexShaderOutput
+struct VSOutput
 {
     float4 Position : SV_Position;
-    float3 Normal : NORMAL;
-    float4 Color : COLOR;
-    float2 Texture : TEXCOORD;
-    float3 Tangent : TANGENT;
+    float3 Normal   : NORMAL;
+    float4 Color    : COLOR;
+    float2 Texture  : TEXCOORD;
+    float3 Tangent  : TANGENT;
 };
 
-[RootSignature(Sprite_RootSig)]
-VertexShaderOutput main(VertexPosColor IN)
+[RootSignature(Mesh_RootSig)]
+VSOutput main(VSInput IN)
 {
-    VertexShaderOutput OUT;
+    VSOutput output;
     
-    row_major matrix modelTransform = Model[IN.sv_instance].Transform;
-    float4 worldPosition = mul(float4(IN.Position, 1.0f), modelTransform);
+    float4 worldPosition = mul(float4(IN.Position, 1.0f), Model.Transform);
 
-    OUT.Position = mul(worldPosition, Constants.ViewProj);
-    OUT.Normal = mul(float4(IN.Normal, 0.0f), modelTransform).xyz;
-    OUT.Color = IN.Color;
-    OUT.Texture = IN.Texture;
-    OUT.Tangent = IN.Tangent;
+    output.Position = mul(worldPosition, Scene.ViewProjection);
+    output.Normal   = mul(float4(IN.Normal, 0.0f), Model.Transform).xyz;
+    output.Color    = IN.Color;
+    output.Texture  = IN.Texture;
+    output.Tangent  = IN.Tangent;
 
-    return OUT;
+    return output;
 }

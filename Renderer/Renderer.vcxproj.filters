@@ -159,6 +159,9 @@
     <ClCompile Include="Utility\DebugInfo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Scene\Material.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Utility\Helpers.h">
@@ -353,6 +356,9 @@
     <ClInclude Include="Utility\DebugInfo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Scene\Material.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\Mesh_ps.hlsl" />
@@ -383,6 +389,7 @@
     <None Include="Shaders\Mesh_rootsig.hlsli" />
     <None Include="Shaders\AABB_rootsig.hlsli" />
     <None Include="Shaders\PostFX_rootsig.hlsli" />
+    <None Include="Shaders\Common.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\dxapp.ico">

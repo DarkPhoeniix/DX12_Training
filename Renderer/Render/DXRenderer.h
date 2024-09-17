@@ -33,7 +33,6 @@ public:
     virtual void OnResize(Core::Events::ResizeEvent& e) override {}
 
 private:
-    ComPtr<ID3D12Device2> _DXDevice;
     HWND _windowHandle;
 
     Core::RootSignature _renderPipeline;

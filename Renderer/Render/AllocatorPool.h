@@ -14,6 +14,4 @@ protected:
     std::vector<Executor> streams;
     std::vector<Executor> computes;
     std::vector<Executor> copies;
-
-    ComPtr<ID3D12Device2> _DXDevice;
 };

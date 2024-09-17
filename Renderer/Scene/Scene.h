@@ -10,6 +10,7 @@
 class FrustumVolume;
 class DescriptorHeap;
 class Texture;
+class Camera;
 
 class Scene
 {
@@ -20,6 +21,8 @@ public:
     void Draw(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum);
     void DrawAABB(Core::GraphicsCommandList& commandList);
 
+    void SetCamera(Camera& camera);
+
     bool LoadScene(const std::string& filepath, Core::GraphicsCommandList& commandList);
 
     friend class ISceneNode;
@@ -28,11 +31,11 @@ public:
 private:
     void _UploadTexture(Core::Texture* texture, Core::GraphicsCommandList& commandList);
 
-    static FbxManager* _FBXManager;
-    FbxScene* _scene;
-
     std::vector<std::shared_ptr<ISceneNode>> _rootNodes;
     std::shared_ptr<Core::ResourceTable> _texturesTable;
+
+    Camera* _camera;
+    std::shared_ptr<Core::Resource> _sceneData;
 
     std::string _name;
 };

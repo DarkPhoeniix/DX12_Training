@@ -30,8 +30,7 @@ namespace
 }
 
 DXRenderer::DXRenderer(HWND windowHandle)
-    : _DXDevice(Device::GetDXDevice())
-    , _windowHandle(windowHandle)
+    : _windowHandle(windowHandle)
     , _contentLoaded(false)
     , _ambient(nullptr)
     , _isCameraMoving(false)
@@ -41,7 +40,6 @@ DXRenderer::DXRenderer(HWND windowHandle)
 
 DXRenderer::~DXRenderer()
 {
-    _DXDevice = nullptr;
 }
 
 bool DXRenderer::LoadContent(TaskGPU* loadTask)
@@ -58,12 +56,12 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
 
         D3D12_COMPUTE_PIPELINE_STATE_DESC pipelineStateStreamDesc = {};
 
-        Helper::throwIfFailed(_DXDevice->CreateRootSignature(0, computeShaderBlob->GetBufferPointer(),
+        Helper::throwIfFailed(Core::Device::GetDXDevice()->CreateRootSignature(0, computeShaderBlob->GetBufferPointer(),
             computeShaderBlob->GetBufferSize(), IID_PPV_ARGS(&_postFXRootSig)));
 
         pipelineStateStreamDesc.CS = CD3DX12_SHADER_BYTECODE(computeShaderBlob.Get());
 
-        Helper::throwIfFailed(_DXDevice->CreateComputePipelineState(&pipelineStateStreamDesc, IID_PPV_ARGS(&_postFXPipeState)));
+        Helper::throwIfFailed(Core::Device::GetDXDevice()->CreateComputePipelineState(&pipelineStateStreamDesc, IID_PPV_ARGS(&_postFXPipeState)));
     }
 
     // Camera Setup
@@ -84,10 +82,10 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
 
     // Setup semi-ambient light parameters
     {
-        EResourceType CBVType = EResourceType::Dynamic | EResourceType::Buffer | EResourceType::StrideAlignment;
+        EResourceType SRVType = EResourceType::Dynamic | EResourceType::Buffer;
 
         ResourceDescription desc;
-        desc.SetResourceType(CBVType);
+        desc.SetResourceType(SRVType);
         desc.SetSize({ sizeof(DirectionalLight), 1 });
         desc.SetStride(1);
         desc.SetFormat(DXGI_FORMAT::DXGI_FORMAT_UNKNOWN);
@@ -106,6 +104,8 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
         Core::GraphicsCommandList* commandList = loadTask->GetCommandLists().front();
 
         _scene.LoadScene("Wyvern\\Wyvern.scene", *commandList);
+
+        _scene.SetCamera(_camera);
 
         commandList->Close();
 
@@ -182,21 +182,18 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         commandList->SetViewport(_camera.GetViewport());
         commandList->SetRenderTarget(&rtv, &dsv);
 
-        XMMATRIX viewProjMatrix = XMMatrixMultiply(_camera.View(), _camera.Projection());
-        commandList->SetConstants(0, sizeof(XMMATRIX) / 4, &viewProjMatrix);
-        
-        commandList->SetCBV(2, _light->OffsetGPU(0));
+        commandList->SetSRV(2, _light->OffsetGPU(0));
 
         _scene.Draw(*commandList, _camera.GetViewFrustum());
 
 #if defined(_DEBUG)
-        DebugInfo::EndStatCollecting(*commandList);
-
         commandList->SetPipelineState(_AABBpipeline);
         commandList->SetGraphicsRootSignature(_AABBpipeline);
-        commandList->SetConstants(1, sizeof(XMMATRIX) / 4, &viewProjMatrix);
+        commandList->SetConstants(1, sizeof(XMMATRIX) / 4, &_camera.ViewProjection());
 
         _scene.DrawAABB(*commandList);
+
+        DebugInfo::EndStatCollecting(*commandList);
 #endif
 
         PIXEndEvent(commandList->GetDXCommandList().Get());

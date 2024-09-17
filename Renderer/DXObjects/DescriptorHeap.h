@@ -32,8 +32,6 @@ namespace Core
         ComPtr<ID3D12DescriptorHeap> GetDXDescriptorHeap() const;
 
     private:
-        ComPtr<ID3D12Device2> _DXDevice;
-
         ComPtr<ID3D12DescriptorHeap> _descriptorHeap;
         DescriptorHeapDescription _descriptorHeapDescription;
         UINT _heapIncrementSize;

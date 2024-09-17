@@ -37,7 +37,6 @@ private:
     // The application instance handle that this application was created with.
     HINSTANCE _hInstance;
 
-    ComPtr<ID3D12Device2> _DXDevice;
     std::shared_ptr<Core::Win32Window> _win32Window;
     Core::SwapChain _swapChain;
 

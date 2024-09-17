@@ -25,8 +25,6 @@ namespace Core
         ComPtr<ID3D12Heap> GetDXHeap() const;
 
     private:
-        ComPtr<ID3D12Device2> _DXDevice;
-
         ComPtr<ID3D12Heap> _heap;
         HeapDescription _heapDescription;
 

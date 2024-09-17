@@ -62,6 +62,4 @@ private:
     Core::Fence* _syncFrame;
 
     std::vector<TaskGPU> _tasks;
-
-    ComPtr<ID3D12Device2> _DXDevice;
 };

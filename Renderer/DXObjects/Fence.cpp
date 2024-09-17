@@ -7,7 +7,6 @@ namespace Core
     Fence::Fence()
         : _fence(nullptr)
         , _fenceValue(0)
-        , _DXDevice(Core::Device::GetDXDevice())
         , _isFree(true)
         , _eventOnCompletion{}
     {
@@ -16,14 +15,13 @@ namespace Core
     Fence::~Fence()
     {
         _fence = nullptr;
-        _DXDevice = nullptr;
     }
 
     void Fence::Init()
     {
         _fenceValue = 0;
 
-        _DXDevice->CreateFence(_fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&_fence));
+        Core::Device::GetDXDevice()->CreateFence(_fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&_fence));
         _eventOnCompletion = ::CreateEvent(NULL, FALSE, FALSE, NULL);
     }
 

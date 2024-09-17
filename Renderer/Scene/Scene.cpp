@@ -8,6 +8,18 @@
 #include "Scene/Camera.h"
 #include "Volumes/FrustumVolume.h"
 
+namespace
+{
+    struct SceneDesc
+    {
+        DirectX::XMMATRIX ViewProjection = DirectX::XMMatrixIdentity();
+        DirectX::XMVECTOR EyePosition = DirectX::XMVectorZero();
+        DirectX::XMVECTOR EyeDirection = DirectX::XMVectorZero();
+
+        UINT LightsNum = 0;
+    };
+} // namespace unnamed
+
 Scene::Scene()
 {
     Core::HeapDescription heapDesc;
@@ -25,6 +37,15 @@ Scene::Scene()
     descriptorHeapDesc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
     descriptorHeapDesc.SetNodeMask(1);
 
+    Core::ResourceDescription desc;
+    desc.SetResourceType(Core::EResourceType::Buffer | Core::EResourceType::Dynamic | Core::EResourceType::StrideAlignment);
+    desc.SetSize({ sizeof(SceneDesc), 1 });
+    desc.SetStride(1);
+    desc.SetFormat(DXGI_FORMAT::DXGI_FORMAT_UNKNOWN);
+    _sceneData = std::make_shared<Core::Resource>();
+    _sceneData->SetResourceDescription(desc);
+    _sceneData->CreateCommitedResource(D3D12_RESOURCE_STATE_GENERIC_READ);
+
     _texturesTable = std::make_shared<Core::ResourceTable>(descriptorHeapDesc, heapDesc);
 }
 
@@ -34,6 +55,10 @@ Scene::~Scene()
 void Scene::Draw(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum)
 {
     commandList.SetDescriptorHeaps({ _texturesTable->GetDescriptorHeap().GetDXDescriptorHeap().Get() });
+
+    SceneDesc* sceneDesc = (SceneDesc*)_sceneData->Map();
+    sceneDesc->ViewProjection = _camera->ViewProjection();
+    commandList.SetCBV(0, _sceneData->OffsetGPU(0));
 
     for (auto& node : _rootNodes)
     {
@@ -47,6 +72,11 @@ void Scene::DrawAABB(Core::GraphicsCommandList& commandList)
     {
         node->DrawAABB(commandList);
     }
+}
+
+void Scene::SetCamera(Camera& camera)
+{
+    _camera = &camera;
 }
 
 bool Scene::LoadScene(const std::string& filepath, Core::GraphicsCommandList& commandList)

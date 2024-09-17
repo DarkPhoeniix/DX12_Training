@@ -1,7 +1,6 @@
 {
-	"Name" : "Wyvern",
-	"Nodes" : 
-	[
-		"Armature.001.node"
-	]
+    "Name": "Wyvern",
+    "Nodes": [
+        "Wyrm.node"
+    ]
 }

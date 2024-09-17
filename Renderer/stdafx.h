@@ -25,12 +25,11 @@ using namespace Microsoft::WRL;
 
 #include "d3dx12.h"             // D3D12 extension library
 
-// Required preprocessor definition when using FBX SDK dynamic library
-#define FBXSDK_SHARED
-
 #include <pix3.h>
 
 #include <json/json.h>
+
+#include <filesystem>
 #include <algorithm>
 #include <assert.h>
 #include <cassert>
