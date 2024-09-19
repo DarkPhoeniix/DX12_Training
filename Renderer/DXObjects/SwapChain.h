@@ -18,6 +18,8 @@ namespace Core
 
         void Init(std::shared_ptr<Core::Win32Window> window);
 
+        DXGI_SWAP_CHAIN_DESC GetDescription() const;
+
         void GetBuffer(unsigned int index, Resource& resource) const;
 
         void UpdateRenderTargetViews();
@@ -29,8 +31,7 @@ namespace Core
         ComPtr<IDXGISwapChain4> CreateSwapChain();
         bool CheckTearingSupport() const;
 
-        ComPtr<ID3D12Device2> _DXDevice;
-
+        DXGI_SWAP_CHAIN_DESC _swapChainDesc;
         ComPtr<IDXGISwapChain4> _dxgiSwapChain;
         DescriptorHeap _RTVDescriptorHeap;
         UINT _RTVDescriptorSize;

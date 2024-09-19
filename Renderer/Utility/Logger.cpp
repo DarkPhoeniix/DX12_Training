@@ -31,9 +31,9 @@ namespace AssertUtility
         if (!statement)
         {
             Logger::Log(LogType::Error, message);
-#if defined(_DEBUG)
+//#if defined(_DEBUG)
             OutputDebugStringA((message + "\n").c_str());
-#endif
+//#endif
         }
         return !statement;
     }

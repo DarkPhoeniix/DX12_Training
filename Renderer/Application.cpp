@@ -12,8 +12,11 @@
 #include "Events/UpdateEvent.h"
 #include "Input/InputDevice.h"
 #include "Render/DXRenderer.h"
+#include "Utility/DebugInfo.h"
 #include "Utility/Resources.h"
 #include "Window/Win32Window.h"
+
+#include "GUI/GUI.h"
 
 using namespace Core;
 
@@ -26,6 +29,8 @@ Application* Application::_instance = nullptr;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    GUI_WndProc(hwnd, message, wParam, lParam);
+
     switch (message)
     {
     case WM_CREATE:
@@ -57,19 +62,17 @@ Application::Application(HINSTANCE hInstance)
     : _hInstance(hInstance)
     , _currentFrame(&_frames[0])
 {
-    _DXDevice = Core::Device::GetDXDevice();
-
     _RegisterWindowClass(hInstance);
 }
 
 Application::~Application()
 {
-    _DXDevice = nullptr;
 }
 
 void Application::Init(HINSTANCE hInstance)
 {
     Device::Init();
+    DebugInfo::Init();
     _instance = new Application(hInstance);
 }
 
@@ -95,6 +98,8 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
 
     Events::InputDevice::Instance().AddInputObserver(pApp.get());
 
+    GUI::Init(_win32Window->GetWindowHandle(), _swapChain);
+
     TaskGPU* uploadTask = _currentFrame->CreateTask(D3D12_COMMAND_LIST_TYPE_COPY, nullptr);
     if (!pApp->LoadContent(uploadTask))
     {
@@ -111,6 +116,8 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
         }
 
         Events::InputDevice::Instance().PollEvents();
+
+        GUI::NewFrame();
 
         _UpdateCall(pApp);
         _RenderCall(pApp);
@@ -131,6 +138,9 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
 
 void Application::Quit(int exitCode)
 {
+    GUI::Destroy();
+
+    DebugInfo::Destroy();
     Device::Destroy();
     PostQuitMessage(exitCode);
 

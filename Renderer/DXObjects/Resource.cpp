@@ -5,8 +5,7 @@
 namespace Core
 {
 	Resource::Resource()
-		: _DXDevice(Core::Device::GetDXDevice())
-		, _resource(nullptr)
+		: _resource(nullptr)
 		, _resourceDesc{}
 		, _currentState(D3D12_RESOURCE_STATE_COMMON)
 		, _initialState(D3D12_RESOURCE_STATE_COMMON)
@@ -14,8 +13,7 @@ namespace Core
 	}
 
 	Resource::Resource(ResourceDescription resourceDesc)
-		: _DXDevice(Core::Device::GetDXDevice())
-		, _resource(nullptr)
+		: _resource(nullptr)
 		, _resourceDesc(resourceDesc)
 		, _currentState(D3D12_RESOURCE_STATE_COMMON)
 		, _initialState(D3D12_RESOURCE_STATE_COMMON)
@@ -24,7 +22,6 @@ namespace Core
 
 	Resource::~Resource()
 	{
-		_DXDevice = nullptr;
 		_resource = nullptr;
 	}
 
@@ -140,7 +137,7 @@ namespace Core
 		// need to RTT and DSV
 		D3D12_RESOURCE_DESC resourceDesc = _resourceDesc.CreateDXResourceDescription();
 		D3D12_CLEAR_VALUE* clearValue = _resourceDesc.GetClearValue().get();
-		_DXDevice->CreateCommittedResource(
+		Core::Device::GetDXDevice()->CreateCommittedResource(
 			&heapDesc,
 			D3D12_HEAP_FLAG_NONE,
 			&resourceDesc,
@@ -161,9 +158,9 @@ namespace Core
 		D3D12_RESOURCE_DESC resourceDesc = _resourceDesc.CreateDXResourceDescription();
 		D3D12_CLEAR_VALUE* clearValue = _resourceDesc.GetClearValue().get();
 
-		_allocationInfo = _DXDevice->GetResourceAllocationInfo(0, 1, &resourceDesc);
+		_allocationInfo = Core::Device::GetDXDevice()->GetResourceAllocationInfo(0, 1, &resourceDesc);
 
-		_DXDevice->CreatePlacedResource(
+		Core::Device::GetDXDevice()->CreatePlacedResource(
 			heap.Get(),
 			offset,
 			&resourceDesc,

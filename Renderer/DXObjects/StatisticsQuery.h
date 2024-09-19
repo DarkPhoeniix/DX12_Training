@@ -16,12 +16,12 @@ namespace Core
         void EndQuery(GraphicsCommandList& commandList);
 
         void ResolveQueryData(GraphicsCommandList& commandList);
-        D3D12_QUERY_DATA_PIPELINE_STATISTICS GetStatistics();
+        const D3D12_QUERY_DATA_PIPELINE_STATISTICS& GetStatistics();
 
     private:
-        ComPtr<ID3D12Device2> _DXDevice;
-
         ComPtr<ID3D12QueryHeap> _statQueryHeap;
         Core::Resource _statResource;
+
+        D3D12_QUERY_DATA_PIPELINE_STATISTICS* _statisticsData;
     };
 } // namespace Core

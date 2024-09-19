@@ -18,25 +18,27 @@ namespace Core
 
     bool ResourceTable::AddResource(Resource* resource)
     {
-        bool res = false;
+        if (LOG_WARNING(resource, "Trying to add a nullptr resource to resource table"))
+        {
+            return false;
+        }
+
+        std::string resourceName = resource->GetName();
 
         ASSERT((_resources.size() < _numDescriptors), "Resource table is full");
-        ASSERT(resource, "Trying to add a nullptr resource to resource table");
+        ASSERT(!resourceName.empty(), "Resource in resource table is unnamed");
 
-        auto name = resource->GetName();
-        LOG_WARNING(!name.empty(), "Resource in resource table is unnamed");
-
-        auto it = _resources.find(name);
+        auto it = _resources.find(resourceName);
         if (it == _resources.end())
         {
-            _resources.emplace(name, resource);
+            _resources.emplace(resourceName, resource);
             _descriptorHeap.PlaceResource(resource);
             _heap.PlaceResource(*resource);
 
-            res = true;
+            return true;
         }
 
-        return res;
+        return false;
     }
 
     D3D12_CPU_DESCRIPTOR_HANDLE ResourceTable::GetResourceCPUHandle(const std::string& name)

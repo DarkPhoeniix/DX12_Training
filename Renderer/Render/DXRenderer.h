@@ -33,11 +33,13 @@ public:
     virtual void OnResize(Core::Events::ResizeEvent& e) override {}
 
 private:
-    ComPtr<ID3D12Device2> _DXDevice;
     HWND _windowHandle;
 
     Core::RootSignature _renderPipeline;
     Core::RootSignature _AABBpipeline;
+
+    ComPtr<ID3D12RootSignature> _postFXRootSig;
+    ComPtr<ID3D12PipelineState> _postFXPipeState;
 
     std::shared_ptr<Core::Resource> _ambient;
 
@@ -51,8 +53,4 @@ private:
     float _deltaTime;
 
     bool _contentLoaded;
-
-#if defined(_DEBUG)
-    Core::StatisticsQuery _statsQuery;
-#endif
 };

@@ -5,9 +5,8 @@
 namespace Core
 {
     SwapChain::SwapChain()
-        : _DXDevice(Core::Device::GetDXDevice())
-        , _dxgiSwapChain{}
-        , _RTVDescriptorSize(_DXDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV))
+        : _dxgiSwapChain{}
+        , _RTVDescriptorSize(Core::Device::GetDXDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV))
         , _currentBackBufferIndex(0)
         , _windowHandle{}
         , _width(0)
@@ -27,7 +26,6 @@ namespace Core
 
     SwapChain::~SwapChain()
     {
-        _DXDevice = nullptr;
         _dxgiSwapChain = nullptr;
     }
 
@@ -40,13 +38,17 @@ namespace Core
 
         _dxgiSwapChain = CreateSwapChain();
 
-        DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
-        Helper::throwIfFailed(_dxgiSwapChain->GetDesc(&swapChainDesc));
-        Helper::throwIfFailed(_dxgiSwapChain->ResizeBuffers(BACK_BUFFER_COUNT, _width, _height, swapChainDesc.BufferDesc.Format, swapChainDesc.Flags));
+        Helper::throwIfFailed(_dxgiSwapChain->GetDesc(&_swapChainDesc));
+        Helper::throwIfFailed(_dxgiSwapChain->ResizeBuffers(BACK_BUFFER_COUNT, _width, _height, _swapChainDesc.BufferDesc.Format, _swapChainDesc.Flags));
 
         _currentBackBufferIndex = _dxgiSwapChain->GetCurrentBackBufferIndex();
 
         UpdateRenderTargetViews();
+    }
+
+    DXGI_SWAP_CHAIN_DESC SwapChain::GetDescription() const
+    {
+        return _swapChainDesc;
     }
 
     void SwapChain::GetBuffer(unsigned int index, Resource& resource) const
@@ -64,7 +66,7 @@ namespace Core
         {
             ComPtr<ID3D12Resource> backBuffer;
             Helper::throwIfFailed(_dxgiSwapChain->GetBuffer(i, IID_PPV_ARGS(&backBuffer)));
-            _DXDevice->CreateRenderTargetView(backBuffer.Get(), nullptr, rtvHandle);
+            Core::Device::GetDXDevice()->CreateRenderTargetView(backBuffer.Get(), nullptr, rtvHandle);
 
             _backBuffers[i].InitFromDXResource(backBuffer);
 

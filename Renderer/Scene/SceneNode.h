@@ -33,9 +33,8 @@ protected:
     void _DrawCurrentNode(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum) const;
 
 private:
-    ComPtr<ID3D12Device2> _DXDevice;
-
     std::shared_ptr<Mesh> _mesh;
+    std::shared_ptr<Material> _material;
     AABBVolume _AABB;
 
     Material _material;
@@ -43,6 +42,7 @@ private:
     std::shared_ptr<Core::Texture> _normalTexture;
 
     std::shared_ptr<Core::Resource> _modelMatrix;
+    std::shared_ptr<Core::Resource> _modelDesc;
     std::shared_ptr<Core::Resource> _vertexBuffer;
     std::shared_ptr<Core::Resource> _indexBuffer;
 

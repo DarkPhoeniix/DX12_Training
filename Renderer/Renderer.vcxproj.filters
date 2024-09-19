@@ -132,10 +132,34 @@
     <ClCompile Include="Scene\Light\DirectionalLight.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\Light\PointLight.cpp">
+    <ClCompile Include="GUI\ImGui\imgui.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\Light\LightManager.cpp">
+    <ClCompile Include="GUI\ImGui\backends\imgui_impl_dx12.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\ImGui\backends\imgui_impl_win32.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\GUI.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\ImGui\imgui_demo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\ImGui\imgui_draw.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\ImGui\imgui_tables.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\ImGui\imgui_widgets.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Utility\DebugInfo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Material.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -302,10 +326,34 @@
     <ClInclude Include="Scene\Light\DirectionalLight.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\Light\PointLight.h">
+    <ClInclude Include="GUI\ImGui\imgui.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\Light\LightManager.h">
+    <ClInclude Include="GUI\ImGui\imgui_internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\ImGui\backends\imgui_impl_dx12.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\ImGui\backends\imgui_impl_win32.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\GUI.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\ImGui\imconfig.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\ImGui\imstb_rectpack.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\ImGui\imstb_textedit.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\ImGui\imstb_truetype.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\DebugInfo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Scene\Material.h">
@@ -318,6 +366,9 @@
     <FxCompile Include="Shaders\AABB_vs.hlsl" />
     <FxCompile Include="Shaders\AABB_gs.hlsl" />
     <FxCompile Include="Shaders\AABB_ps.hlsl" />
+    <FxCompile Include="Shaders\NegativePostFX_cs.hlsl" />
+    <FxCompile Include="Shaders\PostFX_cs.hlsl" />
+    <FxCompile Include="Shaders\SwirlPostFX_cs.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="PipelineDescriptions\AABBRenderPipeline.tech" />
@@ -337,6 +388,8 @@
     <None Include="Shaders\LambertLighting.hlsli" />
     <None Include="Shaders\Mesh_rootsig.hlsli" />
     <None Include="Shaders\AABB_rootsig.hlsli" />
+    <None Include="Shaders\PostFX_rootsig.hlsli" />
+    <None Include="Shaders\Common.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\dxapp.ico">

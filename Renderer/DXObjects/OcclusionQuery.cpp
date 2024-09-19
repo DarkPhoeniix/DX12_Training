@@ -7,14 +7,12 @@
 namespace Core
 {
     OcclusionQuery::OcclusionQuery()
-        : _DXDevice(Device::GetDXDevice())
-        , _queryHeap(nullptr)
+        : _queryHeap(nullptr)
     {
     }
 
     OcclusionQuery::~OcclusionQuery()
     {
-        _DXDevice = nullptr;
         _queryHeap = nullptr;
     }
 
@@ -24,7 +22,7 @@ namespace Core
         D3D12_QUERY_HEAP_DESC queryHeapDesc = {};
         queryHeapDesc.Count = numObjects;
         queryHeapDesc.Type = D3D12_QUERY_HEAP_TYPE_OCCLUSION;
-        _DXDevice->CreateQueryHeap(&queryHeapDesc, IID_PPV_ARGS(&_queryHeap));
+        Core::Device::GetDXDevice()->CreateQueryHeap(&queryHeapDesc, IID_PPV_ARGS(&_queryHeap));
 
         for (int i = 0; i < numObjects; ++i)
         {

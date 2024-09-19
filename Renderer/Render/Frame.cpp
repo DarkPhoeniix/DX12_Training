@@ -23,7 +23,6 @@ Frame::Frame()
     , _fencePool(nullptr)
     , _syncFrame(nullptr)
     , _tasks{}
-    , _DXDevice(Core::Device::GetDXDevice())
 {
 }
 
@@ -42,8 +41,6 @@ Frame::~Frame()
     _allocatorPool = nullptr;
     _fencePool = nullptr;
     _syncFrame = nullptr;
-
-    _DXDevice = nullptr;
 }
 
 void Frame::Init(const Core::SwapChain& swapChain)
@@ -95,10 +92,10 @@ void Frame::Init(const Core::SwapChain& swapChain)
         descHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
         descHeapDesc.NumDescriptors = 1;
         descHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-        _DXDevice->CreateDescriptorHeap(&descHeapDesc, IID_PPV_ARGS(&_targetHeap));
+        Core::Device::GetDXDevice()->CreateDescriptorHeap(&descHeapDesc, IID_PPV_ARGS(&_targetHeap));
 
         descHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-        _DXDevice->CreateDescriptorHeap(&descHeapDesc, IID_PPV_ARGS(&_depthHeap));
+        Core::Device::GetDXDevice()->CreateDescriptorHeap(&descHeapDesc, IID_PPV_ARGS(&_depthHeap));
     }
 
     // Create RTT heap
@@ -107,7 +104,7 @@ void Frame::Init(const Core::SwapChain& swapChain)
         renderTargetDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
         renderTargetDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
         renderTargetDesc.Texture2D.MipSlice = 0;
-        _DXDevice->CreateRenderTargetView(_targetTexture.GetDXResource().Get(), &renderTargetDesc, _targetHeap->GetCPUDescriptorHandleForHeapStart());
+        Core::Device::GetDXDevice()->CreateRenderTargetView(_targetTexture.GetDXResource().Get(), &renderTargetDesc, _targetHeap->GetCPUDescriptorHandleForHeapStart());
     }
 
     // Create DSV heap
@@ -117,7 +114,28 @@ void Frame::Init(const Core::SwapChain& swapChain)
         depthStencilDesc.Flags = D3D12_DSV_FLAG_NONE;//D3D12_DSV_FLAG_READ_ONLY_DEPTH;
         depthStencilDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
         depthStencilDesc.Texture2D.MipSlice = 0;
-        _DXDevice->CreateDepthStencilView(_depthTexture.GetDXResource().Get(), &depthStencilDesc, _depthHeap->GetCPUDescriptorHandleForHeapStart());
+        Core::Device::GetDXDevice()->CreateDepthStencilView(_depthTexture.GetDXResource().Get(), &depthStencilDesc, _depthHeap->GetCPUDescriptorHandleForHeapStart());
+    }
+
+
+    {
+        Core::DescriptorHeapDescription desc = {};
+        desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+        desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
+        desc.SetNumDescriptors(1);
+        desc.SetNodeMask(0);
+
+        _postFXDescHeap.SetDescription(desc);
+        _postFXDescHeap.Create();
+
+        D3D12_CPU_DESCRIPTOR_HANDLE CPUHandle = _postFXDescHeap.GetHeapStartCPUHandle();
+
+        D3D12_UNORDERED_ACCESS_VIEW_DESC UAVDesc = {};
+        UAVDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+        UAVDesc.Texture2D.MipSlice = 0;
+
+        Core::Device::GetDXDevice()->CreateUnorderedAccessView(_targetTexture.GetDXResource().Get(), nullptr, &UAVDesc, CPUHandle);
     }
 }
 

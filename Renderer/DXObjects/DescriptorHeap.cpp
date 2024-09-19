@@ -8,32 +8,29 @@ namespace Core
         : _descriptorHeap(nullptr)
         , _descriptorHeapDescription{}
         , _heapIncrementSize(0)
-        , _DXDevice(Core::Device::GetDXDevice())
     {   }
 
     DescriptorHeap::DescriptorHeap(const DescriptorHeapDescription& description)
         : _descriptorHeap(nullptr)
         , _descriptorHeapDescription(description)
         , _heapIncrementSize(0)
-        , _DXDevice(Core::Device::GetDXDevice())
     {   }
 
     DescriptorHeap::~DescriptorHeap()
     {
         _descriptorHeap = nullptr;
-        _DXDevice = nullptr;
     }
 
     void DescriptorHeap::Create()
     {
-        ASSERT(_DXDevice, "Device is nullptr when trying to create descriptor heap");
+        ASSERT(Core::Device::GetDXDevice(), "Device is nullptr when trying to create descriptor heap");
 
-        _DXDevice->CreateDescriptorHeap(&_descriptorHeapDescription.GetDXDescription(), IID_PPV_ARGS(&_descriptorHeap));
+        Core::Device::GetDXDevice()->CreateDescriptorHeap(&_descriptorHeapDescription.GetDXDescription(), IID_PPV_ARGS(&_descriptorHeap));
 
         std::wstring tmp(_name.begin(), _name.end());
         _descriptorHeap->SetName(tmp.c_str());
 
-        _heapIncrementSize = _DXDevice->GetDescriptorHandleIncrementSize(_descriptorHeapDescription.GetType());
+        _heapIncrementSize = Core::Device::GetDXDevice()->GetDescriptorHandleIncrementSize(_descriptorHeapDescription.GetType());
 
         for (UINT i = 0; i < _descriptorHeapDescription.GetNumDescriptors(); ++i)
         {
@@ -66,9 +63,16 @@ namespace Core
         return _descriptorHeap->GetGPUDescriptorHandleForHeapStart();
     }
 
+    D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetHeapGPUHandle(size_t offset)
+    {
+        D3D12_GPU_DESCRIPTOR_HANDLE handle = _descriptorHeap->GetGPUDescriptorHandleForHeapStart();
+        handle.ptr += offset * _heapIncrementSize;
+        return handle;
+    }
+
     D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetResourceCPUHandle(Resource* resource)
     {
-        ASSERT(_DXDevice, "Device is nullptr when trying to Get CPU descriptor handle increment size");
+        ASSERT(Core::Device::GetDXDevice(), "Device is nullptr when trying to Get CPU descriptor handle increment size");
         ASSERT(resource, "Trying to Get CPU handle for nullptr resource");
 
         auto result = std::find_if(_resourceIndex.begin(), _resourceIndex.end(), [resource](const auto& pair) { return pair.second == resource; });
@@ -84,7 +88,7 @@ namespace Core
 
     D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetResourceGPUHandle(Resource* resource)
     {
-        ASSERT(_DXDevice, "Device is nullptr when trying to Get GPU descriptor handle increment size");
+        ASSERT(Core::Device::GetDXDevice(), "Device is nullptr when trying to Get GPU descriptor handle increment size");
         ASSERT(resource, "Trying to Get GPU handle for nullptr resource");
 
         auto result = std::find_if(_resourceIndex.begin(), _resourceIndex.end(), [resource](const auto& pair) { return pair.second == resource; });
