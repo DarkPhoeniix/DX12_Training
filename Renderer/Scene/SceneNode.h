@@ -1,6 +1,5 @@
 #pragma once
 
-#include "DXObjects/Texture.h"
 #include "Scene/Mesh.h"
 #include "Scene/Material.h"
 #include "Scene/ISceneNode.h"

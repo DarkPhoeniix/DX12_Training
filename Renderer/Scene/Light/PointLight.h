@@ -2,17 +2,20 @@
 
 #include "ILight.h"
 
-class DirectionalLight : public ILight
+class PointLight : public ILight
 {
 public:
-    DirectionalLight(Scene* scene, ISceneNode* parent);
-    ~DirectionalLight() = default;
-
-    void SetDirection(const DirectX::XMVECTOR& direction);
-    const DirectX::XMVECTOR& GetDirection() const;
+    PointLight(Scene* scene, ISceneNode* parent = nullptr);
+    ~PointLight() = default;
 
     void SetColor(const DirectX::XMVECTOR& color);
     const DirectX::XMVECTOR& GetColor() const;
+
+    void SetRange(float range);
+    float GetRange() const;
+
+    void SetIntensity(float intensity);
+    float GetIntensity() const;
 
     // ISceneNode
     void LoadNode(const std::string& filepath, Core::GraphicsCommandList& commandList) override;

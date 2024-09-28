@@ -8,6 +8,9 @@
 #include "Scene/Camera.h"
 #include "Volumes/FrustumVolume.h"
 
+#include "Light/DirectionalLight.h"
+#include "Light/PointLight.h"
+
 namespace
 {
     struct SceneDesc
@@ -21,6 +24,7 @@ namespace
 } // namespace unnamed
 
 Scene::Scene()
+    : _lightManager()
 {
     Core::HeapDescription heapDesc;
     heapDesc.SetHeapType(D3D12_HEAP_TYPE_DEFAULT);
@@ -47,6 +51,26 @@ Scene::Scene()
     _sceneData->CreateCommitedResource(D3D12_RESOURCE_STATE_GENERIC_READ);
 
     _texturesTable = std::make_shared<Core::ResourceTable>(descriptorHeapDesc, heapDesc);
+
+
+
+
+    std::shared_ptr<DirectionalLight> light = std::make_shared<DirectionalLight>(this, nullptr);
+    light->SetName("Directional Light");
+    light->SetDirection(DirectX::XMVectorSet(-0.5f, -0.5f, 0.5f, 0.0f));
+    light->SetColor(DirectX::XMVectorSet(0.0f, 1.0f, 1.0f, 1.0f));
+
+    std::shared_ptr<PointLight> light1 = std::make_shared<PointLight>(this, nullptr);
+    DirectX::XMMATRIX tr = DirectX::XMMatrixIdentity() * DirectX::XMMatrixTranslation(20.0f, 100.0f, -20.0f);
+    light1->SetName("Point Light");
+    light1->SetLocalTransform(tr);
+    light1->SetRange(500.0f);
+    light1->SetIntensity(100.0f);
+    light1->SetColor(DirectX::XMVectorSet(1.0f, 0.0f, 1.0f, 1.0f));
+
+    _lightManager.AddPointLight(light1);
+    _lightManager.AddDirectionalLight(light);
+
 }
 
 Scene::~Scene()
@@ -54,11 +78,18 @@ Scene::~Scene()
 
 void Scene::Draw(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum)
 {
+    // Setup textures
     commandList.SetDescriptorHeaps({ _texturesTable->GetDescriptorHeap().GetDXDescriptorHeap().Get() });
+    commandList.SetDescriptorTable(3, _texturesTable->GetDescriptorHeap().GetHeapStartGPUHandle());
 
+    // Setup scene data
     SceneDesc* sceneDesc = (SceneDesc*)_sceneData->Map();
     sceneDesc->ViewProjection = _camera->ViewProjection();
+    sceneDesc->LightsNum = _lightManager.GetLightsNum();
     commandList.SetCBV(0, _sceneData->OffsetGPU(0));
+
+    // Setup lights
+    _lightManager.SetupLights(commandList);
 
     for (auto& node : _rootNodes)
     {

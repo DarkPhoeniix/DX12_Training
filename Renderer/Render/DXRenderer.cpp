@@ -35,7 +35,6 @@ DXRenderer::DXRenderer(HWND windowHandle)
     , _ambient(nullptr)
     , _isCameraMoving(false)
     , _deltaTime(0.0f)
-    , _light(nullptr)
 {   }
 
 DXRenderer::~DXRenderer()
@@ -78,24 +77,6 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
 
         _camera.LookAt(pos, target, up);
         _camera.SetLens(45.0f, 0.1f, 1000.0f);
-    }
-
-    // Setup semi-ambient light parameters
-    {
-        EResourceType SRVType = EResourceType::Dynamic | EResourceType::Buffer;
-
-        ResourceDescription desc;
-        desc.SetResourceType(SRVType);
-        desc.SetSize({ sizeof(DirectionalLight), 1 });
-        desc.SetStride(1);
-        desc.SetFormat(DXGI_FORMAT::DXGI_FORMAT_UNKNOWN);
-        _light = std::make_shared<Resource>(desc);
-        _light->CreateCommitedResource();
-        _light->SetName("_light");
-
-        DirectionalLight* val = (DirectionalLight*)_light->Map();
-        val->SetDirection(XMVectorSet(0.5f, -0.8f, 0.3f, 1.0f));
-        val->SetColor(XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f));
     }
 
     // Load scene
@@ -181,8 +162,6 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
 
         commandList->SetViewport(_camera.GetViewport());
         commandList->SetRenderTarget(&rtv, &dsv);
-
-        commandList->SetSRV(2, _light->OffsetGPU(0));
 
         _scene.Draw(*commandList, _camera.GetViewFrustum());
 

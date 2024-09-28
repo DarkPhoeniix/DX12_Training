@@ -43,11 +43,7 @@ private:
 
     std::shared_ptr<Core::Resource> _ambient;
 
-    Core::DescriptorHeap _texDescHeap;
-    std::shared_ptr<Core::Texture> _tex;
-
     Scene _scene;
-    std::shared_ptr<Core::Resource> _light;
     Camera _camera;
     bool _isCameraMoving;
     float _deltaTime;

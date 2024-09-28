@@ -333,11 +333,6 @@ void SceneNode::_DrawCurrentNode(Core::GraphicsCommandList& commandList, const F
         return;
     }
 
-    if (_material)
-    {
-        commandList.SetDescriptorTable(3, _scene->_texturesTable->GetDescriptorHeap().GetHeapStartGPUHandle());
-    }
-
     ModelDesc* modelData = (ModelDesc*)_modelDesc->Map();
     modelData->Transform = GetGlobalTransform();
     modelData->AlbedoTextureIndex = _material->AlbedoIndex(_scene->_texturesTable.get());
