@@ -1,37 +1,36 @@
 #pragma once
 
-namespace Core
-{
-    class GraphicsCommandList;
-}
+#include "DXObjects/ResourceTable.h"
 
 class DirectionalLight;
 class PointLight;
 
+namespace Core
+{
+    class GraphicsCommandList;
+} // namespace Core
+
 class LightManager
 {
 public:
-    LightManager() = default;
+    LightManager();
     ~LightManager() = default;
-
-    void Init();
 
     void SetupLights(Core::GraphicsCommandList& commandList);
 
-    void AddDirectionalLight(const DirectionalLight& light);
-    void AddPointLight(const PointLight& light);
+    UINT GetLightsNum() const;
+
+    void AddDirectionalLight(std::shared_ptr<DirectionalLight> directionalLight);
+    void AddPointLight(std::shared_ptr<PointLight> pointLight);
     
 private:
-    struct LightDesc
-    {
-        UINT directionalLightsNum;
-        UINT pointLightsNum;
-    } _lightDesc;
-    Core::Resource _lightDescResource;
+    std::shared_ptr<Core::Resource> CreateGPUResource();
 
-    std::vector<DirectionalLight> _directionalLights;
-    Core::Resource _directionalLightsResource;
+    std::vector<std::shared_ptr<DirectionalLight>> _directionalLights;
+    std::vector<std::shared_ptr<PointLight>> _pointLights;
 
-    std::vector<PointLight> _pointLights;
-    Core::Resource _pointLightsResource;
+    Core::Heap _lightsHeap;
+    Core::DescriptorHeap _descHeap;
+    std::shared_ptr<Core::Resource> _lightsView;
+    std::vector<std::shared_ptr<Core::Resource>> _internalResources;
 };

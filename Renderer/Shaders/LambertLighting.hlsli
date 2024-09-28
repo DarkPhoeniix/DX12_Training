@@ -1,12 +1,26 @@
 
-float4 CalculateAmbient(float4 albedo)
+#include "LightingCommon.hlsli"
+
+#define AMBIENT_IMPACT 0.1f
+
+float4 CalculateAmbient(in Surface surface)
 {
-    return 0.1f * albedo;
+    return surface.Albedo * AMBIENT_IMPACT;
 }
 
-float4 CalculateDiffuse(float3 surfaceNormal, float4 surfaceColor, float3 lightDirection, float4 lightColor)
+float4 CalculateDiffuse(in Surface surface, in LightDesc light)
 {
-    float diffuseFactor = max(dot(surfaceNormal, -lightDirection), 0.0f);
+    float diffuseFactor = 0.0f;
     
-    return surfaceColor * lightColor * diffuseFactor;
+    if (light.Type == LIGHT_TYPE_DIRECTIONAL)
+    {
+        diffuseFactor = max(dot(surface.Normal, -light.Direction), 0.0f);
+    }
+    else if (light.Type == LIGHT_TYPE_POINT)
+    {
+        float4 lightDirection = normalize(light.Position - surface.Positon);
+        diffuseFactor = max(dot(surface.Normal, lightDirection), 0.0f);
+    }
+    
+    return surface.Albedo * light.Color * diffuseFactor;
 }

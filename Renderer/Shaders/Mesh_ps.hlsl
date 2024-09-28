@@ -5,49 +5,45 @@
 #include "Common.hlsli"
 #include "LambertLighting.hlsli"
 
-struct LightDesc
-{
-    float4 Direction;
-    float4 Color;
-};
-
 struct PixelShaderInput
 {
+    float4 WorldPosition : POSITION;
     float4 Position : SV_Position;
-    float3 Normal   : NORMAL;
+    float3 Normal   : NORMAL;   // should be normalized
     float4 Color    : COLOR;
     float2 Texture  : TEXCOORD;
     float3 Tangent  : TANGENT;
-};
+};  
 
 StructuredBuffer<LightDesc> Lights  : register(t0);
 Texture2D Materials[]               : register(t1);
 
-SamplerState AlbedoSampler          : register(s0);
+SamplerState LinearSampler          : register(s0);
 SamplerState PointSampler           : register(s1);
 
 float4 main(PixelShaderInput IN) : SV_Target
 {
-    IN.Normal = normalize(IN.Normal);
-    
     // Sample textures
-    float2 uv = IN.Texture;
-    uv.y = 1.0f - uv.y;
-    float4 textureAlbedo    = Materials[Model.AlbedoTextureIndex].Sample(AlbedoSampler, uv);
-    float4 textureNormal    = Materials[Model.NormalTextureIndex].Sample(PointSampler, uv);
-    float4 textureMetalness = Materials[Model.MetalnessTextureIndex].Sample(PointSampler, uv);
+    float2 uv           = IN.Texture;
+    uv.y                = 1.0f - uv.y;
     
     // Calculate the TBN matrix
-    float3 bitangent = cross(IN.Normal, IN.Tangent);
-    float3x3 TBN = float3x3(IN.Tangent, bitangent, IN.Normal);
+    float4 normal       = Materials[Model.NormalTextureIndex].Sample(PointSampler, uv);
+    float3 bitan        = cross(IN.Normal, IN.Tangent);
+    float3x3 TBN        = float3x3(IN.Tangent, bitan, IN.Normal);
 
-    // Transform the normal
-    float3 finalNormal = normalize(mul(textureNormal.xyz, TBN));
+    // Setup surface
+    Surface surface;
+    surface.Positon     = IN.WorldPosition;
+    surface.Albedo      = Materials[Model.AlbedoTextureIndex].Sample(LinearSampler, uv);;
+    surface.Normal      = float4(normalize(mul(normal.xyz, TBN)), 0.0f);
+    surface.Metalness   = Materials[Model.MetalnessTextureIndex].Sample(PointSampler, uv);;
 
-    float4 ambient = CalculateAmbient(textureAlbedo);
-    float4 diffuse = CalculateDiffuse(finalNormal, textureAlbedo, normalize(Lights[0].Direction.xyz), Lights[0].Color);
+    surface.FinalColor = CalculateAmbient(surface);
+    for (int i = 0; i < Scene.LightsNum; ++i)
+    {
+        surface.FinalColor += CalculateDiffuse(surface, Lights[i]);
+    }
     
-    float4 color = ambient + diffuse;
-    
-    return float4(color.rgb, textureAlbedo.w);
+    return float4(surface.FinalColor.rgb, surface.Albedo.w);
 }

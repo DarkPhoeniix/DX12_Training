@@ -1,18 +1,12 @@
 #pragma once
 
-namespace Core
-{
-    class GraphicsCommandList;
-}
+#include "ILight.h"
 
-class DirectionalLight
+class DirectionalLight : public ILight
 {
 public:
-    DirectionalLight() = default;
-    DirectionalLight(const DirectX::XMVECTOR& direction, const DirectX::XMVECTOR& color);
+    DirectionalLight(Scene* scene, ISceneNode* parent);
     ~DirectionalLight() = default;
-
-    void SetToShader(Core::GraphicsCommandList& commandList, int index) const;
 
     void SetDirection(const DirectX::XMVECTOR& direction);
     const DirectX::XMVECTOR& GetDirection() const;
@@ -20,7 +14,6 @@ public:
     void SetColor(const DirectX::XMVECTOR& color);
     const DirectX::XMVECTOR& GetColor() const;
 
-private:
-    DirectX::XMVECTOR _direction;
-    DirectX::XMVECTOR _color;
+    // ISceneNode
+    void LoadNode(const std::string& filepath, Core::GraphicsCommandList& commandList) override;
 };

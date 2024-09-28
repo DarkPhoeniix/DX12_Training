@@ -37,7 +37,6 @@ private:
     std::shared_ptr<Material> _material;
     AABBVolume _AABB;
 
-    Material _material;
     std::shared_ptr<Core::Texture> _albedoTexture;
     std::shared_ptr<Core::Texture> _normalTexture;
 

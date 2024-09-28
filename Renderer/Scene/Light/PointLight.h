@@ -1,21 +1,12 @@
 #pragma once
 
-namespace Core
-{
-    class GraphicsCommandList;
-}
+#include "ILight.h"
 
-class PointLight
+class PointLight : public ILight
 {
 public:
-    PointLight() = default;
-    PointLight(const DirectX::XMVECTOR& position, const DirectX::XMVECTOR& color, float range);
+    PointLight(Scene* scene, ISceneNode* parent = nullptr);
     ~PointLight() = default;
-
-    void SetToShader(Core::GraphicsCommandList& commandList, int index) const;
-
-    void SetPosition(const DirectX::XMVECTOR& position);
-    const DirectX::XMVECTOR& GetPosition() const;
 
     void SetColor(const DirectX::XMVECTOR& color);
     const DirectX::XMVECTOR& GetColor() const;
@@ -26,9 +17,6 @@ public:
     void SetIntensity(float intensity);
     float GetIntensity() const;
 
-private:
-    DirectX::XMVECTOR _position;
-    DirectX::XMVECTOR _color;
-    float _range;
-    float _intensity;
+    // ISceneNode
+    void LoadNode(const std::string& filepath, Core::GraphicsCommandList& commandList) override;
 };

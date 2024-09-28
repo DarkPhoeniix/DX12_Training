@@ -7,6 +7,8 @@
 #include "DXObjects/ResourceTable.h"
 #include "DXObjects/OcclusionQuery.h"
 
+#include "Light/LightManager.h"
+
 class FrustumVolume;
 class DescriptorHeap;
 class Texture;
@@ -35,6 +37,7 @@ private:
     std::shared_ptr<Core::ResourceTable> _texturesTable;
 
     Camera* _camera;
+    LightManager _lightManager;
     std::shared_ptr<Core::Resource> _sceneData;
 
     std::string _name;

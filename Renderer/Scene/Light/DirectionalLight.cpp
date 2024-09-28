@@ -4,15 +4,9 @@
 
 #include "DXObjects/GraphicsCommandList.h"
 
-DirectionalLight::DirectionalLight(const DirectX::XMVECTOR& direction, const DirectX::XMVECTOR& color)
-    : _direction(direction)
-    , _color(color)
+DirectionalLight::DirectionalLight(Scene* scene, ISceneNode* parent)
+    : ILight(scene, parent)
 {
-}
-
-void DirectionalLight::SetToShader(Core::GraphicsCommandList& commandList, int index) const
-{
-
 }
 
 void DirectionalLight::SetDirection(const DirectX::XMVECTOR& direction)
@@ -33,4 +27,8 @@ void DirectionalLight::SetColor(const DirectX::XMVECTOR& color)
 const DirectX::XMVECTOR& DirectionalLight::GetColor() const
 {
     return _color;
+}
+
+void DirectionalLight::LoadNode(const std::string& filepath, Core::GraphicsCommandList& commandList)
+{
 }

@@ -14,7 +14,7 @@ namespace Core
         ~Heap();
 
         void Create();
-        void PlaceResource(Resource& resource, UINT64 offset = (UINT64)-1);
+        void PlaceResource(Resource& resource, D3D12_RESOURCE_STATES state = D3D12_RESOURCE_STATE_COPY_DEST, UINT64 offset = (UINT64)-1);
 
         void SetDescription(const HeapDescription& description);
         HeapDescription GetDescription() const;

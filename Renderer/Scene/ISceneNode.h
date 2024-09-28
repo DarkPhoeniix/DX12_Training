@@ -14,6 +14,9 @@ public:
     ISceneNode(Scene* scene, ISceneNode* parent = nullptr);
     virtual ~ISceneNode();
 
+    void SetName(const std::string& name);
+    const std::string& GetName() const;
+
     DirectX::XMMATRIX GetGlobalTransform() const;
 
     DirectX::XMMATRIX GetLocalTransform() const;
@@ -30,7 +33,7 @@ protected:
     std::string _name;
 
     Scene* _scene;
-    ISceneNode* _parent;
+    std::shared_ptr<ISceneNode> _parent;
     std::vector<std::shared_ptr<ISceneNode>> _childNodes;
 
     DirectX::XMMATRIX _transform;

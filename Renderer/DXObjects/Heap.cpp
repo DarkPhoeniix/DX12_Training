@@ -30,7 +30,7 @@ namespace Core
         _heap->SetName(tmp.c_str());
     }
 
-    void Heap::PlaceResource(Resource& resource, UINT64 offset)
+    void Heap::PlaceResource(Resource& resource, D3D12_RESOURCE_STATES state, UINT64 offset)
     {
         ASSERT(Core::Device::GetDXDevice(), "Device is nullptr when placing resource in a heap");
 
@@ -40,7 +40,7 @@ namespace Core
             offset = _resourceOffset;
         }
 
-        resource.CreatePlacedResource(_heap, offset);
+        resource.CreatePlacedResource(_heap, offset, state);
 
         unsigned int size = resource.GetAllocationInfo().SizeInBytes;
         _resourceOffset += Math::AlignUp(size, D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT);
