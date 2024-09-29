@@ -1,6 +1,6 @@
 #include "stdafx.h"
 
-#include "SceneNode.h"
+#include "StaticObject.h"
 
 #include "DXObjects/Texture.h"
 #include "DXObjects/GraphicsCommandList.h"
@@ -106,7 +106,7 @@ namespace
     }
 }
 
-SceneNode::SceneNode()
+StaticObject::StaticObject()
     : ISceneNode()
     , _mesh(nullptr)
     , _albedoTexture(nullptr)
@@ -121,7 +121,7 @@ SceneNode::SceneNode()
 {
 }
 
-SceneNode::SceneNode(Scene* scene, SceneNode* parent)
+StaticObject::StaticObject(Scene* scene, StaticObject* parent)
     : ISceneNode(scene, parent)
     , _mesh(nullptr)
     , _albedoTexture(nullptr)
@@ -135,7 +135,7 @@ SceneNode::SceneNode(Scene* scene, SceneNode* parent)
     , _IBO{}
 {   }
 
-SceneNode::~SceneNode()
+StaticObject::~StaticObject()
 {
     for (ComPtr<ID3D12Resource> intermediate : intermediates)
     {
@@ -143,7 +143,7 @@ SceneNode::~SceneNode()
     }
 }
 
-void SceneNode::Draw(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum) const
+void StaticObject::Draw(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum) const
 {
     for (const std::shared_ptr<ISceneNode> node : _childNodes)
     {
@@ -153,7 +153,7 @@ void SceneNode::Draw(Core::GraphicsCommandList& commandList, const FrustumVolume
     _DrawCurrentNode(commandList, frustum);
 }
 
-void SceneNode::DrawAABB(Core::GraphicsCommandList& commandList) const
+void StaticObject::DrawAABB(Core::GraphicsCommandList& commandList) const
 {
     for (const std::shared_ptr<ISceneNode> node : _childNodes)
     {
@@ -179,12 +179,12 @@ void SceneNode::DrawAABB(Core::GraphicsCommandList& commandList) const
     commandList.Draw(1);
 }
 
-const AABBVolume& SceneNode::GetAABB() const
+const AABBVolume& StaticObject::GetAABB() const
 {
     return _AABB;
 }
 
-void SceneNode::LoadNode(const std::string& filepath, Core::GraphicsCommandList& commandList)
+void StaticObject::LoadNode(const std::string& filepath, Core::GraphicsCommandList& commandList)
 {
     Logger::Log(LogType::Info, "Parsing node " + filepath);
 
@@ -216,7 +216,7 @@ void SceneNode::LoadNode(const std::string& filepath, Core::GraphicsCommandList&
 
     for (auto& node : root["Nodes"])
     {
-        std::shared_ptr<SceneNode> child = std::make_shared<SceneNode>(_scene, this);
+        std::shared_ptr<StaticObject> child = std::make_shared<StaticObject>(_scene, this);
         child->LoadNode(_scene->_name + '\\' + node.asCString(), commandList);
         _childNodes.push_back(child);
     }
@@ -273,7 +273,7 @@ void SceneNode::LoadNode(const std::string& filepath, Core::GraphicsCommandList&
     }
 }
 
-void SceneNode::_UploadData(Core::GraphicsCommandList& commandList,
+void StaticObject::_UploadData(Core::GraphicsCommandList& commandList,
     ID3D12Resource** destinationResource,
     size_t numElements,
     size_t elementSize,
@@ -320,7 +320,7 @@ void SceneNode::_UploadData(Core::GraphicsCommandList& commandList,
     }
 }
 
-void SceneNode::_DrawCurrentNode(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum) const
+void StaticObject::_DrawCurrentNode(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum) const
 {
     if (!_mesh)
     {

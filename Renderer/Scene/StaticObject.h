@@ -9,12 +9,12 @@
 
 class Scene;
 
-class SceneNode : public ISceneNode
+class StaticObject : public ISceneNode
 {
 public:
-    SceneNode();
-    SceneNode(Scene* scene, SceneNode* parent = nullptr);
-    ~SceneNode();
+    StaticObject();
+    StaticObject(Scene* scene, StaticObject* parent = nullptr);
+    ~StaticObject();
 
     void Draw(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum) const override;
     void DrawAABB(Core::GraphicsCommandList& commandList) const override;
