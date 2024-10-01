@@ -31,9 +31,9 @@ namespace AssertUtility
         if (!statement)
         {
             Logger::Log(LogType::Error, message);
-//#if defined(_DEBUG)
+#if defined(_DEBUG)
             OutputDebugStringA((message + "\n").c_str());
-//#endif
+#endif
         }
         return !statement;
     }
@@ -50,15 +50,11 @@ namespace AssertUtility
         return !statement;
     }
 
-    bool LogInfoFunction(bool statement, const std::string& message)
+    void LogInfoFunction(const std::string& message)
     {
 #if defined(_DEBUG)
-        if (!statement)
-        {
-            Logger::Log(LogType::Info, message);
-        }
+        Logger::Log(LogType::Info, message);
 #endif
-        return !statement;
     }
 }
 

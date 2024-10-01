@@ -6,14 +6,14 @@
 #define LOG_WARNING(statement, message) \
     AssertUtility::LogWarningFunction(statement, message)
 
-#define LOG_INFO(statement, message) \
-    AssertUtility::LogInfoFunction(statement, message)
+#define LOG_INFO(message) \
+    AssertUtility::LogInfoFunction(message)
 
 namespace AssertUtility
 {
     bool AssertFunction(bool statement, const std::string& message);
     bool LogWarningFunction(bool statement, const std::string& message);
-    bool LogInfoFunction(bool statement, const std::string& message);
+    void LogInfoFunction(const std::string& message);
 }
 
 enum class LogType
