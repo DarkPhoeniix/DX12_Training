@@ -9,23 +9,26 @@ namespace Core
     class ResourceTable;
 } // namespace Core
 
-class Material
+namespace SceneLayer
 {
-public:
-    Core::Texture* Albedo() const;
-    Core::Texture* NormalMap() const;
-    Core::Texture* Metalness() const;
+    class Material
+    {
+    public:
+        Core::Texture* Albedo() const;
+        Core::Texture* NormalMap() const;
+        Core::Texture* Metalness() const;
 
-    UINT AlbedoIndex(Core::ResourceTable* resourceTable) const;
-    UINT NormalMapIndex(Core::ResourceTable* resourceTable) const;
-    UINT MetalnessIndex(Core::ResourceTable* resourceTable) const;
+        UINT AlbedoIndex(Core::ResourceTable* resourceTable) const;
+        UINT NormalMapIndex(Core::ResourceTable* resourceTable) const;
+        UINT MetalnessIndex(Core::ResourceTable* resourceTable) const;
 
-    void UploadToGPU(Core::GraphicsCommandList& commandList, Core::ResourceTable* resourceTable);
+        void UploadToGPU(Core::GraphicsCommandList& commandList, Core::ResourceTable* resourceTable);
 
-    static Material* LoadFromFile(const std::string& filepath);
+        static Material* LoadFromFile(const std::string& filepath);
 
-private:
-    std::shared_ptr<Core::Texture> _albedoTexture;
-    std::shared_ptr<Core::Texture> _normalTexture;
-    std::shared_ptr<Core::Texture> _metalnessTexture;
-};
+    private:
+        std::shared_ptr<Core::Texture> _albedoTexture;
+        std::shared_ptr<Core::Texture> _normalTexture;
+        std::shared_ptr<Core::Texture> _metalnessTexture;
+    };
+} // namespace SceneLayer

@@ -2,35 +2,38 @@
 
 #include "DXObjects/ResourceTable.h"
 
-class DirectionalLight;
-class PointLight;
-
 namespace Core
 {
     class GraphicsCommandList;
 } // namespace Core
 
-class LightManager
+namespace SceneLayer
 {
-public:
-    LightManager();
-    ~LightManager() = default;
+    class DirectionalLight;
+    class PointLight;
 
-    void SetupLights(Core::GraphicsCommandList& commandList);
+    class LightManager
+    {
+    public:
+        LightManager();
+        ~LightManager() = default;
 
-    UINT GetLightsNum() const;
+        void SetupLights(Core::GraphicsCommandList& commandList);
 
-    void AddDirectionalLight(std::shared_ptr<DirectionalLight> directionalLight);
-    void AddPointLight(std::shared_ptr<PointLight> pointLight);
-    
-private:
-    std::shared_ptr<Core::Resource> CreateGPUResource();
+        UINT GetLightsNum() const;
 
-    std::vector<std::shared_ptr<DirectionalLight>> _directionalLights;
-    std::vector<std::shared_ptr<PointLight>> _pointLights;
+        void AddDirectionalLight(std::shared_ptr<DirectionalLight> directionalLight);
+        void AddPointLight(std::shared_ptr<PointLight> pointLight);
 
-    Core::Heap _lightsHeap;
-    Core::DescriptorHeap _descHeap;
-    std::shared_ptr<Core::Resource> _lightsView;
-    std::vector<std::shared_ptr<Core::Resource>> _internalResources;
-};
+    private:
+        std::shared_ptr<Core::Resource> CreateGPUResource();
+
+        std::vector<std::shared_ptr<DirectionalLight>> _directionalLights;
+        std::vector<std::shared_ptr<PointLight>> _pointLights;
+
+        Core::Heap _lightsHeap;
+        Core::DescriptorHeap _descHeap;
+        std::shared_ptr<Core::Resource> _lightsView;
+        std::vector<std::shared_ptr<Core::Resource>> _internalResources;
+    };
+} // namespace SceneLayer

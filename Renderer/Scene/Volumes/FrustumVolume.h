@@ -2,21 +2,17 @@
 
 #include "Scene/Volumes/IVolume.h"
 
-class AABBVolume;
-
-class FrustumVolume : public IVolume
+namespace SceneLayer
 {
-public:
-    void BuildFromProjMatrix(const DirectX::XMMATRIX projectionMatrix);
+    class AABBVolume;
 
-    friend bool Intersect(const FrustumVolume& frustum, const AABBVolume& aabb);
+    class FrustumVolume : public IVolume
+    {
+    public:
+        void BuildFromProjMatrix(const DirectX::XMMATRIX projectionMatrix);
 
-    DirectX::XMVECTOR* leftPlane;
-    DirectX::XMVECTOR* rightPlane;
-    DirectX::XMVECTOR* bottomPlane;
-    DirectX::XMVECTOR* topPlane;
-    DirectX::XMVECTOR* nearPlane;
-    DirectX::XMVECTOR* farPlane;
+        friend bool Intersect(const FrustumVolume& frustum, const AABBVolume& aabb);
 
-    DirectX::XMVECTOR planes[6];
-};
+        DirectX::XMVECTOR planes[6];
+    };
+} // namespace SceneLayer

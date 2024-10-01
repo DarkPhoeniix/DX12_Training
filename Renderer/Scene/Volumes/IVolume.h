@@ -1,7 +1,10 @@
 #pragma once
 
-class IVolume
+namespace SceneLayer
 {
-public:
-    DirectX::XMMATRIX transform;
-};
+    class IVolume
+    {
+    public:
+        DirectX::XMMATRIX transform;
+    };
+} // namespace SceneLayer

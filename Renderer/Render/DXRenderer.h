@@ -5,7 +5,7 @@
 #include "DXObjects/RootSignature.h"
 #include "DXObjects/Texture.h"
 #include "DXObjects/StatisticsQuery.h"
-#include "Scene/Camera.h"
+#include "Scene/Nodes/Camera.h"
 #include "Scene/Scene.h"
 #include "Scene/Light/DirectionalLight.h"
 #include "Render/Frame.h"
@@ -43,8 +43,8 @@ private:
 
     std::shared_ptr<Core::Resource> _ambient;
 
-    Scene _scene;
-    Camera _camera;
+    SceneLayer::Scene _scene;
+    SceneLayer::Camera _camera;
     bool _isCameraMoving;
     float _deltaTime;
 

@@ -5,7 +5,7 @@
 #include "DXObjects/DescriptorHeap.h"
 #include "DXObjects/RootSignature.h"
 #include "DXObjects/Heap.h"
-#include "Scene/Viewport.h"
+#include "Scene/Nodes/Viewport.h"
 
 namespace Core
 {
@@ -110,7 +110,7 @@ namespace Core
         _commandList->OMSetRenderTargets(numTargets, renderTargetDescriptor, FALSE, depthStencilDescriptor);
     }
 
-    void GraphicsCommandList::SetViewport(const Viewport& viewport)
+    void GraphicsCommandList::SetViewport(const SceneLayer::Viewport& viewport)
     {
         CD3DX12_VIEWPORT vp = viewport.GetDXViewport();
         CD3DX12_RECT scissorRect = viewport.GetScissorRectangle();
@@ -128,7 +128,7 @@ namespace Core
         _commandList->SetGraphicsRootSignature(rootSignature.GetRootSignature().Get());
     }
 
-    void GraphicsCommandList::ClearRTV(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetView, const FLOAT color[4], Viewport* viewport)
+    void GraphicsCommandList::ClearRTV(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetView, const FLOAT color[4], SceneLayer::Viewport* viewport)
     {
         // TODO: fix this ugly code
         UINT numRects = viewport ? 1 : 0;
@@ -140,7 +140,7 @@ namespace Core
         _commandList->ClearRenderTargetView(renderTargetView, color, numRects, rect);
     }
 
-    void GraphicsCommandList::ClearDSV(D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, D3D12_CLEAR_FLAGS clearFlags, FLOAT depth, UINT8 stencil, Viewport* viewport)
+    void GraphicsCommandList::ClearDSV(D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, D3D12_CLEAR_FLAGS clearFlags, FLOAT depth, UINT8 stencil, SceneLayer::Viewport* viewport)
     {
         // TODO: fix this ugly code
         UINT numRects = viewport ? 1 : 0;

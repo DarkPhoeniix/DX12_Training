@@ -73,7 +73,7 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
         GetWindowRect(_windowHandle, &windowSize);
         float width = windowSize.right - windowSize.left;
         float height = windowSize.bottom - windowSize.top;
-        _camera.SetViewport(Viewport({ width, height }));
+        _camera.SetViewport(SceneLayer::Viewport({ width, height }));
 
         _camera.LookAt(pos, target, up);
         _camera.SetLens(45.0f, 0.1f, 1000.0f);

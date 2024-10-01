@@ -11,18 +11,21 @@ struct VertexData
     DirectX::XMFLOAT3 Tangent;
 };
 
-class Mesh
+namespace SceneLayer
 {
-public:
-    Mesh() = default;
-    ~Mesh() = default;
+    class Mesh
+    {
+    public:
+        Mesh() = default;
+        ~Mesh() = default;
 
-    const std::vector<VertexData>& getVertices() const;
-    const std::vector<UINT>& getIndices() const;
+        const std::vector<VertexData>& getVertices() const;
+        const std::vector<UINT>& getIndices() const;
 
-    void LoadMesh(const std::string& filepath);
+        void LoadMesh(const std::string& filepath);
 
-private:
-    std::vector<VertexData> _rawVertexData;
-    std::vector<UINT> _rawIndexData;
-};
+    private:
+        std::vector<VertexData> _rawVertexData;
+        std::vector<UINT> _rawIndexData;
+    };
+} // namespace SceneLayer

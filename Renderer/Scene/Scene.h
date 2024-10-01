@@ -1,7 +1,7 @@
 #pragma once
 
-#include "ISceneNode.h"
-#include "SceneNode.h"
+#include "Scene/Nodes/ISceneNode.h"
+#include "Scene/Nodes/StaticObject.h"
 
 #include "DXObjects/Heap.h"
 #include "DXObjects/ResourceTable.h"
@@ -9,37 +9,40 @@
 
 #include "Light/LightManager.h"
 
-class FrustumVolume;
 class DescriptorHeap;
 class Texture;
-class Camera;
 
-class Scene
+namespace SceneLayer
 {
-public:
-    Scene();
-    ~Scene();
+    class FrustumVolume;
+    class Camera;
 
-    void Draw(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum);
-    void DrawAABB(Core::GraphicsCommandList& commandList);
+    class Scene
+    {
+    public:
+        Scene();
+        ~Scene();
 
-    void SetCamera(Camera& camera);
+        void Draw(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum);
+        void DrawAABB(Core::GraphicsCommandList& commandList);
 
-    bool LoadScene(const std::string& filepath, Core::GraphicsCommandList& commandList);
+        void SetCamera(Camera& camera);
 
-    friend class ISceneNode;
-    friend class SceneNode;
+        bool LoadScene(const std::string& filepath, Core::GraphicsCommandList& commandList);
 
-private:
-    void _UploadTexture(Core::Texture* texture, Core::GraphicsCommandList& commandList);
+        friend class ISceneNode;
+        friend class StaticObject;
 
-    std::vector<std::shared_ptr<ISceneNode>> _rootNodes;
-    std::shared_ptr<Core::ResourceTable> _texturesTable;
+    private:
+        void _UploadTexture(Core::Texture* texture, Core::GraphicsCommandList& commandList);
 
-    Camera* _camera;
-    LightManager _lightManager;
-    std::shared_ptr<Core::Resource> _sceneData;
+        std::vector<std::shared_ptr<ISceneNode>> _rootNodes;
+        std::shared_ptr<Core::ResourceTable> _texturesTable;
 
-    std::string _name;
-};
+        Camera* _camera;
+        LightManager _lightManager;
+        std::shared_ptr<Core::Resource> _sceneData;
 
+        std::string _name;
+    };
+} // namespace SceneLayer

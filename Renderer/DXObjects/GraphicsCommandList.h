@@ -2,8 +2,12 @@
 
 #include "DXObjects/RootSignature.h"
 
-class Viewport;
 class Heap;
+
+namespace SceneLayer
+{
+    class Viewport;
+} // namespace SceneLayer
 
 namespace Core
 {
@@ -39,12 +43,12 @@ namespace Core
         void SetRenderTarget(D3D12_CPU_DESCRIPTOR_HANDLE* renderTargetDescriptor, D3D12_CPU_DESCRIPTOR_HANDLE* depthStencilDescriptor);
 
         // Rasterizator State
-        void SetViewport(const Viewport& viewport);
+        void SetViewport(const SceneLayer::Viewport& viewport);
         void SetPipelineState(const RootSignature& rootSignature);
         void SetGraphicsRootSignature(const RootSignature& rootSignature);
 
-        void ClearRTV(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetView, const FLOAT color[4], Viewport* viewport = nullptr);
-        void ClearDSV(D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, D3D12_CLEAR_FLAGS clearFlags = D3D12_CLEAR_FLAG_DEPTH, FLOAT depth = 1.0f, UINT8 stencil = 0, Viewport* viewport = nullptr);
+        void ClearRTV(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetView, const FLOAT color[4], SceneLayer::Viewport* viewport = nullptr);
+        void ClearDSV(D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, D3D12_CLEAR_FLAGS clearFlags = D3D12_CLEAR_FLAG_DEPTH, FLOAT depth = 1.0f, UINT8 stencil = 0, SceneLayer::Viewport* viewport = nullptr);
         void Draw(uint32_t vertexCount, uint32_t instanceCount = 1, uint32_t startVertex = 0, uint32_t startInstance = 0);
         void DrawIndexed(uint32_t indexCount, uint32_t instanceCount = 1, uint32_t startIndex = 0, int32_t baseVertex = 0, uint32_t startInstance = 0);
 

@@ -2,18 +2,21 @@
 
 #include "ILight.h"
 
-class DirectionalLight : public ILight
+namespace SceneLayer
 {
-public:
-    DirectionalLight(Scene* scene, ISceneNode* parent);
-    ~DirectionalLight() = default;
+    class DirectionalLight : public ILight
+    {
+    public:
+        DirectionalLight(Scene* scene, ISceneNode* parent);
+        ~DirectionalLight() = default;
 
-    void SetDirection(const DirectX::XMVECTOR& direction);
-    const DirectX::XMVECTOR& GetDirection() const;
+        void SetDirection(const DirectX::XMVECTOR& direction);
+        const DirectX::XMVECTOR& GetDirection() const;
 
-    void SetColor(const DirectX::XMVECTOR& color);
-    const DirectX::XMVECTOR& GetColor() const;
+        void SetColor(const DirectX::XMVECTOR& color);
+        const DirectX::XMVECTOR& GetColor() const;
 
-    // ISceneNode
-    void LoadNode(const std::string& filepath, Core::GraphicsCommandList& commandList) override;
-};
+        // ISceneNode
+        void LoadNode(const std::string& filepath, Core::GraphicsCommandList& commandList) override;
+    };
+} // namespace SceneLayer
