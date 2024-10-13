@@ -4,14 +4,13 @@
 
 namespace SceneLayer
 {
+    class Scene;
+
     class EmptyObject : public ISceneNode
     {
     public:
-        // ISceneNode
-        void Draw(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum) const override;
-        void DrawAABB(Core::GraphicsCommandList& commandList) const override;
-
-        void LoadNode(const std::string& filepath, Core::GraphicsCommandList& commandList) override;
+        EmptyObject();
+        EmptyObject(SceneCache* cache, ISceneNode* parent = nullptr);
 
     private:
         using Base = ISceneNode;

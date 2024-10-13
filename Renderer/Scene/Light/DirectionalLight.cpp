@@ -3,13 +3,19 @@
 #include "DirectionalLight.h"
 
 #include "DXObjects/GraphicsCommandList.h"
+#include "Scene/NodeFactory.h"
 
 namespace SceneLayer
 {
-    DirectionalLight::DirectionalLight(Scene* scene, ISceneNode* parent)
-        : ILight(scene, parent)
-    {
-    }
+    Register_Node(DirectionalLight);
+
+    DirectionalLight::DirectionalLight()
+        : Base()
+    {    }
+
+    DirectionalLight::DirectionalLight(SceneCache* cache, ISceneNode* parent)
+        : Base(cache, parent)
+    {    }
 
     void DirectionalLight::SetDirection(const DirectX::XMVECTOR& direction)
     {
@@ -29,9 +35,5 @@ namespace SceneLayer
     const DirectX::XMVECTOR& DirectionalLight::GetColor() const
     {
         return _color;
-    }
-
-    void DirectionalLight::LoadNode(const std::string& filepath, Core::GraphicsCommandList& commandList)
-    {
     }
 } // namespace SceneLayer

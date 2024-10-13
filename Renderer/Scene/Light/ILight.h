@@ -12,18 +12,18 @@ namespace SceneLayer
     class ILight : public ISceneNode
     {
     public:
-        ILight(Scene* scene, ISceneNode* parent = nullptr);
-
-        // ISceneNode
-        void Draw(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum) const override {};
-        void DrawAABB(Core::GraphicsCommandList& commandList) const override {};
+        ILight();
+        ILight(SceneCache* cache, ISceneNode* parent = nullptr);
 
     protected:
-        DirectX::XMVECTOR _position;
         DirectX::XMVECTOR _direction;
+        DirectX::XMVECTOR _position;
         DirectX::XMVECTOR _color;
 
         float _intensity;
         float _range;
+
+    private:
+        using Base = ISceneNode;
     };
 } // namespace SceneLayer

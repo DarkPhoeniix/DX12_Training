@@ -1,10 +1,20 @@
 #include "stdafx.h"
+
 #include "PointLight.h"
+
+#include "Scene/NodeFactory.h"
 
 namespace SceneLayer
 {
-    PointLight::PointLight(Scene* scene, ISceneNode* parent)
-        : ILight(scene, parent)
+    Register_Node(PointLight);
+
+    PointLight::PointLight()
+        : Base()
+    {
+    }
+
+    PointLight::PointLight(SceneCache* cache, ISceneNode* parent)
+        : Base(cache, parent)
     {
     }
 
@@ -36,10 +46,5 @@ namespace SceneLayer
     float PointLight::GetIntensity() const
     {
         return _intensity;
-    }
-
-    void PointLight::LoadNode(const std::string& filepath, Core::GraphicsCommandList& commandList)
-    {
-
     }
 } // namespace SceneLayer

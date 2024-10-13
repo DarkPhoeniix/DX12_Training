@@ -7,14 +7,13 @@ namespace Core
 
 namespace SceneLayer
 {
-    class FrustumVolume;
-    class Scene;
+    class SceneCache;
 
     class ISceneNode
     {
     public:
         ISceneNode();
-        ISceneNode(Scene* scene, ISceneNode* parent = nullptr);
+        ISceneNode(SceneCache* cache, ISceneNode* parent = nullptr);
         virtual ~ISceneNode();
 
         void SetName(const std::string& name);
@@ -25,18 +24,22 @@ namespace SceneLayer
         DirectX::XMMATRIX GetLocalTransform() const;
         void SetLocalTransform(const DirectX::XMMATRIX& transform);
 
-        virtual void Draw(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum) const = 0;
-        virtual void DrawAABB(Core::GraphicsCommandList& commandList) const = 0;
+        void SetParent(ISceneNode* parent);
+        ISceneNode* GetParent() const;
+
+        void SetSceneCache(SceneCache* cache);
+        SceneCache* GetSceneCache() const;
+
+        virtual void Draw(Core::GraphicsCommandList& commandList) const;
+        virtual void DrawAABB(Core::GraphicsCommandList& commandList) const;
 
         virtual void LoadNode(const std::string& filepath, Core::GraphicsCommandList& commandList);
 
     protected:
-        friend Scene;
-
         std::string _name;
 
-        Scene* _scene;
-        std::shared_ptr<ISceneNode> _parent;
+        SceneCache* _sceneCache;
+        ISceneNode* _parent;
         std::vector<std::shared_ptr<ISceneNode>> _childNodes;
 
         DirectX::XMMATRIX _transform;

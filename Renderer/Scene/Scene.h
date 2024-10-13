@@ -1,16 +1,12 @@
 #pragma once
 
+#include "Scene/SceneCache.h"
 #include "Scene/Nodes/ISceneNode.h"
-#include "Scene/Nodes/StaticObject.h"
 
-#include "DXObjects/Heap.h"
-#include "DXObjects/ResourceTable.h"
-#include "DXObjects/OcclusionQuery.h"
-
-#include "Light/LightManager.h"
-
-class DescriptorHeap;
-class Texture;
+namespace Core
+{
+    class Texture;
+} // namespace Core
 
 namespace SceneLayer
 {
@@ -23,26 +19,22 @@ namespace SceneLayer
         Scene();
         ~Scene();
 
-        void Draw(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum);
+        void Draw(Core::GraphicsCommandList& commandList);
         void DrawAABB(Core::GraphicsCommandList& commandList);
 
+        // TODO: remove func, load camera from the file
         void SetCamera(Camera& camera);
 
         bool LoadScene(const std::string& filepath, Core::GraphicsCommandList& commandList);
 
-        friend class ISceneNode;
-        friend class StaticObject;
-
     private:
         void _UploadTexture(Core::Texture* texture, Core::GraphicsCommandList& commandList);
 
-        std::vector<std::shared_ptr<ISceneNode>> _rootNodes;
-        std::shared_ptr<Core::ResourceTable> _texturesTable;
-
-        Camera* _camera;
-        LightManager _lightManager;
-        std::shared_ptr<Core::Resource> _sceneData;
-
         std::string _name;
+
+        std::vector<std::shared_ptr<ISceneNode>> _rootNodes;
+
+        SceneCache _cache;
+        std::shared_ptr<Core::Resource> _sceneGPUData;
     };
 } // namespace SceneLayer

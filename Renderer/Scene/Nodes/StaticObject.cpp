@@ -4,10 +4,8 @@
 
 #include "DXObjects/Texture.h"
 #include "DXObjects/GraphicsCommandList.h"
-#include "Scene/Scene.h"
-#include "Scene/Volumes/FrustumVolume.h"
-
-#include <filesystem>
+#include "Scene/SceneCache.h"
+#include "Scene/NodeFactory.h"
 
 using namespace DirectX;
 
@@ -108,8 +106,10 @@ namespace
 
 namespace SceneLayer
 {
+    Register_Node(StaticObject);
+
     StaticObject::StaticObject()
-        : ISceneNode()
+        : Base()
         , _mesh(nullptr)
         , _vertexBuffer(nullptr)
         , _indexBuffer(nullptr)
@@ -120,8 +120,8 @@ namespace SceneLayer
     {
     }
 
-    StaticObject::StaticObject(Scene* scene, StaticObject* parent)
-        : ISceneNode(scene, parent)
+    StaticObject::StaticObject(SceneCache* cache, ISceneNode* parent)
+        : Base(cache, parent)
         , _mesh(nullptr)
         , _vertexBuffer(nullptr)
         , _indexBuffer(nullptr)
@@ -139,11 +139,11 @@ namespace SceneLayer
         }
     }
 
-    void StaticObject::Draw(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum) const
+    void StaticObject::Draw(Core::GraphicsCommandList& commandList) const
     {
         for (const std::shared_ptr<ISceneNode> node : _childNodes)
         {
-            node->Draw(commandList, frustum);
+            node->Draw(commandList);
         }
 
         if (!_mesh)
@@ -152,16 +152,19 @@ namespace SceneLayer
         }
 
         // Frustum culling
-        if (!Intersect(frustum, _AABB))
+        const SceneLayer::FrustumVolume& cameraFrustum = _sceneCache->GetCamera()->GetViewFrustum();
+        if (!Intersect(cameraFrustum, _AABB))
         {
             return;
         }
 
         ModelDesc* modelData = (ModelDesc*)_modelDesc->Map();
-        modelData->Transform = GetGlobalTransform();
-        modelData->AlbedoTextureIndex = _material->AlbedoIndex(_scene->_texturesTable.get());
-        modelData->NormalMapTextureIndex = _material->NormalMapIndex(_scene->_texturesTable.get());
-        modelData->MetalnessTextureIndex = -1;
+        {
+            modelData->Transform = GetGlobalTransform();
+            modelData->AlbedoTextureIndex = _material->AlbedoIndex(_sceneCache->GetTextureTable().get());
+            modelData->NormalMapTextureIndex = _material->NormalMapIndex(_sceneCache->GetTextureTable().get());
+            modelData->MetalnessTextureIndex = -1;
+        }
         commandList.SetCBV(1, _modelDesc->OffsetGPU(0));
 
         commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -211,16 +214,12 @@ namespace SceneLayer
         Json::Value root;
         in >> root;
 
-        // Parse name
-        _name = root["Name"].asCString();
-
-        // Parse trsformation matrix
-        _transform = ParseTransformationMatrix(root);
+        std::string parentPath = std::filesystem::path(filepath).parent_path().string() + '/';
 
         // Parse mesh (vertices + indices)
         if (*root["Mesh"].asCString())
         {
-            _mesh = std::shared_ptr<Mesh>(ParseMesh(_scene->_name + '\\' + root["Mesh"].asCString()));
+            _mesh = std::shared_ptr<Mesh>(ParseMesh(parentPath + root["Mesh"].asCString()));
             _AABB = CalculateAABB(_mesh.get(), _transform);
         }
 
@@ -228,16 +227,8 @@ namespace SceneLayer
         _material = nullptr;
         if (*root["Material"].asCString())
         {
-            _material = std::shared_ptr<Material>(Material::LoadFromFile(_scene->_name + '\\' + root["Material"].asCString()));
-            _material->UploadToGPU(commandList, _scene->_texturesTable.get());
-        }
-
-        // Parse children nodes
-        for (auto& node : root["Nodes"])
-        {
-            std::shared_ptr<StaticObject> child = std::make_shared<StaticObject>(_scene, this);
-            child->LoadNode(_scene->_name + '\\' + node.asCString(), commandList);
-            _childNodes.push_back(child);
+            _material = std::shared_ptr<Material>(Material::LoadFromFile(parentPath + root["Material"].asCString()));
+            _material->UploadToGPU(commandList, _sceneCache->GetTextureTable().get());
         }
 
         _CreateGPUBuffers(commandList);

@@ -33,7 +33,7 @@ namespace Core
         }
     }
 
-    void OcclusionQuery::Run(const SceneLayer::ISceneNode* node, GraphicsCommandList& commandList, const SceneLayer::FrustumVolume& frustum)
+    void OcclusionQuery::Run(const SceneLayer::ISceneNode* node, GraphicsCommandList& commandList)
     {
         size_t index = _queryResources.size();
         for (size_t i = 0; i < _queryResources.size(); ++i)
@@ -47,7 +47,7 @@ namespace Core
         }
 
         commandList.BeginQuery(_queryHeap, D3D12_QUERY_TYPE_BINARY_OCCLUSION, index);
-        node->Draw(commandList, frustum);
+        node->Draw(commandList);
         commandList.EndQuery(_queryHeap, D3D12_QUERY_TYPE_BINARY_OCCLUSION, index);
 
         commandList.TransitionBarrier(_queryResults[index], D3D12_RESOURCE_STATE_COPY_DEST);

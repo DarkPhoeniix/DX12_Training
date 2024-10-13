@@ -7,7 +7,8 @@ namespace SceneLayer
     class DirectionalLight : public ILight
     {
     public:
-        DirectionalLight(Scene* scene, ISceneNode* parent);
+        DirectionalLight();
+        DirectionalLight(SceneCache* cache, ISceneNode* parent);
         ~DirectionalLight() = default;
 
         void SetDirection(const DirectX::XMVECTOR& direction);
@@ -16,7 +17,7 @@ namespace SceneLayer
         void SetColor(const DirectX::XMVECTOR& color);
         const DirectX::XMVECTOR& GetColor() const;
 
-        // ISceneNode
-        void LoadNode(const std::string& filepath, Core::GraphicsCommandList& commandList) override;
+    private:
+        using Base = ILight;
     };
 } // namespace SceneLayer

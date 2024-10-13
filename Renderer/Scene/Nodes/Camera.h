@@ -8,6 +8,8 @@
 
 namespace SceneLayer
 {
+	class Scene;
+
 	class Camera : public ISceneNode
 	{
 	public:
@@ -47,12 +49,6 @@ namespace SceneLayer
 
 		void Update(DirectX::XMVECTOR direction);
 		void Update(int pitch, int yaw);
-
-		// ISceneNode
-		void Draw(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum) const override;
-		void DrawAABB(Core::GraphicsCommandList& commandList) const override;
-
-		void LoadNode(const std::string& filepath, Core::GraphicsCommandList& commandList) override;
 
 	private:
 		using Base = ISceneNode;

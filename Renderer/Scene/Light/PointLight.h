@@ -7,7 +7,8 @@ namespace SceneLayer
     class PointLight : public ILight
     {
     public:
-        PointLight(Scene* scene, ISceneNode* parent = nullptr);
+        PointLight();
+        PointLight(SceneCache* cache, ISceneNode* parent = nullptr);
         ~PointLight() = default;
 
         void SetColor(const DirectX::XMVECTOR& color);
@@ -19,7 +20,7 @@ namespace SceneLayer
         void SetIntensity(float intensity);
         float GetIntensity() const;
 
-        // ISceneNode
-        void LoadNode(const std::string& filepath, Core::GraphicsCommandList& commandList) override;
+    private:
+        using Base = ILight;
     };
 } // namespace SceneLayer

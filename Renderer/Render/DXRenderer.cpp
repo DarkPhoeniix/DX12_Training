@@ -21,13 +21,7 @@ using namespace Core;
 namespace
 {
     constexpr float MOVE_SPEED = 200.0f;
-
-    struct Ambient
-    {
-        XMFLOAT4 Up;
-        XMFLOAT4 Down;
-    };
-}
+} // namespace unnamed
 
 DXRenderer::DXRenderer(HWND windowHandle)
     : _windowHandle(windowHandle)
@@ -38,8 +32,7 @@ DXRenderer::DXRenderer(HWND windowHandle)
 {   }
 
 DXRenderer::~DXRenderer()
-{
-}
+{   }
 
 bool DXRenderer::LoadContent(TaskGPU* loadTask)
 {
@@ -130,18 +123,20 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
         task->SetName("clean");
 
-        Core::GraphicsCommandList* commandList = task->GetCommandLists().front();
-        PIXBeginEvent(commandList->GetDXCommandList().Get(), 1, "Clean");
+        Core::GraphicsCommandList& commandList = *task->GetCommandLists().front();
 
-        commandList->TransitionBarrier(frame._targetTexture, D3D12_RESOURCE_STATE_RENDER_TARGET);
+        PIXBeginEvent(commandList.GetDXCommandList().Get(), 1, "Clean");
+        {
+            commandList.TransitionBarrier(frame._targetTexture, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
-        FLOAT clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+            FLOAT clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
-        commandList->ClearRTV(rtv, clearColor);
-        commandList->ClearDSV(dsv, D3D12_CLEAR_FLAG_DEPTH);
+            commandList.ClearRTV(rtv, clearColor);
+            commandList.ClearDSV(dsv, D3D12_CLEAR_FLAG_DEPTH);
+        }
+        PIXEndEvent(commandList.GetDXCommandList().Get());
 
-        PIXEndEvent(commandList->GetDXCommandList().Get());
-        commandList->Close();
+        commandList.Close();
     }
 
     // Execute the TriangleRender shader
@@ -150,33 +145,35 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         task->SetName("render");
         task->AddDependency("clean");
 
-        Core::GraphicsCommandList* commandList = task->GetCommandLists().front();
-        PIXBeginEvent(commandList->GetDXCommandList().Get(), 4, "Render");
+        Core::GraphicsCommandList& commandList = *task->GetCommandLists().front();
 
+        PIXBeginEvent(commandList.GetDXCommandList().Get(), 4, "Render");
+        {
 #if defined(_DEBUG)
-        DebugInfo::StartStatCollecting(*commandList);
+            DebugInfo::StartStatCollecting(commandList);
 #endif
 
-        commandList->SetPipelineState(_renderPipeline);
-        commandList->SetGraphicsRootSignature(_renderPipeline);
+            commandList.SetPipelineState(_renderPipeline);
+            commandList.SetGraphicsRootSignature(_renderPipeline);
 
-        commandList->SetViewport(_camera.GetViewport());
-        commandList->SetRenderTarget(&rtv, &dsv);
+            commandList.SetViewport(_camera.GetViewport());
+            commandList.SetRenderTarget(&rtv, &dsv);
 
-        _scene.Draw(*commandList, _camera.GetViewFrustum());
+            _scene.Draw(commandList);
 
 #if defined(_DEBUG)
-        commandList->SetPipelineState(_AABBpipeline);
-        commandList->SetGraphicsRootSignature(_AABBpipeline);
-        commandList->SetConstants(1, sizeof(XMMATRIX) / 4, &_camera.ViewProjection());
+            commandList.SetPipelineState(_AABBpipeline);
+            commandList.SetGraphicsRootSignature(_AABBpipeline);
+            commandList.SetConstants(1, sizeof(XMMATRIX) / 4, &_camera.ViewProjection());
 
-        _scene.DrawAABB(*commandList);
+            _scene.DrawAABB(commandList);
 
-        DebugInfo::EndStatCollecting(*commandList);
+            DebugInfo::EndStatCollecting(commandList);
 #endif
+        }
+        PIXEndEvent(commandList.GetDXCommandList().Get());
 
-        PIXEndEvent(commandList->GetDXCommandList().Get());
-        commandList->Close();
+        commandList.Close();
     }
 
     //GUI
@@ -186,62 +183,64 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         task->AddDependency("render");
 
         Core::GraphicsCommandList* commandList = task->GetCommandLists().front();
+
         PIXBeginEvent(commandList->GetDXCommandList().Get(), 7, "GUI");
-
-        commandList->SetViewport(_camera.GetViewport());
-        commandList->SetRenderTarget(&rtv, &dsv);
-
-        if (ImGui::Begin("Debug Info"), true, ImGuiWindowFlags_AlwaysAutoResize)
         {
-            ImGui::SetWindowPos({ 0, 0 });
-            ImGui::SetWindowSize({ 0, 0 });
+            commandList->SetViewport(_camera.GetViewport());
+            commandList->SetRenderTarget(&rtv, &dsv);
 
-            ImGui::Text("FPS: %i (%.03f ms)", DebugInfo::GetFPS(), DebugInfo::GetMsPerFrame());
-
-            if (ImGui::CollapsingHeader("Pipeline statistics"))
+            if (ImGui::Begin("Debug Info"), true, ImGuiWindowFlags_AlwaysAutoResize)
             {
-                D3D12_QUERY_DATA_PIPELINE_STATISTICS stats = DebugInfo::GetPipelineStatisctics();
-                ImGui::Text(std::string("Primitives: " + std::to_string(stats.IAPrimitives)).c_str());
-                ImGui::Text(std::string("VS invocs: " + std::to_string(stats.VSInvocations)).c_str());
-                ImGui::Text(std::string("GS invocs: " + std::to_string(stats.GSInvocations)).c_str());
-                ImGui::Text(std::string("PS invocs: " + std::to_string(stats.PSInvocations)).c_str());
-            }
+                ImGui::SetWindowPos({ 0, 0 });
+                ImGui::SetWindowSize({ 0, 0 });
 
-            if (ImGui::CollapsingHeader("Inputs"))
-            {
-                ImGuiIO& io = ImGui::GetIO();
-                if (ImGui::IsMousePosValid())
+                ImGui::Text("FPS: %i (%.03f ms)", DebugInfo::GetFPS(), DebugInfo::GetMsPerFrame());
+
+                if (ImGui::CollapsingHeader("Pipeline statistics"))
                 {
-                    ImGui::Text("Mouse pos: (%g, %g)", io.MousePos.x, io.MousePos.y);
+                    D3D12_QUERY_DATA_PIPELINE_STATISTICS stats = DebugInfo::GetPipelineStatisctics();
+                    ImGui::Text(std::string("Primitives: " + std::to_string(stats.IAPrimitives)).c_str());
+                    ImGui::Text(std::string("VS invocs: " + std::to_string(stats.VSInvocations)).c_str());
+                    ImGui::Text(std::string("GS invocs: " + std::to_string(stats.GSInvocations)).c_str());
+                    ImGui::Text(std::string("PS invocs: " + std::to_string(stats.PSInvocations)).c_str());
                 }
-                else
+
+                if (ImGui::CollapsingHeader("Inputs"))
                 {
-                    ImGui::Text("Mouse pos: <INVALID>");
-                }
-                ImGui::Text("Mouse delta: (%g, %g)", io.MouseDelta.x, io.MouseDelta.y);
-                ImGui::Text("Mouse down:");
-                for (int i = 0; i < IM_ARRAYSIZE(io.MouseDown); i++) 
-                {
-                    if (ImGui::IsMouseDown(i))
+                    ImGuiIO& io = ImGui::GetIO();
+                    if (ImGui::IsMousePosValid())
                     {
-                        ImGui::SameLine();
-                        ImGui::Text("b%d (%.02f secs)", i, io.MouseDownDuration[i]);
+                        ImGui::Text("Mouse pos: (%g, %g)", io.MousePos.x, io.MousePos.y);
                     }
+                    else
+                    {
+                        ImGui::Text("Mouse pos: <INVALID>");
+                    }
+                    ImGui::Text("Mouse delta: (%g, %g)", io.MouseDelta.x, io.MouseDelta.y);
+                    ImGui::Text("Mouse down:");
+                    for (int i = 0; i < IM_ARRAYSIZE(io.MouseDown); i++)
+                    {
+                        if (ImGui::IsMouseDown(i))
+                        {
+                            ImGui::SameLine();
+                            ImGui::Text("b%d (%.02f secs)", i, io.MouseDownDuration[i]);
+                        }
+                    }
+
+                    struct funcs { static bool IsLegacyNativeDupe(ImGuiKey key) { return key >= 0 && key < 512 && ImGui::GetIO().KeyMap[key] != -1; } }; // Hide Native<>ImGuiKey duplicates when both exists in the array
+                    ImGuiKey start_key = (ImGuiKey)0;
+
+                    ImGui::Text("Keys down:");         for (ImGuiKey key = start_key; key < ImGuiKey_NamedKey_END; key = (ImGuiKey)(key + 1)) { if (funcs::IsLegacyNativeDupe(key) || !ImGui::IsKeyDown(key)) continue; ImGui::SameLine(); ImGui::Text((key < ImGuiKey_NamedKey_BEGIN) ? "\"%s\"" : "\"%s\" %d", ImGui::GetKeyName(key), key); }
+                    ImGui::Text("Keys mods: %s%s%s%s", io.KeyCtrl ? "CTRL " : "", io.KeyShift ? "SHIFT " : "", io.KeyAlt ? "ALT " : "", io.KeySuper ? "SUPER " : "");
+                    ImGui::Text("Chars queue:");       for (int i = 0; i < io.InputQueueCharacters.Size; i++) { ImWchar c = io.InputQueueCharacters[i]; ImGui::SameLine();  ImGui::Text("\'%c\' (0x%04X)", (c > ' ' && c <= 255) ? (char)c : '?', c); } // FIXME: We should convert 'c' to UTF-8 here but the functions are not public.
                 }
-
-                struct funcs { static bool IsLegacyNativeDupe(ImGuiKey key) { return key >= 0 && key < 512 && ImGui::GetIO().KeyMap[key] != -1; } }; // Hide Native<>ImGuiKey duplicates when both exists in the array
-                ImGuiKey start_key = (ImGuiKey)0;
-
-                ImGui::Text("Keys down:");         for (ImGuiKey key = start_key; key < ImGuiKey_NamedKey_END; key = (ImGuiKey)(key + 1)) { if (funcs::IsLegacyNativeDupe(key) || !ImGui::IsKeyDown(key)) continue; ImGui::SameLine(); ImGui::Text((key < ImGuiKey_NamedKey_BEGIN) ? "\"%s\"" : "\"%s\" %d", ImGui::GetKeyName(key), key); }
-                ImGui::Text("Keys mods: %s%s%s%s", io.KeyCtrl ? "CTRL " : "", io.KeyShift ? "SHIFT " : "", io.KeyAlt ? "ALT " : "", io.KeySuper ? "SUPER " : "");
-                ImGui::Text("Chars queue:");       for (int i = 0; i < io.InputQueueCharacters.Size; i++) { ImWchar c = io.InputQueueCharacters[i]; ImGui::SameLine();  ImGui::Text("\'%c\' (0x%04X)", (c > ' ' && c <= 255) ? (char)c : '?', c); } // FIXME: We should convert 'c' to UTF-8 here but the functions are not public.
             }
+            ImGui::End();
+
+            GUI::Render(*commandList);
         }
-        ImGui::End();
-
-        GUI::Render(*commandList);
-
         PIXEndEvent(commandList->GetDXCommandList().Get());
+
         commandList->Close();
     }
 
@@ -252,14 +251,16 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         task->AddDependency("gui");
 
         Core::GraphicsCommandList* commandList = task->GetCommandLists().front();
+
         PIXBeginEvent(commandList->GetDXCommandList().Get(), 5, "Present");
-
-        commandList->TransitionBarrier(frame._swapChainTexture, D3D12_RESOURCE_STATE_COPY_DEST);
-        commandList->TransitionBarrier(frame._targetTexture, D3D12_RESOURCE_STATE_COPY_SOURCE);
-        commandList->CopyResource(frame._targetTexture, frame._swapChainTexture);
-        commandList->TransitionBarrier(frame._swapChainTexture, D3D12_RESOURCE_STATE_PRESENT);
-
+        {
+            commandList->TransitionBarrier(frame._swapChainTexture, D3D12_RESOURCE_STATE_COPY_DEST);
+            commandList->TransitionBarrier(frame._targetTexture, D3D12_RESOURCE_STATE_COPY_SOURCE);
+            commandList->CopyResource(frame._targetTexture, frame._swapChainTexture);
+            commandList->TransitionBarrier(frame._swapChainTexture, D3D12_RESOURCE_STATE_PRESENT);
+        }
         PIXEndEvent(commandList->GetDXCommandList().Get());
+
         commandList->Close();
     }
 }

@@ -12,7 +12,8 @@ namespace
 namespace SceneLayer
 {
 	Camera::Camera()
-		: _view(XMMatrixIdentity())
+		: Base()
+		, _view(XMMatrixIdentity())
 		, _projection(XMMatrixIdentity())
 		, _viewProjection(XMMatrixIdentity())
 		, _position(XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f))
@@ -180,19 +181,6 @@ namespace SceneLayer
 		_BuildView();
 		_prevX = xDelta;
 		_prevY = yDelta;
-	}
-
-	void Camera::Draw(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum) const
-	{
-	}
-
-	void Camera::DrawAABB(Core::GraphicsCommandList& commandList) const
-	{
-	}
-
-	void Camera::LoadNode(const std::string& filepath, Core::GraphicsCommandList& commandList)
-	{
-		Base::LoadNode(filepath, commandList);
 	}
 
 	void Camera::_BuildView()

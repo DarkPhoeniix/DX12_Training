@@ -11,8 +11,8 @@ namespace
 {
     struct GPULightDesc
     {
-        DirectX::XMVECTOR position;
         DirectX::XMVECTOR direction;
+        DirectX::XMVECTOR position;
         DirectX::XMVECTOR color;
 
         float intensity;

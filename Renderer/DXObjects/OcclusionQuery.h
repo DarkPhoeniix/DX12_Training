@@ -19,7 +19,7 @@ namespace Core
 
         void Create(int numObjects = 256);
 
-        void Run(const SceneLayer::ISceneNode* node, GraphicsCommandList& commandList, const SceneLayer::FrustumVolume& frustum);
+        void Run(const SceneLayer::ISceneNode* node, GraphicsCommandList& commandList);
         void SetPredication(const SceneLayer::ISceneNode* node, GraphicsCommandList& commandList);
 
     private:

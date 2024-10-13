@@ -15,8 +15,8 @@ struct Surface
 
 struct LightDesc
 {
-    float4 Position;
     float4 Direction;
+    float4 Position;
     float4 Color;
     
     float Intesity;

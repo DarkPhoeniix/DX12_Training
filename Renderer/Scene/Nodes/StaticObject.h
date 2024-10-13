@@ -7,19 +7,17 @@
 
 namespace SceneLayer
 {
-    class Scene;
-
     class StaticObject : public ISceneNode
     {
     public:
         StaticObject();
-        StaticObject(Scene* scene, StaticObject* parent = nullptr);
+        StaticObject(SceneCache* cache, ISceneNode* parent = nullptr);
         ~StaticObject();
 
         const AABBVolume& GetAABB() const;
 
         // IScene Node
-        void Draw(Core::GraphicsCommandList& commandList, const FrustumVolume& frustum) const override;
+        void Draw(Core::GraphicsCommandList& commandList) const override;
         void DrawAABB(Core::GraphicsCommandList& commandList) const override;
 
         void LoadNode(const std::string& filepath, Core::GraphicsCommandList& commandList) override;
