@@ -1,10 +1,13 @@
 #pragma once
 
 #include "DXObjects/GraphicsCommandList.h"
-#include "Scene/ISceneNode.h"
+#include "Scene/Nodes/ISceneNode.h"
 
-class ISceneNode;
-class FrustumVolume;
+namespace SceneLayer
+{
+    class ISceneNode;
+    class FrustumVolume;
+} // namespace SceneLayer
 
 namespace Core
 {
@@ -16,12 +19,12 @@ namespace Core
 
         void Create(int numObjects = 256);
 
-        void Run(const ISceneNode* node, GraphicsCommandList& commandList, const FrustumVolume& frustum);
-        void SetPredication(const ISceneNode* node, GraphicsCommandList& commandList);
+        void Run(const SceneLayer::ISceneNode* node, GraphicsCommandList& commandList);
+        void SetPredication(const SceneLayer::ISceneNode* node, GraphicsCommandList& commandList);
 
     private:
         ComPtr<ID3D12QueryHeap> _queryHeap;
-        std::vector<const ISceneNode*> _queryResources;
+        std::vector<const SceneLayer::ISceneNode*> _queryResources;
         std::vector<Resource> _queryResults;
     };
-}
+} // namespace Core

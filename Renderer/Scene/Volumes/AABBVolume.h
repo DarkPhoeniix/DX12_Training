@@ -2,9 +2,12 @@
 
 #include "Scene/Volumes/IVolume.h"
 
-class AABBVolume : public IVolume
+namespace SceneLayer
 {
-public:
-    DirectX::XMVECTOR min;
-    DirectX::XMVECTOR max;
-};
+    class AABBVolume : public IVolume
+    {
+    public:
+        DirectX::XMVECTOR min;
+        DirectX::XMVECTOR max;
+    };
+} // namespace SceneLayer

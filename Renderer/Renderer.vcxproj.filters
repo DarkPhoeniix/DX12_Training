@@ -36,9 +36,6 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\Camera.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="DXObjects\RootSignature.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -72,13 +69,7 @@
     <ClCompile Include="Scene\Scene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\SceneNode.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Scene\Mesh.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Scene\ISceneNode.cpp">
+    <ClCompile Include="Scene\Nodes\Objects\Mesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Scene\Volumes\FrustumVolume.cpp">
@@ -111,9 +102,6 @@
     <ClCompile Include="DXObjects\GraphicsCommandList.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\Viewport.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="DXObjects\Texture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -129,7 +117,7 @@
     <ClCompile Include="DXObjects\StatisticsQuery.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\Light\DirectionalLight.cpp">
+    <ClCompile Include="Scene\Nodes\Light\DirectionalLight.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="GUI\ImGui\imgui.cpp">
@@ -159,16 +147,37 @@
     <ClCompile Include="Utility\DebugInfo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\Material.cpp">
+    <ClCompile Include="Scene\Nodes\Objects\Material.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\Light\LightManager.cpp">
+    <ClCompile Include="Scene\LightManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\Light\PointLight.cpp">
+    <ClCompile Include="Scene\Nodes\Light\PointLight.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\Light\ILight.cpp">
+    <ClCompile Include="Scene\Nodes\Light\ILight.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Nodes\Objects\EmptyObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Nodes\Camera\Viewport.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Nodes\ISceneNode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Nodes\Camera\Camera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Nodes\Objects\StaticObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\NodeFactory.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\SceneCache.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -212,9 +221,6 @@
     <ClInclude Include="stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\Camera.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="DXObjects\RootSignature.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -251,13 +257,7 @@
     <ClInclude Include="Scene\Scene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\SceneNode.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Scene\Mesh.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Scene\ISceneNode.h">
+    <ClInclude Include="Scene\Nodes\Objects\Mesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Scene\Volumes\IVolume.h">
@@ -302,9 +302,6 @@
     <ClInclude Include="DXObjects\GraphicsCommandList.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\Viewport.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="DXObjects\Texture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -332,7 +329,7 @@
     <ClInclude Include="DXObjects\StatisticsQuery.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\Light\DirectionalLight.h">
+    <ClInclude Include="Scene\Nodes\Light\DirectionalLight.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GUI\ImGui\imgui.h">
@@ -365,16 +362,37 @@
     <ClInclude Include="Utility\DebugInfo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\Material.h">
+    <ClInclude Include="Scene\Nodes\Objects\Material.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\Light\LightManager.h">
+    <ClInclude Include="Scene\LightManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\Light\PointLight.h">
+    <ClInclude Include="Scene\Nodes\Light\PointLight.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\Light\ILight.h">
+    <ClInclude Include="Scene\Nodes\Light\ILight.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Nodes\Objects\EmptyObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Nodes\Camera\Viewport.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Nodes\ISceneNode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Nodes\Camera\Camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Nodes\Objects\StaticObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\NodeFactory.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\SceneCache.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -399,7 +417,6 @@
     <None Include="PipelineDescriptions\TriangleRenderPipeline.tech" />
     <None Include="PipelineDescriptions\OcclusionCullingPipeline.blend" />
     <None Include="PipelineDescriptions\OcclusionCullingPipeline.tech" />
-    <None Include="packages.config" />
     <None Include="PipelineDescriptions\AABBRenderPipeline.depth" />
     <None Include="Resource.aps" />
     <None Include="Shaders\SemiAmbientLighting.hlsli" />
@@ -409,6 +426,7 @@
     <None Include="Shaders\PostFX_rootsig.hlsli" />
     <None Include="Shaders\Common.hlsli" />
     <None Include="Shaders\LightingCommon.hlsli" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\dxapp.ico">

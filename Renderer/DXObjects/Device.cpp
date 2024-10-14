@@ -47,11 +47,6 @@ namespace Core
         _instance = nullptr;
     }
 
-    Device* Device::Instance()
-    {
-        return _instance;
-    }
-
     ComPtr<ID3D12Device2> Device::GetDXDevice()
     {
         return _instance->_device;

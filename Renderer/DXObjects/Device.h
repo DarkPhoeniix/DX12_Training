@@ -11,8 +11,6 @@ namespace Core
         static void Init();
         static void Destroy();
 
-        static Device* Instance();
-
         static ComPtr<ID3D12Device2> GetDXDevice();
 
         static ID3D12CommandQueue* GetComputeQueue();
