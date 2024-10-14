@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Scene/Light/LightManager.h"
-#include "Scene/Nodes/Camera.h"
+#include "Scene/LightManager.h"
+#include "Scene/Nodes/Camera/Camera.h"
 
 namespace SceneLayer
 {

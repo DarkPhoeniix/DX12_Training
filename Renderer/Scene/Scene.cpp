@@ -5,9 +5,9 @@
 #include "DXObjects/Texture.h"
 #include "DXObjects/GraphicsCommandList.h"
 #include "Scene/NodeFactory.h"
-#include "Scene/Nodes/Camera.h"
-#include "Scene/Light/DirectionalLight.h"
-#include "Scene/Light/PointLight.h"
+#include "Scene/Nodes/Camera/Camera.h"
+#include "Scene/Nodes/Light/DirectionalLight.h"
+#include "Scene/Nodes/Light/PointLight.h"
 
 namespace
 {

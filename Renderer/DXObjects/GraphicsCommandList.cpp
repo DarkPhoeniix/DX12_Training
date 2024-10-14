@@ -5,7 +5,7 @@
 #include "DXObjects/DescriptorHeap.h"
 #include "DXObjects/RootSignature.h"
 #include "DXObjects/Heap.h"
-#include "Scene/Nodes/Viewport.h"
+#include "Scene/Nodes/Camera/Viewport.h"
 
 namespace Core
 {

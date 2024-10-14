@@ -4,8 +4,8 @@
 
 #include "DXObjects/GraphicsCommandList.h"
 
-#include "Scene/Light/DirectionalLight.h"
-#include "Scene/Light/PointLight.h"
+#include "Scene/Nodes/Light/DirectionalLight.h"
+#include "Scene/Nodes/Light/PointLight.h"
 
 namespace
 {

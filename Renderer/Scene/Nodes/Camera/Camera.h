@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Scene/Nodes/Viewport.h"
+#include "Scene/Nodes/Camera/Viewport.h"
 #include "Scene/Nodes/ISceneNode.h"
 #include "Scene/Volumes/FrustumVolume.h"
 

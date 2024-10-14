@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Scene/Mesh.h"
-#include "Scene/Material.h"
+#include "Scene/Nodes/Objects/Mesh.h"
+#include "Scene/Nodes/Objects/Material.h"
 #include "Scene/Nodes/ISceneNode.h"
 #include "Scene/Volumes/AABBVolume.h"
 

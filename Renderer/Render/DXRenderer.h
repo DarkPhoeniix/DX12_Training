@@ -5,13 +5,11 @@
 #include "DXObjects/RootSignature.h"
 #include "DXObjects/Texture.h"
 #include "DXObjects/StatisticsQuery.h"
-#include "Scene/Nodes/Camera.h"
+#include "Scene/Nodes/Camera/Camera.h"
 #include "Scene/Scene.h"
-#include "Scene/Light/DirectionalLight.h"
+#include "Scene/Nodes/Light/DirectionalLight.h"
 #include "Render/Frame.h"
 #include "Window/IWindowEventListener.h"
-
-#include "Scene/Light/DirectionalLight.h"
 
 class DXRenderer : public Core::Events::IWindowEventListener
 {
