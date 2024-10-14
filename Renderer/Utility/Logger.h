@@ -22,9 +22,7 @@ enum class LogType
     Warning = 2,
     Error   = 4
 };
-
-LogType operator&(LogType lhs, LogType rhs);
-LogType operator|(LogType lhs, LogType rhs);
+BINARY_OPERATION_TO_ENUM(LogType);
 
 class Logger
 {

@@ -58,16 +58,6 @@ namespace AssertUtility
     }
 }
 
-LogType operator&(LogType lhs, LogType rhs)
-{
-    return static_cast<LogType>(static_cast<int>(lhs) & static_cast<int>(rhs));
-}
-
-LogType operator|(LogType lhs, LogType rhs)
-{
-    return static_cast<LogType>(static_cast<int>(lhs) | static_cast<int>(rhs));
-}
-
 #if _DEBUG
 LogType Logger::_logLevel = LogType::Info | LogType::Warning | LogType::Error;
 #elif NDEBUG
@@ -82,7 +72,10 @@ Logger& Logger::Instance()
 
 void Logger::Log(LogType type, const std::string& message)
 {
-    std::chrono::time_point<std::chrono::system_clock> time = std::chrono::zoned_time(std::chrono::current_zone(), std::chrono::system_clock::now()).get_sys_time();
+    std::chrono::time_point t = std::chrono::system_clock::now();
+    //time_t tim = std::chrono::system_clock::to_time_t(t);
+    //std::chrono::time_point<std::chrono::system_clock> time = std::chrono::zoned_time(std::chrono::current_zone(), std::chrono::system_clock::now()).get_sys_time();
+    auto time = std::chrono::zoned_time(std::chrono::current_zone(), std::chrono::system_clock::now()).get_local_time();
 
     std::string output = std::format("{0:%T}", time) + " | " + logType(type) + ": " + message + '\n';
     Instance()._logFile << output;
@@ -99,8 +92,8 @@ LogType Logger::GetLogLevel()
 }
 
 Logger::Logger()
-    : _logFile(LOG_FILEPATH)
 {
+    _logFile.open(LOG_FILEPATH, std::ios_base::out);
 }
 
 Logger::~Logger()
