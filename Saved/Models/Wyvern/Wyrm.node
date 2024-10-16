@@ -1,4 +1,5 @@
 {
+	"Type": "StaticObject",
     "Material": "Wyrm.mat",
     "Mesh": "Wyrm.mesh",
     "Name": "Wyrm",

@@ -180,6 +180,9 @@
     <ClCompile Include="Scene\SceneCache.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Render\GBuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Utility\Helpers.h">
@@ -395,6 +398,9 @@
     <ClInclude Include="Scene\SceneCache.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Render\GBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\Mesh_ps.hlsl" />
@@ -405,6 +411,8 @@
     <FxCompile Include="Shaders\NegativePostFX_cs.hlsl" />
     <FxCompile Include="Shaders\PostFX_cs.hlsl" />
     <FxCompile Include="Shaders\SwirlPostFX_cs.hlsl" />
+    <FxCompile Include="Shaders\GPass_vs.hlsl" />
+    <FxCompile Include="Shaders\GPass_ps.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="PipelineDescriptions\AABBRenderPipeline.tech" />
@@ -427,6 +435,7 @@
     <None Include="Shaders\Common.hlsli" />
     <None Include="Shaders\LightingCommon.hlsli" />
     <None Include="packages.config" />
+    <None Include="Shaders\GPass_rootsig.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\dxapp.ico">

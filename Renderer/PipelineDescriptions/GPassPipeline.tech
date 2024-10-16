@@ -1,0 +1,58 @@
+{
+	"Type": "RenderTriangleTechnique",
+
+	"IsGraphicsPipeline": true,
+
+	"TopologyType": "triangle",
+
+	"Blend": "PipelineDescriptions\\TriangleRenderPipeline.blend",
+	"Raster": "PipelineDescriptions\\TriangleRenderPipeline.raster",
+	"Depth": "PipelineDescriptions\\TriangleRenderPipeline.depth",
+
+	"RenderTargets": [
+		"Position",
+		"AlbedoMetalness",
+		"NormalSpecular"
+	],
+	"DepthBuffer": "BackBufferDepth",
+	"Layout": [
+		{
+			"Name": "POSITION",
+			"Stream": 0,
+			"Offset": 0,
+			"Format": "float3",
+			"SemanticIndex": 0
+		},
+		{
+			"Name": "NORMAL",
+			"Stream": 0,
+			"Offset": 12,
+			"Format": "float3",
+			"SemanticIndex": 0
+		},
+		{
+			"Name": "COLOR",
+			"Stream": 0,
+			"Offset": 24,
+			"Format": "float4",
+			"SemanticIndex": 0
+		},
+		{
+			"Name": "TEXCOORD",
+			"Stream": 0,
+			"Offset": 40,
+			"Format": "float2",
+			"SemanticIndex": 0
+		},
+		{
+			"Name": "TANGENT",
+			"Stream": 0,
+			"Offset": 48,
+			"Format": "float3",
+			"SemanticIndex": 0
+		}
+	],
+
+	"VS": "Mesh_vs.cso",
+	"PS": "Mesh_ps.cso"
+}
