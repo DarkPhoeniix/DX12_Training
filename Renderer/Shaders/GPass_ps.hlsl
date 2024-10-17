@@ -29,7 +29,7 @@ PSOutput main(PSInput IN)
 {
     // Sample textures
     float2 uv = IN.Texture;
-    uv.y = uv.y;
+    uv.y = 1.0f - uv.y;
     
     // Calculate the TBN matrix
     float4 normal = Materials[Model.NormalTextureIndex].Sample(PointSampler, uv);

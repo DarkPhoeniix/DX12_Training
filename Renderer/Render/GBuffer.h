@@ -15,6 +15,8 @@ namespace Core
     public:
         void Init(const DirectX::XMUINT2& size);
 
+        void ClearTextures(Core::GraphicsCommandList& commandList);
+
         Core::Texture& GetPositionTexture();
         const Core::Texture& GetPositionTexture() const;
         D3D12_CPU_DESCRIPTOR_HANDLE GetPositionTextureCPUHandle();

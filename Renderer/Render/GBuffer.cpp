@@ -1,5 +1,8 @@
 #include "stdafx.h"
+
 #include "GBuffer.h"
+
+#include "DXObjects/GraphicsCommandList.h"
 
 namespace Core
 {
@@ -69,6 +72,15 @@ namespace Core
             renderTargetDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
             Core::Device::GetDXDevice()->CreateRenderTargetView(_normalSpecular.GetDXResource().Get(), &renderTargetDesc, _descriptorsHeap.GetResourceCPUHandle(&_normalSpecular));
         }
+    }
+
+    void GBuffer::ClearTextures(Core::GraphicsCommandList& commandList)
+    {
+        FLOAT clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+
+        commandList.ClearRTV(GetPositionTextureCPUHandle(), clearColor);
+        commandList.ClearRTV(GetAlbedoMetalnessTextureCPUHandle(), clearColor);
+        commandList.ClearRTV(GetNormalTextureCPUHandle(), clearColor);
     }
 
     Core::Texture& GBuffer::GetPositionTexture()

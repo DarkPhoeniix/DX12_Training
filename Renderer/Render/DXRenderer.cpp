@@ -152,6 +152,8 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
 
         PIXBeginEvent(commandList.GetDXCommandList().Get(), 18, "Deferred");
         {
+            _gBuffer.ClearTextures(commandList);
+
             commandList.SetPipelineState(_deferredPipeline);
             commandList.SetGraphicsRootSignature(_deferredPipeline);
 
