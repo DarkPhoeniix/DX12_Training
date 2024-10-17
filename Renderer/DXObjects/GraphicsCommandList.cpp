@@ -110,6 +110,11 @@ namespace Core
         _commandList->OMSetRenderTargets(numTargets, renderTargetDescriptor, FALSE, depthStencilDescriptor);
     }
 
+    void GraphicsCommandList::SetRenderTargets(const std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> renderTargetDescriptors, D3D12_CPU_DESCRIPTOR_HANDLE* depthStencilDescriptor)
+    {
+        _commandList->OMSetRenderTargets(renderTargetDescriptors.size(), renderTargetDescriptors.data(), FALSE, depthStencilDescriptor);
+    }
+
     void GraphicsCommandList::SetViewport(const SceneLayer::Viewport& viewport)
     {
         CD3DX12_VIEWPORT vp = viewport.GetDXViewport();

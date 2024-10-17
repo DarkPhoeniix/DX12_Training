@@ -5,9 +5,9 @@
 
 	"TopologyType": "triangle",
 
-	"Blend": "PipelineDescriptions\\TriangleRenderPipeline.blend",
-	"Raster": "PipelineDescriptions\\TriangleRenderPipeline.raster",
-	"Depth": "PipelineDescriptions\\TriangleRenderPipeline.depth",
+	"Blend": "PipelineDescriptions\\GPassPipeline.blend",
+	"Raster": "PipelineDescriptions\\GPassPipeline.raster",
+	"Depth": "PipelineDescriptions\\GPassPipeline.depth",
 
 	"RenderTargets": [
 		"Position",
@@ -53,6 +53,6 @@
 		}
 	],
 
-	"VS": "Mesh_vs.cso",
-	"PS": "Mesh_ps.cso"
+	"VS": "GPass_vs.cso",
+	"PS": "GPass_ps.cso"
 }

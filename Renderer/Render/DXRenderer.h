@@ -11,6 +11,8 @@
 #include "Render/Frame.h"
 #include "Window/IWindowEventListener.h"
 
+#include "GBuffer.h"
+
 class DXRenderer : public Core::Events::IWindowEventListener
 {
 public:
@@ -33,6 +35,9 @@ public:
 private:
     HWND _windowHandle;
 
+    Core::GBuffer _gBuffer;
+
+    Core::RootSignature _deferredPipeline;
     Core::RootSignature _renderPipeline;
     Core::RootSignature _AABBpipeline;
 

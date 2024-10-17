@@ -436,6 +436,10 @@
     <None Include="Shaders\LightingCommon.hlsli" />
     <None Include="packages.config" />
     <None Include="Shaders\GPass_rootsig.hlsli" />
+    <None Include="PipelineDescriptions\GPassPipeline.blend" />
+    <None Include="PipelineDescriptions\GPassPipeline.depth" />
+    <None Include="PipelineDescriptions\GPassPipeline.raster" />
+    <None Include="PipelineDescriptions\GPassPipeline.tech" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\dxapp.ico">

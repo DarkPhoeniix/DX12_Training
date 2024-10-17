@@ -41,6 +41,7 @@ namespace Core
 
         // Output Merger
         void SetRenderTarget(D3D12_CPU_DESCRIPTOR_HANDLE* renderTargetDescriptor, D3D12_CPU_DESCRIPTOR_HANDLE* depthStencilDescriptor);
+        void SetRenderTargets(const std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> renderTargetDescriptors, D3D12_CPU_DESCRIPTOR_HANDLE* depthStencilDescriptor);
 
         // Rasterizator State
         void SetViewport(const SceneLayer::Viewport& viewport);

@@ -36,8 +36,11 @@ DXRenderer::~DXRenderer()
 
 bool DXRenderer::LoadContent(TaskGPU* loadTask)
 {
+    _deferredPipeline.Parse("PipelineDescriptions\\GPassPipeline.tech");
     _renderPipeline.Parse("PipelineDescriptions\\TriangleRenderPipeline.tech");
     _AABBpipeline.Parse("PipelineDescriptions\\AABBRenderPipeline.tech");
+
+    _gBuffer.Init({ 1280, 720 });
 
     // TODO: rework
     {
@@ -142,8 +145,31 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
     // Execute the TriangleRender shader
     {
         TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, &_renderPipeline);
-        task->SetName("render");
+        task->SetName("deferred");
         task->AddDependency("clean");
+
+        Core::GraphicsCommandList& commandList = *task->GetCommandLists().front();
+
+        PIXBeginEvent(commandList.GetDXCommandList().Get(), 18, "Deferred");
+        {
+            commandList.SetPipelineState(_deferredPipeline);
+            commandList.SetGraphicsRootSignature(_deferredPipeline);
+
+            commandList.SetViewport(_camera.GetViewport());
+            commandList.SetRenderTargets({ _gBuffer.GetPositionTextureCPUHandle(), _gBuffer.GetAlbedoMetalnessTextureCPUHandle(), _gBuffer.GetNormalTextureCPUHandle() }, &dsv);
+
+            _scene.Draw(commandList);
+        }
+        PIXEndEvent(commandList.GetDXCommandList().Get());
+
+        commandList.Close();
+    }
+
+    // Execute the TriangleRender shader
+    {
+        TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, &_renderPipeline);
+        task->SetName("render");
+        task->AddDependency("deferred");
 
         Core::GraphicsCommandList& commandList = *task->GetCommandLists().front();
 
@@ -152,7 +178,6 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
 #if defined(_DEBUG)
             DebugInfo::StartStatCollecting(commandList);
 #endif
-
             commandList.SetPipelineState(_renderPipeline);
             commandList.SetGraphicsRootSignature(_renderPipeline);
 

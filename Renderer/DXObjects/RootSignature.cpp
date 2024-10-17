@@ -345,11 +345,11 @@ namespace Core
     D3D12_BLEND_DESC RootSignature::ParseBlendDescription(const std::string& filepath)
     {
         Json::Value root = Helper::ParseJson(filepath);
-        Json::Value renderTargets = root["RenderTargets"];
+        int renderTargetsSize = root["RenderTargets"].size();
 
         D3D12_BLEND_DESC description = {};
 
-        for (int i = 0; i < renderTargets.size(); ++i)
+        for (int i = 0; i < renderTargetsSize; ++i)
         {
             Json::Value target = root["RenderTargets"][i];
             description.RenderTarget[i].BlendEnable = target["BlendEnable"].asBool();

@@ -17,7 +17,6 @@ struct PSOutput
     float4 Position : SV_Target0;
     float4 AlbedoMetalness : SV_Target1;
     float4 NormalSpecular : SV_Target2;
-    float4 UV : SV_Target3;
 };
 
 StructuredBuffer<LightDesc> Lights : register(t0);
@@ -30,7 +29,7 @@ PSOutput main(PSInput IN)
 {
     // Sample textures
     float2 uv = IN.Texture;
-    uv.y = 1.0f - uv.y;
+    uv.y = uv.y;
     
     // Calculate the TBN matrix
     float4 normal = Materials[Model.NormalTextureIndex].Sample(PointSampler, uv);
@@ -45,9 +44,8 @@ PSOutput main(PSInput IN)
     PSOutput output;
     
     output.Position = IN.WorldPosition;
-    output.AlbedoMetalness = float4(albedo, metalness);
-    output.NormalSpecular = float4(finalNormal, 0.0f);
-    output.UV = float4(uv, 0.0f, 0.0f);
+    output.AlbedoMetalness = float4(albedo, 1.0f);
+    output.NormalSpecular = float4(finalNormal, 1.0f);
     
     return output;
 }
