@@ -19,6 +19,7 @@ namespace SceneLayer
         Scene();
         ~Scene();
 
+        void DeferredDraw(Core::GraphicsCommandList& commandList);
         void Draw(Core::GraphicsCommandList& commandList);
         void DrawAABB(Core::GraphicsCommandList& commandList);
 

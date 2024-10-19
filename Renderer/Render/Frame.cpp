@@ -122,7 +122,7 @@ void Frame::Init(const Core::SwapChain& swapChain)
         Core::DescriptorHeapDescription desc = {};
         desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
         desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
-        desc.SetNumDescriptors(1);
+        desc.SetNumDescriptors(4);
         desc.SetNodeMask(0);
 
         _postFXDescHeap.SetDescription(desc);

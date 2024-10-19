@@ -17,8 +17,8 @@
 		},
 		{
 			"BlendEnable": true,
-			"SrcBlend": "D3D12_BLEND_SRC_ALPHA",
-			"DestBlend": "D3D12_BLEND_INV_SRC_ALPHA",
+			"SrcBlend": "D3D12_BLEND_ONE",
+			"DestBlend": "D3D12_BLEND_ZERO",
 			"BlendOp": "D3D12_BLEND_OP_ADD",
 
 			"SrcBlendAlpha": "D3D12_BLEND_ONE",
@@ -32,8 +32,8 @@
 		},
 		{
 			"BlendEnable": true,
-			"SrcBlend": "D3D12_BLEND_SRC_ALPHA",
-			"DestBlend": "D3D12_BLEND_INV_SRC_ALPHA",
+			"SrcBlend": "D3D12_BLEND_ONE",
+			"DestBlend": "D3D12_BLEND_ZERO",
 			"BlendOp": "D3D12_BLEND_OP_ADD",
 
 			"SrcBlendAlpha": "D3D12_BLEND_ONE",

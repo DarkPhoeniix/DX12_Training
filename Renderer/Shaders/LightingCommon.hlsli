@@ -5,7 +5,7 @@ struct Surface
     
     float4 Albedo;
     float4 Normal;
-    float4 Metalness;
+    float Metalness;
     
     float4 FinalColor;
 };

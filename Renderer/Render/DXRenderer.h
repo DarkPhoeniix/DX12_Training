@@ -37,6 +37,7 @@ private:
 
     Core::GBuffer _gBuffer;
 
+    Core::RootSignature _gPassPipeline;
     Core::RootSignature _deferredPipeline;
     Core::RootSignature _renderPipeline;
     Core::RootSignature _AABBpipeline;

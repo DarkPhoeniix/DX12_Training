@@ -4,19 +4,19 @@
 
 struct PSInput
 {
-    float4 WorldPosition : POSITION;
-    float4 Position : SV_Position;
-    float3 Normal : NORMAL; // should be normalized
-    float4 Color : COLOR;
-    float2 Texture : TEXCOORD;
-    float3 Tangent : TANGENT;
+    float4 WorldPosition    : POSITION;
+    float4 Position         : SV_Position;
+    float3 Normal           : NORMAL; // should be normalized
+    float4 Color            : COLOR;
+    float2 Texture          : TEXCOORD;
+    float3 Tangent          : TANGENT;
 };
 
 struct PSOutput
 {
-    float4 Position : SV_Target0;
-    float4 AlbedoMetalness : SV_Target1;
-    float4 NormalSpecular : SV_Target2;
+    float4 Position         : SV_Target0;
+    float4 AlbedoMetalness  : SV_Target1;
+    float4 NormalSpecular   : SV_Target2;
 };
 
 StructuredBuffer<LightDesc> Lights : register(t0);
@@ -29,7 +29,7 @@ PSOutput main(PSInput IN)
 {
     // Sample textures
     float2 uv = IN.Texture;
-    uv.y = 1.0f - uv.y;
+    uv.y = 1 - uv.y;
     
     // Calculate the TBN matrix
     float4 normal = Materials[Model.NormalTextureIndex].Sample(PointSampler, uv);
@@ -39,7 +39,7 @@ PSOutput main(PSInput IN)
     // Setup surface
     float3 albedo = Materials[Model.AlbedoTextureIndex].Sample(LinearSampler, uv);
     float metalness = Materials[Model.MetalnessTextureIndex].Sample(LinearSampler, uv).x;
-    float3 finalNormal = normalize(mul(normal.xyz, TBN));
+    float3 finalNormal = mul(2.0f * normal.xyz - 1.0f, TBN);
     
     PSOutput output;
     

@@ -17,6 +17,9 @@ namespace Core
 
         void ClearTextures(Core::GraphicsCommandList& commandList);
 
+        Core::DescriptorHeap& GetDescHeap();
+        Core::DescriptorHeap& GetUAVHeap();
+
         Core::Texture& GetPositionTexture();
         const Core::Texture& GetPositionTexture() const;
         D3D12_CPU_DESCRIPTOR_HANDLE GetPositionTextureCPUHandle();
@@ -38,6 +41,7 @@ namespace Core
         Core::Texture _albedoMetalness;
 
         Core::DescriptorHeap _descriptorsHeap;
+        Core::DescriptorHeap _UAVHeap;
         Core::Heap _heap;
     };
 } // namespace Core

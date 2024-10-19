@@ -81,6 +81,33 @@ namespace SceneLayer
         Core::Device::GetDXDevice()->CreateShaderResourceView(_lightsView->GetDXResource().Get(), &d, _descHeap.GetHeapStartCPUHandle());
     }
 
+    void LightManager::SetupLightsCompute(Core::GraphicsCommandList& commandList)
+    {
+        GPULightDesc* data = (GPULightDesc*)_lightsView->Map();
+        int index = 0;
+        for (const auto& l : _directionalLights)
+        {
+            GPULightDesc desc;
+            desc.direction = l->GetDirection();
+            desc.color = l->GetColor();
+            desc.type = 0;
+            data[index++] = desc;
+        }
+
+        for (const auto& l : _pointLights)
+        {
+            GPULightDesc desc;
+            desc.position = l->GetGlobalTransform().r[3];
+            desc.range = l->GetRange();
+            desc.intensity = l->GetIntensity();
+            desc.color = l->GetColor();
+            desc.type = 1;
+            data[index++] = desc;
+        }
+
+        commandList.GetDXCommandList()->SetComputeRootShaderResourceView(2, _lightsView->OffsetGPU(0));
+    }
+
     void LightManager::SetupLights(Core::GraphicsCommandList& commandList)
     {
         GPULightDesc* data = (GPULightDesc*)_lightsView->Map();

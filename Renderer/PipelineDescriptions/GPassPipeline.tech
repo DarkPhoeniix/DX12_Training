@@ -1,5 +1,5 @@
 {
-	"Type": "RenderTriangleTechnique",
+	"Type": "GPassTechnique",
 
 	"IsGraphicsPipeline": true,
 
@@ -10,9 +10,9 @@
 	"Depth": "PipelineDescriptions\\GPassPipeline.depth",
 
 	"RenderTargets": [
-		"Position",
-		"AlbedoMetalness",
-		"NormalSpecular"
+		{ "Position": "DXGI_FORMAT_R32G32B32A32_FLOAT" },
+		{ "AlbedoMetalness": "DXGI_FORMAT_R8G8B8A8_UNORM" },
+		{ "NormalSpecular": "DXGI_FORMAT_R8G8B8A8_SNORM" }
 	],
 	"DepthBuffer": "BackBufferDepth",
 	"Layout": [

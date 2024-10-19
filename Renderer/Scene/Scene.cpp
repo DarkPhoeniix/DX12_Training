@@ -38,28 +38,32 @@ namespace SceneLayer
 
         std::shared_ptr<DirectionalLight> directionalLight = std::make_shared<DirectionalLight>(&_cache, nullptr);
         directionalLight->SetName("Directional Light");
-        directionalLight->SetDirection(DirectX::XMVectorSet(0.5f, -1.0f, 0.2f, 0.0f));
-        directionalLight->SetColor(DirectX::XMVectorSet(0.0f, 1.0f, 0.5f, 1.0f));
-
-        std::shared_ptr<PointLight> pointLight = std::make_shared<PointLight>(&_cache, nullptr);
-        DirectX::XMMATRIX tr = DirectX::XMMatrixIdentity() * DirectX::XMMatrixTranslation(20.0f, 100.0f, -20.0f);
-        pointLight->SetName("Point Light");
-        pointLight->SetLocalTransform(tr);
-        pointLight->SetRange(500.0f);
-        pointLight->SetIntensity(100.0f);
-        pointLight->SetColor(DirectX::XMVectorSet(1.0f, 0.0f, 1.0f, 1.0f));
+        directionalLight->SetDirection(DirectX::XMVectorSet(0.3f, -0.8f, 0.5f, 0.0f));
+        directionalLight->SetColor(DirectX::XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f));
 
         _cache.GetLightManager()->AddDirectionalLight(directionalLight);
-        _cache.GetLightManager()->AddPointLight(pointLight);
     }
 
     Scene::~Scene()
     {   }
 
+    void Scene::DeferredDraw(Core::GraphicsCommandList& commandList)
+    {
+        // Setup scene data
+        SceneDesc* sceneDesc = (SceneDesc*)_sceneGPUData->Map();
+        sceneDesc->ViewProjection = _cache.GetCamera()->ViewProjection();
+        sceneDesc->LightsNum = _cache.GetLightManager()->GetLightsNum();
+        //commandList.SetCBV(0, _sceneGPUData->OffsetGPU(0));
+        commandList.GetDXCommandList()->SetComputeRootConstantBufferView(0, _sceneGPUData->OffsetGPU(0));
+
+        // Setup lights
+        _cache.GetLightManager()->SetupLightsCompute(commandList);
+    }
+
     void Scene::Draw(Core::GraphicsCommandList& commandList)
     {
         // Setup textures
-        commandList.SetDescriptorHeaps({ _cache.GetTextureTable()->GetDescriptorHeap().GetDXDescriptorHeap().Get()});
+        commandList.SetDescriptorHeaps({ _cache.GetTextureTable()->GetDescriptorHeap().GetDXDescriptorHeap().Get() });
         commandList.SetDescriptorTable(3, _cache.GetTextureTable()->GetDescriptorHeap().GetHeapStartGPUHandle());
 
         // Setup scene data

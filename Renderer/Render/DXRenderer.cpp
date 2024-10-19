@@ -36,7 +36,8 @@ DXRenderer::~DXRenderer()
 
 bool DXRenderer::LoadContent(TaskGPU* loadTask)
 {
-    _deferredPipeline.Parse("PipelineDescriptions\\GPassPipeline.tech");
+    _gPassPipeline.Parse("PipelineDescriptions\\GPassPipeline.tech");
+    _deferredPipeline.Parse("PipelineDescriptions\\DeferredShading.tech");
     _renderPipeline.Parse("PipelineDescriptions\\TriangleRenderPipeline.tech");
     _AABBpipeline.Parse("PipelineDescriptions\\AABBRenderPipeline.tech");
 
@@ -144,18 +145,18 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
 
     // Execute the TriangleRender shader
     {
-        TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, &_renderPipeline);
-        task->SetName("deferred");
+        TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, &_gPassPipeline);
+        task->SetName("g-pass");
         task->AddDependency("clean");
 
         Core::GraphicsCommandList& commandList = *task->GetCommandLists().front();
 
-        PIXBeginEvent(commandList.GetDXCommandList().Get(), 18, "Deferred");
+        PIXBeginEvent(commandList.GetDXCommandList().Get(), 18, "Geometry Pass");
         {
             _gBuffer.ClearTextures(commandList);
 
-            commandList.SetPipelineState(_deferredPipeline);
-            commandList.SetGraphicsRootSignature(_deferredPipeline);
+            commandList.SetPipelineState(_gPassPipeline);
+            commandList.SetGraphicsRootSignature(_gPassPipeline);
 
             commandList.SetViewport(_camera.GetViewport());
             commandList.SetRenderTargets({ _gBuffer.GetPositionTextureCPUHandle(), _gBuffer.GetAlbedoMetalnessTextureCPUHandle(), _gBuffer.GetNormalTextureCPUHandle() }, &dsv);
@@ -169,31 +170,54 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
 
     // Execute the TriangleRender shader
     {
-        TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, &_renderPipeline);
-        task->SetName("render");
-        task->AddDependency("deferred");
+        TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, &_deferredPipeline);
+        task->SetName("deferred");
+        task->AddDependency("g-pass");
 
         Core::GraphicsCommandList& commandList = *task->GetCommandLists().front();
 
-        PIXBeginEvent(commandList.GetDXCommandList().Get(), 4, "Render");
+        PIXBeginEvent(commandList.GetDXCommandList().Get(), 4, "Deferred Shading");
         {
 #if defined(_DEBUG)
             DebugInfo::StartStatCollecting(commandList);
 #endif
-            commandList.SetPipelineState(_renderPipeline);
-            commandList.SetGraphicsRootSignature(_renderPipeline);
+            commandList.SetPipelineState(_deferredPipeline);
+            commandList.GetDXCommandList()->SetComputeRootSignature(_deferredPipeline.GetRootSignature().Get());
 
-            commandList.SetViewport(_camera.GetViewport());
-            commandList.SetRenderTarget(&rtv, &dsv);
+            _scene.DeferredDraw(commandList);
 
-            _scene.Draw(commandList);
+            commandList.TransitionBarrier(_gBuffer.GetPositionTexture(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+            commandList.TransitionBarrier(_gBuffer.GetAlbedoMetalnessTexture(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+            commandList.TransitionBarrier(_gBuffer.GetNormalTexture(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+
+            D3D12_CPU_DESCRIPTOR_HANDLE handle = frame._postFXDescHeap.GetHeapStartCPUHandle();
+            handle.ptr += 32;
+            Core::Device::GetDXDevice()->CopyDescriptorsSimple(3, handle, _gBuffer.GetUAVHeap().GetHeapStartCPUHandle(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+            ID3D12DescriptorHeap* heap[1] = { frame._postFXDescHeap.GetDXDescriptorHeap().Get() };
+            commandList.GetDXCommandList()->SetDescriptorHeaps(1, heap);
+
+            D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle = frame._postFXDescHeap.GetHeapStartGPUHandle();
+            commandList.GetDXCommandList()->SetComputeRootDescriptorTable(6, gpuHandle);
+            gpuHandle.ptr += 32;
+            commandList.GetDXCommandList()->SetComputeRootDescriptorTable(3, gpuHandle);
+            gpuHandle.ptr += 32;
+            commandList.GetDXCommandList()->SetComputeRootDescriptorTable(4, gpuHandle);
+            gpuHandle.ptr += 32;
+            commandList.GetDXCommandList()->SetComputeRootDescriptorTable(5, gpuHandle);
+
+            commandList.GetDXCommandList()->Dispatch(1280, 720, 1);
+
+            commandList.TransitionBarrier(_gBuffer.GetPositionTexture(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+            commandList.TransitionBarrier(_gBuffer.GetAlbedoMetalnessTexture(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+            commandList.TransitionBarrier(_gBuffer.GetNormalTexture(), D3D12_RESOURCE_STATE_RENDER_TARGET);
 
 #if defined(_DEBUG)
-            commandList.SetPipelineState(_AABBpipeline);
-            commandList.SetGraphicsRootSignature(_AABBpipeline);
-            commandList.SetConstants(1, sizeof(XMMATRIX) / 4, &_camera.ViewProjection());
+            //commandList.SetPipelineState(_AABBpipeline);
+            //commandList.SetGraphicsRootSignature(_AABBpipeline);
+            //commandList.SetConstants(1, sizeof(XMMATRIX) / 4, &_camera.ViewProjection());
 
-            _scene.DrawAABB(commandList);
+            //_scene.DrawAABB(commandList);
 
             DebugInfo::EndStatCollecting(commandList);
 #endif
@@ -207,7 +231,7 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
     {
         TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
         task->SetName("gui");
-        task->AddDependency("render");
+        task->AddDependency("deferred");
 
         Core::GraphicsCommandList* commandList = task->GetCommandLists().front();
 
