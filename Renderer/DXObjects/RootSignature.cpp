@@ -232,6 +232,25 @@ namespace Core
             Logger::Log(LogType::Warning, "Failed to parse " + str + " from the topology type description");
             return TOPOLOGY_TYPE.begin()->second;
         }
+
+        // TODO: add FORMAT types
+        const std::map<std::string, DXGI_FORMAT> TEX_FORMAT =
+        {
+            { "DXGI_FORMAT_R8G8B8A8_UNORM", DXGI_FORMAT_R8G8B8A8_UNORM},
+            { "DXGI_FORMAT_R8G8B8A8_SNORM", DXGI_FORMAT_R8G8B8A8_SNORM },
+            { "DXGI_FORMAT_R32G32B32A32_FLOAT", DXGI_FORMAT_R32G32B32A32_FLOAT }
+        };
+
+        DXGI_FORMAT ParseTexFormat(const std::string& str)
+        {
+            auto it = TEX_FORMAT.find(str);
+            if (it != TEX_FORMAT.end())
+            {
+                return it->second;
+            }
+            Logger::Log(LogType::Warning, "Failed to parse " + str + " from the format description");
+            return TEX_FORMAT.begin()->second;
+        }
     } // namespace
 
     ComPtr<ID3D12RootSignature> RootSignature::GetRootSignature() const
@@ -251,45 +270,59 @@ namespace Core
 
     void RootSignature::Parse(const std::string& filepath)
     {
-        auto device = Core::Device::GetDXDevice();
-
         Json::Value jsonRoot = Helper::ParseJson(filepath);
+
+        _isGraphicsPipeline = jsonRoot["IsGraphicsPipeline"].asBool();
+
+        if (_isGraphicsPipeline)
+        {
+            ParseGraphicsPipeline(jsonRoot);
+        }
+        else
+        {
+            ParseComputePipeline(jsonRoot);
+        }
+    }
+
+    void RootSignature::ParseGraphicsPipeline(Json::Value& fileRoot)
+    {
+        ComPtr<ID3D12Device> device = Core::Device::GetDXDevice();
 
         // Load the vertex shader
         ComPtr<ID3DBlob> vertexShaderBlob = nullptr;
-        if (!jsonRoot["VS"].isNull())
+        if (!fileRoot["VS"].isNull())
         {
-            std::string vertexShaderFilepath = jsonRoot["VS"].asCString();
+            std::string vertexShaderFilepath = fileRoot["VS"].asCString();
             Helper::throwIfFailed(D3DReadFileToBlob(std::wstring(vertexShaderFilepath.begin(), vertexShaderFilepath.end()).c_str(), &vertexShaderBlob));
         }
 
         // Load the geometry shader
         ComPtr<ID3DBlob> geometryShaderBlob = nullptr;
-        if (!jsonRoot["GS"].isNull())
+        if (!fileRoot["GS"].isNull())
         {
-            std::string geometryShaderFilepath = jsonRoot["GS"].asCString();
+            std::string geometryShaderFilepath = fileRoot["GS"].asCString();
             Helper::throwIfFailed(D3DReadFileToBlob(std::wstring(geometryShaderFilepath.begin(), geometryShaderFilepath.end()).c_str(), &geometryShaderBlob));
         }
 
         // Load the pixel shader
         ComPtr<ID3DBlob> pixelShaderBlob = nullptr;
-        if (!jsonRoot["PS"].isNull())
+        if (!fileRoot["PS"].isNull())
         {
-            std::string pixelShaderFilepath = jsonRoot["PS"].asCString();
+            std::string pixelShaderFilepath = fileRoot["PS"].asCString();
             Helper::throwIfFailed(D3DReadFileToBlob(std::wstring(pixelShaderFilepath.begin(), pixelShaderFilepath.end()).c_str(), &pixelShaderBlob));
         }
 
         // Create the vertex input layout
-        unsigned int layoutElementsNum = jsonRoot["Layout"].size();
+        unsigned int layoutElementsNum = fileRoot["Layout"].size();
         D3D12_INPUT_ELEMENT_DESC* inputLayout = nullptr;
         std::vector<std::string> names(layoutElementsNum);
-        if (!jsonRoot["Layout"].isNull())
+        if (!fileRoot["Layout"].isNull())
         {
             inputLayout = new D3D12_INPUT_ELEMENT_DESC[layoutElementsNum];
             for (int i = 0; i < layoutElementsNum; ++i)
             {
                 inputLayout[i] = {};
-                Json::Value layout = jsonRoot["Layout"][i];
+                Json::Value layout = fileRoot["Layout"][i];
                 names[i] = layout["Name"].asCString();
                 inputLayout[i].SemanticName = names[i].c_str();
                 inputLayout[i].SemanticIndex = layout["SemanticIndex"].asUInt();
@@ -302,44 +335,76 @@ namespace Core
         Helper::throwIfFailed(device->CreateRootSignature(0, vertexShaderBlob->GetBufferPointer(),
             vertexShaderBlob->GetBufferSize(), IID_PPV_ARGS(&_rootSignature)));
 
-        const std::string blendPipelineDescFilepath = jsonRoot["Blend"].asCString();
-        const std::string rasterPipelineDescFilepath = jsonRoot["Raster"].asCString();
-        const std::string depthPipelineDescFilepath = jsonRoot["Depth"].asCString();
+        const std::string blendPipelineDescFilepath = fileRoot["Blend"].asCString();
+        const std::string rasterPipelineDescFilepath = fileRoot["Raster"].asCString();
+        const std::string depthPipelineDescFilepath = fileRoot["Depth"].asCString();
 
-        D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineStateStreamDesc = {};
+        D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineStateDescription = {};
 
-        pipelineStateStreamDesc.BlendState = ParseBlendDescription(blendPipelineDescFilepath);
-        pipelineStateStreamDesc.RasterizerState = ParseRasterizerDescription(rasterPipelineDescFilepath);
-        pipelineStateStreamDesc.DepthStencilState = ParseDepthStencilDescription(depthPipelineDescFilepath);
+        pipelineStateDescription.BlendState = ParseBlendDescription(blendPipelineDescFilepath);
+        pipelineStateDescription.RasterizerState = ParseRasterizerDescription(rasterPipelineDescFilepath);
+        pipelineStateDescription.DepthStencilState = ParseDepthStencilDescription(depthPipelineDescFilepath);
 
-        pipelineStateStreamDesc.pRootSignature = _rootSignature.Get();
-        pipelineStateStreamDesc.InputLayout = { inputLayout, layoutElementsNum };
-        pipelineStateStreamDesc.PrimitiveTopologyType = ParseTopologyType(jsonRoot["TopologyType"].asCString());
+        pipelineStateDescription.pRootSignature = _rootSignature.Get();
+        pipelineStateDescription.InputLayout = { inputLayout, layoutElementsNum };
+        pipelineStateDescription.PrimitiveTopologyType = ParseTopologyType(fileRoot["TopologyType"].asCString());
         if (vertexShaderBlob)
         {
-            pipelineStateStreamDesc.VS = CD3DX12_SHADER_BYTECODE(vertexShaderBlob.Get());
+            pipelineStateDescription.VS = CD3DX12_SHADER_BYTECODE(vertexShaderBlob.Get());
         }
         if (geometryShaderBlob)
         {
-            pipelineStateStreamDesc.GS = CD3DX12_SHADER_BYTECODE(geometryShaderBlob.Get());
+            pipelineStateDescription.GS = CD3DX12_SHADER_BYTECODE(geometryShaderBlob.Get());
         }
         if (pixelShaderBlob)
         {
-            pipelineStateStreamDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShaderBlob.Get());
+            pipelineStateDescription.PS = CD3DX12_SHADER_BYTECODE(pixelShaderBlob.Get());
         }
-        pipelineStateStreamDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
-        Json::Value renderTargets = jsonRoot["RenderTargets"];
-        pipelineStateStreamDesc.NumRenderTargets = renderTargets.size();
+        pipelineStateDescription.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+        Json::Value renderTargets = fileRoot["RenderTargets"];
+        pipelineStateDescription.NumRenderTargets = renderTargets.size();
         for (int i = 0; i < renderTargets.size(); ++i)
         {
-            pipelineStateStreamDesc.RTVFormats[i] = DXGI_FORMAT_R8G8B8A8_UNORM;
+            for (const auto& id : renderTargets[i].getMemberNames())
+            {
+                pipelineStateDescription.RTVFormats[i] = ParseTexFormat(renderTargets[i][id].asCString());
+            }
         }
-        pipelineStateStreamDesc.SampleDesc.Count = 1; // must be the same sample description as the swapChain and depth/stencil buffer
-        pipelineStateStreamDesc.SampleMask = 0xffffffff; // sample mask has to do with multi-sampling. 0xffffffff means point sampling is done
+        pipelineStateDescription.SampleDesc.Count = 1; // must be the same sample description as the swapChain and depth/stencil buffer
+        pipelineStateDescription.SampleMask = 0xffffffff; // sample mask has to do with multi-sampling. 0xffffffff means point sampling is done
 
-        Helper::throwIfFailed(device->CreateGraphicsPipelineState(&pipelineStateStreamDesc, IID_PPV_ARGS(&_pipelineState)));
+        Helper::throwIfFailed(device->CreateGraphicsPipelineState(&pipelineStateDescription, IID_PPV_ARGS(&_pipelineState)));
 
         delete[] inputLayout;
+    }
+
+    void RootSignature::ParseComputePipeline(Json::Value& fileRoot)
+    {
+        ComPtr<ID3D12Device> device = Core::Device::GetDXDevice();
+
+        // Load the compute shader
+        ComPtr<ID3DBlob> computeShaderBlob = nullptr;
+        if (!fileRoot["CS"].isNull())
+        {
+            std::string computeShaderFilepath = fileRoot["CS"].asCString();
+            Helper::throwIfFailed(D3DReadFileToBlob(std::wstring(computeShaderFilepath.begin(), computeShaderFilepath.end()).c_str(), &computeShaderBlob));
+        }
+
+        Helper::throwIfFailed(device->CreateRootSignature(0, computeShaderBlob->GetBufferPointer(),
+            computeShaderBlob->GetBufferSize(), IID_PPV_ARGS(&_rootSignature)));
+
+        D3D12_COMPUTE_PIPELINE_STATE_DESC pipelineStateDescription = {};
+        pipelineStateDescription.pRootSignature = _rootSignature.Get();
+        if (computeShaderBlob)
+        {
+            pipelineStateDescription.CS = CD3DX12_SHADER_BYTECODE(computeShaderBlob.Get());
+        }
+
+        Helper::throwIfFailed(device->CreateComputePipelineState(&pipelineStateDescription, IID_PPV_ARGS(&_pipelineState)));
+
+        std::string type = fileRoot["Type"].asString();
+        std::wstring name(type.begin(), type.end());
+        _pipelineState->SetName(name.c_str());
     }
 
     D3D12_BLEND_DESC RootSignature::ParseBlendDescription(const std::string& filepath)
