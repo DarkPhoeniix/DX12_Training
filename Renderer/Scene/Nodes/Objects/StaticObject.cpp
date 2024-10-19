@@ -153,7 +153,7 @@ namespace SceneLayer
 
         // Frustum culling
         const SceneLayer::FrustumVolume& cameraFrustum = _sceneCache->GetCamera()->GetViewFrustum();
-        if (!Intersect(cameraFrustum, _AABB))
+        if (!Intersect(cameraFrustum, _AABB, GetGlobalTransform()))
         {
             return;
         }
