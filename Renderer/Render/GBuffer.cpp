@@ -24,13 +24,13 @@ namespace Core
             textureDesc.SetDimension(D3D12_RESOURCE_DIMENSION_TEXTURE2D);
             textureDesc.SetDepthOrArraySize(1);
             textureDesc.SetFlags(D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
-            textureDesc.SetFormat(DXGI_FORMAT_R32G32B32A32_FLOAT);
+            textureDesc.SetFormat(DXGI_FORMAT_D32_FLOAT);
             textureDesc.SetLayout(D3D12_TEXTURE_LAYOUT_UNKNOWN);
             textureDesc.SetMipLevels(1);
             textureDesc.SetAlignment(D3D12_TILED_RESOURCE_TILE_SIZE_IN_BYTES);
 
 
-            clearValueTexTarget.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+            clearValueTexTarget.Format = DXGI_FORMAT_D32_FLOAT;
             clearValueTexTarget.Color[0] = 0.0f;
             clearValueTexTarget.Color[1] = 0.0f;
             clearValueTexTarget.Color[2] = 0.0f;
@@ -41,10 +41,10 @@ namespace Core
 
         }
 
-        _position.SetResourceDescription(textureDesc);
-        _position.CreateCommitedResource(D3D12_RESOURCE_STATE_RENDER_TARGET);
-        _position.SetName("RTV Position");
-        _descriptorsHeap.PlaceResource(&_position);
+        //_position.SetResourceDescription(textureDesc);
+        //_position.CreateCommitedResource(D3D12_RESOURCE_STATE_RENDER_TARGET);
+        //_position.SetName("RTV Position");
+        //_descriptorsHeap.PlaceResource(&_position);
 
         clearValueTexTarget.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
         textureDesc.SetFormat(DXGI_FORMAT_R8G8B8A8_UNORM);
@@ -64,10 +64,10 @@ namespace Core
 
         {
             D3D12_RENDER_TARGET_VIEW_DESC renderTargetDesc = {};
-            renderTargetDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+            renderTargetDesc.Format = DXGI_FORMAT_D32_FLOAT;
             renderTargetDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
             renderTargetDesc.Texture2D.MipSlice = 0;
-            Core::Device::GetDXDevice()->CreateRenderTargetView(_position.GetDXResource().Get(), &renderTargetDesc, _descriptorsHeap.GetResourceCPUHandle(&_position));
+            //Core::Device::GetDXDevice()->CreateRenderTargetView(_position.GetDXResource().Get(), &renderTargetDesc, _descriptorsHeap.GetResourceCPUHandle(&_position));
             renderTargetDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
             Core::Device::GetDXDevice()->CreateRenderTargetView(_albedoMetalness.GetDXResource().Get(), &renderTargetDesc, _descriptorsHeap.GetResourceCPUHandle(&_albedoMetalness));
             renderTargetDesc.Format = DXGI_FORMAT_R8G8B8A8_SNORM;
@@ -81,23 +81,23 @@ namespace Core
             Core::DescriptorHeapDescription desc = {};
             desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
             desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_NONE);
-            desc.SetNumDescriptors(3);
+            desc.SetNumDescriptors(2);
             desc.SetNodeMask(0);
 
             _UAVHeap.SetDescription(desc);
             _UAVHeap.Create();
 
             D3D12_SHADER_RESOURCE_VIEW_DESC SRVDesc = {};
-                SRVDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+            SRVDesc.Format = DXGI_FORMAT_D32_FLOAT;
             SRVDesc.Texture2D.MipLevels = 1;
             SRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
             SRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
-            _UAVHeap.PlaceResource(&_position);
+            //_UAVHeap.PlaceResource(&_position);
             _UAVHeap.PlaceResource(&_albedoMetalness);
             _UAVHeap.PlaceResource(&_normalSpecular);
 
-            Core::Device::GetDXDevice()->CreateShaderResourceView(_position.GetDXResource().Get(), &SRVDesc, _UAVHeap.GetResourceCPUHandle(&_position));
+            //Core::Device::GetDXDevice()->CreateShaderResourceView(_position.GetDXResource().Get(), &SRVDesc, _UAVHeap.GetResourceCPUHandle(&_position));
             SRVDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
             Core::Device::GetDXDevice()->CreateShaderResourceView(_albedoMetalness.GetDXResource().Get(), &SRVDesc, _UAVHeap.GetResourceCPUHandle(&_albedoMetalness));
 
@@ -110,7 +110,7 @@ namespace Core
     {
         FLOAT clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
-        commandList.ClearRTV(GetPositionTextureCPUHandle(), clearColor);
+        //commandList.ClearRTV(GetPositionTextureCPUHandle(), clearColor);
         commandList.ClearRTV(GetAlbedoMetalnessTextureCPUHandle(), clearColor);
         commandList.ClearRTV(GetNormalTextureCPUHandle(), clearColor);
     }

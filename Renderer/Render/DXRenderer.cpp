@@ -38,7 +38,6 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
 {
     _gPassPipeline.Parse("PipelineDescriptions\\GPassPipeline.tech");
     _deferredPipeline.Parse("PipelineDescriptions\\DeferredShading.tech");
-    _renderPipeline.Parse("PipelineDescriptions\\TriangleRenderPipeline.tech");
     _AABBpipeline.Parse("PipelineDescriptions\\AABBRenderPipeline.tech");
 
     _gBuffer.Init({ 1280, 720 });
@@ -142,7 +141,7 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
             commandList.SetGraphicsRootSignature(_gPassPipeline);
 
             commandList.SetViewport(_camera.GetViewport());
-            commandList.SetRenderTargets({ _gBuffer.GetPositionTextureCPUHandle(), _gBuffer.GetAlbedoMetalnessTextureCPUHandle(), _gBuffer.GetNormalTextureCPUHandle() }, &dsv);
+            commandList.SetRenderTargets({ _gBuffer.GetAlbedoMetalnessTextureCPUHandle(), _gBuffer.GetNormalTextureCPUHandle() }, &dsv);
 
             _scene.Draw(commandList);
         }
@@ -169,29 +168,32 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
 
             _scene.DeferredDraw(commandList);
 
-            commandList.TransitionBarrier(_gBuffer.GetPositionTexture(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+            commandList.TransitionBarrier(frame._depthTexture, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
             commandList.TransitionBarrier(_gBuffer.GetAlbedoMetalnessTexture(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
             commandList.TransitionBarrier(_gBuffer.GetNormalTexture(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 
+            frame._postFXDescHeap.PlaceResource(&_gBuffer.GetAlbedoMetalnessTexture());
+            frame._postFXDescHeap.PlaceResource(&_gBuffer.GetNormalTexture());
+
             D3D12_CPU_DESCRIPTOR_HANDLE handle = frame._postFXDescHeap.GetHeapStartCPUHandle();
-            handle.ptr += 32;
-            Core::Device::GetDXDevice()->CopyDescriptorsSimple(3, handle, _gBuffer.GetUAVHeap().GetHeapStartCPUHandle(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+            handle.ptr += 64;
+            Core::Device::GetDXDevice()->CopyDescriptorsSimple(2, handle, _gBuffer.GetUAVHeap().GetHeapStartCPUHandle(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
             ID3D12DescriptorHeap* heap[1] = { frame._postFXDescHeap.GetDXDescriptorHeap().Get() };
             commandList.GetDXCommandList()->SetDescriptorHeaps(1, heap);
 
-            D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle = frame._postFXDescHeap.GetHeapStartGPUHandle();
+            D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle = frame._postFXDescHeap.GetResourceGPUHandle(&frame._targetTexture);
             commandList.GetDXCommandList()->SetComputeRootDescriptorTable(6, gpuHandle);
-            gpuHandle.ptr += 32;
+            gpuHandle = frame._postFXDescHeap.GetResourceGPUHandle(&frame._depthTexture);
             commandList.GetDXCommandList()->SetComputeRootDescriptorTable(3, gpuHandle);
-            gpuHandle.ptr += 32;
+            gpuHandle = frame._postFXDescHeap.GetResourceGPUHandle(&_gBuffer.GetAlbedoMetalnessTexture());
             commandList.GetDXCommandList()->SetComputeRootDescriptorTable(4, gpuHandle);
-            gpuHandle.ptr += 32;
+            gpuHandle = frame._postFXDescHeap.GetResourceGPUHandle(&_gBuffer.GetNormalTexture());
             commandList.GetDXCommandList()->SetComputeRootDescriptorTable(5, gpuHandle);
 
             commandList.GetDXCommandList()->Dispatch(1280, 720, 1);
 
-            commandList.TransitionBarrier(_gBuffer.GetPositionTexture(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+            commandList.TransitionBarrier(frame._depthTexture, D3D12_RESOURCE_STATE_DEPTH_WRITE);
             commandList.TransitionBarrier(_gBuffer.GetAlbedoMetalnessTexture(), D3D12_RESOURCE_STATE_RENDER_TARGET);
             commandList.TransitionBarrier(_gBuffer.GetNormalTexture(), D3D12_RESOURCE_STATE_RENDER_TARGET);
 

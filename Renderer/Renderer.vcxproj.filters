@@ -443,6 +443,7 @@
     <None Include="PipelineDescriptions\GPassPipeline.tech" />
     <None Include="PipelineDescriptions\DeferredShading.tech" />
     <None Include="Shaders\DeferredShading_rootsig.hlsli" />
+    <None Include="Shaders\DepthFuncs.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\dxapp.ico">

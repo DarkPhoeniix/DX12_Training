@@ -11,6 +11,9 @@ struct SceneDesc
     float4 EyePosition;
     float4 EyeDirection;
     
+    uint2 WindowSize;
+    float2 NearFar;
+    
     uint LightsNum;
 };
 

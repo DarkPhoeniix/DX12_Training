@@ -23,6 +23,9 @@ namespace
         DirectX::XMVECTOR EyePosition = DirectX::XMVectorZero();
         DirectX::XMVECTOR EyeDirection = DirectX::XMVectorZero();
 
+        DirectX::XMUINT2 WindowSize = { 0, 0 };
+        DirectX::XMFLOAT2 NearFar = { 0, 0 };
+
         UINT LightsNum = 0;
     };
 } // namespace unnamed
@@ -62,11 +65,12 @@ namespace SceneLayer
             sceneDesc->View = _cache.GetCamera()->View();
             sceneDesc->Projection = _cache.GetCamera()->Projection();
 
-            DirectX::XMVECTOR invViewDet = DirectX::XMMatrixDeterminant(sceneDesc->View);
-            DirectX::XMVECTOR invProjectionDet = DirectX::XMMatrixDeterminant(sceneDesc->View);
+            sceneDesc->InvView = DirectX::XMMatrixInverse(nullptr, sceneDesc->View);
+            sceneDesc->InvProjection = DirectX::XMMatrixInverse(nullptr, sceneDesc->Projection);
 
-            sceneDesc->InvView = DirectX::XMMatrixInverse(&invViewDet, sceneDesc->View);
-            sceneDesc->InvProjection = DirectX::XMMatrixInverse(&invProjectionDet, sceneDesc->Projection);
+            const SceneLayer::Viewport& viewport = _cache.GetCamera()->GetViewport();
+            sceneDesc->WindowSize = { 1280, 720 };
+            sceneDesc->NearFar = { _cache.GetCamera()->GetNearZ(), _cache.GetCamera()->GetFarZ() };
 
             sceneDesc->LightsNum = _cache.GetLightManager()->GetLightsNum();
         }

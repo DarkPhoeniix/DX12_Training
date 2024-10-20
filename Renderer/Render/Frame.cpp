@@ -128,14 +128,24 @@ void Frame::Init(const Core::SwapChain& swapChain)
         _postFXDescHeap.SetDescription(desc);
         _postFXDescHeap.Create();
 
-        D3D12_CPU_DESCRIPTOR_HANDLE CPUHandle = _postFXDescHeap.GetHeapStartCPUHandle();
+
+        _postFXDescHeap.PlaceResource(&_targetTexture);
+        _postFXDescHeap.PlaceResource(&_depthTexture);
 
         D3D12_UNORDERED_ACCESS_VIEW_DESC UAVDesc = {};
         UAVDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
         UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
         UAVDesc.Texture2D.MipSlice = 0;
 
-        Core::Device::GetDXDevice()->CreateUnorderedAccessView(_targetTexture.GetDXResource().Get(), nullptr, &UAVDesc, CPUHandle);
+        Core::Device::GetDXDevice()->CreateUnorderedAccessView(_targetTexture.GetDXResource().Get(), nullptr, &UAVDesc, _postFXDescHeap.GetResourceCPUHandle(&_targetTexture));
+        
+        D3D12_SHADER_RESOURCE_VIEW_DESC SRVDesc = {};
+        SRVDesc.Format = DXGI_FORMAT_R32_FLOAT;
+        SRVDesc.Texture2D.MipLevels = 1;
+        SRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+        SRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+        Core::Device::GetDXDevice()->CreateShaderResourceView(_depthTexture.GetDXResource().Get(), &SRVDesc, _postFXDescHeap.GetResourceCPUHandle(&_depthTexture));
     }
 }
 

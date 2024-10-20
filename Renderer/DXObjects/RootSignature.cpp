@@ -236,9 +236,10 @@ namespace Core
         // TODO: add FORMAT types
         const std::map<std::string, DXGI_FORMAT> TEX_FORMAT =
         {
-            { "DXGI_FORMAT_R8G8B8A8_UNORM", DXGI_FORMAT_R8G8B8A8_UNORM},
+            { "DXGI_FORMAT_R8G8B8A8_UNORM", DXGI_FORMAT_R8G8B8A8_UNORM },
             { "DXGI_FORMAT_R8G8B8A8_SNORM", DXGI_FORMAT_R8G8B8A8_SNORM },
-            { "DXGI_FORMAT_R32G32B32A32_FLOAT", DXGI_FORMAT_R32G32B32A32_FLOAT }
+            { "DXGI_FORMAT_R32G32B32A32_FLOAT", DXGI_FORMAT_R32G32B32A32_FLOAT },
+            { "DXGI_FORMAT_D32_FLOAT", DXGI_FORMAT_D32_FLOAT }
         };
 
         DXGI_FORMAT ParseTexFormat(const std::string& str)

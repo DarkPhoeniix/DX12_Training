@@ -14,9 +14,8 @@ struct PSInput
 
 struct PSOutput
 {
-    float4 Position         : SV_Target0;
-    float4 AlbedoMetalness  : SV_Target1;
-    float4 NormalSpecular   : SV_Target2;
+    float4 AlbedoMetalness  : SV_Target0;
+    float4 NormalSpecular   : SV_Target1;
 };
 
 StructuredBuffer<LightDesc> Lights : register(t0);
@@ -43,7 +42,7 @@ PSOutput main(PSInput IN)
     
     PSOutput output;
     
-    output.Position = IN.WorldPosition;
+    //output.Position = IN.WorldPosition;
     output.AlbedoMetalness = float4(albedo, 1.0f);
     output.NormalSpecular = float4(finalNormal, 1.0f);
     

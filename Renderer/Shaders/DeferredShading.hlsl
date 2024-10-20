@@ -3,6 +3,7 @@
 
 #include "Common.hlsli"
 #include "LambertLighting.hlsli"
+#include "DepthFuncs.hlsli"
 
 StructuredBuffer<LightDesc> Lights          : register(t0);
 
@@ -15,9 +16,11 @@ RWTexture2D<float4> TargetTexture           : register(u0);
 [numthreads(1, 1, 1)]
 void main(uint3 DTid : SV_DispatchThreadID)
 {
+    float depth = PositionTexture.Load(uint3(DTid.xy, 0)).r;
+    
     // Setup surface
     Surface surface;
-    surface.Positon     = PositionTexture.Load(uint3(DTid.xy, 0));
+    surface.Positon     = ReconstructPosW(depth, DTid.xy, Scene.WindowSize, Scene.InvProjection, Scene.InvView);
     surface.Albedo      = float4(AlbedoMetalnessTexture.Load(uint3(DTid.xy, 0)).rgb, 1.0f);
     surface.Metalness   = AlbedoMetalnessTexture.Load(uint3(DTid.xy, 0)).a;
     surface.Normal      = float4(NormalSpecularTexture.Load(uint3(DTid.xy, 0)).xyz, 0.0f);
