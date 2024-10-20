@@ -43,27 +43,10 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
 
     _gBuffer.Init({ 1280, 720 });
 
-    // TODO: rework
-    {
-        ComPtr<ID3DBlob> computeShaderBlob = nullptr;
-        Helper::throwIfFailed(D3DReadFileToBlob(L"NegativePostFX_cs.cso", &computeShaderBlob));
-
-        D3D12_INPUT_ELEMENT_DESC* inputLayout = nullptr;
-
-        D3D12_COMPUTE_PIPELINE_STATE_DESC pipelineStateStreamDesc = {};
-
-        Helper::throwIfFailed(Core::Device::GetDXDevice()->CreateRootSignature(0, computeShaderBlob->GetBufferPointer(),
-            computeShaderBlob->GetBufferSize(), IID_PPV_ARGS(&_postFXRootSig)));
-
-        pipelineStateStreamDesc.CS = CD3DX12_SHADER_BYTECODE(computeShaderBlob.Get());
-
-        Helper::throwIfFailed(Core::Device::GetDXDevice()->CreateComputePipelineState(&pipelineStateStreamDesc, IID_PPV_ARGS(&_postFXPipeState)));
-    }
-
     // Camera Setup
     {
-        XMVECTOR pos = XMVectorSet(-30.0f, 40.0f, -50.0f, 1.0f);
-        XMVECTOR target = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+        XMVECTOR pos = XMVectorSet(-8.0f, 8.0f, -20.0f, 1.0f);
+        XMVECTOR target = XMVectorSet(5.0f, 0.0f, 0.0f, 1.0f);
         XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
         RECT windowSize;

@@ -14,6 +14,12 @@ namespace
     struct SceneDesc
     {
         DirectX::XMMATRIX ViewProjection = DirectX::XMMatrixIdentity();
+        DirectX::XMMATRIX View = DirectX::XMMatrixIdentity();
+        DirectX::XMMATRIX Projection = DirectX::XMMatrixIdentity();
+        
+        DirectX::XMMATRIX InvView = DirectX::XMMatrixIdentity();
+        DirectX::XMMATRIX InvProjection = DirectX::XMMatrixIdentity();
+
         DirectX::XMVECTOR EyePosition = DirectX::XMVectorZero();
         DirectX::XMVECTOR EyeDirection = DirectX::XMVectorZero();
 
@@ -51,9 +57,20 @@ namespace SceneLayer
     {
         // Setup scene data
         SceneDesc* sceneDesc = (SceneDesc*)_sceneGPUData->Map();
-        sceneDesc->ViewProjection = _cache.GetCamera()->ViewProjection();
-        sceneDesc->LightsNum = _cache.GetLightManager()->GetLightsNum();
-        //commandList.SetCBV(0, _sceneGPUData->OffsetGPU(0));
+        {
+            sceneDesc->ViewProjection = _cache.GetCamera()->ViewProjection();
+            sceneDesc->View = _cache.GetCamera()->View();
+            sceneDesc->Projection = _cache.GetCamera()->Projection();
+
+            DirectX::XMVECTOR invViewDet = DirectX::XMMatrixDeterminant(sceneDesc->View);
+            DirectX::XMVECTOR invProjectionDet = DirectX::XMMatrixDeterminant(sceneDesc->View);
+
+            sceneDesc->InvView = DirectX::XMMatrixInverse(&invViewDet, sceneDesc->View);
+            sceneDesc->InvProjection = DirectX::XMMatrixInverse(&invProjectionDet, sceneDesc->Projection);
+
+            sceneDesc->LightsNum = _cache.GetLightManager()->GetLightsNum();
+        }
+
         commandList.GetDXCommandList()->SetComputeRootConstantBufferView(0, _sceneGPUData->OffsetGPU(0));
 
         // Setup lights
@@ -68,8 +85,20 @@ namespace SceneLayer
 
         // Setup scene data
         SceneDesc* sceneDesc = (SceneDesc*)_sceneGPUData->Map();
-        sceneDesc->ViewProjection = _cache.GetCamera()->ViewProjection();
-        sceneDesc->LightsNum = _cache.GetLightManager()->GetLightsNum();
+        {
+            sceneDesc->ViewProjection = _cache.GetCamera()->ViewProjection();
+            sceneDesc->View = _cache.GetCamera()->View();
+            sceneDesc->Projection = _cache.GetCamera()->Projection();
+
+            DirectX::XMVECTOR invViewDet = DirectX::XMMatrixDeterminant(sceneDesc->View);
+            DirectX::XMVECTOR invProjectionDet = DirectX::XMMatrixDeterminant(sceneDesc->View);
+
+            sceneDesc->InvView = DirectX::XMMatrixInverse(&invViewDet, sceneDesc->View);
+            sceneDesc->InvProjection = DirectX::XMMatrixInverse(&invProjectionDet, sceneDesc->Projection);
+
+            sceneDesc->LightsNum = _cache.GetLightManager()->GetLightsNum();
+        }
+
         commandList.SetCBV(0, _sceneGPUData->OffsetGPU(0));
 
         // Setup lights
