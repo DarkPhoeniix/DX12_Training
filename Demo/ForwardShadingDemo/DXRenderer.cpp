@@ -1,19 +1,13 @@
-#include "stdafx.h"
+#include "Pch.h"
 
 #include "DXRenderer.h"
 
 #include "DXObjects/GraphicsCommandList.h"
-#include "Events/MouseScrollEvent.h"
-#include "Events/MouseButtonEvent.h"
-#include "Events/MouseMoveEvent.h"
-#include "Events/RenderEvent.h"
-#include "Events/ResizeEvent.h"
-#include "Events/UpdateEvent.h"
-#include "Events/KeyEvent.h"
+#include "GUI/GUI.h"
 #include "Render/TaskGPU.h"
 #include "Utility/DebugInfo.h"
 
-#include "GUI/GUI.h"
+//#include "Scene/Nodes/Objects/StaticObject.h"
 
 using namespace DirectX;
 using namespace Core;
@@ -23,42 +17,28 @@ namespace
     constexpr float MOVE_SPEED = 200.0f;
 } // namespace unnamed
 
-DXRenderer::DXRenderer(HWND windowHandle)
-    : _windowHandle(windowHandle)
-    , _contentLoaded(false)
-    , _ambient(nullptr)
+ForwardShadingRenderer::ForwardShadingRenderer(HWND windowHandle)
+    : IRenderer(windowHandle)
     , _isCameraMoving(false)
     , _deltaTime(0.0f)
 {   }
 
-DXRenderer::~DXRenderer()
+ForwardShadingRenderer::~ForwardShadingRenderer()
 {   }
 
-bool DXRenderer::LoadContent(TaskGPU* loadTask)
+bool ForwardShadingRenderer::LoadContent(TaskGPU* loadTask)
 {
     _renderPipeline.Parse("PipelineDescriptions\\TriangleRenderPipeline.tech");
     _AABBpipeline.Parse("PipelineDescriptions\\AABBRenderPipeline.tech");
 
-    // TODO: rework
-    {
-        ComPtr<ID3DBlob> computeShaderBlob = nullptr;
-        Helper::throwIfFailed(D3DReadFileToBlob(L"NegativePostFX_cs.cso", &computeShaderBlob));
-
-        D3D12_INPUT_ELEMENT_DESC* inputLayout = nullptr;
-
-        D3D12_COMPUTE_PIPELINE_STATE_DESC pipelineStateStreamDesc = {};
-
-        Helper::throwIfFailed(Core::Device::GetDXDevice()->CreateRootSignature(0, computeShaderBlob->GetBufferPointer(),
-            computeShaderBlob->GetBufferSize(), IID_PPV_ARGS(&_postFXRootSig)));
-
-        pipelineStateStreamDesc.CS = CD3DX12_SHADER_BYTECODE(computeShaderBlob.Get());
-
-        Helper::throwIfFailed(Core::Device::GetDXDevice()->CreateComputePipelineState(&pipelineStateStreamDesc, IID_PPV_ARGS(&_postFXPipeState)));
-    }
+    //{
+    //    SceneLayer::StaticObject o;
+    //    o.SetName("Test");
+    //}
 
     // Camera Setup
     {
-        XMVECTOR pos = XMVectorSet(-30.0f, 40.0f, -50.0f, 1.0f);
+        XMVECTOR pos = XMVectorSet(-10.0f, 15.0f, -30.0f, 1.0f);
         XMVECTOR target = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
         XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
@@ -98,19 +78,19 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
     return _contentLoaded;
 }
 
-void DXRenderer::UnloadContent()
+void ForwardShadingRenderer::UnloadContent()
 {
     _contentLoaded = false;
 }
 
-void DXRenderer::OnUpdate(Events::UpdateEvent& updateEvent)
+void ForwardShadingRenderer::OnUpdate(Events::UpdateEvent& updateEvent)
 {
     DebugInfo::Update(updateEvent);
 
     _deltaTime = updateEvent.elapsedTime;
 }
 
-void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
+void ForwardShadingRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
 {
     frame.WaitCPU();
     frame.ResetGPU();
@@ -125,7 +105,6 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
 
         Core::GraphicsCommandList& commandList = *task->GetCommandLists().front();
 
-        PIXBeginEvent(commandList.GetDXCommandList().Get(), 1, "Clean");
         {
             commandList.TransitionBarrier(frame._targetTexture, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
@@ -134,7 +113,6 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
             commandList.ClearRTV(rtv, clearColor);
             commandList.ClearDSV(dsv, D3D12_CLEAR_FLAG_DEPTH);
         }
-        PIXEndEvent(commandList.GetDXCommandList().Get());
 
         commandList.Close();
     }
@@ -147,7 +125,6 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
 
         Core::GraphicsCommandList& commandList = *task->GetCommandLists().front();
 
-        PIXBeginEvent(commandList.GetDXCommandList().Get(), 4, "Render");
         {
 #if defined(_DEBUG)
             DebugInfo::StartStatCollecting(commandList);
@@ -171,7 +148,6 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
             DebugInfo::EndStatCollecting(commandList);
 #endif
         }
-        PIXEndEvent(commandList.GetDXCommandList().Get());
 
         commandList.Close();
     }
@@ -184,7 +160,6 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
 
         Core::GraphicsCommandList* commandList = task->GetCommandLists().front();
 
-        PIXBeginEvent(commandList->GetDXCommandList().Get(), 7, "GUI");
         {
             commandList->SetViewport(_camera.GetViewport());
             commandList->SetRenderTarget(&rtv, &dsv);
@@ -239,7 +214,6 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
 
             GUI::Render(*commandList);
         }
-        PIXEndEvent(commandList->GetDXCommandList().Get());
 
         commandList->Close();
     }
@@ -252,20 +226,18 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
 
         Core::GraphicsCommandList* commandList = task->GetCommandLists().front();
 
-        PIXBeginEvent(commandList->GetDXCommandList().Get(), 5, "Present");
         {
             commandList->TransitionBarrier(frame._swapChainTexture, D3D12_RESOURCE_STATE_COPY_DEST);
             commandList->TransitionBarrier(frame._targetTexture, D3D12_RESOURCE_STATE_COPY_SOURCE);
             commandList->CopyResource(frame._targetTexture, frame._swapChainTexture);
             commandList->TransitionBarrier(frame._swapChainTexture, D3D12_RESOURCE_STATE_PRESENT);
         }
-        PIXEndEvent(commandList->GetDXCommandList().Get());
 
         commandList->Close();
     }
 }
 
-void DXRenderer::OnKeyPressed(Events::KeyEvent& e)
+void ForwardShadingRenderer::OnKeyPressed(Events::KeyEvent& e)
 {
     XMVECTOR dir = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
     if (e.keyCode == DIKeyCode::DIK_W)
@@ -294,7 +266,7 @@ void DXRenderer::OnKeyPressed(Events::KeyEvent& e)
     }
 }
 
-void DXRenderer::OnMouseMoved(Events::MouseMoveEvent& e)
+void ForwardShadingRenderer::OnMouseMoved(Events::MouseMoveEvent& e)
 {
     if ((e.relativeX != 0 || e.relativeY != 0) && _isCameraMoving)
     {
@@ -302,7 +274,7 @@ void DXRenderer::OnMouseMoved(Events::MouseMoveEvent& e)
     }
 }
 
-void DXRenderer::OnMouseButtonPressed(Events::MouseButtonEvent& e)
+void ForwardShadingRenderer::OnMouseButtonPressed(Events::MouseButtonEvent& e)
 {
     if (e.rightButton)
     {
@@ -310,7 +282,7 @@ void DXRenderer::OnMouseButtonPressed(Events::MouseButtonEvent& e)
     }
 }
 
-void DXRenderer::OnMouseButtonReleased(Events::MouseButtonEvent& e)
+void ForwardShadingRenderer::OnMouseButtonReleased(Events::MouseButtonEvent& e)
 {
     if (!e.rightButton)
     {

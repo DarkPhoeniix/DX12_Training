@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Scene/Nodes/ISceneNode.h"
+#include "Scene/NodeFactory.h"
 
 namespace SceneLayer
 {

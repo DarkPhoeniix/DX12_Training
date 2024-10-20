@@ -4,6 +4,7 @@
 #include "Scene/Nodes/Objects/Material.h"
 #include "Scene/Nodes/ISceneNode.h"
 #include "Scene/Volumes/AABBVolume.h"
+#include "Scene/NodeFactory.h"
 
 namespace SceneLayer
 {

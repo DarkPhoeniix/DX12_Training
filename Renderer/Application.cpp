@@ -11,7 +11,7 @@
 #include "Events/ResizeEvent.h"
 #include "Events/UpdateEvent.h"
 #include "Input/InputDevice.h"
-#include "Render/DXRenderer.h"
+#include "Render/IRenderer.h"
 #include "Utility/DebugInfo.h"
 #include "Utility/Resources.h"
 #include "Window/Win32Window.h"
@@ -76,7 +76,7 @@ void Application::Init(HINSTANCE hInstance)
     _instance = new Application(hInstance);
 }
 
-int Application::Run(std::shared_ptr<DXRenderer> pApp)
+int Application::Run(std::shared_ptr<IRenderer> pApp)
 {
     _swapChain.Init(_win32Window);
     _allocs.Init();
@@ -189,7 +189,7 @@ void Application::_RegisterWindowClass(HINSTANCE hInstance)
     }
 }
 
-void Application::_UpdateCall(std::shared_ptr<DXRenderer> pApp)
+void Application::_UpdateCall(std::shared_ptr<IRenderer> pApp)
 {
     _updateClock.Tick();
 
@@ -197,7 +197,7 @@ void Application::_UpdateCall(std::shared_ptr<DXRenderer> pApp)
     pApp->OnUpdate(updateEvent);
 }
 
-void Application::_RenderCall(std::shared_ptr<DXRenderer> pApp)
+void Application::_RenderCall(std::shared_ptr<IRenderer> pApp)
 {
     _renderClock.Tick();
 

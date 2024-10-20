@@ -1,21 +1,16 @@
 #pragma once
 
-#include "DXObjects/Heap.h"
-#include "DXObjects/DescriptorHeap.h"
 #include "DXObjects/RootSignature.h"
-#include "DXObjects/Texture.h"
-#include "DXObjects/StatisticsQuery.h"
 #include "Scene/Nodes/Camera/Camera.h"
 #include "Scene/Scene.h"
-#include "Scene/Nodes/Light/DirectionalLight.h"
 #include "Render/Frame.h"
-#include "Window/IWindowEventListener.h"
+#include "Render/IRenderer.h"
 
-class DXRenderer : public Core::Events::IWindowEventListener
+class ForwardShadingRenderer : public IRenderer
 {
 public:
-    DXRenderer(HWND windowHandle);
-    ~DXRenderer();
+    ForwardShadingRenderer(HWND windowHandle);
+    ~ForwardShadingRenderer();
 
     virtual bool LoadContent(TaskGPU* loadTask);
     virtual void UnloadContent();
@@ -31,20 +26,12 @@ public:
     virtual void OnResize(Core::Events::ResizeEvent& e) override {}
 
 private:
-    HWND _windowHandle;
-
     Core::RootSignature _renderPipeline;
     Core::RootSignature _AABBpipeline;
 
-    ComPtr<ID3D12RootSignature> _postFXRootSig;
-    ComPtr<ID3D12PipelineState> _postFXPipeState;
-
-    std::shared_ptr<Core::Resource> _ambient;
-
     SceneLayer::Scene _scene;
+
     SceneLayer::Camera _camera;
     bool _isCameraMoving;
     float _deltaTime;
-
-    bool _contentLoaded;
 };

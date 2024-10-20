@@ -5,7 +5,6 @@
 #include "DXObjects/Texture.h"
 #include "DXObjects/GraphicsCommandList.h"
 #include "Scene/SceneCache.h"
-#include "Scene/NodeFactory.h"
 
 using namespace DirectX;
 

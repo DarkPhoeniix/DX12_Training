@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ILight.h"
+#include "Scene/NodeFactory.h"
 
 namespace SceneLayer
 {

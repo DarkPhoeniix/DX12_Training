@@ -2,21 +2,17 @@
 
 #include "PointLight.h"
 
-#include "Scene/NodeFactory.h"
-
 namespace SceneLayer
 {
     Register_Node(PointLight);
 
     PointLight::PointLight()
         : Base()
-    {
-    }
+    {    }
 
     PointLight::PointLight(SceneCache* cache, ISceneNode* parent)
         : Base(cache, parent)
-    {
-    }
+    {    }
 
     void PointLight::SetColor(const DirectX::XMVECTOR& color)
     {

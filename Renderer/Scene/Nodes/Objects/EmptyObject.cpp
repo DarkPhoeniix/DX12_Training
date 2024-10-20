@@ -2,8 +2,6 @@
 
 #include "EmptyObject.h"
 
-#include "Scene/NodeFactory.h"
-
 namespace SceneLayer
 {
     Register_Node(EmptyObject);

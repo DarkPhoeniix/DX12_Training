@@ -38,7 +38,6 @@ public:
 #define STRINGS(x) #x
 
 #define Register_Node(Type) \
-namespace \
-{\
-	static bool registerName = NodeFactory::Register<Type>(STRINGS(Type));\
+namespace { \
+	static bool registerName = NodeFactory::Register<Type>(STRINGS(Type)); \
 }

@@ -1,7 +1,6 @@
 #include "stdafx.h"
 
 #include "ISceneNode.h"
-
 #include "Scene/NodeFactory.h"
 
 using namespace DirectX;

@@ -3,7 +3,6 @@
 #include "DirectionalLight.h"
 
 #include "DXObjects/GraphicsCommandList.h"
-#include "Scene/NodeFactory.h"
 
 namespace SceneLayer
 {

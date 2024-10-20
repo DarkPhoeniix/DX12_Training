@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Utility\Helpers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -37,9 +34,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DXObjects\RootSignature.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\DXRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Render\Frame.cpp">
@@ -180,6 +174,9 @@
     <ClCompile Include="Scene\SceneCache.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Render\IRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Utility\Helpers.h">
@@ -222,9 +219,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DXObjects\RootSignature.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\DXRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Utility\Defines.h">
@@ -314,9 +308,6 @@
     <ClInclude Include="Utility\Resources.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="resource1.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="DXObjects\GraphicsCommandList.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -395,6 +386,9 @@
     <ClInclude Include="Scene\SceneCache.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Render\IRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\Mesh_ps.hlsl" />
@@ -418,7 +412,6 @@
     <None Include="PipelineDescriptions\OcclusionCullingPipeline.blend" />
     <None Include="PipelineDescriptions\OcclusionCullingPipeline.tech" />
     <None Include="PipelineDescriptions\AABBRenderPipeline.depth" />
-    <None Include="Resource.aps" />
     <None Include="Shaders\SemiAmbientLighting.hlsli" />
     <None Include="Shaders\LambertLighting.hlsli" />
     <None Include="Shaders\Mesh_rootsig.hlsli" />
@@ -427,21 +420,5 @@
     <None Include="Shaders\Common.hlsli" />
     <None Include="Shaders\LightingCommon.hlsli" />
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="Resources\dxapp.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\x64\Debug\dxapp.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="icon1.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="Resource.rc">
-      <Filter>Resource Files</Filter>
-    </ResourceCompile>
   </ItemGroup>
 </Project>

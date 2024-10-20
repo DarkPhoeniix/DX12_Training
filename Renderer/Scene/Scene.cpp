@@ -39,18 +39,9 @@ namespace SceneLayer
         std::shared_ptr<DirectionalLight> directionalLight = std::make_shared<DirectionalLight>(&_cache, nullptr);
         directionalLight->SetName("Directional Light");
         directionalLight->SetDirection(DirectX::XMVectorSet(0.5f, -1.0f, 0.2f, 0.0f));
-        directionalLight->SetColor(DirectX::XMVectorSet(0.0f, 1.0f, 0.5f, 1.0f));
-
-        std::shared_ptr<PointLight> pointLight = std::make_shared<PointLight>(&_cache, nullptr);
-        DirectX::XMMATRIX tr = DirectX::XMMatrixIdentity() * DirectX::XMMatrixTranslation(20.0f, 100.0f, -20.0f);
-        pointLight->SetName("Point Light");
-        pointLight->SetLocalTransform(tr);
-        pointLight->SetRange(500.0f);
-        pointLight->SetIntensity(100.0f);
-        pointLight->SetColor(DirectX::XMVectorSet(1.0f, 0.0f, 1.0f, 1.0f));
+        directionalLight->SetColor(DirectX::XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f));
 
         _cache.GetLightManager()->AddDirectionalLight(directionalLight);
-        _cache.GetLightManager()->AddPointLight(pointLight);
     }
 
     Scene::~Scene()
@@ -109,7 +100,8 @@ namespace SceneLayer
             Json::Value root;
             nodeIn >> root;
 
-            std::shared_ptr<ISceneNode> child = std::shared_ptr<ISceneNode>(NodeFactory::Create<ISceneNode>(root["Type"].asCString()));
+            std::string type = root["Type"].asCString();
+            std::shared_ptr<ISceneNode> child = std::shared_ptr<ISceneNode>(NodeFactory::Create<ISceneNode>(type));
             child->SetSceneCache(&_cache);
             child->LoadNode(nodeFilepath, commandList);
 

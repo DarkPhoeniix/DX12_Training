@@ -6,7 +6,7 @@
 #include "Render/Frame.h"
 
 class Win32Window;
-class DXRenderer;
+class IRenderer;
 
 class Application
 {
@@ -15,7 +15,7 @@ public:
     Application& operator=(const Application& copy) = delete;
 
     static void Init(HINSTANCE hInstance);
-    int Run(std::shared_ptr<DXRenderer> pApp);
+    int Run(std::shared_ptr<IRenderer> pApp);
     static void Quit(int exitCode = 0);
 
     static Application* Instance();
@@ -28,8 +28,8 @@ private:
 
     void _RegisterWindowClass(HINSTANCE hInstance);
 
-    void _UpdateCall(std::shared_ptr<DXRenderer> pApp);
-    void _RenderCall(std::shared_ptr<DXRenderer> pApp);
+    void _UpdateCall(std::shared_ptr<IRenderer> pApp);
+    void _RenderCall(std::shared_ptr<IRenderer> pApp);
     void _ExecuteFrameTasks();
 
     friend LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
