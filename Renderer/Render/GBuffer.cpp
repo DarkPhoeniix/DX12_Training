@@ -2,7 +2,7 @@
 
 #include "GBuffer.h"
 
-#include "DXObjects/GraphicsCommandList.h"
+#include "DXObjects/CommandList.h"
 
 namespace Core
 {
@@ -106,7 +106,7 @@ namespace Core
         }
     }
 
-    void GBuffer::ClearTextures(Core::GraphicsCommandList& commandList)
+    void GBuffer::ClearTextures(Core::CommandList& commandList)
     {
         FLOAT clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 

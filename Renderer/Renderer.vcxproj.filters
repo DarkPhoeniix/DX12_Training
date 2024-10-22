@@ -99,7 +99,7 @@
     <ClCompile Include="Window\Win32Window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DXObjects\GraphicsCommandList.cpp">
+    <ClCompile Include="DXObjects\CommandList.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DXObjects\Texture.cpp">
@@ -302,7 +302,7 @@
     <ClInclude Include="Window\IWindowEventListener.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="DXObjects\GraphicsCommandList.h">
+    <ClInclude Include="DXObjects\CommandList.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DXObjects\Texture.h">
@@ -417,15 +417,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="PipelineDescriptions\AABBRenderPipeline.tech" />
-    <None Include="PipelineDescriptions\DepthPretestPipeline.blend" />
-    <None Include="PipelineDescriptions\DepthPretestPipeline.depth" />
-    <None Include="PipelineDescriptions\DepthPretestPipeline.tech" />
-    <None Include="PipelineDescriptions\TriangleRenderPipeline.blend" />
-    <None Include="PipelineDescriptions\TriangleRenderPipeline.depth" />
-    <None Include="PipelineDescriptions\TriangleRenderPipeline.raster" />
-    <None Include="PipelineDescriptions\TriangleRenderPipeline.tech" />
-    <None Include="PipelineDescriptions\OcclusionCullingPipeline.blend" />
-    <None Include="PipelineDescriptions\OcclusionCullingPipeline.tech" />
     <None Include="PipelineDescriptions\AABBRenderPipeline.depth" />
     <None Include="Resource.aps" />
     <None Include="Shaders\SemiAmbientLighting.hlsli" />
@@ -444,6 +435,8 @@
     <None Include="PipelineDescriptions\DeferredShading.tech" />
     <None Include="Shaders\DeferredShading_rootsig.hlsli" />
     <None Include="Shaders\DepthFuncs.hlsli" />
+    <None Include="PipelineDescriptions\AABBRenderPipeline.blend" />
+    <None Include="PipelineDescriptions\AABBRenderPipeline.raster" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\dxapp.ico">

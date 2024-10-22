@@ -11,15 +11,24 @@ namespace SceneLayer
 
 namespace Core
 {
-    class GraphicsCommandList
+    enum class CommandListType
+    {
+        Unknown,
+        Graphics,
+        Compute,
+        Copy
+    };
+
+    class CommandList
     {
     public:
-        GraphicsCommandList();
-        GraphicsCommandList(ComPtr<ID3D12GraphicsCommandList> DXCommandList);
-        ~GraphicsCommandList();
+        CommandList();
+        CommandList(ComPtr<ID3D12GraphicsCommandList> DXCommandList);
+        ~CommandList();
 
-        D3D12_COMMAND_LIST_TYPE GetCommandListType() const;
+        CommandListType GetCommandListType() const;
 
+        void SetDXCommandList(ComPtr<ID3D12GraphicsCommandList> commandList);
         ComPtr<ID3D12GraphicsCommandList> GetDXCommandList() const;
         ComPtr<ID3D12GraphicsCommandList>& GetDXCommandList();
 
@@ -46,7 +55,7 @@ namespace Core
         // Rasterizator State
         void SetViewport(const SceneLayer::Viewport& viewport);
         void SetPipelineState(const RootSignature& rootSignature);
-        void SetGraphicsRootSignature(const RootSignature& rootSignature);
+        void SetRootSignature(const RootSignature& rootSignature);
 
         void ClearRTV(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetView, const FLOAT color[4], SceneLayer::Viewport* viewport = nullptr);
         void ClearDSV(D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, D3D12_CLEAR_FLAGS clearFlags = D3D12_CLEAR_FLAG_DEPTH, FLOAT depth = 1.0f, UINT8 stencil = 0, SceneLayer::Viewport* viewport = nullptr);
@@ -67,5 +76,6 @@ namespace Core
 
     private:
         ComPtr<ID3D12GraphicsCommandList> _commandList;
+        CommandListType _type;
     };
 } // namespace Core

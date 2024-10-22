@@ -3,7 +3,7 @@
 #include "Scene.h"
 
 #include "DXObjects/Texture.h"
-#include "DXObjects/GraphicsCommandList.h"
+#include "DXObjects/CommandList.h"
 #include "Scene/NodeFactory.h"
 #include "Scene/Nodes/Camera/Camera.h"
 #include "Scene/Nodes/Light/DirectionalLight.h"
@@ -56,7 +56,7 @@ namespace SceneLayer
     Scene::~Scene()
     {   }
 
-    void Scene::DeferredDraw(Core::GraphicsCommandList& commandList)
+    void Scene::DeferredDraw(Core::CommandList& commandList)
     {
         // Setup scene data
         SceneDesc* sceneDesc = (SceneDesc*)_sceneGPUData->Map();
@@ -75,13 +75,13 @@ namespace SceneLayer
             sceneDesc->LightsNum = _cache.GetLightManager()->GetLightsNum();
         }
 
-        commandList.GetDXCommandList()->SetComputeRootConstantBufferView(0, _sceneGPUData->OffsetGPU(0));
+        commandList.SetCBV(0, _sceneGPUData->OffsetGPU(0));
 
         // Setup lights
         _cache.GetLightManager()->SetupLightsCompute(commandList);
     }
 
-    void Scene::Draw(Core::GraphicsCommandList& commandList)
+    void Scene::Draw(Core::CommandList& commandList)
     {
         // Setup textures
         commandList.SetDescriptorHeaps({ _cache.GetTextureTable()->GetDescriptorHeap().GetDXDescriptorHeap().Get() });
@@ -114,7 +114,7 @@ namespace SceneLayer
         }
     }
 
-    void Scene::DrawAABB(Core::GraphicsCommandList& commandList)
+    void Scene::DrawAABB(Core::CommandList& commandList)
     {
         for (auto& node : _rootNodes)
         {
@@ -127,7 +127,7 @@ namespace SceneLayer
         _cache.SetCamera(&camera);
     }
 
-    bool Scene::LoadScene(const std::string& filepath, Core::GraphicsCommandList& commandList)
+    bool Scene::LoadScene(const std::string& filepath, Core::CommandList& commandList)
     {
         std::ifstream in(filepath, std::ifstream::in | std::ifstream::binary);
 
@@ -156,7 +156,7 @@ namespace SceneLayer
         return true;
     }
 
-    void Scene::_UploadTexture(Core::Texture* texture, Core::GraphicsCommandList& commandList)
+    void Scene::_UploadTexture(Core::Texture* texture, Core::CommandList& commandList)
     {
         if (_cache.GetTextureTable()->AddResource(texture))
         {

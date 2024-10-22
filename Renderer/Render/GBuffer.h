@@ -15,7 +15,7 @@ namespace Core
     public:
         void Init(const DirectX::XMUINT2& size);
 
-        void ClearTextures(Core::GraphicsCommandList& commandList);
+        void ClearTextures(Core::CommandList& commandList);
 
         Core::DescriptorHeap& GetDescHeap();
         Core::DescriptorHeap& GetUAVHeap();

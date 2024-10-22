@@ -19,17 +19,17 @@ namespace SceneLayer
         Scene();
         ~Scene();
 
-        void DeferredDraw(Core::GraphicsCommandList& commandList);
-        void Draw(Core::GraphicsCommandList& commandList);
-        void DrawAABB(Core::GraphicsCommandList& commandList);
+        void DeferredDraw(Core::CommandList& commandList);
+        void Draw(Core::CommandList& commandList);
+        void DrawAABB(Core::CommandList& commandList);
 
         // TODO: remove func, load camera from the file
         void SetCamera(Camera& camera);
 
-        bool LoadScene(const std::string& filepath, Core::GraphicsCommandList& commandList);
+        bool LoadScene(const std::string& filepath, Core::CommandList& commandList);
 
     private:
-        void _UploadTexture(Core::Texture* texture, Core::GraphicsCommandList& commandList);
+        void _UploadTexture(Core::Texture* texture, Core::CommandList& commandList);
 
         std::string _name;
 

@@ -36,7 +36,7 @@ namespace SceneLayer
         return resourceTable->GetResourceIndex(_metalnessTexture->GetName());
     }
 
-    void Material::UploadToGPU(Core::GraphicsCommandList& commandList, Core::ResourceTable* resourceTable)
+    void Material::UploadToGPU(Core::CommandList& commandList, Core::ResourceTable* resourceTable)
     {
         ASSERT(resourceTable, "Resource table is nullptr");
 

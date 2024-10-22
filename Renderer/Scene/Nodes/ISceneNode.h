@@ -2,7 +2,7 @@
 
 namespace Core
 {
-    class GraphicsCommandList;
+    class CommandList;
 } // namespace Core
 
 namespace SceneLayer
@@ -30,10 +30,10 @@ namespace SceneLayer
         void SetSceneCache(SceneCache* cache);
         SceneCache* GetSceneCache() const;
 
-        virtual void Draw(Core::GraphicsCommandList& commandList) const;
-        virtual void DrawAABB(Core::GraphicsCommandList& commandList) const;
+        virtual void Draw(Core::CommandList& commandList) const;
+        virtual void DrawAABB(Core::CommandList& commandList) const;
 
-        virtual void LoadNode(const std::string& filepath, Core::GraphicsCommandList& commandList);
+        virtual void LoadNode(const std::string& filepath, Core::CommandList& commandList);
 
     protected:
         std::string _name;

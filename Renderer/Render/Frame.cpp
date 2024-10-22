@@ -2,7 +2,7 @@
 
 #include "Frame.h"
 
-#include "DXObjects/GraphicsCommandList.h"
+#include "DXObjects/CommandList.h"
 #include "DXObjects/Fence.h"
 #include "DXObjects/SwapChain.h"
 #include "DXObjects/RootSignature.h"

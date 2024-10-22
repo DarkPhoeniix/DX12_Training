@@ -4,7 +4,7 @@
 
 Executor::Executor()
     : _allocator(nullptr)
-    , _commandList(nullptr)
+    , _commandList()
 {
 }
 
@@ -16,7 +16,11 @@ Executor::~Executor()
 void Executor::Allocate(D3D12_COMMAND_LIST_TYPE type)
 {
     Core::Device::GetDXDevice()->CreateCommandAllocator(type, IID_PPV_ARGS(&_allocator));
-    Core::Device::GetDXDevice()->CreateCommandList(0, type, _allocator.Get(), nullptr, IID_PPV_ARGS(&_commandList.GetDXCommandList()));
+
+    ComPtr<ID3D12GraphicsCommandList> commandList;
+    Core::Device::GetDXDevice()->CreateCommandList(0, type, _allocator.Get(), nullptr, IID_PPV_ARGS(&commandList));
+
+    _commandList.SetDXCommandList(commandList);
     _commandList.Close();
 }
 
@@ -43,7 +47,7 @@ bool Executor::IsFree() const
     return _isFree;
 }
 
-Core::GraphicsCommandList* Executor::GetCommandList()
+Core::CommandList* Executor::GetCommandList()
 {
     return &_commandList;
 }

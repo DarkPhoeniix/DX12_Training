@@ -4,7 +4,7 @@
 
 namespace Core
 {
-    class GraphicsCommandList;
+    class CommandList;
 } // namespace Core
 
 namespace SceneLayer
@@ -18,8 +18,8 @@ namespace SceneLayer
         LightManager();
         ~LightManager() = default;
 
-        void SetupLightsCompute(Core::GraphicsCommandList& commandList);
-        void SetupLights(Core::GraphicsCommandList& commandList);
+        void SetupLightsCompute(Core::CommandList& commandList);
+        void SetupLights(Core::CommandList& commandList);
 
         UINT GetLightsNum() const;
 

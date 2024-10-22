@@ -16,8 +16,8 @@ public:
 
     static void Update(Core::Events::UpdateEvent& updateEvent);
     
-    static void StartStatCollecting(Core::GraphicsCommandList& commandList);
-    static void EndStatCollecting(Core::GraphicsCommandList& commandList);
+    static void StartStatCollecting(Core::CommandList& commandList);
+    static void EndStatCollecting(Core::CommandList& commandList);
 
     static const D3D12_QUERY_DATA_PIPELINE_STATISTICS& GetPipelineStatisctics();
     static UINT GetFPS();

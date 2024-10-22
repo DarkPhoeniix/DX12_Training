@@ -3,7 +3,7 @@
 #include "StaticObject.h"
 
 #include "DXObjects/Texture.h"
-#include "DXObjects/GraphicsCommandList.h"
+#include "DXObjects/CommandList.h"
 #include "Scene/SceneCache.h"
 #include "Scene/NodeFactory.h"
 
@@ -139,7 +139,7 @@ namespace SceneLayer
         }
     }
 
-    void StaticObject::Draw(Core::GraphicsCommandList& commandList) const
+    void StaticObject::Draw(Core::CommandList& commandList) const
     {
         for (const std::shared_ptr<ISceneNode> node : _childNodes)
         {
@@ -174,7 +174,7 @@ namespace SceneLayer
         commandList.DrawIndexed(_mesh->getIndices().size());
     }
 
-    void StaticObject::DrawAABB(Core::GraphicsCommandList& commandList) const
+    void StaticObject::DrawAABB(Core::CommandList& commandList) const
     {
         for (const std::shared_ptr<ISceneNode> node : _childNodes)
         {
@@ -205,7 +205,7 @@ namespace SceneLayer
         return _AABB;
     }
 
-    void StaticObject::LoadNode(const std::string& filepath, Core::GraphicsCommandList& commandList)
+    void StaticObject::LoadNode(const std::string& filepath, Core::CommandList& commandList)
     {
         Base::LoadNode(filepath, commandList);
 
@@ -234,7 +234,7 @@ namespace SceneLayer
         _CreateGPUBuffers(commandList);
     }
 
-    void StaticObject::_CreateGPUBuffers(Core::GraphicsCommandList& commandList)
+    void StaticObject::_CreateGPUBuffers(Core::CommandList& commandList)
     {
         // Create Model Description Buffer
         {
@@ -280,7 +280,7 @@ namespace SceneLayer
         }
     }
 
-    void StaticObject::_UploadData(Core::GraphicsCommandList& commandList,
+    void StaticObject::_UploadData(Core::CommandList& commandList,
         ID3D12Resource** destinationResource,
         size_t numElements,
         size_t elementSize,

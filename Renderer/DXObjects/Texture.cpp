@@ -2,7 +2,7 @@
 
 #include "Texture.h"
 
-#include "DXObjects/GraphicsCommandList.h"
+#include "DXObjects/CommandList.h"
 
 #include <filesystem>
 
@@ -33,7 +33,7 @@ namespace Core
         _descritptorHeap = nullptr;
     }
 
-    void Texture::UploadToGPU(GraphicsCommandList& commandList)
+    void Texture::UploadToGPU(CommandList& commandList)
     {
         ASSERT(_descritptorHeap, "Invalid descriptor heap for texture " + _name);
 

@@ -5,7 +5,7 @@
 
 namespace Core
 {
-    class GraphicsCommandList;
+    class CommandList;
     class ResourceTable;
 } // namespace Core
 
@@ -22,7 +22,7 @@ namespace SceneLayer
         UINT NormalMapIndex(Core::ResourceTable* resourceTable) const;
         UINT MetalnessIndex(Core::ResourceTable* resourceTable) const;
 
-        void UploadToGPU(Core::GraphicsCommandList& commandList, Core::ResourceTable* resourceTable);
+        void UploadToGPU(Core::CommandList& commandList, Core::ResourceTable* resourceTable);
 
         static Material* LoadFromFile(const std::string& filepath);
 

@@ -39,17 +39,17 @@ namespace Core
         _statResource.InitFromDXResource(res);
     }
 
-    void StatisticsQuery::BeginQuery(GraphicsCommandList& commandList)
+    void StatisticsQuery::BeginQuery(CommandList& commandList)
     {
         commandList.BeginQuery(_statQueryHeap, D3D12_QUERY_TYPE_PIPELINE_STATISTICS, 0);
     }
 
-    void StatisticsQuery::EndQuery(GraphicsCommandList& commandList)
+    void StatisticsQuery::EndQuery(CommandList& commandList)
     {
         commandList.EndQuery(_statQueryHeap, D3D12_QUERY_TYPE_PIPELINE_STATISTICS, 0);
     }
 
-    void StatisticsQuery::ResolveQueryData(GraphicsCommandList& commandList)
+    void StatisticsQuery::ResolveQueryData(CommandList& commandList)
     {
         commandList.ResolveQueryData(_statQueryHeap, D3D12_QUERY_TYPE_PIPELINE_STATISTICS, 0, _statResource, 0);
     }

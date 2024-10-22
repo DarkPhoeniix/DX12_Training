@@ -4,7 +4,7 @@
 
 namespace Core
 {
-    class GraphicsCommandList;
+    class CommandList;
 } // namespace Core
 
 namespace SceneLayer

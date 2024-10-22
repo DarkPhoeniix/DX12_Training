@@ -2,7 +2,7 @@
 
 #include "GUI.h"
 
-#include "DXObjects/GraphicsCommandList.h"
+#include "DXObjects/CommandList.h"
 #include "DXObjects/SwapChain.h"
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -130,7 +130,7 @@ void GUI::NewFrame()
     ImGui::NewFrame();
 }
 
-void GUI::Render(Core::GraphicsCommandList& commandList)
+void GUI::Render(Core::CommandList& commandList)
 {
     ImGui::Render();
     commandList.SetDescriptorHeaps({ Instance()._srvDescriptorHeap->GetDXDescriptorHeap().Get() });

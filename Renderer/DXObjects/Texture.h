@@ -6,7 +6,7 @@
 
 namespace Core
 {
-    class GraphicsCommandList;
+    class CommandList;
 
     class Texture : public Resource
     {
@@ -14,7 +14,7 @@ namespace Core
         Texture();
         ~Texture();
 
-        void UploadToGPU(GraphicsCommandList& commandList);
+        void UploadToGPU(CommandList& commandList);
 
         void SetDescriptorHeap(DescriptorHeap* descriptorHeap);
         DescriptorHeap* GetDescriptorHeap() const;

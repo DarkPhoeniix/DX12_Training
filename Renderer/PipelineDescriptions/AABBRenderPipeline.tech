@@ -5,8 +5,8 @@
 
 	"TopologyType": "point",
 
-	"Blend": "PipelineDescriptions\\TriangleRenderPipeline.blend",
-	"Raster": "PipelineDescriptions\\TriangleRenderPipeline.raster",
+	"Blend": "PipelineDescriptions\\AABBRenderPipeline.blend",
+	"Raster": "PipelineDescriptions\\AABBRenderPipeline.raster",
 	"Depth": "PipelineDescriptions\\AABBRenderPipeline.depth",
 
 	"RenderTargets": [
