@@ -56,31 +56,6 @@ namespace SceneLayer
     Scene::~Scene()
     {   }
 
-    void Scene::DeferredDraw(Core::CommandList& commandList)
-    {
-        // Setup scene data
-        SceneDesc* sceneDesc = (SceneDesc*)_sceneGPUData->Map();
-        {
-            sceneDesc->ViewProjection = _cache.GetCamera()->ViewProjection();
-            sceneDesc->View = _cache.GetCamera()->View();
-            sceneDesc->Projection = _cache.GetCamera()->Projection();
-
-            sceneDesc->InvView = DirectX::XMMatrixInverse(nullptr, sceneDesc->View);
-            sceneDesc->InvProjection = DirectX::XMMatrixInverse(nullptr, sceneDesc->Projection);
-
-            const SceneLayer::Viewport& viewport = _cache.GetCamera()->GetViewport();
-            sceneDesc->WindowSize = { 1280, 720 };
-            sceneDesc->NearFar = { _cache.GetCamera()->GetNearZ(), _cache.GetCamera()->GetFarZ() };
-
-            sceneDesc->LightsNum = _cache.GetLightManager()->GetLightsNum();
-        }
-
-        commandList.SetCBV(0, _sceneGPUData->OffsetGPU(0));
-
-        // Setup lights
-        _cache.GetLightManager()->SetupLightsCompute(commandList);
-    }
-
     void Scene::Draw(Core::CommandList& commandList)
     {
         // Setup textures
@@ -94,11 +69,12 @@ namespace SceneLayer
             sceneDesc->View = _cache.GetCamera()->View();
             sceneDesc->Projection = _cache.GetCamera()->Projection();
 
-            DirectX::XMVECTOR invViewDet = DirectX::XMMatrixDeterminant(sceneDesc->View);
-            DirectX::XMVECTOR invProjectionDet = DirectX::XMMatrixDeterminant(sceneDesc->View);
+            sceneDesc->InvView = DirectX::XMMatrixInverse(nullptr, sceneDesc->View);
+            sceneDesc->InvProjection = DirectX::XMMatrixInverse(nullptr, sceneDesc->Projection);
 
-            sceneDesc->InvView = DirectX::XMMatrixInverse(&invViewDet, sceneDesc->View);
-            sceneDesc->InvProjection = DirectX::XMMatrixInverse(&invProjectionDet, sceneDesc->Projection);
+            const SceneLayer::Viewport& viewport = _cache.GetCamera()->GetViewport();
+            sceneDesc->WindowSize = { (uint32_t)viewport.GetSize().x, (uint32_t)viewport.GetSize().y };
+            sceneDesc->NearFar = { _cache.GetCamera()->GetNearZ(), _cache.GetCamera()->GetFarZ() };
 
             sceneDesc->LightsNum = _cache.GetLightManager()->GetLightsNum();
         }

@@ -19,7 +19,6 @@ namespace SceneLayer
         Scene();
         ~Scene();
 
-        void DeferredDraw(Core::CommandList& commandList);
         void Draw(Core::CommandList& commandList);
         void DrawAABB(Core::CommandList& commandList);
 

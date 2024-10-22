@@ -18,7 +18,6 @@ namespace SceneLayer
         LightManager();
         ~LightManager() = default;
 
-        void SetupLightsCompute(Core::CommandList& commandList);
         void SetupLights(Core::CommandList& commandList);
 
         UINT GetLightsNum() const;

@@ -125,7 +125,7 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         commandList.Close();
     }
 
-    // Execute the TriangleRender shader
+    // Execute the GBuffer Pass
     {
         TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, &_gPassPipeline);
         task->SetName("g-pass");
@@ -145,7 +145,6 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
 
             _scene.Draw(commandList);
 
-
             commandList.TransitionBarrier(frame._depthTexture, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
             commandList.TransitionBarrier(_gBuffer.GetAlbedoMetalnessTexture(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
             commandList.TransitionBarrier(_gBuffer.GetNormalTexture(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
@@ -156,7 +155,7 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         commandList.Close();
     }
 
-    // Execute the TriangleRender shader
+    // Execute the Deferred Shading
     {
         TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE, &_deferredPipeline);
         task->SetName("deferred");
@@ -169,7 +168,7 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
             commandList.SetPipelineState(_deferredPipeline);
             commandList.SetRootSignature(_deferredPipeline);
 
-            _scene.DeferredDraw(commandList);
+            _scene.Draw(commandList);
 
             frame._postFXDescHeap.PlaceResource(&_gBuffer.GetAlbedoMetalnessTexture());
             frame._postFXDescHeap.PlaceResource(&_gBuffer.GetNormalTexture());

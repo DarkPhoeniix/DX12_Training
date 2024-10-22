@@ -82,21 +82,30 @@ namespace Core
 
     void CommandList::BeginQuery(ComPtr<ID3D12QueryHeap> queryHeap, D3D12_QUERY_TYPE type, UINT64 index)
     {
-        ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list");
+        if (ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list"))
+        {
+            return;
+        }
 
         _commandList->BeginQuery(queryHeap.Get(), type, index);
     }
 
     void CommandList::ResolveQueryData(ComPtr<ID3D12QueryHeap> queryHeap, D3D12_QUERY_TYPE type, UINT64 index, Resource& destination, UINT64 offset)
     {
-        ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list");
+        if (ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list"))
+        {
+            return;
+        }
 
         _commandList->ResolveQueryData(queryHeap.Get(), type, index, 1, destination.GetDXResource().Get(), offset);
     }
 
     void CommandList::EndQuery(ComPtr<ID3D12QueryHeap> queryHeap, D3D12_QUERY_TYPE type, UINT64 index)
     {
-        ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list");
+        if (ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list"))
+        {
+            return;
+        }
 
         _commandList->EndQuery(queryHeap.Get(), type, index);
     }
@@ -121,28 +130,40 @@ namespace Core
 
     void CommandList::SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY primitiveTopology)
     {
-        ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list");
+        if (ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list"))
+        {
+            return;
+        }
 
         _commandList->IASetPrimitiveTopology(primitiveTopology);
     }
 
     void CommandList::SetVertexBuffer(uint32_t slot, const D3D12_VERTEX_BUFFER_VIEW& vertexBufferView)
     {
-        ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list");
+        if (ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list"))
+        {
+            return;
+        }
 
         _commandList->IASetVertexBuffers(slot, 1, &vertexBufferView);
     }
 
     void CommandList::SetIndexBuffer(const D3D12_INDEX_BUFFER_VIEW& indexBufferView)
     {
-        ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list");
+        if (ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list"))
+        {
+            return;
+        }
 
         _commandList->IASetIndexBuffer(&indexBufferView);
     }
 
     void CommandList::SetRenderTarget(D3D12_CPU_DESCRIPTOR_HANDLE* renderTargetDescriptor, D3D12_CPU_DESCRIPTOR_HANDLE* depthStencilDescriptor)
     {
-        ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list");
+        if (ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list"))
+        {
+            return;
+        }
 
         UINT numTargets = renderTargetDescriptor ? 1 : 0;
         _commandList->OMSetRenderTargets(numTargets, renderTargetDescriptor, FALSE, depthStencilDescriptor);
@@ -150,14 +171,20 @@ namespace Core
 
     void CommandList::SetRenderTargets(const std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> renderTargetDescriptors, D3D12_CPU_DESCRIPTOR_HANDLE* depthStencilDescriptor)
     {
-        ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list");
+        if (ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list"))
+        {
+            return;
+        }
 
         _commandList->OMSetRenderTargets(renderTargetDescriptors.size(), renderTargetDescriptors.data(), FALSE, depthStencilDescriptor);
     }
 
     void CommandList::SetViewport(const SceneLayer::Viewport& viewport)
     {
-        ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list");
+        if (ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list"))
+        {
+            return;
+        }
 
         CD3DX12_VIEWPORT vp = viewport.GetDXViewport();
         CD3DX12_RECT scissorRect = viewport.GetScissorRectangle();
@@ -167,14 +194,18 @@ namespace Core
 
     void CommandList::SetPipelineState(const RootSignature& rootSignature)
     {
-        ASSERT(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Wrond type of the command list");
-
-        _commandList->SetPipelineState(rootSignature.GetPipelineState().Get());
+        if (ASSERT(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Wrond type of the command list"))
+        {
+            return;
+        }
     }
 
     void CommandList::SetRootSignature(const RootSignature& rootSignature)
     {
-        ASSERT(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Wrond type of the command list");
+        if (ASSERT(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Wrond type of the command list"))
+        {
+            return;
+        }
 
         if (_type == CommandListType::Graphics)
         {
@@ -184,13 +215,14 @@ namespace Core
         {
             _commandList->SetComputeRootSignature(rootSignature.GetRootSignature().Get());
         }
-
-        ASSERT(false, "Wrond command list type for SetGraphicsRootSignature function");
     }
 
     void CommandList::ClearRTV(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetView, const FLOAT color[4], SceneLayer::Viewport* viewport)
     {
-        ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list");
+        if (ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list"))
+        {
+            return;
+        }
 
         // TODO: fix this ugly code
         UINT numRects = viewport ? 1 : 0;
@@ -204,7 +236,10 @@ namespace Core
 
     void CommandList::ClearDSV(D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, D3D12_CLEAR_FLAGS clearFlags, FLOAT depth, UINT8 stencil, SceneLayer::Viewport* viewport)
     {
-        ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list");
+        if (ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list"))
+        {
+            return;
+        }
 
         // TODO: fix this ugly code
         UINT numRects = viewport ? 1 : 0;
@@ -218,28 +253,40 @@ namespace Core
 
     void CommandList::Draw(uint32_t vertexCount, uint32_t instanceCount, uint32_t startVertex, uint32_t startInstance)
     {
-        ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list");
+        if (ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list"))
+        {
+            return;
+        }
 
         _commandList->DrawInstanced(vertexCount, instanceCount, startVertex, startInstance);
     }
 
     void CommandList::DrawIndexed(uint32_t indexCount, uint32_t instanceCount, uint32_t startIndex, int32_t baseVertex, uint32_t startInstance)
     {
-        ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list");
+        if (ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list"))
+        {
+            return;
+        }
 
         _commandList->DrawIndexedInstanced(indexCount, instanceCount, startIndex, baseVertex, startInstance);
     }
 
     void CommandList::SetDescriptorHeaps(const std::vector<ID3D12DescriptorHeap*> descriptorHeaps)
     {
-        ASSERT(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Wrond type of the command list");
+        if (ASSERT(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Wrond type of the command list"))
+        {
+            return;
+        }
 
         _commandList->SetDescriptorHeaps(descriptorHeaps.size(), descriptorHeaps.data());
     }
 
     void CommandList::SetConstant(UINT index, UINT data, UINT offset)
     {
-        ASSERT(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Wrond type of the command list");
+        if (ASSERT(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Wrond type of the command list"))
+        {
+            return;
+        }
 
         if (_type == CommandListType::Graphics)
         {
@@ -249,13 +296,14 @@ namespace Core
         {
             _commandList->SetComputeRoot32BitConstant(index, data, offset);
         }
-
-        ASSERT(false, "Wrond command list type for SetConstant function");
     }
 
     void CommandList::SetConstants(UINT index, UINT numValues, const void* data, UINT offset)
     {
-        ASSERT(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Wrond type of the command list");
+        if (ASSERT(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Wrond type of the command list"))
+        {
+            return;
+        }
 
         if (_type == CommandListType::Graphics)
         {
@@ -265,13 +313,14 @@ namespace Core
         {
             _commandList->SetComputeRoot32BitConstants(index, numValues, data, offset);
         }
-
-        ASSERT(false, "Wrond command list type for SetConstants function");
     }
 
     void CommandList::SetCBV(UINT index, D3D12_GPU_VIRTUAL_ADDRESS bufferLocation)
     {
-        ASSERT(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Wrond type of the command list");
+        if (ASSERT(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Wrond type of the command list"))
+        {
+            return;
+        }
 
         if (_type == CommandListType::Graphics)
         {
@@ -281,13 +330,14 @@ namespace Core
         {
             _commandList->SetComputeRootConstantBufferView(index, bufferLocation);
         }
-
-        ASSERT(false, "Wrond command list type for SetCBV function");
     }
 
     void CommandList::SetSRV(UINT index, D3D12_GPU_VIRTUAL_ADDRESS bufferLocation)
     {
-        ASSERT(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Wrond type of the command list");
+        if (ASSERT(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Wrond type of the command list"))
+        {
+            return;
+        }
 
         if (_type == CommandListType::Graphics)
         {
@@ -297,13 +347,14 @@ namespace Core
         {
             _commandList->SetComputeRootShaderResourceView(index, bufferLocation);
         }
-
-        ASSERT(false, "Wrond command list type for SetSRV function");
     }
 
     void CommandList::SetUAV(UINT index, D3D12_GPU_VIRTUAL_ADDRESS bufferLocation)
     {
-        ASSERT(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Wrond type of the command list");
+        if (ASSERT(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Wrond type of the command list"))
+        {
+            return;
+        }
 
         if (_type == CommandListType::Graphics)
         {
@@ -313,13 +364,14 @@ namespace Core
         {
             _commandList->SetComputeRootUnorderedAccessView(index, bufferLocation);
         }
-
-        ASSERT(false, "Wrond command list type for SetUAV function");
     }
 
     void CommandList::SetDescriptorTable(UINT index, D3D12_GPU_DESCRIPTOR_HANDLE descriptor)
     {
-        ASSERT(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Wrond type of the command list");
+        if (ASSERT(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Wrond type of the command list"))
+        {
+            return;
+        }
 
         if (_type == CommandListType::Graphics)
         {
@@ -329,8 +381,6 @@ namespace Core
         {
             _commandList->SetComputeRootDescriptorTable(index, descriptor);
         }
-
-        ASSERT(false, "Wrond command list type for SetDescriptorTable function");
     }
 
     void CommandList::Reset(ID3D12CommandAllocator* commandAllocator, ID3D12PipelineState* pipelineState)
