@@ -54,8 +54,8 @@ namespace Core
         _albedoMetalness.SetName("RTV Albedo+Metalness");
         _descriptorsHeap.PlaceResource(&_albedoMetalness);
 
-        textureDesc.SetFormat(DXGI_FORMAT_R8G8B8A8_SNORM);
-        clearValueTexTarget.Format = DXGI_FORMAT_R8G8B8A8_SNORM;
+        textureDesc.SetFormat(DXGI_FORMAT_R32G32B32A32_FLOAT);
+        clearValueTexTarget.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
         textureDesc.SetClearValue(clearValueTexTarget);
         _normalSpecular.SetResourceDescription(textureDesc);
         _normalSpecular.CreateCommitedResource(D3D12_RESOURCE_STATE_RENDER_TARGET);
@@ -70,7 +70,7 @@ namespace Core
             //Core::Device::GetDXDevice()->CreateRenderTargetView(_position.GetDXResource().Get(), &renderTargetDesc, _descriptorsHeap.GetResourceCPUHandle(&_position));
             renderTargetDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
             Core::Device::GetDXDevice()->CreateRenderTargetView(_albedoMetalness.GetDXResource().Get(), &renderTargetDesc, _descriptorsHeap.GetResourceCPUHandle(&_albedoMetalness));
-            renderTargetDesc.Format = DXGI_FORMAT_R8G8B8A8_SNORM;
+            renderTargetDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
             Core::Device::GetDXDevice()->CreateRenderTargetView(_normalSpecular.GetDXResource().Get(), &renderTargetDesc, _descriptorsHeap.GetResourceCPUHandle(&_normalSpecular));
         }
 
@@ -101,7 +101,7 @@ namespace Core
             SRVDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
             Core::Device::GetDXDevice()->CreateShaderResourceView(_albedoMetalness.GetDXResource().Get(), &SRVDesc, _UAVHeap.GetResourceCPUHandle(&_albedoMetalness));
 
-            SRVDesc.Format = DXGI_FORMAT_R8G8B8A8_SNORM;
+            SRVDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
             Core::Device::GetDXDevice()->CreateShaderResourceView(_normalSpecular.GetDXResource().Get(), &SRVDesc, _UAVHeap.GetResourceCPUHandle(&_normalSpecular));
         }
     }
