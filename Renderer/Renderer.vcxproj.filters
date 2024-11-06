@@ -519,6 +519,7 @@
     <None Include="PipelineDescriptions\GPassPipeline.tech">
       <Filter>PipelineDescriptions</Filter>
     </None>
+    <None Include="Shaders\PBR.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resources\Resource.rc">

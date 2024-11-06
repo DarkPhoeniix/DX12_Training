@@ -21,6 +21,11 @@ namespace SceneLayer
         return _metalnessTexture.get();
     }
 
+    Core::Texture* Material::Roughness() const
+    {
+        return _roughnessTexture.get();
+    }
+
     UINT Material::AlbedoIndex(Core::ResourceTable* resourceTable) const
     {
         return resourceTable->GetResourceIndex(_albedoTexture->GetName());
@@ -34,6 +39,11 @@ namespace SceneLayer
     UINT Material::MetalnessIndex(Core::ResourceTable* resourceTable) const
     {
         return resourceTable->GetResourceIndex(_metalnessTexture->GetName());
+    }
+
+    UINT Material::RoughnessIndex(Core::ResourceTable* resourceTable) const
+    {
+        return resourceTable->GetResourceIndex(_roughnessTexture->GetName());
     }
 
     void Material::UploadToGPU(Core::CommandList& commandList, Core::ResourceTable* resourceTable)
@@ -50,6 +60,18 @@ namespace SceneLayer
         {
             _normalTexture->SetDescriptorHeap(&resourceTable->GetDescriptorHeap());
             _normalTexture->UploadToGPU(commandList);
+        }
+
+        if (resourceTable->AddResource(_metalnessTexture.get()))
+        {
+            _metalnessTexture->SetDescriptorHeap(&resourceTable->GetDescriptorHeap());
+            _metalnessTexture->UploadToGPU(commandList);
+        }
+
+        if (resourceTable->AddResource(_roughnessTexture.get()))
+        {
+            _roughnessTexture->SetDescriptorHeap(&resourceTable->GetDescriptorHeap());
+            _roughnessTexture->UploadToGPU(commandList);
         }
     }
 
@@ -68,7 +90,8 @@ namespace SceneLayer
 
         material->_albedoTexture = Core::Texture::LoadFromFile(materialData["Albedo"].asCString());
         material->_normalTexture = Core::Texture::LoadFromFile(materialData["Normal"].asCString());
-        //material->_metalnessTexture = Core::Texture::LoadFromFile(materialData["Metalness"].asCString());
+        material->_metalnessTexture = Core::Texture::LoadFromFile(materialData["Metalness"].asCString());
+        material->_roughnessTexture = Core::Texture::LoadFromFile(materialData["Roughness"].asCString());
 
         return material;
     }

@@ -18,6 +18,7 @@ namespace
         UINT AlbedoTextureIndex     = -1;
         UINT NormalMapTextureIndex  = -1;
         UINT MetalnessTextureIndex  = -1;
+        UINT RoughnessTextureIndex  = -1;
     };
 
     XMMATRIX ParseTransformationMatrix(const Json::Value& transform)
@@ -163,7 +164,8 @@ namespace SceneLayer
             modelData->Transform = GetGlobalTransform();
             modelData->AlbedoTextureIndex = _material->AlbedoIndex(_sceneCache->GetTextureTable().get());
             modelData->NormalMapTextureIndex = _material->NormalMapIndex(_sceneCache->GetTextureTable().get());
-            modelData->MetalnessTextureIndex = -1;
+            modelData->MetalnessTextureIndex = _material->MetalnessIndex(_sceneCache->GetTextureTable().get());
+            modelData->RoughnessTextureIndex = _material->RoughnessIndex(_sceneCache->GetTextureTable().get());
         }
         commandList.SetCBV(1, _modelDesc->OffsetGPU(0));
 

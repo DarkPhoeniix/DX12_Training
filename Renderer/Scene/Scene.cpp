@@ -47,7 +47,7 @@ namespace SceneLayer
 
         std::shared_ptr<DirectionalLight> directionalLight = std::make_shared<DirectionalLight>(&_cache, nullptr);
         directionalLight->SetName("Directional Light");
-        directionalLight->SetDirection(DirectX::XMVectorSet(0.0f, -1.0f, 0.0f, 0.0f));
+        directionalLight->SetDirection(DirectX::XMVectorSet(1.3f, -0.7f, -1.0f, 0.0f));
         directionalLight->SetColor(DirectX::XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f));
 
         _cache.GetLightManager()->AddDirectionalLight(directionalLight);
@@ -83,6 +83,9 @@ namespace SceneLayer
 
         // Setup lights
         _cache.GetLightManager()->SetupLights(commandList);
+
+        if (commandList.GetCommandListType() != Core::CommandListType::Graphics) return;
+
 
         for (auto& node : _rootNodes)
         {

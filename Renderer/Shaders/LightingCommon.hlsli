@@ -1,3 +1,4 @@
+#pragma once
 
 struct Surface
 {
@@ -6,6 +7,7 @@ struct Surface
     float4 Albedo;
     float4 Normal;
     float Metalness;
+    float Roughness;
     
     float4 FinalColor;
 };

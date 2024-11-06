@@ -44,8 +44,8 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
 
     // Camera Setup
     {
-        XMVECTOR pos = XMVectorSet(-8.0f, 8.0f, -20.0f, 1.0f);
-        XMVECTOR target = XMVectorSet(5.0f, 0.0f, 0.0f, 1.0f);
+        XMVECTOR pos = XMVectorSet(-10.0f, 0.0f, -0.0f, 1.0f);
+        XMVECTOR target = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
         XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
         RECT windowSize;
@@ -63,7 +63,7 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
         loadTask->SetName("Upload Data");
         Core::CommandList& commandList = *loadTask->GetCommandLists().front();
 
-        _scene.LoadScene("Wyvern\\Wyvern.scene", commandList);
+        _scene.LoadScene("TestScene\\MaterialsTest.scene", commandList);
 
         _scene.SetCamera(_camera);
 
@@ -92,6 +92,11 @@ void DXRenderer::UnloadContent()
 void DXRenderer::OnUpdate(Events::UpdateEvent& updateEvent)
 {
     DebugInfo::Update(updateEvent);
+
+    XMVECTOR mov = XMVectorSet(sinf(updateEvent.totalTime) * 10.0f, 0.0f, cosf(updateEvent.totalTime) * 10.0f, 1.0f);
+    XMVECTOR tar = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+    XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+    //_camera.LookAt(mov, tar, up);
 
     _deltaTime = updateEvent.elapsedTime;
 }
@@ -170,8 +175,8 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
 
             _scene.Draw(commandList);
 
-            frame._postFXDescHeap.PlaceResource(&_gBuffer.GetAlbedoMetalnessTexture());
-            frame._postFXDescHeap.PlaceResource(&_gBuffer.GetNormalTexture());
+            //frame._postFXDescHeap.PlaceResource(&_gBuffer.GetAlbedoMetalnessTexture());
+            //frame._postFXDescHeap.PlaceResource(&_gBuffer.GetNormalTexture());
 
             D3D12_CPU_DESCRIPTOR_HANDLE handle = frame._postFXDescHeap.GetHeapStartCPUHandle();
             handle.ptr += 64;
@@ -184,9 +189,10 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
             commandList.GetDXCommandList()->SetComputeRootDescriptorTable(6, gpuHandle);
             gpuHandle = frame._postFXDescHeap.GetResourceGPUHandle(&frame._depthTexture);
             commandList.GetDXCommandList()->SetComputeRootDescriptorTable(3, gpuHandle);
-            gpuHandle = frame._postFXDescHeap.GetResourceGPUHandle(&_gBuffer.GetAlbedoMetalnessTexture());
+            gpuHandle = frame._postFXDescHeap.GetHeapStartGPUHandle();
+            gpuHandle.ptr += 64;
             commandList.GetDXCommandList()->SetComputeRootDescriptorTable(4, gpuHandle);
-            gpuHandle = frame._postFXDescHeap.GetResourceGPUHandle(&_gBuffer.GetNormalTexture());
+            gpuHandle.ptr += 32;
             commandList.GetDXCommandList()->SetComputeRootDescriptorTable(5, gpuHandle);
 
             commandList.GetDXCommandList()->Dispatch(1280, 720, 1);

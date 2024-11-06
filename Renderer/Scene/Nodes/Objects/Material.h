@@ -17,10 +17,12 @@ namespace SceneLayer
         Core::Texture* Albedo() const;
         Core::Texture* NormalMap() const;
         Core::Texture* Metalness() const;
+        Core::Texture* Roughness() const;
 
         UINT AlbedoIndex(Core::ResourceTable* resourceTable) const;
         UINT NormalMapIndex(Core::ResourceTable* resourceTable) const;
         UINT MetalnessIndex(Core::ResourceTable* resourceTable) const;
+        UINT RoughnessIndex(Core::ResourceTable* resourceTable) const;
 
         void UploadToGPU(Core::CommandList& commandList, Core::ResourceTable* resourceTable);
 
@@ -30,5 +32,6 @@ namespace SceneLayer
         std::shared_ptr<Core::Texture> _albedoTexture;
         std::shared_ptr<Core::Texture> _normalTexture;
         std::shared_ptr<Core::Texture> _metalnessTexture;
+        std::shared_ptr<Core::Texture> _roughnessTexture;
     };
 } // namespace SceneLayer
