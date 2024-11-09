@@ -2,7 +2,6 @@
 
 #include "DXObjects/DescriptorHeap.h"
 #include "DXObjects/Resource.h"
-#include "DirectXTex/DirectXTex.h"
 
 namespace Core
 {
@@ -19,7 +18,6 @@ namespace Core
         void SetDescriptorHeap(DescriptorHeap* descriptorHeap);
         DescriptorHeap* GetDescriptorHeap() const;
 
-        static std::shared_ptr<Texture> CreateTexture(const DirectX::XMVECTOR& color);
         static std::shared_ptr<Texture> LoadFromFile(std::string filepath);
 
     private:
