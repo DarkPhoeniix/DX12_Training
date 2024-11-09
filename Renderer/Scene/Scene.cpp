@@ -8,6 +8,7 @@
 #include "Scene/Nodes/Camera/Camera.h"
 #include "Scene/Nodes/Light/DirectionalLight.h"
 #include "Scene/Nodes/Light/PointLight.h"
+#include "Scene/Nodes/Objects/StaticObject.h"
 
 namespace
 {
@@ -61,9 +62,9 @@ namespace SceneLayer
         // Setup scene data
         SceneDesc* sceneDesc = (SceneDesc*)_sceneGPUData->Map();
         {
-            sceneDesc->ViewProjection = _cache.GetCamera()->ViewProjection();
             sceneDesc->View = _cache.GetCamera()->View();
             sceneDesc->Projection = _cache.GetCamera()->Projection();
+            sceneDesc->ViewProjection = _cache.GetCamera()->ViewProjection();
 
             sceneDesc->InvView = DirectX::XMMatrixInverse(nullptr, sceneDesc->View);
             sceneDesc->InvProjection = DirectX::XMMatrixInverse(nullptr, sceneDesc->Projection);
@@ -121,6 +122,11 @@ namespace SceneLayer
 
         _name = root["Name"].asCString();
 
+        {
+            SceneLayer::StaticObject l;
+            l.SetName("trash");
+        }
+
         // Parse children nodes
         for (auto& node : root["Nodes"])
         {
@@ -131,7 +137,7 @@ namespace SceneLayer
             Json::Value root;
             nodeIn >> root;
 
-            std::shared_ptr<ISceneNode> child = std::shared_ptr<ISceneNode>(NodeFactory::Create<ISceneNode>(root["Type"].asCString()));
+            std::shared_ptr<StaticObject> child = std::shared_ptr<StaticObject>(NodeFactory::Create<StaticObject>(root["Type"].asCString()));
             child->SetSceneCache(&_cache);
             child->LoadNode(nodeFilepath, commandList);
 

@@ -18,16 +18,19 @@
 using namespace Microsoft::WRL;
 
 // DirectX12 specific headers
-#include <d3d12.h>
+#include <d3dx12.h>             // D3D12 extension library
 #include <dxgi1_6.h>            // Microsoft DirectX Graphics Infrastructure
 #include <d3dcompiler.h>        // Contains functions to compile HLSL code at runtime
 #include <DirectXMath.h>        // SIMD-friendly C++ types and functions
-
-#include "d3dx12.h"             // D3D12 extension library
+#include <DirectXTex.h>         // SIMD-friendly C++ types and functions
 
 #include <pix3.h>
 
 #include <json/json.h>
+
+#include <imgui.h>
+#include <imgui_impl_win32.h>
+#include <imgui_impl_dx12.h>
 
 #include <filesystem>
 #include <algorithm>
@@ -40,10 +43,6 @@ using namespace Microsoft::WRL;
 #include <memory>
 #include <vector>
 #include <map>
-
-#include <imgui.h>
-#include <backends/imgui_impl_win32.h>
-#include <backends/imgui_impl_dx12.h>
 
 #include "Utility/KeyCodes.h"
 #include "Utility/Defines.h"

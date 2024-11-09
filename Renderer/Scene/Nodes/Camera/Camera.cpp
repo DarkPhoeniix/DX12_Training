@@ -40,7 +40,7 @@ namespace SceneLayer
 
 	const XMMATRIX& Camera::ViewProjection() const
 	{
-		return _view * _projection;
+		return _viewProjection;
 	}
 
 	const XMVECTOR& Camera::Right() const
@@ -218,6 +218,7 @@ namespace SceneLayer
 
 	void Camera::_UpdateFrustum()
 	{
-		_frustum.BuildFromProjMatrix(_view * _projection);
+		_viewProjection = _view * _projection;
+		_frustum.BuildFromProjMatrix(_viewProjection);
 	}
 } // namespace SceneLayer

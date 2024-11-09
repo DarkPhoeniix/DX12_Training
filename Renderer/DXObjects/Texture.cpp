@@ -78,45 +78,6 @@ namespace Core
         return _descritptorHeap;
     }
 
-    std::shared_ptr<Texture> Texture::CreateTexture(const DirectX::XMVECTOR& color)
-    {
-        std::shared_ptr<Texture> texture = std::make_shared<Texture>();
-
-        ComPtr<ID3D12Device2> DXDevice = Core::Device::GetDXDevice();
-
-        TexMetadata metadata = {};
-        metadata.width = 4;
-        metadata.height = 4;
-        metadata.depth = 1;
-        metadata.arraySize = 1;
-        metadata.mipLevels = 1;
-        metadata.dimension = TEX_DIMENSION_TEXTURE2D;
-        metadata.format = DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;
-
-        Image image;
-        image.width = 4;
-        image.height = 4;
-        image.rowPitch = 16;
-        image.slicePitch = 64;
-        image.format = DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;
-        image.pixels = new uint8_t[4 * 4 * 4];
-        for (int i = 0; i < 64; i += 4)
-        {
-            image.pixels[i] =     XMVectorGetZ(color); // B
-            image.pixels[i + 1] = XMVectorGetY(color); // G
-            image.pixels[i + 2] = XMVectorGetX(color); // R
-            image.pixels[i + 3] = XMVectorGetW(color); // A
-        }
-
-        ComPtr<ID3D12Resource> res;
-        ::CreateTexture(DXDevice.Get(), metadata, &res);
-        texture->InitFromDXResource(res);
-        texture->_metadata = metadata;
-        texture->_scratchImage.InitializeFromImage(image);
-
-        return texture;
-    }
-
     std::shared_ptr<Texture> Texture::LoadFromFile(std::string filepath)
     {
         std::filesystem::path path(filepath);
