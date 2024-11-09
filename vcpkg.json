@@ -1,6 +1,13 @@
 {
   "dependencies": [
-    "jsoncpp",
-    "directxtex"
+    "directxtex",
+    {
+      "name": "imgui",
+      "features": [
+        "dx12-binding",
+        "win32-binding"
+      ]
+    },
+    "jsoncpp"
   ]
 }

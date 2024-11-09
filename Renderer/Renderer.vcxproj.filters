@@ -13,9 +13,6 @@
     <Filter Include="GUI">
       <UniqueIdentifier>{48559464-e5a2-4e44-8bd9-d9d4f3dfd2b0}</UniqueIdentifier>
     </Filter>
-    <Filter Include="GUI\ImGui">
-      <UniqueIdentifier>{90800c17-6410-4866-90dc-2857950aff56}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Input">
       <UniqueIdentifier>{0e0a974a-7aab-4339-b615-91ca2f5c7915}</UniqueIdentifier>
     </Filter>
@@ -98,9 +95,6 @@
     </ClCompile>
     <ClCompile Include="DXObjects\CommandList.cpp">
       <Filter>DXObjects</Filter>
-    </ClCompile>
-    <ClCompile Include="GUI\GUI.cpp">
-      <Filter>GUI</Filter>
     </ClCompile>
     <ClCompile Include="Input\InputDevice.cpp">
       <Filter>Input</Filter>
@@ -189,32 +183,14 @@
     <ClCompile Include="Render\TaskGPU.cpp">
       <Filter>Render</Filter>
     </ClCompile>
-    <ClCompile Include="GUI\ImGui\imgui.cpp">
-      <Filter>GUI\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="GUI\ImGui\imgui_demo.cpp">
-      <Filter>GUI\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="GUI\ImGui\imgui_draw.cpp">
-      <Filter>GUI\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="GUI\ImGui\backends\imgui_impl_dx12.cpp">
-      <Filter>GUI\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="GUI\ImGui\backends\imgui_impl_win32.cpp">
-      <Filter>GUI\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="GUI\ImGui\imgui_tables.cpp">
-      <Filter>GUI\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="GUI\ImGui\imgui_widgets.cpp">
-      <Filter>GUI\ImGui</Filter>
-    </ClCompile>
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Scene\Skybox.cpp">
       <Filter>Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\GUI.cpp">
+      <Filter>GUI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -286,9 +262,6 @@
     </ClInclude>
     <ClInclude Include="Events\UpdateEvent.h">
       <Filter>Events</Filter>
-    </ClInclude>
-    <ClInclude Include="GUI\GUI.h">
-      <Filter>GUI</Filter>
     </ClInclude>
     <ClInclude Include="Input\InputDevice.h">
       <Filter>Input</Filter>
@@ -395,30 +368,6 @@
     <ClInclude Include="Render\TaskGPU.h">
       <Filter>Render</Filter>
     </ClInclude>
-    <ClInclude Include="GUI\ImGui\imstb_truetype.h">
-      <Filter>GUI\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="GUI\ImGui\imconfig.h">
-      <Filter>GUI\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="GUI\ImGui\imgui.h">
-      <Filter>GUI\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="GUI\ImGui\backends\imgui_impl_dx12.h">
-      <Filter>GUI\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="GUI\ImGui\backends\imgui_impl_win32.h">
-      <Filter>GUI\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="GUI\ImGui\imgui_internal.h">
-      <Filter>GUI\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="GUI\ImGui\imstb_rectpack.h">
-      <Filter>GUI\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="GUI\ImGui\imstb_textedit.h">
-      <Filter>GUI\ImGui</Filter>
-    </ClInclude>
     <ClInclude Include="Application.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Utility\Resources.h">
@@ -429,6 +378,9 @@
     </ClInclude>
     <ClInclude Include="Scene\Skybox.h">
       <Filter>Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\GUI.h">
+      <Filter>GUI</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
