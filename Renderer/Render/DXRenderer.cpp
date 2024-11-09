@@ -141,7 +141,7 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
 
         Core::CommandList& commandList = *task->GetCommandLists().front();
 
-        PIXBeginEvent(commandList.GetDXCommandList().Get(), 18, "Geometry Pass");
+        PIXBeginEvent(commandList.GetDXCommandList().Get(), 2, "Geometry Pass");
         {
             _gBuffer.ClearTextures(commandList);
 
@@ -210,11 +210,11 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
     {
         TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE, &_SkyboxPipeline);
         task->SetName("skybox");
-        task->AddDependency("deferred");
+        task->AddDependency("g-pass");
 
         Core::CommandList& commandList = *task->GetCommandLists().front();
 
-        PIXBeginEvent(commandList.GetDXCommandList().Get(), 6, "Skybox");
+        PIXBeginEvent(commandList.GetDXCommandList().Get(), 3, "Skybox");
         {
             commandList.SetPipelineState(_SkyboxPipeline);
             commandList.SetRootSignature(_SkyboxPipeline);
@@ -244,17 +244,20 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         PIXEndEvent(commandList.GetDXCommandList().Get());
 
         commandList.Close();
+
+
     }
 
     //GUI
     {
         TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
         task->SetName("gui");
+        task->AddDependency("deferred");
         task->AddDependency("skybox");
 
         Core::CommandList& commandList = *task->GetCommandLists().front();
 
-        PIXBeginEvent(commandList.GetDXCommandList().Get(), 7, "GUI");
+        PIXBeginEvent(commandList.GetDXCommandList().Get(), 5, "GUI");
         {
             commandList.TransitionBarrier(frame._depthTexture, D3D12_RESOURCE_STATE_DEPTH_WRITE);
             commandList.TransitionBarrier(_gBuffer.GetAlbedoMetalnessTexture(), D3D12_RESOURCE_STATE_RENDER_TARGET);
@@ -326,7 +329,7 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
 
         Core::CommandList& commandList = *task->GetCommandLists().front();
 
-        PIXBeginEvent(commandList.GetDXCommandList().Get(), 5, "Present");
+        PIXBeginEvent(commandList.GetDXCommandList().Get(), 6, "Present");
         {
             commandList.TransitionBarrier(frame._swapChainTexture, D3D12_RESOURCE_STATE_COPY_DEST);
             commandList.TransitionBarrier(frame._targetTexture, D3D12_RESOURCE_STATE_COPY_SOURCE);
