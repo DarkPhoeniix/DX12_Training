@@ -19,6 +19,7 @@ namespace SceneLayer
         Scene();
         ~Scene();
 
+        void SetupToShader(Core::CommandList& commandList);
         void Draw(Core::CommandList& commandList);
         void DrawAABB(Core::CommandList& commandList);
 

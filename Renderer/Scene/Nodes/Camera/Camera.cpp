@@ -58,6 +58,11 @@ namespace SceneLayer
 		return _look;
 	}
 
+	const DirectX::XMVECTOR& Camera::Poisition() const
+	{
+		return _position;
+	}
+
 	const FrustumVolume& Camera::GetViewFrustum() const
 	{
 		return _frustum;

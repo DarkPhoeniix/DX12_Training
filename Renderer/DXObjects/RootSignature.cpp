@@ -366,10 +366,7 @@ namespace Core
         pipelineStateDescription.NumRenderTargets = renderTargets.size();
         for (int i = 0; i < renderTargets.size(); ++i)
         {
-            for (const auto& id : renderTargets[i].getMemberNames())
-            {
-                pipelineStateDescription.RTVFormats[i] = ParseTexFormat(renderTargets[i][id].asCString());
-            }
+            pipelineStateDescription.RTVFormats[i] = ParseTexFormat(renderTargets[i].asCString());
         }
         pipelineStateDescription.SampleDesc.Count = 1; // must be the same sample description as the swapChain and depth/stencil buffer
         pipelineStateDescription.SampleMask = 0xffffffff; // sample mask has to do with multi-sampling. 0xffffffff means point sampling is done
@@ -403,7 +400,7 @@ namespace Core
 
         Helper::throwIfFailed(device->CreateComputePipelineState(&pipelineStateDescription, IID_PPV_ARGS(&_pipelineState)));
 
-        std::string type = fileRoot["Type"].asString();
+        std::string type = fileRoot["Type"].asCString();
         std::wstring name(type.begin(), type.end());
         _pipelineState->SetName(name.c_str());
     }

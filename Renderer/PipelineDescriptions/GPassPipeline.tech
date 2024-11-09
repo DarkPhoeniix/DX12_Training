@@ -10,8 +10,8 @@
 	"Depth": "PipelineDescriptions\\GPassPipeline.depth",
 
 	"RenderTargets": [
-		{ "AlbedoMetalness": "R8G8B8A8_UNORM" },
-		{ "NormalSpecular": "R32G32B32A32_FLOAT" }
+		"R8G8B8A8_UNORM",
+		"R32G32B32A32_FLOAT"
 	],
 	"DepthBuffer": "BackBufferDepth",
 	"Layout": [
