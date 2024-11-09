@@ -56,12 +56,8 @@ namespace SceneLayer
     Scene::~Scene()
     {   }
 
-    void Scene::Draw(Core::CommandList& commandList)
+    void Scene::SetupToShader(Core::CommandList& commandList)
     {
-        // Setup textures
-        commandList.SetDescriptorHeaps({ _cache.GetTextureTable()->GetDescriptorHeap().GetDXDescriptorHeap().Get() });
-        commandList.SetDescriptorTable(3, _cache.GetTextureTable()->GetDescriptorHeap().GetHeapStartGPUHandle());
-
         // Setup scene data
         SceneDesc* sceneDesc = (SceneDesc*)_sceneGPUData->Map();
         {
@@ -71,6 +67,9 @@ namespace SceneLayer
 
             sceneDesc->InvView = DirectX::XMMatrixInverse(nullptr, sceneDesc->View);
             sceneDesc->InvProjection = DirectX::XMMatrixInverse(nullptr, sceneDesc->Projection);
+
+            sceneDesc->EyeDirection = _cache.GetCamera()->Look();
+            sceneDesc->EyePosition = _cache.GetCamera()->Poisition();
 
             const SceneLayer::Viewport& viewport = _cache.GetCamera()->GetViewport();
             sceneDesc->WindowSize = { (uint32_t)viewport.GetSize().x, (uint32_t)viewport.GetSize().y };
@@ -83,6 +82,13 @@ namespace SceneLayer
 
         // Setup lights
         _cache.GetLightManager()->SetupLights(commandList);
+    }
+
+    void Scene::Draw(Core::CommandList& commandList)
+    {
+        // Setup textures
+        commandList.SetDescriptorHeaps({ _cache.GetTextureTable()->GetDescriptorHeap().GetDXDescriptorHeap().Get() });
+        commandList.SetDescriptorTable(3, _cache.GetTextureTable()->GetDescriptorHeap().GetHeapStartGPUHandle());
 
         if (commandList.GetCommandListType() != Core::CommandListType::Graphics) return;
 

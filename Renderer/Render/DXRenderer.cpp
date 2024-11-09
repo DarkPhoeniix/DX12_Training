@@ -39,6 +39,7 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
     _gPassPipeline.Parse("PipelineDescriptions\\GPassPipeline.tech");
     _deferredPipeline.Parse("PipelineDescriptions\\DeferredShading.tech");
     _AABBpipeline.Parse("PipelineDescriptions\\AABBRenderPipeline.tech");
+    _SkyboxPipeline.Parse("PipelineDescriptions\\SkyboxPipeline.tech");
 
     _gBuffer.Init({ 1280, 720 });
 
@@ -62,6 +63,8 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
     {
         loadTask->SetName("Upload Data");
         Core::CommandList& commandList = *loadTask->GetCommandLists().front();
+        _skybox.Init();
+        _skybox.Load("Wyvern\\Skybox.node", commandList);
 
         _scene.LoadScene("TestScene\\MaterialsTest.scene", commandList);
 
@@ -79,7 +82,7 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
         loadTask->GetCommandQueue()->ExecuteCommandLists(comLists.size(), comLists.data());
         loadTask->GetCommandQueue()->Signal(loadTask->GetFence()->GetFence().Get(), loadTask->GetFenceValue());
     }
-
+    Sleep(2000);
     _contentLoaded = true;
     return _contentLoaded;
 }
@@ -138,7 +141,7 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
 
         Core::CommandList& commandList = *task->GetCommandLists().front();
 
-        PIXBeginEvent(commandList.GetDXCommandList().Get(), 18, "Geometry Pass");
+        PIXBeginEvent(commandList.GetDXCommandList().Get(), 2, "Geometry Pass");
         {
             _gBuffer.ClearTextures(commandList);
 
@@ -148,6 +151,7 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
             commandList.SetViewport(_camera.GetViewport());
             commandList.SetRenderTargets({ _gBuffer.GetAlbedoMetalnessTextureCPUHandle(), _gBuffer.GetNormalTextureCPUHandle() }, &dsv);
 
+            _scene.SetupToShader(commandList);
             _scene.Draw(commandList);
 
             commandList.TransitionBarrier(frame._depthTexture, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
@@ -173,7 +177,7 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
             commandList.SetPipelineState(_deferredPipeline);
             commandList.SetRootSignature(_deferredPipeline);
 
-            _scene.Draw(commandList);
+            _scene.SetupToShader(commandList);
 
             //frame._postFXDescHeap.PlaceResource(&_gBuffer.GetAlbedoMetalnessTexture());
             //frame._postFXDescHeap.PlaceResource(&_gBuffer.GetNormalTexture());
@@ -196,10 +200,52 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
             commandList.GetDXCommandList()->SetComputeRootDescriptorTable(5, gpuHandle);
 
             commandList.GetDXCommandList()->Dispatch(1280, 720, 1);
-}
+        }
         PIXEndEvent(commandList.GetDXCommandList().Get());
 
         commandList.Close();
+    }
+
+    // Execute the Skybox
+    {
+        TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE, &_SkyboxPipeline);
+        task->SetName("skybox");
+        task->AddDependency("g-pass");
+
+        Core::CommandList& commandList = *task->GetCommandLists().front();
+
+        PIXBeginEvent(commandList.GetDXCommandList().Get(), 3, "Skybox");
+        {
+            commandList.SetPipelineState(_SkyboxPipeline);
+            commandList.SetRootSignature(_SkyboxPipeline);
+
+            _scene.SetupToShader(commandList);
+
+            D3D12_CPU_DESCRIPTOR_HANDLE handle = frame._testHeap.GetHeapStartCPUHandle();
+            handle.ptr += 64;
+            Core::Device::GetDXDevice()->CopyDescriptorsSimple(1, handle, _skybox._descHeap.GetHeapStartCPUHandle(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+            ID3D12DescriptorHeap* heap[1] = { frame._testHeap.GetDXDescriptorHeap().Get() };
+            commandList.GetDXCommandList()->SetDescriptorHeaps(1, heap);
+
+            D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle = frame._testHeap.GetResourceGPUHandle(&frame._depthTexture);
+            commandList.GetDXCommandList()->SetComputeRootDescriptorTable(3, gpuHandle);
+            gpuHandle = frame._testHeap.GetResourceGPUHandle(&frame._targetTexture);
+            commandList.GetDXCommandList()->SetComputeRootDescriptorTable(5, gpuHandle);
+            gpuHandle = frame._testHeap.GetHeapStartGPUHandle();
+            gpuHandle.ptr += 64;
+            commandList.GetDXCommandList()->SetComputeRootDescriptorTable(4, gpuHandle);
+
+            uint32_t x = (uint32_t)std::ceilf(1280 / 4.0f);
+            uint32_t y = (uint32_t)std::ceilf(720 / 4.0f);
+
+            commandList.GetDXCommandList()->Dispatch(x, y, 1);
+        }
+        PIXEndEvent(commandList.GetDXCommandList().Get());
+
+        commandList.Close();
+
+
     }
 
     //GUI
@@ -207,10 +253,11 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
         task->SetName("gui");
         task->AddDependency("deferred");
+        task->AddDependency("skybox");
 
         Core::CommandList& commandList = *task->GetCommandLists().front();
 
-        PIXBeginEvent(commandList.GetDXCommandList().Get(), 7, "GUI");
+        PIXBeginEvent(commandList.GetDXCommandList().Get(), 5, "GUI");
         {
             commandList.TransitionBarrier(frame._depthTexture, D3D12_RESOURCE_STATE_DEPTH_WRITE);
             commandList.TransitionBarrier(_gBuffer.GetAlbedoMetalnessTexture(), D3D12_RESOURCE_STATE_RENDER_TARGET);
@@ -282,7 +329,7 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
 
         Core::CommandList& commandList = *task->GetCommandLists().front();
 
-        PIXBeginEvent(commandList.GetDXCommandList().Get(), 5, "Present");
+        PIXBeginEvent(commandList.GetDXCommandList().Get(), 6, "Present");
         {
             commandList.TransitionBarrier(frame._swapChainTexture, D3D12_RESOURCE_STATE_COPY_DEST);
             commandList.TransitionBarrier(frame._targetTexture, D3D12_RESOURCE_STATE_COPY_SOURCE);

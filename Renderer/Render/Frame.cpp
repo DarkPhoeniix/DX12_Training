@@ -122,7 +122,7 @@ void Frame::Init(const Core::SwapChain& swapChain)
         Core::DescriptorHeapDescription desc = {};
         desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
         desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
-        desc.SetNumDescriptors(14);
+        desc.SetNumDescriptors(4);
         desc.SetNodeMask(0);
 
         _postFXDescHeap.SetDescription(desc);
@@ -132,12 +132,19 @@ void Frame::Init(const Core::SwapChain& swapChain)
         _postFXDescHeap.PlaceResource(&_targetTexture);
         _postFXDescHeap.PlaceResource(&_depthTexture);
 
+        _testHeap.SetDescription(desc);
+        _testHeap.Create();
+
+        _testHeap.PlaceResource(&_depthTexture);
+        _testHeap.PlaceResource(&_targetTexture);
+
         D3D12_UNORDERED_ACCESS_VIEW_DESC UAVDesc = {};
         UAVDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
         UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
         UAVDesc.Texture2D.MipSlice = 0;
 
         Core::Device::GetDXDevice()->CreateUnorderedAccessView(_targetTexture.GetDXResource().Get(), nullptr, &UAVDesc, _postFXDescHeap.GetResourceCPUHandle(&_targetTexture));
+        Core::Device::GetDXDevice()->CreateUnorderedAccessView(_targetTexture.GetDXResource().Get(), nullptr, &UAVDesc, _testHeap.GetResourceCPUHandle(&_targetTexture));
         
         D3D12_SHADER_RESOURCE_VIEW_DESC SRVDesc = {};
         SRVDesc.Format = DXGI_FORMAT_R32_FLOAT;
@@ -146,6 +153,7 @@ void Frame::Init(const Core::SwapChain& swapChain)
         SRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
         Core::Device::GetDXDevice()->CreateShaderResourceView(_depthTexture.GetDXResource().Get(), &SRVDesc, _postFXDescHeap.GetResourceCPUHandle(&_depthTexture));
+        Core::Device::GetDXDevice()->CreateShaderResourceView(_depthTexture.GetDXResource().Get(), &SRVDesc, _testHeap.GetResourceCPUHandle(&_depthTexture));
     }
 }
 
