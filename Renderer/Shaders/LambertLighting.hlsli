@@ -2,7 +2,7 @@
 
 #include "LightingCommon.hlsli"
 
-#define AMBIENT_IMPACT 0.1f
+#define AMBIENT_IMPACT 0.0f
 
 float4 CalculateAmbient(in Surface surface)
 {

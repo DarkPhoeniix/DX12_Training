@@ -26,16 +26,12 @@ void main(uint3 DTid : SV_DispatchThreadID)
     surface.Normal          = float4(NormalRoughnessTexture.Load(uint3(DTid.xy, 0)).xyz, 0.0f);
     surface.Metalness       = AlbedoMetalnessTexture.Load(uint3(DTid.xy, 0)).a;
     surface.Roughness       = NormalRoughnessTexture.Load(uint3(DTid.xy, 0)).a;
-
     
+    float3 eyeDir = normalize(Scene.EyePosition - surface.Positon);
     
-    
-    surface.FinalColor      = CalculateAmbient(surface);
+    surface.FinalColor = CalculateAmbient(surface);
     for (int i = 0; i < Scene.LightsNum; ++i)
     {
-        float3 F0 = float3(0.04f, 0.04f, 0.04f);
-        F0 = lerp(F0, surface.Albedo.rgb, surface.Metalness);
-        
         float3 lightDirection;
         if (Lights[i].Type == LIGHT_TYPE_DIRECTIONAL)
         {
@@ -45,19 +41,24 @@ void main(uint3 DTid : SV_DispatchThreadID)
         {
             lightDirection = normalize(Lights[i].Position - surface.Positon);
         }
-        float3 viewDirection = transpose(Scene.View)[2].xyz;
-        float3 halfway = normalize(viewDirection + lightDirection);
+        float3 halfway = normalize(eyeDir + lightDirection);
         
-        
-        float NdotV = max(dot(surface.Normal.xyz, viewDirection), 0.0f);
+        float NdotV = max(dot(surface.Normal.xyz, eyeDir), 0.0f);
         float NdotL = max(dot(surface.Normal.xyz, lightDirection), 0.0f);
         float NdotH = max(dot(surface.Normal.xyz, halfway), 0.0f);
         
+        float3 F0 = float3(0.04f, 0.04f, 0.04f);
+        F0 = lerp(F0, surface.Albedo.rgb, surface.Metalness);
         
+        // (F * G * D) / (4 * NdotL * NdotV)
+        float3 cookTorrance = (CalculateSpecular(surface, Lights[i]) * fresnelSchlick(NdotH, F0) * GeometrySmith(surface, Lights[i])) / (4 * NdotL * NdotV);
         
-        surface.FinalColor  += CalculateDiffuse(surface, Lights[i]);
-        float cookTorrance = (fresnelSchlick(NdotH, F0) * GeometrySmith(surface, Lights[i]) * CalculateSpecular(surface, Lights[i])) / (4 * NdotL * NdotV);
-        //surface.FinalColor += Lights[i].Color * cookTorrance;
+        float3 diffuseColor = surface.Albedo.rgb * (1.0f - surface.Metalness);
+        float3 lightingModel = (diffuseColor + cookTorrance);
+        lightingModel *= NdotL;
+        float4 finalDiffuse = float4(lightingModel, 1.0f);
+        
+        surface.FinalColor += finalDiffuse;
     }
     
     TargetTexture[DTid.xy]  = surface.FinalColor;

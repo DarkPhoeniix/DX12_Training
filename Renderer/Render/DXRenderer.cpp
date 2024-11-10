@@ -45,7 +45,7 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
 
     // Camera Setup
     {
-        XMVECTOR pos = XMVectorSet(-10.0f, 0.0f, -0.0f, 1.0f);
+        XMVECTOR pos = XMVectorSet(10.0f, 0.0f, 0.0f, 1.0f);
         XMVECTOR target = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
         XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
@@ -96,10 +96,10 @@ void DXRenderer::OnUpdate(Events::UpdateEvent& updateEvent)
 {
     DebugInfo::Update(updateEvent);
 
-    XMVECTOR mov = XMVectorSet(sinf(updateEvent.totalTime) * 10.0f, 0.0f, cosf(updateEvent.totalTime) * 10.0f, 1.0f);
+    XMVECTOR mov = 10.0f * XMVectorSet(sinf(updateEvent.totalTime * 0.5f), 0.0f, cosf(updateEvent.totalTime * 0.5f), 1.0f);
     XMVECTOR tar = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
     XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-    //_camera.LookAt(mov, tar, up);
+    _camera.LookAt(mov, tar, up);
 
     _deltaTime = updateEvent.elapsedTime;
 }
