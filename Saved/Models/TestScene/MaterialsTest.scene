@@ -1,0 +1,9 @@
+{
+    "Name": "MaterialsTest",
+    "Nodes": [
+        "Sphere.node",
+        "Sphere.001.node",
+        "Sphere.002.node",
+        "Sphere.003.node"
+    ]
+}

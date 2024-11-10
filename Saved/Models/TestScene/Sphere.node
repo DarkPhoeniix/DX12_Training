@@ -1,0 +1,13 @@
+{
+    "Material": "Sphere.mat",
+    "Mesh": "Sphere.mesh",
+    "Name": "Sphere",
+    "Nodes": [],
+    "Transform": {
+        "r0": "1.0 0.0 0.0 0.0",
+        "r1": "0.0 1.0 0.0 0.0",
+        "r2": "0.0 0.0 1.0 0.0",
+        "r3": "0.0 -1.5 -1.5 1.0"
+    },
+    "Type": "StaticObject"
+}
