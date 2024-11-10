@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DXObjects/GraphicsCommandList.h"
+#include "DXObjects/CommandList.h"
 
 namespace Core
 {
@@ -19,11 +19,11 @@ public:
     void SetFree(bool isFree);
     bool IsFree() const;
 
-    Core::GraphicsCommandList* GetCommandList();
+    Core::CommandList* GetCommandList();
 
 private:
     ComPtr<ID3D12CommandAllocator> _allocator;
-    Core::GraphicsCommandList _commandList;
+    Core::CommandList _commandList;
 
     bool _isFree = true;
 };

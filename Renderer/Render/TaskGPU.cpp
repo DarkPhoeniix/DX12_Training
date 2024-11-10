@@ -2,7 +2,7 @@
 
 #include "TaskGPU.h"
 
-#include "DXObjects/GraphicsCommandList.h"
+#include "DXObjects/CommandList.h"
 
 TaskGPU::TaskGPU()
     : _commandQueue(nullptr)
@@ -26,12 +26,12 @@ ComPtr<ID3D12CommandQueue> TaskGPU::GetCommandQueue() const
     return _commandQueue;
 }
 
-void TaskGPU::AddCommandList(Core::GraphicsCommandList* commandList)
+void TaskGPU::AddCommandList(Core::CommandList* commandList)
 {
     _commandLists.push_back(commandList);
 }
 
-std::vector<Core::GraphicsCommandList*> TaskGPU::GetCommandLists() const
+std::vector<Core::CommandList*> TaskGPU::GetCommandLists() const
 {
     return _commandLists;
 }

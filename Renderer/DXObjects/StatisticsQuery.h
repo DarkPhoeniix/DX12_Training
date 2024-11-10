@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DXObjects/GraphicsCommandList.h"
+#include "DXObjects/CommandList.h"
 
 namespace Core
 {
@@ -12,10 +12,10 @@ namespace Core
 
         void Create();
 
-        void BeginQuery(GraphicsCommandList& commandList);
-        void EndQuery(GraphicsCommandList& commandList);
+        void BeginQuery(CommandList& commandList);
+        void EndQuery(CommandList& commandList);
 
-        void ResolveQueryData(GraphicsCommandList& commandList);
+        void ResolveQueryData(CommandList& commandList);
         const D3D12_QUERY_DATA_PIPELINE_STATISTICS& GetStatistics();
 
     private:

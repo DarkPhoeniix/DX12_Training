@@ -2,7 +2,7 @@
 
 #include "DXRenderer.h"
 
-#include "DXObjects/GraphicsCommandList.h"
+#include "DXObjects/CommandList.h"
 #include "Events/MouseScrollEvent.h"
 #include "Events/MouseButtonEvent.h"
 #include "Events/MouseMoveEvent.h"
@@ -36,29 +36,16 @@ DXRenderer::~DXRenderer()
 
 bool DXRenderer::LoadContent(TaskGPU* loadTask)
 {
-    _renderPipeline.Parse("PipelineDescriptions\\TriangleRenderPipeline.tech");
+    _gPassPipeline.Parse("PipelineDescriptions\\GPassPipeline.tech");
+    _deferredPipeline.Parse("PipelineDescriptions\\DeferredShading.tech");
     _AABBpipeline.Parse("PipelineDescriptions\\AABBRenderPipeline.tech");
+    _SkyboxPipeline.Parse("PipelineDescriptions\\SkyboxPipeline.tech");
 
-    // TODO: rework
-    {
-        ComPtr<ID3DBlob> computeShaderBlob = nullptr;
-        Helper::throwIfFailed(D3DReadFileToBlob(L"NegativePostFX_cs.cso", &computeShaderBlob));
-
-        D3D12_INPUT_ELEMENT_DESC* inputLayout = nullptr;
-
-        D3D12_COMPUTE_PIPELINE_STATE_DESC pipelineStateStreamDesc = {};
-
-        Helper::throwIfFailed(Core::Device::GetDXDevice()->CreateRootSignature(0, computeShaderBlob->GetBufferPointer(),
-            computeShaderBlob->GetBufferSize(), IID_PPV_ARGS(&_postFXRootSig)));
-
-        pipelineStateStreamDesc.CS = CD3DX12_SHADER_BYTECODE(computeShaderBlob.Get());
-
-        Helper::throwIfFailed(Core::Device::GetDXDevice()->CreateComputePipelineState(&pipelineStateStreamDesc, IID_PPV_ARGS(&_postFXPipeState)));
-    }
+    _gBuffer.Init({ 1280, 720 });
 
     // Camera Setup
     {
-        XMVECTOR pos = XMVectorSet(-30.0f, 40.0f, -50.0f, 1.0f);
+        XMVECTOR pos = XMVectorSet(10.0f, 0.0f, 0.0f, 1.0f);
         XMVECTOR target = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
         XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
@@ -75,13 +62,15 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
     // Load scene
     {
         loadTask->SetName("Upload Data");
-        Core::GraphicsCommandList* commandList = loadTask->GetCommandLists().front();
+        Core::CommandList& commandList = *loadTask->GetCommandLists().front();
+        _skybox.Init();
+        _skybox.Load("Wyvern\\Skybox.node", commandList);
 
-        _scene.LoadScene("Wyvern\\Wyvern.scene", *commandList);
+        _scene.LoadScene("TestScene\\MaterialsTest.scene", commandList);
 
         _scene.SetCamera(_camera);
 
-        commandList->Close();
+        commandList.Close();
 
         std::vector<ID3D12CommandList*> comLists;
         comLists.reserve(loadTask->GetCommandLists().size());
@@ -93,7 +82,7 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
         loadTask->GetCommandQueue()->ExecuteCommandLists(comLists.size(), comLists.data());
         loadTask->GetCommandQueue()->Signal(loadTask->GetFence()->GetFence().Get(), loadTask->GetFenceValue());
     }
-
+    Sleep(2000);
     _contentLoaded = true;
     return _contentLoaded;
 }
@@ -106,6 +95,11 @@ void DXRenderer::UnloadContent()
 void DXRenderer::OnUpdate(Events::UpdateEvent& updateEvent)
 {
     DebugInfo::Update(updateEvent);
+
+    XMVECTOR mov = 10.0f * XMVectorSet(sinf(updateEvent.totalTime * 0.5f), 0.0f, cosf(updateEvent.totalTime * 0.5f), 1.0f);
+    XMVECTOR tar = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+    XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+    _camera.LookAt(mov, tar, up);
 
     _deltaTime = updateEvent.elapsedTime;
 }
@@ -123,7 +117,7 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
         task->SetName("clean");
 
-        Core::GraphicsCommandList& commandList = *task->GetCommandLists().front();
+        Core::CommandList& commandList = *task->GetCommandLists().front();
 
         PIXBeginEvent(commandList.GetDXCommandList().Get(), 1, "Clean");
         {
@@ -139,55 +133,138 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         commandList.Close();
     }
 
-    // Execute the TriangleRender shader
+    // Execute the GBuffer Pass
     {
-        TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, &_renderPipeline);
-        task->SetName("render");
+        TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, &_gPassPipeline);
+        task->SetName("g-pass");
         task->AddDependency("clean");
 
-        Core::GraphicsCommandList& commandList = *task->GetCommandLists().front();
+        Core::CommandList& commandList = *task->GetCommandLists().front();
 
-        PIXBeginEvent(commandList.GetDXCommandList().Get(), 4, "Render");
+        PIXBeginEvent(commandList.GetDXCommandList().Get(), 2, "Geometry Pass");
         {
-#if defined(_DEBUG)
-            DebugInfo::StartStatCollecting(commandList);
-#endif
+            _gBuffer.ClearTextures(commandList);
 
-            commandList.SetPipelineState(_renderPipeline);
-            commandList.SetGraphicsRootSignature(_renderPipeline);
+            commandList.SetPipelineState(_gPassPipeline);
+            commandList.SetRootSignature(_gPassPipeline);
 
             commandList.SetViewport(_camera.GetViewport());
-            commandList.SetRenderTarget(&rtv, &dsv);
+            commandList.SetRenderTargets({ _gBuffer.GetAlbedoMetalnessTextureCPUHandle(), _gBuffer.GetNormalTextureCPUHandle() }, &dsv);
 
+            _scene.SetupToShader(commandList);
             _scene.Draw(commandList);
 
-#if defined(_DEBUG)
-            commandList.SetPipelineState(_AABBpipeline);
-            commandList.SetGraphicsRootSignature(_AABBpipeline);
-            commandList.SetConstants(1, sizeof(XMMATRIX) / 4, &_camera.ViewProjection());
+            commandList.TransitionBarrier(frame._depthTexture, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+            commandList.TransitionBarrier(_gBuffer.GetAlbedoMetalnessTexture(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+            commandList.TransitionBarrier(_gBuffer.GetNormalTexture(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 
-            _scene.DrawAABB(commandList);
-
-            DebugInfo::EndStatCollecting(commandList);
-#endif
         }
         PIXEndEvent(commandList.GetDXCommandList().Get());
 
         commandList.Close();
     }
 
+    // Execute the Deferred Shading
+    {
+        TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE, &_deferredPipeline);
+        task->SetName("deferred");
+        task->AddDependency("g-pass");
+
+        Core::CommandList& commandList = *task->GetCommandLists().front();
+
+        PIXBeginEvent(commandList.GetDXCommandList().Get(), 4, "Deferred Shading");
+        {
+            commandList.SetPipelineState(_deferredPipeline);
+            commandList.SetRootSignature(_deferredPipeline);
+
+            _scene.SetupToShader(commandList);
+
+            //frame._postFXDescHeap.PlaceResource(&_gBuffer.GetAlbedoMetalnessTexture());
+            //frame._postFXDescHeap.PlaceResource(&_gBuffer.GetNormalTexture());
+
+            D3D12_CPU_DESCRIPTOR_HANDLE handle = frame._postFXDescHeap.GetHeapStartCPUHandle();
+            handle.ptr += 64;
+            Core::Device::GetDXDevice()->CopyDescriptorsSimple(2, handle, _gBuffer.GetUAVHeap().GetHeapStartCPUHandle(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+            ID3D12DescriptorHeap* heap[1] = { frame._postFXDescHeap.GetDXDescriptorHeap().Get() };
+            commandList.GetDXCommandList()->SetDescriptorHeaps(1, heap);
+
+            D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle = frame._postFXDescHeap.GetResourceGPUHandle(&frame._targetTexture);
+            commandList.GetDXCommandList()->SetComputeRootDescriptorTable(6, gpuHandle);
+            gpuHandle = frame._postFXDescHeap.GetResourceGPUHandle(&frame._depthTexture);
+            commandList.GetDXCommandList()->SetComputeRootDescriptorTable(3, gpuHandle);
+            gpuHandle = frame._postFXDescHeap.GetHeapStartGPUHandle();
+            gpuHandle.ptr += 64;
+            commandList.GetDXCommandList()->SetComputeRootDescriptorTable(4, gpuHandle);
+            gpuHandle.ptr += 32;
+            commandList.GetDXCommandList()->SetComputeRootDescriptorTable(5, gpuHandle);
+
+            commandList.GetDXCommandList()->Dispatch(1280, 720, 1);
+        }
+        PIXEndEvent(commandList.GetDXCommandList().Get());
+
+        commandList.Close();
+    }
+
+    // Execute the Skybox
+    {
+        TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE, &_SkyboxPipeline);
+        task->SetName("skybox");
+        task->AddDependency("g-pass");
+
+        Core::CommandList& commandList = *task->GetCommandLists().front();
+
+        PIXBeginEvent(commandList.GetDXCommandList().Get(), 3, "Skybox");
+        {
+            commandList.SetPipelineState(_SkyboxPipeline);
+            commandList.SetRootSignature(_SkyboxPipeline);
+
+            _scene.SetupToShader(commandList);
+
+            D3D12_CPU_DESCRIPTOR_HANDLE handle = frame._testHeap.GetHeapStartCPUHandle();
+            handle.ptr += 64;
+            Core::Device::GetDXDevice()->CopyDescriptorsSimple(1, handle, _skybox._descHeap.GetHeapStartCPUHandle(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+            ID3D12DescriptorHeap* heap[1] = { frame._testHeap.GetDXDescriptorHeap().Get() };
+            commandList.GetDXCommandList()->SetDescriptorHeaps(1, heap);
+
+            D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle = frame._testHeap.GetResourceGPUHandle(&frame._depthTexture);
+            commandList.GetDXCommandList()->SetComputeRootDescriptorTable(3, gpuHandle);
+            gpuHandle = frame._testHeap.GetResourceGPUHandle(&frame._targetTexture);
+            commandList.GetDXCommandList()->SetComputeRootDescriptorTable(5, gpuHandle);
+            gpuHandle = frame._testHeap.GetHeapStartGPUHandle();
+            gpuHandle.ptr += 64;
+            commandList.GetDXCommandList()->SetComputeRootDescriptorTable(4, gpuHandle);
+
+            uint32_t x = (uint32_t)std::ceilf(1280 / 4.0f);
+            uint32_t y = (uint32_t)std::ceilf(720 / 4.0f);
+
+            commandList.GetDXCommandList()->Dispatch(x, y, 1);
+        }
+        PIXEndEvent(commandList.GetDXCommandList().Get());
+
+        commandList.Close();
+
+
+    }
+
     //GUI
     {
         TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
         task->SetName("gui");
-        task->AddDependency("render");
+        task->AddDependency("deferred");
+        task->AddDependency("skybox");
 
-        Core::GraphicsCommandList* commandList = task->GetCommandLists().front();
+        Core::CommandList& commandList = *task->GetCommandLists().front();
 
-        PIXBeginEvent(commandList->GetDXCommandList().Get(), 7, "GUI");
+        PIXBeginEvent(commandList.GetDXCommandList().Get(), 5, "GUI");
         {
-            commandList->SetViewport(_camera.GetViewport());
-            commandList->SetRenderTarget(&rtv, &dsv);
+            commandList.TransitionBarrier(frame._depthTexture, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+            commandList.TransitionBarrier(_gBuffer.GetAlbedoMetalnessTexture(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+            commandList.TransitionBarrier(_gBuffer.GetNormalTexture(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+            commandList.SetViewport(_camera.GetViewport());
+            commandList.SetRenderTarget(&rtv, &dsv);
 
             if (ImGui::Begin("Debug Info"), true, ImGuiWindowFlags_AlwaysAutoResize)
             {
@@ -237,11 +314,11 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
             }
             ImGui::End();
 
-            GUI::Render(*commandList);
+            GUI::Render(commandList);
         }
-        PIXEndEvent(commandList->GetDXCommandList().Get());
+        PIXEndEvent(commandList.GetDXCommandList().Get());
 
-        commandList->Close();
+        commandList.Close();
     }
 
     // Present
@@ -250,18 +327,18 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         task->SetName("present");
         task->AddDependency("gui");
 
-        Core::GraphicsCommandList* commandList = task->GetCommandLists().front();
+        Core::CommandList& commandList = *task->GetCommandLists().front();
 
-        PIXBeginEvent(commandList->GetDXCommandList().Get(), 5, "Present");
+        PIXBeginEvent(commandList.GetDXCommandList().Get(), 6, "Present");
         {
-            commandList->TransitionBarrier(frame._swapChainTexture, D3D12_RESOURCE_STATE_COPY_DEST);
-            commandList->TransitionBarrier(frame._targetTexture, D3D12_RESOURCE_STATE_COPY_SOURCE);
-            commandList->CopyResource(frame._targetTexture, frame._swapChainTexture);
-            commandList->TransitionBarrier(frame._swapChainTexture, D3D12_RESOURCE_STATE_PRESENT);
+            commandList.TransitionBarrier(frame._swapChainTexture, D3D12_RESOURCE_STATE_COPY_DEST);
+            commandList.TransitionBarrier(frame._targetTexture, D3D12_RESOURCE_STATE_COPY_SOURCE);
+            commandList.CopyResource(frame._targetTexture, frame._swapChainTexture);
+            commandList.TransitionBarrier(frame._swapChainTexture, D3D12_RESOURCE_STATE_PRESENT);
         }
-        PIXEndEvent(commandList->GetDXCommandList().Get());
+        PIXEndEvent(commandList.GetDXCommandList().Get());
 
-        commandList->Close();
+        commandList.Close();
     }
 }
 

@@ -1,20 +1,31 @@
+#pragma once
 
 struct SceneDesc
 {
-    row_major matrix ViewProjection;
-    float4 EyePosition;
-    float4 EyeDirection;
+    row_major matrix    ViewProjection;
+    row_major matrix    View;
+    row_major matrix    Projection;
     
-    uint LightsNum;
+    row_major matrix    InvView;
+    row_major matrix    InvProjection;
+    
+    float4              EyePosition;
+    float4              EyeDirection;
+    
+    uint2               WindowSize;
+    float2              NearFar;
+    
+    uint                LightsNum;
 };
 
 struct ModelDesc
 {
-    row_major matrix Transform;
+    row_major matrix    Transform;
     
-    uint AlbedoTextureIndex;
-    uint NormalTextureIndex;
-    uint MetalnessTextureIndex;
+    uint                AlbedoTextureIndex;
+    uint                NormalTextureIndex;
+    uint                MetalnessTextureIndex;
+    uint                RoughnessTextureIndex;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

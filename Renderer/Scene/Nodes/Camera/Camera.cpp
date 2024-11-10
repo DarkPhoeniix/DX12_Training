@@ -6,7 +6,7 @@ using namespace DirectX;
 
 namespace
 {
-	constexpr float CAMERA_MOVEMENT_SPEED = 0.1f;
+	constexpr float CAMERA_MOVEMENT_SPEED = 0.025f;
 } // namespace unnamed
 
 namespace SceneLayer
@@ -40,7 +40,7 @@ namespace SceneLayer
 
 	const XMMATRIX& Camera::ViewProjection() const
 	{
-		return _view * _projection;
+		return _viewProjection;
 	}
 
 	const XMVECTOR& Camera::Right() const
@@ -56,6 +56,11 @@ namespace SceneLayer
 	const XMVECTOR& Camera::Look() const
 	{
 		return _look;
+	}
+
+	const DirectX::XMVECTOR& Camera::Poisition() const
+	{
+		return _position;
 	}
 
 	const FrustumVolume& Camera::GetViewFrustum() const
@@ -213,6 +218,7 @@ namespace SceneLayer
 
 	void Camera::_UpdateFrustum()
 	{
-		_frustum.BuildFromProjMatrix(_view * _projection);
+		_viewProjection = _view * _projection;
+		_frustum.BuildFromProjMatrix(_viewProjection);
 	}
 } // namespace SceneLayer

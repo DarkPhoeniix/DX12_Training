@@ -2,7 +2,7 @@
 
 #include "LightManager.h"
 
-#include "DXObjects/GraphicsCommandList.h"
+#include "DXObjects/CommandList.h"
 
 #include "Scene/Nodes/Light/DirectionalLight.h"
 #include "Scene/Nodes/Light/PointLight.h"
@@ -81,7 +81,7 @@ namespace SceneLayer
         Core::Device::GetDXDevice()->CreateShaderResourceView(_lightsView->GetDXResource().Get(), &d, _descHeap.GetHeapStartCPUHandle());
     }
 
-    void LightManager::SetupLights(Core::GraphicsCommandList& commandList)
+    void LightManager::SetupLights(Core::CommandList& commandList)
     {
         GPULightDesc* data = (GPULightDesc*)_lightsView->Map();
         int index = 0;

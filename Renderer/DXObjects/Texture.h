@@ -2,11 +2,10 @@
 
 #include "DXObjects/DescriptorHeap.h"
 #include "DXObjects/Resource.h"
-#include "DirectXTex/DirectXTex.h"
 
 namespace Core
 {
-    class GraphicsCommandList;
+    class CommandList;
 
     class Texture : public Resource
     {
@@ -14,12 +13,11 @@ namespace Core
         Texture();
         ~Texture();
 
-        void UploadToGPU(GraphicsCommandList& commandList);
+        void UploadToGPU(CommandList& commandList);
 
         void SetDescriptorHeap(DescriptorHeap* descriptorHeap);
         DescriptorHeap* GetDescriptorHeap() const;
 
-        static std::shared_ptr<Texture> CreateTexture(const DirectX::XMVECTOR& color);
         static std::shared_ptr<Texture> LoadFromFile(std::string filepath);
 
     private:

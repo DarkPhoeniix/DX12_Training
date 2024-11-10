@@ -33,7 +33,7 @@ namespace Core
         }
     }
 
-    void OcclusionQuery::Run(const SceneLayer::ISceneNode* node, GraphicsCommandList& commandList)
+    void OcclusionQuery::Run(const SceneLayer::ISceneNode* node, CommandList& commandList)
     {
         size_t index = _queryResources.size();
         for (size_t i = 0; i < _queryResources.size(); ++i)
@@ -55,7 +55,7 @@ namespace Core
         commandList.TransitionBarrier(_queryResults[index], D3D12_RESOURCE_STATE_PREDICATION);
     }
 
-    void OcclusionQuery::SetPredication(const SceneLayer::ISceneNode* node, GraphicsCommandList& commandList)
+    void OcclusionQuery::SetPredication(const SceneLayer::ISceneNode* node, CommandList& commandList)
     {
         for (size_t i = 0; i < _queryResources.size(); ++i)
         {

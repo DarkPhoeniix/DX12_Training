@@ -1,7 +1,8 @@
+#pragma once
 
 #include "LightingCommon.hlsli"
 
-#define AMBIENT_IMPACT 0.1f
+#define AMBIENT_IMPACT 0.0f
 
 float4 CalculateAmbient(in Surface surface)
 {
@@ -14,7 +15,7 @@ float4 CalculateDiffuse(in Surface surface, in LightDesc light)
     
     if (light.Type == LIGHT_TYPE_DIRECTIONAL)
     {
-        diffuseFactor = max(dot(surface.Normal, -light.Direction), 0.0f);
+        diffuseFactor = max(dot(surface.Normal, -normalize(light.Direction)), 0.0f);
     }
     else if (light.Type == LIGHT_TYPE_POINT)
     {

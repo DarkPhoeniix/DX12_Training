@@ -1,0 +1,7 @@
+{
+	"Type": "SkyboxTechnique",
+
+	"IsGraphicsPipeline": false,
+
+	"CS": "Skybox_cs.cso"
+}

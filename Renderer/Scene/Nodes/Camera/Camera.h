@@ -22,6 +22,7 @@ namespace SceneLayer
 		const DirectX::XMVECTOR& Right() const;
 		const DirectX::XMVECTOR& Up() const;
 		const DirectX::XMVECTOR& Look() const;
+		const DirectX::XMVECTOR& Poisition() const;
 
 		const FrustumVolume& GetViewFrustum() const;
 

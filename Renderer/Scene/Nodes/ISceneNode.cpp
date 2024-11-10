@@ -106,13 +106,13 @@ namespace SceneLayer
         return _sceneCache;
     }
 
-    void ISceneNode::Draw(Core::GraphicsCommandList& commandList) const
+    void ISceneNode::Draw(Core::CommandList& commandList) const
     {    }
 
-    void ISceneNode::DrawAABB(Core::GraphicsCommandList& commandList) const
+    void ISceneNode::DrawAABB(Core::CommandList& commandList) const
     {    }
 
-    void ISceneNode::LoadNode(const std::string& filepath, Core::GraphicsCommandList& commandList)
+    void ISceneNode::LoadNode(const std::string& filepath, Core::CommandList& commandList)
     {
         LOG_INFO("Parsing node " + filepath);
 

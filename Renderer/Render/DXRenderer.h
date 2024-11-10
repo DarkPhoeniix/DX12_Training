@@ -11,6 +11,9 @@
 #include "Render/Frame.h"
 #include "Window/IWindowEventListener.h"
 
+#include "GBuffer.h"
+#include "Scene/Skybox.h"
+
 class DXRenderer : public Core::Events::IWindowEventListener
 {
 public:
@@ -33,8 +36,15 @@ public:
 private:
     HWND _windowHandle;
 
+    Core::GBuffer _gBuffer;
+
+    Core::RootSignature _gPassPipeline;
+    Core::RootSignature _deferredPipeline;
     Core::RootSignature _renderPipeline;
     Core::RootSignature _AABBpipeline;
+    Core::RootSignature _SkyboxPipeline;
+
+    SceneLayer::Skybox _skybox;
 
     ComPtr<ID3D12RootSignature> _postFXRootSig;
     ComPtr<ID3D12PipelineState> _postFXPipeState;

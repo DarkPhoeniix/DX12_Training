@@ -17,16 +17,16 @@ namespace SceneLayer
         const AABBVolume& GetAABB() const;
 
         // IScene Node
-        void Draw(Core::GraphicsCommandList& commandList) const override;
-        void DrawAABB(Core::GraphicsCommandList& commandList) const override;
+        void Draw(Core::CommandList& commandList) const override;
+        void DrawAABB(Core::CommandList& commandList) const override;
 
-        void LoadNode(const std::string& filepath, Core::GraphicsCommandList& commandList) override;
+        void LoadNode(const std::string& filepath, Core::CommandList& commandList) override;
 
     protected:
         using Base = ISceneNode;
 
-        void _CreateGPUBuffers(Core::GraphicsCommandList& commandList);
-        void _UploadData(Core::GraphicsCommandList& commandList,
+        void _CreateGPUBuffers(Core::CommandList& commandList);
+        void _UploadData(Core::CommandList& commandList,
             ID3D12Resource** destinationResource,
             size_t numElements,
             size_t elementSize,

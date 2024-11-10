@@ -1,0 +1,7 @@
+{
+	"Type": "DeferredShadingTechnique",
+
+	"IsGraphicsPipeline": false,
+
+	"CS": "DeferredShading.cso"
+}

@@ -4,7 +4,7 @@
 
 namespace Core
 {
-    class GraphicsCommandList;
+    class CommandList;
     class SwapChain;
 }
 
@@ -15,7 +15,7 @@ class GUI
 public:
     static void Init(HWND windowHandle, const Core::SwapChain& swapChain);
     static void NewFrame();
-    static void Render(Core::GraphicsCommandList& commandList);
+    static void Render(Core::CommandList& commandList);
     static void Destroy();
 
 private:

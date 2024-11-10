@@ -19,6 +19,9 @@ namespace Core
         static D3D12_DEPTH_STENCIL_DESC ParseDepthStencilDescription(const std::string& filepath);
 
     private:
+        void ParseGraphicsPipeline(Json::Value& fileRoot);
+        void ParseComputePipeline(Json::Value& fileRoot);
+
         ComPtr<ID3D12RootSignature> _rootSignature;
         ComPtr<ID3D12PipelineState> _pipelineState;
 

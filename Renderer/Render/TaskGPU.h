@@ -4,7 +4,7 @@
 
 namespace Core
 {
-    class GraphicsCommandList;
+    class CommandList;
 } // namespace Core
 
 class TaskGPU
@@ -13,8 +13,8 @@ public:
     TaskGPU();
     ~TaskGPU();
 
-    void AddCommandList(Core::GraphicsCommandList* commandList);
-    std::vector<Core::GraphicsCommandList*> GetCommandLists() const;
+    void AddCommandList(Core::CommandList* commandList);
+    std::vector<Core::CommandList*> GetCommandLists() const;
 
     void SetCommandQueue(ComPtr<ID3D12CommandQueue> commandQueue);
     ComPtr<ID3D12CommandQueue> GetCommandQueue() const;
@@ -31,7 +31,7 @@ public:
     const std::string& GetName() const;
 
 private:
-    std::vector<Core::GraphicsCommandList*> _commandLists;
+    std::vector<Core::CommandList*> _commandLists;
     ComPtr<ID3D12CommandQueue> _commandQueue;
 
     Core::Fence* _fence = nullptr;

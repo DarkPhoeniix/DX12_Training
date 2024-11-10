@@ -46,6 +46,7 @@ public:
 
     ComPtr<ID3D12DescriptorHeap> _targetHeap;
     ComPtr<ID3D12DescriptorHeap> _depthHeap;
+    Core::DescriptorHeap _testHeap;
 
     Core::DescriptorHeap _postFXDescHeap;
 

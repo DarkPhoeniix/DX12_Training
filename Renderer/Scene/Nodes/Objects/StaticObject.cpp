@@ -3,7 +3,7 @@
 #include "StaticObject.h"
 
 #include "DXObjects/Texture.h"
-#include "DXObjects/GraphicsCommandList.h"
+#include "DXObjects/CommandList.h"
 #include "Scene/SceneCache.h"
 #include "Scene/NodeFactory.h"
 
@@ -18,6 +18,7 @@ namespace
         UINT AlbedoTextureIndex     = -1;
         UINT NormalMapTextureIndex  = -1;
         UINT MetalnessTextureIndex  = -1;
+        UINT RoughnessTextureIndex  = -1;
     };
 
     XMMATRIX ParseTransformationMatrix(const Json::Value& transform)
@@ -139,7 +140,7 @@ namespace SceneLayer
         }
     }
 
-    void StaticObject::Draw(Core::GraphicsCommandList& commandList) const
+    void StaticObject::Draw(Core::CommandList& commandList) const
     {
         for (const std::shared_ptr<ISceneNode> node : _childNodes)
         {
@@ -163,7 +164,8 @@ namespace SceneLayer
             modelData->Transform = GetGlobalTransform();
             modelData->AlbedoTextureIndex = _material->AlbedoIndex(_sceneCache->GetTextureTable().get());
             modelData->NormalMapTextureIndex = _material->NormalMapIndex(_sceneCache->GetTextureTable().get());
-            modelData->MetalnessTextureIndex = -1;
+            modelData->MetalnessTextureIndex = _material->MetalnessIndex(_sceneCache->GetTextureTable().get());
+            modelData->RoughnessTextureIndex = _material->RoughnessIndex(_sceneCache->GetTextureTable().get());
         }
         commandList.SetCBV(1, _modelDesc->OffsetGPU(0));
 
@@ -174,7 +176,7 @@ namespace SceneLayer
         commandList.DrawIndexed(_mesh->getIndices().size());
     }
 
-    void StaticObject::DrawAABB(Core::GraphicsCommandList& commandList) const
+    void StaticObject::DrawAABB(Core::CommandList& commandList) const
     {
         for (const std::shared_ptr<ISceneNode> node : _childNodes)
         {
@@ -205,7 +207,7 @@ namespace SceneLayer
         return _AABB;
     }
 
-    void StaticObject::LoadNode(const std::string& filepath, Core::GraphicsCommandList& commandList)
+    void StaticObject::LoadNode(const std::string& filepath, Core::CommandList& commandList)
     {
         Base::LoadNode(filepath, commandList);
 
@@ -234,7 +236,7 @@ namespace SceneLayer
         _CreateGPUBuffers(commandList);
     }
 
-    void StaticObject::_CreateGPUBuffers(Core::GraphicsCommandList& commandList)
+    void StaticObject::_CreateGPUBuffers(Core::CommandList& commandList)
     {
         // Create Model Description Buffer
         {
@@ -280,7 +282,7 @@ namespace SceneLayer
         }
     }
 
-    void StaticObject::_UploadData(Core::GraphicsCommandList& commandList,
+    void StaticObject::_UploadData(Core::CommandList& commandList,
         ID3D12Resource** destinationResource,
         size_t numElements,
         size_t elementSize,

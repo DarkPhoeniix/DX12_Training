@@ -1,7 +1,5 @@
 #pragma once
 
-#include <fbxsdk.h>
-
 struct VertexData
 {
     DirectX::XMFLOAT3 Position;
