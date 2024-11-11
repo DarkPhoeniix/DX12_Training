@@ -49,6 +49,9 @@
     <Filter Include="Resources">
       <UniqueIdentifier>{52dbdf78-39a3-44ef-a91a-4b59e168b2d5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Scene\ECS">
+      <UniqueIdentifier>{f3830d58-ce55-44a7-9f20-9b1fc14cae98}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DXObjects\DescriptorHeap.cpp">
@@ -191,6 +194,15 @@
     </ClCompile>
     <ClCompile Include="GUI\GUI.cpp">
       <Filter>GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\ECS\ComponentFactory.cpp">
+      <Filter>Scene\ECS</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\ECS\Components.cpp">
+      <Filter>Scene\ECS</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Entity.cpp">
+      <Filter>Scene</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -381,6 +393,15 @@
     </ClInclude>
     <ClInclude Include="GUI\GUI.h">
       <Filter>GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\ECS\ComponentFactory.h">
+      <Filter>Scene\ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\ECS\Components.h">
+      <Filter>Scene\ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Entity.h">
+      <Filter>Scene</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
