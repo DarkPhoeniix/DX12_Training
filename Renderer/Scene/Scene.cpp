@@ -7,8 +7,7 @@
 #include "Scene/NodeFactory.h"
 #include "Scene/Nodes/Camera/Camera.h"
 #include "Scene/Nodes/Light/DirectionalLight.h"
-#include "Scene/Nodes/Light/PointLight.h"
-#include "Scene/Nodes/Objects/StaticObject.h"
+#include "Scene/ECS/EntityLoader.h"
 
 namespace
 {
@@ -96,7 +95,7 @@ namespace SceneLayer
 
         for (auto& node : _rootNodes)
         {
-            node->Draw(commandList);
+            //node->Draw(commandList);
         }
     }
 
@@ -104,7 +103,7 @@ namespace SceneLayer
     {
         for (auto& node : _rootNodes)
         {
-            node->DrawAABB(commandList);
+            //node->DrawAABB(commandList);
         }
     }
 
@@ -122,26 +121,12 @@ namespace SceneLayer
 
         _name = root["Name"].asCString();
 
-        {
-            SceneLayer::StaticObject l;
-            l.SetName("trash");
-        }
-
         // Parse children nodes
         for (auto& node : root["Nodes"])
         {
-            // TODO: redundant file opening...
-            std::string nodeFilepath = std::filesystem::path(filepath).parent_path().string() + '/' + node.asCString();
-            std::ifstream nodeIn(nodeFilepath, std::ifstream::in | std::ifstream::binary);
-
-            Json::Value root;
-            nodeIn >> root;
-
-            std::shared_ptr<StaticObject> child = std::shared_ptr<StaticObject>(NodeFactory::Create<StaticObject>(root["Type"].asCString()));
-            child->SetSceneCache(&_cache);
-            child->LoadNode(nodeFilepath, commandList);
-
-            _rootNodes.push_back(child);
+            Helpers::EntityLoader loader(std::filesystem::path(filepath).parent_path().string() + '/' + node.asString());
+            
+            _rootNodes.push_back(loader.LoadEntity(&_cache));
         }
 
         return true;

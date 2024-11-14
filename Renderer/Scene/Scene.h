@@ -2,6 +2,7 @@
 
 #include "Scene/SceneCache.h"
 #include "Scene/Nodes/ISceneNode.h"
+#include "Scene/Entity.h"
 
 namespace Core
 {
@@ -33,7 +34,7 @@ namespace SceneLayer
 
         std::string _name;
 
-        std::vector<std::shared_ptr<ISceneNode>> _rootNodes;
+        std::vector<std::shared_ptr<Entity>> _rootNodes;
 
         SceneCache _cache;
         std::shared_ptr<Core::Resource> _sceneGPUData;

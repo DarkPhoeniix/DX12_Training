@@ -31,7 +31,6 @@ struct COMPONENT Transformation : public IComponent
 {
     DirectX::XMMATRIX Transformation;
 };
-Register_Component(Transformation);
 
 struct COMPONENT Material : public IComponent
 {
@@ -40,11 +39,10 @@ struct COMPONENT Material : public IComponent
     std::shared_ptr<Core::Texture> Metalness;
     std::shared_ptr<Core::Texture> Roughness;
 };
-Register_Component(Material);
 
 struct COMPONENT Mesh : public IComponent
 {
-    SceneLayer::AABBVolume _AABB;
+    SceneLayer::AABBVolume AABB;
 
     std::vector<VertexData> VertexData;
     std::vector<UINT> IndexData;
@@ -55,7 +53,6 @@ struct COMPONENT Mesh : public IComponent
     D3D12_VERTEX_BUFFER_VIEW VertexBufferView;
     D3D12_INDEX_BUFFER_VIEW IndexBufferView;
 };
-Register_Component(Mesh);
 
 struct COMPONENT Light : public IComponent
 {
@@ -66,16 +63,13 @@ struct COMPONENT Light : public IComponent
     float Intensity;
     float Range;
 };
-Register_Component(Light);
 
 struct COMPONENT Skybox : public IComponent
 {
     std::shared_ptr<Core::Texture> SkydomeTexture;
 };
-Register_Component(Skybox);
 
 struct COMPONENT Tag : public IComponent
 {
     std::string Name;
 };
-Register_Component(Tag);
