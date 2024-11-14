@@ -1,15 +1,16 @@
 #pragma once
 
 #include "DXObjects/Texture.h"
+#include "Scene/ECS/ComponentFactory.h"
 #include "Scene/Volumes/AABBVolume.h"
-#include "ComponentFactory.h"
 
 #define COMPONENT
 
 enum class LightType
 {
     Directional,
-    Point
+    Point,
+    Spot
 };
 
 struct VertexData
