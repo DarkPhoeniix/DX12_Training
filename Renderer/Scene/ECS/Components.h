@@ -24,16 +24,29 @@ struct VertexData
 
 struct IComponent
 {
+    IComponent() = default;
+    IComponent(const std::string& name)
+        : ComponentName(name)
+    {   }
+
     std::string ComponentName;
 };
 
 struct COMPONENT Transformation : public IComponent
 {
-    DirectX::XMMATRIX Transformation;
+    Transformation()
+        : IComponent("Transformation")
+    {   }
+
+    DirectX::XMMATRIX Transform;
 };
 
 struct COMPONENT Material : public IComponent
 {
+    Material()
+        : IComponent("Material")
+    {   }
+
     std::shared_ptr<Core::Texture> Albedo;
     std::shared_ptr<Core::Texture> NormalMap;
     std::shared_ptr<Core::Texture> Metalness;
@@ -42,6 +55,10 @@ struct COMPONENT Material : public IComponent
 
 struct COMPONENT Mesh : public IComponent
 {
+    Mesh()
+        : IComponent("Mesh")
+    {   }
+
     SceneLayer::AABBVolume AABB;
 
     std::vector<VertexData> VertexData;
@@ -56,6 +73,10 @@ struct COMPONENT Mesh : public IComponent
 
 struct COMPONENT Light : public IComponent
 {
+    Light()
+        : IComponent("Light")
+    {   }
+
     LightType Type;
 
     DirectX::XMVECTOR Color;
@@ -66,10 +87,18 @@ struct COMPONENT Light : public IComponent
 
 struct COMPONENT Skybox : public IComponent
 {
+    Skybox()
+        : IComponent("Skybox")
+    {   }
+
     std::shared_ptr<Core::Texture> SkydomeTexture;
 };
 
 struct COMPONENT Tag : public IComponent
 {
+    Tag()
+        : IComponent("Tag")
+    {   }
+
     std::string Name;
 };

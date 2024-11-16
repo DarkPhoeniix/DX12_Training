@@ -3,15 +3,17 @@
 #include "DXRenderer.h"
 
 #include "DXObjects/CommandList.h"
-#include "Events/MouseScrollEvent.h"
 #include "Events/MouseButtonEvent.h"
 #include "Events/MouseMoveEvent.h"
 #include "Events/RenderEvent.h"
-#include "Events/ResizeEvent.h"
 #include "Events/UpdateEvent.h"
 #include "Events/KeyEvent.h"
-#include "Render/TaskGPU.h"
+#include "Render/Frame/TaskGPU.h"
 #include "Utility/DebugInfo.h"
+
+#include "SceneProcessors/SetupCachedDataProcessor.h"
+#include "SceneProcessors/UploadSceneProcessor.h"
+#include "SceneProcessors/DrawSceneProcessor.h"
 
 #include "GUI/GUI.h"
 
@@ -26,7 +28,7 @@ namespace
 DXRenderer::DXRenderer(HWND windowHandle)
     : _windowHandle(windowHandle)
     , _contentLoaded(false)
-    , _ambient(nullptr)
+    , _currentFrame(nullptr)
     , _isCameraMoving(false)
     , _deltaTime(0.0f)
 {   }
@@ -42,6 +44,8 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
     _SkyboxPipeline.Parse("PipelineDescriptions\\SkyboxPipeline.tech");
 
     _gBuffer.Init({ 1280, 720 });
+
+    UploadSceneProcessor uploadProcessor;
 
     // Camera Setup
     {
@@ -67,6 +71,8 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
         _skybox.Load("Wyvern\\Skybox.node", commandList);
 
         _scene.LoadScene("TestScene\\MaterialsTest.scene", commandList);
+
+        uploadProcessor.Process(_scene, commandList);
 
         _scene.SetCamera(_camera);
 
@@ -99,38 +105,24 @@ void DXRenderer::OnUpdate(Events::UpdateEvent& updateEvent)
     XMVECTOR mov = 10.0f * XMVectorSet(sinf(updateEvent.totalTime * 0.5f), 0.0f, cosf(updateEvent.totalTime * 0.5f), 1.0f);
     XMVECTOR tar = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
     XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-    _camera.LookAt(mov, tar, up);
+    //_camera.LookAt(mov, tar, up);
 
     _deltaTime = updateEvent.elapsedTime;
 }
 
 void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
 {
-    frame.WaitCPU();
-    frame.ResetGPU();
+    _currentFrame = &frame;
 
-    D3D12_CPU_DESCRIPTOR_HANDLE rtv = frame._targetHeap->GetCPUDescriptorHandleForHeapStart();
-    D3D12_CPU_DESCRIPTOR_HANDLE dsv = frame._depthHeap->GetCPUDescriptorHandleForHeapStart();
+    _currentFrame->WaitCPU();
+    _currentFrame->ResetGPU();
 
     // Clear render targets
     {
         TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
         task->SetName("clean");
 
-        Core::CommandList& commandList = *task->GetCommandLists().front();
-
-        PIXBeginEvent(commandList.GetDXCommandList().Get(), 1, "Clean");
-        {
-            commandList.TransitionBarrier(frame._targetTexture, D3D12_RESOURCE_STATE_RENDER_TARGET);
-
-            FLOAT clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-
-            commandList.ClearRTV(rtv, clearColor);
-            commandList.ClearDSV(dsv, D3D12_CLEAR_FLAG_DEPTH);
-        }
-        PIXEndEvent(commandList.GetDXCommandList().Get());
-
-        commandList.Close();
+        ClearBuffers(*task);
     }
 
     // Execute the GBuffer Pass
@@ -139,29 +131,7 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         task->SetName("g-pass");
         task->AddDependency("clean");
 
-        Core::CommandList& commandList = *task->GetCommandLists().front();
-
-        PIXBeginEvent(commandList.GetDXCommandList().Get(), 2, "Geometry Pass");
-        {
-            _gBuffer.ClearTextures(commandList);
-
-            commandList.SetPipelineState(_gPassPipeline);
-            commandList.SetRootSignature(_gPassPipeline);
-
-            commandList.SetViewport(_camera.GetViewport());
-            commandList.SetRenderTargets({ _gBuffer.GetAlbedoMetalnessTextureCPUHandle(), _gBuffer.GetNormalTextureCPUHandle() }, &dsv);
-
-            _scene.SetupToShader(commandList);
-            _scene.Draw(commandList);
-
-            commandList.TransitionBarrier(frame._depthTexture, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-            commandList.TransitionBarrier(_gBuffer.GetAlbedoMetalnessTexture(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-            commandList.TransitionBarrier(_gBuffer.GetNormalTexture(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-
-        }
-        PIXEndEvent(commandList.GetDXCommandList().Get());
-
-        commandList.Close();
+        GeometryPass(*task);
     }
 
     // Execute the Deferred Shading
@@ -170,40 +140,7 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         task->SetName("deferred");
         task->AddDependency("g-pass");
 
-        Core::CommandList& commandList = *task->GetCommandLists().front();
-
-        PIXBeginEvent(commandList.GetDXCommandList().Get(), 4, "Deferred Shading");
-        {
-            commandList.SetPipelineState(_deferredPipeline);
-            commandList.SetRootSignature(_deferredPipeline);
-
-            _scene.SetupToShader(commandList);
-
-            //frame._postFXDescHeap.PlaceResource(&_gBuffer.GetAlbedoMetalnessTexture());
-            //frame._postFXDescHeap.PlaceResource(&_gBuffer.GetNormalTexture());
-
-            D3D12_CPU_DESCRIPTOR_HANDLE handle = frame._postFXDescHeap.GetHeapStartCPUHandle();
-            handle.ptr += 64;
-            Core::Device::GetDXDevice()->CopyDescriptorsSimple(2, handle, _gBuffer.GetUAVHeap().GetHeapStartCPUHandle(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
-            ID3D12DescriptorHeap* heap[1] = { frame._postFXDescHeap.GetDXDescriptorHeap().Get() };
-            commandList.GetDXCommandList()->SetDescriptorHeaps(1, heap);
-
-            D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle = frame._postFXDescHeap.GetResourceGPUHandle(&frame._targetTexture);
-            commandList.GetDXCommandList()->SetComputeRootDescriptorTable(6, gpuHandle);
-            gpuHandle = frame._postFXDescHeap.GetResourceGPUHandle(&frame._depthTexture);
-            commandList.GetDXCommandList()->SetComputeRootDescriptorTable(3, gpuHandle);
-            gpuHandle = frame._postFXDescHeap.GetHeapStartGPUHandle();
-            gpuHandle.ptr += 64;
-            commandList.GetDXCommandList()->SetComputeRootDescriptorTable(4, gpuHandle);
-            gpuHandle.ptr += 32;
-            commandList.GetDXCommandList()->SetComputeRootDescriptorTable(5, gpuHandle);
-
-            commandList.GetDXCommandList()->Dispatch(1280, 720, 1);
-        }
-        PIXEndEvent(commandList.GetDXCommandList().Get());
-
-        commandList.Close();
+        LightingPass(*task);
     }
 
     // Execute the Skybox
@@ -212,40 +149,7 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         task->SetName("skybox");
         task->AddDependency("g-pass");
 
-        Core::CommandList& commandList = *task->GetCommandLists().front();
-
-        PIXBeginEvent(commandList.GetDXCommandList().Get(), 3, "Skybox");
-        {
-            commandList.SetPipelineState(_SkyboxPipeline);
-            commandList.SetRootSignature(_SkyboxPipeline);
-
-            _scene.SetupToShader(commandList);
-
-            D3D12_CPU_DESCRIPTOR_HANDLE handle = frame._testHeap.GetHeapStartCPUHandle();
-            handle.ptr += 64;
-            Core::Device::GetDXDevice()->CopyDescriptorsSimple(1, handle, _skybox._descHeap.GetHeapStartCPUHandle(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
-            ID3D12DescriptorHeap* heap[1] = { frame._testHeap.GetDXDescriptorHeap().Get() };
-            commandList.GetDXCommandList()->SetDescriptorHeaps(1, heap);
-
-            D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle = frame._testHeap.GetResourceGPUHandle(&frame._depthTexture);
-            commandList.GetDXCommandList()->SetComputeRootDescriptorTable(3, gpuHandle);
-            gpuHandle = frame._testHeap.GetResourceGPUHandle(&frame._targetTexture);
-            commandList.GetDXCommandList()->SetComputeRootDescriptorTable(5, gpuHandle);
-            gpuHandle = frame._testHeap.GetHeapStartGPUHandle();
-            gpuHandle.ptr += 64;
-            commandList.GetDXCommandList()->SetComputeRootDescriptorTable(4, gpuHandle);
-
-            uint32_t x = (uint32_t)std::ceilf(1280 / 4.0f);
-            uint32_t y = (uint32_t)std::ceilf(720 / 4.0f);
-
-            commandList.GetDXCommandList()->Dispatch(x, y, 1);
-        }
-        PIXEndEvent(commandList.GetDXCommandList().Get());
-
-        commandList.Close();
-
-
+        RenderSkybox(*task);
     }
 
     //GUI
@@ -255,70 +159,7 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         task->AddDependency("deferred");
         task->AddDependency("skybox");
 
-        Core::CommandList& commandList = *task->GetCommandLists().front();
-
-        PIXBeginEvent(commandList.GetDXCommandList().Get(), 5, "GUI");
-        {
-            commandList.TransitionBarrier(frame._depthTexture, D3D12_RESOURCE_STATE_DEPTH_WRITE);
-            commandList.TransitionBarrier(_gBuffer.GetAlbedoMetalnessTexture(), D3D12_RESOURCE_STATE_RENDER_TARGET);
-            commandList.TransitionBarrier(_gBuffer.GetNormalTexture(), D3D12_RESOURCE_STATE_RENDER_TARGET);
-
-            commandList.SetViewport(_camera.GetViewport());
-            commandList.SetRenderTarget(&rtv, &dsv);
-
-            if (ImGui::Begin("Debug Info"), true, ImGuiWindowFlags_AlwaysAutoResize)
-            {
-                ImGui::SetWindowPos({ 0, 0 });
-                ImGui::SetWindowSize({ 0, 0 });
-
-                ImGui::Text("FPS: %i (%.03f ms)", DebugInfo::GetFPS(), DebugInfo::GetMsPerFrame());
-
-                if (ImGui::CollapsingHeader("Pipeline statistics"))
-                {
-                    D3D12_QUERY_DATA_PIPELINE_STATISTICS stats = DebugInfo::GetPipelineStatisctics();
-                    ImGui::Text(std::string("Primitives: " + std::to_string(stats.IAPrimitives)).c_str());
-                    ImGui::Text(std::string("VS invocs: " + std::to_string(stats.VSInvocations)).c_str());
-                    ImGui::Text(std::string("GS invocs: " + std::to_string(stats.GSInvocations)).c_str());
-                    ImGui::Text(std::string("PS invocs: " + std::to_string(stats.PSInvocations)).c_str());
-                }
-
-                if (ImGui::CollapsingHeader("Inputs"))
-                {
-                    ImGuiIO& io = ImGui::GetIO();
-                    if (ImGui::IsMousePosValid())
-                    {
-                        ImGui::Text("Mouse pos: (%g, %g)", io.MousePos.x, io.MousePos.y);
-                    }
-                    else
-                    {
-                        ImGui::Text("Mouse pos: <INVALID>");
-                    }
-                    ImGui::Text("Mouse delta: (%g, %g)", io.MouseDelta.x, io.MouseDelta.y);
-                    ImGui::Text("Mouse down:");
-                    for (int i = 0; i < IM_ARRAYSIZE(io.MouseDown); i++)
-                    {
-                        if (ImGui::IsMouseDown(i))
-                        {
-                            ImGui::SameLine();
-                            ImGui::Text("b%d (%.02f secs)", i, io.MouseDownDuration[i]);
-                        }
-                    }
-
-                    struct funcs { static bool IsLegacyNativeDupe(ImGuiKey key) { return key >= 0 && key < 512 && ImGui::GetIO().KeyMap[key] != -1; } }; // Hide Native<>ImGuiKey duplicates when both exists in the array
-                    ImGuiKey start_key = (ImGuiKey)0;
-
-                    ImGui::Text("Keys down:");         for (ImGuiKey key = start_key; key < ImGuiKey_NamedKey_END; key = (ImGuiKey)(key + 1)) { if (funcs::IsLegacyNativeDupe(key) || !ImGui::IsKeyDown(key)) continue; ImGui::SameLine(); ImGui::Text((key < ImGuiKey_NamedKey_BEGIN) ? "\"%s\"" : "\"%s\" %d", ImGui::GetKeyName(key), key); }
-                    ImGui::Text("Keys mods: %s%s%s%s", io.KeyCtrl ? "CTRL " : "", io.KeyShift ? "SHIFT " : "", io.KeyAlt ? "ALT " : "", io.KeySuper ? "SUPER " : "");
-                    ImGui::Text("Chars queue:");       for (int i = 0; i < io.InputQueueCharacters.Size; i++) { ImWchar c = io.InputQueueCharacters[i]; ImGui::SameLine();  ImGui::Text("\'%c\' (0x%04X)", (c > ' ' && c <= 255) ? (char)c : '?', c); } // FIXME: We should convert 'c' to UTF-8 here but the functions are not public.
-                }
-            }
-            ImGui::End();
-
-            GUI::Render(commandList);
-        }
-        PIXEndEvent(commandList.GetDXCommandList().Get());
-
-        commandList.Close();
+        RenderGUI(*task);
     }
 
     // Present
@@ -327,18 +168,7 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         task->SetName("present");
         task->AddDependency("gui");
 
-        Core::CommandList& commandList = *task->GetCommandLists().front();
-
-        PIXBeginEvent(commandList.GetDXCommandList().Get(), 6, "Present");
-        {
-            commandList.TransitionBarrier(frame._swapChainTexture, D3D12_RESOURCE_STATE_COPY_DEST);
-            commandList.TransitionBarrier(frame._targetTexture, D3D12_RESOURCE_STATE_COPY_SOURCE);
-            commandList.CopyResource(frame._targetTexture, frame._swapChainTexture);
-            commandList.TransitionBarrier(frame._swapChainTexture, D3D12_RESOURCE_STATE_PRESENT);
-        }
-        PIXEndEvent(commandList.GetDXCommandList().Get());
-
-        commandList.Close();
+        Present(*task);
     }
 }
 
@@ -393,4 +223,217 @@ void DXRenderer::OnMouseButtonReleased(Events::MouseButtonEvent& e)
     {
         _isCameraMoving = false;
     }
+}
+
+void DXRenderer::ClearBuffers(TaskGPU& task)
+{
+    Core::CommandList& commandList = *task.GetCommandLists().front();
+
+    D3D12_CPU_DESCRIPTOR_HANDLE rtv = _currentFrame->_targetHeap->GetCPUDescriptorHandleForHeapStart();
+    D3D12_CPU_DESCRIPTOR_HANDLE dsv = _currentFrame->_depthHeap->GetCPUDescriptorHandleForHeapStart();
+
+    PIXBeginEvent(commandList.GetDXCommandList().Get(), 1, "Clean");
+    {
+        commandList.TransitionBarrier(_currentFrame->_targetTexture, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+        FLOAT clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+
+        commandList.ClearRTV(rtv, clearColor);
+        commandList.ClearDSV(dsv, D3D12_CLEAR_FLAG_DEPTH);
+    }
+    PIXEndEvent(commandList.GetDXCommandList().Get());
+
+    commandList.Close();
+}
+
+void DXRenderer::GeometryPass(TaskGPU& task)
+{
+    Core::CommandList& commandList = *task.GetCommandLists().front();
+
+    D3D12_CPU_DESCRIPTOR_HANDLE dsv = _currentFrame->_depthHeap->GetCPUDescriptorHandleForHeapStart();
+
+    PIXBeginEvent(commandList.GetDXCommandList().Get(), 2, "Geometry Pass");
+    {
+        _gBuffer.ClearTextures(commandList);
+
+        commandList.SetPipelineState(_gPassPipeline);
+        commandList.SetRootSignature(_gPassPipeline);
+
+        commandList.SetViewport(_camera.GetViewport());
+        commandList.SetRenderTargets({ _gBuffer.GetAlbedoMetalnessTextureCPUHandle(), _gBuffer.GetNormalTextureCPUHandle() }, &dsv);
+
+        SetupCachedDataProcessor processor;
+        processor.Process(_scene, commandList);
+
+        DrawSceneProcessor drawProcessor;
+        drawProcessor.Process(_scene, commandList);
+
+        commandList.TransitionBarrier(_currentFrame->_depthTexture, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+        commandList.TransitionBarrier(_gBuffer.GetAlbedoMetalnessTexture(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+        commandList.TransitionBarrier(_gBuffer.GetNormalTexture(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+
+    }
+    PIXEndEvent(commandList.GetDXCommandList().Get());
+
+    commandList.Close();
+}
+
+void DXRenderer::LightingPass(TaskGPU& task)
+{
+    Core::CommandList& commandList = *task.GetCommandLists().front();
+
+    PIXBeginEvent(commandList.GetDXCommandList().Get(), 4, "Deferred Shading");
+    {
+        commandList.SetPipelineState(_deferredPipeline);
+        commandList.SetRootSignature(_deferredPipeline);
+
+        SetupCachedDataProcessor processor;
+        processor.Process(_scene, commandList);
+
+        D3D12_CPU_DESCRIPTOR_HANDLE handle = _currentFrame->_postFXDescHeap.GetHeapStartCPUHandle();
+        handle.ptr += 64;
+        Core::Device::GetDXDevice()->CopyDescriptorsSimple(2, handle, _gBuffer.GetUAVHeap().GetHeapStartCPUHandle(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+        ID3D12DescriptorHeap* heap[1] = { _currentFrame->_postFXDescHeap.GetDXDescriptorHeap().Get() };
+        commandList.GetDXCommandList()->SetDescriptorHeaps(1, heap);
+
+        D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle = _currentFrame->_postFXDescHeap.GetResourceGPUHandle(&_currentFrame->_targetTexture);
+        commandList.GetDXCommandList()->SetComputeRootDescriptorTable(6, gpuHandle);
+        gpuHandle = _currentFrame->_postFXDescHeap.GetResourceGPUHandle(&_currentFrame->_depthTexture);
+        commandList.GetDXCommandList()->SetComputeRootDescriptorTable(3, gpuHandle);
+        gpuHandle = _currentFrame->_postFXDescHeap.GetHeapStartGPUHandle();
+        gpuHandle.ptr += 64;
+        commandList.GetDXCommandList()->SetComputeRootDescriptorTable(4, gpuHandle);
+        gpuHandle.ptr += 32;
+        commandList.GetDXCommandList()->SetComputeRootDescriptorTable(5, gpuHandle);
+
+        commandList.GetDXCommandList()->Dispatch(1280, 720, 1);
+    }
+    PIXEndEvent(commandList.GetDXCommandList().Get());
+
+    commandList.Close();
+}
+
+void DXRenderer::RenderSkybox(TaskGPU& task)
+{
+    Core::CommandList& commandList = *task.GetCommandLists().front();
+
+    PIXBeginEvent(commandList.GetDXCommandList().Get(), 3, "Skybox");
+    {
+        commandList.SetPipelineState(_SkyboxPipeline);
+        commandList.SetRootSignature(_SkyboxPipeline);
+
+        SetupCachedDataProcessor processor;
+        processor.Process(_scene, commandList);
+
+        D3D12_CPU_DESCRIPTOR_HANDLE handle = _currentFrame->_testHeap.GetHeapStartCPUHandle();
+        handle.ptr += 64;
+        Core::Device::GetDXDevice()->CopyDescriptorsSimple(1, handle, _skybox._descHeap.GetHeapStartCPUHandle(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+        ID3D12DescriptorHeap* heap[1] = { _currentFrame->_testHeap.GetDXDescriptorHeap().Get() };
+        commandList.GetDXCommandList()->SetDescriptorHeaps(1, heap);
+
+        D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle = _currentFrame->_testHeap.GetResourceGPUHandle(&_currentFrame->_depthTexture);
+        commandList.GetDXCommandList()->SetComputeRootDescriptorTable(3, gpuHandle);
+        gpuHandle = _currentFrame->_testHeap.GetResourceGPUHandle(&_currentFrame->_targetTexture);
+        commandList.GetDXCommandList()->SetComputeRootDescriptorTable(5, gpuHandle);
+        gpuHandle = _currentFrame->_testHeap.GetHeapStartGPUHandle();
+        gpuHandle.ptr += 64;
+        commandList.GetDXCommandList()->SetComputeRootDescriptorTable(4, gpuHandle);
+
+        uint32_t x = (uint32_t)std::ceilf(1280 / 4.0f);
+        uint32_t y = (uint32_t)std::ceilf(720 / 4.0f);
+
+        commandList.GetDXCommandList()->Dispatch(x, y, 1);
+    }
+    PIXEndEvent(commandList.GetDXCommandList().Get());
+
+    commandList.Close();
+}
+
+void DXRenderer::RenderGUI(TaskGPU& task)
+{
+    Core::CommandList& commandList = *task.GetCommandLists().front();
+
+    D3D12_CPU_DESCRIPTOR_HANDLE rtv = _currentFrame->_targetHeap->GetCPUDescriptorHandleForHeapStart();
+    D3D12_CPU_DESCRIPTOR_HANDLE dsv = _currentFrame->_depthHeap->GetCPUDescriptorHandleForHeapStart();
+
+    PIXBeginEvent(commandList.GetDXCommandList().Get(), 5, "GUI");
+    {
+        commandList.TransitionBarrier(_currentFrame->_depthTexture, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+        commandList.TransitionBarrier(_gBuffer.GetAlbedoMetalnessTexture(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+        commandList.TransitionBarrier(_gBuffer.GetNormalTexture(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+        commandList.SetViewport(_camera.GetViewport());
+        commandList.SetRenderTarget(&rtv, &dsv);
+
+        if (ImGui::Begin("Debug Info"), true, ImGuiWindowFlags_AlwaysAutoResize)
+        {
+            ImGui::SetWindowPos({ 0, 0 });
+            ImGui::SetWindowSize({ 0, 0 });
+
+            ImGui::Text("FPS: %i (%.03f ms)", DebugInfo::GetFPS(), DebugInfo::GetMsPerFrame());
+
+            if (ImGui::CollapsingHeader("Pipeline statistics"))
+            {
+                D3D12_QUERY_DATA_PIPELINE_STATISTICS stats = DebugInfo::GetPipelineStatisctics();
+                ImGui::Text(std::string("Primitives: " + std::to_string(stats.IAPrimitives)).c_str());
+                ImGui::Text(std::string("VS invocs: " + std::to_string(stats.VSInvocations)).c_str());
+                ImGui::Text(std::string("GS invocs: " + std::to_string(stats.GSInvocations)).c_str());
+                ImGui::Text(std::string("PS invocs: " + std::to_string(stats.PSInvocations)).c_str());
+            }
+
+            if (ImGui::CollapsingHeader("Inputs"))
+            {
+                ImGuiIO& io = ImGui::GetIO();
+                if (ImGui::IsMousePosValid())
+                {
+                    ImGui::Text("Mouse pos: (%g, %g)", io.MousePos.x, io.MousePos.y);
+                }
+                else
+                {
+                    ImGui::Text("Mouse pos: <INVALID>");
+                }
+                ImGui::Text("Mouse delta: (%g, %g)", io.MouseDelta.x, io.MouseDelta.y);
+                ImGui::Text("Mouse down:");
+                for (int i = 0; i < IM_ARRAYSIZE(io.MouseDown); i++)
+                {
+                    if (ImGui::IsMouseDown(i))
+                    {
+                        ImGui::SameLine();
+                        ImGui::Text("b%d (%.02f secs)", i, io.MouseDownDuration[i]);
+                    }
+                }
+
+                struct funcs { static bool IsLegacyNativeDupe(ImGuiKey key) { return key >= 0 && key < 512 && ImGui::GetIO().KeyMap[key] != -1; } }; // Hide Native<>ImGuiKey duplicates when both exists in the array
+                ImGuiKey start_key = (ImGuiKey)0;
+
+                ImGui::Text("Keys down:");         for (ImGuiKey key = start_key; key < ImGuiKey_NamedKey_END; key = (ImGuiKey)(key + 1)) { if (funcs::IsLegacyNativeDupe(key) || !ImGui::IsKeyDown(key)) continue; ImGui::SameLine(); ImGui::Text((key < ImGuiKey_NamedKey_BEGIN) ? "\"%s\"" : "\"%s\" %d", ImGui::GetKeyName(key), key); }
+                ImGui::Text("Keys mods: %s%s%s%s", io.KeyCtrl ? "CTRL " : "", io.KeyShift ? "SHIFT " : "", io.KeyAlt ? "ALT " : "", io.KeySuper ? "SUPER " : "");
+                ImGui::Text("Chars queue:");       for (int i = 0; i < io.InputQueueCharacters.Size; i++) { ImWchar c = io.InputQueueCharacters[i]; ImGui::SameLine();  ImGui::Text("\'%c\' (0x%04X)", (c > ' ' && c <= 255) ? (char)c : '?', c); } // FIXME: We should convert 'c' to UTF-8 here but the functions are not public.
+            }
+        }
+        ImGui::End();
+
+        GUI::Render(commandList);
+    }
+    PIXEndEvent(commandList.GetDXCommandList().Get());
+
+    commandList.Close();
+}
+
+void DXRenderer::Present(TaskGPU& task)
+{
+    Core::CommandList& commandList = *task.GetCommandLists().front();
+
+    PIXBeginEvent(commandList.GetDXCommandList().Get(), 6, "Present");
+    {
+        commandList.TransitionBarrier(_currentFrame->_swapChainTexture, D3D12_RESOURCE_STATE_COPY_DEST);
+        commandList.TransitionBarrier(_currentFrame->_targetTexture, D3D12_RESOURCE_STATE_COPY_SOURCE);
+        commandList.CopyResource(_currentFrame->_targetTexture, _currentFrame->_swapChainTexture);
+        commandList.TransitionBarrier(_currentFrame->_swapChainTexture, D3D12_RESOURCE_STATE_PRESENT);
+    }
+    PIXEndEvent(commandList.GetDXCommandList().Get());
+
+    commandList.Close();
 }

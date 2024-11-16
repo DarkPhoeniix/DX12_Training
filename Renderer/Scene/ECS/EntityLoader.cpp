@@ -98,12 +98,12 @@ namespace Helpers
     void EntityLoader::LoadComponent(Json::Value& jsonValue, const std::shared_ptr<Transformation>& component)
     {
 
-        component->Transformation = DirectX::XMMatrixIdentity();
+        component->Transform = DirectX::XMMatrixIdentity();
 
         int matrixSize = jsonValue["Transform"].size();
         for (int i = 0; i < matrixSize; ++i)
         {
-            component->Transformation.r[i] = ParseVector(jsonValue["Transform"][std::format("r{}", i).c_str()].asString());
+            component->Transform.r[i] = ParseVector(jsonValue["Transform"][std::format("r{}", i).c_str()].asString());
         }
     }
 
@@ -121,9 +121,9 @@ namespace Helpers
         std::string roughnessFilepath = _parentFilepath + '/' + materialData["Roughness"].asString();
 
         component->Albedo = Core::Texture::LoadFromFile(albedoFilepath);
-        component->NormalMap = Core::Texture::LoadFromFile(albedoFilepath);
-        component->Metalness = Core::Texture::LoadFromFile(albedoFilepath);
-        component->Roughness = Core::Texture::LoadFromFile(albedoFilepath);
+        component->NormalMap = Core::Texture::LoadFromFile(normalFilepath);
+        component->Metalness = Core::Texture::LoadFromFile(metalnessFilepath);
+        component->Roughness = Core::Texture::LoadFromFile(roughnessFilepath);
     }
 
     void EntityLoader::LoadComponent(Json::Value& jsonValue, const std::shared_ptr<Mesh>& component)

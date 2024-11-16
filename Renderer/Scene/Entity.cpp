@@ -5,13 +5,17 @@
 namespace SceneLayer
 {
     Entity::Entity()
+        : _sceneCache(nullptr)
+        , _parent(nullptr)
     {
+        Init();
     }
 
     Entity::Entity(SceneCache* sceneCache, Entity* parent)
         : _sceneCache(sceneCache)
         , _parent(parent)
     {
+        Init();
     }
 
     IComponent* Entity::GetComponent(const std::string_view& name)
@@ -40,6 +44,11 @@ namespace SceneLayer
         _components.clear();
     }
 
+    std::vector<std::shared_ptr<Entity>>& Entity::GetChildrenNodes()
+    {
+        return _children;
+    }
+
     void Entity::AddChild(std::shared_ptr<Entity> child)
     {
         _children.push_back(child);
@@ -53,5 +62,30 @@ namespace SceneLayer
     const std::string& Entity::GetName() const
     {
         return _name;
+    }
+
+    Core::Resource& Entity::GetGPUDesc()
+    {
+        return _gpuDesc;
+    }
+
+    SceneCache* Entity::GetSceneCache()
+    {
+        return _sceneCache;
+    }
+
+    void Entity::Init()
+    {
+        Core::ResourceDescription resourceDesc;
+        {
+            resourceDesc.SetSize({ sizeof(GPUModelDesc), 1 });
+            resourceDesc.SetStride(1);
+            resourceDesc.SetFormat(DXGI_FORMAT::DXGI_FORMAT_UNKNOWN);
+            resourceDesc.SetResourceType(Core::EResourceType::Dynamic | Core::EResourceType::Buffer | Core::EResourceType::StrideAlignment);
+        }
+
+        _gpuDesc.SetResourceDescription(resourceDesc);
+        _gpuDesc.CreateCommitedResource();
+        _gpuDesc.SetName(_name);
     }
 } // namespace SceneLayer

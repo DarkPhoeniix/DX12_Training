@@ -2,6 +2,7 @@
 
 #include "Scene/SceneCache.h"
 #include "Scene/ECS/Components.h"
+#include "Render/GPUStructs/GPUModelDesc.h"
 
 namespace SceneLayer
 {
@@ -18,16 +19,25 @@ namespace SceneLayer
         void AddComponent(const std::shared_ptr<IComponent>& component);
         void ClearComponents();
 
+        std::vector<std::shared_ptr<Entity>>& GetChildrenNodes();
         void AddChild(std::shared_ptr<Entity> child);
 
         void SetName(const std::string& name);
         const std::string& GetName() const;
 
+        Core::Resource& GetGPUDesc();
+
+        SceneCache* GetSceneCache();
+
     private:
+        void Init();
+
         std::vector<std::shared_ptr<IComponent>> _components;
 
         std::vector<std::shared_ptr<Entity>> _children;
         Entity* _parent;
+
+        Core::Resource _gpuDesc;
 
         SceneCache* _sceneCache;
 

@@ -1,10 +1,10 @@
 #pragma once
 
 #include "DXObjects/SwapChain.h"
-#include "Render/AllocatorPool.h"
-#include "Render/Executor.h"
-#include "Render/TaskGPU.h"
-#include "Render/FencePool.h"
+#include "Render/Frame/AllocatorPool.h"
+#include "Render/Frame/Executor.h"
+#include "Render/Frame/TaskGPU.h"
+#include "Render/Frame/FencePool.h"
 #include "DXObjects/DescriptorHeap.h"
 
 // TODO: refactor the Frame class

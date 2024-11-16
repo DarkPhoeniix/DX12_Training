@@ -26,6 +26,6 @@ namespace SceneLayer
 
         Camera* _camera;
         
-        std::shared_ptr<Core::Resource> _sceneGPUData;
+        std::shared_ptr<Core::Resource> _gpuDesc;
     };
 } // namespace SceneLayer
