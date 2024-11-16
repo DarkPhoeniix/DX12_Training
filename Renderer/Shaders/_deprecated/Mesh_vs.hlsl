@@ -5,7 +5,7 @@
 
 #include "Mesh_rootsig.hlsli"
 
-#include "Common.hlsli"
+#include "../Common.hlsli"
 
 struct VSInput
 {

@@ -2,7 +2,7 @@
 #include "DeferredShading_rootsig.hlsli"
 
 #include "Common.hlsli"
-#include "LambertLighting.hlsli"
+#include "LightingCommon.hlsli"
 #include "DepthFuncs.hlsli"
 #include "PBR.hlsli"
 
@@ -29,7 +29,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
     
     float3 eyeDir = normalize(Scene.EyePosition - surface.Positon);
     
-    surface.FinalColor = CalculateAmbient(surface);
+    surface.FinalColor = 0.05f * surface.Albedo;
     for (int i = 0; i < Scene.LightsNum; ++i)
     {
         float3 lightDirection;

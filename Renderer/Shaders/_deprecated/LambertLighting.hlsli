@@ -1,6 +1,6 @@
 #pragma once
 
-#include "LightingCommon.hlsli"
+#include "../LightingCommon.hlsli"
 
 #define AMBIENT_IMPACT 0.0f
 

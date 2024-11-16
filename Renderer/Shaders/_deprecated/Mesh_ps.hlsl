@@ -2,7 +2,7 @@
 // The Pixel Shader (PS) stage takes the interpolated per-vertex values from
 // the rasterizer stage and produces one (or more) per-pixel color values.
 
-#include "Common.hlsli"
+#include "../Common.hlsli"
 #include "LambertLighting.hlsli"
 
 struct PixelShaderInput
