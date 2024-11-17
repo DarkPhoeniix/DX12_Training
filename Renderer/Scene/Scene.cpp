@@ -2,7 +2,7 @@
 
 #include "Scene.h"
 
-#include "DXObjects/CommandList.h"
+#include "CommandList.h"
 #include "Scene/Camera.h"
 #include "Scene/ECS/EntityLoader.h"
 
@@ -31,9 +31,9 @@ namespace SceneLayer
 {
     Scene::Scene()
     {
-        Core::ResourceDescription sceneDataDescription;
+        dx12::ResourceDescription sceneDataDescription;
         {
-            sceneDataDescription.SetResourceType(Core::EResourceType::Buffer | Core::EResourceType::Dynamic | Core::EResourceType::StrideAlignment);
+            sceneDataDescription.SetResourceType(dx12::EResourceType::Buffer | dx12::EResourceType::Dynamic | dx12::EResourceType::StrideAlignment);
             sceneDataDescription.SetSize({ sizeof(SceneDesc), 1 });
             sceneDataDescription.SetStride(1);
             sceneDataDescription.SetFormat(DXGI_FORMAT::DXGI_FORMAT_UNKNOWN);
@@ -61,12 +61,12 @@ namespace SceneLayer
         _cache.SetCamera(&camera);
     }
 
-    Core::Resource& Scene::GetGPUDesc()
+    dx12::Resource& Scene::GetGPUDesc()
     {
         return _gpuDesc;
     }
 
-    bool Scene::LoadScene(const std::string& filepath, Core::CommandList& commandList)
+    bool Scene::LoadScene(const std::string& filepath, dx12::CommandList& commandList)
     {
         std::ifstream in(filepath, std::ifstream::in | std::ifstream::binary);
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <fstream>
+
 #define ASSERT(statement, message) \
     AssertUtility::AssertFunction(statement, message)
 
@@ -14,7 +16,7 @@ namespace AssertUtility
     bool AssertFunction(bool statement, const std::string& message);
     bool LogWarningFunction(bool statement, const std::string& message);
     void LogInfoFunction(const std::string& message);
-}
+} // namespace AssertUtility
 
 enum class LogType
 {
@@ -22,7 +24,7 @@ enum class LogType
     Warning = 2,
     Error   = 4
 };
-BINARY_OPERATION_TO_ENUM(LogType);
+//BINARY_OPERATION_TO_ENUM(LogType);
 
 class Logger
 {

@@ -2,12 +2,12 @@
 
 #include "DrawSceneProcessor.h"
 
-#include "DXObjects/CommandList.h"
-#include "DXObjects/ResourceTable.h"
+#include "CommandList.h"
+#include "ResourceTable.h"
 #include "Scene/Scene.h"
 #include "Render/GPUStructs/GPUModelDesc.h"
 
-void DrawSceneProcessor::Process(SceneLayer::Scene& scene, Core::CommandList& commandList)
+void DrawSceneProcessor::Process(SceneLayer::Scene& scene, dx12::CommandList& commandList)
 {
     // Setup textures
     commandList.SetDescriptorHeaps({ scene.GetCache().GetTextureTable()->GetDescriptorHeap().GetDXDescriptorHeap().Get()});
@@ -24,7 +24,7 @@ void DrawSceneProcessor::Process(SceneLayer::Scene& scene, Core::CommandList& co
     }
 }
 
-void DrawSceneProcessor::DrawEntity(SceneLayer::Entity& entity, Core::CommandList& commandList)
+void DrawSceneProcessor::DrawEntity(SceneLayer::Entity& entity, dx12::CommandList& commandList)
 {
     SceneLayer::SceneCache* cache = entity.GetSceneCache();
     if (ASSERT(cache, "Entity has no scene cache"))
@@ -42,7 +42,7 @@ void DrawSceneProcessor::DrawEntity(SceneLayer::Entity& entity, Core::CommandLis
 
         if (material)
         {
-            std::shared_ptr<Core::ResourceTable> textureTable = entity.GetSceneCache()->GetTextureTable();
+            std::shared_ptr<dx12::ResourceTable> textureTable = entity.GetSceneCache()->GetTextureTable();
 
             modelDesc->AlbedoTextureIndex = textureTable->GetResourceIndex(material->Albedo->GetName());
             modelDesc->NormalMapTextureIndex = textureTable->GetResourceIndex(material->NormalMap->GetName());

@@ -2,14 +2,14 @@
 
 #include "SceneCache.h"
 
-#include "DXObjects/ResourceTable.h"
+#include "ResourceTable.h"
 #include "Render/GPUStructs/GPULightDesc.h"
 
 namespace SceneLayer
 {
     SceneCache::SceneCache()
     {
-        Core::HeapDescription texturesHeapDesc;
+        dx12::HeapDescription texturesHeapDesc;
         {
             texturesHeapDesc.SetHeapType(D3D12_HEAP_TYPE_DEFAULT);
             texturesHeapDesc.SetHeapFlags(D3D12_HEAP_FLAG_ALLOW_ALL_BUFFERS_AND_TEXTURES);
@@ -20,7 +20,7 @@ namespace SceneLayer
             texturesHeapDesc.SetCreationNodeMask(1);
         }
 
-        Core::DescriptorHeapDescription texturesDescriptorHeapDesc;
+        dx12::DescriptorHeapDescription texturesDescriptorHeapDesc;
         {
             texturesDescriptorHeapDesc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
             texturesDescriptorHeapDesc.SetNumDescriptors(64);
@@ -28,9 +28,9 @@ namespace SceneLayer
             texturesDescriptorHeapDesc.SetNodeMask(1);
         }
 
-        _texturesTable = std::make_shared<Core::ResourceTable>(texturesDescriptorHeapDesc, texturesHeapDesc);
+        _texturesTable = std::make_shared<dx12::ResourceTable>(texturesDescriptorHeapDesc, texturesHeapDesc);
 
-        Core::HeapDescription lightsHeapDesc;
+        dx12::HeapDescription lightsHeapDesc;
         {
             lightsHeapDesc.SetHeapType(D3D12_HEAP_TYPE_UPLOAD);
             lightsHeapDesc.SetHeapFlags(D3D12_HEAP_FLAG_NONE);
@@ -41,20 +41,20 @@ namespace SceneLayer
             lightsHeapDesc.SetCreationNodeMask(1);
         }
 
-        Core::DescriptorHeapDescription lightsDescriptorHeapDesc;
+        dx12::DescriptorHeapDescription lightsDescriptorHeapDesc;
         {
             lightsDescriptorHeapDesc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
             lightsDescriptorHeapDesc.SetNumDescriptors(1);
             lightsDescriptorHeapDesc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
         }
 
-        _lightsTable = std::make_shared<Core::ResourceTable>(lightsDescriptorHeapDesc, lightsHeapDesc);
+        _lightsTable = std::make_shared<dx12::ResourceTable>(lightsDescriptorHeapDesc, lightsHeapDesc);
 
         static uint32_t LIGHTS_NUM = 64;
 
-        Core::ResourceDescription lightsViewDesc;
+        dx12::ResourceDescription lightsViewDesc;
         {
-            lightsViewDesc.SetResourceType(Core::EResourceType::Dynamic | Core::EResourceType::Buffer);
+            lightsViewDesc.SetResourceType(dx12::EResourceType::Dynamic | dx12::EResourceType::Buffer);
             lightsViewDesc.SetSize({ sizeof(GPULightDesc) * LIGHTS_NUM, 1 });
             lightsViewDesc.SetFormat(DXGI_FORMAT_UNKNOWN);
             lightsViewDesc.SetDepthOrArraySize(1);
@@ -74,7 +74,7 @@ namespace SceneLayer
             SRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
         }
 
-        Core::Device::GetDXDevice()->CreateShaderResourceView(_lightsView.GetDXResource().Get(), &SRVDesc, _lightsTable->GetDescriptorHeap().GetHeapStartCPUHandle());
+        dx12::Device::GetDXDevice()->CreateShaderResourceView(_lightsView.GetDXResource().Get(), &SRVDesc, _lightsTable->GetDescriptorHeap().GetHeapStartCPUHandle());
     }
 
     SceneCache::~SceneCache()
@@ -82,17 +82,17 @@ namespace SceneLayer
         _camera = nullptr;
     }
 
-    std::shared_ptr<Core::ResourceTable> SceneCache::GetTextureTable() const
+    std::shared_ptr<dx12::ResourceTable> SceneCache::GetTextureTable() const
     {
         return _texturesTable;
     }
 
-    std::shared_ptr<Core::ResourceTable> SceneCache::GetLightsTable() const
+    std::shared_ptr<dx12::ResourceTable> SceneCache::GetLightsTable() const
     {
         return _lightsTable;
     }
 
-    Core::Resource& SceneCache::GetLightsSRV()
+    dx12::Resource& SceneCache::GetLightsSRV()
     {
         return _lightsView;
     }

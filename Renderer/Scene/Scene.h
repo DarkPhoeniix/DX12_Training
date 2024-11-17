@@ -26,9 +26,9 @@ namespace SceneLayer
         // TODO: remove func, load camera from the file
         void SetCamera(Camera& camera);
 
-        Core::Resource& GetGPUDesc();
+        dx12::Resource& GetGPUDesc();
 
-        bool LoadScene(const std::string& filepath, Core::CommandList& commandList);
+        bool LoadScene(const std::string& filepath, dx12::CommandList& commandList);
 
     private:
         std::string _name;
@@ -37,6 +37,6 @@ namespace SceneLayer
 
         SceneCache _cache;
 
-        Core::Resource _gpuDesc;
+        dx12::Resource _gpuDesc;
     };
 } // namespace SceneLayer

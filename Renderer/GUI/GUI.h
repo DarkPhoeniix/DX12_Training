@@ -1,8 +1,8 @@
 #pragma once
 
-#include "DXObjects/DescriptorHeap.h"
+#include "DescriptorHeap.h"
 
-namespace Core
+namespace dx12
 {
     class CommandList;
     class SwapChain;
@@ -13,9 +13,9 @@ LRESULT GUI_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 class GUI
 {
 public:
-    static void Init(HWND windowHandle, const Core::SwapChain& swapChain);
+    static void Init(HWND windowHandle, const dx12::SwapChain& swapChain);
     static void NewFrame();
-    static void Render(Core::CommandList& commandList);
+    static void Render(dx12::CommandList& commandList);
     static void Destroy();
 
 private:
@@ -25,5 +25,5 @@ private:
     // TODO: fix live DXDevice, change singleton
     static GUI& Instance();
 
-    Core::DescriptorHeap* _srvDescriptorHeap;
+    dx12::DescriptorHeap* _srvDescriptorHeap;
 };

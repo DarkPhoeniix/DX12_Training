@@ -1,8 +1,8 @@
 #pragma once
 
-#include "DXObjects/Fence.h"
+#include "Fence.h"
 
-namespace Core
+namespace dx12
 {
     class CommandList;
 } // namespace Core
@@ -13,14 +13,14 @@ public:
     TaskGPU();
     ~TaskGPU();
 
-    void AddCommandList(Core::CommandList* commandList);
-    std::vector<Core::CommandList*> GetCommandLists() const;
+    void AddCommandList(dx12::CommandList* commandList);
+    std::vector<dx12::CommandList*> GetCommandLists() const;
 
     void SetCommandQueue(ComPtr<ID3D12CommandQueue> commandQueue);
     ComPtr<ID3D12CommandQueue> GetCommandQueue() const;
 
-    void SetFence(Core::Fence* fence);
-    Core::Fence* GetFence() const;
+    void SetFence(dx12::Fence* fence);
+    dx12::Fence* GetFence() const;
     ID3D12Fence* GetDXFence() const;
     UINT64 GetFenceValue() const;
 
@@ -31,10 +31,10 @@ public:
     const std::string& GetName() const;
 
 private:
-    std::vector<Core::CommandList*> _commandLists;
+    std::vector<dx12::CommandList*> _commandLists;
     ComPtr<ID3D12CommandQueue> _commandQueue;
 
-    Core::Fence* _fence = nullptr;
+    dx12::Fence* _fence = nullptr;
     std::vector<std::string> _dependencies;
 
     std::string _name;

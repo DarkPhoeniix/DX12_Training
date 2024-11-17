@@ -2,8 +2,8 @@
 
 #include "GUI.h"
 
-#include "DXObjects/CommandList.h"
-#include "DXObjects/SwapChain.h"
+#include "CommandList.h"
+#include "SwapChain.h"
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -17,7 +17,7 @@ LRESULT GUI_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return S_OK;
 }
 
-void GUI::Init(HWND windowHandle, const Core::SwapChain& swapChain)
+void GUI::Init(HWND windowHandle, const dx12::SwapChain& swapChain)
 {
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -27,8 +27,8 @@ void GUI::Init(HWND windowHandle, const Core::SwapChain& swapChain)
 
     // Setup Platform/Renderer backends
     ImGui_ImplWin32_Init(windowHandle);
-    ImGui_ImplDX12_Init(Core::Device::GetDXDevice().Get(), 
-                        Core::BACK_BUFFER_COUNT, 
+    ImGui_ImplDX12_Init(dx12::Device::GetDXDevice().Get(),
+                        dx12::BACK_BUFFER_COUNT,
                         swapChain.GetDescription().BufferDesc.Format,
                         Instance()._srvDescriptorHeap->GetDXDescriptorHeap().Get(),
                         Instance()._srvDescriptorHeap->GetHeapStartCPUHandle(),
@@ -130,7 +130,7 @@ void GUI::NewFrame()
     ImGui::NewFrame();
 }
 
-void GUI::Render(Core::CommandList& commandList)
+void GUI::Render(dx12::CommandList& commandList)
 {
     ImGui::Render();
     commandList.SetDescriptorHeaps({ Instance()._srvDescriptorHeap->GetDXDescriptorHeap().Get() });
@@ -148,12 +148,12 @@ void GUI::Destroy()
 
 GUI::GUI()
 {
-    Core::DescriptorHeapDescription desc;
+    dx12::DescriptorHeapDescription desc;
     desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
     desc.SetNumDescriptors(1);
 
-    _srvDescriptorHeap = new Core::DescriptorHeap;
+    _srvDescriptorHeap = new dx12::DescriptorHeap;
     _srvDescriptorHeap->SetDescription(desc);
     _srvDescriptorHeap->Create();
     _srvDescriptorHeap->SetName("GUI SRV descriptor heap");

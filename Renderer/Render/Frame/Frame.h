@@ -1,15 +1,15 @@
 #pragma once
 
-#include "DXObjects/SwapChain.h"
+#include "SwapChain.h"
 #include "Render/Frame/AllocatorPool.h"
 #include "Render/Frame/Executor.h"
 #include "Render/Frame/TaskGPU.h"
 #include "Render/Frame/FencePool.h"
-#include "DXObjects/DescriptorHeap.h"
+#include "DescriptorHeap.h"
 
 // TODO: refactor the Frame class
 
-namespace Core
+namespace dx12
 {
     class RootSignature;
 } // namespace Core
@@ -20,9 +20,9 @@ public:
     Frame();
     ~Frame();
 
-    void Init(const Core::SwapChain& swapChain);
+    void Init(const dx12::SwapChain& swapChain);
 
-    TaskGPU* CreateTask(D3D12_COMMAND_LIST_TYPE type, Core::RootSignature* rootSignature = nullptr);
+    TaskGPU* CreateTask(D3D12_COMMAND_LIST_TYPE type, dx12::RootSignature* rootSignature = nullptr);
 
     void WaitCPU();
     void ResetGPU();
@@ -30,8 +30,8 @@ public:
     void SetAllocatorPool(AllocatorPool* allocatorPool);
     void SetFencePool(FencePool* fencePool);
 
-    void SetSyncFrame(Core::Fence* syncFrame);
-    Core::Fence* GetSyncFrame() const;
+    void SetSyncFrame(dx12::Fence* syncFrame);
+    dx12::Fence* GetSyncFrame() const;
 
     TaskGPU* GetTask(const std::string& name);
     std::vector<TaskGPU> GetTasks() const;
@@ -40,15 +40,15 @@ public:
     Frame* Prev;
     Frame* Next;
 
-    Core::Resource _swapChainTexture;
-    Core::Resource _targetTexture;
-    Core::Resource _depthTexture;
+    dx12::Resource _swapChainTexture;
+    dx12::Resource _targetTexture;
+    dx12::Resource _depthTexture;
 
     ComPtr<ID3D12DescriptorHeap> _targetHeap;
     ComPtr<ID3D12DescriptorHeap> _depthHeap;
-    Core::DescriptorHeap _testHeap;
+    dx12::DescriptorHeap _testHeap;
 
-    Core::DescriptorHeap _postFXDescHeap;
+    dx12::DescriptorHeap _postFXDescHeap;
 
 private:
     std::vector<Executor*> _currentTasks;
@@ -60,7 +60,7 @@ private:
 
     AllocatorPool* _allocatorPool;
     FencePool* _fencePool;
-    Core::Fence* _syncFrame;
+    dx12::Fence* _syncFrame;
 
     std::vector<TaskGPU> _tasks;
 };

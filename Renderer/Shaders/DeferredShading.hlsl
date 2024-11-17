@@ -14,7 +14,7 @@ Texture2D<float4>   NormalRoughnessTexture  : register(t3);
 RWTexture2D<float4> TargetTexture           : register(u0);
 
 [RootSignature(DeferredShading_RootSig)]
-[numthreads(1, 1, 1)]
+[numthreads(8, 8, 1)]
 void main(uint3 DTid : SV_DispatchThreadID)
 {
     float depth             = PositionTexture.Load(uint3(DTid.xy, 0)).r;

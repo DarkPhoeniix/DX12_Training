@@ -2,12 +2,12 @@
 
 #include "SetupCachedDataProcessor.h"
 
-#include "DXObjects/CommandList.h"
+#include "CommandList.h"
 #include "Scene/Scene.h"
 #include "Render/GPUStructs/GPUSceneDesc.h"
 #include "Render/GPUStructs/GPULightDesc.h"
 
-void SetupCachedDataProcessor::Process(SceneLayer::Scene& scene, Core::CommandList& commandList)
+void SetupCachedDataProcessor::Process(SceneLayer::Scene& scene, dx12::CommandList& commandList)
 {
     SceneLayer::SceneCache& cache = scene.GetCache();
 
@@ -48,7 +48,7 @@ void SetupCachedDataProcessor::Process(SceneLayer::Scene& scene, Core::CommandLi
     commandList.SetCBV(0, scene.GetGPUDesc().OffsetGPU(0));
 }
 
-void SetupCachedDataProcessor::ProcessEntity(SceneLayer::Entity& entity, Core::CommandList& commandList)
+void SetupCachedDataProcessor::ProcessEntity(SceneLayer::Entity& entity, dx12::CommandList& commandList)
 {
     SceneLayer::SceneCache* cache = entity.GetSceneCache();
     if (ASSERT(cache, "Entity has no scene cache"))

@@ -41,12 +41,12 @@ void DebugInfo::Update(Core::Events::UpdateEvent& updateEvent)
     }
 }
 
-void DebugInfo::StartStatCollecting(Core::CommandList& commandList)
+void DebugInfo::StartStatCollecting(dx12::CommandList& commandList)
 {
     Instance()._statisticsQuery.BeginQuery(commandList);
 }
 
-void DebugInfo::EndStatCollecting(Core::CommandList& commandList)
+void DebugInfo::EndStatCollecting(dx12::CommandList& commandList)
 {
     Instance()._statisticsQuery.EndQuery(commandList);
     Instance()._statisticsQuery.ResolveQueryData(commandList);

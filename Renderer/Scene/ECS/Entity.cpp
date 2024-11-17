@@ -66,7 +66,7 @@ namespace SceneLayer
         return _name;
     }
 
-    Core::Resource& Entity::GetGPUDesc()
+    dx12::Resource& Entity::GetGPUDesc()
     {
         return _gpuDesc;
     }
@@ -78,12 +78,12 @@ namespace SceneLayer
 
     void Entity::Init()
     {
-        Core::ResourceDescription resourceDesc;
+        dx12::ResourceDescription resourceDesc;
         {
             resourceDesc.SetSize({ sizeof(GPUModelDesc), 1 });
             resourceDesc.SetStride(1);
             resourceDesc.SetFormat(DXGI_FORMAT::DXGI_FORMAT_UNKNOWN);
-            resourceDesc.SetResourceType(Core::EResourceType::Dynamic | Core::EResourceType::Buffer | Core::EResourceType::StrideAlignment);
+            resourceDesc.SetResourceType(dx12::EResourceType::Dynamic | dx12::EResourceType::Buffer | dx12::EResourceType::StrideAlignment);
         }
 
         _gpuDesc.SetResourceDescription(resourceDesc);

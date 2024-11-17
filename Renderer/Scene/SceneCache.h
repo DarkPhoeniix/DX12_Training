@@ -2,7 +2,7 @@
 
 #include "Scene/Camera.h"
 
-namespace Core
+namespace dx12
 {
     class ResourceTable;
 }
@@ -15,23 +15,23 @@ namespace SceneLayer
         SceneCache();
         ~SceneCache();
 
-        std::shared_ptr<Core::ResourceTable> GetTextureTable() const;
+        std::shared_ptr<dx12::ResourceTable> GetTextureTable() const;
 
-        std::shared_ptr<Core::ResourceTable> GetLightsTable() const;
-        Core::Resource& GetLightsSRV();
+        std::shared_ptr<dx12::ResourceTable> GetLightsTable() const;
+        dx12::Resource& GetLightsSRV();
 
         // TODO: ...
         void SetCamera(Camera* camera);
         Camera* GetCamera() const;
 
     private:
-        std::shared_ptr<Core::ResourceTable> _texturesTable;
+        std::shared_ptr<dx12::ResourceTable> _texturesTable;
 
-        std::shared_ptr<Core::ResourceTable> _lightsTable;
-        Core::Resource _lightsView;
+        std::shared_ptr<dx12::ResourceTable> _lightsTable;
+        dx12::Resource _lightsView;
 
         Camera* _camera;
         
-        std::shared_ptr<Core::Resource> _gpuDesc;
+        std::shared_ptr<dx12::Resource> _gpuDesc;
     };
 } // namespace SceneLayer

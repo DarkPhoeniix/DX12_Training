@@ -41,8 +41,6 @@ namespace Helper
     };
 
     void throwIfFailed(HRESULT hr);
-
-    Json::Value ParseJson(const std::string& filepath);
 }
 
 namespace Math

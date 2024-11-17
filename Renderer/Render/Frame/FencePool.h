@@ -1,14 +1,14 @@
 #pragma once
 
-#include "DXObjects/Fence.h"
+#include "Fence.h"
 
 class FencePool
 {
 public:
     void Init();
 
-    Core::Fence* Obtain();
+    dx12::Fence* Obtain();
 
 private:
-    std::vector<Core::Fence> fences;
+    std::vector<dx12::Fence> fences;
 };

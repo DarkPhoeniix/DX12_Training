@@ -37,7 +37,6 @@ using namespace Microsoft::WRL;
 #include <assert.h>
 #include <cassert>
 #include <cstdint>
-#include <fstream>
 #include <string>
 #include <chrono>
 #include <memory>
@@ -49,5 +48,5 @@ using namespace Microsoft::WRL;
 #include "Utility/Helpers.h"
 #include "Utility/Logger.h"
 
-#include "DXObjects/Device.h"
-#include "DXObjects/Resource.h"
+#include "Device.h"
+#include "Resource.h"

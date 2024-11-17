@@ -2,11 +2,11 @@
 
 #include "UploadSceneProcessor.h"
 
-#include "DXObjects/CommandList.h"
-#include "DXObjects/ResourceTable.h"
+#include "CommandList.h"
+#include "ResourceTable.h"
 #include "Scene/Scene.h"
 
-void UploadSceneProcessor::Process(SceneLayer::Scene& scene, Core::CommandList& commandList)
+void UploadSceneProcessor::Process(SceneLayer::Scene& scene, dx12::CommandList& commandList)
 {
     SceneLayer::SceneCache& cache = scene.GetCache();
 
@@ -21,7 +21,7 @@ void UploadSceneProcessor::Process(SceneLayer::Scene& scene, Core::CommandList& 
     }
 }
 
-void UploadSceneProcessor::ProcessEntity(SceneLayer::Entity& entity, Core::CommandList& commandList)
+void UploadSceneProcessor::ProcessEntity(SceneLayer::Entity& entity, dx12::CommandList& commandList)
 {
     SceneLayer::SceneCache* cache = entity.GetSceneCache();
     if (ASSERT(cache, "Entity has no scene cache"))
@@ -39,7 +39,7 @@ void UploadSceneProcessor::ProcessEntity(SceneLayer::Entity& entity, Core::Comma
         {
             ComPtr<ID3D12Resource> vertexBuffer;
             UploadData(commandList, &vertexBuffer, mesh->VertexData.size(), sizeof(VertexData), mesh->VertexData.data());
-            mesh->VertexBuffer = std::make_shared<Core::Resource>();
+            mesh->VertexBuffer = std::make_shared<dx12::Resource>();
             mesh->VertexBuffer->InitFromDXResource(vertexBuffer);
             mesh->VertexBuffer->SetName(entity.GetName() + "_VB");
 
@@ -52,7 +52,7 @@ void UploadSceneProcessor::ProcessEntity(SceneLayer::Entity& entity, Core::Comma
         {
             ComPtr<ID3D12Resource> indexBuffer;
             UploadData(commandList, &indexBuffer, mesh->IndexData.size(), sizeof(UINT), mesh->IndexData.data());
-            mesh->IndexBuffer = std::make_shared<Core::Resource>();
+            mesh->IndexBuffer = std::make_shared<dx12::Resource>();
             mesh->IndexBuffer->InitFromDXResource(indexBuffer);
             mesh->IndexBuffer->SetName(entity.GetName() + "_IB");
 
@@ -65,7 +65,7 @@ void UploadSceneProcessor::ProcessEntity(SceneLayer::Entity& entity, Core::Comma
     Material* material = entity.GetComponentAs<Material>("Material");
     if (material)
     {
-        std::shared_ptr<Core::ResourceTable> textureTable = cache->GetTextureTable();
+        std::shared_ptr<dx12::ResourceTable> textureTable = cache->GetTextureTable();
         ASSERT(textureTable.get(), "Resource table is nullptr");
 
         if (textureTable->AddResource(material->Albedo.get()))
@@ -94,14 +94,14 @@ void UploadSceneProcessor::ProcessEntity(SceneLayer::Entity& entity, Core::Comma
     }
 }
 
-void UploadSceneProcessor::UploadData(Core::CommandList& commandList, ID3D12Resource** destinationResource, size_t numElements, size_t elementSize, const void* bufferData, D3D12_RESOURCE_FLAGS flags)
+void UploadSceneProcessor::UploadData(dx12::CommandList& commandList, ID3D12Resource** destinationResource, size_t numElements, size_t elementSize, const void* bufferData, D3D12_RESOURCE_FLAGS flags)
 {
     size_t bufferSize = numElements * elementSize;
 
     CD3DX12_HEAP_PROPERTIES heapTypeDefault(D3D12_HEAP_TYPE_DEFAULT);
     CD3DX12_RESOURCE_DESC bufferWithFlags = CD3DX12_RESOURCE_DESC::Buffer(bufferSize, flags);
 
-    Helper::throwIfFailed(Core::Device::GetDXDevice()->CreateCommittedResource(
+    Helper::throwIfFailed(dx12::Device::GetDXDevice()->CreateCommittedResource(
         &heapTypeDefault,
         D3D12_HEAP_FLAG_NONE,
         &bufferWithFlags,
@@ -116,7 +116,7 @@ void UploadSceneProcessor::UploadData(Core::CommandList& commandList, ID3D12Reso
     {
         ComPtr<ID3D12Resource> intermediateResource = nullptr;
 
-        Helper::throwIfFailed(Core::Device::GetDXDevice()->CreateCommittedResource(
+        Helper::throwIfFailed(dx12::Device::GetDXDevice()->CreateCommittedResource(
             &heapTypeUpload,
             D3D12_HEAP_FLAG_NONE,
             &buffer,

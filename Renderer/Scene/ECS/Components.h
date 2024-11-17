@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DXObjects/Texture.h"
+#include "Texture.h"
 #include "Scene/Volumes/AABBVolume.h"
 
 #define COMPONENT
@@ -46,10 +46,10 @@ struct COMPONENT Material : public IComponent
         : IComponent("Material")
     {   }
 
-    std::shared_ptr<Core::Texture> Albedo;
-    std::shared_ptr<Core::Texture> NormalMap;
-    std::shared_ptr<Core::Texture> Metalness;
-    std::shared_ptr<Core::Texture> Roughness;
+    std::shared_ptr<dx12::Texture> Albedo;
+    std::shared_ptr<dx12::Texture> NormalMap;
+    std::shared_ptr<dx12::Texture> Metalness;
+    std::shared_ptr<dx12::Texture> Roughness;
 };
 
 struct COMPONENT Mesh : public IComponent
@@ -63,8 +63,8 @@ struct COMPONENT Mesh : public IComponent
     std::vector<VertexData> VertexData;
     std::vector<UINT> IndexData;
 
-    std::shared_ptr<Core::Resource> VertexBuffer;
-    std::shared_ptr<Core::Resource> IndexBuffer;
+    std::shared_ptr<dx12::Resource> VertexBuffer;
+    std::shared_ptr<dx12::Resource> IndexBuffer;
 
     D3D12_VERTEX_BUFFER_VIEW VertexBufferView;
     D3D12_INDEX_BUFFER_VIEW IndexBufferView;
@@ -91,7 +91,7 @@ struct COMPONENT Skybox : public IComponent
         : IComponent("Skybox")
     {   }
 
-    std::shared_ptr<Core::Texture> SkydomeTexture;
+    std::shared_ptr<dx12::Texture> SkydomeTexture;
 };
 
 struct COMPONENT Tag : public IComponent

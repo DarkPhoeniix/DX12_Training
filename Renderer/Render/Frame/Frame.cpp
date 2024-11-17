@@ -2,10 +2,10 @@
 
 #include "Frame.h"
 
-#include "DXObjects/CommandList.h"
-#include "DXObjects/Fence.h"
-#include "DXObjects/SwapChain.h"
-#include "DXObjects/RootSignature.h"
+#include "CommandList.h"
+#include "Fence.h"
+#include "SwapChain.h"
+#include "RootSignature.h"
 
 Frame::Frame()
     : Index(0)
@@ -16,9 +16,9 @@ Frame::Frame()
     , _depthTexture{}
     , _currentTasks{}
     , _executedTasks{}
-    , _queueCompute(Core::Device::GetComputeQueue())
-    , _queueStream(Core::Device::GetStreamQueue())
-    , _queueCopy(Core::Device::GetCopyQueue())
+    , _queueCompute(dx12::Device::GetComputeQueue())
+    , _queueStream(dx12::Device::GetStreamQueue())
+    , _queueCopy(dx12::Device::GetCopyQueue())
     , _allocatorPool(nullptr)
     , _fencePool(nullptr)
     , _syncFrame(nullptr)
@@ -43,14 +43,14 @@ Frame::~Frame()
     _syncFrame = nullptr;
 }
 
-void Frame::Init(const Core::SwapChain& swapChain)
+void Frame::Init(const dx12::SwapChain& swapChain)
 {
     swapChain.GetBuffer(Index, _swapChainTexture);
     _swapChainTexture.SetName(std::string("Frame's swapchain resource ") + std::to_string(Index));
 
     // Create resource for the target texture
     {
-        Core::ResourceDescription desc = _swapChainTexture.GetResourceDescription();
+        dx12::ResourceDescription desc = _swapChainTexture.GetResourceDescription();
 
         D3D12_CLEAR_VALUE clearValueTexTarget;
         clearValueTexTarget.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -69,7 +69,7 @@ void Frame::Init(const Core::SwapChain& swapChain)
 
     // Create resource for the depth texture
     {
-        Core::ResourceDescription desc = _swapChainTexture.GetResourceDescription();
+        dx12::ResourceDescription desc = _swapChainTexture.GetResourceDescription();
 
         desc.SetFlags(D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
         desc.SetFormat(DXGI_FORMAT_D32_FLOAT);
@@ -92,10 +92,10 @@ void Frame::Init(const Core::SwapChain& swapChain)
         descHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
         descHeapDesc.NumDescriptors = 1;
         descHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-        Core::Device::GetDXDevice()->CreateDescriptorHeap(&descHeapDesc, IID_PPV_ARGS(&_targetHeap));
+        dx12::Device::GetDXDevice()->CreateDescriptorHeap(&descHeapDesc, IID_PPV_ARGS(&_targetHeap));
 
         descHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-        Core::Device::GetDXDevice()->CreateDescriptorHeap(&descHeapDesc, IID_PPV_ARGS(&_depthHeap));
+        dx12::Device::GetDXDevice()->CreateDescriptorHeap(&descHeapDesc, IID_PPV_ARGS(&_depthHeap));
     }
 
     // Create RTT heap
@@ -104,7 +104,7 @@ void Frame::Init(const Core::SwapChain& swapChain)
         renderTargetDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
         renderTargetDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
         renderTargetDesc.Texture2D.MipSlice = 0;
-        Core::Device::GetDXDevice()->CreateRenderTargetView(_targetTexture.GetDXResource().Get(), &renderTargetDesc, _targetHeap->GetCPUDescriptorHandleForHeapStart());
+        dx12::Device::GetDXDevice()->CreateRenderTargetView(_targetTexture.GetDXResource().Get(), &renderTargetDesc, _targetHeap->GetCPUDescriptorHandleForHeapStart());
     }
 
     // Create DSV heap
@@ -114,12 +114,12 @@ void Frame::Init(const Core::SwapChain& swapChain)
         depthStencilDesc.Flags = D3D12_DSV_FLAG_NONE;//D3D12_DSV_FLAG_READ_ONLY_DEPTH;
         depthStencilDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
         depthStencilDesc.Texture2D.MipSlice = 0;
-        Core::Device::GetDXDevice()->CreateDepthStencilView(_depthTexture.GetDXResource().Get(), &depthStencilDesc, _depthHeap->GetCPUDescriptorHandleForHeapStart());
+        dx12::Device::GetDXDevice()->CreateDepthStencilView(_depthTexture.GetDXResource().Get(), &depthStencilDesc, _depthHeap->GetCPUDescriptorHandleForHeapStart());
     }
 
 
     {
-        Core::DescriptorHeapDescription desc = {};
+        dx12::DescriptorHeapDescription desc = {};
         desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
         desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
         desc.SetNumDescriptors(4);
@@ -143,8 +143,8 @@ void Frame::Init(const Core::SwapChain& swapChain)
         UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
         UAVDesc.Texture2D.MipSlice = 0;
 
-        Core::Device::GetDXDevice()->CreateUnorderedAccessView(_targetTexture.GetDXResource().Get(), nullptr, &UAVDesc, _postFXDescHeap.GetResourceCPUHandle(&_targetTexture));
-        Core::Device::GetDXDevice()->CreateUnorderedAccessView(_targetTexture.GetDXResource().Get(), nullptr, &UAVDesc, _testHeap.GetResourceCPUHandle(&_targetTexture));
+        dx12::Device::GetDXDevice()->CreateUnorderedAccessView(_targetTexture.GetDXResource().Get(), nullptr, &UAVDesc, _postFXDescHeap.GetResourceCPUHandle(&_targetTexture));
+        dx12::Device::GetDXDevice()->CreateUnorderedAccessView(_targetTexture.GetDXResource().Get(), nullptr, &UAVDesc, _testHeap.GetResourceCPUHandle(&_targetTexture));
         
         D3D12_SHADER_RESOURCE_VIEW_DESC SRVDesc = {};
         SRVDesc.Format = DXGI_FORMAT_R32_FLOAT;
@@ -152,12 +152,12 @@ void Frame::Init(const Core::SwapChain& swapChain)
         SRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
         SRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
-        Core::Device::GetDXDevice()->CreateShaderResourceView(_depthTexture.GetDXResource().Get(), &SRVDesc, _postFXDescHeap.GetResourceCPUHandle(&_depthTexture));
-        Core::Device::GetDXDevice()->CreateShaderResourceView(_depthTexture.GetDXResource().Get(), &SRVDesc, _testHeap.GetResourceCPUHandle(&_depthTexture));
+        dx12::Device::GetDXDevice()->CreateShaderResourceView(_depthTexture.GetDXResource().Get(), &SRVDesc, _postFXDescHeap.GetResourceCPUHandle(&_depthTexture));
+        dx12::Device::GetDXDevice()->CreateShaderResourceView(_depthTexture.GetDXResource().Get(), &SRVDesc, _testHeap.GetResourceCPUHandle(&_depthTexture));
     }
 }
 
-TaskGPU* Frame::CreateTask(D3D12_COMMAND_LIST_TYPE type, Core::RootSignature* rootSignature)
+TaskGPU* Frame::CreateTask(D3D12_COMMAND_LIST_TYPE type, dx12::RootSignature* rootSignature)
 {
     Executor* exec = _allocatorPool->Obtain(type);
     _currentTasks.push_back(exec);
@@ -182,7 +182,7 @@ TaskGPU* Frame::CreateTask(D3D12_COMMAND_LIST_TYPE type, Core::RootSignature* ro
 
     task->AddCommandList(exec->GetCommandList());
 
-    Core::Fence* taskFence = _fencePool->Obtain();
+    dx12::Fence* taskFence = _fencePool->Obtain();
     task->SetFence(taskFence);
     taskFence->SetFree(false);
     taskFence->SetValue(taskFence->GetValue() + 1);
@@ -245,12 +245,12 @@ std::vector<TaskGPU> Frame::GetTasks() const
     return _tasks;
 }
 
-void Frame::SetSyncFrame(Core::Fence* syncFrame)
+void Frame::SetSyncFrame(dx12::Fence* syncFrame)
 {
     _syncFrame = syncFrame;
 }
 
-Core::Fence* Frame::GetSyncFrame() const
+dx12::Fence* Frame::GetSyncFrame() const
 {
     return _syncFrame;
 }

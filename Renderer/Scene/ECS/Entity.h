@@ -24,7 +24,7 @@ namespace SceneLayer
         void SetName(const std::string& name);
         const std::string& GetName() const;
 
-        Core::Resource& GetGPUDesc();
+        dx12::Resource& GetGPUDesc();
 
         SceneCache* GetSceneCache();
 
@@ -36,7 +36,7 @@ namespace SceneLayer
         std::vector<std::shared_ptr<Entity>> _children;
         Entity* _parent;
 
-        Core::Resource _gpuDesc;
+        dx12::Resource _gpuDesc;
 
         SceneCache* _sceneCache;
 

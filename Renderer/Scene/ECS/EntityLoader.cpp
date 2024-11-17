@@ -120,10 +120,10 @@ namespace Helpers
         std::string metalnessFilepath = _parentFilepath + '/' + materialData["Metalness"].asString();
         std::string roughnessFilepath = _parentFilepath + '/' + materialData["Roughness"].asString();
 
-        component->Albedo = Core::Texture::LoadFromFile(albedoFilepath);
-        component->NormalMap = Core::Texture::LoadFromFile(normalFilepath);
-        component->Metalness = Core::Texture::LoadFromFile(metalnessFilepath);
-        component->Roughness = Core::Texture::LoadFromFile(roughnessFilepath);
+        component->Albedo = dx12::Texture::LoadFromFile(albedoFilepath);
+        component->NormalMap = dx12::Texture::LoadFromFile(normalFilepath);
+        component->Metalness = dx12::Texture::LoadFromFile(metalnessFilepath);
+        component->Roughness = dx12::Texture::LoadFromFile(roughnessFilepath);
     }
 
     void EntityLoader::LoadComponent(Json::Value& jsonValue, const std::shared_ptr<Mesh>& component)
@@ -202,7 +202,7 @@ namespace Helpers
     {
         std::string skyboxFilepath = _parentFilepath + '/' + jsonValue["Skybox"].asString();
 
-        component->SkydomeTexture = Core::Texture::LoadFromFile(skyboxFilepath);
+        component->SkydomeTexture = dx12::Texture::LoadFromFile(skyboxFilepath);
     }
 
     void EntityLoader::LoadComponent(Json::Value& jsonValue, const std::shared_ptr<Tag>& component)

@@ -6,16 +6,16 @@ void FencePool::Init()
 {
     fences.resize(32 + 32 + 4); // Direct + Compute + Copy
 
-    for (Core::Fence& fence : fences)
+    for (dx12::Fence& fence : fences)
     {
         fence.Init();
         fence.SetFree(true);
     }
 }
 
-Core::Fence* FencePool::Obtain()
+dx12::Fence* FencePool::Obtain()
 {
-    for (Core::Fence& fence : fences)
+    for (dx12::Fence& fence : fences)
     {
         if (fence.IsFree())
         {

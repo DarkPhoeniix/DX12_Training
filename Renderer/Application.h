@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DXObjects/SwapChain.h"
+#include "SwapChain.h"
 #include "Render/Frame/AllocatorPool.h"
 #include "Render/Frame/FencePool.h"
 #include "Render/Frame/Frame.h"
@@ -38,7 +38,7 @@ private:
     HINSTANCE _hInstance;
 
     std::shared_ptr<Core::Win32Window> _win32Window;
-    Core::SwapChain _swapChain;
+    dx12::SwapChain _swapChain;
 
     Frame _frames[3];
     Frame* _currentFrame;

@@ -1,13 +1,12 @@
 #pragma once
 
-#include "DXObjects/RootSignature.h"
+#include "GBuffer.h"
+#include "RootSignature.h"
 #include "Scene/Camera.h"
 #include "Scene/Scene.h"
+#include "Scene/Skybox.h"
 #include "Render/Frame/Frame.h"
 #include "Window/IWindowEventListener.h"
-
-#include "GBuffer.h"
-#include "Scene/Skybox.h"
 
 class DXRenderer : public Core::Events::IWindowEventListener
 {
@@ -40,16 +39,13 @@ private:
 
     Core::GBuffer _gBuffer;
 
-    Core::RootSignature _gPassPipeline;
-    Core::RootSignature _deferredPipeline;
-    Core::RootSignature _renderPipeline;
-    Core::RootSignature _AABBpipeline;
-    Core::RootSignature _SkyboxPipeline;
+    dx12::RootSignature _gPassPipeline;
+    dx12::RootSignature _deferredPipeline;
+    dx12::RootSignature _renderPipeline;
+    dx12::RootSignature _AABBpipeline;
+    dx12::RootSignature _SkyboxPipeline;
 
     SceneLayer::Skybox _skybox;
-
-    ComPtr<ID3D12RootSignature> _postFXRootSig;
-    ComPtr<ID3D12PipelineState> _postFXPipeState;
 
     Frame* _currentFrame;
 

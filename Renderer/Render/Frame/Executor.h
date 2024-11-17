@@ -1,8 +1,8 @@
 #pragma once
 
-#include "DXObjects/CommandList.h"
+#include "CommandList.h"
 
-namespace Core
+namespace dx12
 {
     class RootSignature;
 } // namespace Core
@@ -14,16 +14,16 @@ public:
     ~Executor();
 
     void Allocate(D3D12_COMMAND_LIST_TYPE type);
-    void Reset(Core::RootSignature* rootSignature = nullptr);
+    void Reset(dx12::RootSignature* rootSignature = nullptr);
 
     void SetFree(bool isFree);
     bool IsFree() const;
 
-    Core::CommandList* GetCommandList();
+    dx12::CommandList* GetCommandList();
 
 private:
     ComPtr<ID3D12CommandAllocator> _allocator;
-    Core::CommandList _commandList;
+    dx12::CommandList _commandList;
 
     bool _isFree = true;
 };

@@ -2,7 +2,7 @@
 
 #include "Application.h"
 
-#include "DXObjects/SwapChain.h"
+#include "SwapChain.h"
 #include "Events/KeyEvent.h"
 #include "Events/MouseButtonEvent.h"
 #include "Events/MouseMoveEvent.h"
@@ -71,7 +71,7 @@ Application::~Application()
 
 void Application::Init(HINSTANCE hInstance)
 {
-    Device::Init();
+    dx12::Device::Init();
     DebugInfo::Init();
     _instance = new Application(hInstance);
 }
@@ -141,7 +141,7 @@ void Application::Quit(int exitCode)
     GUI::Destroy();
 
     DebugInfo::Destroy();
-    Device::Destroy();
+    dx12::Device::Destroy();
     PostQuitMessage(exitCode);
 
     if (_instance)

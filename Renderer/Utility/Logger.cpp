@@ -59,9 +59,9 @@ namespace AssertUtility
 }
 
 #if _DEBUG
-LogType Logger::_logLevel = LogType::Info | LogType::Warning | LogType::Error;
+LogType Logger::_logLevel = LogType::Error;
 #elif NDEBUG
-LogType Logger::_logLevel = LogType::Warning | LogType::Error;
+LogType Logger::_logLevel = LogType::Error;
 #endif
 
 Logger& Logger::Instance()

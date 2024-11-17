@@ -54,51 +54,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="DXObjects\DescriptorHeap.cpp">
-      <Filter>DXObjects</Filter>
-    </ClCompile>
-    <ClCompile Include="DXObjects\DescriptorHeapDescription.cpp">
-      <Filter>DXObjects</Filter>
-    </ClCompile>
-    <ClCompile Include="DXObjects\Device.cpp">
-      <Filter>DXObjects</Filter>
-    </ClCompile>
-    <ClCompile Include="DXObjects\Fence.cpp">
-      <Filter>DXObjects</Filter>
-    </ClCompile>
-    <ClCompile Include="DXObjects\Heap.cpp">
-      <Filter>DXObjects</Filter>
-    </ClCompile>
-    <ClCompile Include="DXObjects\HeapDescription.cpp">
-      <Filter>DXObjects</Filter>
-    </ClCompile>
-    <ClCompile Include="DXObjects\OcclusionQuery.cpp">
-      <Filter>DXObjects</Filter>
-    </ClCompile>
-    <ClCompile Include="DXObjects\Resource.cpp">
-      <Filter>DXObjects</Filter>
-    </ClCompile>
-    <ClCompile Include="DXObjects\ResourceDescription.cpp">
-      <Filter>DXObjects</Filter>
-    </ClCompile>
-    <ClCompile Include="DXObjects\ResourceTable.cpp">
-      <Filter>DXObjects</Filter>
-    </ClCompile>
-    <ClCompile Include="DXObjects\RootSignature.cpp">
-      <Filter>DXObjects</Filter>
-    </ClCompile>
-    <ClCompile Include="DXObjects\StatisticsQuery.cpp">
-      <Filter>DXObjects</Filter>
-    </ClCompile>
-    <ClCompile Include="DXObjects\SwapChain.cpp">
-      <Filter>DXObjects</Filter>
-    </ClCompile>
-    <ClCompile Include="DXObjects\Texture.cpp">
-      <Filter>DXObjects</Filter>
-    </ClCompile>
-    <ClCompile Include="DXObjects\CommandList.cpp">
-      <Filter>DXObjects</Filter>
-    </ClCompile>
     <ClCompile Include="Input\InputDevice.cpp">
       <Filter>Input</Filter>
     </ClCompile>
@@ -198,51 +153,6 @@
     <ClCompile Include="Render\GPUStructs\GPULightDesc.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="DXObjects\CommandList.h">
-      <Filter>DXObjects</Filter>
-    </ClInclude>
-    <ClInclude Include="DXObjects\DescriptorHeap.h">
-      <Filter>DXObjects</Filter>
-    </ClInclude>
-    <ClInclude Include="DXObjects\DescriptorHeapDescription.h">
-      <Filter>DXObjects</Filter>
-    </ClInclude>
-    <ClInclude Include="DXObjects\Device.h">
-      <Filter>DXObjects</Filter>
-    </ClInclude>
-    <ClInclude Include="DXObjects\Fence.h">
-      <Filter>DXObjects</Filter>
-    </ClInclude>
-    <ClInclude Include="DXObjects\Heap.h">
-      <Filter>DXObjects</Filter>
-    </ClInclude>
-    <ClInclude Include="DXObjects\HeapDescription.h">
-      <Filter>DXObjects</Filter>
-    </ClInclude>
-    <ClInclude Include="DXObjects\ResourceTable.h">
-      <Filter>DXObjects</Filter>
-    </ClInclude>
-    <ClInclude Include="DXObjects\RootSignature.h">
-      <Filter>DXObjects</Filter>
-    </ClInclude>
-    <ClInclude Include="DXObjects\ResourceDescription.h">
-      <Filter>DXObjects</Filter>
-    </ClInclude>
-    <ClInclude Include="DXObjects\Resource.h">
-      <Filter>DXObjects</Filter>
-    </ClInclude>
-    <ClInclude Include="DXObjects\SwapChain.h">
-      <Filter>DXObjects</Filter>
-    </ClInclude>
-    <ClInclude Include="DXObjects\Texture.h">
-      <Filter>DXObjects</Filter>
-    </ClInclude>
-    <ClInclude Include="DXObjects\OcclusionQuery.h">
-      <Filter>DXObjects</Filter>
-    </ClInclude>
-    <ClInclude Include="DXObjects\StatisticsQuery.h">
-      <Filter>DXObjects</Filter>
-    </ClInclude>
     <ClInclude Include="Events\IEvent.h">
       <Filter>Events</Filter>
     </ClInclude>

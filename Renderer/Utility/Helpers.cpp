@@ -22,17 +22,4 @@ namespace Helper
             throw HrException(hr);
         }
     }
-
-    Json::Value ParseJson(const std::string& filepath)
-    {
-        ASSERT(std::filesystem::exists(filepath), "Failed to load " + filepath);
-
-        std::ifstream file(filepath, std::ios_base::binary);
-		file.open(filepath, std::ios_base::binary);
-        Json::Value root;
-
-        file >> root;
-
-        return root;
-    }
 }

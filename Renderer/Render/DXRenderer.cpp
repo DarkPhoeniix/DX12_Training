@@ -2,7 +2,7 @@
 
 #include "DXRenderer.h"
 
-#include "DXObjects/CommandList.h"
+#include "CommandList.h"
 #include "Events/MouseButtonEvent.h"
 #include "Events/MouseMoveEvent.h"
 #include "Events/RenderEvent.h"
@@ -66,11 +66,11 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
     // Load scene
     {
         loadTask->SetName("Upload Data");
-        Core::CommandList& commandList = *loadTask->GetCommandLists().front();
+        dx12::CommandList& commandList = *loadTask->GetCommandLists().front();
         _skybox.Init();
         _skybox.Load("Wyvern\\Skybox.node", commandList);
 
-        _scene.LoadScene("TestScene\\MaterialsTest.scene", commandList);
+        _scene.LoadScene("Test\\Test.scene", commandList);
 
         uploadProcessor.Process(_scene, commandList);
 
@@ -105,7 +105,7 @@ void DXRenderer::OnUpdate(Events::UpdateEvent& updateEvent)
     XMVECTOR mov = 10.0f * XMVectorSet(sinf(updateEvent.totalTime * 0.5f), 0.0f, cosf(updateEvent.totalTime * 0.5f), 1.0f);
     XMVECTOR tar = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
     XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-    _camera.LookAt(mov, tar, up);
+    //_camera.LookAt(mov, tar, up);
 
     _deltaTime = updateEvent.elapsedTime;
 }
@@ -227,7 +227,7 @@ void DXRenderer::OnMouseButtonReleased(Events::MouseButtonEvent& e)
 
 void DXRenderer::ClearBuffers(TaskGPU& task)
 {
-    Core::CommandList& commandList = *task.GetCommandLists().front();
+    dx12::CommandList& commandList = *task.GetCommandLists().front();
 
     D3D12_CPU_DESCRIPTOR_HANDLE rtv = _currentFrame->_targetHeap->GetCPUDescriptorHandleForHeapStart();
     D3D12_CPU_DESCRIPTOR_HANDLE dsv = _currentFrame->_depthHeap->GetCPUDescriptorHandleForHeapStart();
@@ -248,7 +248,7 @@ void DXRenderer::ClearBuffers(TaskGPU& task)
 
 void DXRenderer::GeometryPass(TaskGPU& task)
 {
-    Core::CommandList& commandList = *task.GetCommandLists().front();
+    dx12::CommandList& commandList = *task.GetCommandLists().front();
 
     D3D12_CPU_DESCRIPTOR_HANDLE dsv = _currentFrame->_depthHeap->GetCPUDescriptorHandleForHeapStart();
 
@@ -262,11 +262,19 @@ void DXRenderer::GeometryPass(TaskGPU& task)
         commandList.SetViewport(_camera.GetViewport());
         commandList.SetRenderTargets({ _gBuffer.GetAlbedoMetalnessTextureCPUHandle(), _gBuffer.GetNormalTextureCPUHandle() }, &dsv);
 
+#if defined(_DEBUG)
+        DebugInfo::StartStatCollecting(commandList);
+#endif
+
         SetupCachedDataProcessor processor;
         processor.Process(_scene, commandList);
 
         DrawSceneProcessor drawProcessor;
         drawProcessor.Process(_scene, commandList);
+
+#if defined(_DEBUG)
+        DebugInfo::EndStatCollecting(commandList);
+#endif
 
         commandList.TransitionBarrier(_currentFrame->_depthTexture, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
         commandList.TransitionBarrier(_gBuffer.GetAlbedoMetalnessTexture(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
@@ -280,7 +288,7 @@ void DXRenderer::GeometryPass(TaskGPU& task)
 
 void DXRenderer::LightingPass(TaskGPU& task)
 {
-    Core::CommandList& commandList = *task.GetCommandLists().front();
+    dx12::CommandList& commandList = *task.GetCommandLists().front();
 
     PIXBeginEvent(commandList.GetDXCommandList().Get(), 4, "Deferred Shading");
     {
@@ -292,7 +300,7 @@ void DXRenderer::LightingPass(TaskGPU& task)
 
         D3D12_CPU_DESCRIPTOR_HANDLE handle = _currentFrame->_postFXDescHeap.GetHeapStartCPUHandle();
         handle.ptr += 64;
-        Core::Device::GetDXDevice()->CopyDescriptorsSimple(2, handle, _gBuffer.GetUAVHeap().GetHeapStartCPUHandle(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+        dx12::Device::GetDXDevice()->CopyDescriptorsSimple(2, handle, _gBuffer.GetUAVHeap().GetHeapStartCPUHandle(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
         ID3D12DescriptorHeap* heap[1] = { _currentFrame->_postFXDescHeap.GetDXDescriptorHeap().Get() };
         commandList.GetDXCommandList()->SetDescriptorHeaps(1, heap);
@@ -307,7 +315,11 @@ void DXRenderer::LightingPass(TaskGPU& task)
         gpuHandle.ptr += 32;
         commandList.GetDXCommandList()->SetComputeRootDescriptorTable(5, gpuHandle);
 
-        commandList.GetDXCommandList()->Dispatch(1280, 720, 1);
+        DirectX::XMFLOAT2 viewportSize = _camera.GetViewport().GetSize();
+        int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 8.0f);
+        int yThreadGroups = (uint32_t)std::ceilf(viewportSize.y / 8.0f);
+
+        commandList.GetDXCommandList()->Dispatch(xThreadGroups, yThreadGroups, 1);
     }
     PIXEndEvent(commandList.GetDXCommandList().Get());
 
@@ -316,7 +328,7 @@ void DXRenderer::LightingPass(TaskGPU& task)
 
 void DXRenderer::RenderSkybox(TaskGPU& task)
 {
-    Core::CommandList& commandList = *task.GetCommandLists().front();
+    dx12::CommandList& commandList = *task.GetCommandLists().front();
 
     PIXBeginEvent(commandList.GetDXCommandList().Get(), 3, "Skybox");
     {
@@ -328,7 +340,7 @@ void DXRenderer::RenderSkybox(TaskGPU& task)
 
         D3D12_CPU_DESCRIPTOR_HANDLE handle = _currentFrame->_testHeap.GetHeapStartCPUHandle();
         handle.ptr += 64;
-        Core::Device::GetDXDevice()->CopyDescriptorsSimple(1, handle, _skybox._descHeap.GetHeapStartCPUHandle(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+        dx12::Device::GetDXDevice()->CopyDescriptorsSimple(1, handle, _skybox._descHeap.GetHeapStartCPUHandle(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
         ID3D12DescriptorHeap* heap[1] = { _currentFrame->_testHeap.GetDXDescriptorHeap().Get() };
         commandList.GetDXCommandList()->SetDescriptorHeaps(1, heap);
@@ -341,10 +353,11 @@ void DXRenderer::RenderSkybox(TaskGPU& task)
         gpuHandle.ptr += 64;
         commandList.GetDXCommandList()->SetComputeRootDescriptorTable(4, gpuHandle);
 
-        uint32_t x = (uint32_t)std::ceilf(1280 / 4.0f);
-        uint32_t y = (uint32_t)std::ceilf(720 / 4.0f);
+        DirectX::XMFLOAT2 viewportSize = _camera.GetViewport().GetSize();
+        int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 8.0f);
+        int yThreadGroups = (uint32_t)std::ceilf(viewportSize.y / 8.0f);
 
-        commandList.GetDXCommandList()->Dispatch(x, y, 1);
+        commandList.GetDXCommandList()->Dispatch(xThreadGroups, yThreadGroups, 1);
     }
     PIXEndEvent(commandList.GetDXCommandList().Get());
 
@@ -353,7 +366,7 @@ void DXRenderer::RenderSkybox(TaskGPU& task)
 
 void DXRenderer::RenderGUI(TaskGPU& task)
 {
-    Core::CommandList& commandList = *task.GetCommandLists().front();
+    dx12::CommandList& commandList = *task.GetCommandLists().front();
 
     D3D12_CPU_DESCRIPTOR_HANDLE rtv = _currentFrame->_targetHeap->GetCPUDescriptorHandleForHeapStart();
     D3D12_CPU_DESCRIPTOR_HANDLE dsv = _currentFrame->_depthHeap->GetCPUDescriptorHandleForHeapStart();
@@ -424,7 +437,7 @@ void DXRenderer::RenderGUI(TaskGPU& task)
 
 void DXRenderer::Present(TaskGPU& task)
 {
-    Core::CommandList& commandList = *task.GetCommandLists().front();
+    dx12::CommandList& commandList = *task.GetCommandLists().front();
 
     PIXBeginEvent(commandList.GetDXCommandList().Get(), 6, "Present");
     {
