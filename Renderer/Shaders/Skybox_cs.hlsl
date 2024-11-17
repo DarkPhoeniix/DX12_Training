@@ -22,7 +22,7 @@ float2 SampleSphericalMap(float3 v)
 }
 
 [RootSignature(Skybox_RootSig)]
-[numthreads(4, 4, 1)]
+[numthreads(8, 8, 1)]
 void main(uint3 DTid : SV_DispatchThreadID)
 {
     if (DTid.x > Scene.WindowSize.x || DTid.y > Scene.WindowSize.y)

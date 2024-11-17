@@ -1,10 +1,10 @@
 #pragma once
 
-#include "DXObjects/Heap.h"
-#include "DXObjects/DescriptorHeap.h"
-#include "DXObjects/Texture.h"
+#include "Heap.h"
+#include "DescriptorHeap.h"
+#include "Texture.h"
 
-namespace Core
+namespace dx12
 {
     class CommandList;
 } // namespace Core
@@ -15,12 +15,12 @@ namespace SceneLayer
     {
     public:
         void Init();
-        void Load(const std::string& filepath, Core::CommandList& commandList);
+        void Load(const std::string& filepath, dx12::CommandList& commandList);
 
     //private:
-        std::shared_ptr<Core::Texture> _skyboxTexture;
+        std::shared_ptr<dx12::Texture> _skyboxTexture;
 
-        Core::DescriptorHeap _descHeap;
-        Core::Heap _heap;
+        dx12::DescriptorHeap _descHeap;
+        dx12::Heap _heap;
     };
 } // namespace SceneLayer

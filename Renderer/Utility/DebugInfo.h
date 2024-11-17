@@ -1,7 +1,6 @@
 #pragma once
 
-#include "DXObjects/StatisticsQuery.h"
-#include "Utility/HighResolutionClock.h"
+#include "StatisticsQuery.h"
 
 namespace Core::Events
 {
@@ -16,8 +15,8 @@ public:
 
     static void Update(Core::Events::UpdateEvent& updateEvent);
     
-    static void StartStatCollecting(Core::CommandList& commandList);
-    static void EndStatCollecting(Core::CommandList& commandList);
+    static void StartStatCollecting(dx12::CommandList& commandList);
+    static void EndStatCollecting(dx12::CommandList& commandList);
 
     static const D3D12_QUERY_DATA_PIPELINE_STATISTICS& GetPipelineStatisctics();
     static UINT GetFPS();
@@ -29,7 +28,7 @@ private:
 
     static DebugInfo& Instance();
 
-    Core::StatisticsQuery _statisticsQuery;
+    dx12::StatisticsQuery _statisticsQuery;
     int _fps;
     double _msPerFrame;
 

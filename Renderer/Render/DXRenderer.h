@@ -1,18 +1,12 @@
 #pragma once
 
-#include "DXObjects/Heap.h"
-#include "DXObjects/DescriptorHeap.h"
-#include "DXObjects/RootSignature.h"
-#include "DXObjects/Texture.h"
-#include "DXObjects/StatisticsQuery.h"
-#include "Scene/Nodes/Camera/Camera.h"
-#include "Scene/Scene.h"
-#include "Scene/Nodes/Light/DirectionalLight.h"
-#include "Render/Frame.h"
-#include "Window/IWindowEventListener.h"
-
 #include "GBuffer.h"
+#include "RootSignature.h"
+#include "Scene/Camera.h"
+#include "Scene/Scene.h"
 #include "Scene/Skybox.h"
+#include "Render/Frame/Frame.h"
+#include "Window/IWindowEventListener.h"
 
 class DXRenderer : public Core::Events::IWindowEventListener
 {
@@ -34,22 +28,26 @@ public:
     virtual void OnResize(Core::Events::ResizeEvent& e) override {}
 
 private:
+    void ClearBuffers(TaskGPU& task);
+    void GeometryPass(TaskGPU& task);
+    void LightingPass(TaskGPU& task);
+    void RenderSkybox(TaskGPU& task);
+    void RenderGUI(TaskGPU& task);
+    void Present(TaskGPU& task);
+
     HWND _windowHandle;
 
     Core::GBuffer _gBuffer;
 
-    Core::RootSignature _gPassPipeline;
-    Core::RootSignature _deferredPipeline;
-    Core::RootSignature _renderPipeline;
-    Core::RootSignature _AABBpipeline;
-    Core::RootSignature _SkyboxPipeline;
+    dx12::RootSignature _gPassPipeline;
+    dx12::RootSignature _deferredPipeline;
+    dx12::RootSignature _renderPipeline;
+    dx12::RootSignature _AABBpipeline;
+    dx12::RootSignature _SkyboxPipeline;
 
     SceneLayer::Skybox _skybox;
 
-    ComPtr<ID3D12RootSignature> _postFXRootSig;
-    ComPtr<ID3D12PipelineState> _postFXPipeState;
-
-    std::shared_ptr<Core::Resource> _ambient;
+    Frame* _currentFrame;
 
     SceneLayer::Scene _scene;
     SceneLayer::Camera _camera;

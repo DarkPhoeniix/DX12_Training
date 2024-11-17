@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Scene/SceneCache.h"
-#include "Scene/Nodes/ISceneNode.h"
+#include "Scene/ECS/Entity.h"
 
 namespace Core
 {
@@ -19,23 +19,24 @@ namespace SceneLayer
         Scene();
         ~Scene();
 
-        void SetupToShader(Core::CommandList& commandList);
-        void Draw(Core::CommandList& commandList);
-        void DrawAABB(Core::CommandList& commandList);
+        std::vector<std::shared_ptr<Entity>>& GetRootNodes();
+
+        SceneCache& GetCache();
 
         // TODO: remove func, load camera from the file
         void SetCamera(Camera& camera);
 
-        bool LoadScene(const std::string& filepath, Core::CommandList& commandList);
+        dx12::Resource& GetGPUDesc();
+
+        bool LoadScene(const std::string& filepath, dx12::CommandList& commandList);
 
     private:
-        void _UploadTexture(Core::Texture* texture, Core::CommandList& commandList);
-
         std::string _name;
 
-        std::vector<std::shared_ptr<ISceneNode>> _rootNodes;
+        std::vector<std::shared_ptr<Entity>> _rootNodes;
 
         SceneCache _cache;
-        std::shared_ptr<Core::Resource> _sceneGPUData;
+
+        dx12::Resource _gpuDesc;
     };
 } // namespace SceneLayer

@@ -2,13 +2,13 @@
 
 #include "GBuffer.h"
 
-#include "DXObjects/CommandList.h"
+#include "CommandList.h"
 
 namespace Core
 {
     void GBuffer::Init(const DirectX::XMUINT2& size)
     {
-        Core::DescriptorHeapDescription heapDesc;
+        dx12::DescriptorHeapDescription heapDesc;
         {
             heapDesc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_NONE);
             heapDesc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
@@ -18,7 +18,7 @@ namespace Core
         _descriptorsHeap.Create();
 
         D3D12_CLEAR_VALUE clearValueTexTarget;
-        ResourceDescription textureDesc;
+        dx12::ResourceDescription textureDesc;
         {
             textureDesc.SetSize(size);
             textureDesc.SetDimension(D3D12_RESOURCE_DIMENSION_TEXTURE2D);
@@ -69,16 +69,16 @@ namespace Core
             renderTargetDesc.Texture2D.MipSlice = 0;
             //Core::Device::GetDXDevice()->CreateRenderTargetView(_position.GetDXResource().Get(), &renderTargetDesc, _descriptorsHeap.GetResourceCPUHandle(&_position));
             renderTargetDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-            Core::Device::GetDXDevice()->CreateRenderTargetView(_albedoMetalness.GetDXResource().Get(), &renderTargetDesc, _descriptorsHeap.GetResourceCPUHandle(&_albedoMetalness));
+            dx12::Device::GetDXDevice()->CreateRenderTargetView(_albedoMetalness.GetDXResource().Get(), &renderTargetDesc, _descriptorsHeap.GetResourceCPUHandle(&_albedoMetalness));
             renderTargetDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-            Core::Device::GetDXDevice()->CreateRenderTargetView(_normalSpecular.GetDXResource().Get(), &renderTargetDesc, _descriptorsHeap.GetResourceCPUHandle(&_normalSpecular));
+            dx12::Device::GetDXDevice()->CreateRenderTargetView(_normalSpecular.GetDXResource().Get(), &renderTargetDesc, _descriptorsHeap.GetResourceCPUHandle(&_normalSpecular));
         }
 
 
 
 
         {
-            Core::DescriptorHeapDescription desc = {};
+            dx12::DescriptorHeapDescription desc = {};
             desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
             desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_NONE);
             desc.SetNumDescriptors(2);
@@ -99,14 +99,14 @@ namespace Core
 
             //Core::Device::GetDXDevice()->CreateShaderResourceView(_position.GetDXResource().Get(), &SRVDesc, _UAVHeap.GetResourceCPUHandle(&_position));
             SRVDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-            Core::Device::GetDXDevice()->CreateShaderResourceView(_albedoMetalness.GetDXResource().Get(), &SRVDesc, _UAVHeap.GetResourceCPUHandle(&_albedoMetalness));
+            dx12::Device::GetDXDevice()->CreateShaderResourceView(_albedoMetalness.GetDXResource().Get(), &SRVDesc, _UAVHeap.GetResourceCPUHandle(&_albedoMetalness));
 
             SRVDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-            Core::Device::GetDXDevice()->CreateShaderResourceView(_normalSpecular.GetDXResource().Get(), &SRVDesc, _UAVHeap.GetResourceCPUHandle(&_normalSpecular));
+            dx12::Device::GetDXDevice()->CreateShaderResourceView(_normalSpecular.GetDXResource().Get(), &SRVDesc, _UAVHeap.GetResourceCPUHandle(&_normalSpecular));
         }
     }
 
-    void GBuffer::ClearTextures(Core::CommandList& commandList)
+    void GBuffer::ClearTextures(dx12::CommandList& commandList)
     {
         FLOAT clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
@@ -115,22 +115,22 @@ namespace Core
         commandList.ClearRTV(GetNormalTextureCPUHandle(), clearColor);
     }
 
-    Core::DescriptorHeap& GBuffer::GetDescHeap()
+    dx12::DescriptorHeap& GBuffer::GetDescHeap()
     {
         return _descriptorsHeap;
     }
 
-    Core::DescriptorHeap& GBuffer::GetUAVHeap()
+    dx12::DescriptorHeap& GBuffer::GetUAVHeap()
     {
         return _UAVHeap;
     }
 
-    Core::Texture& GBuffer::GetPositionTexture()
+    dx12::Texture& GBuffer::GetPositionTexture()
     {
         return _position;
     }
 
-    const Core::Texture& GBuffer::GetPositionTexture() const
+    const dx12::Texture& GBuffer::GetPositionTexture() const
     {
         return _position;
     }
@@ -145,12 +145,12 @@ namespace Core
         return _descriptorsHeap.GetResourceGPUHandle(&_position);
     }
 
-    Core::Texture& GBuffer::GetNormalTexture()
+    dx12::Texture& GBuffer::GetNormalTexture()
     {
         return _normalSpecular;
     }
 
-    const Core::Texture& GBuffer::GetNormalTexture() const
+    const dx12::Texture& GBuffer::GetNormalTexture() const
     {
         return _normalSpecular;
     }
@@ -165,12 +165,12 @@ namespace Core
         return _descriptorsHeap.GetResourceGPUHandle(&_normalSpecular);
     }
 
-    Core::Texture& GBuffer::GetAlbedoMetalnessTexture()
+    dx12::Texture& GBuffer::GetAlbedoMetalnessTexture()
     {
         return _albedoMetalness;
     }
 
-    const Core::Texture& GBuffer::GetAlbedoMetalnessTexture() const
+    const dx12::Texture& GBuffer::GetAlbedoMetalnessTexture() const
     {
         return _albedoMetalness;
     }

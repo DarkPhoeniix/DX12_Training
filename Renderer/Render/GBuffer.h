@@ -1,7 +1,7 @@
 #pragma once
 
-#include "DXObjects/Heap.h"
-#include "DXObjects/Texture.h"
+#include "Heap.h"
+#include "Texture.h"
 
 namespace SceneLayer
 {
@@ -15,33 +15,33 @@ namespace Core
     public:
         void Init(const DirectX::XMUINT2& size);
 
-        void ClearTextures(Core::CommandList& commandList);
+        void ClearTextures(dx12::CommandList& commandList);
 
-        Core::DescriptorHeap& GetDescHeap();
-        Core::DescriptorHeap& GetUAVHeap();
+        dx12::DescriptorHeap& GetDescHeap();
+        dx12::DescriptorHeap& GetUAVHeap();
 
-        Core::Texture& GetPositionTexture();
-        const Core::Texture& GetPositionTexture() const;
+        dx12::Texture& GetPositionTexture();
+        const dx12::Texture& GetPositionTexture() const;
         D3D12_CPU_DESCRIPTOR_HANDLE GetPositionTextureCPUHandle();
         D3D12_GPU_DESCRIPTOR_HANDLE GetPositionTextureGPUHandle();
 
-        Core::Texture& GetNormalTexture();
-        const Core::Texture& GetNormalTexture() const;
+        dx12::Texture& GetNormalTexture();
+        const dx12::Texture& GetNormalTexture() const;
         D3D12_CPU_DESCRIPTOR_HANDLE GetNormalTextureCPUHandle();
         D3D12_GPU_DESCRIPTOR_HANDLE GetNormalTextureGPUHandle();
 
-        Core::Texture& GetAlbedoMetalnessTexture();
-        const Core::Texture& GetAlbedoMetalnessTexture() const;
+        dx12::Texture& GetAlbedoMetalnessTexture();
+        const dx12::Texture& GetAlbedoMetalnessTexture() const;
         D3D12_CPU_DESCRIPTOR_HANDLE GetAlbedoMetalnessTextureCPUHandle();
         D3D12_GPU_DESCRIPTOR_HANDLE GetAlbedoMetalnessTextureGPUHandle();
 
     private:
-        Core::Texture _position;
-        Core::Texture _normalSpecular;
-        Core::Texture _albedoMetalness;
+        dx12::Texture _position;
+        dx12::Texture _normalSpecular;
+        dx12::Texture _albedoMetalness;
 
-        Core::DescriptorHeap _descriptorsHeap;
-        Core::DescriptorHeap _UAVHeap;
-        Core::Heap _heap;
+        dx12::DescriptorHeap _descriptorsHeap;
+        dx12::DescriptorHeap _UAVHeap;
+        dx12::Heap _heap;
     };
 } // namespace Core

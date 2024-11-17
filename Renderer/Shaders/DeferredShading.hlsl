@@ -2,7 +2,7 @@
 #include "DeferredShading_rootsig.hlsli"
 
 #include "Common.hlsli"
-#include "LambertLighting.hlsli"
+#include "LightingCommon.hlsli"
 #include "DepthFuncs.hlsli"
 #include "PBR.hlsli"
 
@@ -14,7 +14,7 @@ Texture2D<float4>   NormalRoughnessTexture  : register(t3);
 RWTexture2D<float4> TargetTexture           : register(u0);
 
 [RootSignature(DeferredShading_RootSig)]
-[numthreads(1, 1, 1)]
+[numthreads(8, 8, 1)]
 void main(uint3 DTid : SV_DispatchThreadID)
 {
     float depth             = PositionTexture.Load(uint3(DTid.xy, 0)).r;
@@ -29,7 +29,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
     
     float3 eyeDir = normalize(Scene.EyePosition - surface.Positon);
     
-    surface.FinalColor = CalculateAmbient(surface);
+    surface.FinalColor = 0.01f * surface.Albedo;
     for (int i = 0; i < Scene.LightsNum; ++i)
     {
         float3 lightDirection;

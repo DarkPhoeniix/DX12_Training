@@ -6,7 +6,7 @@ namespace SceneLayer
     void Skybox::Init()
     {
         {
-            Core::DescriptorHeapDescription desc;
+            dx12::DescriptorHeapDescription desc;
             desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
             desc.SetNumDescriptors(10);
             desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_NONE);
@@ -17,7 +17,7 @@ namespace SceneLayer
         }
 
         {
-            Core::HeapDescription desc;
+            dx12::HeapDescription desc;
             desc.SetSize(_256MB * 2);
             desc.SetHeapType(D3D12_HEAP_TYPE_DEFAULT);
             desc.SetHeapFlags(D3D12_HEAP_FLAG_ALLOW_ALL_BUFFERS_AND_TEXTURES);
@@ -28,14 +28,14 @@ namespace SceneLayer
         }
     }
 
-    void Skybox::Load(const std::string& filepath, Core::CommandList& commandList)
+    void Skybox::Load(const std::string& filepath, dx12::CommandList& commandList)
     {
         // Open and read Json file
         std::ifstream in(filepath, std::ios_base::in | std::ios_base::binary);
         Json::Value root;
         in >> root;
 
-        _skyboxTexture = Core::Texture::LoadFromFile(root["Skybox"].asCString());
+        _skyboxTexture = dx12::Texture::LoadFromFile(root["Skybox"].asCString());
 
         _skyboxTexture->SetDescriptorHeap(&_descHeap);
 
@@ -50,7 +50,7 @@ namespace SceneLayer
         SRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
         SRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
-        Core::Device::GetDXDevice()->CreateShaderResourceView(_skyboxTexture->GetDXResource().Get(), &SRVDesc, _descHeap.GetResourceCPUHandle(_skyboxTexture.get()));
+        dx12::Device::GetDXDevice()->CreateShaderResourceView(_skyboxTexture->GetDXResource().Get(), &SRVDesc, _descHeap.GetResourceCPUHandle(_skyboxTexture.get()));
 
     }
 } // namespace SceneLayer
