@@ -1,7 +1,11 @@
 #pragma once
 
-#include "Scene/LightManager.h"
-#include "Scene/Nodes/Camera/Camera.h"
+#include "Scene/Camera.h"
+
+namespace Core
+{
+    class ResourceTable;
+}
 
 namespace SceneLayer
 {
@@ -13,7 +17,8 @@ namespace SceneLayer
 
         std::shared_ptr<Core::ResourceTable> GetTextureTable() const;
 
-        LightManager* GetLightManager();
+        std::shared_ptr<Core::ResourceTable> GetLightsTable() const;
+        Core::Resource& GetLightsSRV();
 
         // TODO: ...
         void SetCamera(Camera* camera);
@@ -22,7 +27,8 @@ namespace SceneLayer
     private:
         std::shared_ptr<Core::ResourceTable> _texturesTable;
 
-        LightManager _lightManager;
+        std::shared_ptr<Core::ResourceTable> _lightsTable;
+        Core::Resource _lightsView;
 
         Camera* _camera;
         

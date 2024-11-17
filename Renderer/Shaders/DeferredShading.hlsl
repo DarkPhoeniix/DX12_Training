@@ -29,7 +29,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
     
     float3 eyeDir = normalize(Scene.EyePosition - surface.Positon);
     
-    surface.FinalColor = 0.05f * surface.Albedo;
+    surface.FinalColor = 0.01f * surface.Albedo;
     for (int i = 0; i < Scene.LightsNum; ++i)
     {
         float3 lightDirection;

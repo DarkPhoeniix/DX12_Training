@@ -2,7 +2,6 @@
 
 #include "Scene/SceneCache.h"
 #include "Scene/ECS/Components.h"
-#include "Render/GPUStructs/GPUModelDesc.h"
 
 namespace SceneLayer
 {

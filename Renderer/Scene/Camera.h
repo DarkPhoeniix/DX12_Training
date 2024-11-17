@@ -1,7 +1,6 @@
 #pragma once
 
-#include "Scene/Nodes/Camera/Viewport.h"
-#include "Scene/Nodes/ISceneNode.h"
+#include "Scene/Viewport.h"
 #include "Scene/Volumes/FrustumVolume.h"
 
 // TODO: refactor Camera
@@ -10,7 +9,7 @@ namespace SceneLayer
 {
 	class Scene;
 
-	class Camera : public ISceneNode
+	class Camera
 	{
 	public:
 		Camera();
@@ -52,8 +51,6 @@ namespace SceneLayer
 		void Update(int pitch, int yaw);
 
 	private:
-		using Base = ISceneNode;
-
 		// Constructs the view matrix based on the camera's basis
 		// vectors and origin, relative to the world space
 		void _BuildView();

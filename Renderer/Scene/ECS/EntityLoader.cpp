@@ -2,7 +2,7 @@
 
 #include "EntityLoader.h"
 
-#include "Scene/Entity.h"
+#include "Scene/ECS/Entity.h"
 
 using namespace SceneLayer;
 
@@ -192,6 +192,7 @@ namespace Helpers
             component->Type = LightType::Spot;
         }
 
+        component->Direction = ParseVector(lightData["Direction"].asString());
         component->Color = ParseVector(lightData["Color"].asString());
         component->Intensity = lightData["Intensity"].asFloat();
         component->Range = lightData["Range"].asFloat();

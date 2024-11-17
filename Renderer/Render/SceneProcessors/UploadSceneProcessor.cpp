@@ -3,6 +3,7 @@
 #include "UploadSceneProcessor.h"
 
 #include "DXObjects/CommandList.h"
+#include "DXObjects/ResourceTable.h"
 #include "Scene/Scene.h"
 
 void UploadSceneProcessor::Process(SceneLayer::Scene& scene, Core::CommandList& commandList)
@@ -11,16 +12,16 @@ void UploadSceneProcessor::Process(SceneLayer::Scene& scene, Core::CommandList& 
 
     for (std::shared_ptr<SceneLayer::Entity>& node : scene.GetRootNodes())
     {
-        UploadEntity(*node, commandList);
+        ProcessEntity(*node, commandList);
 
         for (std::shared_ptr<SceneLayer::Entity>& child : node->GetChildrenNodes())
         {
-            UploadEntity(*child, commandList);
+            ProcessEntity(*child, commandList);
         }
     }
 }
 
-void UploadSceneProcessor::UploadEntity(SceneLayer::Entity& entity, Core::CommandList& commandList)
+void UploadSceneProcessor::ProcessEntity(SceneLayer::Entity& entity, Core::CommandList& commandList)
 {
     SceneLayer::SceneCache* cache = entity.GetSceneCache();
     if (ASSERT(cache, "Entity has no scene cache"))

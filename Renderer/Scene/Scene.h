@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Scene/SceneCache.h"
-#include "Scene/Entity.h"
+#include "Scene/ECS/Entity.h"
 
 namespace Core
 {

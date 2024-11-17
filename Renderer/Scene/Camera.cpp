@@ -12,8 +12,7 @@ namespace
 namespace SceneLayer
 {
 	Camera::Camera()
-		: Base()
-		, _view(XMMatrixIdentity())
+		: _view(XMMatrixIdentity())
 		, _projection(XMMatrixIdentity())
 		, _viewProjection(XMMatrixIdentity())
 		, _position(XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f))

@@ -2,6 +2,8 @@
 
 #include "Entity.h"
 
+#include "Render/GPUStructs/GPUModelDesc.h"
+
 namespace SceneLayer
 {
     Entity::Entity()

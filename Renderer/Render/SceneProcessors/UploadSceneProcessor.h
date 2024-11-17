@@ -7,7 +7,7 @@ class UploadSceneProcessor : public ISceneProcessor
 public:
     void Process(SceneLayer::Scene& scene, Core::CommandList& commandList) override;
 
-    void UploadEntity(SceneLayer::Entity& entity, Core::CommandList& commandList);
+    void ProcessEntity(SceneLayer::Entity& entity, Core::CommandList& commandList);
 
 private:
     void UploadData(Core::CommandList& commandList,

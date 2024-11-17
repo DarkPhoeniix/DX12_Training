@@ -2,8 +2,10 @@
 
 #include "DrawSceneProcessor.h"
 
-#include "Scene/Scene.h"
 #include "DXObjects/CommandList.h"
+#include "DXObjects/ResourceTable.h"
+#include "Scene/Scene.h"
+#include "Render/GPUStructs/GPUModelDesc.h"
 
 void DrawSceneProcessor::Process(SceneLayer::Scene& scene, Core::CommandList& commandList)
 {

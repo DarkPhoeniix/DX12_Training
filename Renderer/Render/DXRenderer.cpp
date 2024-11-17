@@ -105,7 +105,7 @@ void DXRenderer::OnUpdate(Events::UpdateEvent& updateEvent)
     XMVECTOR mov = 10.0f * XMVectorSet(sinf(updateEvent.totalTime * 0.5f), 0.0f, cosf(updateEvent.totalTime * 0.5f), 1.0f);
     XMVECTOR tar = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
     XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-    //_camera.LookAt(mov, tar, up);
+    _camera.LookAt(mov, tar, up);
 
     _deltaTime = updateEvent.elapsedTime;
 }

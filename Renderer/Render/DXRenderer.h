@@ -1,7 +1,7 @@
 #pragma once
 
 #include "DXObjects/RootSignature.h"
-#include "Scene/Nodes/Camera/Camera.h"
+#include "Scene/Camera.h"
 #include "Scene/Scene.h"
 #include "Render/Frame/Frame.h"
 #include "Window/IWindowEventListener.h"

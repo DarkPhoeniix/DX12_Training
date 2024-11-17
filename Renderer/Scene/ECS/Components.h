@@ -1,7 +1,6 @@
 #pragma once
 
 #include "DXObjects/Texture.h"
-#include "Scene/ECS/ComponentFactory.h"
 #include "Scene/Volumes/AABBVolume.h"
 
 #define COMPONENT
@@ -79,6 +78,7 @@ struct COMPONENT Light : public IComponent
 
     LightType Type;
 
+    DirectX::XMVECTOR Direction;
     DirectX::XMVECTOR Color;
 
     float Intensity;

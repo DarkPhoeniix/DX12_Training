@@ -2,11 +2,8 @@
 
 #include "Scene.h"
 
-#include "DXObjects/Texture.h"
 #include "DXObjects/CommandList.h"
-#include "Scene/NodeFactory.h"
-#include "Scene/Nodes/Camera/Camera.h"
-#include "Scene/Nodes/Light/DirectionalLight.h"
+#include "Scene/Camera.h"
 #include "Scene/ECS/EntityLoader.h"
 
 namespace
@@ -44,13 +41,6 @@ namespace SceneLayer
             _gpuDesc.SetResourceDescription(sceneDataDescription);
             _gpuDesc.CreateCommitedResource(D3D12_RESOURCE_STATE_GENERIC_READ);
         }
-
-        std::shared_ptr<DirectionalLight> directionalLight = std::make_shared<DirectionalLight>(&_cache, nullptr);
-        directionalLight->SetName("Directional Light");
-        directionalLight->SetDirection(DirectX::XMVectorSet(-0.7f, -0.8f, -0.5f, 0.0f));
-        directionalLight->SetColor(DirectX::XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f));
-
-        _cache.GetLightManager()->AddDirectionalLight(directionalLight);
     }
 
     Scene::~Scene()
