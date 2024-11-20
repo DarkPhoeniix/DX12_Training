@@ -1,6 +1,7 @@
 {
     "Name": "MaterialsTest",
     "Nodes": [
+	"DirectionalLight.node",
         "Sphere.node",
         "Sphere.001.node",
         "Sphere.002.node",

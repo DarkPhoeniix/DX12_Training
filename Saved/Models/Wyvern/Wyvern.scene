@@ -1,6 +1,7 @@
 {
     "Name": "Wyvern",
     "Nodes": [
+        "DirectionalLight.node",
         "Wyvern.node"
     ]
 }
