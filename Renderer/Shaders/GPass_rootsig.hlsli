@@ -10,7 +10,8 @@
     "CBV(b0, visibility = SHADER_VISIBILITY_ALL), " \
     "CBV(b1, visibility = SHADER_VISIBILITY_ALL), " \
 	"SRV(t0, visibility = SHADER_VISIBILITY_PIXEL), " \
-    "DescriptorTable(SRV(t1, numDescriptors = unbounded, flags = DESCRIPTORS_VOLATILE), visibility = SHADER_VISIBILITY_PIXEL)," \
+	"SRV(t1, visibility = SHADER_VISIBILITY_VERTEX), " \
+    "DescriptorTable(SRV(t2, numDescriptors = unbounded, flags = DESCRIPTORS_VOLATILE), visibility = SHADER_VISIBILITY_PIXEL)," \
     "StaticSampler(s0," \
         "addressU = TEXTURE_ADDRESS_MIRROR," \
         "addressV = TEXTURE_ADDRESS_MIRROR," \

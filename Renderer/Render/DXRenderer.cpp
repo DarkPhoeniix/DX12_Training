@@ -49,8 +49,8 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
 
     // Camera Setup
     {
-        XMVECTOR pos = XMVectorSet(10.0f, 0.0f, 0.0f, 1.0f);
-        XMVECTOR target = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+        XMVECTOR pos = XMVectorSet(-5.0f, 5.0f, -2.0f, 1.0f);
+        XMVECTOR target = XMVectorSet(0.0f, 0.0f, -2.0f, 1.0f);
         XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
         RECT windowSize;
@@ -70,7 +70,7 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
         _skybox.Init();
         _skybox.Load("Wyvern\\Skybox.node", commandList);
 
-        _scene.LoadScene("Test\\Test.scene", commandList);
+        _scene.LoadScene("AnimTest\\AnimTest.scene", commandList);
 
         uploadProcessor.Process(_scene, commandList);
 
@@ -88,7 +88,7 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
         loadTask->GetCommandQueue()->ExecuteCommandLists(comLists.size(), comLists.data());
         loadTask->GetCommandQueue()->Signal(loadTask->GetFence()->GetFence().Get(), loadTask->GetFenceValue());
     }
-    Sleep(2000);
+    Sleep(1000);
     _contentLoaded = true;
     return _contentLoaded;
 }
@@ -102,10 +102,14 @@ void DXRenderer::OnUpdate(Events::UpdateEvent& updateEvent)
 {
     DebugInfo::Update(updateEvent);
 
+    _scene.GetCache().SetTime(updateEvent.totalTime);
+
     XMVECTOR mov = 10.0f * XMVectorSet(sinf(updateEvent.totalTime * 0.5f), 0.0f, cosf(updateEvent.totalTime * 0.5f), 1.0f);
     XMVECTOR tar = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
     XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
     //_camera.LookAt(mov, tar, up);
+
+
 
     _deltaTime = updateEvent.elapsedTime;
 }

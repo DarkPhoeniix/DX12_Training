@@ -24,6 +24,9 @@ namespace SceneLayer
         void SetCamera(Camera* camera);
         Camera* GetCamera() const;
 
+        void SetTime(float time);
+        float GetTime() const;
+
     private:
         std::shared_ptr<dx12::ResourceTable> _texturesTable;
 
@@ -31,6 +34,8 @@ namespace SceneLayer
         dx12::Resource _lightsView;
 
         Camera* _camera;
+
+        float _currentTime;
         
         std::shared_ptr<dx12::Resource> _gpuDesc;
     };

@@ -29,6 +29,10 @@ namespace dx12
             { "float3", DXGI_FORMAT_R32G32B32_FLOAT },
             { "float2", DXGI_FORMAT_R32G32_FLOAT },
             { "float", DXGI_FORMAT_R32_FLOAT },
+            { "uint4", DXGI_FORMAT_R32G32B32A32_UINT },
+            { "uint3", DXGI_FORMAT_R32G32B32_UINT },
+            { "uint2", DXGI_FORMAT_R32G32_UINT },
+            { "uint", DXGI_FORMAT_R32_UINT },
         };
 
         DXGI_FORMAT ParseFormat(const std::string& str)
@@ -343,7 +347,7 @@ namespace dx12
                 inputLayout[i].SemanticIndex = layout["SemanticIndex"].asUInt();
                 inputLayout[i].Format = ParseFormat(layout["Format"].asCString());
                 inputLayout[i].AlignedByteOffset = layout["Offset"].asUInt();
-                inputLayout[i].InputSlot = layout["Stream"].asUInt();
+                inputLayout[i].InputSlot = layout["Slot"].asUInt();
             }
         }
 

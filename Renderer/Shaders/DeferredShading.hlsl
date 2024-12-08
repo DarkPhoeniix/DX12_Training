@@ -61,5 +61,5 @@ void main(uint3 DTid : SV_DispatchThreadID)
         surface.FinalColor += finalDiffuse;
     }
     
-    TargetTexture[DTid.xy]  = surface.FinalColor;
+    TargetTexture[DTid.xy]  = surface.Albedo;
 }

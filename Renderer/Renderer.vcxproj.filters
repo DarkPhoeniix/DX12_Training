@@ -151,6 +151,14 @@
       <Filter>Scene\ECS</Filter>
     </ClCompile>
     <ClCompile Include="Render\GPUStructs\GPULightDesc.cpp" />
+    <ClCompile Include="Scene\ECS\Components\Animation.cpp" />
+    <ClCompile Include="Scene\ECS\Components\Light.cpp" />
+    <ClCompile Include="Scene\ECS\Components\Material.cpp" />
+    <ClCompile Include="Scene\ECS\Components\Mesh.cpp" />
+    <ClCompile Include="Scene\ECS\Components\Transformation.cpp" />
+    <ClCompile Include="Scene\ECS\Components\Skybox.cpp" />
+    <ClCompile Include="Scene\ECS\Components\Armature.cpp" />
+    <ClCompile Include="Render\SceneProcessors\UpdateSceneProcessor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Events\IEvent.h">
@@ -300,6 +308,14 @@
       <Filter>Scene\ECS</Filter>
     </ClInclude>
     <ClInclude Include="Render\GPUStructs\GPULightDesc.h" />
+    <ClInclude Include="Scene\ECS\Components\Animation.h" />
+    <ClInclude Include="Scene\ECS\Components\Light.h" />
+    <ClInclude Include="Scene\ECS\Components\Material.h" />
+    <ClInclude Include="Scene\ECS\Components\Mesh.h" />
+    <ClInclude Include="Scene\ECS\Components\Transformation.h" />
+    <ClInclude Include="Scene\ECS\Components\Skybox.h" />
+    <ClInclude Include="Scene\ECS\Components\Armature.h" />
+    <ClInclude Include="Render\SceneProcessors\UpdateSceneProcessor.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\AABB_gs.hlsl">

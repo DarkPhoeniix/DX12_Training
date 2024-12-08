@@ -3,6 +3,11 @@
 #include "Scene/SceneCache.h"
 #include "Scene/ECS/Entity.h"
 
+namespace dx12
+{
+    class CommandList;
+} // namespace dx12
+
 namespace Core
 {
     class Texture;

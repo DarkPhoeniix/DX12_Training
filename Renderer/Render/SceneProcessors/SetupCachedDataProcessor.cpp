@@ -3,7 +3,13 @@
 #include "SetupCachedDataProcessor.h"
 
 #include "CommandList.h"
+
 #include "Scene/Scene.h"
+#include "Scene/ECS/Components/Armature.h"
+#include "Scene/ECS/Components/Animation.h"
+#include "Scene/ECS/Components/Transformation.h"
+#include "Scene/ECS/Components/Light.h"
+
 #include "Render/GPUStructs/GPUSceneDesc.h"
 #include "Render/GPUStructs/GPULightDesc.h"
 
@@ -73,5 +79,22 @@ void SetupCachedDataProcessor::ProcessEntity(SceneLayer::Entity& entity, dx12::C
         }
 
         data[_lightNum++] = lightDesc;
+    }
+
+    Animation* animation = entity.GetComponentAs<Animation>("Animation");
+    Armature* armature = entity.GetComponentAs<Armature>("Armature");
+    if (armature && animation)
+    {
+        DirectX::XMMATRIX* data = (DirectX::XMMATRIX*)armature->BoneTransforms.Map();
+
+        const auto& transforms = animation->GetBonesTransforms(cache->GetTime());
+        armature->ApplyAnimation(transforms);
+        armature->UpdateGlobalTransformations();
+
+        const std::vector<Bone>& bones = armature->GetBones();
+        for (int i = 0; i < bones.size(); ++i)
+        {
+            data[i] = bones[i].Offset * bones[i].GlobalTransform;// *bones[i].Offset;
+        }
     }
 }

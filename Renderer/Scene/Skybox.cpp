@@ -1,5 +1,8 @@
 #include "stdafx.h"
+
 #include "Skybox.h"
+
+#include "CommandList.h"
 
 namespace SceneLayer
 {
