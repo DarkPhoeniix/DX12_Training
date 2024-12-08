@@ -1,0 +1,7 @@
+{
+    "Name": "AnimTest",
+    "Nodes": [
+        "Plane.node",
+        "DirectionalLight.node"
+    ]
+}

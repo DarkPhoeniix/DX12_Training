@@ -1,0 +1,6 @@
+{
+    "Albedo": "Plane_albedo.png",
+    "Metalness": "Plane_metalness.png",
+    "Roughness": "Plane_roughness.png",
+    "Normal": "Plane_nmap.png"
+}
