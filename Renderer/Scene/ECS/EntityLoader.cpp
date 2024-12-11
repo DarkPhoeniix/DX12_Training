@@ -43,18 +43,16 @@ namespace
         {
             Json::Value& boneValue = jsonValue[i];
 
-            BoneId parentId = bones.size();
-
             Bone bone;
-            bone.ID = bones.size();
+            bone.ID = boneValue["ID"].asUInt();
             bone.Name = boneValue["Name"].asString();
             bone.ParentId = ParentId;
-            bone.PendingUpdate = true;
             bone.Offset = ParseMatrix(boneValue["Offset"]);
+            bone.LocalTransform = DirectX::XMMatrixIdentity();
 
             bones.push_back(std::move(bone));
 
-            ParseBones(boneValue["Children"], bones, parentId);
+            ParseBones(boneValue["Children"], bones, bone.ID);
         }
     }
 } // namespace unnamed
@@ -135,14 +133,14 @@ namespace Helpers
         if (!jsonRoot["Animation"].isNull())
         {
             std::shared_ptr<Animation> component = std::make_shared<Animation>();
-            LoadComponent(jsonRoot, component);
+            LoadComponent(jsonRoot, entity->GetComponentAs<Armature>("Armature"), component);
             entity->AddComponent(component);
         }
 
         return entity;
     }
 
-    void EntityLoader::LoadComponent(Json::Value& jsonValue, const std::shared_ptr<Animation>& component)
+    void EntityLoader::LoadComponent(Json::Value& jsonValue, Armature* armature, const std::shared_ptr<Animation>& component)
     {
         std::string animationFilepth = _parentFilepath + '/' + jsonValue["Animation"].asString();
 
@@ -170,7 +168,9 @@ namespace Helpers
                 {
                     m.r[ind++] = ParseVector(animationData["Move"][frameNumStr][itr.key().asString()][itr1.key().asString()].asString());
                 }
-                frame.Transforms[boneIndex++] = m;
+                std::string name = itr.key().asString();
+                Bone* b = armature->GetBoneByName(name);
+                frame.Transforms[b->ID] = m;
             }
 
             component->Frames.push_back(frame);
@@ -194,7 +194,7 @@ namespace Helpers
         std::vector<Bone> bones;
         ParseBones(armatureData["Armature"], bones);
 
-        component->SetBones(bones);
+        component->Init(bones);
     }
 
     void EntityLoader::LoadComponent(Json::Value& jsonValue, const std::shared_ptr<Transformation>& component)

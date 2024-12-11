@@ -10,6 +10,7 @@ struct Bone
     BoneId ID;
     std::string Name;
     BoneId ParentId;
+    std::vector<Bone*> Children;
 
     DirectX::XMMATRIX Offset;
     DirectX::XMMATRIX LocalTransform;
@@ -22,15 +23,19 @@ struct Armature : public IComponent
 {
     Armature();
 
+    void Init(const std::vector<Bone>& bones);
+
     void ApplyAnimation(const std::map<BoneId, DirectX::XMMATRIX>& boneTransforms);
     void UpdateGlobalTransformations();
 
     void SetBoneLocalTransform(BoneId id, const DirectX::XMMATRIX& transform);
 
     void AddBone(const Bone& bone);
-    void SetBones(const std::vector<Bone>& bones);
     std::vector<Bone>& GetBones();
     const std::vector<Bone>& GetBones() const;
+    const std::vector<Bone*>& GetSortedBones() const;
+
+    Bone* GetBoneByName(const std::string& name);
 
     void SetName(const std::string& name);
     const std::string& GetName() const;
@@ -39,6 +44,11 @@ struct Armature : public IComponent
     dx12::Resource BoneDebugTransforms;
 
 private:
+    Bone* FindBone(BoneId id);
+
     std::string _name;
+
+    Bone* _root;
     std::vector<Bone> _bones;
+    std::vector<Bone*> _bonesSorted;
 };

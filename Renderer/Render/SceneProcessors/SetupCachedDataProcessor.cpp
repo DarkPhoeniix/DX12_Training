@@ -91,10 +91,11 @@ void SetupCachedDataProcessor::ProcessEntity(SceneLayer::Entity& entity, dx12::C
         armature->ApplyAnimation(transforms);
         armature->UpdateGlobalTransformations();
 
-        const std::vector<Bone>& bones = armature->GetBones();
+        const std::vector<Bone*>& bones = armature->GetSortedBones();
         for (int i = 0; i < bones.size(); ++i)
         {
-            data[i] = bones[i].Offset * bones[i].GlobalTransform;// *bones[i].Offset;
+            DirectX::XMMATRIX result = bones[i]->Offset * bones[i]->GlobalTransform;
+            data[i] = result;
         }
     }
 }

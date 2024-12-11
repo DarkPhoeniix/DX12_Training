@@ -52,8 +52,8 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
 
     // Camera Setup
     {
-        XMVECTOR pos = XMVectorSet(-5.0f, 5.0f, -2.0f, 1.0f);
-        XMVECTOR target = XMVectorSet(0.0f, 0.0f, -2.0f, 1.0f);
+        XMVECTOR pos = XMVectorSet(-300.0f, 300.0f, -300.0f, 1.0f);
+        XMVECTOR target = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
         XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
         RECT windowSize;
@@ -73,7 +73,8 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
         _skybox.Init();
         _skybox.Load("Wyvern\\Skybox.node", commandList);
 
-        _scene.LoadScene("AnimTest\\AnimTest.scene", commandList);
+        //_scene.LoadScene("AnimTest\\AnimTest.scene", commandList);
+        _scene.LoadScene("Dragon\\DragonScene.scene", commandList);
 
         uploadProcessor.Process(_scene, commandList);
 
@@ -397,12 +398,15 @@ void DXRenderer::RenderArmature(TaskGPU& task)
             {
                 DirectX::XMVECTOR* data = (DirectX::XMVECTOR*)arm->BoneDebugTransforms.Map();
 
-                for (int i = 1, j = 0; i < arm->GetBones().size(); ++i, j+=2)
+                const auto& sortedBones = arm->GetSortedBones();
+                int ind = 0;
+                for (const auto& bone : sortedBones)
                 {
-                    DirectX::XMVECTOR t = (arm->GetBones()[i - 1].GlobalTransform).r[3];
-                    data[j] = DirectX::XMVectorSet(-t.m128_f32[0], -t.m128_f32[1], -t.m128_f32[2], t.m128_f32[3]);
-                    t = ( arm->GetBones()[i].GlobalTransform).r[3];
-                    data[j+1] = DirectX::XMVectorSet(-t.m128_f32[0], -t.m128_f32[1], -t.m128_f32[2], t.m128_f32[3]);
+                    for (const auto& child : bone->Children)
+                    {
+                        data[ind++] = bone->GlobalTransform.r[3];
+                        data[ind++] = child->GlobalTransform.r[3];
+                    }
                 }
 
                 D3D12_CPU_DESCRIPTOR_HANDLE rtv = _currentFrame->_targetHeap->GetCPUDescriptorHandleForHeapStart();

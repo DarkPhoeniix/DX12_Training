@@ -24,7 +24,7 @@ namespace Helpers
         std::shared_ptr<SceneLayer::Entity> LoadEntity(SceneLayer::SceneCache* sceneCache, SceneLayer::Entity* parent = nullptr);
 
     private:
-        void LoadComponent(Json::Value& jsonValue, const std::shared_ptr<Animation>& component);
+        void LoadComponent(Json::Value& jsonValue, Armature* armature, const std::shared_ptr<Animation>& component);
         void LoadComponent(Json::Value& jsonValue, const std::shared_ptr<Armature>& component);
         void LoadComponent(Json::Value& jsonValue, const std::shared_ptr<Transformation>& component);
         void LoadComponent(Json::Value& jsonValue, const std::shared_ptr<Material>& component);

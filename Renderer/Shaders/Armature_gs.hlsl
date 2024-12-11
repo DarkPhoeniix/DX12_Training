@@ -27,7 +27,7 @@ ConstantBuffer<ArmatureData> Armature : register(b1);
 
 StructuredBuffer<float4> BonePositions : register(t0);
 
-[maxvertexcount(256)]
+[maxvertexcount(128)]
 void main(point GeometryInput input[1], inout LineStream<PixelInput> lineStream)
 {
     uint size = Armature.Size;
