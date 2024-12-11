@@ -15,6 +15,8 @@
 #include "SceneProcessors/UploadSceneProcessor.h"
 #include "SceneProcessors/DrawSceneProcessor.h"
 
+#include "Scene/ECS/Components/Armature.h"
+
 #include "GUI/GUI.h"
 
 using namespace DirectX;
@@ -42,6 +44,7 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
     _deferredPipeline.Parse("PipelineDescriptions\\DeferredShading.tech");
     _AABBpipeline.Parse("PipelineDescriptions\\AABBRenderPipeline.tech");
     _SkyboxPipeline.Parse("PipelineDescriptions\\SkyboxPipeline.tech");
+    _ArmatureDebugPipeline.Parse("PipelineDescriptions\\ArmatureDebugPipeline.tech");
 
     _gBuffer.Init({ 1280, 720 });
 
@@ -156,12 +159,21 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         RenderSkybox(*task);
     }
 
+    // Render Armature
+    {
+        TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, &_ArmatureDebugPipeline);
+        task->SetName("armature");
+        task->AddDependency("deferred");
+        task->AddDependency("skybox");
+
+        RenderArmature(*task);        
+    }
+
     //GUI
     {
         TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
         task->SetName("gui");
-        task->AddDependency("deferred");
-        task->AddDependency("skybox");
+        task->AddDependency("armature");
 
         RenderGUI(*task);
     }
@@ -362,6 +374,54 @@ void DXRenderer::RenderSkybox(TaskGPU& task)
         int yThreadGroups = (uint32_t)std::ceilf(viewportSize.y / 8.0f);
 
         commandList.GetDXCommandList()->Dispatch(xThreadGroups, yThreadGroups, 1);
+    }
+    PIXEndEvent(commandList.GetDXCommandList().Get());
+
+    commandList.Close();
+}
+
+void DXRenderer::RenderArmature(TaskGPU& task)
+{
+    dx12::CommandList& commandList = *task.GetCommandLists().front();
+
+    PIXBeginEvent(commandList.GetDXCommandList().Get(), 8, "Armature");
+    {
+        commandList.SetPipelineState(_ArmatureDebugPipeline);
+        commandList.SetRootSignature(_ArmatureDebugPipeline);
+
+        for (auto& node : _scene.GetRootNodes())
+        {
+            Armature* arm = node->GetComponentAs<Armature>("Armature");
+
+            if (arm)
+            {
+                DirectX::XMVECTOR* data = (DirectX::XMVECTOR*)arm->BoneDebugTransforms.Map();
+
+                for (int i = 1, j = 0; i < arm->GetBones().size(); ++i, j+=2)
+                {
+                    DirectX::XMVECTOR t = (arm->GetBones()[i - 1].GlobalTransform).r[3];
+                    data[j] = DirectX::XMVectorSet(-t.m128_f32[0], -t.m128_f32[1], -t.m128_f32[2], t.m128_f32[3]);
+                    t = ( arm->GetBones()[i].GlobalTransform).r[3];
+                    data[j+1] = DirectX::XMVectorSet(-t.m128_f32[0], -t.m128_f32[1], -t.m128_f32[2], t.m128_f32[3]);
+                }
+
+                D3D12_CPU_DESCRIPTOR_HANDLE rtv = _currentFrame->_targetHeap->GetCPUDescriptorHandleForHeapStart();
+                D3D12_CPU_DESCRIPTOR_HANDLE dsv = _currentFrame->_depthHeap->GetCPUDescriptorHandleForHeapStart();
+
+                commandList.SetViewport(_camera.GetViewport());
+                commandList.SetRenderTarget(&rtv, &dsv);
+
+                DirectX::XMMATRIX vp = _camera.ViewProjection();
+
+                commandList.SetConstants(0, 16, &vp);
+                commandList.SetConstant(1, (uint32_t)((arm->GetBones().size() - 1) * 2));
+                commandList.SetSRV(2, arm->BoneDebugTransforms.OffsetGPU(0));
+
+                commandList.SetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
+
+                commandList.Draw(1);
+            }
+        }
     }
     PIXEndEvent(commandList.GetDXCommandList().Get());
 

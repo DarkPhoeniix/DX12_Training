@@ -32,6 +32,7 @@ private:
     void GeometryPass(TaskGPU& task);
     void LightingPass(TaskGPU& task);
     void RenderSkybox(TaskGPU& task);
+    void RenderArmature(TaskGPU& task);
     void RenderGUI(TaskGPU& task);
     void Present(TaskGPU& task);
 
@@ -44,6 +45,7 @@ private:
     dx12::RootSignature _renderPipeline;
     dx12::RootSignature _AABBpipeline;
     dx12::RootSignature _SkyboxPipeline;
+    dx12::RootSignature _ArmatureDebugPipeline;
 
     SceneLayer::Skybox _skybox;
 

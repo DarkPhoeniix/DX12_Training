@@ -126,6 +126,12 @@ void UploadSceneProcessor::ProcessEntity(SceneLayer::Entity& entity, dx12::Comma
         armature->BoneTransforms.SetResourceDescription(desc);
         armature->BoneTransforms.CreateCommitedResource();
         armature->BoneTransforms.SetName(entity.GetName() + "_Bones");
+
+        desc.SetSize({ ((uint32_t)armature->GetBones().size() - 1) * 2 * 16 , 1 });
+
+        armature->BoneDebugTransforms.SetResourceDescription(desc);
+        armature->BoneDebugTransforms.CreateCommitedResource();
+        armature->BoneDebugTransforms.SetName(entity.GetName() + "_DebugBones");
     }
 }
 

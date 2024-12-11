@@ -354,6 +354,9 @@
     <FxCompile Include="Shaders\_deprecated\SwirlPostFX_cs.hlsl">
       <Filter>Shaders\_deprecated</Filter>
     </FxCompile>
+    <FxCompile Include="Shaders\Armature_vs.hlsl" />
+    <FxCompile Include="Shaders\Armature_ps.hlsl" />
+    <FxCompile Include="Shaders\Armature_gs.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -423,6 +426,11 @@
     <None Include="Shaders\_deprecated\SemiAmbientLighting.hlsli">
       <Filter>Shaders\_deprecated</Filter>
     </None>
+    <None Include="Shaders\Armature_rootsig.hlsli" />
+    <None Include="PipelineDescriptions\ArmatureDebugPipeline.blend" />
+    <None Include="PipelineDescriptions\ArmatureDebugPipeline.depth" />
+    <None Include="PipelineDescriptions\ArmatureDebugPipeline.raster" />
+    <None Include="PipelineDescriptions\ArmatureDebugPipeline.tech" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resources\Resource.rc">

@@ -36,6 +36,7 @@ struct Armature : public IComponent
     const std::string& GetName() const;
 
     dx12::Resource BoneTransforms;
+    dx12::Resource BoneDebugTransforms;
 
 private:
     std::string _name;
