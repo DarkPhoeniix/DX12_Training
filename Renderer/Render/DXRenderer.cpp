@@ -16,6 +16,7 @@
 #include "SceneProcessors/DrawSceneProcessor.h"
 
 #include "Scene/ECS/Components/Armature.h"
+#include "Scene/ECS/Components/Transformation.h"
 
 #include "GUI/GUI.h"
 
@@ -52,7 +53,7 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
 
     // Camera Setup
     {
-        XMVECTOR pos = XMVectorSet(-300.0f, 300.0f, -300.0f, 1.0f);
+        XMVECTOR pos = XMVectorSet(0.0f, 30.0f, 30.0f, 1.0f);
         XMVECTOR target = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
         XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
@@ -108,12 +109,10 @@ void DXRenderer::OnUpdate(Events::UpdateEvent& updateEvent)
 
     _scene.GetCache().SetTime(updateEvent.totalTime);
 
-    XMVECTOR mov = 10.0f * XMVectorSet(sinf(updateEvent.totalTime * 0.5f), 0.0f, cosf(updateEvent.totalTime * 0.5f), 1.0f);
-    XMVECTOR tar = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+    XMVECTOR mov = 37.0f * XMVectorSet(sinf(updateEvent.totalTime * 0.5f), 0.8f, cosf(updateEvent.totalTime * 0.5f), 1.0f);
+    XMVECTOR tar = XMVectorSet(0.0f, 17.0f, 0.0f, 1.0f);
     XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
     //_camera.LookAt(mov, tar, up);
-
-
 
     _deltaTime = updateEvent.elapsedTime;
 }
@@ -175,6 +174,8 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
         task->SetName("gui");
         task->AddDependency("armature");
+        //task->AddDependency("deferred");
+        //task->AddDependency("skybox");
 
         RenderGUI(*task);
     }
@@ -393,6 +394,7 @@ void DXRenderer::RenderArmature(TaskGPU& task)
         for (auto& node : _scene.GetRootNodes())
         {
             Armature* arm = node->GetComponentAs<Armature>("Armature");
+            Transformation* transform = node->GetComponentAs<Transformation>("Transformation");
 
             if (arm)
             {
@@ -404,8 +406,8 @@ void DXRenderer::RenderArmature(TaskGPU& task)
                 {
                     for (const auto& child : bone->Children)
                     {
-                        data[ind++] = bone->GlobalTransform.r[3];
-                        data[ind++] = child->GlobalTransform.r[3];
+                        data[ind++] = DirectX::XMVector4Transform(bone->GlobalTransform.r[3], transform->Transform);
+                        data[ind++] = DirectX::XMVector4Transform(child->GlobalTransform.r[3], transform->Transform);
                     }
                 }
 

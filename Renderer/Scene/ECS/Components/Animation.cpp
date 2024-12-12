@@ -24,7 +24,7 @@ std::map<BoneId, DirectX::XMMATRIX> Animation::GetBonesTransforms(float time) co
 {
     std::vector<DirectX::XMMATRIX> transforms;
 
-    float normalizedTime = std::fmodf(time * TICKS_PER_SEC, 30);
+    float normalizedTime = std::fmodf(time * TicksPerSecond, Duration);
     const AnimationFrame& frame = GetInterpolatedKeyFrame(Frames, normalizedTime).first;
     for (const auto& [boneId, boneTransform] : frame.Transforms)
     {

@@ -46,10 +46,12 @@ VSOutput main(VSInput IN)
     VSOutput output;
     output.WorldPosition    = worldPosition;
     output.Position         = mul(worldPosition, Scene.ViewProjection);
-    output.Normal           = normalize(mul(IN.Normal, (float3x3)Model.Transform));
+    float3 normal           = normalize(mul(IN.Normal, (float3x3)boneTransform));
+    output.Normal           = normalize(mul(normal, (float3x3) Model.Transform));
     output.Color            = IN.Color;
     output.Texture          = IN.Texture;
-    output.Tangent          = normalize(mul(IN.Tangent, (float3x3)Model.Transform));
+    float3 tangent          = normalize(mul(IN.Tangent, (float3x3) boneTransform));
+    output.Tangent          = normalize(mul(tangent, (float3x3) Model.Transform));
 
     return output;
 }

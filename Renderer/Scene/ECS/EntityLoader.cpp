@@ -148,10 +148,9 @@ namespace Helpers
         Json::Value animationData;
         file >> animationData;
 
-        // TODO: change test name
-        component->Name = "Move";
+        component->Name = jsonValue["Animation"].asString();
 
-        int framesNum = animationData["Move"].size();
+        int framesNum = animationData["Frames"].size();
         for (int frameIndex = 1; frameIndex <= framesNum; ++frameIndex)
         {
             AnimationFrame frame;
@@ -160,15 +159,15 @@ namespace Helpers
             std::string frameNumStr = std::to_string(frameIndex);
             std::uint32_t boneIndex = 0;
 
-            for (Json::Value::const_iterator itr = animationData["Move"][frameNumStr].begin(); itr != animationData["Move"][frameNumStr].end(); itr++)
+            for (Json::Value::const_iterator frameIt = animationData["Frames"][frameNumStr].begin(); frameIt != animationData["Frames"][frameNumStr].end(); frameIt++)
             {
                 int ind = 0;
-                DirectX::XMMATRIX m;
-                for (Json::Value::const_iterator itr1 = animationData["Move"][frameNumStr][itr.key().asString()].begin(); itr1 != animationData["Move"][frameNumStr][itr.key().asString()].end(); itr1++)
+                DirectX::XMMATRIX m = DirectX::XMMatrixIdentity();
+                for (Json::Value::const_iterator boneIt = animationData["Frames"][frameNumStr][frameIt.key().asString()].begin(); boneIt != animationData["Frames"][frameNumStr][frameIt.key().asString()].end(); boneIt++)
                 {
-                    m.r[ind++] = ParseVector(animationData["Move"][frameNumStr][itr.key().asString()][itr1.key().asString()].asString());
+                    m.r[ind++] = ParseVector(animationData["Frames"][frameNumStr][frameIt.key().asString()][boneIt.key().asString()].asString());
                 }
-                std::string name = itr.key().asString();
+                std::string name = frameIt.key().asString();
                 Bone* b = armature->GetBoneByName(name);
                 frame.Transforms[b->ID] = m;
             }
@@ -176,8 +175,8 @@ namespace Helpers
             component->Frames.push_back(frame);
         }
 
-        component->TicksPerSecond = 25.0f;
-        component->Duration = framesNum / 25.0f;
+        component->TicksPerSecond = animationData["FrameRate"].asFloat();
+        component->Duration = animationData["Duration"].asFloat();
     }
 
     void EntityLoader::LoadComponent(Json::Value& jsonValue, const std::shared_ptr<Armature>& component)

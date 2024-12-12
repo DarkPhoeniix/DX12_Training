@@ -6,7 +6,7 @@ using namespace DirectX;
 
 namespace
 {
-	constexpr float CAMERA_MOVEMENT_SPEED = 1.025f;
+	constexpr float CAMERA_MOVEMENT_SPEED = 0.05f;
 } // namespace unnamed
 
 namespace SceneLayer
