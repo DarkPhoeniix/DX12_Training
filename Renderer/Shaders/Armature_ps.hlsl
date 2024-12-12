@@ -2,10 +2,10 @@
 struct PixelInput
 {
     float4 Position : SV_Position;
-    float4 Color    : COLOR;
+    float2 Color    : COLOR;
 };
 
 float4 main(PixelInput input) : SV_Target
 {
-    return input.Color;
+    return float4(input.Color, 0.0f, 1.0f);
 }
