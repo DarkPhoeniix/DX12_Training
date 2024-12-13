@@ -7,6 +7,8 @@
 #include "Scene/Camera.h"
 #include "Scene/ECS/EntityLoader.h"
 
+#include <queue>
+
 namespace
 {
     struct SceneDesc
@@ -50,6 +52,54 @@ namespace SceneLayer
     std::vector<std::shared_ptr<Entity>>& Scene::GetRootNodes()
     {
         return _rootNodes;
+    }
+
+    std::shared_ptr<Entity> Scene::FindNodeByName(const std::string& name) const
+    {
+        std::shared_ptr<Entity> currentEntity = nullptr;
+
+        std::queue<std::shared_ptr<Entity>> entities;
+        for (const auto& rootNode : _rootNodes)
+        {
+            entities.push(rootNode);
+        }
+
+        while (!entities.empty())
+        {
+            currentEntity = entities.front();
+            entities.pop();
+
+            if (currentEntity->GetName() == name)
+            {
+                return currentEntity;
+            }
+        }
+
+        return nullptr;
+    }
+
+    std::shared_ptr<Entity> Scene::FindNodeByComponentName(const std::string& componentName) const
+    {
+        std::shared_ptr<Entity> currentEntity = nullptr;
+
+        std::queue<std::shared_ptr<Entity>> entities;
+        for (const auto& rootNode : _rootNodes)
+        {
+            entities.push(rootNode);
+        }
+
+        while (!entities.empty())
+        {
+            currentEntity = entities.front();
+            entities.pop();
+
+            if (currentEntity->GetComponent(componentName))
+            {
+                return currentEntity;
+            }
+        }
+
+        return nullptr;
     }
 
     SceneCache& Scene::GetCache()

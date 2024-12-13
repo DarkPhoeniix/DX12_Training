@@ -4,8 +4,6 @@
 
 #include "Animation.h"
 
-#include <queue>
-
 namespace
 {
     void UpdateBone(Bone* bone, const DirectX::XMMATRIX parentTransform = DirectX::XMMatrixIdentity())

@@ -10,6 +10,7 @@
 #include "Scene/ECS/Components/Animation.h"
 #include "Scene/ECS/Components/Material.h"
 #include "Scene/ECS/Components/Mesh.h"
+#include "Scene/ECS/Components/Skybox.h"
 
 void UploadSceneProcessor::Process(SceneLayer::Scene& scene, dx12::CommandList& commandList)
 {
@@ -132,6 +133,25 @@ void UploadSceneProcessor::ProcessEntity(SceneLayer::Entity& entity, dx12::Comma
         armature->BoneDebugTransforms.SetResourceDescription(desc);
         armature->BoneDebugTransforms.CreateCommitedResource();
         armature->BoneDebugTransforms.SetName(entity.GetName() + "_DebugBones");
+    }
+
+    Skybox* skybox = entity.GetComponentAs<Skybox>("Skybox");
+    if (skybox)
+    {
+        skybox->SkydomeTexture->SetDescriptorHeap(&skybox->DescHeap);
+
+        skybox->DescHeap.PlaceResource(skybox->SkydomeTexture.get());
+        skybox->TexHeap.PlaceResource(*skybox->SkydomeTexture);
+
+        skybox->SkydomeTexture->UploadToGPU(commandList);
+
+        D3D12_SHADER_RESOURCE_VIEW_DESC SRVDesc = {};
+        SRVDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+        SRVDesc.Texture2D.MipLevels = 1;
+        SRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+        SRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+        dx12::Device::GetDXDevice()->CreateShaderResourceView(skybox->SkydomeTexture->GetDXResource().Get(), &SRVDesc, skybox->DescHeap.GetResourceCPUHandle(skybox->SkydomeTexture.get()));
     }
 }
 

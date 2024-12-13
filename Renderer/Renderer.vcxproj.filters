@@ -75,9 +75,6 @@
     <ClCompile Include="Window\Win32Window.cpp">
       <Filter>Window</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\NodeFactory.cpp">
-      <Filter>Scene</Filter>
-    </ClCompile>
     <ClCompile Include="Scene\Scene.cpp">
       <Filter>Scene</Filter>
     </ClCompile>
@@ -96,9 +93,6 @@
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="Main.cpp" />
-    <ClCompile Include="Scene\Skybox.cpp">
-      <Filter>Scene</Filter>
-    </ClCompile>
     <ClCompile Include="GUI\GUI.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
@@ -218,9 +212,6 @@
     <ClInclude Include="Window\IWindowEventListener.h">
       <Filter>Window</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\NodeFactory.h">
-      <Filter>Scene</Filter>
-    </ClInclude>
     <ClInclude Include="Scene\Scene.h">
       <Filter>Scene</Filter>
     </ClInclude>
@@ -249,9 +240,6 @@
     </ClInclude>
     <ClInclude Include="Resources\resource1.h">
       <Filter>Resources</Filter>
-    </ClInclude>
-    <ClInclude Include="Scene\Skybox.h">
-      <Filter>Scene</Filter>
     </ClInclude>
     <ClInclude Include="GUI\GUI.h">
       <Filter>GUI</Filter>

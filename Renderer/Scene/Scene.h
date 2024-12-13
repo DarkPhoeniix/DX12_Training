@@ -8,14 +8,8 @@ namespace dx12
     class CommandList;
 } // namespace dx12
 
-namespace Core
-{
-    class Texture;
-} // namespace Core
-
 namespace SceneLayer
 {
-    class FrustumVolume;
     class Camera;
 
     class Scene
@@ -25,6 +19,8 @@ namespace SceneLayer
         ~Scene();
 
         std::vector<std::shared_ptr<Entity>>& GetRootNodes();
+        std::shared_ptr<Entity> FindNodeByName(const std::string& name) const;
+        std::shared_ptr<Entity> FindNodeByComponentName(const std::string& componentName) const;
 
         SceneCache& GetCache();
 

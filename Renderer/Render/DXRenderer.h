@@ -4,7 +4,6 @@
 #include "RootSignature.h"
 #include "Scene/Camera.h"
 #include "Scene/Scene.h"
-#include "Scene/Skybox.h"
 #include "Render/Frame/Frame.h"
 #include "Window/IWindowEventListener.h"
 
@@ -46,8 +45,6 @@ private:
     dx12::RootSignature _AABBpipeline;
     dx12::RootSignature _SkyboxPipeline;
     dx12::RootSignature _ArmatureDebugPipeline;
-
-    SceneLayer::Skybox _skybox;
 
     Frame* _currentFrame;
 

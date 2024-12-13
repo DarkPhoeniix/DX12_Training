@@ -17,6 +17,7 @@
 
 #include "Scene/ECS/Components/Armature.h"
 #include "Scene/ECS/Components/Transformation.h"
+#include "Scene/ECS/Components/Skybox.h"
 
 #include "GUI/GUI.h"
 
@@ -71,8 +72,6 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
     {
         loadTask->SetName("Upload Data");
         dx12::CommandList& commandList = *loadTask->GetCommandLists().front();
-        _skybox.Init();
-        _skybox.Load("Wyvern\\Skybox.node", commandList);
 
         //_scene.LoadScene("AnimTest\\AnimTest.scene", commandList);
         _scene.LoadScene("Dragon\\DragonScene.scene", commandList);
@@ -112,7 +111,7 @@ void DXRenderer::OnUpdate(Events::UpdateEvent& updateEvent)
     XMVECTOR mov = 37.0f * XMVectorSet(sinf(updateEvent.totalTime * 0.5f), 0.8f, cosf(updateEvent.totalTime * 0.5f), 1.0f);
     XMVECTOR tar = XMVectorSet(0.0f, 17.0f, 0.0f, 1.0f);
     XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-    //_camera.LookAt(mov, tar, up);
+    _camera.LookAt(mov, tar, up);
 
     _deltaTime = updateEvent.elapsedTime;
 }
@@ -348,6 +347,14 @@ void DXRenderer::RenderSkybox(TaskGPU& task)
 {
     dx12::CommandList& commandList = *task.GetCommandLists().front();
 
+    std::shared_ptr<SceneLayer::Entity> entity = _scene.FindNodeByComponentName("Skybox");
+    if (!entity)
+    {
+        return;
+    }
+
+    Skybox* skybox = entity->GetComponentAs<Skybox>("Skybox");
+
     PIXBeginEvent(commandList.GetDXCommandList().Get(), 3, "Skybox");
     {
         commandList.SetPipelineState(_SkyboxPipeline);
@@ -358,7 +365,7 @@ void DXRenderer::RenderSkybox(TaskGPU& task)
 
         D3D12_CPU_DESCRIPTOR_HANDLE handle = _currentFrame->_testHeap.GetHeapStartCPUHandle();
         handle.ptr += 64;
-        dx12::Device::GetDXDevice()->CopyDescriptorsSimple(1, handle, _skybox._descHeap.GetHeapStartCPUHandle(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+        dx12::Device::GetDXDevice()->CopyDescriptorsSimple(1, handle, skybox->DescHeap.GetHeapStartCPUHandle(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
         ID3D12DescriptorHeap* heap[1] = { _currentFrame->_testHeap.GetDXDescriptorHeap().Get() };
         commandList.GetDXCommandList()->SetDescriptorHeaps(1, heap);
