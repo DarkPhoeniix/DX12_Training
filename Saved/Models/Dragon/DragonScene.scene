@@ -2,6 +2,7 @@
     "Name": "",
     "Nodes": [
         "Dragon.node",
-        "DirectionalLight.node"
+        "Sun.node",
+        "Skybox.node"
     ]
 }
