@@ -6,7 +6,8 @@
 struct AnimationFrame
 {
     uint32_t Index;
-    std::map<BoneId, DirectX::XMMATRIX> Transforms;
+    std::map<BoneId, DirectX::XMVECTOR> Locations;
+    std::map<BoneId, DirectX::XMVECTOR> Rotations;
 };
 
 struct Animation : public IComponent

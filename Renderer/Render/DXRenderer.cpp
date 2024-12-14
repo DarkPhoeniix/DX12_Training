@@ -345,8 +345,6 @@ void DXRenderer::LightingPass(TaskGPU& task)
 
 void DXRenderer::RenderSkybox(TaskGPU& task)
 {
-    dx12::CommandList& commandList = *task.GetCommandLists().front();
-
     std::shared_ptr<SceneLayer::Entity> entity = _scene.FindNodeByComponentName("Skybox");
     if (!entity)
     {
@@ -354,6 +352,8 @@ void DXRenderer::RenderSkybox(TaskGPU& task)
     }
 
     Skybox* skybox = entity->GetComponentAs<Skybox>("Skybox");
+
+    dx12::CommandList& commandList = *task.GetCommandLists().front();
 
     PIXBeginEvent(commandList.GetDXCommandList().Get(), 3, "Skybox");
     {

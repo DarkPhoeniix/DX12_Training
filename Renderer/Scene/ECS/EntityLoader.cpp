@@ -84,7 +84,7 @@ namespace Helpers
         entity->SetName(jsonRoot["Name"].asCString());
 
         // Parse children nodes
-        for (auto& node : jsonRoot["Nodes"])
+        for (auto& node : jsonRoot["Children"])
         {
             std::string nodeFilepath = _parentFilepath + '/' + node.asString();
 
@@ -151,7 +151,7 @@ namespace Helpers
         component->Name = jsonValue["Animation"].asString();
 
         int framesNum = animationData["Frames"].size();
-        for (int frameIndex = 1; frameIndex <= framesNum; ++frameIndex)
+        for (int frameIndex = 0; frameIndex < framesNum; ++frameIndex)
         {
             AnimationFrame frame;
             frame.Index = frameIndex;
@@ -161,15 +161,11 @@ namespace Helpers
 
             for (Json::Value::const_iterator frameIt = animationData["Frames"][frameNumStr].begin(); frameIt != animationData["Frames"][frameNumStr].end(); frameIt++)
             {
-                int ind = 0;
-                DirectX::XMMATRIX m = DirectX::XMMatrixIdentity();
-                for (Json::Value::const_iterator boneIt = animationData["Frames"][frameNumStr][frameIt.key().asString()].begin(); boneIt != animationData["Frames"][frameNumStr][frameIt.key().asString()].end(); boneIt++)
-                {
-                    m.r[ind++] = ParseVector(animationData["Frames"][frameNumStr][frameIt.key().asString()][boneIt.key().asString()].asString());
-                }
                 std::string name = frameIt.key().asString();
                 Bone* b = armature->GetBoneByName(name);
-                frame.Transforms[b->ID] = m;
+
+                frame.Locations[b->ID] = ParseVector(animationData["Frames"][frameNumStr][frameIt.key().asString()]["LocationVec"].asString());
+                frame.Rotations[b->ID] = ParseVector(animationData["Frames"][frameNumStr][frameIt.key().asString()]["RotationQuat"].asString());
             }
 
             component->Frames.push_back(frame);
