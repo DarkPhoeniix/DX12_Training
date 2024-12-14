@@ -3,14 +3,13 @@
 #include "Scene/SceneCache.h"
 #include "Scene/ECS/Entity.h"
 
-namespace Core
+namespace dx12
 {
-    class Texture;
-} // namespace Core
+    class CommandList;
+} // namespace dx12
 
 namespace SceneLayer
 {
-    class FrustumVolume;
     class Camera;
 
     class Scene
@@ -20,6 +19,8 @@ namespace SceneLayer
         ~Scene();
 
         std::vector<std::shared_ptr<Entity>>& GetRootNodes();
+        std::shared_ptr<Entity> FindNodeByName(const std::string& name) const;
+        std::shared_ptr<Entity> FindNodeByComponentName(const std::string& componentName) const;
 
         SceneCache& GetCache();
 

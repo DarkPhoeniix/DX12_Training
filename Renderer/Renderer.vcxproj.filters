@@ -75,9 +75,6 @@
     <ClCompile Include="Window\Win32Window.cpp">
       <Filter>Window</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\NodeFactory.cpp">
-      <Filter>Scene</Filter>
-    </ClCompile>
     <ClCompile Include="Scene\Scene.cpp">
       <Filter>Scene</Filter>
     </ClCompile>
@@ -96,9 +93,6 @@
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="Main.cpp" />
-    <ClCompile Include="Scene\Skybox.cpp">
-      <Filter>Scene</Filter>
-    </ClCompile>
     <ClCompile Include="GUI\GUI.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
@@ -151,6 +145,14 @@
       <Filter>Scene\ECS</Filter>
     </ClCompile>
     <ClCompile Include="Render\GPUStructs\GPULightDesc.cpp" />
+    <ClCompile Include="Scene\ECS\Components\Animation.cpp" />
+    <ClCompile Include="Scene\ECS\Components\Light.cpp" />
+    <ClCompile Include="Scene\ECS\Components\Material.cpp" />
+    <ClCompile Include="Scene\ECS\Components\Mesh.cpp" />
+    <ClCompile Include="Scene\ECS\Components\Transformation.cpp" />
+    <ClCompile Include="Scene\ECS\Components\Skybox.cpp" />
+    <ClCompile Include="Scene\ECS\Components\Armature.cpp" />
+    <ClCompile Include="Render\SceneProcessors\UpdateSceneProcessor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Events\IEvent.h">
@@ -210,9 +212,6 @@
     <ClInclude Include="Window\IWindowEventListener.h">
       <Filter>Window</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\NodeFactory.h">
-      <Filter>Scene</Filter>
-    </ClInclude>
     <ClInclude Include="Scene\Scene.h">
       <Filter>Scene</Filter>
     </ClInclude>
@@ -241,9 +240,6 @@
     </ClInclude>
     <ClInclude Include="Resources\resource1.h">
       <Filter>Resources</Filter>
-    </ClInclude>
-    <ClInclude Include="Scene\Skybox.h">
-      <Filter>Scene</Filter>
     </ClInclude>
     <ClInclude Include="GUI\GUI.h">
       <Filter>GUI</Filter>
@@ -300,6 +296,14 @@
       <Filter>Scene\ECS</Filter>
     </ClInclude>
     <ClInclude Include="Render\GPUStructs\GPULightDesc.h" />
+    <ClInclude Include="Scene\ECS\Components\Animation.h" />
+    <ClInclude Include="Scene\ECS\Components\Light.h" />
+    <ClInclude Include="Scene\ECS\Components\Material.h" />
+    <ClInclude Include="Scene\ECS\Components\Mesh.h" />
+    <ClInclude Include="Scene\ECS\Components\Transformation.h" />
+    <ClInclude Include="Scene\ECS\Components\Skybox.h" />
+    <ClInclude Include="Scene\ECS\Components\Armature.h" />
+    <ClInclude Include="Render\SceneProcessors\UpdateSceneProcessor.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\AABB_gs.hlsl">
@@ -338,6 +342,9 @@
     <FxCompile Include="Shaders\_deprecated\SwirlPostFX_cs.hlsl">
       <Filter>Shaders\_deprecated</Filter>
     </FxCompile>
+    <FxCompile Include="Shaders\Armature_vs.hlsl" />
+    <FxCompile Include="Shaders\Armature_ps.hlsl" />
+    <FxCompile Include="Shaders\Armature_gs.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -407,6 +414,11 @@
     <None Include="Shaders\_deprecated\SemiAmbientLighting.hlsli">
       <Filter>Shaders\_deprecated</Filter>
     </None>
+    <None Include="Shaders\Armature_rootsig.hlsli" />
+    <None Include="PipelineDescriptions\ArmatureDebugPipeline.blend" />
+    <None Include="PipelineDescriptions\ArmatureDebugPipeline.depth" />
+    <None Include="PipelineDescriptions\ArmatureDebugPipeline.raster" />
+    <None Include="PipelineDescriptions\ArmatureDebugPipeline.tech" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resources\Resource.rc">

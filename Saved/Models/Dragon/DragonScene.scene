@@ -1,0 +1,8 @@
+{
+    "Name": "",
+    "Nodes": [
+        "Dragon.node",
+        "Sun.node",
+        "Skybox.node"
+    ]
+}

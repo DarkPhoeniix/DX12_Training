@@ -1,0 +1,21 @@
+{
+	"Type": "RenderArmatureTechnique",
+
+	"IsGraphicsPipeline": true,
+
+	"TopologyType": "point",
+
+	"Blend": "PipelineDescriptions\\ArmatureDebugPipeline.blend",
+	"Raster": "PipelineDescriptions\\ArmatureDebugPipeline.raster",
+	"Depth": "PipelineDescriptions\\ArmatureDebugPipeline.depth",
+
+	"RenderTargets": [
+		"R8G8B8A8_UNORM"
+	],
+	"DepthBuffer": "BackBufferDepth",
+	"Layout": null,
+
+	"VS": "Armature_vs.cso",
+	"GS": "Armature_gs.cso",
+	"PS": "Armature_ps.cso"
+}

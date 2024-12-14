@@ -4,7 +4,6 @@
 #include "RootSignature.h"
 #include "Scene/Camera.h"
 #include "Scene/Scene.h"
-#include "Scene/Skybox.h"
 #include "Render/Frame/Frame.h"
 #include "Window/IWindowEventListener.h"
 
@@ -32,6 +31,7 @@ private:
     void GeometryPass(TaskGPU& task);
     void LightingPass(TaskGPU& task);
     void RenderSkybox(TaskGPU& task);
+    void RenderArmature(TaskGPU& task);
     void RenderGUI(TaskGPU& task);
     void Present(TaskGPU& task);
 
@@ -44,8 +44,7 @@ private:
     dx12::RootSignature _renderPipeline;
     dx12::RootSignature _AABBpipeline;
     dx12::RootSignature _SkyboxPipeline;
-
-    SceneLayer::Skybox _skybox;
+    dx12::RootSignature _ArmatureDebugPipeline;
 
     Frame* _currentFrame;
 

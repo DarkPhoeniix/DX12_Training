@@ -3,6 +3,13 @@
 #include "EntityLoader.h"
 
 #include "Scene/ECS/Entity.h"
+#include "Scene/ECS/Components/Animation.h"
+#include "Scene/ECS/Components/Armature.h"
+#include "Scene/ECS/Components/Light.h"
+#include "Scene/ECS/Components/Material.h"
+#include "Scene/ECS/Components/Mesh.h"
+#include "Scene/ECS/Components/Skybox.h"
+#include "Scene/ECS/Components/Transformation.h"
 
 using namespace SceneLayer;
 
@@ -15,6 +22,38 @@ namespace
         iss >> r.x >> r.y >> r.z >> r.w;
 
         return DirectX::XMLoadFloat4(&r);
+    }
+
+    DirectX::XMMATRIX ParseMatrix(Json::Value& value)
+    {
+        DirectX::XMMATRIX matrix = DirectX::XMMatrixIdentity();
+
+        for (int i = 0; i < value.size(); ++i)
+        {
+            matrix.r[i] = ParseVector(value[std::format("r{}", i).c_str()].asString());
+        }
+
+        return matrix;
+    }
+
+    void ParseBones(Json::Value& jsonValue, std::vector<Bone>& bones, BoneId ParentId = -1)
+    {
+        int size = jsonValue.size();
+        for (int i = 0; i < size; ++i)
+        {
+            Json::Value& boneValue = jsonValue[i];
+
+            Bone bone;
+            bone.ID = boneValue["ID"].asUInt();
+            bone.Name = boneValue["Name"].asString();
+            bone.ParentId = ParentId;
+            bone.Offset = ParseMatrix(boneValue["Offset"]);
+            bone.LocalTransform = DirectX::XMMatrixIdentity();
+
+            bones.push_back(std::move(bone));
+
+            ParseBones(boneValue["Children"], bones, bone.ID);
+        }
     }
 } // namespace unnamed
 
@@ -45,7 +84,7 @@ namespace Helpers
         entity->SetName(jsonRoot["Name"].asCString());
 
         // Parse children nodes
-        for (auto& node : jsonRoot["Nodes"])
+        for (auto& node : jsonRoot["Children"])
         {
             std::string nodeFilepath = _parentFilepath + '/' + node.asString();
 
@@ -85,26 +124,77 @@ namespace Helpers
             LoadComponent(jsonRoot, component);
             entity->AddComponent(component);
         }
-        if (!jsonRoot["Tag"].isNull())
+        if (!jsonRoot["Armature"].isNull())
         {
-            std::shared_ptr<Tag> component = std::make_shared<Tag>();
+            std::shared_ptr<Armature> component = std::make_shared<Armature>();
             LoadComponent(jsonRoot, component);
+            entity->AddComponent(component);
+        }
+        if (!jsonRoot["Animation"].isNull())
+        {
+            std::shared_ptr<Animation> component = std::make_shared<Animation>();
+            LoadComponent(jsonRoot, entity->GetComponentAs<Armature>("Armature"), component);
             entity->AddComponent(component);
         }
 
         return entity;
     }
 
+    void EntityLoader::LoadComponent(Json::Value& jsonValue, Armature* armature, const std::shared_ptr<Animation>& component)
+    {
+        std::string animationFilepth = _parentFilepath + '/' + jsonValue["Animation"].asString();
+
+        std::ifstream file(animationFilepth, std::ios_base::in | std::ios_base::binary);
+        Json::Value animationData;
+        file >> animationData;
+
+        component->Name = jsonValue["Animation"].asString();
+
+        int framesNum = animationData["Frames"].size();
+        for (int frameIndex = 0; frameIndex < framesNum; ++frameIndex)
+        {
+            AnimationFrame frame;
+            frame.Index = frameIndex;
+
+            std::string frameNumStr = std::to_string(frameIndex);
+            std::uint32_t boneIndex = 0;
+
+            for (Json::Value::const_iterator frameIt = animationData["Frames"][frameNumStr].begin(); frameIt != animationData["Frames"][frameNumStr].end(); frameIt++)
+            {
+                std::string name = frameIt.key().asString();
+                Bone* b = armature->GetBoneByName(name);
+
+                frame.Locations[b->ID] = ParseVector(animationData["Frames"][frameNumStr][frameIt.key().asString()]["LocationVec"].asString());
+                frame.Rotations[b->ID] = ParseVector(animationData["Frames"][frameNumStr][frameIt.key().asString()]["RotationQuat"].asString());
+            }
+
+            component->Frames.push_back(frame);
+        }
+
+        component->TicksPerSecond = animationData["FrameRate"].asFloat();
+        component->Duration = animationData["Duration"].asFloat();
+    }
+
+    void EntityLoader::LoadComponent(Json::Value& jsonValue, const std::shared_ptr<Armature>& component)
+    {
+        std::string armatureFilepth = _parentFilepath + '/' + jsonValue["Armature"].asString();
+
+        std::ifstream file(armatureFilepth, std::ios_base::in | std::ios_base::binary);
+        Json::Value armatureData;
+        file >> armatureData;
+
+        std::string name = "Armature";
+        component->SetName(name);
+
+        std::vector<Bone> bones;
+        ParseBones(armatureData["Armature"], bones);
+
+        component->Init(bones);
+    }
+
     void EntityLoader::LoadComponent(Json::Value& jsonValue, const std::shared_ptr<Transformation>& component)
     {
-
-        component->Transform = DirectX::XMMatrixIdentity();
-
-        int matrixSize = jsonValue["Transform"].size();
-        for (int i = 0; i < matrixSize; ++i)
-        {
-            component->Transform.r[i] = ParseVector(jsonValue["Transform"][std::format("r{}", i).c_str()].asString());
-        }
+        component->Transform = ParseMatrix(jsonValue["Transform"]);
     }
 
     void EntityLoader::LoadComponent(Json::Value& jsonValue, const std::shared_ptr<Material>& component)
@@ -205,14 +295,11 @@ namespace Helpers
         component->SkydomeTexture = dx12::Texture::LoadFromFile(skyboxFilepath);
     }
 
-    void EntityLoader::LoadComponent(Json::Value& jsonValue, const std::shared_ptr<Tag>& component)
-    {
-        component->Name = jsonValue["Tag"].asString();
-    }
-
     void EntityLoader::LoadRawMesh(const std::string& filepath, const std::shared_ptr<Mesh>& meshComponent)
     {
         std::vector<DirectX::XMFLOAT3> points;
+        std::vector<DirectX::XMUINT4> groupIndexes;
+        std::vector<DirectX::XMFLOAT4> groupWeights;
         std::vector<DirectX::XMFLOAT3> normals;
         std::vector<DirectX::XMFLOAT4> colors;
         std::vector<DirectX::XMFLOAT2> UVs;
@@ -261,6 +348,18 @@ namespace Helpers
                 in >> tangent.x >> tangent.y >> tangent.z;
                 tangents.push_back(tangent);
             }
+            else if (input == "gi")
+            {
+                DirectX::XMUINT4 groupIndex;
+                in >> groupIndex.x >> groupIndex.y >> groupIndex.z >> groupIndex.w;
+                groupIndexes.push_back(groupIndex);
+            }
+            else if (input == "gw")
+            {
+                DirectX::XMFLOAT4 groupWeight;
+                in >> groupWeight.x >> groupWeight.y >> groupWeight.z >> groupWeight.w;
+                groupWeights.push_back(groupWeight);
+            }
             else if (input == "f")
             {
                 char sym;
@@ -277,7 +376,24 @@ namespace Helpers
                     vertex.UV = UVs[vt];
                     vertex.Tangent = tangents[vtan];
 
+                    SkinningVertexData skin;
+                    if (!groupIndexes.empty())
+                    {
+                        skin.BoneIds[0] = groupIndexes[v].x;
+                        skin.BoneIds[1] = groupIndexes[v].y;
+                        skin.BoneIds[2] = groupIndexes[v].z;
+                        skin.BoneIds[3] = groupIndexes[v].w;
+                        skin.BoneWeights[0] = groupWeights[v].x;
+                        skin.BoneWeights[1] = groupWeights[v].y;
+                        skin.BoneWeights[2] = groupWeights[v].z;
+                        skin.BoneWeights[3] = groupWeights[v].w;
+                    }
+
                     meshComponent->VertexData.push_back(vertex);
+                    if (!groupIndexes.empty())
+                    {
+                        meshComponent->SkinningVertexData.push_back(skin);
+                    }
                     meshComponent->IndexData.push_back(index++);
                 }
             }

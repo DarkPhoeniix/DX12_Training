@@ -4,14 +4,21 @@
 
 #include "CommandList.h"
 #include "ResourceTable.h"
+
 #include "Scene/Scene.h"
+#include "Scene/ECS/Components/Animation.h"
+#include "Scene/ECS/Components/Armature.h"
+#include "Scene/ECS/Components/Material.h"
+#include "Scene/ECS/Components/Mesh.h"
+#include "Scene/ECS/Components/Transformation.h"
+
 #include "Render/GPUStructs/GPUModelDesc.h"
 
 void DrawSceneProcessor::Process(SceneLayer::Scene& scene, dx12::CommandList& commandList)
 {
     // Setup textures
     commandList.SetDescriptorHeaps({ scene.GetCache().GetTextureTable()->GetDescriptorHeap().GetDXDescriptorHeap().Get()});
-    commandList.SetDescriptorTable(3, scene.GetCache().GetTextureTable()->GetDescriptorHeap().GetHeapStartGPUHandle());
+    commandList.SetDescriptorTable(4, scene.GetCache().GetTextureTable()->GetDescriptorHeap().GetHeapStartGPUHandle());
 
     for (std::shared_ptr<SceneLayer::Entity>& node : scene.GetRootNodes())
     {
@@ -53,10 +60,21 @@ void DrawSceneProcessor::DrawEntity(SceneLayer::Entity& entity, dx12::CommandLis
 
     commandList.SetCBV(1, entity.GetGPUDesc().OffsetGPU(0));
 
+    Animation* animation = entity.GetComponentAs<Animation>("Animation");
+    Armature* armature = entity.GetComponentAs<Armature>("Armature");
+    if (armature && animation)
+    {
+        commandList.SetSRV(3, armature->BoneTransforms.OffsetGPU(0));
+    }
+
     if (mesh)
     {
         commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         commandList.SetVertexBuffer(0, mesh->VertexBufferView);
+        if (!mesh->SkinningVertexData.empty())
+        {
+            commandList.SetVertexBuffer(1, mesh->SkinningVertexBufferView);
+        }
         commandList.SetIndexBuffer(mesh->IndexBufferView);
 
         commandList.DrawIndexed(mesh->IndexData.size());

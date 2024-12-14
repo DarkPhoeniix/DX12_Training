@@ -15,6 +15,10 @@
 #include "SceneProcessors/UploadSceneProcessor.h"
 #include "SceneProcessors/DrawSceneProcessor.h"
 
+#include "Scene/ECS/Components/Armature.h"
+#include "Scene/ECS/Components/Transformation.h"
+#include "Scene/ECS/Components/Skybox.h"
+
 #include "GUI/GUI.h"
 
 using namespace DirectX;
@@ -42,6 +46,7 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
     _deferredPipeline.Parse("PipelineDescriptions\\DeferredShading.tech");
     _AABBpipeline.Parse("PipelineDescriptions\\AABBRenderPipeline.tech");
     _SkyboxPipeline.Parse("PipelineDescriptions\\SkyboxPipeline.tech");
+    _ArmatureDebugPipeline.Parse("PipelineDescriptions\\ArmatureDebugPipeline.tech");
 
     _gBuffer.Init({ 1280, 720 });
 
@@ -49,7 +54,7 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
 
     // Camera Setup
     {
-        XMVECTOR pos = XMVectorSet(10.0f, 0.0f, 0.0f, 1.0f);
+        XMVECTOR pos = XMVectorSet(0.0f, 30.0f, 30.0f, 1.0f);
         XMVECTOR target = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
         XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
@@ -67,10 +72,9 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
     {
         loadTask->SetName("Upload Data");
         dx12::CommandList& commandList = *loadTask->GetCommandLists().front();
-        _skybox.Init();
-        _skybox.Load("Wyvern\\Skybox.node", commandList);
 
-        _scene.LoadScene("Test\\Test.scene", commandList);
+        //_scene.LoadScene("AnimTest\\AnimTest.scene", commandList);
+        _scene.LoadScene("Dragon\\DragonScene.scene", commandList);
 
         uploadProcessor.Process(_scene, commandList);
 
@@ -88,7 +92,7 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
         loadTask->GetCommandQueue()->ExecuteCommandLists(comLists.size(), comLists.data());
         loadTask->GetCommandQueue()->Signal(loadTask->GetFence()->GetFence().Get(), loadTask->GetFenceValue());
     }
-    Sleep(2000);
+    Sleep(1000);
     _contentLoaded = true;
     return _contentLoaded;
 }
@@ -102,10 +106,12 @@ void DXRenderer::OnUpdate(Events::UpdateEvent& updateEvent)
 {
     DebugInfo::Update(updateEvent);
 
-    XMVECTOR mov = 10.0f * XMVectorSet(sinf(updateEvent.totalTime * 0.5f), 0.0f, cosf(updateEvent.totalTime * 0.5f), 1.0f);
-    XMVECTOR tar = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+    _scene.GetCache().SetTime(updateEvent.totalTime);
+
+    XMVECTOR mov = 37.0f * XMVectorSet(sinf(updateEvent.totalTime * 0.5f), 0.8f, cosf(updateEvent.totalTime * 0.5f), 1.0f);
+    XMVECTOR tar = XMVectorSet(0.0f, 17.0f, 0.0f, 1.0f);
     XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-    //_camera.LookAt(mov, tar, up);
+    _camera.LookAt(mov, tar, up);
 
     _deltaTime = updateEvent.elapsedTime;
 }
@@ -152,12 +158,23 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         RenderSkybox(*task);
     }
 
+    // Render Armature
+    {
+        TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, &_ArmatureDebugPipeline);
+        task->SetName("armature");
+        task->AddDependency("deferred");
+        task->AddDependency("skybox");
+
+        RenderArmature(*task);        
+    }
+
     //GUI
     {
         TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
         task->SetName("gui");
-        task->AddDependency("deferred");
-        task->AddDependency("skybox");
+        task->AddDependency("armature");
+        //task->AddDependency("deferred");
+        //task->AddDependency("skybox");
 
         RenderGUI(*task);
     }
@@ -328,6 +345,14 @@ void DXRenderer::LightingPass(TaskGPU& task)
 
 void DXRenderer::RenderSkybox(TaskGPU& task)
 {
+    std::shared_ptr<SceneLayer::Entity> entity = _scene.FindNodeByComponentName("Skybox");
+    if (!entity)
+    {
+        return;
+    }
+
+    Skybox* skybox = entity->GetComponentAs<Skybox>("Skybox");
+
     dx12::CommandList& commandList = *task.GetCommandLists().front();
 
     PIXBeginEvent(commandList.GetDXCommandList().Get(), 3, "Skybox");
@@ -340,7 +365,7 @@ void DXRenderer::RenderSkybox(TaskGPU& task)
 
         D3D12_CPU_DESCRIPTOR_HANDLE handle = _currentFrame->_testHeap.GetHeapStartCPUHandle();
         handle.ptr += 64;
-        dx12::Device::GetDXDevice()->CopyDescriptorsSimple(1, handle, _skybox._descHeap.GetHeapStartCPUHandle(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+        dx12::Device::GetDXDevice()->CopyDescriptorsSimple(1, handle, skybox->DescHeap.GetHeapStartCPUHandle(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
         ID3D12DescriptorHeap* heap[1] = { _currentFrame->_testHeap.GetDXDescriptorHeap().Get() };
         commandList.GetDXCommandList()->SetDescriptorHeaps(1, heap);
@@ -358,6 +383,58 @@ void DXRenderer::RenderSkybox(TaskGPU& task)
         int yThreadGroups = (uint32_t)std::ceilf(viewportSize.y / 8.0f);
 
         commandList.GetDXCommandList()->Dispatch(xThreadGroups, yThreadGroups, 1);
+    }
+    PIXEndEvent(commandList.GetDXCommandList().Get());
+
+    commandList.Close();
+}
+
+void DXRenderer::RenderArmature(TaskGPU& task)
+{
+    dx12::CommandList& commandList = *task.GetCommandLists().front();
+
+    PIXBeginEvent(commandList.GetDXCommandList().Get(), 8, "Armature");
+    {
+        commandList.SetPipelineState(_ArmatureDebugPipeline);
+        commandList.SetRootSignature(_ArmatureDebugPipeline);
+
+        for (auto& node : _scene.GetRootNodes())
+        {
+            Armature* arm = node->GetComponentAs<Armature>("Armature");
+            Transformation* transform = node->GetComponentAs<Transformation>("Transformation");
+
+            if (arm)
+            {
+                DirectX::XMVECTOR* data = (DirectX::XMVECTOR*)arm->BoneDebugTransforms.Map();
+
+                const auto& sortedBones = arm->GetSortedBones();
+                int ind = 0;
+                for (const auto& bone : sortedBones)
+                {
+                    for (const auto& child : bone->Children)
+                    {
+                        data[ind++] = DirectX::XMVector4Transform(bone->GlobalTransform.r[3], transform->Transform);
+                        data[ind++] = DirectX::XMVector4Transform(child->GlobalTransform.r[3], transform->Transform);
+                    }
+                }
+
+                D3D12_CPU_DESCRIPTOR_HANDLE rtv = _currentFrame->_targetHeap->GetCPUDescriptorHandleForHeapStart();
+                D3D12_CPU_DESCRIPTOR_HANDLE dsv = _currentFrame->_depthHeap->GetCPUDescriptorHandleForHeapStart();
+
+                commandList.SetViewport(_camera.GetViewport());
+                commandList.SetRenderTarget(&rtv, &dsv);
+
+                DirectX::XMMATRIX vp = _camera.ViewProjection();
+
+                commandList.SetConstants(0, 16, &vp);
+                commandList.SetConstant(1, (uint32_t)((arm->GetBones().size() - 1) * 2));
+                commandList.SetSRV(2, arm->BoneDebugTransforms.OffsetGPU(0));
+
+                commandList.SetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
+
+                commandList.Draw(1);
+            }
+        }
     }
     PIXEndEvent(commandList.GetDXCommandList().Get());
 

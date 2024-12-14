@@ -106,4 +106,14 @@ namespace SceneLayer
     {
         return _camera;
     }
+
+    void SceneCache::SetTime(float time)
+    {
+        _currentTime = time;
+    }
+
+    float SceneCache::GetTime() const
+    {
+        return _currentTime;
+    }
 } // namespace SceneLayer

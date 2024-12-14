@@ -19,7 +19,7 @@ struct PSOutput
 };
 
 StructuredBuffer<LightDesc> Lights  : register(t0);
-Texture2D Materials[]               : register(t1);
+Texture2D Materials[]               : register(t2);
 
 SamplerState LinearSampler          : register(s0);
 SamplerState PointSampler           : register(s1);

@@ -4,7 +4,13 @@
 
 #include "CommandList.h"
 #include "ResourceTable.h"
+
 #include "Scene/Scene.h"
+#include "Scene/ECS/Components/Armature.h"
+#include "Scene/ECS/Components/Animation.h"
+#include "Scene/ECS/Components/Material.h"
+#include "Scene/ECS/Components/Mesh.h"
+#include "Scene/ECS/Components/Skybox.h"
 
 void UploadSceneProcessor::Process(SceneLayer::Scene& scene, dx12::CommandList& commandList)
 {
@@ -46,6 +52,20 @@ void UploadSceneProcessor::ProcessEntity(SceneLayer::Entity& entity, dx12::Comma
             mesh->VertexBufferView.BufferLocation = mesh->VertexBuffer->OffsetGPU(0);
             mesh->VertexBufferView.SizeInBytes = static_cast<UINT>(mesh->VertexData.size() * sizeof(mesh->VertexData[0]));
             mesh->VertexBufferView.StrideInBytes = sizeof(VertexData);
+        }
+
+        // Upload Skinning Vertex buffer
+        if (!mesh->SkinningVertexData.empty())
+        {
+            ComPtr<ID3D12Resource> skinBuffer;
+            UploadData(commandList, &skinBuffer, mesh->SkinningVertexData.size(), sizeof(SkinningVertexData), mesh->SkinningVertexData.data());
+            mesh->SkinningVertexBuffer = std::make_shared<dx12::Resource>();
+            mesh->SkinningVertexBuffer->InitFromDXResource(skinBuffer);
+            mesh->SkinningVertexBuffer->SetName(entity.GetName() + "_SVB");
+
+            mesh->SkinningVertexBufferView.BufferLocation = mesh->SkinningVertexBuffer->OffsetGPU(0);
+            mesh->SkinningVertexBufferView.SizeInBytes = static_cast<UINT>(mesh->SkinningVertexData.size() * sizeof(mesh->SkinningVertexData[0]));
+            mesh->SkinningVertexBufferView.StrideInBytes = sizeof(SkinningVertexData);
         }
 
         // Upload Index buffer
@@ -91,6 +111,47 @@ void UploadSceneProcessor::ProcessEntity(SceneLayer::Entity& entity, dx12::Comma
             material->Roughness->SetDescriptorHeap(&textureTable->GetDescriptorHeap());
             material->Roughness->UploadToGPU(commandList);
         }
+    }
+
+    Armature* armature = entity.GetComponentAs<Armature>("Armature");
+    if (armature)
+    {
+        dx12::ResourceDescription desc;
+        {
+            desc.SetResourceType(dx12::EResourceType::Buffer | dx12::EResourceType::Dynamic);
+            desc.SetSize({ (uint32_t)armature->GetBones().size() * sizeof(DirectX::XMMATRIX), 1});
+            desc.SetFormat(DXGI_FORMAT_UNKNOWN);
+            desc.SetFlags(D3D12_RESOURCE_FLAG_NONE);
+        }
+
+        armature->BoneTransforms.SetResourceDescription(desc);
+        armature->BoneTransforms.CreateCommitedResource();
+        armature->BoneTransforms.SetName(entity.GetName() + "_Bones");
+
+        desc.SetSize({ ((uint32_t)armature->GetBones().size() - 1) * 2 * 16 , 1 });
+
+        armature->BoneDebugTransforms.SetResourceDescription(desc);
+        armature->BoneDebugTransforms.CreateCommitedResource();
+        armature->BoneDebugTransforms.SetName(entity.GetName() + "_DebugBones");
+    }
+
+    Skybox* skybox = entity.GetComponentAs<Skybox>("Skybox");
+    if (skybox)
+    {
+        skybox->SkydomeTexture->SetDescriptorHeap(&skybox->DescHeap);
+
+        skybox->DescHeap.PlaceResource(skybox->SkydomeTexture.get());
+        skybox->TexHeap.PlaceResource(*skybox->SkydomeTexture);
+
+        skybox->SkydomeTexture->UploadToGPU(commandList);
+
+        D3D12_SHADER_RESOURCE_VIEW_DESC SRVDesc = {};
+        SRVDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+        SRVDesc.Texture2D.MipLevels = 1;
+        SRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+        SRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+        dx12::Device::GetDXDevice()->CreateShaderResourceView(skybox->SkydomeTexture->GetDXResource().Get(), &SRVDesc, skybox->DescHeap.GetResourceCPUHandle(skybox->SkydomeTexture.get()));
     }
 }
 
