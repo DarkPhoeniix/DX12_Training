@@ -19,18 +19,17 @@ namespace Core
         : _eventListener(nullptr)
         , _vSync(vSync)
         , _title(title)
-        , _width(width)
-        , _height(height)
         , _fullscreen(false)
     {
         RECT windowRect = { 0, 0, width, height };
         AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
 
+        _width = windowRect.right - windowRect.left;
+        _height = windowRect.bottom - windowRect.top;
+
         _windowHandle = CreateWindowW(L"DX12WindowClass", title.c_str(),
             WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
-            windowRect.right - windowRect.left,
-            windowRect.bottom - windowRect.top,
-            nullptr, nullptr, hInstance, this);
+            _width, _height, nullptr, nullptr, hInstance, this);
 
         if (!_windowHandle)
         {

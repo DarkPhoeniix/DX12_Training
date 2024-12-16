@@ -44,7 +44,10 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
     _SkyboxPipeline.Parse("PipelineDescriptions\\SkyboxPipeline.tech");
     _ArmatureDebugPipeline.Parse("PipelineDescriptions\\ArmatureDebugPipeline.tech");
 
-    _gBuffer.Init({ 1280, 720 });
+    RECT windowSize;
+    GetWindowRect(_windowHandle, &windowSize);
+    uint32_t windowWidth = windowSize.right - windowSize.left;
+    uint32_t windowHeight = windowSize.bottom - windowSize.top;
 
     // Camera Setup
     {
@@ -52,15 +55,12 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
         XMVECTOR target = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
         XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
         
-        RECT windowSize;
-        GetWindowRect(_windowHandle, &windowSize);
-        float width = windowSize.right - windowSize.left;
-        float height = windowSize.bottom - windowSize.top;
-        _camera.SetViewport(SceneLayer::Viewport({ width, height }));
-
         _camera.LookAt(pos, target, up);
+        _camera.SetViewport(SceneLayer::Viewport({ windowWidth, windowHeight }));
         _camera.SetLens(45.0f, 0.1f, 1000.0f);
     }
+
+    _gBuffer.Init({ windowWidth, windowHeight });
 
     // Load scene
     {
@@ -307,7 +307,7 @@ void DXRenderer::LightingPass(TaskGPU& task)
         gpuHandle.ptr += 32;
         commandList.GetDXCommandList()->SetComputeRootDescriptorTable(5, gpuHandle);
 
-        DirectX::XMFLOAT2 viewportSize = _camera.GetViewport().GetSize();
+        DirectX::XMUINT2 viewportSize = _camera.GetViewport().GetSize();
         int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 8.0f);
         int yThreadGroups = (uint32_t)std::ceilf(viewportSize.y / 8.0f);
 
@@ -352,7 +352,7 @@ void DXRenderer::RenderSkybox(TaskGPU& task)
         gpuHandle.ptr += 64;
         commandList.GetDXCommandList()->SetComputeRootDescriptorTable(4, gpuHandle);
 
-        DirectX::XMFLOAT2 viewportSize = _camera.GetViewport().GetSize();
+        DirectX::XMUINT2 viewportSize = _camera.GetViewport().GetSize();
         int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 8.0f);
         int yThreadGroups = (uint32_t)std::ceilf(viewportSize.y / 8.0f);
 

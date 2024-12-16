@@ -11,10 +11,10 @@ namespace SceneLayer
     {
     }
 
-    Viewport::Viewport(const DirectX::XMFLOAT2& size)
-        : _viewport(0.0f, 0.0f, size.x, size.y)
+    Viewport::Viewport(const DirectX::XMUINT2& size)
+        : _viewport(0.0f, 0.0f, (FLOAT)size.x, (FLOAT)size.y)
         , _scissorRectangle(0, 0, LONG_MAX, LONG_MAX)
-        , _aspectRatio(size.x / size.y)
+        , _aspectRatio(size.x / (FLOAT)size.y)
     {
     }
 
@@ -35,15 +35,15 @@ namespace SceneLayer
         return _aspectRatio;
     }
 
-    void Viewport::SetSize(const DirectX::XMFLOAT2& size)
+    void Viewport::SetSize(const DirectX::XMUINT2& size)
     {
-        _viewport.Width = size.x;
-        _viewport.Height = size.y;
+        _viewport.Width = (FLOAT)size.x;
+        _viewport.Height = (FLOAT)size.y;
     }
 
-    DirectX::XMFLOAT2 Viewport::GetSize() const
+    DirectX::XMUINT2 Viewport::GetSize() const
     {
-        return { _viewport.Width, _viewport.Height };
+        return { (UINT)_viewport.Width, (UINT)_viewport.Height };
     }
 
     void Viewport::SetDepth(const DirectX::XMFLOAT2& depth)
