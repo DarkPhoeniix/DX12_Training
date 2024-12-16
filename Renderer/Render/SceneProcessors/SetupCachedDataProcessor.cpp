@@ -17,6 +17,8 @@ void SetupCachedDataProcessor::Process(SceneLayer::Scene& scene, dx12::CommandLi
 {
     SceneLayer::SceneCache& cache = scene.GetCache();
 
+    _lightNum = 0;
+
     for (std::shared_ptr<SceneLayer::Entity>& node : scene.GetRootNodes())
     {
         ProcessEntity(*node, commandList);

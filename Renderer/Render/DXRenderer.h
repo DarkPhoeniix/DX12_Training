@@ -4,6 +4,9 @@
 #include "RootSignature.h"
 #include "Scene/Camera.h"
 #include "Scene/Scene.h"
+#include "SceneProcessors/DrawSceneProcessor.h"
+#include "SceneProcessors/SetupCachedDataProcessor.h"
+#include "SceneProcessors/UploadSceneProcessor.h"
 #include "Render/Frame/Frame.h"
 #include "Window/IWindowEventListener.h"
 
@@ -41,10 +44,13 @@ private:
 
     dx12::RootSignature _gPassPipeline;
     dx12::RootSignature _deferredPipeline;
-    dx12::RootSignature _renderPipeline;
     dx12::RootSignature _AABBpipeline;
     dx12::RootSignature _SkyboxPipeline;
     dx12::RootSignature _ArmatureDebugPipeline;
+
+    UploadSceneProcessor _uploadProcessor;
+    SetupCachedDataProcessor _cachedDataProcessor;
+    DrawSceneProcessor _drawProcessor;
 
     Frame* _currentFrame;
 

@@ -105,6 +105,10 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
     {
         return 1;
     }
+    _currentFrame->SetSyncFrame(uploadTask->GetFence());
+    _ExecuteFrameTasks();
+    _currentFrame->WaitCPU();
+    _currentFrame->ResetGPU();
 
     MSG msg = { 0 };
     while (msg.message != WM_QUIT)
