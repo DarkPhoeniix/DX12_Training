@@ -3,20 +3,14 @@
 #include "Application.h"
 
 #include "SwapChain.h"
-#include "Events/KeyEvent.h"
-#include "Events/MouseButtonEvent.h"
-#include "Events/MouseMoveEvent.h"
-#include "Events/MouseScrollEvent.h"
 #include "Events/RenderEvent.h"
-#include "Events/ResizeEvent.h"
 #include "Events/UpdateEvent.h"
+#include "GUI/GUI.h"
 #include "Input/InputDevice.h"
 #include "Render/DXRenderer.h"
 #include "Utility/DebugInfo.h"
 #include "Utility/Resources.h"
 #include "Window/Win32Window.h"
-
-#include "GUI/GUI.h"
 
 using namespace Core;
 
@@ -78,33 +72,41 @@ void Application::Init(HINSTANCE hInstance)
 
 int Application::Run(std::shared_ptr<DXRenderer> pApp)
 {
-    _swapChain.Init(_win32Window);
-    _allocs.Init();
-    _fencePool.Init();
-
-    for (int i = 0; i < 3; ++i)
+    // Initialization
     {
-        Frame& frame = _frames[i];
-        frame.Index = i;
-        frame.Next = &_frames[(i + 1) % 3];
-        frame.Prev = &_frames[(i + 3 - 1) % 3];
+        _swapChain.Init(_win32Window);
+        _allocs.Init();
+        _fencePool.Init();
 
-        frame.SetSyncFrame(nullptr);
-        frame.SetAllocatorPool(&_allocs);
-        frame.SetFencePool(&_fencePool);
+        for (int i = 0; i < dx12::BACK_BUFFER_COUNT; ++i)
+        {
+            int nextIndex = (i + 1) % dx12::BACK_BUFFER_COUNT;
+            int prevIndex = (i == 0) ? (dx12::BACK_BUFFER_COUNT - 1) : (i - 1);
 
-        frame.Init(_swapChain);
+            Frame& frame = _frames[i];
+            frame.Index = i;
+            frame.Next = &_frames[nextIndex];
+            frame.Prev = &_frames[prevIndex];
+
+            frame.SetSyncFrame(nullptr);
+            frame.SetAllocatorPool(&_allocs);
+            frame.SetFencePool(&_fencePool);
+
+            frame.Init(_swapChain);
+        }
+
+        GUI::Init(_win32Window->GetWindowHandle(), _swapChain);
     }
 
     Events::InputDevice::Instance().AddInputObserver(pApp.get());
-
-    GUI::Init(_win32Window->GetWindowHandle(), _swapChain);
 
     TaskGPU* uploadTask = _currentFrame->CreateTask(D3D12_COMMAND_LIST_TYPE_COPY, nullptr);
     if (!pApp->LoadContent(uploadTask))
     {
         return 1;
     }
+    _currentFrame->SetSyncFrame(uploadTask->GetFence());
+    _ExecuteFrameTasks();
 
     MSG msg = { 0 };
     while (msg.message != WM_QUIT)
@@ -139,9 +141,9 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
 void Application::Quit(int exitCode)
 {
     GUI::Destroy();
-
     DebugInfo::Destroy();
     dx12::Device::Destroy();
+
     PostQuitMessage(exitCode);
 
     if (_instance)

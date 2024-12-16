@@ -6,15 +6,15 @@ namespace SceneLayer
     {
     public:
         Viewport();
-        Viewport(const DirectX::XMFLOAT2& size);
+        Viewport(const DirectX::XMUINT2& size);
         Viewport(const CD3DX12_VIEWPORT& DXViewport);
         ~Viewport() = default;
 
         CD3DX12_VIEWPORT GetDXViewport() const;
         float GetAspectRatio() const;
 
-        void SetSize(const DirectX::XMFLOAT2& size);
-        DirectX::XMFLOAT2 GetSize() const;
+        void SetSize(const DirectX::XMUINT2& size);
+        DirectX::XMUINT2 GetSize() const;
 
         void SetDepth(const DirectX::XMFLOAT2& depth);
         DirectX::XMFLOAT2 GetDepth() const;

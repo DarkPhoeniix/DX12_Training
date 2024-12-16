@@ -11,10 +11,6 @@
 #include "Render/Frame/TaskGPU.h"
 #include "Utility/DebugInfo.h"
 
-#include "SceneProcessors/SetupCachedDataProcessor.h"
-#include "SceneProcessors/UploadSceneProcessor.h"
-#include "SceneProcessors/DrawSceneProcessor.h"
-
 #include "Scene/ECS/Components/Armature.h"
 #include "Scene/ECS/Components/Transformation.h"
 #include "Scene/ECS/Components/Skybox.h"
@@ -48,51 +44,36 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
     _SkyboxPipeline.Parse("PipelineDescriptions\\SkyboxPipeline.tech");
     _ArmatureDebugPipeline.Parse("PipelineDescriptions\\ArmatureDebugPipeline.tech");
 
-    _gBuffer.Init({ 1280, 720 });
-
-    UploadSceneProcessor uploadProcessor;
+    RECT windowSize;
+    GetWindowRect(_windowHandle, &windowSize);
+    uint32_t windowWidth = windowSize.right - windowSize.left;
+    uint32_t windowHeight = windowSize.bottom - windowSize.top;
 
     // Camera Setup
     {
         XMVECTOR pos = XMVectorSet(0.0f, 30.0f, 30.0f, 1.0f);
         XMVECTOR target = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
         XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-
-        RECT windowSize;
-        GetWindowRect(_windowHandle, &windowSize);
-        float width = windowSize.right - windowSize.left;
-        float height = windowSize.bottom - windowSize.top;
-        _camera.SetViewport(SceneLayer::Viewport({ width, height }));
-
+        
         _camera.LookAt(pos, target, up);
+        _camera.SetViewport(SceneLayer::Viewport({ windowWidth, windowHeight }));
         _camera.SetLens(45.0f, 0.1f, 1000.0f);
     }
+
+    _gBuffer.Init({ windowWidth, windowHeight });
 
     // Load scene
     {
         loadTask->SetName("Upload Data");
         dx12::CommandList& commandList = *loadTask->GetCommandLists().front();
 
-        //_scene.LoadScene("AnimTest\\AnimTest.scene", commandList);
         _scene.LoadScene("Dragon\\DragonScene.scene", commandList);
-
-        uploadProcessor.Process(_scene, commandList);
-
+        _uploadProcessor.Process(_scene, commandList);
         _scene.SetCamera(_camera);
 
         commandList.Close();
-
-        std::vector<ID3D12CommandList*> comLists;
-        comLists.reserve(loadTask->GetCommandLists().size());
-        for (auto cl : loadTask->GetCommandLists())
-        {
-            comLists.push_back(cl->GetDXCommandList().Get());
-        }
-
-        loadTask->GetCommandQueue()->ExecuteCommandLists(comLists.size(), comLists.data());
-        loadTask->GetCommandQueue()->Signal(loadTask->GetFence()->GetFence().Get(), loadTask->GetFenceValue());
     }
-    Sleep(1000);
+
     _contentLoaded = true;
     return _contentLoaded;
 }
@@ -173,8 +154,6 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
         task->SetName("gui");
         task->AddDependency("armature");
-        //task->AddDependency("deferred");
-        //task->AddDependency("skybox");
 
         RenderGUI(*task);
     }
@@ -283,11 +262,8 @@ void DXRenderer::GeometryPass(TaskGPU& task)
         DebugInfo::StartStatCollecting(commandList);
 #endif
 
-        SetupCachedDataProcessor processor;
-        processor.Process(_scene, commandList);
-
-        DrawSceneProcessor drawProcessor;
-        drawProcessor.Process(_scene, commandList);
+        _cachedDataProcessor.Process(_scene, commandList);
+        _drawProcessor.Process(_scene, commandList);
 
 #if defined(_DEBUG)
         DebugInfo::EndStatCollecting(commandList);
@@ -312,8 +288,7 @@ void DXRenderer::LightingPass(TaskGPU& task)
         commandList.SetPipelineState(_deferredPipeline);
         commandList.SetRootSignature(_deferredPipeline);
 
-        SetupCachedDataProcessor processor;
-        processor.Process(_scene, commandList);
+        _cachedDataProcessor.Process(_scene, commandList);
 
         D3D12_CPU_DESCRIPTOR_HANDLE handle = _currentFrame->_postFXDescHeap.GetHeapStartCPUHandle();
         handle.ptr += 64;
@@ -332,7 +307,7 @@ void DXRenderer::LightingPass(TaskGPU& task)
         gpuHandle.ptr += 32;
         commandList.GetDXCommandList()->SetComputeRootDescriptorTable(5, gpuHandle);
 
-        DirectX::XMFLOAT2 viewportSize = _camera.GetViewport().GetSize();
+        DirectX::XMUINT2 viewportSize = _camera.GetViewport().GetSize();
         int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 8.0f);
         int yThreadGroups = (uint32_t)std::ceilf(viewportSize.y / 8.0f);
 
@@ -360,8 +335,7 @@ void DXRenderer::RenderSkybox(TaskGPU& task)
         commandList.SetPipelineState(_SkyboxPipeline);
         commandList.SetRootSignature(_SkyboxPipeline);
 
-        SetupCachedDataProcessor processor;
-        processor.Process(_scene, commandList);
+        _cachedDataProcessor.Process(_scene, commandList);
 
         D3D12_CPU_DESCRIPTOR_HANDLE handle = _currentFrame->_testHeap.GetHeapStartCPUHandle();
         handle.ptr += 64;
@@ -378,7 +352,7 @@ void DXRenderer::RenderSkybox(TaskGPU& task)
         gpuHandle.ptr += 64;
         commandList.GetDXCommandList()->SetComputeRootDescriptorTable(4, gpuHandle);
 
-        DirectX::XMFLOAT2 viewportSize = _camera.GetViewport().GetSize();
+        DirectX::XMUINT2 viewportSize = _camera.GetViewport().GetSize();
         int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 8.0f);
         int yThreadGroups = (uint32_t)std::ceilf(viewportSize.y / 8.0f);
 
