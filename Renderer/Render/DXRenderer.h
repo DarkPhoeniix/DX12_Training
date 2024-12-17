@@ -27,7 +27,7 @@ public:
     virtual void OnMouseButtonPressed(Core::Events::MouseButtonEvent& e) override;
     virtual void OnMouseButtonReleased(Core::Events::MouseButtonEvent& e) override;
     virtual void OnMouseScroll(Core::Events::MouseScrollEvent& e) override {}
-    virtual void OnResize(Core::Events::ResizeEvent& e) override {}
+    virtual void OnResize(Core::Events::ResizeEvent& e) override;
 
 private:
     void ClearBuffers(TaskGPU& task);

@@ -8,14 +8,13 @@
 #include "Events/RenderEvent.h"
 #include "Events/UpdateEvent.h"
 #include "Events/KeyEvent.h"
+#include "GUI/GUI.h"
 #include "Render/Frame/TaskGPU.h"
 #include "Utility/DebugInfo.h"
 
 #include "Scene/ECS/Components/Armature.h"
 #include "Scene/ECS/Components/Transformation.h"
 #include "Scene/ECS/Components/Skybox.h"
-
-#include "GUI/GUI.h"
 
 using namespace DirectX;
 using namespace Core;
@@ -219,6 +218,33 @@ void DXRenderer::OnMouseButtonReleased(Events::MouseButtonEvent& e)
     {
         _isCameraMoving = false;
     }
+}
+
+void DXRenderer::OnResize(Core::Events::ResizeEvent& e)
+{
+    Frame* current = _currentFrame;
+    do
+    {
+        current->WaitCPU();
+        current = current->Next;
+    } while (current != _currentFrame);
+
+    RECT windowRect = { 0, 0, e.width, e.height };
+    AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
+
+    uint32_t width = windowRect.right - windowRect.left;
+    uint32_t height = windowRect.bottom - windowRect.top;
+
+
+    do
+    {
+        current->
+
+        current = current->Next;
+    } while (current != _currentFrame);
+
+    _camera.SetViewport(SceneLayer::Viewport({ width, height }));
+    _gBuffer.Init({ width, height });
 }
 
 void DXRenderer::ClearBuffers(TaskGPU& task)

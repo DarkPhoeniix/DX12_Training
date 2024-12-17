@@ -125,6 +125,9 @@ namespace Core
                 int width = ((int)(short)LOWORD(lParam));
                 int height = ((int)(short)HIWORD(lParam));
 
+                _width = width;
+                _height = height;
+
                 ResizeEvent resizeEventArgs(width, height);
                 listener->OnResize(resizeEventArgs);
             }
