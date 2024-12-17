@@ -92,11 +92,15 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
             frame.SetAllocatorPool(&_allocs);
             frame.SetFencePool(&_fencePool);
 
-            frame.Init(_swapChain);
+            frame.Init({ (uint32_t)_win32Window->GetWidth(), (uint32_t)_win32Window->GetHeight() });
+            frame.SetSwapChainTexture(_swapChain.GetBuffer(i));
         }
 
         GUI::Init(_win32Window->GetWindowHandle(), _swapChain);
     }
+
+    _win32Window->AddEventListener(pApp.get());
+    _win32Window->AddEventListener(&_swapChain);
 
     Events::InputDevice::Instance().AddInputObserver(pApp.get());
 

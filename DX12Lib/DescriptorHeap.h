@@ -13,6 +13,7 @@ namespace dx12
 
         void Create();
         void PlaceResource(Resource* resource);
+        void Reset();
 
         D3D12_CPU_DESCRIPTOR_HANDLE GetHeapStartCPUHandle();
         D3D12_GPU_DESCRIPTOR_HANDLE GetHeapStartGPUHandle();
@@ -36,7 +37,7 @@ namespace dx12
         DescriptorHeapDescription _descriptorHeapDescription;
         UINT _heapIncrementSize;
 
-        std::map<UINT, Resource*> _resourceIndex;
+        std::vector<Resource*> _resources;
 
         std::string _name;
     };

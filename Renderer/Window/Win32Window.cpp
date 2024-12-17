@@ -16,7 +16,7 @@ namespace Core
     using Events::ResizeEvent;
 
     Win32Window::Win32Window(HINSTANCE hInstance, int width, int height, const std::wstring& title, bool vSync)
-        : _eventListener(nullptr)
+        : _eventListeners{}
         , _vSync(vSync)
         , _title(title)
         , _fullscreen(false)
@@ -50,12 +50,17 @@ namespace Core
 
     void Win32Window::AddEventListener(Events::IWindowEventListener* listener)
     {
-        _eventListener = listener;
+        _eventListeners.push_back(listener);
     }
 
-    void Win32Window::RemoveEventListener()
+    void Win32Window::RemoveEventListener(Events::IWindowEventListener* listener)
     {
-        _eventListener = nullptr;
+        auto it = std::find(_eventListeners.begin(), _eventListeners.end(), listener);
+
+        if (it != _eventListeners.end())
+        {
+            _eventListeners.erase(it);
+        }
     }
 
     HWND Win32Window::GetWindowHandle() const
@@ -110,40 +115,33 @@ namespace Core
 
     LRESULT Win32Window::WindowProcCallback(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
-        static Events::IWindowEventListener* listener = nullptr;
-        if (!listener)
+        switch (message)
         {
-            listener = _eventListener;
-        }
-
-        if (listener)
+        case WM_SIZE:
         {
-            switch (message)
-            {
-            case WM_SIZE:
-            {
-                int width = ((int)(short)LOWORD(lParam));
-                int height = ((int)(short)HIWORD(lParam));
+            int width = ((int)(short)LOWORD(lParam));
+            int height = ((int)(short)HIWORD(lParam));
 
-                _width = width;
-                _height = height;
+            RECT windowRect = { 0, 0, width, height };
+            AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
 
-                ResizeEvent resizeEventArgs(width, height);
+            _width = windowRect.right - windowRect.left;
+            _height = windowRect.bottom - windowRect.top;
+
+            ResizeEvent resizeEventArgs(width, height);
+            for (Events::IWindowEventListener* listener : _eventListeners)
+            {
                 listener->OnResize(resizeEventArgs);
             }
-            break;
-            case WM_DESTROY:
-            {
-                // If there are no more windows, quit the application.
-                PostQuitMessage(0);
-            }
-            break;
-            default:
-                return DefWindowProcW(hwnd, message, wParam, lParam);
-            }
         }
-        else
+        break;
+        case WM_DESTROY:
         {
+            // If there are no more windows, quit the application.
+            PostQuitMessage(0);
+        }
+        break;
+        default:
             return DefWindowProcW(hwnd, message, wParam, lParam);
         }
 

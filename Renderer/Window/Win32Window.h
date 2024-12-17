@@ -29,14 +29,14 @@ namespace Core
         void Hide();
 
         void AddEventListener(Events::IWindowEventListener* listener);
-        void RemoveEventListener();
+        void RemoveEventListener(Events::IWindowEventListener* listener);
 
         LRESULT WindowProcCallback(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
     protected:
         HWND _windowHandle;
 
-        Events::IWindowEventListener* _eventListener;
+        std::vector<Events::IWindowEventListener*> _eventListeners;
 
         std::wstring _title;
         int _width;

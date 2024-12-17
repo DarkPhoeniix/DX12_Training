@@ -18,7 +18,7 @@ namespace dx12
 
         DXGI_SWAP_CHAIN_DESC GetDescription() const;
 
-        void GetBuffer(unsigned int index, Resource& resource) const;
+        dx12::Resource* GetBuffer(unsigned int index);
 
         void UpdateRenderTargetViews();
         UINT Present();

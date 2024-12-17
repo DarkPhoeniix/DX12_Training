@@ -51,11 +51,9 @@ namespace dx12
         return _swapChainDesc;
     }
 
-    void SwapChain::GetBuffer(unsigned int index, Resource& resource) const
+    dx12::Resource* SwapChain::GetBuffer(unsigned int index)
     {
-        ComPtr<ID3D12Resource> buffer;
-        _dxgiSwapChain->GetBuffer(index, IID_PPV_ARGS(&buffer));
-        resource.InitFromDXResource(buffer);
+        return &_backBuffers[index];
     }
 
     void SwapChain::UpdateRenderTargetViews()
@@ -91,11 +89,10 @@ namespace dx12
             _width = std::max(1, e.width);
             _height = std::max(1, e.height);
 
-            // TODO: Do it really needs Reset() ?
-            //for (int i = 0; i < BUFFER_COUNT; ++i)
-            //{
-            //    _backBuffers[i].Reset(); 
-            //}
+            for (int i = 0; i < BACK_BUFFER_COUNT; ++i)
+            {
+                _backBuffers[i].GetDXResource().Reset();
+            }
 
             DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
             Helper::throwIfFailed(_dxgiSwapChain->GetDesc(&swapChainDesc));

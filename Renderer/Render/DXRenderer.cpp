@@ -226,25 +226,20 @@ void DXRenderer::OnResize(Core::Events::ResizeEvent& e)
     do
     {
         current->WaitCPU();
+        current->ResetGPU();
         current = current->Next;
     } while (current != _currentFrame);
 
-    RECT windowRect = { 0, 0, e.width, e.height };
-    AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
-
-    uint32_t width = windowRect.right - windowRect.left;
-    uint32_t height = windowRect.bottom - windowRect.top;
-
+    DirectX::XMUINT2 windowSize = { (uint32_t)e.width, (uint32_t)e.height };
 
     do
     {
-        current->
-
+        current->Resize(windowSize);
         current = current->Next;
     } while (current != _currentFrame);
 
-    _camera.SetViewport(SceneLayer::Viewport({ width, height }));
-    _gBuffer.Init({ width, height });
+    _camera.SetViewport(SceneLayer::Viewport(windowSize));
+    _gBuffer.Init(windowSize);
 }
 
 void DXRenderer::ClearBuffers(TaskGPU& task)
@@ -518,10 +513,10 @@ void DXRenderer::Present(TaskGPU& task)
 
     PIXBeginEvent(commandList.GetDXCommandList().Get(), 6, "Present");
     {
-        commandList.TransitionBarrier(_currentFrame->_swapChainTexture, D3D12_RESOURCE_STATE_COPY_DEST);
+        commandList.TransitionBarrier(*_currentFrame->_swapChainTexture, D3D12_RESOURCE_STATE_COPY_DEST);
         commandList.TransitionBarrier(_currentFrame->_targetTexture, D3D12_RESOURCE_STATE_COPY_SOURCE);
-        commandList.CopyResource(_currentFrame->_targetTexture, _currentFrame->_swapChainTexture);
-        commandList.TransitionBarrier(_currentFrame->_swapChainTexture, D3D12_RESOURCE_STATE_PRESENT);
+        commandList.CopyResource(_currentFrame->_targetTexture, *_currentFrame->_swapChainTexture);
+        commandList.TransitionBarrier(*_currentFrame->_swapChainTexture, D3D12_RESOURCE_STATE_PRESENT);
     }
     PIXEndEvent(commandList.GetDXCommandList().Get());
 
