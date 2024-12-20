@@ -220,7 +220,10 @@ void Application::_ExecuteFrameTasks()
         // wait
         for (const std::string& dependency : task.GetDependencies())
         {
-            dependencies.push_back(_currentFrame->GetTask(dependency));
+            if (TaskGPU* dependentTask = _currentFrame->GetTask(dependency))
+            {
+                dependencies.push_back(dependentTask);
+            }
         }
 
         for (TaskGPU* d : dependencies)

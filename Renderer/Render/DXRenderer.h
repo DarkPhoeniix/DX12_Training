@@ -59,5 +59,7 @@ private:
     bool _isCameraMoving;
     float _deltaTime;
 
+    bool _renderArmature;
+
     bool _contentLoaded;
 };

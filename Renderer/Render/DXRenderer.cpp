@@ -124,6 +124,7 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
     {
         TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE, &_deferredPipeline);
         task->SetName("deferred");
+        task->AddDependency("clean");
         task->AddDependency("g-pass");
 
         LightingPass(*task);
@@ -133,15 +134,19 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
     {
         TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE, &_SkyboxPipeline);
         task->SetName("skybox");
+        task->AddDependency("clean");
         task->AddDependency("g-pass");
 
         RenderSkybox(*task);
     }
 
     // Render Armature
+    if (_renderArmature)
     {
         TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, &_ArmatureDebugPipeline);
         task->SetName("armature");
+        task->AddDependency("clean");
+        task->AddDependency("g-pass");
         task->AddDependency("deferred");
         task->AddDependency("skybox");
 
@@ -152,6 +157,10 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
     {
         TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
         task->SetName("gui");
+        task->AddDependency("clean");
+        task->AddDependency("g-pass");
+        task->AddDependency("deferred");
+        task->AddDependency("skybox");
         task->AddDependency("armature");
 
         RenderGUI(*task);
@@ -161,6 +170,11 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
     {
         TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
         task->SetName("present");
+        task->AddDependency("clean");
+        task->AddDependency("g-pass");
+        task->AddDependency("deferred");
+        task->AddDependency("skybox");
+        task->AddDependency("armature");
         task->AddDependency("gui");
 
         Present(*task);
@@ -468,6 +482,11 @@ void DXRenderer::RenderGUI(TaskGPU& task)
                 ImGui::Text(std::string("VS invocs: " + std::to_string(stats.VSInvocations)).c_str());
                 ImGui::Text(std::string("GS invocs: " + std::to_string(stats.GSInvocations)).c_str());
                 ImGui::Text(std::string("PS invocs: " + std::to_string(stats.PSInvocations)).c_str());
+            }
+
+            if (ImGui::CollapsingHeader("Settings"))
+            {
+                ImGui::Checkbox("Render debug armature", &_renderArmature);
             }
 
             if (ImGui::CollapsingHeader("Inputs"))
