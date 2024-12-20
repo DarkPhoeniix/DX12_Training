@@ -86,7 +86,7 @@ namespace SceneLayer
 		_viewport = viewport;
 	}
 
-	Viewport Camera::GetViewport() const
+	Viewport& Camera::GetViewport()
 	{
 		return _viewport;
 	}

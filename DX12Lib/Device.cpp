@@ -47,6 +47,11 @@ namespace dx12
         _instance = nullptr;
     }
 
+    void Device::BindSwapChain(SwapChain* swapChain)
+    {
+        _instance->_swapChain = swapChain;
+    }
+
     ComPtr<ID3D12Device2> Device::GetDXDevice()
     {
         return _instance->_device;
@@ -65,6 +70,21 @@ namespace dx12
     ID3D12CommandQueue* Device::GetCopyQueue()
     {
         return _instance->_queueCopy.Get();
+    }
+
+    void Device::OnResize(const DirectX::XMUINT2& size)
+    {
+        _instance->_swapChain->OnResize(size);
+    }
+
+    dx12::Resource* Device::GetBackBuffer()
+    {
+        return _instance->_swapChain->GetBackBuffer();
+    }
+
+    void Device::Present()
+    {
+        _instance->_swapChain->Present();
     }
 
     Device::Device()

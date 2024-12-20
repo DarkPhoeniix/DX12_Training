@@ -4,6 +4,7 @@
 #include "Render/Frame/AllocatorPool.h"
 #include "Render/Frame/FencePool.h"
 #include "Render/Frame/Frame.h"
+#include "Utility/HighResolutionClock.h"
 
 class Win32Window;
 class DXRenderer;

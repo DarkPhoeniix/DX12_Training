@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Utility/HighResolutionClock.h"
 #include "Window/IWindowEventListener.h"
 
 namespace Core

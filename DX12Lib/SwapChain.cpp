@@ -2,6 +2,8 @@
 
 #include "SwapChain.h"
 
+#include "Window/Win32Window.h"
+
 namespace dx12
 {
     SwapChain::SwapChain()
@@ -29,12 +31,12 @@ namespace dx12
         _dxgiSwapChain = nullptr;
     }
 
-    void SwapChain::Init(std::shared_ptr<Core::Win32Window> window)
+    void SwapChain::Init(const Core::Win32Window& window)
     {
-        _windowHandle = window->GetWindowHandle();
-        _width = window->GetWidth();
-        _height = window->GetHeight();
-        _vSync = window->IsVSync();
+        _windowHandle = window.GetWindowHandle();
+        _width = window.GetWidth();
+        _height = window.GetHeight();
+        _vSync = window.IsVSync();
 
         _dxgiSwapChain = CreateSwapChain();
 
@@ -51,9 +53,14 @@ namespace dx12
         return _swapChainDesc;
     }
 
-    dx12::Resource* SwapChain::GetBuffer(unsigned int index)
+    Resource* SwapChain::GetBuffer(unsigned int index)
     {
         return &_backBuffers[index];
+    }
+
+    Resource* SwapChain::GetBackBuffer()
+    {
+        return &_backBuffers[_currentBackBufferIndex];
     }
 
     void SwapChain::UpdateRenderTargetViews()
@@ -82,12 +89,12 @@ namespace dx12
         return _currentBackBufferIndex;
     }
 
-    void SwapChain::OnResize(Core::Events::ResizeEvent& e)
+    void SwapChain::OnResize(const DirectX::XMUINT2& size)
     {
-        if (_width != e.width || _height != e.height)
+        if (_width != size.x || _height != size.y)
         {
-            _width = std::max(1, e.width);
-            _height = std::max(1, e.height);
+            _width = std::max(1, (int)size.x);
+            _height = std::max(1, (int)size.y);
 
             for (int i = 0; i < BACK_BUFFER_COUNT; ++i)
             {

@@ -1,29 +1,33 @@
 #pragma once
 
 #include "DescriptorHeap.h"
-#include "Window/IWindowEventListener.h"
-#include "Window/Win32Window.h"
+
+namespace Core
+{
+    class Win32Window;
+}
 
 namespace dx12
 {
     constexpr UINT BACK_BUFFER_COUNT = 3;
 
-    class SwapChain : public Core::Events::IWindowEventListener
+    class SwapChain
     {
     public:
         SwapChain();
         ~SwapChain();
 
-        void Init(std::shared_ptr<Core::Win32Window> window);
+        void Init(const Core::Win32Window& window);
 
         DXGI_SWAP_CHAIN_DESC GetDescription() const;
 
-        dx12::Resource* GetBuffer(unsigned int index);
+        Resource* GetBuffer(unsigned int index);
+        Resource* GetBackBuffer();
 
         void UpdateRenderTargetViews();
         UINT Present();
 
-        void OnResize(Core::Events::ResizeEvent& e) override;
+        void OnResize(const DirectX::XMUINT2& size);
 
     private:
         ComPtr<IDXGISwapChain4> CreateSwapChain();

@@ -48,5 +48,5 @@ using namespace Microsoft::WRL;
 #include "Utility/Helpers.h"
 #include "Utility/Logger.h"
 
-#include "Device.h"
 #include "Resource.h"
+#include "Device.h"

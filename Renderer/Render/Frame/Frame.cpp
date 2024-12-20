@@ -11,7 +11,6 @@ Frame::Frame()
     : Index(0)
     , Prev(nullptr)
     , Next(nullptr)
-    , _swapChainTexture{}
     , _targetTexture{}
     , _depthTexture{}
     , _currentTasks{}
@@ -228,7 +227,6 @@ void Frame::Resize(const DirectX::XMUINT2& size)
     _targetTexture.GetDXResource().Reset();
     _depthTexture.GetDXResource().Reset();
 
-
     dx12::ResourceDescription textureDesc;
     textureDesc.SetDimension(D3D12_RESOURCE_DIMENSION_TEXTURE2D);
     textureDesc.SetLayout(D3D12_TEXTURE_LAYOUT_UNKNOWN);
@@ -351,11 +349,6 @@ TaskGPU* Frame::GetTask(const std::string& name)
 std::vector<TaskGPU> Frame::GetTasks() const
 {
     return _tasks;
-}
-
-void Frame::SetSwapChainTexture(dx12::Resource* texture)
-{
-    _swapChainTexture = texture;
 }
 
 void Frame::SetSyncFrame(dx12::Fence* syncFrame)

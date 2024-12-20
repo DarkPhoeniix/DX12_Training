@@ -238,7 +238,8 @@ void DXRenderer::OnResize(Core::Events::ResizeEvent& e)
         current = current->Next;
     } while (current != _currentFrame);
 
-    _camera.SetViewport(SceneLayer::Viewport(windowSize));
+    dx12::Device::OnResize(windowSize);
+    _camera.GetViewport().SetSize(windowSize);
     _gBuffer.Init(windowSize);
 }
 
@@ -513,10 +514,11 @@ void DXRenderer::Present(TaskGPU& task)
 
     PIXBeginEvent(commandList.GetDXCommandList().Get(), 6, "Present");
     {
-        commandList.TransitionBarrier(*_currentFrame->_swapChainTexture, D3D12_RESOURCE_STATE_COPY_DEST);
+        dx12::Resource& swapChainTexture = *dx12::Device::GetBackBuffer();
+        commandList.TransitionBarrier(swapChainTexture, D3D12_RESOURCE_STATE_COPY_DEST);
         commandList.TransitionBarrier(_currentFrame->_targetTexture, D3D12_RESOURCE_STATE_COPY_SOURCE);
-        commandList.CopyResource(_currentFrame->_targetTexture, *_currentFrame->_swapChainTexture);
-        commandList.TransitionBarrier(*_currentFrame->_swapChainTexture, D3D12_RESOURCE_STATE_PRESENT);
+        commandList.CopyResource(_currentFrame->_targetTexture, swapChainTexture);
+        commandList.TransitionBarrier(swapChainTexture, D3D12_RESOURCE_STATE_PRESENT);
     }
     PIXEndEvent(commandList.GetDXCommandList().Get());
 

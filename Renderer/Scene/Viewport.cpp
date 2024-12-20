@@ -39,6 +39,7 @@ namespace SceneLayer
     {
         _viewport.Width = (FLOAT)size.x;
         _viewport.Height = (FLOAT)size.y;
+        _aspectRatio = (size.x / (FLOAT)size.y);
     }
 
     DirectX::XMUINT2 Viewport::GetSize() const

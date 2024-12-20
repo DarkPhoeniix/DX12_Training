@@ -38,13 +38,10 @@ public:
     TaskGPU* GetTask(const std::string& name);
     std::vector<TaskGPU> GetTasks() const;
 
-    void SetSwapChainTexture(dx12::Resource* texture);
-
     unsigned int Index;
     Frame* Prev;
     Frame* Next;
 
-    dx12::Resource* _swapChainTexture;
     dx12::Resource _targetTexture;
     dx12::Resource _depthTexture;
 

@@ -4,6 +4,8 @@
 
 namespace dx12
 {
+    class Resource;
+
     class DescriptorHeap
     {
     public:

@@ -2,7 +2,6 @@
 
 #include "Win32Window.h"
 
-#include "Events/KeyEvent.h"
 #include "Events/MouseButtonEvent.h"
 #include "Events/MouseScrollEvent.h"
 #include "Events/MouseMoveEvent.h"

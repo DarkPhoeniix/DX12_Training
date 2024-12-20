@@ -28,7 +28,7 @@ namespace SceneLayer
 		void LookAt(DirectX::XMVECTOR& pos, DirectX::XMVECTOR& target, DirectX::XMVECTOR& up);
 
 		void SetViewport(const Viewport& viewport);
-		Viewport GetViewport() const;
+		Viewport& GetViewport();
 
 		CD3DX12_VIEWPORT GetDXViewport() const;
 		CD3DX12_RECT GetDXScissorRectangle() const;
