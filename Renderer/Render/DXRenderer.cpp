@@ -240,6 +240,7 @@ void DXRenderer::OnResize(Core::Events::ResizeEvent& e)
 
     dx12::Device::OnResize(windowSize);
     _camera.GetViewport().SetSize(windowSize);
+    _camera.Update();
     _gBuffer.Init(windowSize);
 }
 

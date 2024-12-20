@@ -47,6 +47,7 @@ namespace SceneLayer
 		void SetSpeed(float s);
 		float GetSpeed() const;
 
+		void Update();
 		void Update(DirectX::XMVECTOR direction);
 		void Update(int pitch, int yaw);
 

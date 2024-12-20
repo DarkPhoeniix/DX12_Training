@@ -156,6 +156,12 @@ namespace SceneLayer
 		return _speed;
 	}
 
+	void Camera::Update()
+	{
+		_BuildView();
+		_BuildProjection();
+	}
+
 	void Camera::Update(XMVECTOR direction)
 	{
 		_position += direction * CAMERA_MOVEMENT_SPEED;
