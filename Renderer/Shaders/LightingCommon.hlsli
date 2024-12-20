@@ -10,6 +10,10 @@ struct Surface
     float Roughness;
     
     float4 FinalColor;
+    
+    float NdotV;
+    float NdotL;
+    float NdotH;
 };
 
 #define LIGHT_TYPE_DIRECTIONAL 0
