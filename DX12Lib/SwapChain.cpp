@@ -176,4 +176,11 @@ namespace dx12
 
         return allowTearing == TRUE;
     }
+
+    ComPtr<IDXGIOutput> SwapChain::GetContainingOutput()
+    {
+        ComPtr<IDXGIOutput> output;
+        Helper::throwIfFailed(_dxgiSwapChain->GetContainingOutput(&output));
+        return output;
+    }
 } // namespace dx12

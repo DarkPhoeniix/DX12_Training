@@ -75,6 +75,7 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
     // Initialization
     {
         _swapChain.Init(*_win32Window);
+        _win32Window->SetSwapChain(&_swapChain);
         dx12::Device::BindSwapChain(&_swapChain);
 
         _allocs.Init();

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "SwapChain.h"
 #include "Window/IWindowEventListener.h"
 
 namespace Core
@@ -30,14 +31,22 @@ namespace Core
         void AddEventListener(Events::IWindowEventListener* listener);
         void RemoveEventListener(Events::IWindowEventListener* listener);
 
+        void SetSwapChain(dx12::SwapChain* swapChain);
+
         LRESULT WindowProcCallback(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
     protected:
+        void ToggleFullscreenWindow();
+
         HWND _windowHandle;
 
         std::vector<Events::IWindowEventListener*> _eventListeners;
 
+        dx12::SwapChain* _swapChain;
+
         std::wstring _title;
+        UINT _windowStyle;
+        RECT _windowRect;
         int _width;
         int _height;
 

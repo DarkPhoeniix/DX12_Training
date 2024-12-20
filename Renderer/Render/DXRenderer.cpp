@@ -30,6 +30,7 @@ DXRenderer::DXRenderer(HWND windowHandle)
     , _currentFrame(nullptr)
     , _isCameraMoving(false)
     , _deltaTime(0.0f)
+    , _renderArmature(false)
 {   }
 
 DXRenderer::~DXRenderer()

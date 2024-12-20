@@ -29,6 +29,8 @@ namespace dx12
 
         void OnResize(const DirectX::XMUINT2& size);
 
+        ComPtr<IDXGIOutput> GetContainingOutput();
+
     private:
         ComPtr<IDXGISwapChain4> CreateSwapChain();
         bool CheckTearingSupport() const;
