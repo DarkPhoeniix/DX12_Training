@@ -8,14 +8,13 @@
 #include "Events/RenderEvent.h"
 #include "Events/UpdateEvent.h"
 #include "Events/KeyEvent.h"
+#include "GUI/GUI.h"
 #include "Render/Frame/TaskGPU.h"
 #include "Utility/DebugInfo.h"
 
 #include "Scene/ECS/Components/Armature.h"
 #include "Scene/ECS/Components/Transformation.h"
 #include "Scene/ECS/Components/Skybox.h"
-
-#include "GUI/GUI.h"
 
 using namespace DirectX;
 using namespace Core;
@@ -31,6 +30,7 @@ DXRenderer::DXRenderer(HWND windowHandle)
     , _currentFrame(nullptr)
     , _isCameraMoving(false)
     , _deltaTime(0.0f)
+    , _renderArmature(false)
 {   }
 
 DXRenderer::~DXRenderer()
@@ -125,6 +125,7 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
     {
         TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE, &_deferredPipeline);
         task->SetName("deferred");
+        task->AddDependency("clean");
         task->AddDependency("g-pass");
 
         LightingPass(*task);
@@ -134,15 +135,19 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
     {
         TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE, &_SkyboxPipeline);
         task->SetName("skybox");
+        task->AddDependency("clean");
         task->AddDependency("g-pass");
 
         RenderSkybox(*task);
     }
 
     // Render Armature
+    if (_renderArmature)
     {
         TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, &_ArmatureDebugPipeline);
         task->SetName("armature");
+        task->AddDependency("clean");
+        task->AddDependency("g-pass");
         task->AddDependency("deferred");
         task->AddDependency("skybox");
 
@@ -153,6 +158,10 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
     {
         TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
         task->SetName("gui");
+        task->AddDependency("clean");
+        task->AddDependency("g-pass");
+        task->AddDependency("deferred");
+        task->AddDependency("skybox");
         task->AddDependency("armature");
 
         RenderGUI(*task);
@@ -162,6 +171,11 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
     {
         TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
         task->SetName("present");
+        task->AddDependency("clean");
+        task->AddDependency("g-pass");
+        task->AddDependency("deferred");
+        task->AddDependency("skybox");
+        task->AddDependency("armature");
         task->AddDependency("gui");
 
         Present(*task);
@@ -219,6 +233,30 @@ void DXRenderer::OnMouseButtonReleased(Events::MouseButtonEvent& e)
     {
         _isCameraMoving = false;
     }
+}
+
+void DXRenderer::OnResize(Core::Events::ResizeEvent& e)
+{
+    Frame* current = _currentFrame;
+    do
+    {
+        current->WaitCPU();
+        current->ResetGPU();
+        current = current->Next;
+    } while (current != _currentFrame);
+
+    DirectX::XMUINT2 windowSize = { (uint32_t)e.width, (uint32_t)e.height };
+
+    do
+    {
+        current->Resize(windowSize);
+        current = current->Next;
+    } while (current != _currentFrame);
+
+    dx12::Device::OnResize(windowSize);
+    _camera.GetViewport().SetSize(windowSize);
+    _camera.Update();
+    _gBuffer.Init(windowSize);
 }
 
 void DXRenderer::ClearBuffers(TaskGPU& task)
@@ -447,6 +485,11 @@ void DXRenderer::RenderGUI(TaskGPU& task)
                 ImGui::Text(std::string("PS invocs: " + std::to_string(stats.PSInvocations)).c_str());
             }
 
+            if (ImGui::CollapsingHeader("Settings"))
+            {
+                ImGui::Checkbox("Render debug armature", &_renderArmature);
+            }
+
             if (ImGui::CollapsingHeader("Inputs"))
             {
                 ImGuiIO& io = ImGui::GetIO();
@@ -492,10 +535,11 @@ void DXRenderer::Present(TaskGPU& task)
 
     PIXBeginEvent(commandList.GetDXCommandList().Get(), 6, "Present");
     {
-        commandList.TransitionBarrier(_currentFrame->_swapChainTexture, D3D12_RESOURCE_STATE_COPY_DEST);
+        dx12::Resource& swapChainTexture = *dx12::Device::GetBackBuffer();
+        commandList.TransitionBarrier(swapChainTexture, D3D12_RESOURCE_STATE_COPY_DEST);
         commandList.TransitionBarrier(_currentFrame->_targetTexture, D3D12_RESOURCE_STATE_COPY_SOURCE);
-        commandList.CopyResource(_currentFrame->_targetTexture, _currentFrame->_swapChainTexture);
-        commandList.TransitionBarrier(_currentFrame->_swapChainTexture, D3D12_RESOURCE_STATE_PRESENT);
+        commandList.CopyResource(_currentFrame->_targetTexture, swapChainTexture);
+        commandList.TransitionBarrier(swapChainTexture, D3D12_RESOURCE_STATE_PRESENT);
     }
     PIXEndEvent(commandList.GetDXCommandList().Get());
 

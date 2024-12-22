@@ -20,12 +20,14 @@ public:
     Frame();
     ~Frame();
 
-    void Init(const dx12::SwapChain& swapChain);
+    void Init(const DirectX::XMUINT2& size);
 
     TaskGPU* CreateTask(D3D12_COMMAND_LIST_TYPE type, dx12::RootSignature* rootSignature = nullptr);
 
     void WaitCPU();
     void ResetGPU();
+
+    void Resize(const DirectX::XMUINT2& size);
 
     void SetAllocatorPool(AllocatorPool* allocatorPool);
     void SetFencePool(FencePool* fencePool);
@@ -40,7 +42,6 @@ public:
     Frame* Prev;
     Frame* Next;
 
-    dx12::Resource _swapChainTexture;
     dx12::Resource _targetTexture;
     dx12::Resource _depthTexture;
 

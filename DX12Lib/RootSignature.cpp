@@ -303,7 +303,7 @@ namespace dx12
         }
     }
 
-    void RootSignature::ParseGraphicsPipeline(Json::Value& fileRoot)
+    void RootSignature::ParseGraphicsPipeline(const Json::Value& fileRoot)
     {
         ComPtr<ID3D12Device> device = dx12::Device::GetDXDevice();
 
@@ -394,7 +394,7 @@ namespace dx12
         delete[] inputLayout;
     }
 
-    void RootSignature::ParseComputePipeline(Json::Value& fileRoot)
+    void RootSignature::ParseComputePipeline(const Json::Value& fileRoot)
     {
         ComPtr<ID3D12Device> device = dx12::Device::GetDXDevice();
 

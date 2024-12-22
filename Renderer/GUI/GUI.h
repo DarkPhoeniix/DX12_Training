@@ -13,7 +13,7 @@ LRESULT GUI_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 class GUI
 {
 public:
-    static void Init(HWND windowHandle, const dx12::SwapChain& swapChain);
+    static void Init(HWND windowHandle);
     static void NewFrame();
     static void Render(dx12::CommandList& commandList);
     static void Destroy();

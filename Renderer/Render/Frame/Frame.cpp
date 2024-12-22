@@ -11,7 +11,6 @@ Frame::Frame()
     : Index(0)
     , Prev(nullptr)
     , Next(nullptr)
-    , _swapChainTexture{}
     , _targetTexture{}
     , _depthTexture{}
     , _currentTasks{}
@@ -43,45 +42,51 @@ Frame::~Frame()
     _syncFrame = nullptr;
 }
 
-void Frame::Init(const dx12::SwapChain& swapChain)
+void Frame::Init(const DirectX::XMUINT2& size)
 {
-    swapChain.GetBuffer(Index, _swapChainTexture);
-    _swapChainTexture.SetName(std::string("Frame's swapchain resource ") + std::to_string(Index));
+    dx12::ResourceDescription textureDesc;
+    textureDesc.SetSize(size);
+    textureDesc.SetDimension(D3D12_RESOURCE_DIMENSION_TEXTURE2D);
+    textureDesc.SetLayout(D3D12_TEXTURE_LAYOUT_UNKNOWN);
+    textureDesc.SetMipLevels(1);
+    textureDesc.SetAlignment(D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT);
 
     // Create resource for the target texture
     {
-        dx12::ResourceDescription desc = _swapChainTexture.GetResourceDescription();
-
         D3D12_CLEAR_VALUE clearValueTexTarget;
-        clearValueTexTarget.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        clearValueTexTarget.Color[0] = 0.0f; 
-        clearValueTexTarget.Color[1] = 0.0f;
-        clearValueTexTarget.Color[2] = 0.0f;
-        clearValueTexTarget.Color[3] = 1.0f;
+        {
+            clearValueTexTarget.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+            clearValueTexTarget.Color[0] = 0.0f;
+            clearValueTexTarget.Color[1] = 0.0f;
+            clearValueTexTarget.Color[2] = 0.0f;
+            clearValueTexTarget.Color[3] = 1.0f;
+        }
 
-        desc.AddFlags(D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-        desc.SetClearValue(clearValueTexTarget);
+        textureDesc.SetFormat(DXGI_FORMAT_R8G8B8A8_UNORM);
+        textureDesc.SetFlags(D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+        textureDesc.AddFlags(D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+        textureDesc.SetClearValue(clearValueTexTarget);
 
-        _targetTexture.SetResourceDescription(desc);
+        _targetTexture.SetResourceDescription(textureDesc);
         _targetTexture.CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_SOURCE);
         _targetTexture.SetName(std::string("Frame RTT ") + std::to_string(Index));
     }
 
     // Create resource for the depth texture
     {
-        dx12::ResourceDescription desc = _swapChainTexture.GetResourceDescription();
-
-        desc.SetFlags(D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
-        desc.SetFormat(DXGI_FORMAT_D32_FLOAT);
+        textureDesc.SetFlags(D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
+        textureDesc.SetFormat(DXGI_FORMAT_D32_FLOAT);
 
         D3D12_CLEAR_VALUE clearValue;
-        clearValue.Format = DXGI_FORMAT_D32_FLOAT;
-        clearValue.DepthStencil.Depth = 1;
-        clearValue.DepthStencil.Stencil = 0;
+        {
+            clearValue.Format = DXGI_FORMAT_D32_FLOAT;
+            clearValue.DepthStencil.Depth = 1;
+            clearValue.DepthStencil.Stencil = 0;
+        }
 
-        desc.SetClearValue(clearValue);
+        textureDesc.SetClearValue(clearValue);
 
-        _depthTexture.SetResourceDescription(desc);
+        _depthTexture.SetResourceDescription(textureDesc);
         _depthTexture.CreateCommitedResource(D3D12_RESOURCE_STATE_DEPTH_WRITE);
         _depthTexture.SetName(std::string("Frame DSV ") + std::to_string( Index));
     }
@@ -98,7 +103,7 @@ void Frame::Init(const dx12::SwapChain& swapChain)
         dx12::Device::GetDXDevice()->CreateDescriptorHeap(&descHeapDesc, IID_PPV_ARGS(&_depthHeap));
     }
 
-    // Create RTT heap
+    // Create RTV on descriptor heap
     {
         D3D12_RENDER_TARGET_VIEW_DESC renderTargetDesc = {};
         renderTargetDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -107,11 +112,11 @@ void Frame::Init(const dx12::SwapChain& swapChain)
         dx12::Device::GetDXDevice()->CreateRenderTargetView(_targetTexture.GetDXResource().Get(), &renderTargetDesc, _targetHeap->GetCPUDescriptorHandleForHeapStart());
     }
 
-    // Create DSV heap
+    // Create DSV on descriptor heap
     {
         D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
         depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
-        depthStencilDesc.Flags = D3D12_DSV_FLAG_NONE;//D3D12_DSV_FLAG_READ_ONLY_DEPTH;
+        depthStencilDesc.Flags = D3D12_DSV_FLAG_NONE;
         depthStencilDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
         depthStencilDesc.Texture2D.MipSlice = 0;
         dx12::Device::GetDXDevice()->CreateDepthStencilView(_depthTexture.GetDXResource().Get(), &depthStencilDesc, _depthHeap->GetCPUDescriptorHandleForHeapStart());
@@ -215,6 +220,107 @@ void Frame::ResetGPU()
     _tasks.clear();
     _executedTasks.clear();
     _executedTasks = std::move(_currentTasks);
+}
+
+void Frame::Resize(const DirectX::XMUINT2& size)
+{
+    _targetTexture.GetDXResource().Reset();
+    _depthTexture.GetDXResource().Reset();
+
+    dx12::ResourceDescription textureDesc;
+    textureDesc.SetDimension(D3D12_RESOURCE_DIMENSION_TEXTURE2D);
+    textureDesc.SetLayout(D3D12_TEXTURE_LAYOUT_UNKNOWN);
+    textureDesc.SetMipLevels(1);
+    textureDesc.SetAlignment(D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT);
+
+    // Create resource for the target texture
+    {
+        D3D12_CLEAR_VALUE clearValueTexTarget;
+        {
+            clearValueTexTarget.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+            clearValueTexTarget.Color[0] = 0.0f;
+            clearValueTexTarget.Color[1] = 0.0f;
+            clearValueTexTarget.Color[2] = 0.0f;
+            clearValueTexTarget.Color[3] = 1.0f;
+        }
+        
+        textureDesc.SetResourceType(dx12::EResourceType::Buffer | dx12::EResourceType::RenderTarget | dx12::EResourceType::Texture);
+        textureDesc.SetFormat(DXGI_FORMAT_R8G8B8A8_UNORM);
+        textureDesc.SetFlags(D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+        textureDesc.AddFlags(D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+        textureDesc.SetClearValue(clearValueTexTarget);
+        textureDesc.SetSize(size);
+
+        _targetTexture.SetResourceDescription(textureDesc);
+        _targetTexture.CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_SOURCE);
+        _targetTexture.SetName(std::string("Frame RTT ") + std::to_string(Index));
+    }
+
+    // Create resource for the depth texture
+    {
+        textureDesc.SetResourceType(dx12::EResourceType::Buffer | dx12::EResourceType::DepthTarget | dx12::EResourceType::Texture);
+        textureDesc.SetFlags(D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
+        textureDesc.SetFormat(DXGI_FORMAT_D32_FLOAT);
+        textureDesc.SetSize(size);
+
+        D3D12_CLEAR_VALUE clearValue;
+        {
+            clearValue.Format = DXGI_FORMAT_D32_FLOAT;
+            clearValue.DepthStencil.Depth = 1;
+            clearValue.DepthStencil.Stencil = 0;
+        }
+
+        textureDesc.SetClearValue(clearValue);
+
+        _depthTexture.SetResourceDescription(textureDesc);
+        _depthTexture.CreateCommitedResource(D3D12_RESOURCE_STATE_DEPTH_WRITE);
+        _depthTexture.SetName(std::string("Frame DSV ") + std::to_string(Index));
+    }
+
+    // Create RTV on descriptor heap
+    {
+        D3D12_RENDER_TARGET_VIEW_DESC renderTargetDesc = {};
+        renderTargetDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        renderTargetDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+        renderTargetDesc.Texture2D.MipSlice = 0;
+        dx12::Device::GetDXDevice()->CreateRenderTargetView(_targetTexture.GetDXResource().Get(), &renderTargetDesc, _targetHeap->GetCPUDescriptorHandleForHeapStart());
+    }
+
+    // Create DSV on descriptor heap
+    {
+        D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
+        depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
+        depthStencilDesc.Flags = D3D12_DSV_FLAG_NONE;//D3D12_DSV_FLAG_READ_ONLY_DEPTH;
+        depthStencilDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+        depthStencilDesc.Texture2D.MipSlice = 0;
+        dx12::Device::GetDXDevice()->CreateDepthStencilView(_depthTexture.GetDXResource().Get(), &depthStencilDesc, _depthHeap->GetCPUDescriptorHandleForHeapStart());
+    }
+
+    _postFXDescHeap.Reset();
+    _testHeap.Reset();
+
+    _postFXDescHeap.PlaceResource(&_targetTexture);
+    _postFXDescHeap.PlaceResource(&_depthTexture);
+
+    _testHeap.PlaceResource(&_depthTexture);
+    _testHeap.PlaceResource(&_targetTexture);
+
+    D3D12_UNORDERED_ACCESS_VIEW_DESC UAVDesc = {};
+    UAVDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+    UAVDesc.Texture2D.MipSlice = 0;
+
+    dx12::Device::GetDXDevice()->CreateUnorderedAccessView(_targetTexture.GetDXResource().Get(), nullptr, &UAVDesc, _postFXDescHeap.GetResourceCPUHandle(&_targetTexture));
+    dx12::Device::GetDXDevice()->CreateUnorderedAccessView(_targetTexture.GetDXResource().Get(), nullptr, &UAVDesc, _testHeap.GetResourceCPUHandle(&_targetTexture));
+
+    D3D12_SHADER_RESOURCE_VIEW_DESC SRVDesc = {};
+    SRVDesc.Format = DXGI_FORMAT_R32_FLOAT;
+    SRVDesc.Texture2D.MipLevels = 1;
+    SRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    SRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+    dx12::Device::GetDXDevice()->CreateShaderResourceView(_depthTexture.GetDXResource().Get(), &SRVDesc, _postFXDescHeap.GetResourceCPUHandle(&_depthTexture));
+    dx12::Device::GetDXDevice()->CreateShaderResourceView(_depthTexture.GetDXResource().Get(), &SRVDesc, _testHeap.GetResourceCPUHandle(&_depthTexture));
 }
 
 void Frame::SetAllocatorPool(AllocatorPool* allocatorPool)

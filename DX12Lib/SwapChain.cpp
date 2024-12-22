@@ -2,6 +2,8 @@
 
 #include "SwapChain.h"
 
+#include "Window/Win32Window.h"
+
 namespace dx12
 {
     SwapChain::SwapChain()
@@ -29,12 +31,12 @@ namespace dx12
         _dxgiSwapChain = nullptr;
     }
 
-    void SwapChain::Init(std::shared_ptr<Core::Win32Window> window)
+    void SwapChain::Init(const Core::Win32Window& window)
     {
-        _windowHandle = window->GetWindowHandle();
-        _width = window->GetWidth();
-        _height = window->GetHeight();
-        _vSync = window->IsVSync();
+        _windowHandle = window.GetWindowHandle();
+        _width = window.GetWidth();
+        _height = window.GetHeight();
+        _vSync = window.IsVSync();
 
         _dxgiSwapChain = CreateSwapChain();
 
@@ -51,11 +53,14 @@ namespace dx12
         return _swapChainDesc;
     }
 
-    void SwapChain::GetBuffer(unsigned int index, Resource& resource) const
+    Resource* SwapChain::GetBuffer(unsigned int index)
     {
-        ComPtr<ID3D12Resource> buffer;
-        _dxgiSwapChain->GetBuffer(index, IID_PPV_ARGS(&buffer));
-        resource.InitFromDXResource(buffer);
+        return &_backBuffers[index];
+    }
+
+    Resource* SwapChain::GetBackBuffer()
+    {
+        return &_backBuffers[_currentBackBufferIndex];
     }
 
     void SwapChain::UpdateRenderTargetViews()
@@ -84,18 +89,17 @@ namespace dx12
         return _currentBackBufferIndex;
     }
 
-    void SwapChain::OnResize(Core::Events::ResizeEvent& e)
+    void SwapChain::OnResize(const DirectX::XMUINT2& size)
     {
-        if (_width != e.width || _height != e.height)
+        if (_width != size.x || _height != size.y)
         {
-            _width = std::max(1, e.width);
-            _height = std::max(1, e.height);
+            _width = std::max(1, (int)size.x);
+            _height = std::max(1, (int)size.y);
 
-            // TODO: Do it really needs Reset() ?
-            //for (int i = 0; i < BUFFER_COUNT; ++i)
-            //{
-            //    _backBuffers[i].Reset(); 
-            //}
+            for (int i = 0; i < BACK_BUFFER_COUNT; ++i)
+            {
+                _backBuffers[i].GetDXResource().Reset();
+            }
 
             DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
             Helper::throwIfFailed(_dxgiSwapChain->GetDesc(&swapChainDesc));
@@ -171,5 +175,12 @@ namespace dx12
         }
 
         return allowTearing == TRUE;
+    }
+
+    ComPtr<IDXGIOutput> SwapChain::GetContainingOutput()
+    {
+        ComPtr<IDXGIOutput> output;
+        Helper::throwIfFailed(_dxgiSwapChain->GetContainingOutput(&output));
+        return output;
     }
 } // namespace dx12

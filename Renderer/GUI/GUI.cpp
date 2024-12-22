@@ -17,7 +17,7 @@ LRESULT GUI_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return S_OK;
 }
 
-void GUI::Init(HWND windowHandle, const dx12::SwapChain& swapChain)
+void GUI::Init(HWND windowHandle)
 {
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -29,7 +29,7 @@ void GUI::Init(HWND windowHandle, const dx12::SwapChain& swapChain)
     ImGui_ImplWin32_Init(windowHandle);
     ImGui_ImplDX12_Init(dx12::Device::GetDXDevice().Get(),
                         dx12::BACK_BUFFER_COUNT,
-                        swapChain.GetDescription().BufferDesc.Format,
+                        DXGI_FORMAT_R8G8B8A8_UNORM,
                         Instance()._srvDescriptorHeap->GetDXDescriptorHeap().Get(),
                         Instance()._srvDescriptorHeap->GetHeapStartCPUHandle(),
                         Instance()._srvDescriptorHeap->GetHeapStartGPUHandle());

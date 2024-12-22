@@ -2,7 +2,6 @@
 
 #include "Win32Window.h"
 
-#include "Events/KeyEvent.h"
 #include "Events/MouseButtonEvent.h"
 #include "Events/MouseScrollEvent.h"
 #include "Events/MouseMoveEvent.h"
@@ -16,19 +15,21 @@ namespace Core
     using Events::ResizeEvent;
 
     Win32Window::Win32Window(HINSTANCE hInstance, int width, int height, const std::wstring& title, bool vSync)
-        : _eventListener(nullptr)
+        : _eventListeners{}
         , _vSync(vSync)
         , _title(title)
         , _fullscreen(false)
     {
-        RECT windowRect = { 0, 0, width, height };
-        AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
+        _windowStyle = WS_OVERLAPPEDWINDOW;
 
-        _width = windowRect.right - windowRect.left;
-        _height = windowRect.bottom - windowRect.top;
+        _windowRect = { 0, 0, width, height };
+        AdjustWindowRect(&_windowRect, _windowStyle, FALSE);
+
+        _width = _windowRect.right - _windowRect.left;
+        _height = _windowRect.bottom - _windowRect.top;
 
         _windowHandle = CreateWindowW(L"DX12WindowClass", title.c_str(),
-            WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
+            _windowStyle, CW_USEDEFAULT, CW_USEDEFAULT,
             _width, _height, nullptr, nullptr, hInstance, this);
 
         if (!_windowHandle)
@@ -50,12 +51,22 @@ namespace Core
 
     void Win32Window::AddEventListener(Events::IWindowEventListener* listener)
     {
-        _eventListener = listener;
+        _eventListeners.push_back(listener);
     }
 
-    void Win32Window::RemoveEventListener()
+    void Win32Window::RemoveEventListener(Events::IWindowEventListener* listener)
     {
-        _eventListener = nullptr;
+        auto it = std::find(_eventListeners.begin(), _eventListeners.end(), listener);
+
+        if (it != _eventListeners.end())
+        {
+            _eventListeners.erase(it);
+        }
+    }
+
+    void Win32Window::SetSwapChain(dx12::SwapChain* swapChain)
+    {
+        _swapChain = swapChain;
     }
 
     HWND Win32Window::GetWindowHandle() const
@@ -101,49 +112,118 @@ namespace Core
     void Win32Window::SetFullscreen(bool fullscreen)
     {
         _fullscreen = fullscreen;
+        ToggleFullscreenWindow();
     }
 
     void Win32Window::ToggleFullscreen()
     {
-        _fullscreen = !_fullscreen;
+        SetFullscreen(!_fullscreen);
     }
 
     LRESULT Win32Window::WindowProcCallback(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
-        static Events::IWindowEventListener* listener = nullptr;
-        if (!listener)
+        switch (message)
         {
-            listener = _eventListener;
+        case WM_SYSKEYDOWN:
+        {
+            // Handle ALT+ENTER:
+            if ((wParam == VK_RETURN) && (lParam & (1 << 29)))
+            {
+                ToggleFullscreen();
+            }
         }
-
-        if (listener)
+        break;
+        case WM_SIZE:
         {
-            switch (message)
-            {
-            case WM_SIZE:
-            {
-                int width = ((int)(short)LOWORD(lParam));
-                int height = ((int)(short)HIWORD(lParam));
+            int width = ((int)(short)LOWORD(lParam));
+            int height = ((int)(short)HIWORD(lParam));
 
-                ResizeEvent resizeEventArgs(width, height);
+            RECT windowRect = { 0, 0, width, height };
+            AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
+
+            _width = windowRect.right - windowRect.left;
+            _height = windowRect.bottom - windowRect.top;
+
+            ResizeEvent resizeEventArgs(width, height);
+            for (Events::IWindowEventListener* listener : _eventListeners)
+            {
                 listener->OnResize(resizeEventArgs);
             }
-            break;
-            case WM_DESTROY:
-            {
-                // If there are no more windows, quit the application.
-                PostQuitMessage(0);
-            }
-            break;
-            default:
-                return DefWindowProcW(hwnd, message, wParam, lParam);
-            }
         }
-        else
+        break;
+        case WM_DESTROY:
         {
+            // If there are no more windows, quit the application.
+            PostQuitMessage(0);
+        }
+        break;
+        default:
             return DefWindowProcW(hwnd, message, wParam, lParam);
         }
 
         return 0;
+    }
+
+    void Win32Window::ToggleFullscreenWindow()
+    {
+        if (_fullscreen)
+        {
+            // Save the old window rect so we can restore it when exiting fullscreen mode
+            GetWindowRect(_windowHandle, &_windowRect);
+
+            // Make the window borderless so that the client area can fill the screen
+            SetWindowLong(_windowHandle, GWL_STYLE, _windowStyle & ~(WS_CAPTION | WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_SYSMENU | WS_THICKFRAME));
+
+            RECT fullscreenWindowRect;
+            if (_swapChain)
+            {
+                // Get the settings of the display on which the app's window is currently displayed
+                ComPtr<IDXGIOutput> pOutput = _swapChain->GetContainingOutput();
+                DXGI_OUTPUT_DESC Desc;
+                Helper::throwIfFailed(pOutput->GetDesc(&Desc));
+                fullscreenWindowRect = Desc.DesktopCoordinates;
+            }
+            else
+            {
+                // Get the settings of the primary display
+                DEVMODE devMode = {};
+                devMode.dmSize = sizeof(DEVMODE);
+                EnumDisplaySettings(nullptr, ENUM_CURRENT_SETTINGS, &devMode);
+
+                fullscreenWindowRect = {
+                    devMode.dmPosition.x,
+                    devMode.dmPosition.y,
+                    devMode.dmPosition.x + static_cast<LONG>(devMode.dmPelsWidth),
+                    devMode.dmPosition.y + static_cast<LONG>(devMode.dmPelsHeight)
+                };
+            }
+
+            SetWindowPos(
+                _windowHandle,
+                HWND_TOPMOST,
+                fullscreenWindowRect.left,
+                fullscreenWindowRect.top,
+                fullscreenWindowRect.right,
+                fullscreenWindowRect.bottom,
+                SWP_FRAMECHANGED | SWP_NOACTIVATE);
+
+            ShowWindow(_windowHandle, SW_MAXIMIZE);
+        }
+        else
+        {
+            // Restore the window's attributes and size.
+            SetWindowLong(_windowHandle, GWL_STYLE, _windowStyle);
+
+            SetWindowPos(
+                _windowHandle,
+                HWND_NOTOPMOST,
+                _windowRect.left,
+                _windowRect.top,
+                _windowRect.right - _windowRect.left,
+                _windowRect.bottom - _windowRect.top,
+                SWP_FRAMECHANGED | SWP_NOACTIVATE);
+
+            ShowWindow(_windowHandle, SW_NORMAL);
+        }
     }
 } // namespace Core

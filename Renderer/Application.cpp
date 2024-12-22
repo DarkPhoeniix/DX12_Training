@@ -74,7 +74,10 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
 {
     // Initialization
     {
-        _swapChain.Init(_win32Window);
+        _swapChain.Init(*_win32Window);
+        _win32Window->SetSwapChain(&_swapChain);
+        dx12::Device::BindSwapChain(&_swapChain);
+
         _allocs.Init();
         _fencePool.Init();
 
@@ -92,11 +95,13 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
             frame.SetAllocatorPool(&_allocs);
             frame.SetFencePool(&_fencePool);
 
-            frame.Init(_swapChain);
+            frame.Init({ (uint32_t)_win32Window->GetWidth(), (uint32_t)_win32Window->GetHeight() });
         }
 
-        GUI::Init(_win32Window->GetWindowHandle(), _swapChain);
+        GUI::Init(_win32Window->GetWindowHandle());
     }
+
+    _win32Window->AddEventListener(pApp.get());
 
     Events::InputDevice::Instance().AddInputObserver(pApp.get());
 
@@ -216,7 +221,10 @@ void Application::_ExecuteFrameTasks()
         // wait
         for (const std::string& dependency : task.GetDependencies())
         {
-            dependencies.push_back(_currentFrame->GetTask(dependency));
+            if (TaskGPU* dependentTask = _currentFrame->GetTask(dependency))
+            {
+                dependencies.push_back(dependentTask);
+            }
         }
 
         for (TaskGPU* d : dependencies)
@@ -235,7 +243,7 @@ void Application::_ExecuteFrameTasks()
 
         if (task.GetName() == "present")
         {
-            _swapChain.Present();
+            dx12::Device::Present();
             _currentFrame->SetSyncFrame(task.GetFence());
         }
         task.GetCommandQueue()->Signal(task.GetDXFence(), task.GetFenceValue());

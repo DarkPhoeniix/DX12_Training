@@ -86,7 +86,7 @@ namespace SceneLayer
 		_viewport = viewport;
 	}
 
-	Viewport Camera::GetViewport() const
+	Viewport& Camera::GetViewport()
 	{
 		return _viewport;
 	}
@@ -154,6 +154,12 @@ namespace SceneLayer
 	float Camera::GetSpeed() const
 	{
 		return _speed;
+	}
+
+	void Camera::Update()
+	{
+		_BuildView();
+		_BuildProjection();
 	}
 
 	void Camera::Update(XMVECTOR direction)

@@ -35,8 +35,8 @@ using namespace Microsoft::WRL;
 
 #include "Utility/Logger.h"
 #include "Utility/Helpers.h"
-#include "Device.h"
 #include "Resource.h"
+#include "Device.h"
 
 #include <filesystem>
 #include <cstdint>
