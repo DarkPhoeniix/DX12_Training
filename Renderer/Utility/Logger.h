@@ -3,6 +3,7 @@
 #include <fstream>
 
 #define ASSERT(statement, message) \
+    assert(statement); \
     AssertUtility::AssertFunction(statement, message)
 
 #define LOG_WARNING(statement, message) \

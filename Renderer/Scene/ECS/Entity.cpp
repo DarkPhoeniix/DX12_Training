@@ -46,6 +46,16 @@ namespace SceneLayer
         _components.clear();
     }
 
+    const Transformation& Entity::GetGlobalTransform() const
+    {
+        return _globalTransformation;
+    }
+
+    void Entity::UpdateGlobalTransform(const Transformation& parentTransform)
+    {
+        _globalTransformation.Transform = GetComponentAs<Transformation>("Transformation")->Transform * parentTransform.Transform;
+    }
+
     std::vector<std::shared_ptr<Entity>>& Entity::GetChildrenNodes()
     {
         return _children;

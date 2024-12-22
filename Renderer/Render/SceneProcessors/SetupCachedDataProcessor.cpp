@@ -82,22 +82,4 @@ void SetupCachedDataProcessor::ProcessEntity(SceneLayer::Entity& entity, dx12::C
 
         data[_lightNum++] = lightDesc;
     }
-
-    Animation* animation = entity.GetComponentAs<Animation>("Animation");
-    Armature* armature = entity.GetComponentAs<Armature>("Armature");
-    if (armature && animation)
-    {
-        DirectX::XMMATRIX* data = (DirectX::XMMATRIX*)armature->BoneTransforms.Map();
-
-        const auto& transforms = animation->GetBonesTransforms(cache->GetTime());
-        armature->ApplyAnimation(transforms);
-        armature->UpdateGlobalTransformations();
-
-        const std::vector<Bone*>& bones = armature->GetSortedBones();
-        for (int i = 0; i < bones.size(); ++i)
-        {
-            DirectX::XMMATRIX result = bones[i]->Offset * bones[i]->GlobalTransform;
-            data[i] = result;
-        }
-    }
 }

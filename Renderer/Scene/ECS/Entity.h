@@ -2,6 +2,7 @@
 
 #include "Scene/SceneCache.h"
 #include "Scene/ECS/Components.h"
+#include "Scene/ECS/Components/Transformation.h"
 
 namespace SceneLayer
 {
@@ -18,6 +19,9 @@ namespace SceneLayer
         void AddComponent(const std::shared_ptr<IComponent>& component);
         void ClearComponents();
 
+        const Transformation& GetGlobalTransform() const;
+        void UpdateGlobalTransform(const Transformation& parentTransform);
+
         std::vector<std::shared_ptr<Entity>>& GetChildrenNodes();
         void AddChild(std::shared_ptr<Entity> child);
 
@@ -32,6 +36,7 @@ namespace SceneLayer
         void Init();
 
         std::vector<std::shared_ptr<IComponent>> _components;
+        Transformation _globalTransformation;
 
         std::vector<std::shared_ptr<Entity>> _children;
         Entity* _parent;
