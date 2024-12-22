@@ -3,5 +3,5 @@
 
 	"IsGraphicsPipeline": false,
 
-	"CS": "DeferredShading.cso"
+	"CS": "Shaders\\DeferredShading.cso"
 }

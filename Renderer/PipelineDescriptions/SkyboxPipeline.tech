@@ -3,5 +3,5 @@
 
 	"IsGraphicsPipeline": false,
 
-	"CS": "Skybox_cs.cso"
+	"CS": "Shaders\\Skybox_cs.cso"
 }

@@ -15,7 +15,7 @@
 	"DepthBuffer": "BackBufferDepth",
 	"Layout": null,
 
-	"VS": "Armature_vs.cso",
-	"GS": "Armature_gs.cso",
-	"PS": "Armature_ps.cso"
+	"VS": "Shaders\\Armature_vs.cso",
+	"GS": "Shaders\\Armature_gs.cso",
+	"PS": "Shaders\\Armature_ps.cso"
 }

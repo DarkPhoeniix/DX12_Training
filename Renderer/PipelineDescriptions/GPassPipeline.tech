@@ -66,6 +66,6 @@
 		}
 	],
 
-	"VS": "GPass_vs.cso",
-	"PS": "GPass_ps.cso"
+	"VS": "Shaders\\GPass_vs.cso",
+	"PS": "Shaders\\GPass_ps.cso"
 }
