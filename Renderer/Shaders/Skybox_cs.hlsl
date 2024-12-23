@@ -21,6 +21,8 @@ float2 SampleSphericalMap(float3 v)
     return uv;
 }
 
+SamplerState LinearSampler : register(s0);
+
 [RootSignature(Skybox_RootSig)]
 [numthreads(8, 8, 1)]
 void main(uint3 DTid : SV_DispatchThreadID)
@@ -42,8 +44,8 @@ void main(uint3 DTid : SV_DispatchThreadID)
     uint x, y, z;
     SkyboxTexture.GetDimensions(0, x, y, z);
     float2 skyboxTexel = SampleSphericalMap(dir.xyz);
-    skyboxTexel *= float2(x, y);
-    float4 color = SkyboxTexture.Load(uint3(skyboxTexel, 0));
+    //skyboxTexel *= float2(x - 1, y - 1);
+    float4 color = SkyboxTexture.SampleLevel(LinearSampler, skyboxTexel, 0);
     
     TargetTexture[DTid.xy] = color;
 }

@@ -12,21 +12,22 @@
 #include "Scene/ECS/Components/Transformation.h"
 
 using namespace SceneLayer;
+using namespace DirectX;
 
 namespace
 {
-    DirectX::XMVECTOR ParseVector(const std::string& str)
+    XMVECTOR ParseVector(const std::string& str)
     {
         std::stringstream iss(str);
-        DirectX::XMFLOAT4 r;
+        XMFLOAT4 r;
         iss >> r.x >> r.y >> r.z >> r.w;
 
-        return DirectX::XMLoadFloat4(&r);
+        return XMLoadFloat4(&r);
     }
 
-    DirectX::XMMATRIX ParseMatrix(Json::Value& value)
+    XMMATRIX ParseMatrix(Json::Value& value)
     {
-        DirectX::XMMATRIX matrix = DirectX::XMMatrixIdentity();
+        XMMATRIX matrix = XMMatrixIdentity();
 
         for (int i = 0; i < value.size(); ++i)
         {
@@ -48,11 +49,80 @@ namespace
             bone.Name = boneValue["Name"].asString();
             bone.ParentId = ParentId;
             bone.Offset = ParseMatrix(boneValue["Offset"]);
-            bone.LocalTransform = DirectX::XMMatrixIdentity();
+            bone.LocalTransform = XMMatrixIdentity();
 
             bones.push_back(std::move(bone));
 
             ParseBones(boneValue["Children"], bones, bone.ID);
+        }
+    }
+
+    float CalculateDistanceToLine(const XMVECTOR& point, const XMVECTOR& lineStart, const XMVECTOR& lineEnd)
+    {
+        XMVECTOR v1 = XMVectorSubtract(point, lineStart);
+        XMVECTOR v2 = XMVectorSubtract(lineEnd, lineStart);
+
+        float nominator = XMVectorGetX(XMVector3Length(XMVector3Cross(v1, v2)));
+        float denominator = XMVectorGetX(XMVector3Length(v2));
+
+        return nominator / denominator;
+    }
+
+    void CalculateBoundingVolume(std::shared_ptr<Entity> entity)
+    {
+        Transformation* transform = entity->GetComponentAs<Transformation>("Transformation");
+        Armature* armature = entity->GetComponentAs<Armature>("Armature");
+        Mesh* mesh = entity->GetComponentAs<Mesh>("Mesh");
+
+        if (!mesh || !armature)
+        {
+            return;
+        }
+
+        auto UpdateBoneAABB = [&](Bone* bone, XMFLOAT3 position)
+            {
+                //XMVECTOR pos = XMLoadFloat3(&position);
+                //pos = XMVector3Transform(pos, transform->Transform);
+                //XMStoreFloat3(&position, pos);
+
+                if (position.x < XMVectorGetX(bone->AABB.Min))
+                {
+                    bone->AABB.Min = XMVectorSetX(bone->AABB.Min, position.x);
+                }
+                else if (position.x > XMVectorGetX(bone->AABB.Max))
+                {
+                    bone->AABB.Max = XMVectorSetX(bone->AABB.Max, position.x);
+                }
+
+                if (position.y < XMVectorGetY(bone->AABB.Min))
+                {
+                    bone->AABB.Min = XMVectorSetY(bone->AABB.Min, position.y);
+                }
+                else if (position.y > XMVectorGetY(bone->AABB.Max))
+                {
+                    bone->AABB.Max = XMVectorSetY(bone->AABB.Max, position.y);
+                }
+
+                if (position.z < XMVectorGetZ(bone->AABB.Min))
+                {
+                    bone->AABB.Min = XMVectorSetZ(bone->AABB.Min, position.z);
+                }
+                else if (position.z > XMVectorGetZ(bone->AABB.Max))
+                {
+                    bone->AABB.Max = XMVectorSetZ(bone->AABB.Max, position.z);
+                }
+            };
+
+        for (int i = 0; i < mesh->VertexData.size(); ++i)
+        {
+            for (int j = 0; j < 4; ++j)
+            //for (int j = 0; j < armature->GetBones().size(); ++j)
+            {
+                if (mesh->SkinningVertexData[i].BoneWeights[j] > 0.000001f)
+                {
+                    UpdateBoneAABB(armature->GetSortedBones()[mesh->SkinningVertexData[i].BoneIds[j]], mesh->VertexData[i].Position);
+                }
+            }
         }
     }
 } // namespace unnamed
@@ -136,6 +206,8 @@ namespace Helpers
             LoadComponent(jsonRoot, entity->GetComponentAs<Armature>("Armature"), component);
             entity->AddComponent(component);
         }
+
+        CalculateBoundingVolume(entity);
 
         return entity;
     }
@@ -222,8 +294,8 @@ namespace Helpers
 
         LoadRawMesh(meshFilepth, component);
 
-        DirectX::XMFLOAT4 min(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), 1.0f);
-        DirectX::XMFLOAT4 max(-std::numeric_limits<float>::max(), -std::numeric_limits<float>::max(), -std::numeric_limits<float>::max(), 1.0f);
+        XMFLOAT4 min(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), 1.0f);
+        XMFLOAT4 max(-std::numeric_limits<float>::max(), -std::numeric_limits<float>::max(), -std::numeric_limits<float>::max(), 1.0f);
 
         for (const VertexData& vertex : component->VertexData)
         {
@@ -255,8 +327,8 @@ namespace Helpers
             }
         }
 
-        component->AABB.min = DirectX::XMLoadFloat4(&min);
-        component->AABB.max = DirectX::XMLoadFloat4(&max);
+        component->AABB.Min = XMLoadFloat4(&min);
+        component->AABB.Max = XMLoadFloat4(&max);
     }
 
     void EntityLoader::LoadComponent(Json::Value& jsonValue, const std::shared_ptr<Light>& component)
@@ -297,13 +369,13 @@ namespace Helpers
 
     void EntityLoader::LoadRawMesh(const std::string& filepath, const std::shared_ptr<Mesh>& meshComponent)
     {
-        std::vector<DirectX::XMFLOAT3> points;
-        std::vector<DirectX::XMUINT4> groupIndexes;
-        std::vector<DirectX::XMFLOAT4> groupWeights;
-        std::vector<DirectX::XMFLOAT3> normals;
-        std::vector<DirectX::XMFLOAT4> colors;
-        std::vector<DirectX::XMFLOAT2> UVs;
-        std::vector<DirectX::XMFLOAT3> tangents;
+        std::vector<XMFLOAT3> points;
+        std::vector<XMUINT4> groupIndexes;
+        std::vector<XMFLOAT4> groupWeights;
+        std::vector<XMFLOAT3> normals;
+        std::vector<XMFLOAT4> colors;
+        std::vector<XMFLOAT2> UVs;
+        std::vector<XMFLOAT3> tangents;
         UINT64 index = 0;
 
         std::string input;
@@ -320,13 +392,13 @@ namespace Helpers
             }
             else if (input == "v")
             {
-                DirectX::XMFLOAT3 v;
+                XMFLOAT3 v;
                 in >> v.x >> v.y >> v.z;
                 points.push_back(v);
             }
             else if (input == "vn")
             {
-                DirectX::XMFLOAT3 vn;
+                XMFLOAT3 vn;
                 in >> vn.x >> vn.y >> vn.z;
                 normals.push_back(vn);
             }
@@ -344,19 +416,19 @@ namespace Helpers
             }
             else if (input == "vtan")
             {
-                DirectX::XMFLOAT3 tangent;
+                XMFLOAT3 tangent;
                 in >> tangent.x >> tangent.y >> tangent.z;
                 tangents.push_back(tangent);
             }
             else if (input == "gi")
             {
-                DirectX::XMUINT4 groupIndex;
+                XMUINT4 groupIndex;
                 in >> groupIndex.x >> groupIndex.y >> groupIndex.z >> groupIndex.w;
                 groupIndexes.push_back(groupIndex);
             }
             else if (input == "gw")
             {
-                DirectX::XMFLOAT4 groupWeight;
+                XMFLOAT4 groupWeight;
                 in >> groupWeight.x >> groupWeight.y >> groupWeight.z >> groupWeight.w;
                 groupWeights.push_back(groupWeight);
             }

@@ -31,6 +31,7 @@ DXRenderer::DXRenderer(HWND windowHandle)
     , _isCameraMoving(false)
     , _deltaTime(0.0f)
     , _renderArmature(false)
+    , _renderAABB(false)
 {   }
 
 DXRenderer::~DXRenderer()
@@ -52,7 +53,7 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
     // Camera Setup
     {
         XMVECTOR pos = XMVectorSet(0.0f, 30.0f, 30.0f, 1.0f);
-        XMVECTOR target = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+        XMVECTOR target = XMVectorSet(0.0f, 20.0f, 0.0f, 1.0f);
         XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
         
         _camera.LookAt(pos, target, up);
@@ -92,7 +93,7 @@ void DXRenderer::OnUpdate(Events::UpdateEvent& updateEvent)
     XMVECTOR mov = 37.0f * XMVectorSet(sinf(updateEvent.totalTime * 0.5f), 0.8f, cosf(updateEvent.totalTime * 0.5f), 1.0f);
     XMVECTOR tar = XMVectorSet(0.0f, 17.0f, 0.0f, 1.0f);
     XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-    _camera.LookAt(mov, tar, up);
+    //_camera.LookAt(mov, tar, up);
 
     _deltaTime = updateEvent.elapsedTime;
 }
@@ -154,6 +155,38 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         RenderArmature(*task);        
     }
 
+    {
+        TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
+        task->SetName("transit");
+        task->AddDependency("clean");
+        task->AddDependency("g-pass");
+        task->AddDependency("deferred");
+        task->AddDependency("skybox");
+        task->AddDependency("armature");
+
+        dx12::CommandList& commandList = *task->GetCommandLists().front();
+
+        commandList.TransitionBarrier(_currentFrame->_depthTexture, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+        commandList.TransitionBarrier(_gBuffer.GetAlbedoMetalnessTexture(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+        commandList.TransitionBarrier(_gBuffer.GetNormalTexture(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+        commandList.Close();
+    }
+
+    if (_renderAABB)
+    {
+        TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, &_AABBpipeline);
+        task->SetName("aabb");
+        task->AddDependency("clean");
+        task->AddDependency("g-pass");
+        task->AddDependency("deferred");
+        task->AddDependency("skybox");
+        task->AddDependency("armature");
+        task->AddDependency("transit");
+
+        RenderAABB(*task);
+    }
+
     //GUI
     {
         TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
@@ -163,6 +196,8 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         task->AddDependency("deferred");
         task->AddDependency("skybox");
         task->AddDependency("armature");
+        task->AddDependency("transit");
+        task->AddDependency("aabb");
 
         RenderGUI(*task);
     }
@@ -176,6 +211,8 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         task->AddDependency("deferred");
         task->AddDependency("skybox");
         task->AddDependency("armature");
+        task->AddDependency("transit");
+        task->AddDependency("aabb");
         task->AddDependency("gui");
 
         Present(*task);
@@ -453,6 +490,60 @@ void DXRenderer::RenderArmature(TaskGPU& task)
     commandList.Close();
 }
 
+void DXRenderer::RenderAABB(TaskGPU& task)
+{
+    dx12::CommandList& commandList = *task.GetCommandLists().front();
+
+    PIXBeginEvent(commandList.GetDXCommandList().Get(), 8, "AABB");
+    {
+        commandList.SetPipelineState(_AABBpipeline);
+        commandList.SetRootSignature(_AABBpipeline);
+
+        for (auto& node : _scene.GetRootNodes())
+        {
+            Armature* arm = node->GetComponentAs<Armature>("Armature");
+            Transformation* transform = node->GetComponentAs<Transformation>("Transformation");
+
+            if (arm)
+            {
+                D3D12_CPU_DESCRIPTOR_HANDLE rtv = _currentFrame->_targetHeap->GetCPUDescriptorHandleForHeapStart();
+                D3D12_CPU_DESCRIPTOR_HANDLE dsv = _currentFrame->_depthHeap->GetCPUDescriptorHandleForHeapStart();
+
+                commandList.SetViewport(_camera.GetViewport());
+                commandList.SetRenderTarget(&rtv, &dsv);
+
+                DirectX::XMMATRIX vp = _camera.ViewProjection();
+
+                std::vector<SceneLayer::AABBVolume> volumes;
+                for (const auto& bone : arm->GetSortedBones())
+                {
+                    if (XMVectorGetX(bone->AABB.Min) < 1000000.0f)
+                    {
+                        XMVECTOR min = bone->AABB.Min;
+                        XMVECTOR max = bone->AABB.Max;
+                        min = XMVector3Transform(bone->AABB.Min, bone->Offset * bone->GlobalTransform * transform->Transform);
+                        max = XMVector3Transform(bone->AABB.Max, bone->Offset * bone->GlobalTransform * transform->Transform);
+
+                        volumes.push_back(SceneLayer::AABBVolume(min, max));
+                    }
+                }
+
+                SceneLayer::AABBVolume res = SceneLayer::CombineAABBs(volumes);
+                commandList.SetConstants(0, 4, &res.Min.m128_f32);
+                commandList.SetConstants(0, 4, &res.Max.m128_f32, 4);
+                commandList.SetConstants(1, 16, &vp);
+
+                commandList.SetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
+
+                commandList.Draw(1);
+            }
+        }
+    }
+    PIXEndEvent(commandList.GetDXCommandList().Get());
+
+    commandList.Close();
+}
+
 void DXRenderer::RenderGUI(TaskGPU& task)
 {
     dx12::CommandList& commandList = *task.GetCommandLists().front();
@@ -462,10 +553,6 @@ void DXRenderer::RenderGUI(TaskGPU& task)
 
     PIXBeginEvent(commandList.GetDXCommandList().Get(), 5, "GUI");
     {
-        commandList.TransitionBarrier(_currentFrame->_depthTexture, D3D12_RESOURCE_STATE_DEPTH_WRITE);
-        commandList.TransitionBarrier(_gBuffer.GetAlbedoMetalnessTexture(), D3D12_RESOURCE_STATE_RENDER_TARGET);
-        commandList.TransitionBarrier(_gBuffer.GetNormalTexture(), D3D12_RESOURCE_STATE_RENDER_TARGET);
-
         commandList.SetViewport(_camera.GetViewport());
         commandList.SetRenderTarget(&rtv, &dsv);
 
@@ -488,6 +575,7 @@ void DXRenderer::RenderGUI(TaskGPU& task)
             if (ImGui::CollapsingHeader("Settings"))
             {
                 ImGui::Checkbox("Render debug armature", &_renderArmature);
+                ImGui::Checkbox("Render debug AABB", &_renderAABB);
             }
 
             if (ImGui::CollapsingHeader("Inputs"))

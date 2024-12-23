@@ -40,7 +40,7 @@ void DrawSceneProcessor::DrawEntity(SceneLayer::Entity& entity, dx12::CommandLis
         return;
     }
 
-    Transformation transform = entity.GetGlobalTransform();
+    Transformation transform = *entity.GetComponentAs<Transformation>("Transformation");
     Material* material = entity.GetComponentAs<Material>("Material");
     Mesh* mesh = entity.GetComponentAs<Mesh>("Mesh");
 

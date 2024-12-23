@@ -55,7 +55,7 @@ namespace SceneLayer
         dx12::ResourceDescription lightsViewDesc;
         {
             lightsViewDesc.SetResourceType(dx12::EResourceType::Dynamic | dx12::EResourceType::Buffer);
-            lightsViewDesc.SetSize({ sizeof(GPULightDesc) * LIGHTS_NUM, 1 });
+            lightsViewDesc.SetSize({ (uint32_t)sizeof(GPULightDesc) * LIGHTS_NUM, 1 });
             lightsViewDesc.SetFormat(DXGI_FORMAT_UNKNOWN);
             lightsViewDesc.SetDepthOrArraySize(1);
         }

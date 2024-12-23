@@ -153,6 +153,7 @@
     <ClCompile Include="Scene\ECS\Components\Skybox.cpp" />
     <ClCompile Include="Scene\ECS\Components\Armature.cpp" />
     <ClCompile Include="Render\SceneProcessors\UpdateSceneProcessor.cpp" />
+    <ClCompile Include="Scene\Volumes\AABBVolume.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Events\IEvent.h">
@@ -304,6 +305,7 @@
     <ClInclude Include="Scene\ECS\Components\Skybox.h" />
     <ClInclude Include="Scene\ECS\Components\Armature.h" />
     <ClInclude Include="Render\SceneProcessors\UpdateSceneProcessor.h" />
+    <ClInclude Include="Scene\Volumes\CapsuleVolume.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\AABB_gs.hlsl">

@@ -12,4 +12,9 @@
     "SRV(t0, visibility = SHADER_VISIBILITY_ALL), " \
     "DescriptorTable(SRV(t1), visibility=SHADER_VISIBILITY_ALL)," \
     "DescriptorTable(SRV(t2), visibility=SHADER_VISIBILITY_ALL)," \
-    "DescriptorTable(UAV(u0), visibility=SHADER_VISIBILITY_ALL)"
+    "DescriptorTable(UAV(u0), visibility=SHADER_VISIBILITY_ALL)," \
+    "StaticSampler(s0," \
+        "addressU = TEXTURE_ADDRESS_MIRROR," \
+        "addressV = TEXTURE_ADDRESS_MIRROR," \
+        "addressW = TEXTURE_ADDRESS_MIRROR," \
+        "filter = FILTER_MIN_MAG_MIP_LINEAR)," \

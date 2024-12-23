@@ -5,6 +5,7 @@
 Executor::Executor()
     : _allocator(nullptr)
     , _commandList()
+    , _isFree(true)
 {
 }
 

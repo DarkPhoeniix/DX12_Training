@@ -25,5 +25,5 @@ private:
     ComPtr<ID3D12CommandAllocator> _allocator;
     dx12::CommandList _commandList;
 
-    bool _isFree = true;
+    bool _isFree;
 };

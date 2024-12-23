@@ -35,6 +35,7 @@ private:
     void LightingPass(TaskGPU& task);
     void RenderSkybox(TaskGPU& task);
     void RenderArmature(TaskGPU& task);
+    void RenderAABB(TaskGPU& task);
     void RenderGUI(TaskGPU& task);
     void Present(TaskGPU& task);
 
@@ -60,6 +61,7 @@ private:
     float _deltaTime;
 
     bool _renderArmature;
+    bool _renderAABB;
 
     bool _contentLoaded;
 };

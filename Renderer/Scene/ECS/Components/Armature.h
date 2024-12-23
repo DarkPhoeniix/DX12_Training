@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Scene/ECS/Components.h"
+#include "Scene/Volumes/AABBVolume.h"
 
 // TODO: change BoneId type
 using BoneId = std::uint32_t;
@@ -17,6 +18,8 @@ struct Bone
     DirectX::XMMATRIX GlobalTransform;
 
     bool PendingUpdate;
+
+    SceneLayer::AABBVolume AABB;
 };
 
 struct Armature : public IComponent
