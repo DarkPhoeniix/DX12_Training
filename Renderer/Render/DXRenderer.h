@@ -46,6 +46,7 @@ private:
     dx12::RootSignature _gPassPipeline;
     dx12::RootSignature _deferredPipeline;
     dx12::RootSignature _AABBpipeline;
+    dx12::RootSignature _OBBpipeline;
     dx12::RootSignature _SkyboxPipeline;
     dx12::RootSignature _ArmatureDebugPipeline;
 
@@ -62,6 +63,7 @@ private:
 
     bool _renderArmature;
     bool _renderAABB;
+    float _timeMiltiplier;
 
     bool _contentLoaded;
 };

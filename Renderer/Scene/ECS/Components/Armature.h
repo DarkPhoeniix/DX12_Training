@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Scene/ECS/Components.h"
-#include "Scene/Volumes/AABBVolume.h"
+#include "Scene/Volumes/OBBVolume.h"
 
 // TODO: change BoneId type
 using BoneId = std::uint32_t;
@@ -19,7 +19,7 @@ struct Bone
 
     bool PendingUpdate;
 
-    SceneLayer::AABBVolume AABB;
+    SceneLayer::OBBVolume AABB;
 };
 
 struct Armature : public IComponent

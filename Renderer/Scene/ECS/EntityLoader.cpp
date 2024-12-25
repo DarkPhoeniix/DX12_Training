@@ -11,6 +11,9 @@
 #include "Scene/ECS/Components/Skybox.h"
 #include "Scene/ECS/Components/Transformation.h"
 
+#include "Scene/Volumes/AABBVolume.h"
+#include "Scene/Volumes/OBBVolume.h"
+
 using namespace SceneLayer;
 using namespace DirectX;
 
@@ -79,51 +82,42 @@ namespace
             return;
         }
 
-        auto UpdateBoneAABB = [&](Bone* bone, XMFLOAT3 position)
+        auto UpdateBoneAABB = [](SceneLayer::AABBVolume& volume, Bone* bone, XMFLOAT3 position)
             {
-                //XMVECTOR pos = XMLoadFloat3(&position);
-                //pos = XMVector3Transform(pos, transform->Transform);
-                //XMStoreFloat3(&position, pos);
+                DirectX::XMVECTOR positionVec = DirectX::XMLoadFloat3(&position);
+                positionVec = DirectX::XMVector4Transform(positionVec, bone->Offset);
 
-                if (position.x < XMVectorGetX(bone->AABB.Min))
-                {
-                    bone->AABB.Min = XMVectorSetX(bone->AABB.Min, position.x);
-                }
-                else if (position.x > XMVectorGetX(bone->AABB.Max))
-                {
-                    bone->AABB.Max = XMVectorSetX(bone->AABB.Max, position.x);
-                }
-
-                if (position.y < XMVectorGetY(bone->AABB.Min))
-                {
-                    bone->AABB.Min = XMVectorSetY(bone->AABB.Min, position.y);
-                }
-                else if (position.y > XMVectorGetY(bone->AABB.Max))
-                {
-                    bone->AABB.Max = XMVectorSetY(bone->AABB.Max, position.y);
-                }
-
-                if (position.z < XMVectorGetZ(bone->AABB.Min))
-                {
-                    bone->AABB.Min = XMVectorSetZ(bone->AABB.Min, position.z);
-                }
-                else if (position.z > XMVectorGetZ(bone->AABB.Max))
-                {
-                    bone->AABB.Max = XMVectorSetZ(bone->AABB.Max, position.z);
-                }
+                volume.Min = DirectX::XMVectorMin(volume.Min, positionVec);
+                volume.Max = DirectX::XMVectorMax(volume.Max, positionVec);
             };
+
+        std::vector<SceneLayer::AABBVolume> volumes(armature->GetBones().size());
 
         for (int i = 0; i < mesh->VertexData.size(); ++i)
         {
             for (int j = 0; j < 4; ++j)
-            //for (int j = 0; j < armature->GetBones().size(); ++j)
             {
-                if (mesh->SkinningVertexData[i].BoneWeights[j] > 0.000001f)
+                if (mesh->SkinningVertexData[i].BoneWeights[j] > 0.00001f)
                 {
-                    UpdateBoneAABB(armature->GetSortedBones()[mesh->SkinningVertexData[i].BoneIds[j]], mesh->VertexData[i].Position);
+                    BoneId boneId = mesh->SkinningVertexData[i].BoneIds[j];
+                    Bone* bone = armature->GetSortedBones()[boneId];
+
+                    UpdateBoneAABB(volumes[boneId], bone, mesh->VertexData[i].Position);
                 }
             }
         }
+
+        for (int i = 0; i < armature->GetBones().size(); ++i)
+        {
+            Bone* bone = armature->GetSortedBones()[i];
+
+            DirectX::XMVECTOR boxScale = DirectX::XMVectorSubtract(volumes[i].Max, volumes[i].Min) * 0.5f;
+            DirectX::XMVECTOR boxLocation = DirectX::XMVectorAdd(volumes[i].Max, volumes[i].Min) * 0.5f;
+            DirectX::XMMATRIX invOffset = DirectX::XMMatrixInverse(nullptr, bone->Offset);
+            invOffset.r[3] = DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+
+            bone->AABB.Bounds = DirectX::XMMatrixScalingFromVector(boxScale) * DirectX::XMMatrixTranslationFromVector(boxLocation) * invOffset;
+        } 
     }
 } // namespace unnamed
 

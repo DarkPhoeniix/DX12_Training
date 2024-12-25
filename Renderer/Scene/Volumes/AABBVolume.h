@@ -20,6 +20,4 @@ namespace SceneLayer
         DirectX::XMVECTOR Min;
         DirectX::XMVECTOR Max;
     };
-
-    AABBVolume CombineAABBs(const std::vector<AABBVolume>& volumes);
 } // namespace SceneLayer

@@ -154,6 +154,7 @@
     <ClCompile Include="Scene\ECS\Components\Armature.cpp" />
     <ClCompile Include="Render\SceneProcessors\UpdateSceneProcessor.cpp" />
     <ClCompile Include="Scene\Volumes\AABBVolume.cpp" />
+    <ClCompile Include="Scene\Volumes\OBBVolume.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Events\IEvent.h">
@@ -306,6 +307,7 @@
     <ClInclude Include="Scene\ECS\Components\Armature.h" />
     <ClInclude Include="Render\SceneProcessors\UpdateSceneProcessor.h" />
     <ClInclude Include="Scene\Volumes\CapsuleVolume.h" />
+    <ClInclude Include="Scene\Volumes\OBBVolume.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\AABB_gs.hlsl">
@@ -347,6 +349,9 @@
     <FxCompile Include="Shaders\Armature_vs.hlsl" />
     <FxCompile Include="Shaders\Armature_ps.hlsl" />
     <FxCompile Include="Shaders\Armature_gs.hlsl" />
+    <FxCompile Include="Shaders\OBB_gs.hlsl" />
+    <FxCompile Include="Shaders\OBB_ps.hlsl" />
+    <FxCompile Include="Shaders\OBB_vs.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -421,6 +426,8 @@
     <None Include="PipelineDescriptions\ArmatureDebugPipeline.depth" />
     <None Include="PipelineDescriptions\ArmatureDebugPipeline.raster" />
     <None Include="PipelineDescriptions\ArmatureDebugPipeline.tech" />
+    <None Include="Shaders\OBB_rootsig.hlsli" />
+    <None Include="PipelineDescriptions\OBBRenderPipeline.tech" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resources\Resource.rc">
