@@ -91,7 +91,7 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
 
     // Camera Setup
     {
-        XMVECTOR pos = XMVectorSet(10.0f, 0.0f, 0.0f, 1.0f);
+        XMVECTOR pos = XMVectorSet(0.0f, 30.0f, 30.0f, 1.0f);
         XMVECTOR target = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
         XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
         

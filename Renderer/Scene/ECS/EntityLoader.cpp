@@ -288,41 +288,14 @@ namespace Helpers
 
         LoadRawMesh(meshFilepth, component);
 
-        XMFLOAT4 min(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), 1.0f);
-        XMFLOAT4 max(-std::numeric_limits<float>::max(), -std::numeric_limits<float>::max(), -std::numeric_limits<float>::max(), 1.0f);
-
+        // TODO: remove for meshes with armature
         for (const VertexData& vertex : component->VertexData)
         {
-            if (vertex.Position.x < min.x)
-            {
-                min.x = vertex.Position.x;
-            }
-            else if (vertex.Position.x > max.x)
-            {
-                max.x = vertex.Position.x;
-            }
+            XMVECTOR position = XMLoadFloat3(&vertex.Position);
 
-            if (vertex.Position.y < min.y)
-            {
-                min.y = vertex.Position.y;
-            }
-            else if (vertex.Position.y > max.y)
-            {
-                max.y = vertex.Position.y;
-            }
-
-            if (vertex.Position.z < min.z)
-            {
-                min.z = vertex.Position.z;
-            }
-            else if (vertex.Position.z > max.z)
-            {
-                max.z = vertex.Position.z;
-            }
+            component->AABB.Min = XMVectorMin(component->AABB.Min, position);
+            component->AABB.Max = XMVectorMax(component->AABB.Max, position);
         }
-
-        component->AABB.Min = XMLoadFloat4(&min);
-        component->AABB.Max = XMLoadFloat4(&max);
     }
 
     void EntityLoader::LoadComponent(Json::Value& jsonValue, const std::shared_ptr<Light>& component)
