@@ -1,8 +1,0 @@
-{
-    "DepthEnable": false,
-
-    "DepthFunc": "D3D12_COMPARISON_FUNC_NEVER",
-    "DepthWriteMask": "D3D12_DEPTH_WRITE_MASK_ZERO",
-
-    "StencilEnable": false
-}

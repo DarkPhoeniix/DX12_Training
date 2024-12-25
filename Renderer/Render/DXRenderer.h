@@ -35,6 +35,7 @@ private:
     void LightingPass(TaskGPU& task);
     void RenderSkybox(TaskGPU& task);
     void RenderArmature(TaskGPU& task);
+    void RenderAABB(TaskGPU& task);
     void RenderGUI(TaskGPU& task);
     void Present(TaskGPU& task);
 
@@ -45,6 +46,7 @@ private:
     dx12::RootSignature _gPassPipeline;
     dx12::RootSignature _deferredPipeline;
     dx12::RootSignature _AABBpipeline;
+    dx12::RootSignature _OBBpipeline;
     dx12::RootSignature _SkyboxPipeline;
     dx12::RootSignature _ArmatureDebugPipeline;
 
@@ -60,6 +62,8 @@ private:
     float _deltaTime;
 
     bool _renderArmature;
+    bool _renderAABB;
+    float _timeMiltiplier;
 
     bool _contentLoaded;
 };

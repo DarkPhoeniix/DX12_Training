@@ -20,7 +20,7 @@ namespace SceneLayer
         void ClearComponents();
 
         const Transformation& GetGlobalTransform() const;
-        void UpdateGlobalTransform(const Transformation& parentTransform);
+        void UpdateGlobalTransform(const Transformation* parentTransform = nullptr);
 
         std::vector<std::shared_ptr<Entity>>& GetChildrenNodes();
         void AddChild(std::shared_ptr<Entity> child);

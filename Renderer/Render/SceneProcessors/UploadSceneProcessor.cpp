@@ -119,7 +119,7 @@ void UploadSceneProcessor::ProcessEntity(SceneLayer::Entity& entity, dx12::Comma
         dx12::ResourceDescription desc;
         {
             desc.SetResourceType(dx12::EResourceType::Buffer | dx12::EResourceType::Dynamic);
-            desc.SetSize({ (uint32_t)armature->GetBones().size() * sizeof(DirectX::XMMATRIX), 1});
+            desc.SetSize({ (uint32_t)armature->GetBones().size() * (uint32_t)sizeof(DirectX::XMMATRIX), 1});
             desc.SetFormat(DXGI_FORMAT_UNKNOWN);
             desc.SetFlags(D3D12_RESOURCE_FLAG_NONE);
         }
@@ -146,7 +146,7 @@ void UploadSceneProcessor::ProcessEntity(SceneLayer::Entity& entity, dx12::Comma
         skybox->SkydomeTexture->UploadToGPU(commandList);
 
         D3D12_SHADER_RESOURCE_VIEW_DESC SRVDesc = {};
-        SRVDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+        SRVDesc.Format = skybox->SkydomeTexture->GetResourceDescription().GetFormat();
         SRVDesc.Texture2D.MipLevels = 1;
         SRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
         SRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;

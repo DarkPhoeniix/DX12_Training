@@ -12,8 +12,8 @@ namespace
     {
         bool result = true;
 
-        XMVECTOR aabbCenter = (aabb.max + aabb.min) * 0.5f;
-        XMVECTOR aabbHalfSize = (aabb.max - aabb.min) * 0.5f;
+        XMVECTOR aabbCenter = (aabb.Max + aabb.Min) * 0.5f;
+        XMVECTOR aabbHalfSize = (aabb.Max - aabb.Min) * 0.5f;
 
         float rg = abs(XMVectorGetX(plane) * XMVectorGetX(aabbHalfSize))
                  + abs(XMVectorGetY(plane) * XMVectorGetY(aabbHalfSize))
@@ -78,8 +78,8 @@ namespace SceneLayer
     bool Intersect(const FrustumVolume& frustum, const AABBVolume& aabb, const DirectX::XMMATRIX& globalTransform)
     {
         AABBVolume transformedAABB = aabb;
-        transformedAABB.min = DirectX::XMVector4Transform(aabb.min, globalTransform);
-        transformedAABB.max = DirectX::XMVector4Transform(aabb.max, globalTransform);
+        transformedAABB.Min = DirectX::XMVector4Transform(aabb.Min, globalTransform);
+        transformedAABB.Max = DirectX::XMVector4Transform(aabb.Max, globalTransform);
 
         for (const XMVECTOR& plane : frustum.planes)
         {

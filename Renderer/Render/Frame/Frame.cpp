@@ -207,6 +207,8 @@ void Frame::WaitCPU()
 
 void Frame::ResetGPU()
 {
+    _executedTasks = std::move(_currentTasks);
+
     for (auto& task : _executedTasks)
     {
         task->SetFree(true);
@@ -219,7 +221,6 @@ void Frame::ResetGPU()
 
     _tasks.clear();
     _executedTasks.clear();
-    _executedTasks = std::move(_currentTasks);
 }
 
 void Frame::Resize(const DirectX::XMUINT2& size)

@@ -1,0 +1,21 @@
+{
+	"Type": "RenderOBBTechnique",
+
+	"IsGraphicsPipeline": true,
+
+	"TopologyType": "point",
+
+	"Blend": "PipelineDescriptions\\AABBRenderPipeline.blend",
+	"Raster": "PipelineDescriptions\\Raster_Solid.raster",
+	"Depth": "PipelineDescriptions\\Depth_LE_WriteAll.depth",
+
+	"RenderTargets": [
+		"R8G8B8A8_UNORM"
+	],
+	"DepthBuffer": "BackBufferDepth",
+	"Layout": null,
+
+	"VS": "Shaders\\OBB_vs.cso",
+	"GS": "Shaders\\OBB_gs.cso",
+	"PS": "Shaders\\OBB_ps.cso"
+}

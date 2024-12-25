@@ -22,11 +22,12 @@ void DrawSceneProcessor::Process(SceneLayer::Scene& scene, dx12::CommandList& co
 
     for (std::shared_ptr<SceneLayer::Entity>& node : scene.GetRootNodes())
     {
+        node->UpdateGlobalTransform();
         DrawEntity(*node, commandList);
 
         for (std::shared_ptr<SceneLayer::Entity>& child : node->GetChildrenNodes())
         {
-            child->UpdateGlobalTransform(*node->GetComponentAs<Transformation>("Transformation"));
+            child->UpdateGlobalTransform(&node->GetGlobalTransform());
             DrawEntity(*child, commandList);
         }
     }

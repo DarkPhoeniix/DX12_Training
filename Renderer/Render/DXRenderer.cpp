@@ -16,12 +16,49 @@
 #include "Scene/ECS/Components/Transformation.h"
 #include "Scene/ECS/Components/Skybox.h"
 
+#include "Scene/Volumes/AABBVolume.h"
+
 using namespace DirectX;
 using namespace Core;
 
 namespace
 {
     constexpr float MOVE_SPEED = 200.0f;
+
+    const static DirectX::XMVECTOR _kBoxVerts[8] =
+    {
+        // front rect
+        DirectX::XMVectorSet(-1.0f, -1.0f, -1.0f, 1.0f),
+        DirectX::XMVectorSet(-1.0f,  1.0f, -1.0f, 1.0f),
+        DirectX::XMVectorSet( 1.0f,  1.0f, -1.0f, 1.0f),
+        DirectX::XMVectorSet( 1.0f, -1.0f, -1.0f, 1.0f),
+
+        // back rect
+        DirectX::XMVectorSet(-1.0f, -1.0f,  1.0f, 1.0f),
+        DirectX::XMVectorSet(-1.0f,  1.0f,  1.0f, 1.0f),
+        DirectX::XMVectorSet( 1.0f,  1.0f,  1.0f, 1.0f),
+        DirectX::XMVectorSet( 1.0f, -1.0f,  1.0f, 1.0f)
+    };
+
+    SceneLayer::AABBVolume CombineOBBs(const std::vector<SceneLayer::OBBVolume>& volumes)
+    {
+        SceneLayer::AABBVolume result;
+
+        for (const auto& volume : volumes)
+        {
+            if (!DirectX::XMMatrixIsNaN(volume.Bounds))
+            {
+                for (int i = 0; i < 8; ++i)
+                {
+                    DirectX::XMVECTOR v = DirectX::XMVector4Transform(_kBoxVerts[i], volume.Bounds);
+                    result.Min = DirectX::XMVectorMin(result.Min, v);
+                    result.Max = DirectX::XMVectorMax(result.Max, v);
+                }
+            }
+        }
+
+        return result;
+    }
 } // namespace unnamed
 
 DXRenderer::DXRenderer(HWND windowHandle)
@@ -31,6 +68,8 @@ DXRenderer::DXRenderer(HWND windowHandle)
     , _isCameraMoving(false)
     , _deltaTime(0.0f)
     , _renderArmature(false)
+    , _renderAABB(false)
+    , _timeMiltiplier(1.0f)
 {   }
 
 DXRenderer::~DXRenderer()
@@ -41,6 +80,7 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
     _gPassPipeline.Parse("PipelineDescriptions\\GPassPipeline.tech");
     _deferredPipeline.Parse("PipelineDescriptions\\DeferredShading.tech");
     _AABBpipeline.Parse("PipelineDescriptions\\AABBRenderPipeline.tech");
+    _OBBpipeline.Parse("PipelineDescriptions\\OBBRenderPipeline.tech");
     _SkyboxPipeline.Parse("PipelineDescriptions\\SkyboxPipeline.tech");
     _ArmatureDebugPipeline.Parse("PipelineDescriptions\\ArmatureDebugPipeline.tech");
 
@@ -87,14 +127,14 @@ void DXRenderer::OnUpdate(Events::UpdateEvent& updateEvent)
 {
     DebugInfo::Update(updateEvent);
 
-    _scene.GetCache().SetTime(updateEvent.totalTime);
+    _scene.GetCache().SetTime(updateEvent.totalTime * _timeMiltiplier);
 
-    XMVECTOR mov = 37.0f * XMVectorSet(sinf(updateEvent.totalTime * 0.5f), 0.8f, cosf(updateEvent.totalTime * 0.5f), 1.0f);
+    XMVECTOR mov = 50.0f * XMVectorSet(sinf(updateEvent.totalTime * _timeMiltiplier * 0.45f), 0.8f, cosf(updateEvent.totalTime * _timeMiltiplier * 0.45f), 1.0f);
     XMVECTOR tar = XMVectorSet(0.0f, 17.0f, 0.0f, 1.0f);
     XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
     _camera.LookAt(mov, tar, up);
 
-    _deltaTime = updateEvent.elapsedTime;
+    _deltaTime = updateEvent.elapsedTime * _timeMiltiplier;
 }
 
 void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
@@ -154,6 +194,38 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         RenderArmature(*task);        
     }
 
+    {
+        TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
+        task->SetName("transit");
+        task->AddDependency("clean");
+        task->AddDependency("g-pass");
+        task->AddDependency("deferred");
+        task->AddDependency("skybox");
+        task->AddDependency("armature");
+
+        dx12::CommandList& commandList = *task->GetCommandLists().front();
+
+        commandList.TransitionBarrier(_currentFrame->_depthTexture, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+        commandList.TransitionBarrier(_gBuffer.GetAlbedoMetalnessTexture(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+        commandList.TransitionBarrier(_gBuffer.GetNormalTexture(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+        commandList.Close();
+    }
+
+    if (_renderAABB)
+    {
+        TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, &_OBBpipeline);
+        task->SetName("aabb");
+        task->AddDependency("clean");
+        task->AddDependency("g-pass");
+        task->AddDependency("deferred");
+        task->AddDependency("skybox");
+        task->AddDependency("armature");
+        task->AddDependency("transit");
+
+        RenderAABB(*task);
+    }
+
     //GUI
     {
         TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
@@ -163,6 +235,8 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         task->AddDependency("deferred");
         task->AddDependency("skybox");
         task->AddDependency("armature");
+        task->AddDependency("transit");
+        task->AddDependency("aabb");
 
         RenderGUI(*task);
     }
@@ -176,6 +250,8 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         task->AddDependency("deferred");
         task->AddDependency("skybox");
         task->AddDependency("armature");
+        task->AddDependency("transit");
+        task->AddDependency("aabb");
         task->AddDependency("gui");
 
         Present(*task);
@@ -419,17 +495,6 @@ void DXRenderer::RenderArmature(TaskGPU& task)
             {
                 DirectX::XMVECTOR* data = (DirectX::XMVECTOR*)arm->BoneDebugTransforms.Map();
 
-                const auto& sortedBones = arm->GetSortedBones();
-                int ind = 0;
-                for (const auto& bone : sortedBones)
-                {
-                    for (const auto& child : bone->Children)
-                    {
-                        data[ind++] = DirectX::XMVector4Transform(bone->GlobalTransform.r[3], transform->Transform);
-                        data[ind++] = DirectX::XMVector4Transform(child->GlobalTransform.r[3], transform->Transform);
-                    }
-                }
-
                 D3D12_CPU_DESCRIPTOR_HANDLE rtv = _currentFrame->_targetHeap->GetCPUDescriptorHandleForHeapStart();
                 D3D12_CPU_DESCRIPTOR_HANDLE dsv = _currentFrame->_depthHeap->GetCPUDescriptorHandleForHeapStart();
 
@@ -438,15 +503,84 @@ void DXRenderer::RenderArmature(TaskGPU& task)
 
                 DirectX::XMMATRIX vp = _camera.ViewProjection();
 
-                commandList.SetConstants(0, 16, &vp);
-                commandList.SetConstant(1, (uint32_t)((arm->GetBones().size() - 1) * 2));
-                commandList.SetSRV(2, arm->BoneDebugTransforms.OffsetGPU(0));
+                const auto& sortedBones = arm->GetSortedBones();
+                int ind = 0;
+                for (const auto& bone : sortedBones)
+                {
+                    for (const auto& child : bone->Children)
+                    {
+                        data[0] = DirectX::XMVector4Transform(bone->GlobalTransform.r[3], transform->Transform);
+                        data[1] = DirectX::XMVector4Transform(child->GlobalTransform.r[3], transform->Transform);
 
-                commandList.SetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
+                        commandList.SetConstants(0, 16, &vp);
+                        commandList.SetConstants(1, 4, &data[0]);
+                        commandList.SetConstants(1, 4, &data[1], 4);
+                        commandList.SetSRV(2, arm->BoneDebugTransforms.OffsetGPU(0));
 
-                commandList.Draw(1);
+                        commandList.SetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
+
+                        commandList.Draw(1);
+                    }
+                }
             }
         }
+    }
+    PIXEndEvent(commandList.GetDXCommandList().Get());
+
+    commandList.Close();
+}
+
+void DXRenderer::RenderAABB(TaskGPU& task)
+{
+    dx12::CommandList& commandList = *task.GetCommandLists().front();
+
+    PIXBeginEvent(commandList.GetDXCommandList().Get(), 8, "AABB");
+    {
+        commandList.SetPipelineState(_OBBpipeline);
+        commandList.SetRootSignature(_OBBpipeline);
+
+        std::vector<SceneLayer::OBBVolume> volumes;
+
+        for (auto& node : _scene.GetRootNodes())
+        {
+            Armature* arm = node->GetComponentAs<Armature>("Armature");
+            Transformation* transform = node->GetComponentAs<Transformation>("Transformation");
+
+            if (arm)
+            {
+                for (const auto& bone : arm->GetSortedBones())
+                {
+                    DirectX::XMMATRIX boneOBB = bone->AABB.Bounds;
+                    boneOBB *= bone->Offset * bone->GlobalTransform * transform->Transform;
+
+                    SceneLayer::OBBVolume obb;
+                    obb.Bounds = boneOBB;
+
+                    volumes.push_back(obb);
+                }
+            }
+        }
+
+        D3D12_CPU_DESCRIPTOR_HANDLE rtv = _currentFrame->_targetHeap->GetCPUDescriptorHandleForHeapStart();
+        D3D12_CPU_DESCRIPTOR_HANDLE dsv = _currentFrame->_depthHeap->GetCPUDescriptorHandleForHeapStart();
+
+        commandList.SetViewport(_camera.GetViewport());
+        commandList.SetRenderTarget(&rtv, &dsv);
+
+        DirectX::XMMATRIX vp = _camera.ViewProjection();
+
+        SceneLayer::AABBVolume aabb = CombineOBBs(volumes);
+
+        DirectX::XMVECTOR center = (aabb.Max - aabb.Min) * 0.5f;
+        DirectX::XMVECTOR translation = (aabb.Max + aabb.Min) * 0.5f;
+        DirectX::XMMATRIX obb = DirectX::XMMatrixScalingFromVector(center) * DirectX::XMMatrixTranslationFromVector(translation);
+
+        commandList.SetConstants(0, 16, &vp);
+        commandList.SetConstants(1, 16, &obb);
+
+        commandList.SetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
+
+        commandList.Draw(1);
     }
     PIXEndEvent(commandList.GetDXCommandList().Get());
 
@@ -462,10 +596,6 @@ void DXRenderer::RenderGUI(TaskGPU& task)
 
     PIXBeginEvent(commandList.GetDXCommandList().Get(), 5, "GUI");
     {
-        commandList.TransitionBarrier(_currentFrame->_depthTexture, D3D12_RESOURCE_STATE_DEPTH_WRITE);
-        commandList.TransitionBarrier(_gBuffer.GetAlbedoMetalnessTexture(), D3D12_RESOURCE_STATE_RENDER_TARGET);
-        commandList.TransitionBarrier(_gBuffer.GetNormalTexture(), D3D12_RESOURCE_STATE_RENDER_TARGET);
-
         commandList.SetViewport(_camera.GetViewport());
         commandList.SetRenderTarget(&rtv, &dsv);
 
@@ -487,7 +617,9 @@ void DXRenderer::RenderGUI(TaskGPU& task)
 
             if (ImGui::CollapsingHeader("Settings"))
             {
+                ImGui::SliderFloat("Time multiplier", &_timeMiltiplier, 0.1f, 2.0f, "%.1f");
                 ImGui::Checkbox("Render debug armature", &_renderArmature);
+                ImGui::Checkbox("Render debug AABB", &_renderAABB);
             }
 
             if (ImGui::CollapsingHeader("Inputs"))
