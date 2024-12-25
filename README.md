@@ -1,5 +1,5 @@
 # DX12 Sandbox
 
-![Debug demo](Saved/Screenshots/Demo_Debug.png)
+![Demo](Saved/Screenshots/Demo.gif)
 
 ![PBR demo](Saved/Screenshots/Demo_PBR.png)
