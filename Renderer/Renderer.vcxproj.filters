@@ -373,41 +373,11 @@
     <None Include="Shaders\Common.hlsli">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="PipelineDescriptions\AABBRenderPipeline.blend">
-      <Filter>PipelineDescriptions</Filter>
-    </None>
-    <None Include="PipelineDescriptions\AABBRenderPipeline.depth">
-      <Filter>PipelineDescriptions</Filter>
-    </None>
-    <None Include="PipelineDescriptions\AABBRenderPipeline.raster">
-      <Filter>PipelineDescriptions</Filter>
-    </None>
-    <None Include="PipelineDescriptions\AABBRenderPipeline.tech">
-      <Filter>PipelineDescriptions</Filter>
-    </None>
-    <None Include="PipelineDescriptions\DeferredShading.tech">
-      <Filter>PipelineDescriptions</Filter>
-    </None>
-    <None Include="PipelineDescriptions\GPassPipeline.blend">
-      <Filter>PipelineDescriptions</Filter>
-    </None>
-    <None Include="PipelineDescriptions\GPassPipeline.depth">
-      <Filter>PipelineDescriptions</Filter>
-    </None>
-    <None Include="PipelineDescriptions\GPassPipeline.raster">
-      <Filter>PipelineDescriptions</Filter>
-    </None>
-    <None Include="PipelineDescriptions\GPassPipeline.tech">
-      <Filter>PipelineDescriptions</Filter>
-    </None>
     <None Include="Shaders\Skybox_rootsig.hlsli">
       <Filter>Shaders</Filter>
     </None>
     <None Include="Shaders\PBR.hlsli">
       <Filter>Shaders</Filter>
-    </None>
-    <None Include="PipelineDescriptions\SkyboxPipeline.tech">
-      <Filter>PipelineDescriptions</Filter>
     </None>
     <None Include="Shaders\_deprecated\LambertLighting.hlsli">
       <Filter>Shaders\_deprecated</Filter>
@@ -422,16 +392,37 @@
       <Filter>Shaders\_deprecated</Filter>
     </None>
     <None Include="Shaders\Armature_rootsig.hlsli" />
-    <None Include="PipelineDescriptions\ArmatureDebugPipeline.blend" />
-    <None Include="PipelineDescriptions\ArmatureDebugPipeline.depth" />
-    <None Include="PipelineDescriptions\ArmatureDebugPipeline.raster" />
-    <None Include="PipelineDescriptions\ArmatureDebugPipeline.tech" />
     <None Include="Shaders\OBB_rootsig.hlsli" />
-    <None Include="PipelineDescriptions\OBBRenderPipeline.tech" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resources\Resource.rc">
       <Filter>Resources</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="PipelineDescriptions\Depth_LE_WriteAll.depth" />
+    <Text Include="PipelineDescriptions\Depth_None.depth" />
+    <Text Include="PipelineDescriptions\SkyboxPipeline.tech">
+      <Filter>PipelineDescriptions</Filter>
+    </Text>
+    <Text Include="PipelineDescriptions\AABBRenderPipeline.blend">
+      <Filter>PipelineDescriptions</Filter>
+    </Text>
+    <Text Include="PipelineDescriptions\AABBRenderPipeline.tech">
+      <Filter>PipelineDescriptions</Filter>
+    </Text>
+    <Text Include="PipelineDescriptions\ArmatureDebugPipeline.blend" />
+    <Text Include="PipelineDescriptions\ArmatureDebugPipeline.tech" />
+    <Text Include="PipelineDescriptions\DeferredShading.tech">
+      <Filter>PipelineDescriptions</Filter>
+    </Text>
+    <Text Include="PipelineDescriptions\GPassPipeline.blend">
+      <Filter>PipelineDescriptions</Filter>
+    </Text>
+    <Text Include="PipelineDescriptions\GPassPipeline.tech">
+      <Filter>PipelineDescriptions</Filter>
+    </Text>
+    <Text Include="PipelineDescriptions\OBBRenderPipeline.tech" />
+    <Text Include="PipelineDescriptions\Raster_Solid.raster" />
   </ItemGroup>
 </Project>
