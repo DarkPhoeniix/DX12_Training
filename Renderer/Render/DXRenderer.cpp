@@ -548,9 +548,6 @@ void DXRenderer::RenderAABB(TaskGPU& task)
 
             if (arm)
             {
-                commandList.SetViewport(_camera.GetViewport());
-                commandList.SetRenderTarget(&rtv, &dsv);
-
                 for (const auto& bone : arm->GetSortedBones())
                 {
                     DirectX::XMMATRIX boneOBB = bone->AABB.Bounds;
@@ -566,6 +563,9 @@ void DXRenderer::RenderAABB(TaskGPU& task)
 
         D3D12_CPU_DESCRIPTOR_HANDLE rtv = _currentFrame->_targetHeap->GetCPUDescriptorHandleForHeapStart();
         D3D12_CPU_DESCRIPTOR_HANDLE dsv = _currentFrame->_depthHeap->GetCPUDescriptorHandleForHeapStart();
+
+        commandList.SetViewport(_camera.GetViewport());
+        commandList.SetRenderTarget(&rtv, &dsv);
 
         DirectX::XMMATRIX vp = _camera.ViewProjection();
 
