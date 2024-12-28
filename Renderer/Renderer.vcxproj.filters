@@ -352,6 +352,7 @@
     <FxCompile Include="Shaders\OBB_gs.hlsl" />
     <FxCompile Include="Shaders\OBB_ps.hlsl" />
     <FxCompile Include="Shaders\OBB_vs.hlsl" />
+    <FxCompile Include="Shaders\FXAA_cs.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -393,6 +394,9 @@
     </None>
     <None Include="Shaders\Armature_rootsig.hlsli" />
     <None Include="Shaders\OBB_rootsig.hlsli" />
+    <None Include="Shaders\FXAA_rootsig.hlsli" />
+    <None Include="Shaders\FXAA_helpers.hlsli" />
+    <None Include="PipelineDescriptions\FXAAPipeline.tech" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resources\Resource.rc">

@@ -47,7 +47,14 @@ void SetupCachedDataProcessor::Process(SceneLayer::Scene& scene, dx12::CommandLi
         sceneDesc->EyePosition = camera->Poisition();
 
         const SceneLayer::Viewport& viewport = camera->GetViewport();
-        sceneDesc->WindowSize = { (uint32_t)viewport.GetSize().x, (uint32_t)viewport.GetSize().y };
+        sceneDesc->WindowSize = { 
+            (uint32_t)viewport.GetSize().x, 
+            (uint32_t)viewport.GetSize().y 
+        };
+        sceneDesc->ReciprocalWindowSize = { 
+            (1.0f / (float)viewport.GetSize().x), 
+            (1.0f / (float)viewport.GetSize().y) 
+        };
         sceneDesc->NearFar = { camera->GetNearZ(), camera->GetFarZ() };
 
         sceneDesc->LightsNum = _lightNum;

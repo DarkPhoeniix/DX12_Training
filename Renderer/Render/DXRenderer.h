@@ -35,6 +35,7 @@ private:
     void LightingPass(TaskGPU& task);
     void RenderSkybox(TaskGPU& task);
     void RenderArmature(TaskGPU& task);
+    void RenderFXAA(TaskGPU& task);
     void RenderAABB(TaskGPU& task);
     void RenderGUI(TaskGPU& task);
     void Present(TaskGPU& task);
@@ -48,6 +49,7 @@ private:
     dx12::RootSignature _AABBpipeline;
     dx12::RootSignature _OBBpipeline;
     dx12::RootSignature _SkyboxPipeline;
+    dx12::RootSignature _FXAAPipeline;
     dx12::RootSignature _ArmatureDebugPipeline;
 
     UploadSceneProcessor _uploadProcessor;

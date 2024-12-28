@@ -124,10 +124,27 @@ void Frame::Init(const DirectX::XMUINT2& size)
 
 
     {
+
+        dx12::ResourceDescription desc;
+        desc.SetSize(size);
+        desc.SetDimension(D3D12_RESOURCE_DIMENSION_TEXTURE2D);
+        desc.SetLayout(D3D12_TEXTURE_LAYOUT_UNKNOWN);
+        desc.SetMipLevels(1);
+        desc.SetAlignment(D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT);
+        desc.SetFormat(DXGI_FORMAT_R8G8B8A8_UNORM);
+        desc.SetFlags(D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+        desc.AddFlags(D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+
+        _fxaaTexture.SetResourceDescription(desc);
+        _fxaaTexture.CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_SOURCE);
+    }
+
+
+    {
         dx12::DescriptorHeapDescription desc = {};
         desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
         desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
-        desc.SetNumDescriptors(4);
+        desc.SetNumDescriptors(12);
         desc.SetNodeMask(0);
 
         _postFXDescHeap.SetDescription(desc);
@@ -136,12 +153,19 @@ void Frame::Init(const DirectX::XMUINT2& size)
 
         _postFXDescHeap.PlaceResource(&_targetTexture);
         _postFXDescHeap.PlaceResource(&_depthTexture);
+        _postFXDescHeap.PlaceResource(&_fxaaTexture);
 
         _testHeap.SetDescription(desc);
         _testHeap.Create();
 
         _testHeap.PlaceResource(&_depthTexture);
         _testHeap.PlaceResource(&_targetTexture);
+
+        _fxaaHeap.SetDescription(desc);
+        _fxaaHeap.Create();
+
+        _fxaaHeap.PlaceResource(&_targetTexture);
+        _fxaaHeap.PlaceResource(&_fxaaTexture);
 
         D3D12_UNORDERED_ACCESS_VIEW_DESC UAVDesc = {};
         UAVDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -150,6 +174,7 @@ void Frame::Init(const DirectX::XMUINT2& size)
 
         dx12::Device::GetDXDevice()->CreateUnorderedAccessView(_targetTexture.GetDXResource().Get(), nullptr, &UAVDesc, _postFXDescHeap.GetResourceCPUHandle(&_targetTexture));
         dx12::Device::GetDXDevice()->CreateUnorderedAccessView(_targetTexture.GetDXResource().Get(), nullptr, &UAVDesc, _testHeap.GetResourceCPUHandle(&_targetTexture));
+        dx12::Device::GetDXDevice()->CreateUnorderedAccessView(_fxaaTexture.GetDXResource().Get(), nullptr, &UAVDesc, _fxaaHeap.GetResourceCPUHandle(&_fxaaTexture));
         
         D3D12_SHADER_RESOURCE_VIEW_DESC SRVDesc = {};
         SRVDesc.Format = DXGI_FORMAT_R32_FLOAT;
@@ -159,6 +184,9 @@ void Frame::Init(const DirectX::XMUINT2& size)
 
         dx12::Device::GetDXDevice()->CreateShaderResourceView(_depthTexture.GetDXResource().Get(), &SRVDesc, _postFXDescHeap.GetResourceCPUHandle(&_depthTexture));
         dx12::Device::GetDXDevice()->CreateShaderResourceView(_depthTexture.GetDXResource().Get(), &SRVDesc, _testHeap.GetResourceCPUHandle(&_depthTexture));
+
+        SRVDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        dx12::Device::GetDXDevice()->CreateShaderResourceView(_targetTexture.GetDXResource().Get(), &SRVDesc, _fxaaHeap.GetResourceCPUHandle(&_targetTexture));
     }
 }
 
@@ -227,6 +255,7 @@ void Frame::Resize(const DirectX::XMUINT2& size)
 {
     _targetTexture.GetDXResource().Reset();
     _depthTexture.GetDXResource().Reset();
+    _fxaaTexture.GetDXResource().Reset();
 
     dx12::ResourceDescription textureDesc;
     textureDesc.SetDimension(D3D12_RESOURCE_DIMENSION_TEXTURE2D);
@@ -297,14 +326,34 @@ void Frame::Resize(const DirectX::XMUINT2& size)
         dx12::Device::GetDXDevice()->CreateDepthStencilView(_depthTexture.GetDXResource().Get(), &depthStencilDesc, _depthHeap->GetCPUDescriptorHandleForHeapStart());
     }
 
+    {
+
+        dx12::ResourceDescription desc;
+        desc.SetSize(size);
+        desc.SetDimension(D3D12_RESOURCE_DIMENSION_TEXTURE2D);
+        desc.SetLayout(D3D12_TEXTURE_LAYOUT_UNKNOWN);
+        desc.SetMipLevels(1);
+        desc.SetAlignment(D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT);
+        desc.SetFormat(DXGI_FORMAT_R8G8B8A8_UNORM);
+        desc.SetFlags(D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+        desc.AddFlags(D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+
+        _fxaaTexture.SetResourceDescription(desc);
+        _fxaaTexture.CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_SOURCE);
+    }
+
     _postFXDescHeap.Reset();
     _testHeap.Reset();
+    _fxaaHeap.Reset();
 
     _postFXDescHeap.PlaceResource(&_targetTexture);
     _postFXDescHeap.PlaceResource(&_depthTexture);
 
     _testHeap.PlaceResource(&_depthTexture);
     _testHeap.PlaceResource(&_targetTexture);
+
+    _fxaaHeap.PlaceResource(&_targetTexture);
+    _fxaaHeap.PlaceResource(&_fxaaTexture);
 
     D3D12_UNORDERED_ACCESS_VIEW_DESC UAVDesc = {};
     UAVDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -313,6 +362,7 @@ void Frame::Resize(const DirectX::XMUINT2& size)
 
     dx12::Device::GetDXDevice()->CreateUnorderedAccessView(_targetTexture.GetDXResource().Get(), nullptr, &UAVDesc, _postFXDescHeap.GetResourceCPUHandle(&_targetTexture));
     dx12::Device::GetDXDevice()->CreateUnorderedAccessView(_targetTexture.GetDXResource().Get(), nullptr, &UAVDesc, _testHeap.GetResourceCPUHandle(&_targetTexture));
+    dx12::Device::GetDXDevice()->CreateUnorderedAccessView(_fxaaTexture.GetDXResource().Get(), nullptr, &UAVDesc, _fxaaHeap.GetResourceCPUHandle(&_fxaaTexture));
 
     D3D12_SHADER_RESOURCE_VIEW_DESC SRVDesc = {};
     SRVDesc.Format = DXGI_FORMAT_R32_FLOAT;
@@ -322,6 +372,10 @@ void Frame::Resize(const DirectX::XMUINT2& size)
 
     dx12::Device::GetDXDevice()->CreateShaderResourceView(_depthTexture.GetDXResource().Get(), &SRVDesc, _postFXDescHeap.GetResourceCPUHandle(&_depthTexture));
     dx12::Device::GetDXDevice()->CreateShaderResourceView(_depthTexture.GetDXResource().Get(), &SRVDesc, _testHeap.GetResourceCPUHandle(&_depthTexture));
+
+
+    SRVDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    dx12::Device::GetDXDevice()->CreateShaderResourceView(_targetTexture.GetDXResource().Get(), &SRVDesc, _fxaaHeap.GetResourceCPUHandle(&_targetTexture));
 }
 
 void Frame::SetAllocatorPool(AllocatorPool* allocatorPool)

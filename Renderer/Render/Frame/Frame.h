@@ -44,10 +44,12 @@ public:
 
     dx12::Resource _targetTexture;
     dx12::Resource _depthTexture;
+    dx12::Resource _fxaaTexture;
 
     ComPtr<ID3D12DescriptorHeap> _targetHeap;
     ComPtr<ID3D12DescriptorHeap> _depthHeap;
     dx12::DescriptorHeap _testHeap;
+    dx12::DescriptorHeap _fxaaHeap;
 
     dx12::DescriptorHeap _postFXDescHeap;
 

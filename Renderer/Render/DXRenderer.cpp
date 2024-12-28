@@ -82,6 +82,7 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
     _AABBpipeline.Parse("PipelineDescriptions\\AABBRenderPipeline.tech");
     _OBBpipeline.Parse("PipelineDescriptions\\OBBRenderPipeline.tech");
     _SkyboxPipeline.Parse("PipelineDescriptions\\SkyboxPipeline.tech");
+    _FXAAPipeline.Parse("PipelineDescriptions\\FXAAPipeline.tech");
     _ArmatureDebugPipeline.Parse("PipelineDescriptions\\ArmatureDebugPipeline.tech");
 
     RECT windowSize;
@@ -91,8 +92,8 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
 
     // Camera Setup
     {
-        XMVECTOR pos = XMVectorSet(0.0f, 30.0f, 30.0f, 1.0f);
-        XMVECTOR target = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+        XMVECTOR pos = XMVectorSet(15.0f, 23.0f, 20.0f, 1.0f);
+        XMVECTOR target = XMVectorSet(0.0f, 20.0f, 0.0f, 1.0f);
         XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
         
         _camera.LookAt(pos, target, up);
@@ -132,7 +133,7 @@ void DXRenderer::OnUpdate(Events::UpdateEvent& updateEvent)
     XMVECTOR mov = 50.0f * XMVectorSet(sinf(updateEvent.totalTime * _timeMiltiplier * 0.45f), 0.8f, cosf(updateEvent.totalTime * _timeMiltiplier * 0.45f), 1.0f);
     XMVECTOR tar = XMVectorSet(0.0f, 17.0f, 0.0f, 1.0f);
     XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-    _camera.LookAt(mov, tar, up);
+    //_camera.LookAt(mov, tar, up);
 
     _deltaTime = updateEvent.elapsedTime * _timeMiltiplier;
 }
@@ -181,6 +182,60 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         RenderSkybox(*task);
     }
 
+    {
+        TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
+        task->SetName("transit1");
+        task->AddDependency("clean");
+        task->AddDependency("g-pass");
+        task->AddDependency("deferred");
+        task->AddDependency("skybox");
+
+        dx12::CommandList& commandList = *task->GetCommandLists().front();
+
+        commandList.TransitionBarrier(_currentFrame->_targetTexture, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+        commandList.TransitionBarrier(_currentFrame->_fxaaTexture, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+
+        commandList.Close();
+    }
+
+
+
+    // Execute the FXAA
+    {
+        TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE, &_FXAAPipeline);
+        task->SetName("fxaa");
+        task->AddDependency("clean");
+        task->AddDependency("g-pass");
+        task->AddDependency("deferred");
+        task->AddDependency("skybox");
+        task->AddDependency("transit1");
+
+        RenderFXAA(*task);
+    }
+
+    {
+        TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
+        task->SetName("transit2");
+        task->AddDependency("clean");
+        task->AddDependency("g-pass");
+        task->AddDependency("deferred");
+        task->AddDependency("skybox");
+        task->AddDependency("transit1");
+        task->AddDependency("fxaa");
+
+        dx12::CommandList& commandList = *task->GetCommandLists().front();
+
+        commandList.TransitionBarrier(_currentFrame->_targetTexture, D3D12_RESOURCE_STATE_COPY_DEST);
+        commandList.TransitionBarrier(_currentFrame->_fxaaTexture, D3D12_RESOURCE_STATE_COPY_SOURCE);
+
+        commandList.CopyResource(_currentFrame->_fxaaTexture, _currentFrame->_targetTexture);
+
+        commandList.TransitionBarrier(_currentFrame->_targetTexture, D3D12_RESOURCE_STATE_RENDER_TARGET);
+        commandList.TransitionBarrier(_currentFrame->_fxaaTexture, D3D12_RESOURCE_STATE_COMMON);
+
+        commandList.Close();
+    }
+
     // Render Armature
     if (_renderArmature)
     {
@@ -190,6 +245,9 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         task->AddDependency("g-pass");
         task->AddDependency("deferred");
         task->AddDependency("skybox");
+        task->AddDependency("transit1");
+        task->AddDependency("fxaa");
+        task->AddDependency("transit2");
 
         RenderArmature(*task);        
     }
@@ -201,6 +259,7 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         task->AddDependency("g-pass");
         task->AddDependency("deferred");
         task->AddDependency("skybox");
+        task->AddDependency("fxaa");
         task->AddDependency("armature");
 
         dx12::CommandList& commandList = *task->GetCommandLists().front();
@@ -220,6 +279,7 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         task->AddDependency("g-pass");
         task->AddDependency("deferred");
         task->AddDependency("skybox");
+        task->AddDependency("fxaa");
         task->AddDependency("armature");
         task->AddDependency("transit");
 
@@ -234,6 +294,7 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         task->AddDependency("g-pass");
         task->AddDependency("deferred");
         task->AddDependency("skybox");
+        task->AddDependency("fxaa");
         task->AddDependency("armature");
         task->AddDependency("transit");
         task->AddDependency("aabb");
@@ -249,6 +310,7 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         task->AddDependency("g-pass");
         task->AddDependency("deferred");
         task->AddDependency("skybox");
+        task->AddDependency("fxaa");
         task->AddDependency("armature");
         task->AddDependency("transit");
         task->AddDependency("aabb");
@@ -405,7 +467,7 @@ void DXRenderer::LightingPass(TaskGPU& task)
         _cachedDataProcessor.Process(_scene, commandList);
 
         D3D12_CPU_DESCRIPTOR_HANDLE handle = _currentFrame->_postFXDescHeap.GetHeapStartCPUHandle();
-        handle.ptr += 64;
+        handle.ptr += 32 * 3;
         dx12::Device::GetDXDevice()->CopyDescriptorsSimple(2, handle, _gBuffer.GetUAVHeap().GetHeapStartCPUHandle(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
         ID3D12DescriptorHeap* heap[1] = { _currentFrame->_postFXDescHeap.GetDXDescriptorHeap().Get() };
@@ -416,7 +478,7 @@ void DXRenderer::LightingPass(TaskGPU& task)
         gpuHandle = _currentFrame->_postFXDescHeap.GetResourceGPUHandle(&_currentFrame->_depthTexture);
         commandList.GetDXCommandList()->SetComputeRootDescriptorTable(3, gpuHandle);
         gpuHandle = _currentFrame->_postFXDescHeap.GetHeapStartGPUHandle();
-        gpuHandle.ptr += 64;
+        gpuHandle.ptr += 32 * 3;
         commandList.GetDXCommandList()->SetComputeRootDescriptorTable(4, gpuHandle);
         gpuHandle.ptr += 32;
         commandList.GetDXCommandList()->SetComputeRootDescriptorTable(5, gpuHandle);
@@ -465,6 +527,39 @@ void DXRenderer::RenderSkybox(TaskGPU& task)
         gpuHandle = _currentFrame->_testHeap.GetHeapStartGPUHandle();
         gpuHandle.ptr += 64;
         commandList.GetDXCommandList()->SetComputeRootDescriptorTable(4, gpuHandle);
+
+        DirectX::XMUINT2 viewportSize = _camera.GetViewport().GetSize();
+        int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 8.0f);
+        int yThreadGroups = (uint32_t)std::ceilf(viewportSize.y / 8.0f);
+
+        commandList.GetDXCommandList()->Dispatch(xThreadGroups, yThreadGroups, 1);
+    }
+    PIXEndEvent(commandList.GetDXCommandList().Get());
+
+    commandList.Close();
+}
+
+void DXRenderer::RenderFXAA(TaskGPU& task)
+{
+    dx12::CommandList& commandList = *task.GetCommandLists().front();
+
+    PIXBeginEvent(commandList.GetDXCommandList().Get(), 10, "FXAA");
+    {
+        commandList.SetPipelineState(_FXAAPipeline);
+        commandList.SetRootSignature(_FXAAPipeline);
+
+        _cachedDataProcessor.Process(_scene, commandList);
+
+        {
+            ID3D12DescriptorHeap* heap[1] = { _currentFrame->_fxaaHeap.GetDXDescriptorHeap().Get() };
+            commandList.GetDXCommandList()->SetDescriptorHeaps(1, heap);
+
+            D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle = _currentFrame->_fxaaHeap.GetResourceGPUHandle(&_currentFrame->_targetTexture);
+            commandList.GetDXCommandList()->SetComputeRootDescriptorTable(3, gpuHandle);
+
+            gpuHandle = _currentFrame->_fxaaHeap.GetResourceGPUHandle(&_currentFrame->_fxaaTexture);
+            commandList.GetDXCommandList()->SetComputeRootDescriptorTable(4, gpuHandle);
+        }
 
         DirectX::XMUINT2 viewportSize = _camera.GetViewport().GetSize();
         int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 8.0f);

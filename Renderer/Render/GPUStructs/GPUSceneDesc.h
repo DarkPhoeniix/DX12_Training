@@ -13,7 +13,8 @@ struct GPUSceneDesc
     DirectX::XMVECTOR EyeDirection = DirectX::XMVectorZero();
 
     DirectX::XMUINT2 WindowSize = { 0, 0 };
-    DirectX::XMFLOAT2 NearFar = { 0, 0 };
+    DirectX::XMFLOAT2 ReciprocalWindowSize = { 0.0f, 0.0f };
+    DirectX::XMFLOAT2 NearFar = { 0.0f, 0.0f };
 
     UINT LightsNum = 0;
 };
