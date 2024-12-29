@@ -15,16 +15,16 @@ RWTexture2D<float4> TargetTexture           : register(u0);
 
 void SetLightParams(in LightDesc light, inout Surface surface)
 {
-    float3 eyeDir = normalize(Scene.EyePosition - surface.Positon);
+    float3 eyeDir = normalize(Scene.EyePosition - surface.Positon).xyz;
     
     float3 lightDirection;
     if (light.Type == LIGHT_TYPE_DIRECTIONAL)
     {
-        lightDirection = -normalize(light.Direction);
+        lightDirection = -normalize(light.Direction).xyz;
     }
     else if (light.Type == LIGHT_TYPE_POINT)
     {
-        lightDirection = normalize(light.Position - surface.Positon);
+        lightDirection = normalize(light.Position - surface.Positon).xyz;
     }
     float3 halfway = normalize(eyeDir + lightDirection);
         
@@ -37,6 +37,11 @@ void SetLightParams(in LightDesc light, inout Surface surface)
 [numthreads(8, 8, 1)]
 void main(uint3 DTid : SV_DispatchThreadID)
 {
+    if (DTid.x > Scene.WindowSize.x || DTid.y > Scene.WindowSize.y)
+    {
+        return;
+    }
+    
     float depth             = PositionTexture.Load(uint3(DTid.xy, 0)).r;
     
     // Setup surface
@@ -47,7 +52,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
     surface.Metalness       = AlbedoMetalnessTexture.Load(uint3(DTid.xy, 0)).a;
     surface.Roughness       = NormalRoughnessTexture.Load(uint3(DTid.xy, 0)).a;
     
-    surface.FinalColor = 0.1f * surface.Albedo; // Ambient
+    surface.FinalColor = 0.0f * surface.Albedo; // Ambient
     for (int i = 0; i < Scene.LightsNum; ++i)
     {
         SetLightParams(Lights[i], surface);
@@ -56,17 +61,18 @@ void main(uint3 DTid : SV_DispatchThreadID)
         F0 = lerp(F0, surface.Albedo.rgb, surface.Metalness);
         
         // (F * G * D) / (4 * NdotL * NdotV)
-        float F = FresnelSchlick(surface, F0);
+        float3 F = FresnelSchlick(surface, F0);
         float G = GeometrySmith(surface, Lights[i]);
         float D = CalculateSpecular(surface, Lights[i]);
-        float3 cookTorrance = (F * G * D) / max(0.00001f, (4.0f * surface.NdotL * surface.NdotV));
+        float3 cookTorrance = (F * G * D) / (4.0f * surface.NdotL * surface.NdotV);
         
         float3 diffuseColor = surface.Albedo.rgb * (1.0f - surface.Metalness);
         float3 lightingModel = (diffuseColor + cookTorrance) * surface.NdotL;
+        
         float4 finalDiffuse = float4(lightingModel, 1.0f);
         
         surface.FinalColor += finalDiffuse;
     }
     
-    TargetTexture[DTid.xy] = surface.FinalColor;
+    TargetTexture[DTid.xy] = float4(surface.FinalColor.rgb, 1.0f);
 }

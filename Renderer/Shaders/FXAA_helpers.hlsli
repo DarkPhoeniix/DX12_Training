@@ -3,8 +3,6 @@
 
 float rgbToLuma(float3 rgb)
 {
-    //return sqrt(dot(rgb, float3(0.299f, 0.587f, 0.114f)));
-    
     return rgb.y * (0.587 / 0.299) + rgb.x;
 }
 

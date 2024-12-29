@@ -411,7 +411,6 @@ namespace Helpers
                     VertexData vertex;
                     vertex.Position = points[v];
                     vertex.Normal = normals[vn];
-                    vertex.Color = { 0.8f, 0.8f, 0.8f, 1.0f };
                     vertex.UV = UVs[vt];
                     vertex.Tangent = tangents[vtan];
 

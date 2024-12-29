@@ -7,9 +7,8 @@ struct PSInput
     float4 WorldPosition    : POSITION;
     float4 Position         : SV_Position;
     float3 Normal           : NORMAL;
-    float4 Color            : COLOR;
-    float2 Texture          : TEXCOORD;
     float3 Tangent          : TANGENT;
+    float2 Texture          : TEXCOORD;
 };
 
 struct PSOutput
@@ -29,10 +28,10 @@ PSOutput main(PSInput IN)
 {
     // Sample textures
     float2 uv               = IN.Texture;
-    uv.y                    = 1 - uv.y;
+    uv.y                    = 1.0f - uv.y;
     
-    float3 albedo           = Materials[Model.AlbedoTextureIndex].Sample(LinearSampler, uv);
-    float3 normalMap        = Materials[Model.NormalTextureIndex].Sample(PointSampler, uv);
+    float3 albedo           = Materials[Model.AlbedoTextureIndex].Sample(LinearSampler, uv).rgb;
+    float3 normalMap        = Materials[Model.NormalTextureIndex].Sample(PointSampler, uv).rgb;
     float metalness         = Materials[Model.MetalnessTextureIndex].Sample(PointSampler, uv).x;
     float roughness         = Materials[Model.RoughnessTextureIndex].Sample(PointSampler, uv).x;
     
@@ -47,7 +46,7 @@ PSOutput main(PSInput IN)
     // Setup output buffer
     PSOutput output;
     output.AlbedoMetalness  = float4(albedo, metalness);
-    output.NormalRougness   = float4(finalNormal, roughness);
+    output.NormalRougness   = float4(normal, roughness);
     
     return output;
 }

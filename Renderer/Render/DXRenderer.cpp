@@ -69,6 +69,8 @@ DXRenderer::DXRenderer(HWND windowHandle)
     , _deltaTime(0.0f)
     , _renderArmature(false)
     , _renderAABB(false)
+    , _applyFXAA(false)
+    , _renderSkybox(true)
     , _timeMiltiplier(1.0f)
 {   }
 
@@ -173,11 +175,13 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
     }
 
     // Execute the Skybox
+    if (_renderSkybox)
     {
         TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE, &_SkyboxPipeline);
         task->SetName("skybox");
         task->AddDependency("clean");
         task->AddDependency("g-pass");
+        task->AddDependency("deferred");
 
         RenderSkybox(*task);
     }
@@ -201,6 +205,7 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
 
 
     // Execute the FXAA
+    if (_applyFXAA)
     {
         TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE, &_FXAAPipeline);
         task->SetName("fxaa");
@@ -228,7 +233,8 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         commandList.TransitionBarrier(_currentFrame->_targetTexture, D3D12_RESOURCE_STATE_COPY_DEST);
         commandList.TransitionBarrier(_currentFrame->_fxaaTexture, D3D12_RESOURCE_STATE_COPY_SOURCE);
 
-        commandList.CopyResource(_currentFrame->_fxaaTexture, _currentFrame->_targetTexture);
+        if (_applyFXAA)
+            commandList.CopyResource(_currentFrame->_fxaaTexture, _currentFrame->_targetTexture);
 
         commandList.TransitionBarrier(_currentFrame->_targetTexture, D3D12_RESOURCE_STATE_RENDER_TARGET);
         commandList.TransitionBarrier(_currentFrame->_fxaaTexture, D3D12_RESOURCE_STATE_COMMON);
@@ -715,6 +721,8 @@ void DXRenderer::RenderGUI(TaskGPU& task)
                 ImGui::SliderFloat("Time multiplier", &_timeMiltiplier, 0.1f, 2.0f, "%.1f");
                 ImGui::Checkbox("Render debug armature", &_renderArmature);
                 ImGui::Checkbox("Render debug AABB", &_renderAABB);
+                ImGui::Checkbox("Render skybox", &_renderSkybox);
+                ImGui::Checkbox("Apply FXAA", &_applyFXAA);
             }
 
             if (ImGui::CollapsingHeader("Inputs"))

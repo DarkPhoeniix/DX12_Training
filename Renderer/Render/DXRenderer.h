@@ -65,6 +65,8 @@ private:
 
     bool _renderArmature;
     bool _renderAABB;
+    bool _renderSkybox;
+    bool _applyFXAA;
     float _timeMiltiplier;
 
     bool _contentLoaded;

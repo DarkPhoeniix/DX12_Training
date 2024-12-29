@@ -7,9 +7,8 @@ struct VertexData
 {
     DirectX::XMFLOAT3 Position;
     DirectX::XMFLOAT3 Normal;
-    DirectX::XMFLOAT4 Color;
-    DirectX::XMFLOAT2 UV;
     DirectX::XMFLOAT3 Tangent;
+    DirectX::XMFLOAT2 UV;
 };
 
 struct SkinningVertexData

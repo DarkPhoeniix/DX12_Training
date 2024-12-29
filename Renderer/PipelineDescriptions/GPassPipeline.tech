@@ -6,7 +6,7 @@
 	"TopologyType": "triangle",
 
 	"Blend": "PipelineDescriptions\\GPassPipeline.blend",
-	"Raster": "PipelineDescriptions\\Raster_Solid.raster",
+	"Raster": "PipelineDescriptions\\Raster_Solid_CullBack.raster",
 	"Depth": "PipelineDescriptions\\Depth_LE_WriteAll.depth",
 
 	"RenderTargets": [
@@ -30,24 +30,17 @@
 			"SemanticIndex": 0
 		},
 		{
-			"Name": "COLOR",
+			"Name": "TANGENT",
 			"Slot": 0,
 			"Offset": 24,
-			"Format": "float4",
+			"Format": "float3",
 			"SemanticIndex": 0
 		},
 		{
 			"Name": "TEXCOORD",
 			"Slot": 0,
-			"Offset": 40,
+			"Offset": 36,
 			"Format": "float2",
-			"SemanticIndex": 0
-		},
-		{
-			"Name": "TANGENT",
-			"Slot": 0,
-			"Offset": 48,
-			"Format": "float3",
 			"SemanticIndex": 0
 		},
 		{
