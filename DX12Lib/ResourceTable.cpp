@@ -7,8 +7,7 @@ namespace dx12
     ResourceTable::ResourceTable(DescriptorHeapDescription descriptorHeapDesc, HeapDescription heapDesc)
         : _numDescriptors(descriptorHeapDesc.GetNumDescriptors())
     {
-        _heap.SetDescription(heapDesc);
-        _heap.Create();
+        _heap.Create(heapDesc);
         _heap.SetName("Heap of resource table");
 
         _descriptorHeap.Create(descriptorHeapDesc);

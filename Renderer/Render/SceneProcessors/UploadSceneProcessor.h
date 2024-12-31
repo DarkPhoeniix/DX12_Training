@@ -5,9 +5,9 @@
 class UploadSceneProcessor : public ISceneProcessor
 {
 public:
-    void Process(SceneLayer::Scene& scene, dx12::CommandList& commandList) override;
+    void Process(SceneLayer::Scene& scene, dx12::CommandList& commandList, CacheGPU* frameCache) override;
 
-    void ProcessEntity(SceneLayer::Entity& entity, dx12::CommandList& commandList);
+    void ProcessEntity(SceneLayer::Entity& entity, dx12::CommandList& commandList, CacheGPU* frameCache);
 
 private:
     void UploadData(dx12::CommandList& commandList,

@@ -180,6 +180,7 @@
     <ClCompile Include="Render\GPUStructs\GPULightDesc.cpp">
       <Filter>Render\GPUStructs</Filter>
     </ClCompile>
+    <ClCompile Include="Render\Frame\CacheGPU.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Events\IEvent.h">
@@ -355,6 +356,7 @@
     <ClInclude Include="Scene\Volumes\CapsuleVolume.h">
       <Filter>Scene\Volumes</Filter>
     </ClInclude>
+    <ClInclude Include="Render\Frame\CacheGPU.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\AABB_gs.hlsl">

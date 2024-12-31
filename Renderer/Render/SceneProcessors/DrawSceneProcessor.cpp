@@ -13,8 +13,9 @@
 #include "Scene/ECS/Components/Transformation.h"
 
 #include "Render/GPUStructs/GPUModelDesc.h"
+#include "Render/Frame/CacheGPU.h"
 
-void DrawSceneProcessor::Process(SceneLayer::Scene& scene, dx12::CommandList& commandList)
+void DrawSceneProcessor::Process(SceneLayer::Scene& scene, dx12::CommandList& commandList, CacheGPU* frameCache)
 {
     // Setup textures
     commandList.SetDescriptorHeaps({ scene.GetCache().GetTextureTable()->GetDescriptorHeap().GetDXDescriptorHeap().Get() });
@@ -23,17 +24,17 @@ void DrawSceneProcessor::Process(SceneLayer::Scene& scene, dx12::CommandList& co
     for (std::shared_ptr<SceneLayer::Entity>& node : scene.GetRootNodes())
     {
         node->UpdateGlobalTransform();
-        DrawEntity(*node, commandList);
+        DrawEntity(*node, commandList, frameCache);
 
         for (std::shared_ptr<SceneLayer::Entity>& child : node->GetChildrenNodes())
         {
             child->UpdateGlobalTransform(&node->GetGlobalTransform());
-            DrawEntity(*child, commandList);
+            DrawEntity(*child, commandList, frameCache);
         }
     }
 }
 
-void DrawSceneProcessor::DrawEntity(SceneLayer::Entity& entity, dx12::CommandList& commandList, SceneLayer::Entity* parent)
+void DrawSceneProcessor::DrawEntity(SceneLayer::Entity& entity, dx12::CommandList& commandList, CacheGPU* frameCache, SceneLayer::Entity* parent)
 {
     SceneLayer::SceneCache* cache = entity.GetSceneCache();
     if (ASSERT(cache, "Entity has no scene cache"))
@@ -80,7 +81,19 @@ void DrawSceneProcessor::DrawEntity(SceneLayer::Entity& entity, dx12::CommandLis
             data[i] = result;
         }
 
-        commandList.SetSRV(3, armature->BoneTransforms.OffsetGPU(0));
+        CacheGPU::DataHandle dataHandle = frameCache->RequestPlacement(armature->BoneTransforms.GetResourceDescription().GetSize().x);
+
+        dx12::Resource boneTransformationsData(armature->BoneTransforms.GetResourceDescription());
+        boneTransformationsData.CreatePlacedResource(dataHandle.Heap->GetDXHeap(), dataHandle.Offset);
+        boneTransformationsData.SetName("Bones temp buffer");
+        
+        commandList.TransitionBarrier(boneTransformationsData, D3D12_RESOURCE_STATE_COPY_DEST);
+        commandList.CopyResource(armature->BoneTransforms, boneTransformationsData);
+        commandList.TransitionBarrier(boneTransformationsData, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+
+        commandList.SetSRV(3, boneTransformationsData.OffsetGPU(0));
+
+        frameCache->tempResources.push_back(std::move(boneTransformationsData));
     }
 
     if (mesh)

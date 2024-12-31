@@ -12,22 +12,24 @@
 #include "Scene/ECS/Components/Mesh.h"
 #include "Scene/ECS/Components/Skybox.h"
 
-void UploadSceneProcessor::Process(SceneLayer::Scene& scene, dx12::CommandList& commandList)
+#include "Render/Frame/CacheGPU.h"
+
+void UploadSceneProcessor::Process(SceneLayer::Scene& scene, dx12::CommandList& commandList, CacheGPU* frameCache)
 {
     SceneLayer::SceneCache& cache = scene.GetCache();
 
     for (std::shared_ptr<SceneLayer::Entity>& node : scene.GetRootNodes())
     {
-        ProcessEntity(*node, commandList);
+        ProcessEntity(*node, commandList, frameCache);
 
         for (std::shared_ptr<SceneLayer::Entity>& child : node->GetChildrenNodes())
         {
-            ProcessEntity(*child, commandList);
+            ProcessEntity(*child, commandList, frameCache);
         }
     }
 }
 
-void UploadSceneProcessor::ProcessEntity(SceneLayer::Entity& entity, dx12::CommandList& commandList)
+void UploadSceneProcessor::ProcessEntity(SceneLayer::Entity& entity, dx12::CommandList& commandList, CacheGPU* frameCache)
 {
     SceneLayer::SceneCache* cache = entity.GetSceneCache();
     if (ASSERT(cache, "Entity has no scene cache"))

@@ -4,6 +4,7 @@
 #include "Render/Frame/Executor.h"
 #include "Render/Frame/TaskGPU.h"
 #include "Render/Frame/FencePool.h"
+#include "Render/Frame/CacheGPU.h"
 #include "DescriptorHeap.h"
 
 // TODO: refactor the Frame class
@@ -29,6 +30,7 @@ public:
     void WaitCPU();
     void ResetGPU();
 
+    CacheGPU& GetCache();
     void ResetCache();
 
     void Resize(const DirectX::XMUINT2& size);
@@ -58,6 +60,9 @@ private:
     dx12::DescriptorHeap _DSVHeap;
     dx12::DescriptorHeap _RTVHeap;
     dx12::DescriptorHeap _BuffersHeap;
+
+    dx12::Heap _resourcesHeap;
+    CacheGPU _cache;
 
     dx12::Resource _targetTexture;
 

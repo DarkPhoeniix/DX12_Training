@@ -154,8 +154,7 @@ GUI::GUI()
     desc.SetNumDescriptors(1);
 
     _srvDescriptorHeap = new dx12::DescriptorHeap;
-    _srvDescriptorHeap->SetDescription(desc);
-    _srvDescriptorHeap->Create();
+    _srvDescriptorHeap->Create(desc);
     _srvDescriptorHeap->SetName("GUI SRV descriptor heap");
 }
 

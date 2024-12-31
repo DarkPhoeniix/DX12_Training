@@ -111,7 +111,7 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
         dx12::CommandList& commandList = *loadTask->GetCommandLists().front();
 
         _scene.LoadScene("Dragon\\DragonScene.scene", commandList);
-        _uploadProcessor.Process(_scene, commandList);
+        _uploadProcessor.Process(_scene, commandList, &_currentFrame->GetCache());
         _scene.SetCamera(_camera);
 
         commandList.Close();
@@ -135,7 +135,7 @@ void DXRenderer::OnUpdate(Events::UpdateEvent& updateEvent)
     XMVECTOR mov = 50.0f * XMVectorSet(sinf(updateEvent.totalTime * _timeMiltiplier * 0.45f), 0.8f, cosf(updateEvent.totalTime * _timeMiltiplier * 0.45f), 1.0f);
     XMVECTOR tar = XMVectorSet(0.0f, 17.0f, 0.0f, 1.0f);
     XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-    //_camera.LookAt(mov, tar, up);
+    _camera.LookAt(mov, tar, up);
 
     _deltaTime = updateEvent.elapsedTime * _timeMiltiplier;
 }
@@ -450,8 +450,8 @@ void DXRenderer::GeometryPass(TaskGPU& task)
         DebugInfo::StartStatCollecting(commandList);
 #endif
 
-        _cachedDataProcessor.Process(_scene, commandList);
-        _drawProcessor.Process(_scene, commandList);
+        _cachedDataProcessor.Process(_scene, commandList, &_currentFrame->GetCache());
+        _drawProcessor.Process(_scene, commandList, &_currentFrame->GetCache());
 
 #if defined(_DEBUG)
         DebugInfo::EndStatCollecting(commandList);
@@ -475,9 +475,8 @@ void DXRenderer::LightingPass(TaskGPU& task)
     {
         commandList.SetPipelineState(_deferredPipeline);
 
-        _cachedDataProcessor.Process(_scene, commandList);
+        _cachedDataProcessor.Process(_scene, commandList, &_currentFrame->GetCache());
 
-        dx12::DescriptorHeap& RTVHeap = _currentFrame->GetDescriptorHeap(dx12::DescriptorHeapType::RTV);
         dx12::DescriptorHeap& buffersHeap = _currentFrame->GetDescriptorHeap(dx12::DescriptorHeapType::CBV_SRV_UAV);
 
         dx12::Resource* target = &_currentFrame->GetTargetTexture();
@@ -525,7 +524,7 @@ void DXRenderer::RenderSkybox(TaskGPU& task)
     {
         commandList.SetPipelineState(_SkyboxPipeline);
 
-        _cachedDataProcessor.Process(_scene, commandList);
+        _cachedDataProcessor.Process(_scene, commandList, &_currentFrame->GetCache());
 
         dx12::DescriptorHeap& buffersHeap = _currentFrame->GetDescriptorHeap(dx12::DescriptorHeapType::CBV_SRV_UAV);
 
