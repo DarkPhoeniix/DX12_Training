@@ -8,12 +8,11 @@ namespace dx12
         : _numDescriptors(descriptorHeapDesc.GetNumDescriptors())
     {
         _heap.SetDescription(heapDesc);
-        _heap.SetName("Heap of resource table");
         _heap.Create();
+        _heap.SetName("Heap of resource table");
 
-        _descriptorHeap.SetDescription(descriptorHeapDesc);
+        _descriptorHeap.Create(descriptorHeapDesc);
         _descriptorHeap.SetName("Descriptor heap of resource table");
-        _descriptorHeap.Create();
     }
 
     bool ResourceTable::AddResource(Resource* resource)

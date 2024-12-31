@@ -4,7 +4,7 @@
 
 namespace dx12
 {
-    class RootSignature
+    class PipelineState
     {
     public:
         ComPtr<ID3D12RootSignature> GetRootSignature() const;

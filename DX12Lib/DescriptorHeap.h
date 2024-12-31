@@ -6,6 +6,13 @@ namespace dx12
 {
     class Resource;
 
+    enum class DescriptorHeapType
+    {
+        RTV,
+        DSV,
+        CBV_SRV_UAV
+    };
+
     class DescriptorHeap
     {
     public:
@@ -14,16 +21,21 @@ namespace dx12
         ~DescriptorHeap();
 
         void Create();
-        void PlaceResource(Resource* resource);
+        void Create(const DescriptorHeapDescription& description);
         void Reset();
+
+        void PlaceResource(Resource* resource);
+        void PlaceResourceDescriptor(Resource* resource, D3D12_CPU_DESCRIPTOR_HANDLE descriptor);
 
         D3D12_CPU_DESCRIPTOR_HANDLE GetHeapStartCPUHandle();
         D3D12_GPU_DESCRIPTOR_HANDLE GetHeapStartGPUHandle();
 
-        D3D12_GPU_DESCRIPTOR_HANDLE GetHeapGPUHandle(size_t offset = 0);
+        D3D12_CPU_DESCRIPTOR_HANDLE GetFreeCPUHandle();
+        D3D12_GPU_DESCRIPTOR_HANDLE GetFreeGPUHandle();
 
         D3D12_CPU_DESCRIPTOR_HANDLE GetResourceCPUHandle(Resource* resource);
         D3D12_GPU_DESCRIPTOR_HANDLE GetResourceGPUHandle(Resource* resource);
+
         UINT GetResourceIndex(Resource* resource);
 
         void SetDescription(const DescriptorHeapDescription& description);
@@ -36,7 +48,7 @@ namespace dx12
 
     private:
         ComPtr<ID3D12DescriptorHeap> _descriptorHeap;
-        DescriptorHeapDescription _descriptorHeapDescription;
+        DescriptorHeapDescription _description;
         UINT _heapIncrementSize;
 
         std::vector<Resource*> _resources;

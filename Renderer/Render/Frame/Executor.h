@@ -4,7 +4,7 @@
 
 namespace dx12
 {
-    class RootSignature;
+    class PipelineState;
 } // namespace Core
 
 class Executor
@@ -14,7 +14,7 @@ public:
     ~Executor();
 
     void Allocate(D3D12_COMMAND_LIST_TYPE type);
-    void Reset(dx12::RootSignature* rootSignature = nullptr);
+    void Reset(dx12::PipelineState* rootSignature = nullptr);
 
     void SetFree(bool isFree);
     bool IsFree() const;

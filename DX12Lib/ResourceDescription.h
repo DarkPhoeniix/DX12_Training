@@ -4,26 +4,22 @@ namespace dx12
 {
     enum class EResourceType : int
     {
-        None = 1 << 0,
+        None = 0,
 
         // access type 
-        Dynamic = 1 << 1,
-        ReadBack = 1 << 2,
-        Unordered = 1 << 3,
+        Dynamic         = 1 << 0,
+        ReadBack        = 1 << 1,
+        Unordered       = 1 << 2,
 
         // type of resource
-        Buffer = 1 << 4,
-        Texture = 1 << 5,
-        RenderTarget = 1 << 6,
-        DepthTarget = 1 << 7,
+        Buffer          = 1 << 3,
+        Texture         = 1 << 4,
+        RenderTarget    = 1 << 5,
+        DepthStencil    = 1 << 6,
 
         // addition flags
-        StrideAlignment = 1 << 8,
-
-        // acceleration flags
-        Deny_shader_resource = 1 << 9,
-
-        Last = 1 << 10
+        Aligned         = 1 << 7,
+        DenyShader      = 1 << 8
     };
     BINARY_OPERATION_TO_ENUM(EResourceType);
 

@@ -6,13 +6,13 @@ namespace dx12
 {
     DescriptorHeap::DescriptorHeap()
         : _descriptorHeap(nullptr)
-        , _descriptorHeapDescription{}
+        , _description{}
         , _heapIncrementSize(0)
     {   }
 
     DescriptorHeap::DescriptorHeap(const DescriptorHeapDescription& description)
         : _descriptorHeap(nullptr)
-        , _descriptorHeapDescription(description)
+        , _description(description)
         , _heapIncrementSize(0)
     {   }
 
@@ -25,20 +25,34 @@ namespace dx12
     {
         ASSERT(dx12::Device::GetDXDevice(), "Device is nullptr when trying to create descriptor heap");
 
-        dx12::Device::GetDXDevice()->CreateDescriptorHeap(&_descriptorHeapDescription.GetDXDescription(), IID_PPV_ARGS(&_descriptorHeap));
+        dx12::Device::GetDXDevice()->CreateDescriptorHeap(&_description.GetDXDescription(), IID_PPV_ARGS(&_descriptorHeap));
 
         std::wstring tmp(_name.begin(), _name.end());
         _descriptorHeap->SetName(tmp.c_str());
 
-        _heapIncrementSize = dx12::Device::GetDXDevice()->GetDescriptorHandleIncrementSize(_descriptorHeapDescription.GetType());
+        _heapIncrementSize = dx12::Device::GetDXDevice()->GetDescriptorHandleIncrementSize(_description.GetType());
 
-        int numDescriptors = _descriptorHeapDescription.GetNumDescriptors();
+        int numDescriptors = _description.GetNumDescriptors();
         _resources.resize(numDescriptors, nullptr);
+    }
+
+    void DescriptorHeap::Create(const DescriptorHeapDescription& description)
+    {
+        _description = description;
+
+        Create();
+    }
+
+    void DescriptorHeap::Reset()
+    {
+        for (auto& res : _resources)
+        {
+            res = nullptr;
+        }
     }
 
     void DescriptorHeap::PlaceResource(Resource* resource)
     {
-        // TODO: use vector instead of map
         for (auto& res : _resources)
         {
             if (!res)
@@ -51,12 +65,26 @@ namespace dx12
         Logger::Log(LogType::Error, "Descriptor heap " + _name + " doesn't have free desriptors");
     }
 
-    void DescriptorHeap::Reset()
+    void DescriptorHeap::PlaceResourceDescriptor(Resource* resource, D3D12_CPU_DESCRIPTOR_HANDLE descriptor)
     {
-        for (auto& res : _resources)
+        size_t offset = -1;
+        for (size_t i = 0; i < _resources.size(); ++i)
         {
-            res = nullptr;
+            if (!_resources[i])
+            {
+                offset = i;
+                _resources[i] = resource;
+            }
         }
+
+        if (ASSERT(offset != -1, std::format("Descriptor heap {} is full", _name)))
+        {
+            return;
+        }
+
+        D3D12_CPU_DESCRIPTOR_HANDLE handle = _descriptorHeap->GetCPUDescriptorHandleForHeapStart();
+        handle.ptr += _heapIncrementSize * offset;
+        dx12::Device::GetDXDevice()->CopyDescriptorsSimple(1, handle, descriptor, _description.GetType());
     }
 
     D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetHeapStartCPUHandle()
@@ -69,11 +97,44 @@ namespace dx12
         return _descriptorHeap->GetGPUDescriptorHandleForHeapStart();
     }
 
-    D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetHeapGPUHandle(size_t offset)
+    D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetFreeCPUHandle()
     {
-        D3D12_GPU_DESCRIPTOR_HANDLE handle = _descriptorHeap->GetGPUDescriptorHandleForHeapStart();
-        handle.ptr += offset * _heapIncrementSize;
-        return handle;
+        size_t offset = -1;
+        for (size_t i = 0; i < _resources.size(); ++i)
+        {
+            if (!_resources[i])
+            {
+                offset = i;
+                break;
+            }
+        }
+
+        ASSERT((offset != -1), "Trying to Get invalid resource CPU handle from descriptor heap");
+
+        D3D12_CPU_DESCRIPTOR_HANDLE start = _descriptorHeap->GetCPUDescriptorHandleForHeapStart();
+        start.ptr += _heapIncrementSize * offset;
+
+        return start;
+    }
+
+    D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetFreeGPUHandle()
+    {
+        size_t offset = -1;
+        for (size_t i = 0; i < _resources.size(); ++i)
+        {
+            if (!_resources[i])
+            {
+                offset = i;
+                break;
+            }
+        }
+
+        ASSERT((offset != -1), "Trying to Get invalid resource CPU handle from descriptor heap");
+
+        D3D12_GPU_DESCRIPTOR_HANDLE start = _descriptorHeap->GetGPUDescriptorHandleForHeapStart();
+        start.ptr += _heapIncrementSize * offset;
+
+        return start;
     }
 
     D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetResourceCPUHandle(Resource* resource)
@@ -143,12 +204,12 @@ namespace dx12
 
     void DescriptorHeap::SetDescription(const DescriptorHeapDescription& description)
     {
-        _descriptorHeapDescription = description;
+        _description = description;
     }
 
     const DescriptorHeapDescription& DescriptorHeap::GetDescription() const
     {
-        return _descriptorHeapDescription;
+        return _description;
     }
 
     void DescriptorHeap::SetName(const std::string& name)

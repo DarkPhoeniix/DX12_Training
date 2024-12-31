@@ -87,6 +87,36 @@ namespace dx12
         _instance->_swapChain->Present();
     }
 
+    void Device::CreateRenderTargetView(const RenderTargetView& view, DescriptorHeap& descriptorHeap)
+    {
+        descriptorHeap.PlaceResource(view.Owner);
+        _instance->_device->CreateRenderTargetView(view.Owner->GetDXResource().Get(), &view, descriptorHeap.GetResourceCPUHandle(view.Owner));
+    }
+
+    void Device::CreateDepthStencilView(const DepthStencilView& view, DescriptorHeap& descriptorHeap)
+    {
+        descriptorHeap.PlaceResource(view.Owner);
+        _instance->_device->CreateDepthStencilView(view.Owner->GetDXResource().Get(), &view, descriptorHeap.GetResourceCPUHandle(view.Owner));
+    }
+
+    void Device::CreateConstantBufferView(const ConstantBufferView& view, DescriptorHeap& descriptorHeap)
+    {
+        descriptorHeap.PlaceResource(view.Owner);
+        _instance->_device->CreateConstantBufferView(&view, descriptorHeap.GetResourceCPUHandle(view.Owner));
+    }
+
+    void Device::CreateShaderResourceView(const ShaderResourceView& view, DescriptorHeap& descriptorHeap)
+    {
+        descriptorHeap.PlaceResource(view.Owner);
+        _instance->_device->CreateShaderResourceView(view.Owner->GetDXResource().Get(), &view, descriptorHeap.GetResourceCPUHandle(view.Owner));
+    }
+
+    void Device::CreateUnorderedAccessView(const UnorderedAccessView& view, DescriptorHeap& descriptorHeap)
+    {
+        descriptorHeap.PlaceResource(view.Owner);
+        _instance->_device->CreateUnorderedAccessView(view.Owner->GetDXResource().Get(), nullptr, &view, descriptorHeap.GetResourceCPUHandle(view.Owner));
+    }
+
     Device::Device()
     {
 #if defined(_DEBUG)

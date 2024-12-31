@@ -51,7 +51,7 @@
     <ClInclude Include="ResourceTable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="RootSignature.h">
+    <ClInclude Include="PipelineState.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="StatisticsQuery.h">
@@ -101,7 +101,7 @@
     <ClCompile Include="ResourceTable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="RootSignature.cpp">
+    <ClCompile Include="PipelineState.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="StatisticsQuery.cpp">

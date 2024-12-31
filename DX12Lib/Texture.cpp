@@ -148,6 +148,7 @@ namespace dx12
         }
 
         texture->_resourceDesc = textureDesc;
+        texture->_resourceDesc.SetResourceType(dx12::EResourceType::Texture);
 
         return texture;
     }

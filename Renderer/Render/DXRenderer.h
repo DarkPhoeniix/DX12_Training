@@ -1,7 +1,7 @@
 #pragma once
 
 #include "GBuffer.h"
-#include "RootSignature.h"
+#include "PipelineState.h"
 #include "Scene/Camera.h"
 #include "Scene/Scene.h"
 #include "SceneProcessors/DrawSceneProcessor.h"
@@ -34,9 +34,9 @@ private:
     void GeometryPass(TaskGPU& task);
     void LightingPass(TaskGPU& task);
     void RenderSkybox(TaskGPU& task);
-    void RenderArmature(TaskGPU& task);
-    void RenderFXAA(TaskGPU& task);
-    void RenderAABB(TaskGPU& task);
+    //void RenderArmature(TaskGPU& task);
+    //void RenderFXAA(TaskGPU& task);
+    //void RenderAABB(TaskGPU& task);
     void RenderGUI(TaskGPU& task);
     void Present(TaskGPU& task);
 
@@ -44,13 +44,13 @@ private:
 
     Core::GBuffer _gBuffer;
 
-    dx12::RootSignature _gPassPipeline;
-    dx12::RootSignature _deferredPipeline;
-    dx12::RootSignature _AABBpipeline;
-    dx12::RootSignature _OBBpipeline;
-    dx12::RootSignature _SkyboxPipeline;
-    dx12::RootSignature _FXAAPipeline;
-    dx12::RootSignature _ArmatureDebugPipeline;
+    dx12::PipelineState _gPassPipeline;
+    dx12::PipelineState _deferredPipeline;
+    dx12::PipelineState _AABBpipeline;
+    dx12::PipelineState _OBBpipeline;
+    dx12::PipelineState _SkyboxPipeline;
+    dx12::PipelineState _FXAAPipeline;
+    dx12::PipelineState _ArmatureDebugPipeline;
 
     UploadSceneProcessor _uploadProcessor;
     SetupCachedDataProcessor _cachedDataProcessor;

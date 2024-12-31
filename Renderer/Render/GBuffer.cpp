@@ -8,101 +8,85 @@ namespace Core
 {
     void GBuffer::Init(const DirectX::XMUINT2& size)
     {
-        dx12::DescriptorHeapDescription heapDesc;
+        // Create descriptor heaps (RTV/DSV/SRV)
         {
-            heapDesc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_NONE);
-            heapDesc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-            heapDesc.SetNumDescriptors(3);
-        }
-        _descriptorsHeap.SetDescription(heapDesc);
-        _descriptorsHeap.Create();
-
-        D3D12_CLEAR_VALUE clearValueTexTarget;
-        dx12::ResourceDescription textureDesc;
-        {
-            textureDesc.SetSize(size);
-            textureDesc.SetDimension(D3D12_RESOURCE_DIMENSION_TEXTURE2D);
-            textureDesc.SetDepthOrArraySize(1);
-            textureDesc.SetFlags(D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
-            textureDesc.SetFormat(DXGI_FORMAT_D32_FLOAT);
-            textureDesc.SetLayout(D3D12_TEXTURE_LAYOUT_UNKNOWN);
-            textureDesc.SetMipLevels(1);
-            textureDesc.SetAlignment(D3D12_TILED_RESOURCE_TILE_SIZE_IN_BYTES);
-
-
-            clearValueTexTarget.Format = DXGI_FORMAT_D32_FLOAT;
-            clearValueTexTarget.Color[0] = 0.0f;
-            clearValueTexTarget.Color[1] = 0.0f;
-            clearValueTexTarget.Color[2] = 0.0f;
-            clearValueTexTarget.Color[3] = 1.0f;
-
-            textureDesc.AddFlags(D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-            textureDesc.SetClearValue(clearValueTexTarget);
-
-        }
-
-        //_position.SetResourceDescription(textureDesc);
-        //_position.CreateCommitedResource(D3D12_RESOURCE_STATE_RENDER_TARGET);
-        //_position.SetName("RTV Position");
-        //_descriptorsHeap.PlaceResource(&_position);
-
-        clearValueTexTarget.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        textureDesc.SetFormat(DXGI_FORMAT_R8G8B8A8_UNORM);
-        textureDesc.SetClearValue(clearValueTexTarget);
-        _albedoMetalness.SetResourceDescription(textureDesc);
-        _albedoMetalness.CreateCommitedResource(D3D12_RESOURCE_STATE_RENDER_TARGET);
-        _albedoMetalness.SetName("RTV Albedo+Metalness");
-        _descriptorsHeap.PlaceResource(&_albedoMetalness);
-
-        textureDesc.SetFormat(DXGI_FORMAT_R32G32B32A32_FLOAT);
-        clearValueTexTarget.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-        textureDesc.SetClearValue(clearValueTexTarget);
-        _normalSpecular.SetResourceDescription(textureDesc);
-        _normalSpecular.CreateCommitedResource(D3D12_RESOURCE_STATE_RENDER_TARGET);
-        _normalSpecular.SetName("RTV Normal+Specular");
-        _descriptorsHeap.PlaceResource(&_normalSpecular);
-
-        {
-            D3D12_RENDER_TARGET_VIEW_DESC renderTargetDesc = {};
-            renderTargetDesc.Format = DXGI_FORMAT_D32_FLOAT;
-            renderTargetDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-            renderTargetDesc.Texture2D.MipSlice = 0;
-            //Core::Device::GetDXDevice()->CreateRenderTargetView(_position.GetDXResource().Get(), &renderTargetDesc, _descriptorsHeap.GetResourceCPUHandle(&_position));
-            renderTargetDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-            dx12::Device::GetDXDevice()->CreateRenderTargetView(_albedoMetalness.GetDXResource().Get(), &renderTargetDesc, _descriptorsHeap.GetResourceCPUHandle(&_albedoMetalness));
-            renderTargetDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-            dx12::Device::GetDXDevice()->CreateRenderTargetView(_normalSpecular.GetDXResource().Get(), &renderTargetDesc, _descriptorsHeap.GetResourceCPUHandle(&_normalSpecular));
-        }
-
-
-
-
-        {
-            dx12::DescriptorHeapDescription desc = {};
-            desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+            dx12::DescriptorHeapDescription desc;
             desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_NONE);
-            desc.SetNumDescriptors(2);
-            desc.SetNodeMask(0);
+            desc.SetNumDescriptors(4);
 
-            _UAVHeap.SetDescription(desc);
-            _UAVHeap.Create();
+            desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+            _RTVDescriptorsHeap.Create(desc);
+            _RTVDescriptorsHeap.SetName("G-Buffer RTV descriptor heap");
 
-            D3D12_SHADER_RESOURCE_VIEW_DESC SRVDesc = {};
-            SRVDesc.Format = DXGI_FORMAT_D32_FLOAT;
-            SRVDesc.Texture2D.MipLevels = 1;
-            SRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-            SRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+            desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+            _DSVDescriptorsHeap.Create(desc);
+            _DSVDescriptorsHeap.SetName("G-Buffer DSV descriptor heap");
 
-            //_UAVHeap.PlaceResource(&_position);
-            _UAVHeap.PlaceResource(&_albedoMetalness);
-            _UAVHeap.PlaceResource(&_normalSpecular);
+            desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+            _SRVDescriptorsHeap.Create(desc);
+            _SRVDescriptorsHeap.SetName("G-Buffer SRV descriptor heap");
+        }
 
-            //Core::Device::GetDXDevice()->CreateShaderResourceView(_position.GetDXResource().Get(), &SRVDesc, _UAVHeap.GetResourceCPUHandle(&_position));
-            SRVDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-            dx12::Device::GetDXDevice()->CreateShaderResourceView(_albedoMetalness.GetDXResource().Get(), &SRVDesc, _UAVHeap.GetResourceCPUHandle(&_albedoMetalness));
+        // Create textures
+        {
+            dx12::ResourceDescription textureDesc;
+            D3D12_CLEAR_VALUE clearValue;
+            {
+                textureDesc.SetSize(size);
+                textureDesc.SetDimension(D3D12_RESOURCE_DIMENSION_TEXTURE2D);
+                textureDesc.SetDepthOrArraySize(1);
+                textureDesc.SetLayout(D3D12_TEXTURE_LAYOUT_UNKNOWN);
+                textureDesc.SetMipLevels(1);
+                textureDesc.SetAlignment(D3D12_TILED_RESOURCE_TILE_SIZE_IN_BYTES);
+                textureDesc.SetFlags(D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+                textureDesc.SetResourceType(dx12::EResourceType::Texture | dx12::EResourceType::RenderTarget);
 
-            SRVDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-            dx12::Device::GetDXDevice()->CreateShaderResourceView(_normalSpecular.GetDXResource().Get(), &SRVDesc, _UAVHeap.GetResourceCPUHandle(&_normalSpecular));
+                clearValue.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+                clearValue.Color[0] = 0.0f;
+                clearValue.Color[1] = 0.0f;
+                clearValue.Color[2] = 0.0f;
+                clearValue.Color[3] = 1.0f;
+            }
+
+            // Create AlbedoMetalness texture
+            textureDesc.SetFormat(DXGI_FORMAT_R8G8B8A8_UNORM);
+            textureDesc.SetClearValue(clearValue);
+
+            _albedoMetalness.CreateCommitedResource(textureDesc, D3D12_RESOURCE_STATE_RENDER_TARGET);
+            _albedoMetalness.SetName("G-Buffer Albedo+Metalness");
+
+            // Create NormalSpecular texture
+            clearValue.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+
+            textureDesc.SetFormat(DXGI_FORMAT_R32G32B32A32_FLOAT);
+            textureDesc.SetClearValue(clearValue);
+
+            _normalSpecular.CreateCommitedResource(textureDesc, D3D12_RESOURCE_STATE_RENDER_TARGET);
+            _normalSpecular.SetName("G-Buffer Normal+Specular");
+
+            // Create DepthStencil texture
+            clearValue.Format = DXGI_FORMAT_D32_FLOAT;
+            clearValue.DepthStencil.Depth = 1;
+            clearValue.DepthStencil.Stencil = 0;
+
+            textureDesc.SetFormat(DXGI_FORMAT_D32_FLOAT);
+            textureDesc.SetFlags(D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
+            textureDesc.SetClearValue(clearValue);
+            textureDesc.SetResourceType(dx12::EResourceType::Texture | dx12::EResourceType::DepthStencil);
+
+            _depthStencil.CreateCommitedResource(textureDesc, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+            _depthStencil.SetName("G-Buffer DepthStencil");
+        }
+
+        // Create resource views
+        {
+            dx12::Device::CreateRenderTargetView(_albedoMetalness.GetAsRTV(), _RTVDescriptorsHeap);
+            dx12::Device::CreateRenderTargetView(_normalSpecular.GetAsRTV(), _RTVDescriptorsHeap);
+
+            dx12::Device::CreateDepthStencilView(_depthStencil.GetAsDSV(), _DSVDescriptorsHeap);
+
+            dx12::Device::CreateShaderResourceView(_albedoMetalness.GetAsSRV(), _SRVDescriptorsHeap);
+            dx12::Device::CreateShaderResourceView(_normalSpecular.GetAsSRV(), _SRVDescriptorsHeap);
         }
     }
 
@@ -110,39 +94,39 @@ namespace Core
     {
         FLOAT clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
-        //commandList.ClearRTV(GetPositionTextureCPUHandle(), clearColor);
         commandList.ClearRTV(GetAlbedoMetalnessTextureCPUHandle(), clearColor);
         commandList.ClearRTV(GetNormalTextureCPUHandle(), clearColor);
+        commandList.ClearDSV(GetDepthTextureCPUHandle());
     }
 
     dx12::DescriptorHeap& GBuffer::GetDescHeap()
     {
-        return _descriptorsHeap;
+        return _RTVDescriptorsHeap;
     }
 
     dx12::DescriptorHeap& GBuffer::GetUAVHeap()
     {
-        return _UAVHeap;
+        return _SRVDescriptorsHeap;
     }
 
-    dx12::Texture& GBuffer::GetPositionTexture()
+    dx12::Texture& GBuffer::GetDepthTexture()
     {
-        return _position;
+        return _depthStencil;
     }
 
-    const dx12::Texture& GBuffer::GetPositionTexture() const
+    const dx12::Texture& GBuffer::GetDepthTexture() const
     {
-        return _position;
+        return _depthStencil;
     }
 
-    D3D12_CPU_DESCRIPTOR_HANDLE GBuffer::GetPositionTextureCPUHandle()
+    D3D12_CPU_DESCRIPTOR_HANDLE GBuffer::GetDepthTextureCPUHandle()
     {
-        return _descriptorsHeap.GetResourceCPUHandle(&_position);
+        return _DSVDescriptorsHeap.GetResourceCPUHandle(&_depthStencil);
     }
 
-    D3D12_GPU_DESCRIPTOR_HANDLE GBuffer::GetPositionTextureGPUHandle()
+    D3D12_GPU_DESCRIPTOR_HANDLE GBuffer::GetDepthTextureGPUHandle()
     {
-        return _descriptorsHeap.GetResourceGPUHandle(&_position);
+        return _DSVDescriptorsHeap.GetResourceGPUHandle(&_depthStencil);
     }
 
     dx12::Texture& GBuffer::GetNormalTexture()
@@ -157,12 +141,12 @@ namespace Core
 
     D3D12_CPU_DESCRIPTOR_HANDLE GBuffer::GetNormalTextureCPUHandle()
     {
-        return _descriptorsHeap.GetResourceCPUHandle(&_normalSpecular);
+        return _RTVDescriptorsHeap.GetResourceCPUHandle(&_normalSpecular);
     }
 
     D3D12_GPU_DESCRIPTOR_HANDLE GBuffer::GetNormalTextureGPUHandle()
     {
-        return _descriptorsHeap.GetResourceGPUHandle(&_normalSpecular);
+        return _RTVDescriptorsHeap.GetResourceGPUHandle(&_normalSpecular);
     }
 
     dx12::Texture& GBuffer::GetAlbedoMetalnessTexture()
@@ -177,11 +161,11 @@ namespace Core
     
     D3D12_CPU_DESCRIPTOR_HANDLE GBuffer::GetAlbedoMetalnessTextureCPUHandle()
     {
-        return _descriptorsHeap.GetResourceCPUHandle(&_albedoMetalness);
+        return _RTVDescriptorsHeap.GetResourceCPUHandle(&_albedoMetalness);
     }
 
     D3D12_GPU_DESCRIPTOR_HANDLE GBuffer::GetAlbedoMetalnessTextureGPUHandle()
     {
-        return _descriptorsHeap.GetResourceGPUHandle(&_albedoMetalness);
+        return _RTVDescriptorsHeap.GetResourceGPUHandle(&_albedoMetalness);
     }
 } // namespace Core
