@@ -64,7 +64,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
         float3 F = FresnelSchlick(surface, F0);
         float G = GeometrySmith(surface, Lights[i]);
         float D = CalculateSpecular(surface, Lights[i]);
-        float3 cookTorrance = (F * G * D) / (4.0f * surface.NdotL * surface.NdotV);
+        float3 cookTorrance = (F * G * D) / max(0.00001f, (4.0f * surface.NdotL * surface.NdotV));
         
         float3 diffuseColor = surface.Albedo.rgb * (1.0f - surface.Metalness);
         float3 lightingModel = (diffuseColor + cookTorrance) * surface.NdotL;
