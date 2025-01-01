@@ -34,15 +34,17 @@ private:
     void GeometryPass(TaskGPU& task);
     void LightingPass(TaskGPU& task);
     void RenderSkybox(TaskGPU& task);
-    //void RenderArmature(TaskGPU& task);
-    //void RenderFXAA(TaskGPU& task);
-    //void RenderAABB(TaskGPU& task);
+    void RenderArmature(TaskGPU& task);
+    void RenderFXAA(TaskGPU& task);
+    void RenderAABB(TaskGPU& task);
     void RenderGUI(TaskGPU& task);
     void Present(TaskGPU& task);
 
     HWND _windowHandle;
 
     Core::GBuffer _gBuffer;
+
+    dx12::Resource _fxaaRTT;
 
     dx12::PipelineState _gPassPipeline;
     dx12::PipelineState _deferredPipeline;

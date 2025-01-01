@@ -9,11 +9,23 @@ void CacheGPU::SetHeap(std::shared_ptr<dx12::Heap> heap)
     CurrentOffset = 0;
 }
 
-void CacheGPU::Reset()
+void CacheGPU::Clear()
 {
     CurrentOffset = 0;
 
-    tempResources.clear();
+    CachedResources.clear();
+}
+
+CacheGPU::DataHandle CacheGPU::PlaceResource(dx12::Resource&& resource)
+{
+    uint32_t resourceSize = resource.GetResourceDescription().GetSize().x * resource.GetResourceDescription().GetSize().y;
+    DataHandle heapHandle = RequestPlacement(resourceSize);
+
+    resource.CreatePlacedResource(heapHandle.Heap->GetDXHeap(), heapHandle.Offset);
+
+    CachedResources.push_back(std::move(resource));
+
+    return heapHandle;
 }
 
 CacheGPU::DataHandle CacheGPU::RequestPlacement(uint32_t size)

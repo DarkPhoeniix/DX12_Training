@@ -85,7 +85,6 @@ void DrawSceneProcessor::DrawEntity(SceneLayer::Entity& entity, dx12::CommandLis
 
         dx12::Resource boneTransformationsData(armature->BoneTransforms.GetResourceDescription());
         boneTransformationsData.CreatePlacedResource(dataHandle.Heap->GetDXHeap(), dataHandle.Offset);
-        boneTransformationsData.SetName("Bones temp buffer");
         
         commandList.TransitionBarrier(boneTransformationsData, D3D12_RESOURCE_STATE_COPY_DEST);
         commandList.CopyResource(armature->BoneTransforms, boneTransformationsData);
@@ -93,7 +92,7 @@ void DrawSceneProcessor::DrawEntity(SceneLayer::Entity& entity, dx12::CommandLis
 
         commandList.SetSRV(3, boneTransformationsData.OffsetGPU(0));
 
-        frameCache->tempResources.push_back(std::move(boneTransformationsData));
+        frameCache->CachedResources.push_back(std::move(boneTransformationsData));
     }
 
     if (mesh)

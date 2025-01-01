@@ -12,14 +12,15 @@ public:
     };
 
     void SetHeap(std::shared_ptr<dx12::Heap> heap);
-    void Reset();
+    void Clear();
 
     DataHandle RequestPlacement(uint32_t size);
+    DataHandle PlaceResource(dx12::Resource&& resource);
 
     std::shared_ptr<dx12::Heap> Cache;
 
     uint32_t Size;
     uint32_t CurrentOffset;
 
-    std::vector<dx12::Resource> tempResources;
+    std::vector<dx12::Resource> CachedResources;
 };

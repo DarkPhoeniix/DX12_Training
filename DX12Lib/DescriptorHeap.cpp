@@ -51,18 +51,20 @@ namespace dx12
         }
     }
 
-    void DescriptorHeap::PlaceResource(Resource* resource)
+    uint32_t DescriptorHeap::PlaceResource(Resource* resource)
     {
-        for (auto& res : _resources)
+        size_t offset = -1;
+        for (size_t i = 0; i < _resources.size(); ++i)
         {
-            if (!res)
+            if (!_resources[i])
             {
-                res = resource;
-                return;
+                offset = i;
+                _resources[i] = resource;
+                break;
             }
         }
 
-        Logger::Log(LogType::Error, "Descriptor heap " + _name + " doesn't have free desriptors");
+        return offset;
     }
 
     void DescriptorHeap::PlaceResourceDescriptor(Resource* resource, D3D12_CPU_DESCRIPTOR_HANDLE descriptor)
@@ -95,6 +97,22 @@ namespace dx12
     D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetHeapStartGPUHandle()
     {
         return _descriptorHeap->GetGPUDescriptorHandleForHeapStart();
+    }
+
+    D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetOffsetCPUHandle(uint32_t index)
+    {
+        D3D12_CPU_DESCRIPTOR_HANDLE handle = _descriptorHeap->GetCPUDescriptorHandleForHeapStart();
+        handle.ptr += _heapIncrementSize * index;
+
+        return handle;
+    }
+
+    D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetOffsetGPUHandle(uint32_t index)
+    {
+        D3D12_GPU_DESCRIPTOR_HANDLE handle = _descriptorHeap->GetGPUDescriptorHandleForHeapStart();
+        handle.ptr += _heapIncrementSize * index;
+
+        return handle;
     }
 
     D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetFreeCPUHandle()

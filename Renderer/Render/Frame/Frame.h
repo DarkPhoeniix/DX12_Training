@@ -20,7 +20,7 @@ public:
     Frame();
     ~Frame();
 
-    void Init(const DirectX::XMUINT2& size);
+    void Init(const DirectX::XMUINT2& size, uint32_t cacheSize = _16MB);
 
     TaskGPU* CreateTask(D3D12_COMMAND_LIST_TYPE type, dx12::PipelineState* rootSignature = nullptr);
 

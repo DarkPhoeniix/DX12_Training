@@ -89,32 +89,32 @@ namespace dx12
 
     void Device::CreateRenderTargetView(const RenderTargetView& view, DescriptorHeap& descriptorHeap)
     {
-        descriptorHeap.PlaceResource(view.Owner);
+        uint32_t resourceOffset = descriptorHeap.PlaceResource(view.Owner);
         _instance->_device->CreateRenderTargetView(view.Owner->GetDXResource().Get(), &view, descriptorHeap.GetResourceCPUHandle(view.Owner));
     }
 
     void Device::CreateDepthStencilView(const DepthStencilView& view, DescriptorHeap& descriptorHeap)
     {
-        descriptorHeap.PlaceResource(view.Owner);
-        _instance->_device->CreateDepthStencilView(view.Owner->GetDXResource().Get(), &view, descriptorHeap.GetResourceCPUHandle(view.Owner));
+        uint32_t resourceOffset = descriptorHeap.PlaceResource(view.Owner);
+        _instance->_device->CreateDepthStencilView(view.Owner->GetDXResource().Get(), &view, descriptorHeap.GetOffsetCPUHandle(resourceOffset));
     }
 
     void Device::CreateConstantBufferView(const ConstantBufferView& view, DescriptorHeap& descriptorHeap)
     {
-        descriptorHeap.PlaceResource(view.Owner);
-        _instance->_device->CreateConstantBufferView(&view, descriptorHeap.GetResourceCPUHandle(view.Owner));
+        uint32_t resourceOffset = descriptorHeap.PlaceResource(view.Owner);
+        _instance->_device->CreateConstantBufferView(&view, descriptorHeap.GetOffsetCPUHandle(resourceOffset));
     }
 
     void Device::CreateShaderResourceView(const ShaderResourceView& view, DescriptorHeap& descriptorHeap)
     {
-        descriptorHeap.PlaceResource(view.Owner);
-        _instance->_device->CreateShaderResourceView(view.Owner->GetDXResource().Get(), &view, descriptorHeap.GetResourceCPUHandle(view.Owner));
+        uint32_t resourceOffset = descriptorHeap.PlaceResource(view.Owner);
+            _instance->_device->CreateShaderResourceView(view.Owner->GetDXResource().Get(), &view, descriptorHeap.GetOffsetCPUHandle(resourceOffset));
     }
 
     void Device::CreateUnorderedAccessView(const UnorderedAccessView& view, DescriptorHeap& descriptorHeap)
     {
-        descriptorHeap.PlaceResource(view.Owner);
-        _instance->_device->CreateUnorderedAccessView(view.Owner->GetDXResource().Get(), nullptr, &view, descriptorHeap.GetResourceCPUHandle(view.Owner));
+        uint32_t resourceOffset = descriptorHeap.PlaceResource(view.Owner);
+        _instance->_device->CreateUnorderedAccessView(view.Owner->GetDXResource().Get(), nullptr, &view, descriptorHeap.GetOffsetCPUHandle(resourceOffset));
     }
 
     Device::Device()

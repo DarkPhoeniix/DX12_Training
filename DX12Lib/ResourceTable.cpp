@@ -30,7 +30,6 @@ namespace dx12
         if (it == _resources.end())
         {
             _resources.emplace(resourceName, resource);
-            _descriptorHeap.PlaceResource(resource);
             _heap.PlaceResource(*resource);
 
             return true;

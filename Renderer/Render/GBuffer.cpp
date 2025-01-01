@@ -8,6 +8,10 @@ namespace Core
 {
     void GBuffer::Init(const DirectX::XMUINT2& size)
     {
+        _RTVDescriptorsHeap.Reset();
+        _DSVDescriptorsHeap.Reset();
+        _SRVDescriptorsHeap.Reset();
+
         // Create descriptor heaps (RTV/DSV/SRV)
         {
             dx12::DescriptorHeapDescription desc;

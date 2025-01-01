@@ -24,11 +24,14 @@ namespace dx12
         void Create(const DescriptorHeapDescription& description);
         void Reset();
 
-        void PlaceResource(Resource* resource);
+        uint32_t PlaceResource(Resource* resource);
         void PlaceResourceDescriptor(Resource* resource, D3D12_CPU_DESCRIPTOR_HANDLE descriptor);
 
         D3D12_CPU_DESCRIPTOR_HANDLE GetHeapStartCPUHandle();
         D3D12_GPU_DESCRIPTOR_HANDLE GetHeapStartGPUHandle();
+
+        D3D12_CPU_DESCRIPTOR_HANDLE GetOffsetCPUHandle(uint32_t index);
+        D3D12_GPU_DESCRIPTOR_HANDLE GetOffsetGPUHandle(uint32_t index);
 
         D3D12_CPU_DESCRIPTOR_HANDLE GetFreeCPUHandle();
         D3D12_GPU_DESCRIPTOR_HANDLE GetFreeGPUHandle();

@@ -30,8 +30,18 @@ Frame::~Frame()
     _syncPoint = nullptr;
 }
 
-void Frame::Init(const DirectX::XMUINT2& size)
+void Frame::Init(const DirectX::XMUINT2& size, uint32_t cacheSize)
 {
+    // Initialize cache heap
+    {
+        dx12::HeapDescription desc = {};
+        desc.SetSize(cacheSize);
+        desc.SetHeapType(D3D12_HEAP_TYPE_DEFAULT);
+        _resourcesHeap.Create(desc);
+
+        _cache.SetHeap(std::make_shared<dx12::Heap>(_resourcesHeap));
+    }
+
     // Create descriptor heaps (RTV / DSR / CBV_SRV_UAV)
     {
         dx12::DescriptorHeapDescription desc = {};
@@ -83,15 +93,6 @@ void Frame::Init(const DirectX::XMUINT2& size)
     // Create RTV on descriptor heap
     {
         dx12::Device::CreateRenderTargetView(_targetTexture.GetAsRTV(), _RTVHeap);
-    }
-
-    {
-        dx12::HeapDescription desc = {};
-        desc.SetSize(_32MB);
-        desc.SetHeapType(D3D12_HEAP_TYPE_DEFAULT);
-        _resourcesHeap.Create(desc);
-
-        _cache.SetHeap(std::make_shared<dx12::Heap>(_resourcesHeap));
     }
 }
 
@@ -183,7 +184,7 @@ void Frame::ResetCache()
     _DSVHeap.Reset();
     _BuffersHeap.Reset();
 
-    _cache.Reset();
+    _cache.Clear();
 
     dx12::Device::CreateRenderTargetView(_targetTexture.GetAsRTV(), _RTVHeap);
 }
@@ -195,6 +196,8 @@ void Frame::Resize(const DirectX::XMUINT2& size)
     _RTVHeap.Reset();
     _DSVHeap.Reset();
     _BuffersHeap.Reset();
+
+    _cache.Clear();
 
     Init(size);
 }
