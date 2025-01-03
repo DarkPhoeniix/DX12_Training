@@ -34,12 +34,15 @@ void Frame::Init(const DirectX::XMUINT2& size, uint32_t cacheSize)
 {
     // Initialize cache heap
     {
-        dx12::HeapDescription desc = {};
-        desc.SetSize(cacheSize);
-        desc.SetHeapType(D3D12_HEAP_TYPE_DEFAULT);
-        _resourcesHeap.Create(desc);
+        dx12::ResourceDescription desc = {};
+        desc.SetSize({ _16MB, 1 });
+        desc.SetFormat(DXGI_FORMAT_UNKNOWN);
+        desc.SetResourceType(dx12::EResourceType::Buffer | dx12::EResourceType::Dynamic);
 
-        _cache.SetHeap(std::make_shared<dx12::Heap>(_resourcesHeap));
+        std::shared_ptr<dx12::Resource> frameCachedMemory = std::make_shared<dx12::Resource>();
+        frameCachedMemory->CreateCommitedResource(desc, D3D12_RESOURCE_STATE_COMMON);
+
+        _cache.SetResource(frameCachedMemory);
     }
 
     // Create descriptor heaps (RTV / DSR / CBV_SRV_UAV)

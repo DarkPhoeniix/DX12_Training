@@ -2,30 +2,16 @@
 
 #include "CacheGPU.h"
 
-void CacheGPU::SetHeap(std::shared_ptr<dx12::Heap> heap)
+void CacheGPU::SetResource(std::shared_ptr<dx12::Resource> memoryBlock)
 {
-    Cache = heap;
-    Size = heap->GetDescription().GetSize();
+    Cache = memoryBlock;
+    Size = memoryBlock->GetResourceDescription().GetSize().x * memoryBlock->GetResourceDescription().GetSize().y;
     CurrentOffset = 0;
 }
 
 void CacheGPU::Clear()
 {
     CurrentOffset = 0;
-
-    CachedResources.clear();
-}
-
-CacheGPU::DataHandle CacheGPU::PlaceResource(dx12::Resource&& resource)
-{
-    uint32_t resourceSize = resource.GetResourceDescription().GetSize().x * resource.GetResourceDescription().GetSize().y;
-    DataHandle heapHandle = RequestPlacement(resourceSize);
-
-    resource.CreatePlacedResource(heapHandle.Heap->GetDXHeap(), heapHandle.Offset);
-
-    CachedResources.push_back(std::move(resource));
-
-    return heapHandle;
 }
 
 CacheGPU::DataHandle CacheGPU::RequestPlacement(uint32_t size)
@@ -34,12 +20,13 @@ CacheGPU::DataHandle CacheGPU::RequestPlacement(uint32_t size)
 
     uint32_t newOffset = (CurrentOffset + size);
 
-    if (ASSERT(newOffset < Size, "GPU cache is full"))
+    if (ASSERT(newOffset < Size, "GPU cache is full"))  
     {
         return handle;
     }
 
-    handle.Heap = Cache;
+    handle.DataCPU = Cache->Map(CurrentOffset, 0); // TODO: not sure if 0 will work good
+    handle.DataGPU = Cache->OffsetGPU(CurrentOffset);
     handle.Offset = CurrentOffset;
 
     return handle;

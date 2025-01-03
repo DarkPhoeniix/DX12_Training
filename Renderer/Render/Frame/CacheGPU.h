@@ -7,20 +7,18 @@ class CacheGPU
 public:
     struct DataHandle
     {
-        std::shared_ptr<dx12::Heap> Heap = nullptr;
+        void* DataCPU = nullptr;
+        D3D12_GPU_VIRTUAL_ADDRESS DataGPU = 0;
         uint32_t Offset = -1;
     };
 
-    void SetHeap(std::shared_ptr<dx12::Heap> heap);
+    void SetResource(std::shared_ptr<dx12::Resource> memoryBlock);
     void Clear();
 
     DataHandle RequestPlacement(uint32_t size);
-    DataHandle PlaceResource(dx12::Resource&& resource);
 
-    std::shared_ptr<dx12::Heap> Cache;
+    std::shared_ptr<dx12::Resource> Cache;
 
     uint32_t Size;
     uint32_t CurrentOffset;
-
-    std::vector<dx12::Resource> CachedResources;
 };

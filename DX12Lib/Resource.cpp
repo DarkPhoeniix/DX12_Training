@@ -85,14 +85,26 @@ namespace dx12
 
 	void* Resource::Map()
 	{
-		void* res = nullptr;
+		void* data = nullptr;
 
 		D3D12_RANGE range;
 		range.Begin = 0;
 		range.End = 0;
-		_resource->Map(0, &range, &res);
+		_resource->Map(0, &range, &data);
 
-		return res;
+		return data;
+	}
+
+	void* dx12::Resource::Map(uint32_t offset, uint32_t end)
+	{
+		void* data = nullptr;
+
+		D3D12_RANGE range;
+		range.Begin = offset;
+		range.End = end;
+		_resource->Map(0, &range, &data);
+
+		return data;
 	}
 
 	void Resource::Reset()

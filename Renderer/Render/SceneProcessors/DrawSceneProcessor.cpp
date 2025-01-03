@@ -68,7 +68,9 @@ void DrawSceneProcessor::DrawEntity(SceneLayer::Entity& entity, dx12::CommandLis
     // Update and setup animantion
     if (armature && animation)
     {
-        DirectX::XMMATRIX* data = (DirectX::XMMATRIX*)armature->BoneTransforms.Map();
+        CacheGPU::DataHandle dataHandle = frameCache->RequestPlacement(armature->BoneTransforms.GetResourceDescription().GetSize().x);
+
+        DirectX::XMMATRIX* data = (DirectX::XMMATRIX*)dataHandle.DataCPU;
 
         const auto& transforms = animation->GetBonesTransforms(cache->GetTime());
         armature->ApplyAnimation(transforms);
@@ -81,18 +83,7 @@ void DrawSceneProcessor::DrawEntity(SceneLayer::Entity& entity, dx12::CommandLis
             data[i] = result;
         }
 
-        CacheGPU::DataHandle dataHandle = frameCache->RequestPlacement(armature->BoneTransforms.GetResourceDescription().GetSize().x);
-
-        dx12::Resource boneTransformationsData(armature->BoneTransforms.GetResourceDescription());
-        boneTransformationsData.CreatePlacedResource(dataHandle.Heap->GetDXHeap(), dataHandle.Offset);
-        
-        commandList.TransitionBarrier(boneTransformationsData, D3D12_RESOURCE_STATE_COPY_DEST);
-        commandList.CopyResource(armature->BoneTransforms, boneTransformationsData);
-        commandList.TransitionBarrier(boneTransformationsData, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-
-        commandList.SetSRV(3, boneTransformationsData.OffsetGPU(0));
-
-        frameCache->CachedResources.push_back(std::move(boneTransformationsData));
+        commandList.SetSRV(3, dataHandle.DataGPU);
     }
 
     if (mesh)
