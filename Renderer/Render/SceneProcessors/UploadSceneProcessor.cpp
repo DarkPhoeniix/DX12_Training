@@ -90,25 +90,25 @@ void UploadSceneProcessor::ProcessEntity(SceneLayer::Entity& entity, dx12::Comma
         std::shared_ptr<dx12::ResourceTable> textureTable = cache->GetTextureTable();
         ASSERT(textureTable.get(), "Resource table is nullptr");
 
-        if (textureTable->AddResource(material->Albedo.get()))
+        if (textureTable->AddResource(material->Albedo.get(), dx12::ResourceViewType::SRV))
         {
             material->Albedo->SetDescriptorHeap(&textureTable->GetDescriptorHeap());
             material->Albedo->UploadToGPU(commandList);
         }
 
-        if (textureTable->AddResource(material->NormalMap.get()))
+        if (textureTable->AddResource(material->NormalMap.get(), dx12::ResourceViewType::SRV))
         {
             material->NormalMap->SetDescriptorHeap(&textureTable->GetDescriptorHeap());
             material->NormalMap->UploadToGPU(commandList);
         }
 
-        if (textureTable->AddResource(material->Metalness.get()))
+        if (textureTable->AddResource(material->Metalness.get(), dx12::ResourceViewType::SRV))
         {
             material->Metalness->SetDescriptorHeap(&textureTable->GetDescriptorHeap());
             material->Metalness->UploadToGPU(commandList);
         }
 
-        if (textureTable->AddResource(material->Roughness.get()))
+        if (textureTable->AddResource(material->Roughness.get(), dx12::ResourceViewType::SRV))
         {
             material->Roughness->SetDescriptorHeap(&textureTable->GetDescriptorHeap());
             material->Roughness->UploadToGPU(commandList);
@@ -140,18 +140,11 @@ void UploadSceneProcessor::ProcessEntity(SceneLayer::Entity& entity, dx12::Comma
     {
         skybox->SkydomeTexture->SetDescriptorHeap(&skybox->DescHeap);
 
-        skybox->DescHeap.PlaceResource(skybox->SkydomeTexture.get());
+        skybox->DescHeap.PlaceResource(skybox->SkydomeTexture.get(), dx12::ResourceViewType::SRV);
         skybox->TexHeap.PlaceResource(*skybox->SkydomeTexture);
-
         skybox->SkydomeTexture->UploadToGPU(commandList);
 
-        D3D12_SHADER_RESOURCE_VIEW_DESC SRVDesc = {};
-        SRVDesc.Format = skybox->SkydomeTexture->GetResourceDescription().GetFormat();
-        SRVDesc.Texture2D.MipLevels = 1;
-        SRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-        SRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-
-        dx12::Device::GetDXDevice()->CreateShaderResourceView(skybox->SkydomeTexture->GetDXResource().Get(), &SRVDesc, skybox->DescHeap.GetResourceCPUHandle(skybox->SkydomeTexture.get()));
+        dx12::Device::CreateShaderResourceView(skybox->SkydomeTexture->GetAsSRV(), skybox->DescHeap);
     }
 }
 

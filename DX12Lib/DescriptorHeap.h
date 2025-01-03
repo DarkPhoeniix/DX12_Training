@@ -6,6 +6,16 @@ namespace dx12
 {
     class Resource;
 
+    enum class ResourceViewType
+    {
+        Unknown,
+        RTV,
+        DSV,
+        CBV,
+        SRV,
+        UAV
+    };
+
     enum class DescriptorHeapType
     {
         RTV,
@@ -24,22 +34,16 @@ namespace dx12
         void Create(const DescriptorHeapDescription& description);
         void Reset();
 
-        uint32_t PlaceResource(Resource* resource);
-        void PlaceResourceDescriptor(Resource* resource, D3D12_CPU_DESCRIPTOR_HANDLE descriptor);
+        void PlaceResource(Resource* resource, ResourceViewType viewType);
+        void CopyResourceDescriptor(Resource* resource, ResourceViewType viewType, D3D12_CPU_DESCRIPTOR_HANDLE descriptor);
 
         D3D12_CPU_DESCRIPTOR_HANDLE GetHeapStartCPUHandle();
         D3D12_GPU_DESCRIPTOR_HANDLE GetHeapStartGPUHandle();
 
-        D3D12_CPU_DESCRIPTOR_HANDLE GetOffsetCPUHandle(uint32_t index);
-        D3D12_GPU_DESCRIPTOR_HANDLE GetOffsetGPUHandle(uint32_t index);
+        D3D12_CPU_DESCRIPTOR_HANDLE GetResourceCPUHandle(Resource* resource, ResourceViewType viewType);
+        D3D12_GPU_DESCRIPTOR_HANDLE GetResourceGPUHandle(Resource* resource, ResourceViewType viewType);
 
-        D3D12_CPU_DESCRIPTOR_HANDLE GetFreeCPUHandle();
-        D3D12_GPU_DESCRIPTOR_HANDLE GetFreeGPUHandle();
-
-        D3D12_CPU_DESCRIPTOR_HANDLE GetResourceCPUHandle(Resource* resource);
-        D3D12_GPU_DESCRIPTOR_HANDLE GetResourceGPUHandle(Resource* resource);
-
-        UINT GetResourceIndex(Resource* resource);
+        UINT GetResourceIndex(Resource* resource, ResourceViewType viewType);
 
         void SetDescription(const DescriptorHeapDescription& description);
         const DescriptorHeapDescription& GetDescription() const;
@@ -50,11 +54,19 @@ namespace dx12
         ComPtr<ID3D12DescriptorHeap> GetDXDescriptorHeap() const;
 
     private:
+        struct InternalResourceDesc
+        {
+            using ResourceIndex = std::uint32_t;
+
+            ResourceIndex HeapIndex = -1;
+            ResourceViewType Type = ResourceViewType::Unknown;
+        };
+
         ComPtr<ID3D12DescriptorHeap> _descriptorHeap;
         DescriptorHeapDescription _description;
         UINT _heapIncrementSize;
 
-        std::vector<Resource*> _resources;
+        std::unordered_multimap<std::string, InternalResourceDesc> _resources;
 
         std::string _name;
     };

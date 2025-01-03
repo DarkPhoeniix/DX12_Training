@@ -14,49 +14,37 @@ namespace dx12
         _descriptorHeap.SetName("Descriptor heap of resource table");
     }
 
-    bool ResourceTable::AddResource(Resource* resource)
+    bool ResourceTable::AddResource(Resource* resource, ResourceViewType viewType)
     {
         if (ASSERT(resource, "Trying to add a nullptr resource to resource table"))
         {
             return false;
         }
 
-        std::string resourceName = resource->GetName();
-
         ASSERT((_resources.size() < _numDescriptors), "Resource table is full");
-        ASSERT(!resourceName.empty(), "Resource in resource table is unnamed");
 
-        auto it = _resources.find(resourceName);
-        if (it == _resources.end())
-        {
-            _resources.emplace(resourceName, resource);
-            _heap.PlaceResource(*resource);
+        InternalResourceDesc value = { _resources.size(), viewType };
+        std::string key = resource->GetName();
 
-            return true;
-        }
+        _resources.insert(std::make_pair(key, value));
+        _heap.PlaceResource(*resource);
 
-        return false;
+        return true;
     }
 
-    D3D12_CPU_DESCRIPTOR_HANDLE ResourceTable::GetResourceCPUHandle(const std::string& name)
+    D3D12_CPU_DESCRIPTOR_HANDLE ResourceTable::GetResourceCPUHandle(Resource* resource, ResourceViewType viewType)
     {
-        Resource* resource = _resources[name];
-        ASSERT(resource, "Resource \"" + name + "\" not present in resource table");
-        return _descriptorHeap.GetResourceCPUHandle(resource);
+        return _descriptorHeap.GetResourceCPUHandle(resource, viewType);
     }
 
-    D3D12_GPU_DESCRIPTOR_HANDLE ResourceTable::GetResourceGPUHandle(const std::string& name)
+    D3D12_GPU_DESCRIPTOR_HANDLE ResourceTable::GetResourceGPUHandle(Resource* resource, ResourceViewType viewType)
     {
-        Resource* resource = _resources[name];
-        ASSERT(resource, "Resource \"" + name + "\" not present in resource table");
-        return _descriptorHeap.GetResourceGPUHandle(resource);
+        return _descriptorHeap.GetResourceGPUHandle(resource, viewType);
     }
 
-    UINT ResourceTable::GetResourceIndex(const std::string& name)
+    UINT ResourceTable::GetResourceIndex(Resource* resource, ResourceViewType viewType)
     {
-        Resource* resource = _resources[name];
-        ASSERT(resource, "Resource \"" + name + "\" not present in resource table");
-        return _descriptorHeap.GetResourceIndex(resource);
+        return _descriptorHeap.GetResourceIndex(resource, viewType);
     }
 
     DescriptorHeap& ResourceTable::GetDescriptorHeap()

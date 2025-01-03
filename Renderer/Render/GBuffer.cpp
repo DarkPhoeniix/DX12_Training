@@ -125,12 +125,12 @@ namespace Core
 
     D3D12_CPU_DESCRIPTOR_HANDLE GBuffer::GetDepthTextureCPUHandle()
     {
-        return _DSVDescriptorsHeap.GetResourceCPUHandle(&_depthStencil);
+        return _DSVDescriptorsHeap.GetResourceCPUHandle(&_depthStencil, dx12::ResourceViewType::DSV);
     }
 
     D3D12_GPU_DESCRIPTOR_HANDLE GBuffer::GetDepthTextureGPUHandle()
     {
-        return _DSVDescriptorsHeap.GetResourceGPUHandle(&_depthStencil);
+        return _DSVDescriptorsHeap.GetResourceGPUHandle(&_depthStencil, dx12::ResourceViewType::DSV);
     }
 
     dx12::Texture& GBuffer::GetNormalTexture()
@@ -145,12 +145,12 @@ namespace Core
 
     D3D12_CPU_DESCRIPTOR_HANDLE GBuffer::GetNormalTextureCPUHandle()
     {
-        return _RTVDescriptorsHeap.GetResourceCPUHandle(&_normalSpecular);
+        return _RTVDescriptorsHeap.GetResourceCPUHandle(&_normalSpecular, dx12::ResourceViewType::RTV);
     }
 
     D3D12_GPU_DESCRIPTOR_HANDLE GBuffer::GetNormalTextureGPUHandle()
     {
-        return _RTVDescriptorsHeap.GetResourceGPUHandle(&_normalSpecular);
+        return _RTVDescriptorsHeap.GetResourceGPUHandle(&_normalSpecular, dx12::ResourceViewType::RTV);
     }
 
     dx12::Texture& GBuffer::GetAlbedoMetalnessTexture()
@@ -165,11 +165,11 @@ namespace Core
     
     D3D12_CPU_DESCRIPTOR_HANDLE GBuffer::GetAlbedoMetalnessTextureCPUHandle()
     {
-        return _RTVDescriptorsHeap.GetResourceCPUHandle(&_albedoMetalness);
+        return _RTVDescriptorsHeap.GetResourceCPUHandle(&_albedoMetalness, dx12::ResourceViewType::RTV);
     }
 
     D3D12_GPU_DESCRIPTOR_HANDLE GBuffer::GetAlbedoMetalnessTextureGPUHandle()
     {
-        return _RTVDescriptorsHeap.GetResourceGPUHandle(&_albedoMetalness);
+        return _RTVDescriptorsHeap.GetResourceGPUHandle(&_albedoMetalness, dx12::ResourceViewType::RTV);
     }
 } // namespace Core

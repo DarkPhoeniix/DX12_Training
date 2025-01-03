@@ -440,7 +440,7 @@ void DXRenderer::ClearBuffers(TaskGPU& task)
 
     dx12::DescriptorHeap& RTVHeap = _currentFrame->GetDescriptorHeap(dx12::DescriptorHeapType::RTV);
 
-    D3D12_CPU_DESCRIPTOR_HANDLE rtv = RTVHeap.GetResourceCPUHandle(&_currentFrame->GetTargetTexture());
+    D3D12_CPU_DESCRIPTOR_HANDLE rtv = RTVHeap.GetResourceCPUHandle(&_currentFrame->GetTargetTexture(), dx12::ResourceViewType::RTV);
     D3D12_CPU_DESCRIPTOR_HANDLE dsv = _gBuffer.GetDepthTextureCPUHandle();
 
     PIXBeginEvent(commandList.GetDXCommandList().Get(), 1, "Clean");
@@ -520,10 +520,10 @@ void DXRenderer::LightingPass(TaskGPU& task)
 
         _currentFrame->BindDescriptorHeaps(commandList);
 
-        commandList.SetDescriptorTable(3, buffersHeap.GetResourceGPUHandle(depth));
-        commandList.SetDescriptorTable(4, buffersHeap.GetResourceGPUHandle(albedoMetalness));
-        commandList.SetDescriptorTable(5, buffersHeap.GetResourceGPUHandle(normalSpecular));
-        commandList.SetDescriptorTable(6, buffersHeap.GetResourceGPUHandle(target));
+        commandList.SetDescriptorTable(3, buffersHeap.GetResourceGPUHandle(depth, dx12::ResourceViewType::SRV));
+        commandList.SetDescriptorTable(4, buffersHeap.GetResourceGPUHandle(albedoMetalness, dx12::ResourceViewType::SRV));
+        commandList.SetDescriptorTable(5, buffersHeap.GetResourceGPUHandle(normalSpecular, dx12::ResourceViewType::SRV));
+        commandList.SetDescriptorTable(6, buffersHeap.GetResourceGPUHandle(target, dx12::ResourceViewType::UAV));
 
         DirectX::XMUINT2 viewportSize = _camera.GetViewport().GetSize();
         int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 8.0f);
@@ -565,9 +565,9 @@ void DXRenderer::RenderSkybox(TaskGPU& task)
 
         _currentFrame->BindDescriptorHeaps(commandList);
 
-        commandList.SetDescriptorTable(3, buffersHeap.GetResourceGPUHandle(depth));
-        commandList.SetDescriptorTable(4, buffersHeap.GetResourceGPUHandle(skyboxTexture));
-        commandList.SetDescriptorTable(5, buffersHeap.GetResourceGPUHandle(target));
+        commandList.SetDescriptorTable(3, buffersHeap.GetResourceGPUHandle(depth, dx12::ResourceViewType::SRV));
+        commandList.SetDescriptorTable(4, buffersHeap.GetResourceGPUHandle(skyboxTexture, dx12::ResourceViewType::SRV));
+        commandList.SetDescriptorTable(5, buffersHeap.GetResourceGPUHandle(target, dx12::ResourceViewType::UAV));
 
         DirectX::XMUINT2 viewportSize = _camera.GetViewport().GetSize();
         int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 8.0f);
@@ -597,9 +597,8 @@ void DXRenderer::RenderFXAA(TaskGPU& task)
 
         _currentFrame->BindDescriptorHeaps(commandList);
 
-        D3D12_GPU_DESCRIPTOR_HANDLE fxaaTextureHandle = buffersHeap.GetResourceGPUHandle(&_fxaaRTT);
-        D3D12_GPU_DESCRIPTOR_HANDLE targetTextureHandle = fxaaTextureHandle;
-        targetTextureHandle.ptr += 32;
+        D3D12_GPU_DESCRIPTOR_HANDLE targetTextureHandle = buffersHeap.GetResourceGPUHandle(&_currentFrame->GetTargetTexture(), dx12::ResourceViewType::SRV);
+        D3D12_GPU_DESCRIPTOR_HANDLE fxaaTextureHandle = buffersHeap.GetResourceGPUHandle(&_fxaaRTT, dx12::ResourceViewType::UAV);
 
         commandList.GetDXCommandList()->SetComputeRootDescriptorTable(3, targetTextureHandle);
         commandList.GetDXCommandList()->SetComputeRootDescriptorTable(4, fxaaTextureHandle);
@@ -632,7 +631,7 @@ void DXRenderer::RenderArmature(TaskGPU& task)
             {
                 dx12::DescriptorHeap& RTVHeap = _currentFrame->GetDescriptorHeap(dx12::DescriptorHeapType::RTV);
 
-                D3D12_CPU_DESCRIPTOR_HANDLE rtv = RTVHeap.GetResourceCPUHandle(&_currentFrame->GetTargetTexture());
+                D3D12_CPU_DESCRIPTOR_HANDLE rtv = RTVHeap.GetResourceCPUHandle(&_currentFrame->GetTargetTexture(), dx12::ResourceViewType::RTV);
                 D3D12_CPU_DESCRIPTOR_HANDLE dsv = _gBuffer.GetDepthTextureCPUHandle();
 
                 commandList.SetViewport(_camera.GetViewport());
@@ -700,7 +699,7 @@ void DXRenderer::RenderAABB(TaskGPU& task)
 
         dx12::DescriptorHeap& RTVHeap = _currentFrame->GetDescriptorHeap(dx12::DescriptorHeapType::RTV);
 
-        D3D12_CPU_DESCRIPTOR_HANDLE rtv = RTVHeap.GetResourceCPUHandle(&_currentFrame->GetTargetTexture());
+        D3D12_CPU_DESCRIPTOR_HANDLE rtv = RTVHeap.GetResourceCPUHandle(&_currentFrame->GetTargetTexture(), dx12::ResourceViewType::RTV);
         D3D12_CPU_DESCRIPTOR_HANDLE dsv = _gBuffer.GetDepthTextureCPUHandle();
 
         commandList.SetViewport(_camera.GetViewport());
@@ -733,7 +732,7 @@ void DXRenderer::RenderGUI(TaskGPU& task)
 
     dx12::DescriptorHeap& RTVHeap = _currentFrame->GetDescriptorHeap(dx12::DescriptorHeapType::RTV);
 
-    D3D12_CPU_DESCRIPTOR_HANDLE rtv = RTVHeap.GetResourceCPUHandle(&_currentFrame->GetTargetTexture());
+    D3D12_CPU_DESCRIPTOR_HANDLE rtv = RTVHeap.GetResourceCPUHandle(&_currentFrame->GetTargetTexture(), dx12::ResourceViewType::RTV);
     D3D12_CPU_DESCRIPTOR_HANDLE dsv = _gBuffer.GetDepthTextureCPUHandle();
 
     PIXBeginEvent(commandList.GetDXCommandList().Get(), 5, "GUI");
