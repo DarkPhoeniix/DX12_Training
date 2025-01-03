@@ -1,3 +1,3 @@
-#include "stdafx.h"
+#include "RendererPCH.h"
 
 #include "Components.h"

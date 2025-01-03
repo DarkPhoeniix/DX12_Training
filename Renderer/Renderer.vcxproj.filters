@@ -93,7 +93,7 @@
     <ClCompile Include="Render\GBuffer.cpp">
       <Filter>Render</Filter>
     </ClCompile>
-    <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="RendererPCH.cpp" />
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="GUI\GUI.cpp">
@@ -262,7 +262,7 @@
       <Filter>Render</Filter>
     </ClInclude>
     <ClInclude Include="Application.h" />
-    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="RendererPCH.h" />
     <ClInclude Include="Utility\Resources.h">
       <Filter>Resources</Filter>
     </ClInclude>
