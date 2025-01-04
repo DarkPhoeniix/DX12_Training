@@ -1,4 +1,4 @@
-#include "pch.h"
+#include "DX12LibPCH.h"
 
 #include "Texture.h"
 
@@ -57,15 +57,7 @@ namespace dx12
 
         UpdateSubresources(commandList.GetDXCommandList().Get(), _resource.Get(), _intermediateResource.Get(), 0, 0, subresources.size(), subresources.data());
 
-        D3D12_CPU_DESCRIPTOR_HANDLE CPUHandle = _descritptorHeap->GetResourceCPUHandle(this);
-
-        D3D12_SHADER_RESOURCE_VIEW_DESC SRVDesc = {};
-        SRVDesc.Format = _resourceDesc.GetFormat();
-        SRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D; // TODO: Only 2D textures supported
-        SRVDesc.Texture2D.MipLevels = _resourceDesc.GetMipLevels();
-        SRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-
-        dx12::Device::GetDXDevice()->CreateShaderResourceView(_resource.Get(), &SRVDesc, CPUHandle);
+        dx12::Device::CreateShaderResourceView(GetAsSRV(), *_descritptorHeap);
     }
 
     void Texture::SetDescriptorHeap(DescriptorHeap* descriptorHeap)
@@ -148,6 +140,7 @@ namespace dx12
         }
 
         texture->_resourceDesc = textureDesc;
+        texture->_resourceDesc.SetResourceType(dx12::EResourceType::Texture);
 
         return texture;
     }

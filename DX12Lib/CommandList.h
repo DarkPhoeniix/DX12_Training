@@ -1,6 +1,6 @@
 #pragma once
 
-#include "RootSignature.h"
+#include "PipelineState.h"
 
 class Heap;
 
@@ -54,8 +54,7 @@ namespace dx12
 
         // Rasterizator State
         void SetViewport(const SceneLayer::Viewport& viewport);
-        void SetPipelineState(const RootSignature& rootSignature);
-        void SetRootSignature(const RootSignature& rootSignature);
+        void SetPipelineState(const PipelineState& rootSignature);
 
         void ClearRTV(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetView, const FLOAT color[4], SceneLayer::Viewport* viewport = nullptr);
         void ClearDSV(D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, D3D12_CLEAR_FLAGS clearFlags = D3D12_CLEAR_FLAG_DEPTH, FLOAT depth = 1.0f, UINT8 stencil = 0, SceneLayer::Viewport* viewport = nullptr);
@@ -74,8 +73,13 @@ namespace dx12
         void Reset(ID3D12CommandAllocator* commandAllocator, ID3D12PipelineState* pipelineState);
         void Close();
 
+        void SetName(const std::string& name);
+        std::string GetName() const;
+
     private:
         ComPtr<ID3D12GraphicsCommandList> _commandList;
         CommandListType _type;
+
+        std::string _name;
     };
 } // namespace dx12

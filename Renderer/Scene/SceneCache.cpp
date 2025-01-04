@@ -1,9 +1,14 @@
-#include "stdafx.h"
+#include "RendererPCH.h"
 
 #include "SceneCache.h"
 
 #include "ResourceTable.h"
 #include "Render/GPUStructs/GPULightDesc.h"
+
+namespace
+{
+    constexpr uint32_t MAX_LIGHTS_NUM = 64;
+}
 
 namespace SceneLayer
 {
@@ -34,7 +39,7 @@ namespace SceneLayer
         {
             lightsHeapDesc.SetHeapType(D3D12_HEAP_TYPE_UPLOAD);
             lightsHeapDesc.SetHeapFlags(D3D12_HEAP_FLAG_NONE);
-            lightsHeapDesc.SetSize(_32MB);
+            lightsHeapDesc.SetSize(_4MB);
             lightsHeapDesc.SetMemoryPoolPreference(D3D12_MEMORY_POOL_UNKNOWN);
             lightsHeapDesc.SetCPUPageProperty(D3D12_CPU_PAGE_PROPERTY_UNKNOWN);
             lightsHeapDesc.SetVisibleNodeMask(1);
@@ -50,31 +55,18 @@ namespace SceneLayer
 
         _lightsTable = std::make_shared<dx12::ResourceTable>(lightsDescriptorHeapDesc, lightsHeapDesc);
 
-        static uint32_t LIGHTS_NUM = 64;
-
         dx12::ResourceDescription lightsViewDesc;
         {
-            lightsViewDesc.SetResourceType(dx12::EResourceType::Dynamic | dx12::EResourceType::Buffer);
-            lightsViewDesc.SetSize({ (uint32_t)sizeof(GPULightDesc) * LIGHTS_NUM, 1 });
+            lightsViewDesc.SetSize({ (uint32_t)sizeof(GPULightDesc) * MAX_LIGHTS_NUM, 1 });
+            lightsViewDesc.SetStride((uint32_t)sizeof(GPULightDesc));
             lightsViewDesc.SetFormat(DXGI_FORMAT_UNKNOWN);
             lightsViewDesc.SetDepthOrArraySize(1);
+            lightsViewDesc.SetResourceType(dx12::EResourceType::Dynamic | dx12::EResourceType::Buffer);
         }
 
-        _lightsView.SetResourceDescription(lightsViewDesc);
-        _lightsView.CreateCommitedResource(D3D12_RESOURCE_STATE_GENERIC_READ);
-
-        D3D12_SHADER_RESOURCE_VIEW_DESC SRVDesc;
-        {
-            SRVDesc.Buffer.FirstElement = 0;
-            SRVDesc.Buffer.NumElements = LIGHTS_NUM;
-            SRVDesc.Buffer.StructureByteStride = sizeof(GPULightDesc);
-            SRVDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
-            SRVDesc.Format = DXGI_FORMAT_UNKNOWN;
-            SRVDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
-            SRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-        }
-
-        dx12::Device::GetDXDevice()->CreateShaderResourceView(_lightsView.GetDXResource().Get(), &SRVDesc, _lightsTable->GetDescriptorHeap().GetHeapStartCPUHandle());
+        _lightsView.CreateCommitedResource(lightsViewDesc, D3D12_RESOURCE_STATE_GENERIC_READ);
+        _lightsView.SetName("Lights desc Table");
+        dx12::Device::CreateShaderResourceView(_lightsView.GetAsSRV(), _lightsTable->GetDescriptorHeap());
     }
 
     SceneCache::~SceneCache()

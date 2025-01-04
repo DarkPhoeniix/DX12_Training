@@ -1,5 +1,5 @@
 
-#include "stdafx.h"
+#include "RendererPCH.h"
 
 #include "Application.h"
 #include "Render/DXRenderer.h"

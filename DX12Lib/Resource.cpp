@@ -1,4 +1,4 @@
-#include "pch.h"
+#include "DX12LibPCH.h"
 
 #include "Resource.h"
 
@@ -85,14 +85,31 @@ namespace dx12
 
 	void* Resource::Map()
 	{
-		void* res = nullptr;
+		void* data = nullptr;
 
 		D3D12_RANGE range;
 		range.Begin = 0;
 		range.End = 0;
-		_resource->Map(0, &range, &res);
+		_resource->Map(0, &range, &data);
 
-		return res;
+		return data;
+	}
+
+	void* dx12::Resource::Map(uint32_t offset, uint32_t end)
+	{
+		void* data = nullptr;
+
+		D3D12_RANGE range;
+		range.Begin = offset;
+		range.End = end;
+		_resource->Map(0, &range, &data);
+
+		return data;
+	}
+
+	void Resource::Reset()
+	{
+		_resource.Reset();
 	}
 
 	D3D12_GPU_VIRTUAL_ADDRESS Resource::OffsetGPU(unsigned int offset) const
@@ -151,6 +168,12 @@ namespace dx12
 		return _resource;
 	}
 
+	ComPtr<ID3D12Resource> Resource::CreateCommitedResource(const ResourceDescription& resourceDesc, D3D12_RESOURCE_STATES initialState)
+	{
+		_resourceDesc = resourceDesc;
+		return CreateCommitedResource(initialState);
+	}
+
 	ComPtr<ID3D12Resource> Resource::CreatePlacedResource(ComPtr<ID3D12Heap> heap, unsigned int offset, D3D12_RESOURCE_STATES initialState)
 	{
 		_initialState = initialState;
@@ -172,5 +195,96 @@ namespace dx12
 		_resource->SetName(temp.c_str());
 
 		return _resource;
+	}
+
+	ComPtr<ID3D12Resource> Resource::CreatePlacedResource(const ResourceDescription& resourceDesc, ComPtr<ID3D12Heap> heap, unsigned int offset, D3D12_RESOURCE_STATES initialState)
+	{
+		_resourceDesc = resourceDesc;
+		return CreatePlacedResource(heap, offset, initialState);
+	}
+
+	RenderTargetView Resource::GetAsRTV()
+	{
+		RenderTargetView view = {};
+
+		view.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+		view.Texture2D.MipSlice = 0;
+		view.Owner = this;
+
+		return view;
+	}
+
+	DepthStencilView Resource::GetAsDSV()
+	{
+		DepthStencilView view = {};
+
+		view.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+		view.Texture2D.MipSlice = 0;
+		view.Owner = this;
+
+		return view;
+	}
+
+	ConstantBufferView Resource::GetAsCBV()
+	{
+		ConstantBufferView view = {};
+
+		// TODO: add CBV to resource
+		view.Owner = this;
+
+
+		return view;
+	}
+
+	ShaderResourceView Resource::GetAsSRV()
+	{
+		ShaderResourceView view = {};
+
+		view.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		view.Format = _resourceDesc.GetFormat();
+		view.Owner = this;
+
+		EResourceType type = _resourceDesc.GetResourceType();
+		if ((type & EResourceType::Buffer) != EResourceType::None)
+		{
+			view.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+			view.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+			view.Buffer.FirstElement = 0;
+			view.Buffer.StructureByteStride = _resourceDesc.GetStride();
+			view.Buffer.NumElements = _resourceDesc.GetSize().x / _resourceDesc.GetStride();
+		}
+		else if ((type & EResourceType::Texture) != EResourceType::None)
+		{
+			view.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+			view.Texture2D.MipLevels = 1;
+		}
+
+		if ((type & EResourceType::DepthStencil) != EResourceType::None)
+		{
+			view.Format = DXGI_FORMAT_R32_FLOAT;
+		}
+
+		return view;
+	}
+
+	UnorderedAccessView Resource::GetAsUAV()
+	{
+		UnorderedAccessView view = {};
+
+		view.Format = _resourceDesc.GetFormat();
+		view.Owner = this;
+
+		EResourceType type = _resourceDesc.GetResourceType();
+		if ((type & EResourceType::Buffer) != EResourceType::None)
+		{
+			view.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+		}
+		else if ((type & EResourceType::Texture) != EResourceType::None)
+		{
+			view.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+			view.Texture2D.MipSlice = 0;
+		}
+
+		return view;
 	}
 } // namespace dx12

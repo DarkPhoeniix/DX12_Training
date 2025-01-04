@@ -10,10 +10,11 @@ namespace dx12
     {
     public:
         Heap();
-        Heap(const HeapDescription& heapDescription);
+        Heap(const HeapDescription& description);
         ~Heap();
 
         void Create();
+        void Create(const HeapDescription& description);
         void PlaceResource(Resource& resource, D3D12_RESOURCE_STATES state = D3D12_RESOURCE_STATE_COPY_DEST, UINT64 offset = (UINT64)-1);
 
         void SetDescription(const HeapDescription& description);
@@ -26,7 +27,7 @@ namespace dx12
 
     private:
         ComPtr<ID3D12Heap> _heap;
-        HeapDescription _heapDescription;
+        HeapDescription _description;
 
         UINT64 _resourceOffset;
 

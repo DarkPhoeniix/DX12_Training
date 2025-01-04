@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "RendererPCH.h"
 
 #include "Scene.h"
 
@@ -36,13 +36,12 @@ namespace SceneLayer
     {
         dx12::ResourceDescription sceneDataDescription;
         {
-            sceneDataDescription.SetResourceType(dx12::EResourceType::Buffer | dx12::EResourceType::Dynamic | dx12::EResourceType::StrideAlignment);
+            sceneDataDescription.SetResourceType(dx12::EResourceType::Buffer | dx12::EResourceType::Dynamic | dx12::EResourceType::Aligned);
             sceneDataDescription.SetSize({ sizeof(SceneDesc), 1 });
             sceneDataDescription.SetStride(1);
             sceneDataDescription.SetFormat(DXGI_FORMAT::DXGI_FORMAT_UNKNOWN);
 
-            _gpuDesc.SetResourceDescription(sceneDataDescription);
-            _gpuDesc.CreateCommitedResource(D3D12_RESOURCE_STATE_GENERIC_READ);
+            _gpuDesc.CreateCommitedResource(sceneDataDescription, D3D12_RESOURCE_STATE_GENERIC_READ);
         }
     }
 

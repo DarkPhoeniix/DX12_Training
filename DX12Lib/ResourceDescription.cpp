@@ -1,4 +1,4 @@
-#include "pch.h"
+#include "DX12LibPCH.h"
 
 #include "ResourceDescription.h"
 
@@ -135,18 +135,17 @@ namespace dx12
 	{
 		_resourceType = type;
 
-		if (type & EResourceType::Texture)
+		if ((type & EResourceType::Texture) != EResourceType::None)
 		{
-			if (_resourceDescription.Format == DXGI_FORMAT::DXGI_FORMAT_UNKNOWN)
-				_resourceDescription.Format = DXGI_FORMAT::DXGI_FORMAT_R8G8B8A8_UNORM;
-
-
 			_resourceDescription.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 			_resourceDescription.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 		}
+		else if ((type & EResourceType::Buffer) != EResourceType::None)
+		{
+			_resourceDescription.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+		}
 
 		UpdateFlags(_resourceType);
-		UpdateSize(_resourceType);
 	}
 
 	void ResourceDescription::AddResourceType(EResourceType type)
@@ -199,15 +198,15 @@ namespace dx12
 
 	void ResourceDescription::UpdateSize(EResourceType type)
 	{
-		if (type & EResourceType::Buffer)
+		if ((type & EResourceType::Buffer) != EResourceType::None)
 		{
 			UINT64 rowBytes = _resourceDescription.Width;
 
-			if (type & EResourceType::StrideAlignment)
+			if ((type & EResourceType::Aligned) != EResourceType::None)
 			{
 				// calculate width of buffer
 				UINT64 alligned = _stride;
-				if (type & EResourceType::Dynamic)
+				if ((type & EResourceType::Dynamic) != EResourceType::None)
 				{
 					alligned = (_stride + 255) & ~255;
 				}
@@ -225,19 +224,19 @@ namespace dx12
 
 	void ResourceDescription::UpdateFlags(EResourceType type)
 	{
-		if (type & EResourceType::Unordered)
+		if ((type & EResourceType::Unordered) != EResourceType::None)
 		{
 			_resourceDescription.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 		}
-		if (type & EResourceType::RenderTarget)
+		if ((type & EResourceType::RenderTarget) != EResourceType::None)
 		{
 			_resourceDescription.Flags |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
 		}
-		if (type & EResourceType::DepthTarget)
+		if ((type & EResourceType::DepthStencil) != EResourceType::None)
 		{
 			_resourceDescription.Flags |= D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 		}
-		if (type & EResourceType::Deny_shader_resource)
+		if ((type & EResourceType::DenyShader) != EResourceType::None)
 		{
 			_resourceDescription.Flags |= D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE;
 		}

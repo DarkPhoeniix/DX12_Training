@@ -1,4 +1,4 @@
-#include "pch.h"
+#include "DX12LibPCH.h"
 
 #include "Heap.h"
 
@@ -6,13 +6,13 @@ namespace dx12
 {
     Heap::Heap()
         : _heap(nullptr)
-        , _heapDescription()
+        , _description()
         , _resourceOffset(0)
     {   }
 
-    Heap::Heap(const HeapDescription& heapDescription)
+    Heap::Heap(const HeapDescription& description)
         : _heap(nullptr)
-        , _heapDescription(heapDescription)
+        , _description(description)
         , _resourceOffset(0)
     {   }
 
@@ -25,9 +25,15 @@ namespace dx12
     {
         ASSERT(dx12::Device::GetDXDevice(), "Device is nullptr when creating a heap");
 
-        dx12::Device::GetDXDevice()->CreateHeap(&_heapDescription.GetDXHeapDescription(), IID_PPV_ARGS(&_heap));
+        dx12::Device::GetDXDevice()->CreateHeap(&_description.GetDXHeapDescription(), IID_PPV_ARGS(&_heap));
         std::wstring tmp(_name.cbegin(), _name.cend());
         _heap->SetName(tmp.c_str());
+    }
+
+    void Heap::Create(const HeapDescription& description)
+    {
+        _description = description;
+        Create();
     }
 
     void Heap::PlaceResource(Resource& resource, D3D12_RESOURCE_STATES state, UINT64 offset)
@@ -48,12 +54,12 @@ namespace dx12
 
     void Heap::SetDescription(const HeapDescription& description)
     {
-        _heapDescription = description;
+        _description = description;
     }
 
     HeapDescription Heap::GetDescription() const
     {
-        return _heapDescription;
+        return _description;
     }
 
     void Heap::SetName(const std::string& name)

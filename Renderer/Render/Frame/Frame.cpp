@@ -1,26 +1,21 @@
-#include "stdafx.h"
+#include "RendererPCH.h"
 
 #include "Frame.h"
 
 #include "CommandList.h"
 #include "Fence.h"
 #include "SwapChain.h"
-#include "RootSignature.h"
+#include "PipelineState.h"
 
 Frame::Frame()
     : Index(0)
     , Prev(nullptr)
     , Next(nullptr)
     , _targetTexture{}
-    , _depthTexture{}
     , _currentTasks{}
-    , _executedTasks{}
-    , _queueCompute(dx12::Device::GetComputeQueue())
-    , _queueStream(dx12::Device::GetStreamQueue())
-    , _queueCopy(dx12::Device::GetCopyQueue())
     , _allocatorPool(nullptr)
     , _fencePool(nullptr)
-    , _syncFrame(nullptr)
+    , _syncPoint(nullptr)
     , _tasks{}
 {
 }
@@ -30,26 +25,45 @@ Frame::~Frame()
     Prev = nullptr;
     Next = nullptr;
 
-    _targetHeap = nullptr;
-    _depthHeap = nullptr;
-
-    _queueCompute = nullptr;
-    _queueStream = nullptr;
-    _queueCopy = nullptr;
-
     _allocatorPool = nullptr;
     _fencePool = nullptr;
-    _syncFrame = nullptr;
+    _syncPoint = nullptr;
 }
 
-void Frame::Init(const DirectX::XMUINT2& size)
+void Frame::Init(const DirectX::XMUINT2& size, uint32_t cacheSize)
 {
-    dx12::ResourceDescription textureDesc;
-    textureDesc.SetSize(size);
-    textureDesc.SetDimension(D3D12_RESOURCE_DIMENSION_TEXTURE2D);
-    textureDesc.SetLayout(D3D12_TEXTURE_LAYOUT_UNKNOWN);
-    textureDesc.SetMipLevels(1);
-    textureDesc.SetAlignment(D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT);
+    // Initialize cache heap
+    {
+        dx12::ResourceDescription desc = {};
+        desc.SetSize({ _16MB, 1 });
+        desc.SetFormat(DXGI_FORMAT_UNKNOWN);
+        desc.SetResourceType(dx12::EResourceType::Buffer | dx12::EResourceType::Dynamic);
+
+        std::shared_ptr<dx12::Resource> frameCachedMemory = std::make_shared<dx12::Resource>();
+        frameCachedMemory->CreateCommitedResource(desc, D3D12_RESOURCE_STATE_COMMON);
+
+        _cache.SetResource(frameCachedMemory);
+    }
+
+    // Create descriptor heaps (RTV / DSR / CBV_SRV_UAV)
+    {
+        dx12::DescriptorHeapDescription desc = {};
+        desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+        desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_NONE);
+        desc.SetNumDescriptors(32);
+        desc.SetNodeMask(0);
+
+        _RTVHeap.Create(desc);
+
+        desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+
+        _DSVHeap.Create(desc);
+
+        desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
+        desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+        _BuffersHeap.Create(desc);
+    }
 
     // Create resource for the target texture
     {
@@ -62,158 +76,53 @@ void Frame::Init(const DirectX::XMUINT2& size)
             clearValueTexTarget.Color[3] = 1.0f;
         }
 
-        textureDesc.SetFormat(DXGI_FORMAT_R8G8B8A8_UNORM);
-        textureDesc.SetFlags(D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
-        textureDesc.AddFlags(D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-        textureDesc.SetClearValue(clearValueTexTarget);
-
-        _targetTexture.SetResourceDescription(textureDesc);
-        _targetTexture.CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_SOURCE);
-        _targetTexture.SetName(std::string("Frame RTT ") + std::to_string(Index));
-    }
-
-    // Create resource for the depth texture
-    {
-        textureDesc.SetFlags(D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
-        textureDesc.SetFormat(DXGI_FORMAT_D32_FLOAT);
-
-        D3D12_CLEAR_VALUE clearValue;
+        dx12::ResourceDescription textureDesc;
         {
-            clearValue.Format = DXGI_FORMAT_D32_FLOAT;
-            clearValue.DepthStencil.Depth = 1;
-            clearValue.DepthStencil.Stencil = 0;
+            textureDesc.SetSize(size);
+            textureDesc.SetDimension(D3D12_RESOURCE_DIMENSION_TEXTURE2D);
+            textureDesc.SetLayout(D3D12_TEXTURE_LAYOUT_UNKNOWN);
+            textureDesc.SetMipLevels(1);
+            textureDesc.SetAlignment(D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT);
+            textureDesc.SetFormat(DXGI_FORMAT_R8G8B8A8_UNORM);
+            textureDesc.SetFlags(D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+            textureDesc.SetClearValue(clearValueTexTarget);
+            textureDesc.SetResourceType(dx12::EResourceType::Texture | dx12::EResourceType::RenderTarget);
         }
 
-        textureDesc.SetClearValue(clearValue);
-
-        _depthTexture.SetResourceDescription(textureDesc);
-        _depthTexture.CreateCommitedResource(D3D12_RESOURCE_STATE_DEPTH_WRITE);
-        _depthTexture.SetName(std::string("Frame DSV ") + std::to_string( Index));
-    }
-
-    // Create descriptor heaps for RTT/DSV heaps
-    {
-        D3D12_DESCRIPTOR_HEAP_DESC descHeapDesc = {};
-        descHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-        descHeapDesc.NumDescriptors = 1;
-        descHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-        dx12::Device::GetDXDevice()->CreateDescriptorHeap(&descHeapDesc, IID_PPV_ARGS(&_targetHeap));
-
-        descHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-        dx12::Device::GetDXDevice()->CreateDescriptorHeap(&descHeapDesc, IID_PPV_ARGS(&_depthHeap));
+        _targetTexture.CreateCommitedResource(textureDesc, D3D12_RESOURCE_STATE_COPY_SOURCE);
+        _targetTexture.SetName(std::string("Frame RTT ") + std::to_string(Index));
     }
 
     // Create RTV on descriptor heap
     {
-        D3D12_RENDER_TARGET_VIEW_DESC renderTargetDesc = {};
-        renderTargetDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        renderTargetDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-        renderTargetDesc.Texture2D.MipSlice = 0;
-        dx12::Device::GetDXDevice()->CreateRenderTargetView(_targetTexture.GetDXResource().Get(), &renderTargetDesc, _targetHeap->GetCPUDescriptorHandleForHeapStart());
-    }
-
-    // Create DSV on descriptor heap
-    {
-        D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
-        depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
-        depthStencilDesc.Flags = D3D12_DSV_FLAG_NONE;
-        depthStencilDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-        depthStencilDesc.Texture2D.MipSlice = 0;
-        dx12::Device::GetDXDevice()->CreateDepthStencilView(_depthTexture.GetDXResource().Get(), &depthStencilDesc, _depthHeap->GetCPUDescriptorHandleForHeapStart());
-    }
-
-
-    {
-
-        dx12::ResourceDescription desc;
-        desc.SetSize(size);
-        desc.SetDimension(D3D12_RESOURCE_DIMENSION_TEXTURE2D);
-        desc.SetLayout(D3D12_TEXTURE_LAYOUT_UNKNOWN);
-        desc.SetMipLevels(1);
-        desc.SetAlignment(D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT);
-        desc.SetFormat(DXGI_FORMAT_R8G8B8A8_UNORM);
-        desc.SetFlags(D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
-        desc.AddFlags(D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-
-        _fxaaTexture.SetResourceDescription(desc);
-        _fxaaTexture.CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_SOURCE);
-    }
-
-
-    {
-        dx12::DescriptorHeapDescription desc = {};
-        desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-        desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
-        desc.SetNumDescriptors(12);
-        desc.SetNodeMask(0);
-
-        _postFXDescHeap.SetDescription(desc);
-        _postFXDescHeap.Create();
-
-
-        _postFXDescHeap.PlaceResource(&_targetTexture);
-        _postFXDescHeap.PlaceResource(&_depthTexture);
-        _postFXDescHeap.PlaceResource(&_fxaaTexture);
-
-        _testHeap.SetDescription(desc);
-        _testHeap.Create();
-
-        _testHeap.PlaceResource(&_depthTexture);
-        _testHeap.PlaceResource(&_targetTexture);
-
-        _fxaaHeap.SetDescription(desc);
-        _fxaaHeap.Create();
-
-        _fxaaHeap.PlaceResource(&_targetTexture);
-        _fxaaHeap.PlaceResource(&_fxaaTexture);
-
-        D3D12_UNORDERED_ACCESS_VIEW_DESC UAVDesc = {};
-        UAVDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-        UAVDesc.Texture2D.MipSlice = 0;
-
-        dx12::Device::GetDXDevice()->CreateUnorderedAccessView(_targetTexture.GetDXResource().Get(), nullptr, &UAVDesc, _postFXDescHeap.GetResourceCPUHandle(&_targetTexture));
-        dx12::Device::GetDXDevice()->CreateUnorderedAccessView(_targetTexture.GetDXResource().Get(), nullptr, &UAVDesc, _testHeap.GetResourceCPUHandle(&_targetTexture));
-        dx12::Device::GetDXDevice()->CreateUnorderedAccessView(_fxaaTexture.GetDXResource().Get(), nullptr, &UAVDesc, _fxaaHeap.GetResourceCPUHandle(&_fxaaTexture));
-        
-        D3D12_SHADER_RESOURCE_VIEW_DESC SRVDesc = {};
-        SRVDesc.Format = DXGI_FORMAT_R32_FLOAT;
-        SRVDesc.Texture2D.MipLevels = 1;
-        SRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-        SRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-
-        dx12::Device::GetDXDevice()->CreateShaderResourceView(_depthTexture.GetDXResource().Get(), &SRVDesc, _postFXDescHeap.GetResourceCPUHandle(&_depthTexture));
-        dx12::Device::GetDXDevice()->CreateShaderResourceView(_depthTexture.GetDXResource().Get(), &SRVDesc, _testHeap.GetResourceCPUHandle(&_depthTexture));
-
-        SRVDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        dx12::Device::GetDXDevice()->CreateShaderResourceView(_targetTexture.GetDXResource().Get(), &SRVDesc, _fxaaHeap.GetResourceCPUHandle(&_targetTexture));
+        dx12::Device::CreateRenderTargetView(_targetTexture.GetAsRTV(), _RTVHeap);
     }
 }
 
-TaskGPU* Frame::CreateTask(D3D12_COMMAND_LIST_TYPE type, dx12::RootSignature* rootSignature)
+TaskGPU* Frame::CreateTask(D3D12_COMMAND_LIST_TYPE type, dx12::PipelineState* rootSignature)
 {
-    Executor* exec = _allocatorPool->Obtain(type);
-    _currentTasks.push_back(exec);
+    Executor* executor = _allocatorPool->Obtain(type);
+    _currentTasks.push_back(executor);
 
-    exec->Reset(rootSignature);
-    exec->SetFree(false);
+    executor->Reset(rootSignature);
+    executor->SetFree(false);
 
     _tasks.push_back({});
     TaskGPU* task = &_tasks.back();
     if (type == D3D12_COMMAND_LIST_TYPE_DIRECT)
     {
-        task->SetCommandQueue(_queueStream);
+        task->SetCommandQueue(dx12::Device::GetStreamQueue());
     }
     else if (type == D3D12_COMMAND_LIST_TYPE_COMPUTE)
     {
-        task->SetCommandQueue(_queueCompute);
+        task->SetCommandQueue(dx12::Device::GetComputeQueue());
     }
     else if (type == D3D12_COMMAND_LIST_TYPE_COPY)
     {
-        task->SetCommandQueue(_queueCopy);
+        task->SetCommandQueue(dx12::Device::GetCopyQueue());
     }
 
-    task->AddCommandList(exec->GetCommandList());
+    task->AddCommandList(executor->GetCommandList());
 
     dx12::Fence* taskFence = _fencePool->Obtain();
     task->SetFence(taskFence);
@@ -223,21 +132,37 @@ TaskGPU* Frame::CreateTask(D3D12_COMMAND_LIST_TYPE type, dx12::RootSignature* ro
     return task;
 }
 
+void Frame::BindDescriptorHeaps(dx12::CommandList& commandList)
+{
+    commandList.SetDescriptorHeaps({ _BuffersHeap.GetDXDescriptorHeap().Get() });
+}
+
+dx12::DescriptorHeap& Frame::GetDescriptorHeap(dx12::DescriptorHeapType type)
+{
+    switch (type)
+    {
+    case dx12::DescriptorHeapType::RTV:
+        return _RTVHeap;
+    case dx12::DescriptorHeapType::DSV:
+        return _DSVHeap;
+    case dx12::DescriptorHeapType::CBV_SRV_UAV:
+        return _BuffersHeap;
+    }
+}
+
 void Frame::WaitCPU()
 {
-    if (_syncFrame)
+    if (_syncPoint)
     {
-        _syncFrame->Wait();
-        _syncFrame->SetFree(true);
-        _syncFrame = nullptr;
+        _syncPoint->Wait();
+        _syncPoint->SetFree(true);
+        _syncPoint = nullptr;
     }
 }
 
 void Frame::ResetGPU()
 {
-    _executedTasks = std::move(_currentTasks);
-
-    for (auto& task : _executedTasks)
+    for (auto& task : _currentTasks)
     {
         task->SetFree(true);
     }
@@ -248,134 +173,36 @@ void Frame::ResetGPU()
     }
 
     _tasks.clear();
-    _executedTasks.clear();
+    _currentTasks.clear();
+}
+
+CacheGPU& Frame::GetCache()
+{
+    return _cache;
+}
+
+void Frame::ResetCache()
+{
+    _RTVHeap.Reset();
+    _DSVHeap.Reset();
+    _BuffersHeap.Reset();
+
+    _cache.Clear();
+
+    dx12::Device::CreateRenderTargetView(_targetTexture.GetAsRTV(), _RTVHeap);
 }
 
 void Frame::Resize(const DirectX::XMUINT2& size)
 {
-    _targetTexture.GetDXResource().Reset();
-    _depthTexture.GetDXResource().Reset();
-    _fxaaTexture.GetDXResource().Reset();
+    _targetTexture.Reset();
 
-    dx12::ResourceDescription textureDesc;
-    textureDesc.SetDimension(D3D12_RESOURCE_DIMENSION_TEXTURE2D);
-    textureDesc.SetLayout(D3D12_TEXTURE_LAYOUT_UNKNOWN);
-    textureDesc.SetMipLevels(1);
-    textureDesc.SetAlignment(D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT);
+    _RTVHeap.Reset();
+    _DSVHeap.Reset();
+    _BuffersHeap.Reset();
 
-    // Create resource for the target texture
-    {
-        D3D12_CLEAR_VALUE clearValueTexTarget;
-        {
-            clearValueTexTarget.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-            clearValueTexTarget.Color[0] = 0.0f;
-            clearValueTexTarget.Color[1] = 0.0f;
-            clearValueTexTarget.Color[2] = 0.0f;
-            clearValueTexTarget.Color[3] = 1.0f;
-        }
-        
-        textureDesc.SetResourceType(dx12::EResourceType::Buffer | dx12::EResourceType::RenderTarget | dx12::EResourceType::Texture);
-        textureDesc.SetFormat(DXGI_FORMAT_R8G8B8A8_UNORM);
-        textureDesc.SetFlags(D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
-        textureDesc.AddFlags(D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-        textureDesc.SetClearValue(clearValueTexTarget);
-        textureDesc.SetSize(size);
+    _cache.Clear();
 
-        _targetTexture.SetResourceDescription(textureDesc);
-        _targetTexture.CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_SOURCE);
-        _targetTexture.SetName(std::string("Frame RTT ") + std::to_string(Index));
-    }
-
-    // Create resource for the depth texture
-    {
-        textureDesc.SetResourceType(dx12::EResourceType::Buffer | dx12::EResourceType::DepthTarget | dx12::EResourceType::Texture);
-        textureDesc.SetFlags(D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
-        textureDesc.SetFormat(DXGI_FORMAT_D32_FLOAT);
-        textureDesc.SetSize(size);
-
-        D3D12_CLEAR_VALUE clearValue;
-        {
-            clearValue.Format = DXGI_FORMAT_D32_FLOAT;
-            clearValue.DepthStencil.Depth = 1;
-            clearValue.DepthStencil.Stencil = 0;
-        }
-
-        textureDesc.SetClearValue(clearValue);
-
-        _depthTexture.SetResourceDescription(textureDesc);
-        _depthTexture.CreateCommitedResource(D3D12_RESOURCE_STATE_DEPTH_WRITE);
-        _depthTexture.SetName(std::string("Frame DSV ") + std::to_string(Index));
-    }
-
-    // Create RTV on descriptor heap
-    {
-        D3D12_RENDER_TARGET_VIEW_DESC renderTargetDesc = {};
-        renderTargetDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        renderTargetDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-        renderTargetDesc.Texture2D.MipSlice = 0;
-        dx12::Device::GetDXDevice()->CreateRenderTargetView(_targetTexture.GetDXResource().Get(), &renderTargetDesc, _targetHeap->GetCPUDescriptorHandleForHeapStart());
-    }
-
-    // Create DSV on descriptor heap
-    {
-        D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
-        depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
-        depthStencilDesc.Flags = D3D12_DSV_FLAG_NONE;//D3D12_DSV_FLAG_READ_ONLY_DEPTH;
-        depthStencilDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-        depthStencilDesc.Texture2D.MipSlice = 0;
-        dx12::Device::GetDXDevice()->CreateDepthStencilView(_depthTexture.GetDXResource().Get(), &depthStencilDesc, _depthHeap->GetCPUDescriptorHandleForHeapStart());
-    }
-
-    {
-
-        dx12::ResourceDescription desc;
-        desc.SetSize(size);
-        desc.SetDimension(D3D12_RESOURCE_DIMENSION_TEXTURE2D);
-        desc.SetLayout(D3D12_TEXTURE_LAYOUT_UNKNOWN);
-        desc.SetMipLevels(1);
-        desc.SetAlignment(D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT);
-        desc.SetFormat(DXGI_FORMAT_R8G8B8A8_UNORM);
-        desc.SetFlags(D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
-        desc.AddFlags(D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-
-        _fxaaTexture.SetResourceDescription(desc);
-        _fxaaTexture.CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_SOURCE);
-    }
-
-    _postFXDescHeap.Reset();
-    _testHeap.Reset();
-    _fxaaHeap.Reset();
-
-    _postFXDescHeap.PlaceResource(&_targetTexture);
-    _postFXDescHeap.PlaceResource(&_depthTexture);
-
-    _testHeap.PlaceResource(&_depthTexture);
-    _testHeap.PlaceResource(&_targetTexture);
-
-    _fxaaHeap.PlaceResource(&_targetTexture);
-    _fxaaHeap.PlaceResource(&_fxaaTexture);
-
-    D3D12_UNORDERED_ACCESS_VIEW_DESC UAVDesc = {};
-    UAVDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-    UAVDesc.Texture2D.MipSlice = 0;
-
-    dx12::Device::GetDXDevice()->CreateUnorderedAccessView(_targetTexture.GetDXResource().Get(), nullptr, &UAVDesc, _postFXDescHeap.GetResourceCPUHandle(&_targetTexture));
-    dx12::Device::GetDXDevice()->CreateUnorderedAccessView(_targetTexture.GetDXResource().Get(), nullptr, &UAVDesc, _testHeap.GetResourceCPUHandle(&_targetTexture));
-    dx12::Device::GetDXDevice()->CreateUnorderedAccessView(_fxaaTexture.GetDXResource().Get(), nullptr, &UAVDesc, _fxaaHeap.GetResourceCPUHandle(&_fxaaTexture));
-
-    D3D12_SHADER_RESOURCE_VIEW_DESC SRVDesc = {};
-    SRVDesc.Format = DXGI_FORMAT_R32_FLOAT;
-    SRVDesc.Texture2D.MipLevels = 1;
-    SRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    SRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-
-    dx12::Device::GetDXDevice()->CreateShaderResourceView(_depthTexture.GetDXResource().Get(), &SRVDesc, _postFXDescHeap.GetResourceCPUHandle(&_depthTexture));
-    dx12::Device::GetDXDevice()->CreateShaderResourceView(_depthTexture.GetDXResource().Get(), &SRVDesc, _testHeap.GetResourceCPUHandle(&_depthTexture));
-
-
-    SRVDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    dx12::Device::GetDXDevice()->CreateShaderResourceView(_targetTexture.GetDXResource().Get(), &SRVDesc, _fxaaHeap.GetResourceCPUHandle(&_targetTexture));
+    Init(size);
 }
 
 void Frame::SetAllocatorPool(AllocatorPool* allocatorPool)
@@ -406,12 +233,17 @@ std::vector<TaskGPU> Frame::GetTasks() const
     return _tasks;
 }
 
-void Frame::SetSyncFrame(dx12::Fence* syncFrame)
+dx12::Resource& Frame::GetTargetTexture()
 {
-    _syncFrame = syncFrame;
+    return _targetTexture;
 }
 
-dx12::Fence* Frame::GetSyncFrame() const
+void Frame::SetSyncPoint(dx12::Fence* syncPoint)
 {
-    return _syncFrame;
+    _syncPoint = syncPoint;
+}
+
+dx12::Fence* Frame::GetSyncPoint() const
+{
+    return _syncPoint;
 }

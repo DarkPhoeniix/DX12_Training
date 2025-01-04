@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "RendererPCH.h"
 
 #include "Skybox.h"
 
@@ -14,9 +14,8 @@ Skybox::Skybox()
         desc.SetNumDescriptors(10);
         desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_NONE);
 
-        DescHeap.SetDescription(desc);
-        DescHeap.SetName("Skybox1 descriptor heap");
-        DescHeap.Create();
+        DescHeap.Create(desc);
+        DescHeap.SetName("Skybox descriptor heap");
     }
 
     {
@@ -25,8 +24,7 @@ Skybox::Skybox()
         desc.SetHeapType(D3D12_HEAP_TYPE_DEFAULT);
         desc.SetHeapFlags(D3D12_HEAP_FLAG_ALLOW_ALL_BUFFERS_AND_TEXTURES);
 
-        TexHeap.SetDescription(desc);
-        TexHeap.SetName("Skybox1 heap");
-        TexHeap.Create();
+        TexHeap.Create(desc);
+        TexHeap.SetName("Skybox heap");
     }
 }

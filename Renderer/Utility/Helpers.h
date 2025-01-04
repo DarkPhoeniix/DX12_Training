@@ -13,9 +13,9 @@
 	{\
 		x = (type)((int)x & (int)y); return x;\
 	}\
-	inline int operator&(const type x, const type y)\
+	inline type operator&(const type x, const type y)\
 	{\
-		return ((int)x & (int)y);\
+		return (type)((int)x & (int)y);\
 	}\
 	inline type& operator^=(type &x, const type y)\
 	{\

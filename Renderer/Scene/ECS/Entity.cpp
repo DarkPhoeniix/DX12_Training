@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "RendererPCH.h"
 
 #include "Entity.h"
 
@@ -97,11 +97,10 @@ namespace SceneLayer
             resourceDesc.SetSize({ sizeof(GPUModelDesc), 1 });
             resourceDesc.SetStride(1);
             resourceDesc.SetFormat(DXGI_FORMAT::DXGI_FORMAT_UNKNOWN);
-            resourceDesc.SetResourceType(dx12::EResourceType::Dynamic | dx12::EResourceType::Buffer | dx12::EResourceType::StrideAlignment);
+            resourceDesc.SetResourceType(dx12::EResourceType::Dynamic | dx12::EResourceType::Buffer | dx12::EResourceType::Aligned);
         }
 
-        _gpuDesc.SetResourceDescription(resourceDesc);
-        _gpuDesc.CreateCommitedResource();
+        _gpuDesc.CreateCommitedResource(resourceDesc);
         _gpuDesc.SetName(_name);
     }
 } // namespace SceneLayer

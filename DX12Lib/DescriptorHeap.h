@@ -6,6 +6,23 @@ namespace dx12
 {
     class Resource;
 
+    enum class ResourceViewType
+    {
+        Unknown,
+        RTV,
+        DSV,
+        CBV,
+        SRV,
+        UAV
+    };
+
+    enum class DescriptorHeapType
+    {
+        RTV,
+        DSV,
+        CBV_SRV_UAV
+    };
+
     class DescriptorHeap
     {
     public:
@@ -14,17 +31,19 @@ namespace dx12
         ~DescriptorHeap();
 
         void Create();
-        void PlaceResource(Resource* resource);
+        void Create(const DescriptorHeapDescription& description);
         void Reset();
+
+        void PlaceResource(Resource* resource, ResourceViewType viewType);
+        void CopyResourceDescriptor(Resource* resource, ResourceViewType viewType, D3D12_CPU_DESCRIPTOR_HANDLE descriptor);
 
         D3D12_CPU_DESCRIPTOR_HANDLE GetHeapStartCPUHandle();
         D3D12_GPU_DESCRIPTOR_HANDLE GetHeapStartGPUHandle();
 
-        D3D12_GPU_DESCRIPTOR_HANDLE GetHeapGPUHandle(size_t offset = 0);
+        D3D12_CPU_DESCRIPTOR_HANDLE GetResourceCPUHandle(Resource* resource, ResourceViewType viewType);
+        D3D12_GPU_DESCRIPTOR_HANDLE GetResourceGPUHandle(Resource* resource, ResourceViewType viewType);
 
-        D3D12_CPU_DESCRIPTOR_HANDLE GetResourceCPUHandle(Resource* resource);
-        D3D12_GPU_DESCRIPTOR_HANDLE GetResourceGPUHandle(Resource* resource);
-        UINT GetResourceIndex(Resource* resource);
+        UINT GetResourceIndex(Resource* resource, ResourceViewType viewType);
 
         void SetDescription(const DescriptorHeapDescription& description);
         const DescriptorHeapDescription& GetDescription() const;
@@ -35,11 +54,19 @@ namespace dx12
         ComPtr<ID3D12DescriptorHeap> GetDXDescriptorHeap() const;
 
     private:
+        struct InternalResourceDesc
+        {
+            using ResourceIndex = std::uint32_t;
+
+            ResourceIndex HeapIndex = -1;
+            ResourceViewType Type = ResourceViewType::Unknown;
+        };
+
         ComPtr<ID3D12DescriptorHeap> _descriptorHeap;
-        DescriptorHeapDescription _descriptorHeapDescription;
+        DescriptorHeapDescription _description;
         UINT _heapIncrementSize;
 
-        std::vector<Resource*> _resources;
+        std::unordered_multimap<std::string, InternalResourceDesc> _resources;
 
         std::string _name;
     };

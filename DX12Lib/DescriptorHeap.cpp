@@ -1,4 +1,4 @@
-#include "pch.h"
+#include "DX12LibPCH.h"
 
 #include "DescriptorHeap.h"
 
@@ -6,13 +6,13 @@ namespace dx12
 {
     DescriptorHeap::DescriptorHeap()
         : _descriptorHeap(nullptr)
-        , _descriptorHeapDescription{}
+        , _description{}
         , _heapIncrementSize(0)
     {   }
 
     DescriptorHeap::DescriptorHeap(const DescriptorHeapDescription& description)
         : _descriptorHeap(nullptr)
-        , _descriptorHeapDescription(description)
+        , _description(description)
         , _heapIncrementSize(0)
     {   }
 
@@ -25,38 +25,46 @@ namespace dx12
     {
         ASSERT(dx12::Device::GetDXDevice(), "Device is nullptr when trying to create descriptor heap");
 
-        dx12::Device::GetDXDevice()->CreateDescriptorHeap(&_descriptorHeapDescription.GetDXDescription(), IID_PPV_ARGS(&_descriptorHeap));
+        dx12::Device::GetDXDevice()->CreateDescriptorHeap(&_description.GetDXDescription(), IID_PPV_ARGS(&_descriptorHeap));
 
         std::wstring tmp(_name.begin(), _name.end());
         _descriptorHeap->SetName(tmp.c_str());
 
-        _heapIncrementSize = dx12::Device::GetDXDevice()->GetDescriptorHandleIncrementSize(_descriptorHeapDescription.GetType());
-
-        int numDescriptors = _descriptorHeapDescription.GetNumDescriptors();
-        _resources.resize(numDescriptors, nullptr);
+        _heapIncrementSize = dx12::Device::GetDXDevice()->GetDescriptorHandleIncrementSize(_description.GetType());
     }
 
-    void DescriptorHeap::PlaceResource(Resource* resource)
+    void DescriptorHeap::Create(const DescriptorHeapDescription& description)
     {
-        // TODO: use vector instead of map
-        for (auto& res : _resources)
-        {
-            if (!res)
-            {
-                res = resource;
-                return;
-            }
-        }
+        _description = description;
 
-        Logger::Log(LogType::Error, "Descriptor heap " + _name + " doesn't have free desriptors");
+        Create();
     }
 
     void DescriptorHeap::Reset()
     {
-        for (auto& res : _resources)
-        {
-            res = nullptr;
-        }
+        _resources.clear();
+    }
+
+    void DescriptorHeap::PlaceResource(Resource* resource, ResourceViewType viewType)
+    {
+        InternalResourceDesc value = { _resources.size(), viewType };
+        std::string key = resource->GetName();
+
+        _resources.insert(std::make_pair(key, value));
+    }
+
+    void DescriptorHeap::CopyResourceDescriptor(Resource* resource, ResourceViewType viewType, D3D12_CPU_DESCRIPTOR_HANDLE descriptor)
+    {
+        InternalResourceDesc value = { _resources.size(), viewType };
+        std::string key = resource->GetName();
+
+        _resources.insert(std::make_pair(key, value));
+
+        uint32_t offset = value.HeapIndex;
+        D3D12_CPU_DESCRIPTOR_HANDLE handle = _descriptorHeap->GetCPUDescriptorHandleForHeapStart();
+        handle.ptr += _heapIncrementSize * offset;
+
+        dx12::Device::GetDXDevice()->CopyDescriptorsSimple(1, handle, descriptor, _description.GetType());
     }
 
     D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetHeapStartCPUHandle()
@@ -69,86 +77,69 @@ namespace dx12
         return _descriptorHeap->GetGPUDescriptorHandleForHeapStart();
     }
 
-    D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetHeapGPUHandle(size_t offset)
-    {
-        D3D12_GPU_DESCRIPTOR_HANDLE handle = _descriptorHeap->GetGPUDescriptorHandleForHeapStart();
-        handle.ptr += offset * _heapIncrementSize;
-        return handle;
-    }
-
-    D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetResourceCPUHandle(Resource* resource)
+    D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetResourceCPUHandle(Resource* resource, ResourceViewType viewType)
     {
         ASSERT(dx12::Device::GetDXDevice(), "Device is nullptr when trying to Get CPU descriptor handle increment size");
         ASSERT(resource, "Trying to Get CPU handle for nullptr resource");
 
-        auto result = std::find_if(_resources.begin(), _resources.end(), [resource](const auto& res) { return res == resource; });
-        
-        size_t index = -1;
-        for (size_t i = 0; i < _resources.size(); ++i)
+        std::string key = resource->GetName();
+        auto result = _resources.find(key);
+        while (result->first == key && result->second.Type != viewType)
         {
-            if (_resources[i] == resource)
-            {
-                index = i;
-                break;
-            }
+            ASSERT((result != _resources.end()), "Trying to Get invalid resource CPU handle from descriptor heap");
+            ++result;
         }
-
-        ASSERT((index != -1), "Trying to Get invalid resource CPU handle from descriptor heap");
+        
+        ASSERT((result != _resources.end()), "Trying to Get invalid resource CPU handle from descriptor heap");
 
         D3D12_CPU_DESCRIPTOR_HANDLE handle = _descriptorHeap->GetCPUDescriptorHandleForHeapStart();
-        handle.ptr += _heapIncrementSize * index;
+        handle.ptr += _heapIncrementSize * result->second.HeapIndex;
 
         return handle;
     }
 
-    D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetResourceGPUHandle(Resource* resource)
+    D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetResourceGPUHandle(Resource* resource, ResourceViewType viewType)
     {
         ASSERT(dx12::Device::GetDXDevice(), "Device is nullptr when trying to Get GPU descriptor handle increment size");
         ASSERT(resource, "Trying to Get GPU handle for nullptr resource");
 
-        size_t index = -1;
-        for (size_t i = 0; i < _resources.size(); ++i)
+        std::string key = resource->GetName();
+        auto result = _resources.find(key);
+        while (result->first == key && result->second.Type != viewType)
         {
-            if (_resources[i] == resource)
-            {
-                index = i;
-                break;
-            }
+            ++result;
         }
 
-        ASSERT((index != (UINT)-1), "Trying to Get invalid resource GPU handle from descriptor heap");
+        ASSERT((result != _resources.end()), "Trying to Get invalid resource GPU handle from descriptor heap");
 
         D3D12_GPU_DESCRIPTOR_HANDLE handle = _descriptorHeap->GetGPUDescriptorHandleForHeapStart();
-        handle.ptr += _heapIncrementSize * index;
+        handle.ptr += _heapIncrementSize * result->second.HeapIndex;
 
         return handle;
     }
 
-    UINT DescriptorHeap::GetResourceIndex(Resource* resource)
+    UINT DescriptorHeap::GetResourceIndex(Resource* resource, ResourceViewType viewType)
     {
-        size_t index = -1;
-        for (size_t i = 0; i < _resources.size(); ++i)
+        std::string key = resource->GetName();
+        auto result = _resources.find(key);
+        while (result->first == key && result->second.Type != viewType)
         {
-            if (_resources[i] == resource)
-            {
-                index = i;
-                break;
-            }
+            ++result;
         }
 
-        ASSERT((index != (UINT)-1), "Trying to Get invalid resource GPU handle from descriptor heap");
+        ASSERT((result != _resources.end()), "Trying to Get invalid resource GPU handle from descriptor heap");
 
-        return index;
+        return result->second.HeapIndex;
     }
 
     void DescriptorHeap::SetDescription(const DescriptorHeapDescription& description)
     {
-        _descriptorHeapDescription = description;
+        _description = description;
     }
 
     const DescriptorHeapDescription& DescriptorHeap::GetDescription() const
     {
-        return _descriptorHeapDescription;
+        return _description;
     }
 
     void DescriptorHeap::SetName(const std::string& name)

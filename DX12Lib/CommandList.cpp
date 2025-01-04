@@ -1,9 +1,9 @@
-#include "pch.h"
+#include "DX12LibPCH.h"
 
 #include "CommandList.h"
 
 #include "DescriptorHeap.h"
-#include "RootSignature.h"
+#include "PipelineState.h"
 #include "Heap.h"
 #include "Scene/Viewport.h"
 
@@ -192,20 +192,14 @@ namespace dx12
         _commandList->RSSetScissorRects(1, &scissorRect);
     }
 
-    void CommandList::SetPipelineState(const RootSignature& rootSignature)
+    void CommandList::SetPipelineState(const PipelineState& rootSignature)
     {
         if (ASSERT(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Wrond type of the command list"))
         {
             return;
         }
-    }
 
-    void CommandList::SetRootSignature(const RootSignature& rootSignature)
-    {
-        if (ASSERT(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Wrond type of the command list"))
-        {
-            return;
-        }
+        _commandList->SetPipelineState(rootSignature.GetPipelineState().Get());
 
         if (_type == CommandListType::Graphics)
         {
@@ -391,5 +385,18 @@ namespace dx12
     void CommandList::Close()
     {
         _commandList->Close();
+    }
+
+    void CommandList::SetName(const std::string& name)
+    {
+        _name = name;
+
+        std::wstring tmp(_name.begin(), _name.end());
+        _commandList->SetName(tmp.c_str());
+    }
+
+    std::string CommandList::GetName() const
+    {
+        return _name;
     }
 } // namespace dx12

@@ -1,17 +1,17 @@
 #pragma once
 
-#include "SwapChain.h"
 #include "Render/Frame/AllocatorPool.h"
 #include "Render/Frame/Executor.h"
 #include "Render/Frame/TaskGPU.h"
 #include "Render/Frame/FencePool.h"
+#include "Render/Frame/CacheGPU.h"
 #include "DescriptorHeap.h"
 
 // TODO: refactor the Frame class
 
 namespace dx12
 {
-    class RootSignature;
+    class PipelineState;
 } // namespace Core
 
 class Frame
@@ -20,50 +20,51 @@ public:
     Frame();
     ~Frame();
 
-    void Init(const DirectX::XMUINT2& size);
+    void Init(const DirectX::XMUINT2& size, uint32_t cacheSize = _16MB);
 
-    TaskGPU* CreateTask(D3D12_COMMAND_LIST_TYPE type, dx12::RootSignature* rootSignature = nullptr);
+    TaskGPU* CreateTask(D3D12_COMMAND_LIST_TYPE type, dx12::PipelineState* rootSignature = nullptr);
+
+    void BindDescriptorHeaps(dx12::CommandList& commandList);
+    dx12::DescriptorHeap& GetDescriptorHeap(dx12::DescriptorHeapType type);
 
     void WaitCPU();
     void ResetGPU();
+
+    CacheGPU& GetCache();
+    void ResetCache();
 
     void Resize(const DirectX::XMUINT2& size);
 
     void SetAllocatorPool(AllocatorPool* allocatorPool);
     void SetFencePool(FencePool* fencePool);
 
-    void SetSyncFrame(dx12::Fence* syncFrame);
-    dx12::Fence* GetSyncFrame() const;
+    void SetSyncPoint(dx12::Fence* syncPoint);
+    dx12::Fence* GetSyncPoint() const;
 
     TaskGPU* GetTask(const std::string& name);
     std::vector<TaskGPU> GetTasks() const;
+
+    dx12::Resource& GetTargetTexture();
 
     unsigned int Index;
     Frame* Prev;
     Frame* Next;
 
-    dx12::Resource _targetTexture;
-    dx12::Resource _depthTexture;
-    dx12::Resource _fxaaTexture;
-
-    ComPtr<ID3D12DescriptorHeap> _targetHeap;
-    ComPtr<ID3D12DescriptorHeap> _depthHeap;
-    dx12::DescriptorHeap _testHeap;
-    dx12::DescriptorHeap _fxaaHeap;
-
-    dx12::DescriptorHeap _postFXDescHeap;
-
 private:
     std::vector<Executor*> _currentTasks;
-    std::vector<Executor*> _executedTasks;
-
-    ID3D12CommandQueue* _queueStream;
-    ID3D12CommandQueue* _queueCompute;
-    ID3D12CommandQueue* _queueCopy;
 
     AllocatorPool* _allocatorPool;
     FencePool* _fencePool;
-    dx12::Fence* _syncFrame;
+    dx12::Fence* _syncPoint;
+
+    dx12::DescriptorHeap _DSVHeap;
+    dx12::DescriptorHeap _RTVHeap;
+    dx12::DescriptorHeap _BuffersHeap;
+
+    dx12::Heap _resourcesHeap;
+    CacheGPU _cache;
+
+    dx12::Resource _targetTexture;
 
     std::vector<TaskGPU> _tasks;
 };

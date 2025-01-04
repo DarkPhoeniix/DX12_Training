@@ -1,6 +1,6 @@
-#include "pch.h"
+#include "DX12LibPCH.h"
 
-#include "RootSignature.h"
+#include "PipelineState.h"
 
 #include <fstream>
 #include <filesystem>
@@ -272,22 +272,22 @@ namespace dx12
         }
     } // namespace
 
-    ComPtr<ID3D12RootSignature> RootSignature::GetRootSignature() const
+    ComPtr<ID3D12RootSignature> PipelineState::GetRootSignature() const
     {
         return _rootSignature;
     }
 
-    ComPtr<ID3D12PipelineState> RootSignature::GetPipelineState() const
+    ComPtr<ID3D12PipelineState> PipelineState::GetPipelineState() const
     {
         return _pipelineState;
     }
 
-    bool RootSignature::IsGraphicsPipeline() const
+    bool PipelineState::IsGraphicsPipeline() const
     {
         return _isGraphicsPipeline;
     }
 
-    void RootSignature::Parse(const std::string& filepath)
+    void PipelineState::Parse(const std::string& filepath)
     {
         Json::Value jsonRoot = ParseJson(filepath);
 
@@ -303,7 +303,7 @@ namespace dx12
         }
     }
 
-    void RootSignature::ParseGraphicsPipeline(const Json::Value& fileRoot)
+    void PipelineState::ParseGraphicsPipeline(const Json::Value& fileRoot)
     {
         ComPtr<ID3D12Device> device = dx12::Device::GetDXDevice();
 
@@ -394,7 +394,7 @@ namespace dx12
         delete[] inputLayout;
     }
 
-    void RootSignature::ParseComputePipeline(const Json::Value& fileRoot)
+    void PipelineState::ParseComputePipeline(const Json::Value& fileRoot)
     {
         ComPtr<ID3D12Device> device = dx12::Device::GetDXDevice();
 
@@ -423,7 +423,7 @@ namespace dx12
         _pipelineState->SetName(name.c_str());
     }
 
-    D3D12_BLEND_DESC RootSignature::ParseBlendDescription(const std::string& filepath)
+    D3D12_BLEND_DESC PipelineState::ParseBlendDescription(const std::string& filepath)
     {
         Json::Value root = ParseJson(filepath);
         int renderTargetsSize = root["RenderTargets"].size();
@@ -451,7 +451,7 @@ namespace dx12
         return description;
     }
 
-    D3D12_RASTERIZER_DESC RootSignature::ParseRasterizerDescription(const std::string& filepath)
+    D3D12_RASTERIZER_DESC PipelineState::ParseRasterizerDescription(const std::string& filepath)
     {
         Json::Value root = ParseJson(filepath);
 
@@ -463,7 +463,7 @@ namespace dx12
         return description;
     }
 
-    D3D12_DEPTH_STENCIL_DESC RootSignature::ParseDepthStencilDescription(const std::string& filepath)
+    D3D12_DEPTH_STENCIL_DESC PipelineState::ParseDepthStencilDescription(const std::string& filepath)
     {
         Json::Value root = ParseJson(filepath);
 

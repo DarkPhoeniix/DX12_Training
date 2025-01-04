@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "RendererPCH.h"
 
 #include "DrawSceneProcessor.h"
 
@@ -13,8 +13,9 @@
 #include "Scene/ECS/Components/Transformation.h"
 
 #include "Render/GPUStructs/GPUModelDesc.h"
+#include "Render/Frame/CacheGPU.h"
 
-void DrawSceneProcessor::Process(SceneLayer::Scene& scene, dx12::CommandList& commandList)
+void DrawSceneProcessor::Process(SceneLayer::Scene& scene, dx12::CommandList& commandList, CacheGPU* frameCache)
 {
     // Setup textures
     commandList.SetDescriptorHeaps({ scene.GetCache().GetTextureTable()->GetDescriptorHeap().GetDXDescriptorHeap().Get() });
@@ -23,17 +24,17 @@ void DrawSceneProcessor::Process(SceneLayer::Scene& scene, dx12::CommandList& co
     for (std::shared_ptr<SceneLayer::Entity>& node : scene.GetRootNodes())
     {
         node->UpdateGlobalTransform();
-        DrawEntity(*node, commandList);
+        DrawEntity(*node, commandList, frameCache);
 
         for (std::shared_ptr<SceneLayer::Entity>& child : node->GetChildrenNodes())
         {
             child->UpdateGlobalTransform(&node->GetGlobalTransform());
-            DrawEntity(*child, commandList);
+            DrawEntity(*child, commandList, frameCache);
         }
     }
 }
 
-void DrawSceneProcessor::DrawEntity(SceneLayer::Entity& entity, dx12::CommandList& commandList, SceneLayer::Entity* parent)
+void DrawSceneProcessor::DrawEntity(SceneLayer::Entity& entity, dx12::CommandList& commandList, CacheGPU* frameCache, SceneLayer::Entity* parent)
 {
     SceneLayer::SceneCache* cache = entity.GetSceneCache();
     if (ASSERT(cache, "Entity has no scene cache"))
@@ -53,10 +54,10 @@ void DrawSceneProcessor::DrawEntity(SceneLayer::Entity& entity, dx12::CommandLis
         {
             std::shared_ptr<dx12::ResourceTable> textureTable = entity.GetSceneCache()->GetTextureTable();
 
-            modelDesc->AlbedoTextureIndex = textureTable->GetResourceIndex(material->Albedo->GetName());
-            modelDesc->NormalMapTextureIndex = textureTable->GetResourceIndex(material->NormalMap->GetName());
-            modelDesc->MetalnessTextureIndex = textureTable->GetResourceIndex(material->Metalness->GetName());
-            modelDesc->RoughnessTextureIndex = textureTable->GetResourceIndex(material->Roughness->GetName());
+            modelDesc->AlbedoTextureIndex    = textureTable->GetResourceIndex(material->Albedo.get(), dx12::ResourceViewType::SRV);
+            modelDesc->NormalMapTextureIndex = textureTable->GetResourceIndex(material->NormalMap.get(), dx12::ResourceViewType::SRV);
+            modelDesc->MetalnessTextureIndex = textureTable->GetResourceIndex(material->Metalness.get(), dx12::ResourceViewType::SRV);
+            modelDesc->RoughnessTextureIndex = textureTable->GetResourceIndex(material->Roughness.get(), dx12::ResourceViewType::SRV);
         }
     }
 
@@ -67,7 +68,9 @@ void DrawSceneProcessor::DrawEntity(SceneLayer::Entity& entity, dx12::CommandLis
     // Update and setup animantion
     if (armature && animation)
     {
-        DirectX::XMMATRIX* data = (DirectX::XMMATRIX*)armature->BoneTransforms.Map();
+        CacheGPU::DataHandle dataHandle = frameCache->RequestPlacement(armature->BoneTransforms.GetResourceDescription().GetSize().x);
+
+        DirectX::XMMATRIX* data = (DirectX::XMMATRIX*)dataHandle.DataCPU;
 
         const auto& transforms = animation->GetBonesTransforms(cache->GetTime());
         armature->ApplyAnimation(transforms);
@@ -80,7 +83,7 @@ void DrawSceneProcessor::DrawEntity(SceneLayer::Entity& entity, dx12::CommandLis
             data[i] = result;
         }
 
-        commandList.SetSRV(3, armature->BoneTransforms.OffsetGPU(0));
+        commandList.SetSRV(3, dataHandle.DataGPU);
     }
 
     if (mesh)

@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "RendererPCH.h"
 
 #include "Executor.h"
 
@@ -25,7 +25,7 @@ void Executor::Allocate(D3D12_COMMAND_LIST_TYPE type)
     _commandList.Close();
 }
 
-void Executor::Reset(dx12::RootSignature* rootSignature)
+void Executor::Reset(dx12::PipelineState* rootSignature)
 {
     //if (isFree)
     //{

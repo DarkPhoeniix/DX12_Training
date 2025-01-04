@@ -4,6 +4,8 @@
 
 namespace dx12
 {
+    class DescriptorHeap;
+
     class Device
     {
     public:
@@ -25,6 +27,12 @@ namespace dx12
         static Resource* GetBackBuffer();
 
         static void Present();
+
+        static void CreateRenderTargetView(const RenderTargetView& view, DescriptorHeap& descriptorHeap);
+        static void CreateDepthStencilView(const DepthStencilView& view, DescriptorHeap& descriptorHeap);
+        static void CreateConstantBufferView(const ConstantBufferView& view, DescriptorHeap& descriptorHeap);
+        static void CreateShaderResourceView(const ShaderResourceView& view, DescriptorHeap& descriptorHeap);
+        static void CreateUnorderedAccessView(const UnorderedAccessView& view, DescriptorHeap& descriptorHeap);
 
     private:
         Device();

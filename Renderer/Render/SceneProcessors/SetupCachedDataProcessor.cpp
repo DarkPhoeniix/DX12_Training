@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "RendererPCH.h"
 
 #include "SetupCachedDataProcessor.h"
 
@@ -12,8 +12,9 @@
 
 #include "Render/GPUStructs/GPUSceneDesc.h"
 #include "Render/GPUStructs/GPULightDesc.h"
+#include "Render/Frame/CacheGPU.h"
 
-void SetupCachedDataProcessor::Process(SceneLayer::Scene& scene, dx12::CommandList& commandList)
+void SetupCachedDataProcessor::Process(SceneLayer::Scene& scene, dx12::CommandList& commandList, CacheGPU* frameCache)
 {
     SceneLayer::SceneCache& cache = scene.GetCache();
 
@@ -21,11 +22,11 @@ void SetupCachedDataProcessor::Process(SceneLayer::Scene& scene, dx12::CommandLi
 
     for (std::shared_ptr<SceneLayer::Entity>& node : scene.GetRootNodes())
     {
-        ProcessEntity(*node, commandList);
+        ProcessEntity(*node, commandList, frameCache);
 
         for (std::shared_ptr<SceneLayer::Entity>& child : node->GetChildrenNodes())
         {
-            ProcessEntity(*child, commandList);
+            ProcessEntity(*child, commandList, frameCache);
         }
     }
 
@@ -63,7 +64,7 @@ void SetupCachedDataProcessor::Process(SceneLayer::Scene& scene, dx12::CommandLi
     commandList.SetCBV(0, scene.GetGPUDesc().OffsetGPU(0));
 }
 
-void SetupCachedDataProcessor::ProcessEntity(SceneLayer::Entity& entity, dx12::CommandList& commandList)
+void SetupCachedDataProcessor::ProcessEntity(SceneLayer::Entity& entity, dx12::CommandList& commandList, CacheGPU* frameCache)
 {
     SceneLayer::SceneCache* cache = entity.GetSceneCache();
     if (ASSERT(cache, "Entity has no scene cache"))

@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "RendererPCH.h"
 
 #include "Application.h"
 
@@ -91,7 +91,7 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
             frame.Next = &_frames[nextIndex];
             frame.Prev = &_frames[prevIndex];
 
-            frame.SetSyncFrame(nullptr);
+            frame.SetSyncPoint(nullptr);
             frame.SetAllocatorPool(&_allocs);
             frame.SetFencePool(&_fencePool);
 
@@ -110,7 +110,7 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
     {
         return 1;
     }
-    _currentFrame->SetSyncFrame(uploadTask->GetFence());
+    _currentFrame->SetSyncPoint(uploadTask->GetFence());
     _ExecuteFrameTasks();
 
     MSG msg = { 0 };
@@ -244,7 +244,7 @@ void Application::_ExecuteFrameTasks()
         if (task.GetName() == "present")
         {
             dx12::Device::Present();
-            _currentFrame->SetSyncFrame(task.GetFence());
+            _currentFrame->SetSyncPoint(task.GetFence());
         }
         task.GetCommandQueue()->Signal(task.GetDXFence(), task.GetFenceValue());
     }

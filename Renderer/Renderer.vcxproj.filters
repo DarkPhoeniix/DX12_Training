@@ -93,7 +93,7 @@
     <ClCompile Include="Render\GBuffer.cpp">
       <Filter>Render</Filter>
     </ClCompile>
-    <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="RendererPCH.cpp" />
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="GUI\GUI.cpp">
@@ -180,6 +180,7 @@
     <ClCompile Include="Render\GPUStructs\GPULightDesc.cpp">
       <Filter>Render\GPUStructs</Filter>
     </ClCompile>
+    <ClCompile Include="Render\Frame\CacheGPU.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Events\IEvent.h">
@@ -261,7 +262,7 @@
       <Filter>Render</Filter>
     </ClInclude>
     <ClInclude Include="Application.h" />
-    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="RendererPCH.h" />
     <ClInclude Include="Utility\Resources.h">
       <Filter>Resources</Filter>
     </ClInclude>
@@ -355,6 +356,7 @@
     <ClInclude Include="Scene\Volumes\CapsuleVolume.h">
       <Filter>Scene\Volumes</Filter>
     </ClInclude>
+    <ClInclude Include="Render\Frame\CacheGPU.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\AABB_gs.hlsl">
