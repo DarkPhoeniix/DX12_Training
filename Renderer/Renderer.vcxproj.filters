@@ -52,6 +52,9 @@
     <Filter Include="Shaders\_deprecated">
       <UniqueIdentifier>{0cff9de6-f4ea-4a7a-b3cc-8484eb782352}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Scene\ECS\Components">
+      <UniqueIdentifier>{05d20807-e1a0-4371-b0a8-d9373812ca6a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Input\InputDevice.cpp">
@@ -144,17 +147,39 @@
     <ClCompile Include="Scene\ECS\EntityLoader.cpp">
       <Filter>Scene\ECS</Filter>
     </ClCompile>
-    <ClCompile Include="Render\GPUStructs\GPULightDesc.cpp" />
-    <ClCompile Include="Scene\ECS\Components\Animation.cpp" />
-    <ClCompile Include="Scene\ECS\Components\Light.cpp" />
-    <ClCompile Include="Scene\ECS\Components\Material.cpp" />
-    <ClCompile Include="Scene\ECS\Components\Mesh.cpp" />
-    <ClCompile Include="Scene\ECS\Components\Transformation.cpp" />
-    <ClCompile Include="Scene\ECS\Components\Skybox.cpp" />
-    <ClCompile Include="Scene\ECS\Components\Armature.cpp" />
-    <ClCompile Include="Render\SceneProcessors\UpdateSceneProcessor.cpp" />
-    <ClCompile Include="Scene\Volumes\AABBVolume.cpp" />
-    <ClCompile Include="Scene\Volumes\OBBVolume.cpp" />
+    <ClCompile Include="Scene\ECS\Components\Animation.cpp">
+      <Filter>Scene\ECS\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\ECS\Components\Armature.cpp">
+      <Filter>Scene\ECS\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\ECS\Components\Light.cpp">
+      <Filter>Scene\ECS\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\ECS\Components\Material.cpp">
+      <Filter>Scene\ECS\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\ECS\Components\Mesh.cpp">
+      <Filter>Scene\ECS\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\ECS\Components\Skybox.cpp">
+      <Filter>Scene\ECS\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\ECS\Components\Transformation.cpp">
+      <Filter>Scene\ECS\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Volumes\AABBVolume.cpp">
+      <Filter>Scene\Volumes</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Volumes\OBBVolume.cpp">
+      <Filter>Scene\Volumes</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\SceneProcessors\UpdateSceneProcessor.cpp">
+      <Filter>Render\SceneProcessors</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\GPUStructs\GPULightDesc.cpp">
+      <Filter>Render\GPUStructs</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Events\IEvent.h">
@@ -297,17 +322,39 @@
     <ClInclude Include="Scene\ECS\EntityLoader.h">
       <Filter>Scene\ECS</Filter>
     </ClInclude>
-    <ClInclude Include="Render\GPUStructs\GPULightDesc.h" />
-    <ClInclude Include="Scene\ECS\Components\Animation.h" />
-    <ClInclude Include="Scene\ECS\Components\Light.h" />
-    <ClInclude Include="Scene\ECS\Components\Material.h" />
-    <ClInclude Include="Scene\ECS\Components\Mesh.h" />
-    <ClInclude Include="Scene\ECS\Components\Transformation.h" />
-    <ClInclude Include="Scene\ECS\Components\Skybox.h" />
-    <ClInclude Include="Scene\ECS\Components\Armature.h" />
-    <ClInclude Include="Render\SceneProcessors\UpdateSceneProcessor.h" />
-    <ClInclude Include="Scene\Volumes\CapsuleVolume.h" />
-    <ClInclude Include="Scene\Volumes\OBBVolume.h" />
+    <ClInclude Include="Scene\ECS\Components\Animation.h">
+      <Filter>Scene\ECS\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\ECS\Components\Armature.h">
+      <Filter>Scene\ECS\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\ECS\Components\Light.h">
+      <Filter>Scene\ECS\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\ECS\Components\Material.h">
+      <Filter>Scene\ECS\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\ECS\Components\Mesh.h">
+      <Filter>Scene\ECS\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\ECS\Components\Skybox.h">
+      <Filter>Scene\ECS\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\ECS\Components\Transformation.h">
+      <Filter>Scene\ECS\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Volumes\OBBVolume.h">
+      <Filter>Scene\Volumes</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\SceneProcessors\UpdateSceneProcessor.h">
+      <Filter>Render\SceneProcessors</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\GPUStructs\GPULightDesc.h">
+      <Filter>Render\GPUStructs</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Volumes\CapsuleVolume.h">
+      <Filter>Scene\Volumes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\AABB_gs.hlsl">
@@ -346,12 +393,27 @@
     <FxCompile Include="Shaders\_deprecated\SwirlPostFX_cs.hlsl">
       <Filter>Shaders\_deprecated</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\Armature_vs.hlsl" />
-    <FxCompile Include="Shaders\Armature_ps.hlsl" />
-    <FxCompile Include="Shaders\Armature_gs.hlsl" />
-    <FxCompile Include="Shaders\OBB_gs.hlsl" />
-    <FxCompile Include="Shaders\OBB_ps.hlsl" />
-    <FxCompile Include="Shaders\OBB_vs.hlsl" />
+    <FxCompile Include="Shaders\Armature_gs.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\Armature_ps.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\Armature_vs.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\OBB_vs.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\FXAA_cs.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\OBB_gs.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\OBB_ps.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -391,8 +453,24 @@
     <None Include="Shaders\_deprecated\SemiAmbientLighting.hlsli">
       <Filter>Shaders\_deprecated</Filter>
     </None>
-    <None Include="Shaders\Armature_rootsig.hlsli" />
-    <None Include="Shaders\OBB_rootsig.hlsli" />
+    <None Include="Shaders\Armature_rootsig.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="PipelineDescriptions\Raster_Solid_CullBack.raster">
+      <Filter>PipelineDescriptions</Filter>
+    </None>
+    <None Include="Shaders\FXAA_helpers.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\FXAA_rootsig.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\OBB_rootsig.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="PipelineDescriptions\FXAAPipeline.tech">
+      <Filter>PipelineDescriptions</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resources\Resource.rc">
@@ -400,8 +478,6 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="PipelineDescriptions\Depth_LE_WriteAll.depth" />
-    <Text Include="PipelineDescriptions\Depth_None.depth" />
     <Text Include="PipelineDescriptions\SkyboxPipeline.tech">
       <Filter>PipelineDescriptions</Filter>
     </Text>
@@ -411,8 +487,6 @@
     <Text Include="PipelineDescriptions\AABBRenderPipeline.tech">
       <Filter>PipelineDescriptions</Filter>
     </Text>
-    <Text Include="PipelineDescriptions\ArmatureDebugPipeline.blend" />
-    <Text Include="PipelineDescriptions\ArmatureDebugPipeline.tech" />
     <Text Include="PipelineDescriptions\DeferredShading.tech">
       <Filter>PipelineDescriptions</Filter>
     </Text>
@@ -422,7 +496,23 @@
     <Text Include="PipelineDescriptions\GPassPipeline.tech">
       <Filter>PipelineDescriptions</Filter>
     </Text>
-    <Text Include="PipelineDescriptions\OBBRenderPipeline.tech" />
-    <Text Include="PipelineDescriptions\Raster_Solid.raster" />
+    <Text Include="PipelineDescriptions\ArmatureDebugPipeline.blend">
+      <Filter>PipelineDescriptions</Filter>
+    </Text>
+    <Text Include="PipelineDescriptions\ArmatureDebugPipeline.tech">
+      <Filter>PipelineDescriptions</Filter>
+    </Text>
+    <Text Include="PipelineDescriptions\Depth_LE_WriteAll.depth">
+      <Filter>PipelineDescriptions</Filter>
+    </Text>
+    <Text Include="PipelineDescriptions\Depth_None.depth">
+      <Filter>PipelineDescriptions</Filter>
+    </Text>
+    <Text Include="PipelineDescriptions\OBBRenderPipeline.tech">
+      <Filter>PipelineDescriptions</Filter>
+    </Text>
+    <Text Include="PipelineDescriptions\Raster_Solid.raster">
+      <Filter>PipelineDescriptions</Filter>
+    </Text>
   </ItemGroup>
 </Project>
