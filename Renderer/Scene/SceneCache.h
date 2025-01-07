@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Scene/Camera.h"
+#include "Scene/Entity/Components/Camera.h"
 
 namespace dx12
 {
@@ -19,10 +19,6 @@ namespace SceneLayer
 
         std::shared_ptr<dx12::ResourceTable> GetLightsTable() const;
         dx12::Resource& GetLightsSRV();
-
-        // TODO: ...
-        void SetCamera(Camera* camera);
-        Camera* GetCamera() const;
 
         void SetTime(float time);
         float GetTime() const;

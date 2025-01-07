@@ -1,15 +1,40 @@
 #pragma once
 
-#include "Scene/Viewport.h"
+#include "Scene/Entity/Components/Camera.h"
+#include "Scene/Entity/Components/IComponent.h"
 #include "Scene/Volumes/FrustumVolume.h"
 
 // TODO: refactor Camera
 
 namespace SceneLayer
 {
-	class Scene;
+	class Viewport
+	{
+	public:
+		Viewport();
+		Viewport(const DirectX::XMUINT2& size);
+		Viewport(const CD3DX12_VIEWPORT& DXViewport);
+		~Viewport() = default;
 
-	class Camera
+		CD3DX12_VIEWPORT GetDXViewport() const;
+		float GetAspectRatio() const;
+
+		void SetSize(const DirectX::XMUINT2& size);
+		DirectX::XMUINT2 GetSize() const;
+
+		void SetDepth(const DirectX::XMFLOAT2& depth);
+		DirectX::XMFLOAT2 GetDepth() const;
+
+		void SetScissorRectangle(const CD3DX12_RECT& rect);
+		CD3DX12_RECT GetScissorRectangle() const;
+
+	private:
+		CD3DX12_VIEWPORT _viewport;
+		CD3DX12_RECT _scissorRectangle;
+		float _aspectRatio;
+	};
+
+	class Camera : public IComponent
 	{
 	public:
 		Camera();

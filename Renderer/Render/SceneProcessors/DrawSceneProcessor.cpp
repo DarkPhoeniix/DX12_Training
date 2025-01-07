@@ -6,11 +6,11 @@
 #include "ResourceTable.h"
 
 #include "Scene/Scene.h"
-#include "Scene/ECS/Components/Animation.h"
-#include "Scene/ECS/Components/Armature.h"
-#include "Scene/ECS/Components/Material.h"
-#include "Scene/ECS/Components/Mesh.h"
-#include "Scene/ECS/Components/Transformation.h"
+#include "Scene/Entity/Components/Animation.h"
+#include "Scene/Entity/Components/Armature.h"
+#include "Scene/Entity/Components/Material.h"
+#include "Scene/Entity/Components/Mesh.h"
+#include "Scene/Entity/Components/Transformation.h"
 
 #include "Render/GPUStructs/GPUModelDesc.h"
 #include "Render/Frame/CacheGPU.h"
@@ -42,9 +42,9 @@ void DrawSceneProcessor::DrawEntity(SceneLayer::Entity& entity, dx12::CommandLis
         return;
     }
 
-    Transformation transform = entity.GetGlobalTransform();
-    Material* material = entity.GetComponentAs<Material>("Material");
-    Mesh* mesh = entity.GetComponentAs<Mesh>("Mesh");
+    SceneLayer::Transformation transform = entity.GetGlobalTransform();
+    SceneLayer::Material* material = entity.GetComponentAs<SceneLayer::Material>("Material");
+    SceneLayer::Mesh* mesh = entity.GetComponentAs<SceneLayer::Mesh>("Mesh");
 
     GPUModelDesc* modelDesc = (GPUModelDesc*)entity.GetGPUDesc().Map();
     {
@@ -63,8 +63,8 @@ void DrawSceneProcessor::DrawEntity(SceneLayer::Entity& entity, dx12::CommandLis
 
     commandList.SetCBV(1, entity.GetGPUDesc().OffsetGPU(0));
 
-    Animation* animation = entity.GetComponentAs<Animation>("Animation");
-    Armature* armature = entity.GetComponentAs<Armature>("Armature");
+    SceneLayer::Animation* animation = entity.GetComponentAs<SceneLayer::Animation>("Animation");
+    SceneLayer::Armature* armature = entity.GetComponentAs<SceneLayer::Armature>("Armature");
     // Update and setup animantion
     if (armature && animation)
     {
@@ -76,7 +76,7 @@ void DrawSceneProcessor::DrawEntity(SceneLayer::Entity& entity, dx12::CommandLis
         armature->ApplyAnimation(transforms);
         armature->UpdateGlobalTransformations();
 
-        const std::vector<Bone*>& bones = armature->GetSortedBones();
+        const std::vector<SceneLayer::Bone*>& bones = armature->GetSortedBones();
         for (int i = 0; i < bones.size(); ++i)
         {
             DirectX::XMMATRIX result = bones[i]->Offset * bones[i]->GlobalTransform;

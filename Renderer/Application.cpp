@@ -2,15 +2,18 @@
 
 #include "Application.h"
 
-#include "SwapChain.h"
 #include "Events/RenderEvent.h"
 #include "Events/UpdateEvent.h"
-#include "GUI/GUI.h"
 #include "Input/InputDevice.h"
+
 #include "Render/DXRenderer.h"
-#include "Utility/DebugInfo.h"
-#include "Utility/Resources.h"
+#include "SwapChain.h"
 #include "Window/Win32Window.h"
+
+#include "GUI/GUI.h"
+
+#include "Resources/Resources.h"
+#include "Utility/DebugInfo.h"
 
 using namespace Core;
 

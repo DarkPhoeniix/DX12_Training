@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Events/IEvent.h"
-#include "Utility/DirectInputKeyCodes.h"
+#include "Input/DirectInputKeyCodes.h"
 
 namespace Core
 {

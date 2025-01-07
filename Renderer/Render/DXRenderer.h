@@ -2,7 +2,7 @@
 
 #include "GBuffer.h"
 #include "PipelineState.h"
-#include "Scene/Camera.h"
+#include "Scene/Entity/Components/Camera.h"
 #include "Scene/Scene.h"
 #include "SceneProcessors/DrawSceneProcessor.h"
 #include "SceneProcessors/SetupCachedDataProcessor.h"
@@ -61,7 +61,7 @@ private:
     Frame* _currentFrame;
 
     SceneLayer::Scene _scene;
-    SceneLayer::Camera _camera;
+    std::shared_ptr<SceneLayer::Camera> _cameraComponent;
     bool _isCameraMoving;
     float _deltaTime;
 

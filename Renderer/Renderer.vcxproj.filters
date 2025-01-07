@@ -99,19 +99,13 @@
     <ClCompile Include="GUI\GUI.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\ECS\ComponentFactory.cpp">
+    <ClCompile Include="Scene\Entity\Components\IComponent.cpp">
       <Filter>Scene\ECS</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\ECS\Components.cpp">
+    <ClCompile Include="Scene\Entity\Entity.cpp">
       <Filter>Scene\ECS</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\ECS\Entity.cpp">
-      <Filter>Scene\ECS</Filter>
-    </ClCompile>
-    <ClCompile Include="Scene\Camera.cpp">
-      <Filter>Scene</Filter>
-    </ClCompile>
-    <ClCompile Include="Scene\Viewport.cpp">
+    <ClCompile Include="Scene\Entity\Components\Camera.cpp">
       <Filter>Scene</Filter>
     </ClCompile>
     <ClCompile Include="Render\Frame\AllocatorPool.cpp">
@@ -144,28 +138,28 @@
     <ClCompile Include="Render\GPUStructs\GPUSceneDesc.cpp">
       <Filter>Render\GPUStructs</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\ECS\EntityLoader.cpp">
+    <ClCompile Include="Scene\Entity\EntityLoader.cpp">
       <Filter>Scene\ECS</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\ECS\Components\Animation.cpp">
+    <ClCompile Include="Scene\Entity\Components\Animation.cpp">
       <Filter>Scene\ECS\Components</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\ECS\Components\Armature.cpp">
+    <ClCompile Include="Scene\Entity\Components\Armature.cpp">
       <Filter>Scene\ECS\Components</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\ECS\Components\Light.cpp">
+    <ClCompile Include="Scene\Entity\Components\Light.cpp">
       <Filter>Scene\ECS\Components</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\ECS\Components\Material.cpp">
+    <ClCompile Include="Scene\Entity\Components\Material.cpp">
       <Filter>Scene\ECS\Components</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\ECS\Components\Mesh.cpp">
+    <ClCompile Include="Scene\Entity\Components\Mesh.cpp">
       <Filter>Scene\ECS\Components</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\ECS\Components\Skybox.cpp">
+    <ClCompile Include="Scene\Entity\Components\Skybox.cpp">
       <Filter>Scene\ECS\Components</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\ECS\Components\Transformation.cpp">
+    <ClCompile Include="Scene\Entity\Components\Transformation.cpp">
       <Filter>Scene\ECS\Components</Filter>
     </ClCompile>
     <ClCompile Include="Scene\Volumes\AABBVolume.cpp">
@@ -216,16 +210,13 @@
     <ClInclude Include="Utility\Defines.h">
       <Filter>Utility</Filter>
     </ClInclude>
-    <ClInclude Include="Utility\DirectInputKeyCodes.h">
+    <ClInclude Include="Input\DirectInputKeyCodes.h">
       <Filter>Utility</Filter>
     </ClInclude>
     <ClInclude Include="Utility\Helpers.h">
       <Filter>Utility</Filter>
     </ClInclude>
     <ClInclude Include="Utility\HighResolutionClock.h">
-      <Filter>Utility</Filter>
-    </ClInclude>
-    <ClInclude Include="Utility\KeyCodes.h">
       <Filter>Utility</Filter>
     </ClInclude>
     <ClInclude Include="Utility\Logger.h">
@@ -263,7 +254,7 @@
     </ClInclude>
     <ClInclude Include="Application.h" />
     <ClInclude Include="RendererPCH.h" />
-    <ClInclude Include="Utility\Resources.h">
+    <ClInclude Include="Resources\Resources.h">
       <Filter>Resources</Filter>
     </ClInclude>
     <ClInclude Include="Resources\resource1.h">
@@ -272,19 +263,13 @@
     <ClInclude Include="GUI\GUI.h">
       <Filter>GUI</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\ECS\ComponentFactory.h">
+    <ClInclude Include="Scene\Entity\Components\IComponent.h">
       <Filter>Scene\ECS</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\ECS\Components.h">
+    <ClInclude Include="Scene\Entity\Entity.h">
       <Filter>Scene\ECS</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\ECS\Entity.h">
-      <Filter>Scene\ECS</Filter>
-    </ClInclude>
-    <ClInclude Include="Scene\Camera.h">
-      <Filter>Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="Scene\Viewport.h">
+    <ClInclude Include="Scene\Entity\Components\Camera.h">
       <Filter>Scene</Filter>
     </ClInclude>
     <ClInclude Include="Render\Frame\AllocatorPool.h">
@@ -320,28 +305,28 @@
     <ClInclude Include="Render\GPUStructs\GPUSceneDesc.h">
       <Filter>Render\GPUStructs</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\ECS\EntityLoader.h">
+    <ClInclude Include="Scene\Entity\EntityLoader.h">
       <Filter>Scene\ECS</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\ECS\Components\Animation.h">
+    <ClInclude Include="Scene\Entity\Components\Animation.h">
       <Filter>Scene\ECS\Components</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\ECS\Components\Armature.h">
+    <ClInclude Include="Scene\Entity\Components\Armature.h">
       <Filter>Scene\ECS\Components</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\ECS\Components\Light.h">
+    <ClInclude Include="Scene\Entity\Components\Light.h">
       <Filter>Scene\ECS\Components</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\ECS\Components\Material.h">
+    <ClInclude Include="Scene\Entity\Components\Material.h">
       <Filter>Scene\ECS\Components</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\ECS\Components\Mesh.h">
+    <ClInclude Include="Scene\Entity\Components\Mesh.h">
       <Filter>Scene\ECS\Components</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\ECS\Components\Skybox.h">
+    <ClInclude Include="Scene\Entity\Components\Skybox.h">
       <Filter>Scene\ECS\Components</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\ECS\Components\Transformation.h">
+    <ClInclude Include="Scene\Entity\Components\Transformation.h">
       <Filter>Scene\ECS\Components</Filter>
     </ClInclude>
     <ClInclude Include="Scene\Volumes\OBBVolume.h">

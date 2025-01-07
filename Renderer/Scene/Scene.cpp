@@ -4,8 +4,8 @@
 
 #include "CommandList.h"
 
-#include "Scene/Camera.h"
-#include "Scene/ECS/EntityLoader.h"
+#include "Scene/Entity/Components/Camera.h"
+#include "Scene/Entity/EntityLoader.h"
 
 #include <queue>
 
@@ -47,6 +47,11 @@ namespace SceneLayer
 
     Scene::~Scene()
     {   }
+
+    void Scene::AddRootNode(std::shared_ptr<Entity> entity)
+    {
+        _rootNodes.push_back(entity);
+    }
 
     std::vector<std::shared_ptr<Entity>>& Scene::GetRootNodes()
     {
@@ -104,11 +109,6 @@ namespace SceneLayer
     SceneCache& Scene::GetCache()
     {
         return _cache;
-    }
-
-    void Scene::SetCamera(Camera& camera)
-    {
-        _cache.SetCamera(&camera);
     }
 
     dx12::Resource& Scene::GetGPUDesc()

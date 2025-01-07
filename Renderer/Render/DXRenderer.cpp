@@ -3,18 +3,20 @@
 #include "DXRenderer.h"
 
 #include "CommandList.h"
+#include "Events/KeyEvent.h"
 #include "Events/MouseButtonEvent.h"
 #include "Events/MouseMoveEvent.h"
 #include "Events/RenderEvent.h"
 #include "Events/UpdateEvent.h"
-#include "Events/KeyEvent.h"
 #include "GUI/GUI.h"
 #include "Render/Frame/TaskGPU.h"
 #include "Utility/DebugInfo.h"
 
-#include "Scene/ECS/Components/Armature.h"
-#include "Scene/ECS/Components/Transformation.h"
-#include "Scene/ECS/Components/Skybox.h"
+#include "Scene/Entity/Entity.h"
+#include "Scene/Entity/Components/Armature.h"
+#include "Scene/Entity/Components/Camera.h"
+#include "Scene/Entity/Components/Skybox.h"
+#include "Scene/Entity/Components/Transformation.h"
 
 #include "Scene/Volumes/AABBVolume.h"
 
@@ -95,14 +97,24 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
     uint32_t windowHeight = windowSize.bottom - windowSize.top;
 
     // Camera Setup
+    std::shared_ptr<SceneLayer::Entity> cameraEntity = std::make_shared<SceneLayer::Entity>(&_scene.GetCache());
     {
         XMVECTOR pos = XMVectorSet(15.0f, 23.0f, 20.0f, 1.0f);
         XMVECTOR target = XMVectorSet(0.0f, 20.0f, 0.0f, 1.0f);
         XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
-        _camera.LookAt(pos, target, up);
-        _camera.SetViewport(SceneLayer::Viewport({ windowWidth, windowHeight }));
-        _camera.SetLens(45.0f, 0.1f, 1000.0f);
+        std::shared_ptr<SceneLayer::Camera> cameraComponent = std::make_shared<SceneLayer::Camera>();
+        cameraComponent->LookAt(pos, target, up);
+        cameraComponent->SetViewport(SceneLayer::Viewport({ windowWidth, windowHeight }));
+        cameraComponent->SetLens(45.0f, 0.1f, 1000.0f);
+
+        std::shared_ptr<SceneLayer::Transformation> transformComponent = std::make_shared<SceneLayer::Transformation>();
+        transformComponent->Transform = cameraComponent->View();
+
+        cameraEntity->AddComponent(cameraComponent);
+        cameraEntity->AddComponent(transformComponent);
+
+        _cameraComponent = cameraComponent;
     }
 
     {
@@ -125,7 +137,8 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
 
         _scene.LoadScene("Dragon\\DragonScene.scene", commandList);
         _uploadProcessor.Process(_scene, commandList, &_currentFrame->GetCache());
-        _scene.SetCamera(_camera);
+
+        _scene.AddRootNode(cameraEntity);
 
         commandList.Close();
     }
@@ -144,11 +157,6 @@ void DXRenderer::OnUpdate(Events::UpdateEvent& updateEvent)
     DebugInfo::Update(updateEvent);
 
     _scene.GetCache().SetTime(updateEvent.totalTime * _timeMiltiplier);
-
-    XMVECTOR mov = 50.0f * XMVectorSet(sinf(updateEvent.totalTime * _timeMiltiplier * 0.45f), 0.8f, cosf(updateEvent.totalTime * _timeMiltiplier * 0.45f), 1.0f);
-    XMVECTOR tar = XMVectorSet(0.0f, 17.0f, 0.0f, 1.0f);
-    XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-    _camera.LookAt(mov, tar, up);
 
     _deltaTime = updateEvent.elapsedTime * _timeMiltiplier;
 }
@@ -344,24 +352,28 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
 
 void DXRenderer::OnKeyPressed(Events::KeyEvent& e)
 {
+    auto cameraEntity = _scene.FindNodeByComponentName("Camera");
+    ASSERT(cameraEntity.get(), "No camera on the scene");
+    SceneLayer::Camera* camera = cameraEntity->GetComponentAs<SceneLayer::Camera>("Camera");
+
     XMVECTOR dir = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
     if (e.keyCode == DIKeyCode::DIK_W)
     {
-        dir += _camera.Look() * _deltaTime * MOVE_SPEED;
+        dir += _cameraComponent->Look() * _deltaTime * MOVE_SPEED;
     }
     if (e.keyCode == DIKeyCode::DIK_S)
     {
-        dir -= _camera.Look() * _deltaTime * MOVE_SPEED;
+        dir -= _cameraComponent->Look() * _deltaTime * MOVE_SPEED;
     }
     if (e.keyCode == DIKeyCode::DIK_D)
     {
-        dir += _camera.Right() * _deltaTime * MOVE_SPEED;
+        dir += _cameraComponent->Right() * _deltaTime * MOVE_SPEED;
     }
     if (e.keyCode == DIKeyCode::DIK_A)
     {
-        dir -= _camera.Right() * _deltaTime * MOVE_SPEED;
+        dir -= _cameraComponent->Right() * _deltaTime * MOVE_SPEED;
     }
-    _camera.Update(dir);
+    _cameraComponent->Update(dir);
 
     switch (e.keyCode)
     {
@@ -375,7 +387,7 @@ void DXRenderer::OnMouseMoved(Events::MouseMoveEvent& e)
 {
     if ((e.relativeX != 0 || e.relativeY != 0) && _isCameraMoving)
     {
-        _camera.Update(e.relativeX, e.relativeY);
+        _cameraComponent->Update(e.relativeX, e.relativeY);
     }
 }
 
@@ -414,8 +426,8 @@ void DXRenderer::OnResize(Core::Events::ResizeEvent& e)
     } while (current != _currentFrame);
 
     dx12::Device::OnResize(windowSize);
-    _camera.GetViewport().SetSize(windowSize);
-    _camera.Update();
+    _cameraComponent->GetViewport().SetSize(windowSize);
+    _cameraComponent->Update();
     _gBuffer.Init(windowSize);
 
 
@@ -472,7 +484,7 @@ void DXRenderer::GeometryPass(TaskGPU& task)
 
         commandList.SetPipelineState(_gPassPipeline);
 
-        commandList.SetViewport(_camera.GetViewport());
+        commandList.SetViewport(_cameraComponent->GetViewport());
         commandList.SetRenderTargets({ albedoMetalnessHandle, normalSpecularHandle }, &depthHandle);
 
 #if defined(_DEBUG)
@@ -525,7 +537,7 @@ void DXRenderer::LightingPass(TaskGPU& task)
         commandList.SetDescriptorTable(5, buffersHeap.GetResourceGPUHandle(normalSpecular, dx12::ResourceViewType::SRV));
         commandList.SetDescriptorTable(6, buffersHeap.GetResourceGPUHandle(target, dx12::ResourceViewType::UAV));
 
-        DirectX::XMUINT2 viewportSize = _camera.GetViewport().GetSize();
+        DirectX::XMUINT2 viewportSize = _cameraComponent->GetViewport().GetSize();
         int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 8.0f);
         int yThreadGroups = (uint32_t)std::ceilf(viewportSize.y / 8.0f);
 
@@ -544,7 +556,7 @@ void DXRenderer::RenderSkybox(TaskGPU& task)
         return;
     }
 
-    Skybox* skybox = entity->GetComponentAs<Skybox>("Skybox");
+    SceneLayer::Skybox* skybox = entity->GetComponentAs<SceneLayer::Skybox>("Skybox");
 
     dx12::CommandList& commandList = *task.GetCommandLists().front();
     commandList.SetName("RenderSkybox");
@@ -569,7 +581,7 @@ void DXRenderer::RenderSkybox(TaskGPU& task)
         commandList.SetDescriptorTable(4, buffersHeap.GetResourceGPUHandle(skyboxTexture, dx12::ResourceViewType::SRV));
         commandList.SetDescriptorTable(5, buffersHeap.GetResourceGPUHandle(target, dx12::ResourceViewType::UAV));
 
-        DirectX::XMUINT2 viewportSize = _camera.GetViewport().GetSize();
+        DirectX::XMUINT2 viewportSize = _cameraComponent->GetViewport().GetSize();
         int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 8.0f);
         int yThreadGroups = (uint32_t)std::ceilf(viewportSize.y / 8.0f);
 
@@ -603,7 +615,7 @@ void DXRenderer::RenderFXAA(TaskGPU& task)
         commandList.GetDXCommandList()->SetComputeRootDescriptorTable(3, targetTextureHandle);
         commandList.GetDXCommandList()->SetComputeRootDescriptorTable(4, fxaaTextureHandle);
 
-        DirectX::XMUINT2 viewportSize = _camera.GetViewport().GetSize();
+        DirectX::XMUINT2 viewportSize = _cameraComponent->GetViewport().GetSize();
         int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 8.0f);
         int yThreadGroups = (uint32_t)std::ceilf(viewportSize.y / 8.0f);
 
@@ -624,8 +636,8 @@ void DXRenderer::RenderArmature(TaskGPU& task)
 
         for (auto& node : _scene.GetRootNodes())
         {
-            Armature* arm = node->GetComponentAs<Armature>("Armature");
-            Transformation* transform = node->GetComponentAs<Transformation>("Transformation");
+            SceneLayer::Armature* arm = node->GetComponentAs<SceneLayer::Armature>("Armature");
+            SceneLayer::Transformation* transform = node->GetComponentAs<SceneLayer::Transformation>("Transformation");
 
             if (arm)
             {
@@ -634,10 +646,10 @@ void DXRenderer::RenderArmature(TaskGPU& task)
                 D3D12_CPU_DESCRIPTOR_HANDLE rtv = RTVHeap.GetResourceCPUHandle(&_currentFrame->GetTargetTexture(), dx12::ResourceViewType::RTV);
                 D3D12_CPU_DESCRIPTOR_HANDLE dsv = _gBuffer.GetDepthTextureCPUHandle();
 
-                commandList.SetViewport(_camera.GetViewport());
+                commandList.SetViewport(_cameraComponent->GetViewport());
                 commandList.SetRenderTarget(&rtv, &dsv);
 
-                DirectX::XMMATRIX vp = _camera.ViewProjection();
+                DirectX::XMMATRIX vp = _cameraComponent->ViewProjection();
                 DirectX::XMVECTOR* data = (DirectX::XMVECTOR*)arm->BoneDebugTransforms.Map();
 
                 const auto& sortedBones = arm->GetSortedBones();
@@ -679,8 +691,8 @@ void DXRenderer::RenderAABB(TaskGPU& task)
 
         for (auto& node : _scene.GetRootNodes())
         {
-            Armature* arm = node->GetComponentAs<Armature>("Armature");
-            Transformation* transform = node->GetComponentAs<Transformation>("Transformation");
+            SceneLayer::Armature* arm = node->GetComponentAs<SceneLayer::Armature>("Armature");
+            SceneLayer::Transformation* transform = node->GetComponentAs<SceneLayer::Transformation>("Transformation");
 
             if (arm)
             {
@@ -702,10 +714,10 @@ void DXRenderer::RenderAABB(TaskGPU& task)
         D3D12_CPU_DESCRIPTOR_HANDLE rtv = RTVHeap.GetResourceCPUHandle(&_currentFrame->GetTargetTexture(), dx12::ResourceViewType::RTV);
         D3D12_CPU_DESCRIPTOR_HANDLE dsv = _gBuffer.GetDepthTextureCPUHandle();
 
-        commandList.SetViewport(_camera.GetViewport());
+        commandList.SetViewport(_cameraComponent->GetViewport());
         commandList.SetRenderTarget(&rtv, &dsv);
 
-        DirectX::XMMATRIX vp = _camera.ViewProjection();
+        DirectX::XMMATRIX vp = _cameraComponent->ViewProjection();
 
         SceneLayer::AABBVolume aabb = CombineOBBs(volumes);
 
@@ -737,7 +749,7 @@ void DXRenderer::RenderGUI(TaskGPU& task)
 
     PIXBeginEvent(commandList.GetDXCommandList().Get(), 5, "GUI");
     {
-        commandList.SetViewport(_camera.GetViewport());
+        commandList.SetViewport(_cameraComponent->GetViewport());
         commandList.SetRenderTarget(&rtv, &dsv);
 
         if (ImGui::Begin("Debug Info"), true, ImGuiWindowFlags_AlwaysAutoResize)

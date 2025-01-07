@@ -6,11 +6,11 @@
 #include "ResourceTable.h"
 
 #include "Scene/Scene.h"
-#include "Scene/ECS/Components/Armature.h"
-#include "Scene/ECS/Components/Animation.h"
-#include "Scene/ECS/Components/Material.h"
-#include "Scene/ECS/Components/Mesh.h"
-#include "Scene/ECS/Components/Skybox.h"
+#include "Scene/Entity/Components/Armature.h"
+#include "Scene/Entity/Components/Animation.h"
+#include "Scene/Entity/Components/Material.h"
+#include "Scene/Entity/Components/Mesh.h"
+#include "Scene/Entity/Components/Skybox.h"
 
 #include "Render/Frame/CacheGPU.h"
 
@@ -37,7 +37,7 @@ void UploadSceneProcessor::ProcessEntity(SceneLayer::Entity& entity, dx12::Comma
         return;
     }
 
-    Mesh* mesh = entity.GetComponentAs<Mesh>("Mesh");
+    SceneLayer::Mesh* mesh = entity.GetComponentAs<SceneLayer::Mesh>("Mesh");
     // Create buffers for Mesh
     if (mesh)
     {
@@ -46,28 +46,28 @@ void UploadSceneProcessor::ProcessEntity(SceneLayer::Entity& entity, dx12::Comma
         // Upload Vertex buffer
         {
             ComPtr<ID3D12Resource> vertexBuffer;
-            UploadData(commandList, &vertexBuffer, mesh->VertexData.size(), sizeof(VertexData), mesh->VertexData.data());
+            UploadData(commandList, &vertexBuffer, mesh->VertexData.size(), sizeof(SceneLayer::VertexData), mesh->VertexData.data());
             mesh->VertexBuffer = std::make_shared<dx12::Resource>();
             mesh->VertexBuffer->InitFromDXResource(vertexBuffer);
             mesh->VertexBuffer->SetName(entity.GetName() + "_VB");
 
             mesh->VertexBufferView.BufferLocation = mesh->VertexBuffer->OffsetGPU(0);
             mesh->VertexBufferView.SizeInBytes = static_cast<UINT>(mesh->VertexData.size() * sizeof(mesh->VertexData[0]));
-            mesh->VertexBufferView.StrideInBytes = sizeof(VertexData);
+            mesh->VertexBufferView.StrideInBytes = sizeof(SceneLayer::VertexData);
         }
 
         // Upload Skinning Vertex buffer
         if (!mesh->SkinningVertexData.empty())
         {
             ComPtr<ID3D12Resource> skinBuffer;
-            UploadData(commandList, &skinBuffer, mesh->SkinningVertexData.size(), sizeof(SkinningVertexData), mesh->SkinningVertexData.data());
+            UploadData(commandList, &skinBuffer, mesh->SkinningVertexData.size(), sizeof(SceneLayer::SkinningVertexData), mesh->SkinningVertexData.data());
             mesh->SkinningVertexBuffer = std::make_shared<dx12::Resource>();
             mesh->SkinningVertexBuffer->InitFromDXResource(skinBuffer);
             mesh->SkinningVertexBuffer->SetName(entity.GetName() + "_SVB");
 
             mesh->SkinningVertexBufferView.BufferLocation = mesh->SkinningVertexBuffer->OffsetGPU(0);
             mesh->SkinningVertexBufferView.SizeInBytes = static_cast<UINT>(mesh->SkinningVertexData.size() * sizeof(mesh->SkinningVertexData[0]));
-            mesh->SkinningVertexBufferView.StrideInBytes = sizeof(SkinningVertexData);
+            mesh->SkinningVertexBufferView.StrideInBytes = sizeof(SceneLayer::SkinningVertexData);
         }
 
         // Upload Index buffer
@@ -84,7 +84,7 @@ void UploadSceneProcessor::ProcessEntity(SceneLayer::Entity& entity, dx12::Comma
         }
     }
 
-    Material* material = entity.GetComponentAs<Material>("Material");
+    SceneLayer::Material* material = entity.GetComponentAs<SceneLayer::Material>("Material");
     if (material)
     {
         std::shared_ptr<dx12::ResourceTable> textureTable = cache->GetTextureTable();
@@ -115,7 +115,7 @@ void UploadSceneProcessor::ProcessEntity(SceneLayer::Entity& entity, dx12::Comma
         }
     }
 
-    Armature* armature = entity.GetComponentAs<Armature>("Armature");
+    SceneLayer::Armature* armature = entity.GetComponentAs<SceneLayer::Armature>("Armature");
     if (armature)
     {
         dx12::ResourceDescription desc;
@@ -135,7 +135,7 @@ void UploadSceneProcessor::ProcessEntity(SceneLayer::Entity& entity, dx12::Comma
         armature->BoneDebugTransforms.SetName(entity.GetName() + "_DebugBones");
     }
 
-    Skybox* skybox = entity.GetComponentAs<Skybox>("Skybox");
+    SceneLayer::Skybox* skybox = entity.GetComponentAs<SceneLayer::Skybox>("Skybox");
     if (skybox)
     {
         skybox->SkydomeTexture->SetDescriptorHeap(&skybox->DescHeap);

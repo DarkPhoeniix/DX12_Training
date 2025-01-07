@@ -4,15 +4,15 @@
 
 #include "CommandList.h"
 
+#include "Scene/Entity/Components/Animation.h"
+#include "Scene/Entity/Components/Armature.h"
+#include "Scene/Entity/Components/Light.h"
+#include "Scene/Entity/Components/Transformation.h"
 #include "Scene/Scene.h"
-#include "Scene/ECS/Components/Armature.h"
-#include "Scene/ECS/Components/Animation.h"
-#include "Scene/ECS/Components/Transformation.h"
-#include "Scene/ECS/Components/Light.h"
 
-#include "Render/GPUStructs/GPUSceneDesc.h"
-#include "Render/GPUStructs/GPULightDesc.h"
 #include "Render/Frame/CacheGPU.h"
+#include "Render/GPUStructs/GPULightDesc.h"
+#include "Render/GPUStructs/GPUSceneDesc.h"
 
 void SetupCachedDataProcessor::Process(SceneLayer::Scene& scene, dx12::CommandList& commandList, CacheGPU* frameCache)
 {
@@ -35,7 +35,13 @@ void SetupCachedDataProcessor::Process(SceneLayer::Scene& scene, dx12::CommandLi
     // Setup scene data
     GPUSceneDesc* sceneDesc = (GPUSceneDesc*)scene.GetGPUDesc().Map();
     {
-        SceneLayer::Camera* camera = cache.GetCamera();
+        auto cameraEntity = scene.FindNodeByComponentName("Camera");
+        if (ASSERT(cameraEntity.get(), "No camera on the scene"))
+        {
+            return;
+        }
+
+        SceneLayer::Camera* camera = cameraEntity->GetComponentAs<SceneLayer::Camera>("Camera");
 
         sceneDesc->View = camera->View();
         sceneDesc->Projection = camera->Projection();
@@ -72,8 +78,8 @@ void SetupCachedDataProcessor::ProcessEntity(SceneLayer::Entity& entity, dx12::C
         return;
     }
 
-    Transformation* transform = entity.GetComponentAs<Transformation>("Transformation");
-    Light* light = entity.GetComponentAs<Light>("Light");
+    SceneLayer::Transformation* transform = entity.GetComponentAs<SceneLayer::Transformation>("Transformation");
+    SceneLayer::Light* light = entity.GetComponentAs<SceneLayer::Light>("Light");
     if (light)
     {
         GPULightDesc* data = (GPULightDesc*)cache->GetLightsSRV().Map();

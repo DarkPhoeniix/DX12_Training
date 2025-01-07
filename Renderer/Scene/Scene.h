@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Scene/SceneCache.h"
-#include "Scene/ECS/Entity.h"
+#include "Scene/Entity/Entity.h"
 
 namespace dx12
 {
@@ -18,14 +18,13 @@ namespace SceneLayer
         Scene();
         ~Scene();
 
+        void AddRootNode(std::shared_ptr<Entity> entity);
+
         std::vector<std::shared_ptr<Entity>>& GetRootNodes();
         std::shared_ptr<Entity> FindNodeByName(const std::string& name) const;
         std::shared_ptr<Entity> FindNodeByComponentName(const std::string& componentName) const;
 
         SceneCache& GetCache();
-
-        // TODO: remove func, load camera from the file
-        void SetCamera(Camera& camera);
 
         dx12::Resource& GetGPUDesc();
 

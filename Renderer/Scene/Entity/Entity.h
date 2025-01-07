@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Scene/SceneCache.h"
-#include "Scene/ECS/Components.h"
-#include "Scene/ECS/Components/Transformation.h"
+#include "Scene/Entity/Components/IComponent.h"
+#include "Scene/Entity/Components/Transformation.h"
 
 namespace SceneLayer
 {

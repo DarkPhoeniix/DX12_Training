@@ -89,16 +89,6 @@ namespace SceneLayer
         return _lightsView;
     }
 
-    void SceneCache::SetCamera(Camera* camera)
-    {
-        _camera = camera;
-    }
-
-    Camera* SceneCache::GetCamera() const
-    {
-        return _camera;
-    }
-
     void SceneCache::SetTime(float time)
     {
         _currentTime = time;

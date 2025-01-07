@@ -5,7 +5,7 @@
 #include "DescriptorHeap.h"
 #include "PipelineState.h"
 #include "Heap.h"
-#include "Scene/Viewport.h"
+#include "Scene/Entity/Components/Camera.h"
 
 namespace
 {

@@ -3,11 +3,11 @@
 #include "UpdateSceneProcessor.h"
 
 #include "Scene/Scene.h"
-#include "Scene/ECS/Components/Animation.h"
-#include "Scene/ECS/Components/Armature.h"
-#include "Scene/ECS/Components/Material.h"
-#include "Scene/ECS/Components/Mesh.h"
-#include "Scene/ECS/Components/Transformation.h"
+#include "Scene/Entity/Components/Animation.h"
+#include "Scene/Entity/Components/Armature.h"
+#include "Scene/Entity/Components/Material.h"
+#include "Scene/Entity/Components/Mesh.h"
+#include "Scene/Entity/Components/Transformation.h"
 
 #include "Render/Frame/CacheGPU.h"
 
@@ -26,11 +26,11 @@ void UpdateSceneProcessor::Process(SceneLayer::Scene& scene, dx12::CommandList& 
 
 void UpdateSceneProcessor::UpdateEntity(SceneLayer::Entity& entity, dx12::CommandList& commandList, CacheGPU* frameCache)
 {
-    Armature* armature = entity.GetComponentAs<Armature>("Armature");
+    SceneLayer::Armature* armature = entity.GetComponentAs<SceneLayer::Armature>("Armature");
 
     if (armature)
     {
-        for (Bone& bone : armature->GetBones())
+        for (SceneLayer::Bone& bone : armature->GetBones())
         {
 
         }
