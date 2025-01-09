@@ -15,9 +15,6 @@ namespace SceneLayer
     class Scene
     {
     public:
-        Scene();
-        ~Scene();
-
         void AddRootNode(std::shared_ptr<Entity> entity);
 
         std::vector<std::shared_ptr<Entity>>& GetRootNodes();
@@ -25,8 +22,6 @@ namespace SceneLayer
         std::shared_ptr<Entity> FindNodeByComponentName(const std::string& componentName) const;
 
         SceneCache& GetCache();
-
-        dx12::Resource& GetGPUDesc();
 
         bool LoadScene(const std::string& filepath, dx12::CommandList& commandList);
 
@@ -36,7 +31,5 @@ namespace SceneLayer
         std::vector<std::shared_ptr<Entity>> _rootNodes;
 
         SceneCache _cache;
-
-        dx12::Resource _gpuDesc;
     };
 } // namespace SceneLayer

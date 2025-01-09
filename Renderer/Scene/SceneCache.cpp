@@ -3,7 +3,7 @@
 #include "SceneCache.h"
 
 #include "ResourceTable.h"
-#include "Render/GPUStructs/GPULightDesc.h"
+#include "Render/Helpers/GPUStructs.h"
 
 namespace
 {
@@ -54,24 +54,6 @@ namespace SceneLayer
         }
 
         _lightsTable = std::make_shared<dx12::ResourceTable>(lightsDescriptorHeapDesc, lightsHeapDesc);
-
-        dx12::ResourceDescription lightsViewDesc;
-        {
-            lightsViewDesc.SetSize({ (uint32_t)sizeof(GPULightDesc) * MAX_LIGHTS_NUM, 1 });
-            lightsViewDesc.SetStride((uint32_t)sizeof(GPULightDesc));
-            lightsViewDesc.SetFormat(DXGI_FORMAT_UNKNOWN);
-            lightsViewDesc.SetDepthOrArraySize(1);
-            lightsViewDesc.SetResourceType(dx12::EResourceType::Dynamic | dx12::EResourceType::Buffer);
-        }
-
-        _lightsView.CreateCommitedResource(lightsViewDesc, D3D12_RESOURCE_STATE_GENERIC_READ);
-        _lightsView.SetName("Lights desc Table");
-        dx12::Device::CreateShaderResourceView(_lightsView.GetAsSRV(), _lightsTable->GetDescriptorHeap());
-    }
-
-    SceneCache::~SceneCache()
-    {
-        _camera = nullptr;
     }
 
     std::shared_ptr<dx12::ResourceTable> SceneCache::GetTextureTable() const
@@ -82,11 +64,6 @@ namespace SceneLayer
     std::shared_ptr<dx12::ResourceTable> SceneCache::GetLightsTable() const
     {
         return _lightsTable;
-    }
-
-    dx12::Resource& SceneCache::GetLightsSRV()
-    {
-        return _lightsView;
     }
 
     void SceneCache::SetTime(float time)

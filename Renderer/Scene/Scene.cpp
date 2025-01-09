@@ -32,22 +32,6 @@ namespace
 
 namespace SceneLayer
 {
-    Scene::Scene()
-    {
-        dx12::ResourceDescription sceneDataDescription;
-        {
-            sceneDataDescription.SetResourceType(dx12::EResourceType::Buffer | dx12::EResourceType::Dynamic | dx12::EResourceType::Aligned);
-            sceneDataDescription.SetSize({ sizeof(SceneDesc), 1 });
-            sceneDataDescription.SetStride(1);
-            sceneDataDescription.SetFormat(DXGI_FORMAT::DXGI_FORMAT_UNKNOWN);
-
-            _gpuDesc.CreateCommitedResource(sceneDataDescription, D3D12_RESOURCE_STATE_GENERIC_READ);
-        }
-    }
-
-    Scene::~Scene()
-    {   }
-
     void Scene::AddRootNode(std::shared_ptr<Entity> entity)
     {
         _rootNodes.push_back(entity);
@@ -109,11 +93,6 @@ namespace SceneLayer
     SceneCache& Scene::GetCache()
     {
         return _cache;
-    }
-
-    dx12::Resource& Scene::GetGPUDesc()
-    {
-        return _gpuDesc;
     }
 
     bool Scene::LoadScene(const std::string& filepath, dx12::CommandList& commandList)

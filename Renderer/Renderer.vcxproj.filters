@@ -123,20 +123,8 @@
     <ClCompile Include="Render\Frame\TaskGPU.cpp">
       <Filter>Render\Frame</Filter>
     </ClCompile>
-    <ClCompile Include="Render\SceneProcessors\DrawSceneProcessor.cpp">
-      <Filter>Render\SceneProcessors</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\SceneProcessors\SetupCachedDataProcessor.cpp">
-      <Filter>Render\SceneProcessors</Filter>
-    </ClCompile>
     <ClCompile Include="Render\SceneProcessors\UploadSceneProcessor.cpp">
       <Filter>Render\SceneProcessors</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\GPUStructs\GPUModelDesc.cpp">
-      <Filter>Render\GPUStructs</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\GPUStructs\GPUSceneDesc.cpp">
-      <Filter>Render\GPUStructs</Filter>
     </ClCompile>
     <ClCompile Include="Scene\Entity\EntityLoader.cpp">
       <Filter>Scene\ECS</Filter>
@@ -168,13 +156,18 @@
     <ClCompile Include="Scene\Volumes\OBBVolume.cpp">
       <Filter>Scene\Volumes</Filter>
     </ClCompile>
-    <ClCompile Include="Render\SceneProcessors\UpdateSceneProcessor.cpp">
-      <Filter>Render\SceneProcessors</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\GPUStructs\GPULightDesc.cpp">
-      <Filter>Render\GPUStructs</Filter>
-    </ClCompile>
     <ClCompile Include="Render\Frame\CacheGPU.cpp" />
+    <ClCompile Include="Render\Passes\SkyboxPass.cpp" />
+    <ClCompile Include="Render\Passes\ClearBuffersPass.cpp" />
+    <ClCompile Include="Render\Passes\DebugBoundingVolumePass.cpp" />
+    <ClCompile Include="Render\Passes\FXAAPass.cpp" />
+    <ClCompile Include="Render\Passes\GeometryPass.cpp" />
+    <ClCompile Include="Render\Passes\GUIPass.cpp" />
+    <ClCompile Include="Render\Passes\IRenderPass.cpp" />
+    <ClCompile Include="Render\Passes\LightingPass.cpp" />
+    <ClCompile Include="Render\Helpers\GPUStructs.cpp" />
+    <ClCompile Include="Render\Helpers\RenderHelpers.cpp" />
+    <ClCompile Include="Render\Passes\DebugArmaturePass.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Events\IEvent.h">
@@ -287,23 +280,11 @@
     <ClInclude Include="Render\Frame\TaskGPU.h">
       <Filter>Render\Frame</Filter>
     </ClInclude>
-    <ClInclude Include="Render\SceneProcessors\DrawSceneProcessor.h">
-      <Filter>Render\SceneProcessors</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\SceneProcessors\SetupCachedDataProcessor.h">
-      <Filter>Render\SceneProcessors</Filter>
-    </ClInclude>
     <ClInclude Include="Render\SceneProcessors\UploadSceneProcessor.h">
       <Filter>Render\SceneProcessors</Filter>
     </ClInclude>
     <ClInclude Include="Render\SceneProcessors\ISceneProcessor.h">
       <Filter>Render\SceneProcessors</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\GPUStructs\GPUModelDesc.h">
-      <Filter>Render\GPUStructs</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\GPUStructs\GPUSceneDesc.h">
-      <Filter>Render\GPUStructs</Filter>
     </ClInclude>
     <ClInclude Include="Scene\Entity\EntityLoader.h">
       <Filter>Scene\ECS</Filter>
@@ -332,16 +313,21 @@
     <ClInclude Include="Scene\Volumes\OBBVolume.h">
       <Filter>Scene\Volumes</Filter>
     </ClInclude>
-    <ClInclude Include="Render\SceneProcessors\UpdateSceneProcessor.h">
-      <Filter>Render\SceneProcessors</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\GPUStructs\GPULightDesc.h">
-      <Filter>Render\GPUStructs</Filter>
-    </ClInclude>
     <ClInclude Include="Scene\Volumes\CapsuleVolume.h">
       <Filter>Scene\Volumes</Filter>
     </ClInclude>
     <ClInclude Include="Render\Frame\CacheGPU.h" />
+    <ClInclude Include="Render\Passes\SkyboxPass.h" />
+    <ClInclude Include="Render\Passes\ClearBuffersPass.h" />
+    <ClInclude Include="Render\Passes\DebugBoundingVolumePass.h" />
+    <ClInclude Include="Render\Passes\FXAAPass.h" />
+    <ClInclude Include="Render\Passes\GeometryPass.h" />
+    <ClInclude Include="Render\Passes\GUIPass.h" />
+    <ClInclude Include="Render\Passes\IRenderPass.h" />
+    <ClInclude Include="Render\Passes\LightingPass.h" />
+    <ClInclude Include="Render\Helpers\GPUStructs.h" />
+    <ClInclude Include="Render\Helpers\RenderHelpers.h" />
+    <ClInclude Include="Render\Passes\DebugArmaturePass.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\AABB_gs.hlsl">

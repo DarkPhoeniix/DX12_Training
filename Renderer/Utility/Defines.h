@@ -13,3 +13,5 @@
 #define _64MB _MB(64)
 #define _128MB _MB(128)
 #define _256MB _MB(256)
+
+#define STRINGER(x) #x

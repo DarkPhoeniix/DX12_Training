@@ -2,22 +2,12 @@
 
 #include "Entity.h"
 
-#include "Render/GPUStructs/GPUModelDesc.h"
-
 namespace SceneLayer
 {
-    Entity::Entity()
-        : _sceneCache(nullptr)
-        , _parent(nullptr)
-    {
-        Init();
-    }
-
     Entity::Entity(SceneCache* sceneCache, Entity* parent)
         : _sceneCache(sceneCache)
         , _parent(parent)
     {
-        Init();
     }
 
     IComponent* Entity::GetComponent(const std::string_view& name)
@@ -80,27 +70,8 @@ namespace SceneLayer
         return _name;
     }
 
-    dx12::Resource& Entity::GetGPUDesc()
-    {
-        return _gpuDesc;
-    }
-
     SceneCache* Entity::GetSceneCache()
     {
         return _sceneCache;
-    }
-
-    void Entity::Init()
-    {
-        dx12::ResourceDescription resourceDesc;
-        {
-            resourceDesc.SetSize({ sizeof(GPUModelDesc), 1 });
-            resourceDesc.SetStride(1);
-            resourceDesc.SetFormat(DXGI_FORMAT::DXGI_FORMAT_UNKNOWN);
-            resourceDesc.SetResourceType(dx12::EResourceType::Dynamic | dx12::EResourceType::Buffer | dx12::EResourceType::Aligned);
-        }
-
-        _gpuDesc.CreateCommitedResource(resourceDesc);
-        _gpuDesc.SetName(_name);
     }
 } // namespace SceneLayer

@@ -25,9 +25,11 @@ CacheGPU::DataHandle CacheGPU::RequestPlacement(uint32_t size)
         return handle;
     }
 
-    handle.DataCPU = Cache->Map(CurrentOffset, 0); // TODO: not sure if 0 will work good
+    handle.DataCPU = Cache->Map(CurrentOffset, newOffset); // TODO: not sure if 0 will work good
     handle.DataGPU = Cache->OffsetGPU(CurrentOffset);
     handle.Offset = CurrentOffset;
+
+    CurrentOffset = Math::AlignUp(newOffset, 256);
 
     return handle;
 }

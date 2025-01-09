@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Scene/Entity/Components/Camera.h"
-
 namespace dx12
 {
     class ResourceTable;
@@ -13,12 +11,16 @@ namespace SceneLayer
     {
     public:
         SceneCache();
-        ~SceneCache();
+        SceneCache(const SceneCache&) = delete;
+        SceneCache(SceneCache&&) = default;
+        ~SceneCache() = default;
+
+        SceneCache& operator=(const SceneCache&) = delete;
+        SceneCache& operator=(SceneCache&&) = default;
 
         std::shared_ptr<dx12::ResourceTable> GetTextureTable() const;
 
         std::shared_ptr<dx12::ResourceTable> GetLightsTable() const;
-        dx12::Resource& GetLightsSRV();
 
         void SetTime(float time);
         float GetTime() const;
@@ -27,9 +29,6 @@ namespace SceneLayer
         std::shared_ptr<dx12::ResourceTable> _texturesTable;
 
         std::shared_ptr<dx12::ResourceTable> _lightsTable;
-        dx12::Resource _lightsView;
-
-        Camera* _camera;
 
         float _currentTime;
         

@@ -67,7 +67,7 @@ void main(point GeometryInput input[1], inout LineStream<PixelInput> lineStream)
 	
 	// for each pair of line, adding to stream
 	[unroll]
-    for (i = 0; i < 24; i += 2)
+    for (uint i = 0; i < 24; i += 2)
     {
         lineStream.Append((PixelInput) _kBoxVertsW[_kusBoxIndeces[i + 0]]);
         lineStream.Append((PixelInput) _kBoxVertsW[_kusBoxIndeces[i + 1]]);

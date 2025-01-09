@@ -36,7 +36,7 @@ VSOutput main(VSInput IN)
         float4(1.0f, 0.0f, 0.0f, 0.0f),
         float4(0.0f, 1.0f, 0.0f, 0.0f),
         float4(0.0f, 0.0f, 1.0f, 0.0f),
-        float4(0.0f, 1.0f, 0.0f, 1.0f));
+        float4(0.0f, 0.0f, 0.0f, 1.0f));
     boneTransform            = Bones[IN.BoneIds[0]].Transform * IN.BoneWeights[0];
     boneTransform           += Bones[IN.BoneIds[1]].Transform * IN.BoneWeights[1];
     boneTransform           += Bones[IN.BoneIds[2]].Transform * IN.BoneWeights[2];

@@ -9,7 +9,6 @@ namespace SceneLayer
     class Entity
     {
     public:
-        Entity();
         explicit Entity(SceneCache* sceneCache, Entity* parent = nullptr);
 
         IComponent* GetComponent(const std::string_view& name);
@@ -28,20 +27,14 @@ namespace SceneLayer
         void SetName(const std::string& name);
         const std::string& GetName() const;
 
-        dx12::Resource& GetGPUDesc();
-
         SceneCache* GetSceneCache();
 
     private:
-        void Init();
-
         std::vector<std::shared_ptr<IComponent>> _components;
         Transformation _globalTransformation;
 
         std::vector<std::shared_ptr<Entity>> _children;
         Entity* _parent;
-
-        dx12::Resource _gpuDesc;
 
         SceneCache* _sceneCache;
 
