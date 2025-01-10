@@ -33,6 +33,7 @@ namespace
 
 DXRenderer::DXRenderer(HWND windowHandle)
     : _windowHandle(windowHandle)
+    , _currentFrame(nullptr)
     , _contentLoaded(false)
     , _isCameraMoving(false)
     , _deltaTime(0.0f)
@@ -91,27 +92,7 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
         commandList.Close();
     }
 
-
-    {
-        _renderPasses.push_back(std::make_unique<ClearBuffersPass>());
-        _renderPasses.push_back(std::make_unique<GeometryPass>());
-        _renderPasses.push_back(std::make_unique<LightingPass>());
-        _renderPasses.push_back(std::make_unique<SkyboxPass>());
-        _renderPasses.push_back(std::make_unique<FXAAPass>());
-        _renderPasses.push_back(std::make_unique<DebugArmaturePass>());
-        _renderPasses.push_back(std::make_unique<DebugBoundingVolumePass>());
-        _renderPasses.push_back(std::make_unique<GUIPass>());
-
-        for (auto& pass : _renderPasses)
-        {
-            pass->SetScene(_scene);
-            pass->SetGeometryBuffer(_gBuffer);
-
-            pass->Inititalize();
-        }
-    }
-
-
+    SetupRenderPipeline();
 
     _contentLoaded = true;
     return _contentLoaded;
@@ -120,6 +101,11 @@ bool DXRenderer::LoadContent(TaskGPU* loadTask)
 void DXRenderer::UnloadContent()
 {
     _contentLoaded = false;
+}
+
+void DXRenderer::SetFrame(Frame& frame)
+{
+    _currentFrame = &frame;
 }
 
 void DXRenderer::OnUpdate(Events::UpdateEvent& updateEvent)
@@ -131,22 +117,22 @@ void DXRenderer::OnUpdate(Events::UpdateEvent& updateEvent)
     _deltaTime = updateEvent.elapsedTime * _timeMiltiplier;
 }
 
-void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
+void DXRenderer::OnRender(Events::RenderEvent& renderEvent)
 {
-    frame.WaitCPU();
-    frame.ResetGPU();
-    frame.ResetCache();
+    _currentFrame->WaitCPU();
+    _currentFrame->ResetGPU();
+    _currentFrame->ResetCache();
 
     for (size_t i = 0; i < _renderPasses.size(); ++i)
     {
-        _renderPasses[i]->SetRenderFrame(frame);
+        _renderPasses[i]->SetRenderFrame(*_currentFrame);
 
         _renderPasses[i]->Execute();
     }
 
     // Present
     {
-        TaskGPU* task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
+        TaskGPU* task = _currentFrame->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
         task->SetName("present");
 
         dx12::CommandList& commandList = *task->GetCommandLists().front();
@@ -156,8 +142,8 @@ void DXRenderer::OnRender(Events::RenderEvent& renderEvent, Frame& frame)
         {
             dx12::Resource& swapChainTexture = *dx12::Device::GetBackBuffer();
             commandList.TransitionBarrier(swapChainTexture, D3D12_RESOURCE_STATE_COPY_DEST);
-            commandList.TransitionBarrier(frame.GetTargetTexture(), D3D12_RESOURCE_STATE_COPY_SOURCE);
-            commandList.CopyResource(frame.GetTargetTexture(), swapChainTexture);
+            commandList.TransitionBarrier(_currentFrame->GetTargetTexture(), D3D12_RESOURCE_STATE_COPY_SOURCE);
+            commandList.CopyResource(_currentFrame->GetTargetTexture(), swapChainTexture);
             commandList.TransitionBarrier(swapChainTexture, D3D12_RESOURCE_STATE_PRESENT);
         }
         PIXEndEvent(commandList.GetDXCommandList().Get());
@@ -225,13 +211,13 @@ void DXRenderer::OnMouseButtonReleased(Events::MouseButtonEvent& e)
 
 void DXRenderer::OnResize(Core::Events::ResizeEvent& e)
 {
-    Frame* current = nullptr;
+    Frame* current = _currentFrame;
     do
     {
         current->WaitCPU();
         current->ResetGPU();
         current = current->Next;
-    } while (current != nullptr);
+    } while (current != _currentFrame);
 
     DirectX::XMUINT2 windowSize = { (uint32_t)e.width, (uint32_t)e.height };
 
@@ -239,10 +225,34 @@ void DXRenderer::OnResize(Core::Events::ResizeEvent& e)
     {
         current->Resize(windowSize);
         current = current->Next;
-    } while (current != nullptr);
+    } while (current != _currentFrame);
 
     dx12::Device::OnResize(windowSize);
     _cameraComponent->GetViewport().SetSize(windowSize);
     _cameraComponent->Update();
     _gBuffer.Init(windowSize);
+
+    SetupRenderPipeline();
+}
+
+void DXRenderer::SetupRenderPipeline()
+{
+    _renderPasses.clear();
+
+    _renderPasses.push_back(std::make_unique<ClearBuffersPass>());
+    _renderPasses.push_back(std::make_unique<GeometryPass>());
+    _renderPasses.push_back(std::make_unique<LightingPass>());
+    _renderPasses.push_back(std::make_unique<SkyboxPass>());
+    _renderPasses.push_back(std::make_unique<FXAAPass>());
+    _renderPasses.push_back(std::make_unique<DebugArmaturePass>());
+    _renderPasses.push_back(std::make_unique<DebugBoundingVolumePass>());
+    _renderPasses.push_back(std::make_unique<GUIPass>());
+
+    for (auto& pass : _renderPasses)
+    {
+        pass->SetScene(_scene);
+        pass->SetGeometryBuffer(_gBuffer);
+
+        pass->Inititalize();
+    }
 }

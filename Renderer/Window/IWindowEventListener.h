@@ -18,7 +18,7 @@ namespace Core
         {
         public:
             virtual void OnUpdate(UpdateEvent& e) {}
-            virtual void OnRender(RenderEvent& e, Frame& frame) {}
+            virtual void OnRender(RenderEvent& e) {}
             virtual void OnKeyPressed(KeyEvent& e) {}
             virtual void OnKeyReleased(KeyEvent& e) {}
             virtual void OnMouseMoved(MouseMoveEvent& e) {}

@@ -1,6 +1,6 @@
 #pragma once
 
-struct alignas(256) GPUSceneDesc
+struct GPUSceneDesc
 {
     DirectX::XMMATRIX ViewProjection = DirectX::XMMatrixIdentity();
     DirectX::XMMATRIX View = DirectX::XMMatrixIdentity();
@@ -19,7 +19,7 @@ struct alignas(256) GPUSceneDesc
     UINT LightsNum = 0;
 };
 
-struct alignas(256) GPUModelDesc
+struct GPUModelDesc
 {
     DirectX::XMMATRIX Transform = DirectX::XMMatrixIdentity();
 

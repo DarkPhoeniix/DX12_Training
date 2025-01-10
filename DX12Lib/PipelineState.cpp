@@ -354,6 +354,12 @@ namespace dx12
         Helper::throwIfFailed(device->CreateRootSignature(0, vertexShaderBlob->GetBufferPointer(),
             vertexShaderBlob->GetBufferSize(), IID_PPV_ARGS(&_rootSignature)));
 
+        {
+            std::string type = fileRoot["Type"].asCString();
+            std::wstring name(type.begin(), type.end());
+            _rootSignature->SetName(name.c_str());
+        }
+
         const std::string blendPipelineDescFilepath = fileRoot["Blend"].asCString();
         const std::string rasterPipelineDescFilepath = fileRoot["Raster"].asCString();
         const std::string depthPipelineDescFilepath = fileRoot["Depth"].asCString();
@@ -391,6 +397,12 @@ namespace dx12
 
         Helper::throwIfFailed(device->CreateGraphicsPipelineState(&pipelineStateDescription, IID_PPV_ARGS(&_pipelineState)));
 
+        {
+            std::string type = fileRoot["Type"].asCString();
+            std::wstring name(type.begin(), type.end());
+            _pipelineState->SetName(name.c_str());
+        }
+
         delete[] inputLayout;
     }
 
@@ -409,6 +421,12 @@ namespace dx12
         Helper::throwIfFailed(device->CreateRootSignature(0, computeShaderBlob->GetBufferPointer(),
             computeShaderBlob->GetBufferSize(), IID_PPV_ARGS(&_rootSignature)));
 
+        {
+            std::string type = fileRoot["Type"].asCString();
+            std::wstring name(type.begin(), type.end());
+            _rootSignature->SetName(name.c_str());
+        }
+
         D3D12_COMPUTE_PIPELINE_STATE_DESC pipelineStateDescription = {};
         pipelineStateDescription.pRootSignature = _rootSignature.Get();
         if (computeShaderBlob)
@@ -418,9 +436,11 @@ namespace dx12
 
         Helper::throwIfFailed(device->CreateComputePipelineState(&pipelineStateDescription, IID_PPV_ARGS(&_pipelineState)));
 
-        std::string type = fileRoot["Type"].asCString();
-        std::wstring name(type.begin(), type.end());
-        _pipelineState->SetName(name.c_str());
+        {
+            std::string type = fileRoot["Type"].asCString();
+            std::wstring name(type.begin(), type.end());
+            _pipelineState->SetName(name.c_str());
+        }
     }
 
     D3D12_BLEND_DESC PipelineState::ParseBlendDescription(const std::string& filepath)

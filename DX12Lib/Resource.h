@@ -34,7 +34,8 @@ namespace dx12
 
         D3D12_GPU_VIRTUAL_ADDRESS OffsetGPU(unsigned int offset) const;
         void* Map();
-        void* Map(uint32_t offset, uint32_t end);
+        void* Map(uint32_t begin, uint32_t end);
+        void Unmap();
 
         void Reset();
 

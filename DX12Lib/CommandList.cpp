@@ -265,6 +265,16 @@ namespace dx12
         _commandList->DrawIndexedInstanced(indexCount, instanceCount, startIndex, baseVertex, startInstance);
     }
 
+    void CommandList::Dispatch(uint32_t xThreadGroupsCount, uint32_t yThreadGroupsCount, uint32_t zThreadGroupsCount)
+    {
+        if (ASSERT(_type == CommandListType::Compute, "Wrond type of the command list"))
+        {
+            return;
+        }
+
+        _commandList->Dispatch(xThreadGroupsCount, yThreadGroupsCount, zThreadGroupsCount);
+    }
+
     void CommandList::SetDescriptorHeaps(const std::vector<ID3D12DescriptorHeap*> descriptorHeaps)
     {
         if (ASSERT(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Wrond type of the command list"))

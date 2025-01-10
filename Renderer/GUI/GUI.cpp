@@ -143,7 +143,7 @@ void GUI::Destroy()
     ImGui_ImplWin32_Shutdown();
     ImGui::DestroyContext();
 
-    delete Instance()._srvDescriptorHeap;
+    Instance()._srvDescriptorHeap.reset();
 }
 
 GUI::GUI()
@@ -153,7 +153,7 @@ GUI::GUI()
     desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
     desc.SetNumDescriptors(1);
 
-    _srvDescriptorHeap = new dx12::DescriptorHeap;
+    _srvDescriptorHeap = std::make_shared<dx12::DescriptorHeap>();
     _srvDescriptorHeap->Create(desc);
     _srvDescriptorHeap->SetName("GUI SRV descriptor heap");
 }

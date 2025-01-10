@@ -17,8 +17,6 @@ struct SceneDesc
     float2              NearFar;
     
     uint                LightsNum;
-    
-    uint pad[32];
 };
 
 struct ModelDesc
@@ -29,8 +27,6 @@ struct ModelDesc
     uint                NormalTextureIndex;
     uint                MetalnessTextureIndex;
     uint                RoughnessTextureIndex;
-    
-    uint pad[44];
 };
 
 ////////////////////////////////////////////////////////////////////////////////

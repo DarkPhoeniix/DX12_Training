@@ -18,18 +18,18 @@ CacheGPU::DataHandle CacheGPU::RequestPlacement(uint32_t size)
 {
     DataHandle handle = {};
 
-    uint32_t newOffset = (CurrentOffset + size);
+    uint32_t newOffset = Math::AlignUp((CurrentOffset + size), 256);
 
     if (ASSERT(newOffset < Size, "GPU cache is full"))  
     {
         return handle;
     }
 
-    handle.DataCPU = Cache->Map(CurrentOffset, newOffset); // TODO: not sure if 0 will work good
+    handle.DataCPU = (char*)Cache->Map() + CurrentOffset;
     handle.DataGPU = Cache->OffsetGPU(CurrentOffset);
     handle.Offset = CurrentOffset;
 
-    CurrentOffset = Math::AlignUp(newOffset, 256);
+    CurrentOffset = newOffset;
 
     return handle;
 }

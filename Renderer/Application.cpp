@@ -4,16 +4,13 @@
 
 #include "Events/RenderEvent.h"
 #include "Events/UpdateEvent.h"
-#include "Input/InputDevice.h"
-
-#include "Render/DXRenderer.h"
-#include "SwapChain.h"
-#include "Window/Win32Window.h"
-
 #include "GUI/GUI.h"
-
+#include "Input/InputDevice.h"
+#include "Render/DXRenderer.h"
 #include "Resources/Resources.h"
+#include "SwapChain.h"
 #include "Utility/DebugInfo.h"
+#include "Window/Win32Window.h"
 
 using namespace Core;
 
@@ -212,7 +209,8 @@ void Application::_RenderCall(std::shared_ptr<DXRenderer> pApp)
     _renderClock.Tick();
 
     Events::RenderEvent renderEvent(_updateClock.GetDeltaSeconds(), _updateClock.GetTotalSeconds(), _currentFrame->Index);
-    pApp->OnRender(renderEvent, *_currentFrame);
+    pApp->SetFrame(*_currentFrame);
+    pApp->OnRender(renderEvent);
 }
 
 void Application::_ExecuteFrameTasks()

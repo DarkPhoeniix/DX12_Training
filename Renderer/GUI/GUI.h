@@ -22,8 +22,7 @@ private:
     GUI();
     ~GUI();
 
-    // TODO: fix live DXDevice, change singleton
     static GUI& Instance();
 
-    dx12::DescriptorHeap* _srvDescriptorHeap;
+    std::shared_ptr<dx12::DescriptorHeap> _srvDescriptorHeap;
 };

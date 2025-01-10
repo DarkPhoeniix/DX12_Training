@@ -17,13 +17,11 @@ void FXAAPass::Inititalize()
         dx12::ResourceDescription desc = {};
         desc.SetSize(_activeCamera->GetViewport().GetSize());
         desc.SetDimension(D3D12_RESOURCE_DIMENSION_TEXTURE2D);
-        desc.SetFlags(D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
         desc.SetFormat(DXGI_FORMAT_R8G8B8A8_UNORM);
         desc.SetResourceType(dx12::EResourceType::Texture | dx12::EResourceType::Unordered);
 
         _fxaaRTT.CreateCommitedResource(desc);
     }
-
 }
 
 void FXAAPass::Destroy()
@@ -71,14 +69,14 @@ void FXAAPass::Execute()
             D3D12_GPU_DESCRIPTOR_HANDLE targetTextureHandle = buffersHeap.GetResourceGPUHandle(&_frame->GetTargetTexture(), dx12::ResourceViewType::SRV);
             D3D12_GPU_DESCRIPTOR_HANDLE fxaaTextureHandle = buffersHeap.GetResourceGPUHandle(&_fxaaRTT, dx12::ResourceViewType::UAV);
 
-            commandList.GetDXCommandList()->SetComputeRootDescriptorTable(3, targetTextureHandle);
-            commandList.GetDXCommandList()->SetComputeRootDescriptorTable(4, fxaaTextureHandle);
+            commandList.SetDescriptorTable(3, targetTextureHandle);
+            commandList.SetDescriptorTable(4, fxaaTextureHandle);
 
             DirectX::XMUINT2 viewportSize = _activeCamera->GetViewport().GetSize();
             int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 8.0f);
             int yThreadGroups = (uint32_t)std::ceilf(viewportSize.y / 8.0f);
 
-            commandList.GetDXCommandList()->Dispatch(xThreadGroups, yThreadGroups, 1);
+            commandList.Dispatch(xThreadGroups, yThreadGroups);
 
         }
         PIXEndEvent(commandList.GetDXCommandList().Get());

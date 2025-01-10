@@ -61,6 +61,8 @@ namespace dx12
         void Draw(uint32_t vertexCount, uint32_t instanceCount = 1, uint32_t startVertex = 0, uint32_t startInstance = 0);
         void DrawIndexed(uint32_t indexCount, uint32_t instanceCount = 1, uint32_t startIndex = 0, int32_t baseVertex = 0, uint32_t startInstance = 0);
 
+        void Dispatch(uint32_t xThreadGroupsCount = 1, uint32_t yThreadGroupsCount = 1, uint32_t zThreadGroupsCount = 1);
+
         void SetDescriptorHeaps(const std::vector<ID3D12DescriptorHeap*> descriptorHeaps);
 
         void SetConstant(UINT index, UINT data, UINT offset = 0);

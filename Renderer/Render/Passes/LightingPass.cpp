@@ -57,7 +57,7 @@ void LightingPass::Execute()
         int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 8.0f);
         int yThreadGroups = (uint32_t)std::ceilf(viewportSize.y / 8.0f);
 
-        commandList.GetDXCommandList()->Dispatch(xThreadGroups, yThreadGroups, 1);
+        commandList.Dispatch(xThreadGroups, yThreadGroups);
     }
     PIXEndEvent(commandList.GetDXCommandList().Get());
 

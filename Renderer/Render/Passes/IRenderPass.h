@@ -7,6 +7,8 @@
 class IRenderPass
 {
 public:
+    virtual ~IRenderPass() = default;
+
     void SetScene(SceneLayer::Scene& scene);
     void SetRenderFrame(Frame& currentFrame);
     void SetGeometryBuffer(Core::GBuffer& gBuffer);
