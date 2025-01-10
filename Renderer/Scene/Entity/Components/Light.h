@@ -2,7 +2,7 @@
 
 #include "Scene/Entity/Components/IComponent.h"
 
-namespace SceneLayer
+namespace scene
 {
     enum class LightType
     {

@@ -1,18 +1,18 @@
 #pragma once
 
-#include "Events/UpdateEvent.h"
-#include "Events/RenderEvent.h"
-#include "Events/KeyEvent.h"
-#include "Events/MouseMoveEvent.h"
-#include "Events/MouseButtonEvent.h"
-#include "Events/MouseScrollEvent.h"
-#include "Events/ResizeEvent.h"
+#include "events/UpdateEvent.h"
+#include "events/RenderEvent.h"
+#include "events/KeyEvent.h"
+#include "events/MouseMoveEvent.h"
+#include "events/MouseButtonEvent.h"
+#include "events/MouseScrollEvent.h"
+#include "events/ResizeEvent.h"
 
 class Frame;
 
-namespace Core
+namespace core
 {
-    namespace Events
+    namespace events
     {
         class IWindowEventListener
         {
@@ -27,5 +27,5 @@ namespace Core
             virtual void OnMouseScroll(MouseScrollEvent& e) {}
             virtual void OnResize(ResizeEvent& e) {}
         };
-    } // namespace Events
-} // namespace Core
+    } // namespace events
+} // namespace core

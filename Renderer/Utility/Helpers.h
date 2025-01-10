@@ -26,7 +26,7 @@
 		return (type)((int)x ^ (int)y);\
 	}
 
-namespace Helper
+namespace helpers
 {
     std::string HrToString(HRESULT hr);
 

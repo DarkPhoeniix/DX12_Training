@@ -3,7 +3,7 @@
 #include "Texture.h"
 #include "Scene/Entity/Components/IComponent.h"
 
-namespace SceneLayer
+namespace scene
 {
     struct Material : public IComponent
     {
@@ -17,4 +17,4 @@ namespace SceneLayer
         std::shared_ptr<dx12::Texture> Metalness;
         std::shared_ptr<dx12::Texture> Roughness;
     };
-} // namespace SceneLayer
+} // namespace scene

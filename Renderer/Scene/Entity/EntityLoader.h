@@ -1,6 +1,6 @@
 #pragma once
 
-namespace SceneLayer
+namespace scene
 {
     class Entity;
     class SceneCache;
@@ -20,7 +20,7 @@ namespace SceneLayer
         public:
             EntityLoader(const std::string& filepath);
 
-            std::shared_ptr<SceneLayer::Entity> LoadEntity(SceneLayer::SceneCache* sceneCache, SceneLayer::Entity* parent = nullptr);
+            std::shared_ptr<scene::Entity> LoadEntity(scene::SceneCache* sceneCache, scene::Entity* parent = nullptr);
 
         private:
             void LoadComponent(Json::Value& jsonValue, Armature* armature, const std::shared_ptr<Animation>& component);
@@ -37,4 +37,4 @@ namespace SceneLayer
             const std::string _parentFilepath;
         };
     } // namespace Helpers
-} // namespace SceneLayer
+} // namespace scene

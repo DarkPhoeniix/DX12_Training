@@ -2,7 +2,7 @@
 
 #include "StatisticsQuery.h"
 
-namespace Core::Events
+namespace core::events
 {
     class UpdateEvent;
 }
@@ -13,7 +13,7 @@ public:
     static void Init();
     static void Destroy();
 
-    static void Update(Core::Events::UpdateEvent& updateEvent);
+    static void Update(core::events::UpdateEvent& updateEvent);
     
     static void StartStatCollecting(dx12::CommandList& commandList);
     static void EndStatCollecting(dx12::CommandList& commandList);

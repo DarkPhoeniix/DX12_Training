@@ -3,7 +3,7 @@
 #include "Scene/Entity/Components/IComponent.h"
 #include "Scene/Volumes/OBBVolume.h"
 
-namespace SceneLayer
+namespace scene
 {
     // TODO: change BoneId type
     using BoneId = std::uint32_t;
@@ -21,7 +21,7 @@ namespace SceneLayer
 
         bool PendingUpdate;
 
-        SceneLayer::OBBVolume AABB;
+        scene::OBBVolume AABB;
     };
 
     struct Armature : public IComponent
@@ -57,4 +57,4 @@ namespace SceneLayer
         std::vector<Bone> _bones;
         std::vector<Bone*> _bonesSorted;
     };
-} // namespace SceneLayer
+} // namespace scene

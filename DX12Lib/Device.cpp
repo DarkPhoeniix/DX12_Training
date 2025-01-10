@@ -9,7 +9,7 @@ namespace dx12
         void EnableDXDebugLayer()
         {
             ComPtr<ID3D12Debug> debugInterface;
-            Helper::throwIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&debugInterface)));
+            helpers::throwIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&debugInterface)));
             debugInterface->EnableDebugLayer();
 
             ComPtr<ID3D12DeviceRemovedExtendedDataSettings> pDredSettings;
@@ -156,15 +156,15 @@ namespace dx12
         createFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
 #endif
 
-        Helper::throwIfFailed(CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&dxgiFactory)));
+        helpers::throwIfFailed(CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&dxgiFactory)));
 
         ComPtr<IDXGIAdapter1> dxgiAdapter1;
         ComPtr<IDXGIAdapter4> dxgiAdapter4;
 
         if (useWarp)
         {
-            Helper::throwIfFailed(dxgiFactory->EnumWarpAdapter(IID_PPV_ARGS(&dxgiAdapter1)));
-            Helper::throwIfFailed(dxgiAdapter1.As(&dxgiAdapter4));
+            helpers::throwIfFailed(dxgiFactory->EnumWarpAdapter(IID_PPV_ARGS(&dxgiAdapter1)));
+            helpers::throwIfFailed(dxgiAdapter1.As(&dxgiAdapter4));
         }
         else
         {
@@ -183,7 +183,7 @@ namespace dx12
                     dxgiAdapterDesc1.DedicatedVideoMemory > maxDedicatedVideoMemory)
                 {
                     maxDedicatedVideoMemory = dxgiAdapterDesc1.DedicatedVideoMemory;
-                    Helper::throwIfFailed(dxgiAdapter1.As(&dxgiAdapter4));
+                    helpers::throwIfFailed(dxgiAdapter1.As(&dxgiAdapter4));
                 }
             }
         }
@@ -193,7 +193,7 @@ namespace dx12
 
     void Device::CreateDevice()
     {
-        Helper::throwIfFailed(D3D12CreateDevice(_adapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&_device)));
+        helpers::throwIfFailed(D3D12CreateDevice(_adapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&_device)));
         _device->SetName(L"DX12 Device");
 
         // Enable debug messages in debug mode.
@@ -229,7 +229,7 @@ namespace dx12
             NewFilter.DenyList.NumIDs = _countof(DenyIds);
             NewFilter.DenyList.pIDList = DenyIds;
 
-            Helper::throwIfFailed(infoQueue->PushStorageFilter(&NewFilter));
+            helpers::throwIfFailed(infoQueue->PushStorageFilter(&NewFilter));
         }
 #endif
     }

@@ -8,7 +8,7 @@ using namespace DirectX;
 
 namespace
 {
-    bool IntersectWithPlane(const XMVECTOR& plane, const SceneLayer::AABBVolume& aabb)
+    bool IntersectWithPlane(const XMVECTOR& plane, const scene::AABBVolume& aabb)
     {
         bool result = true;
 
@@ -28,7 +28,7 @@ namespace
     }
 }
 
-namespace SceneLayer
+namespace scene
 {
     void FrustumVolume::BuildFromProjMatrix(const DirectX::XMMATRIX projectionMatrix)
     {
@@ -91,4 +91,4 @@ namespace SceneLayer
 
         return true;
     }
-} // namespace SceneLayer
+} // namespace scene

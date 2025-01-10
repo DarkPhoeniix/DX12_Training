@@ -1,12 +1,12 @@
 
 #include "Common.hlsli"
 
-struct GeometryInput
+struct Geometryinput
 {
     uint Primitive : INDEX;
 };
 
-struct PixelInput
+struct Pixelinput
 {
     float4 Position : SV_Position;
     float2 Color : COLOR;
@@ -29,20 +29,20 @@ ConstantBuffer<ArmatureData> Armature : register(b1);
 StructuredBuffer<float4> BonePositions : register(t0);
 
 [maxvertexcount(170)]
-void main(point GeometryInput input[1], inout LineStream<PixelInput> lineStream)
+void main(point Geometryinput input[1], inout LineStream<Pixelinput> lineStream)
 {
 	// for each pair of line, adding to stream
-    PixelInput psInput;
+    Pixelinput psinput;
         
     float4 pos = Armature.start;
         
-    psInput.Position = mul(pos, Instance.ViewProj);
-    psInput.Color = float2(1.0f, 0.0f);
-    lineStream.Append(psInput);
+    psinput.Position = mul(pos, Instance.ViewProj);
+    psinput.Color = float2(1.0f, 0.0f);
+    lineStream.Append(psinput);
         
     pos = Armature.end;
         
-    psInput.Position = mul(pos, Instance.ViewProj);
-    psInput.Color = float2(0.0f, 1.0f);
-    lineStream.Append(psInput);
+    psinput.Position = mul(pos, Instance.ViewProj);
+    psinput.Color = float2(0.0f, 1.0f);
+    lineStream.Append(psinput);
 }

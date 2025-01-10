@@ -14,7 +14,7 @@
 #include "Scene/Volumes/AABBVolume.h"
 #include "Scene/Volumes/OBBVolume.h"
 
-using namespace SceneLayer;
+using namespace scene;
 using namespace DirectX;
 
 namespace
@@ -82,7 +82,7 @@ namespace
             return;
         }
 
-        auto UpdateBoneAABB = [](SceneLayer::AABBVolume& volume, Bone* bone, XMFLOAT3 position)
+        auto UpdateBoneAABB = [](scene::AABBVolume& volume, Bone* bone, XMFLOAT3 position)
             {
                 DirectX::XMVECTOR positionVec = DirectX::XMLoadFloat3(&position);
                 positionVec = DirectX::XMVector4Transform(positionVec, bone->Offset);
@@ -91,7 +91,7 @@ namespace
                 volume.Max = DirectX::XMVectorMax(volume.Max, positionVec);
             };
 
-        std::vector<SceneLayer::AABBVolume> volumes(armature->GetBones().size());
+        std::vector<scene::AABBVolume> volumes(armature->GetBones().size());
 
         for (int i = 0; i < mesh->VertexData.size(); ++i)
         {
@@ -121,7 +121,7 @@ namespace
     }
 } // namespace unnamed
 
-namespace SceneLayer
+namespace scene
 {
     namespace Helpers
     {
@@ -440,4 +440,4 @@ namespace SceneLayer
             }
         }
     } // namespace Helpers
-} // namespace SceneLayer
+} // namespace scene

@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="DXObjects">
-      <UniqueIdentifier>{2f262470-38c3-4bc4-82f1-04c6cdc1e9b1}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Shaders">
       <UniqueIdentifier>{1fa8204c-e6b6-4306-9e69-716675047cee}</UniqueIdentifier>
     </Filter>
@@ -230,9 +227,6 @@
     <ClInclude Include="Utility\Defines.h">
       <Filter>Utility</Filter>
     </ClInclude>
-    <ClInclude Include="Input\DirectInputKeyCodes.h">
-      <Filter>Utility</Filter>
-    </ClInclude>
     <ClInclude Include="Utility\Helpers.h">
       <Filter>Utility</Filter>
     </ClInclude>
@@ -378,6 +372,9 @@
     </ClInclude>
     <ClInclude Include="Render\Frame\CacheGPU.h">
       <Filter>Render\Frame</Filter>
+    </ClInclude>
+    <ClInclude Include="Input\DirectInputKeyCodes.h">
+      <Filter>Input</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

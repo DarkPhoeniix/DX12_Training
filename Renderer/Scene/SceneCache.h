@@ -5,7 +5,7 @@ namespace dx12
     class ResourceTable;
 }
 
-namespace SceneLayer
+namespace scene
 {
     class SceneCache
     {
@@ -34,4 +34,4 @@ namespace SceneLayer
         
         std::shared_ptr<dx12::Resource> _gpuDesc;
     };
-} // namespace SceneLayer
+} // namespace scene

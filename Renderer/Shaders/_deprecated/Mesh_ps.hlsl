@@ -5,7 +5,7 @@
 #include "../Common.hlsli"
 #include "LambertLighting.hlsli"
 
-struct PixelShaderInput
+struct PixelShaderinput
 {
     float4 WorldPosition : POSITION;
     float4 Position : SV_Position;
@@ -21,7 +21,7 @@ Texture2D Materials[]               : register(t1);
 SamplerState LinearSampler          : register(s0);
 SamplerState PointSampler           : register(s1);
 
-float4 main(PixelShaderInput IN) : SV_Target
+float4 main(PixelShaderinput IN) : SV_Target
 {
     // Sample textures
     float2 uv           = IN.Texture;

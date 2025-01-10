@@ -2,7 +2,7 @@
 
 #include "Entity.h"
 
-namespace SceneLayer
+namespace scene
 {
     Entity::Entity(SceneCache* sceneCache, Entity* parent)
         : _sceneCache(sceneCache)
@@ -74,4 +74,4 @@ namespace SceneLayer
     {
         return _sceneCache;
     }
-} // namespace SceneLayer
+} // namespace scene

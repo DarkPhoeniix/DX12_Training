@@ -30,7 +30,7 @@ namespace
     };
 } // namespace unnamed
 
-namespace SceneLayer
+namespace scene
 {
     void Scene::AddRootNode(std::shared_ptr<Entity> entity)
     {
@@ -114,4 +114,4 @@ namespace SceneLayer
 
         return true;
     }
-} // namespace SceneLayer
+} // namespace scene

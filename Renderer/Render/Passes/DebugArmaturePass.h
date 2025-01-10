@@ -2,16 +2,18 @@
 
 #include "IRenderPass.h"
 
-class DebugArmaturePass : public IRenderPass
+namespace render
 {
-public:
-    // Inherited via IRenderPass
-    void Inititalize() override;
-    void Destroy() override;
+    class DebugArmaturePass : public IRenderPass
+    {
+    public:
+        // Inherited via IRenderPass
+        void Inititalize() override;
+        void Destroy() override;
 
-    void Execute() override;
+        void Execute() override;
 
-private:
-    dx12::PipelineState _debugArmaturePipeline;
-};
-
+    private:
+        dx12::PipelineState _debugArmaturePipeline;
+    };
+} // namespace render

@@ -1,6 +1,6 @@
 #pragma once
 
-namespace SceneLayer
+namespace scene
 {
     struct IComponent
     {
@@ -12,4 +12,4 @@ namespace SceneLayer
 
         std::string ComponentName;
     };
-} // namespace SceneLayer
+} // namespace scene

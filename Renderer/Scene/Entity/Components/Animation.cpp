@@ -8,7 +8,7 @@ namespace
 {
     constexpr float TICKS_PER_SEC = 25.0f;
 
-    std::pair<SceneLayer::AnimationFrame, SceneLayer::AnimationFrame> GetInterpolatedKeyFrame(const std::vector<SceneLayer::AnimationFrame>& keyFrames, float normalizedTime)
+    std::pair<scene::AnimationFrame, scene::AnimationFrame> GetInterpolatedKeyFrame(const std::vector<scene::AnimationFrame>& keyFrames, float normalizedTime)
     {
         if (normalizedTime < keyFrames.size() - 1)
         {
@@ -22,7 +22,7 @@ namespace
     }
 }
 
-namespace SceneLayer
+namespace scene
 {
     std::map<BoneId, XMMATRIX> Animation::GetBonesTransforms(float time) const
     {
@@ -51,4 +51,4 @@ namespace SceneLayer
 
         return transforms;
     }
-} // namespace SceneLayer
+} // namespace scene

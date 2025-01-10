@@ -5,7 +5,7 @@
 #include "DescriptorHeap.h"
 #include "Heap.h"
 
-namespace SceneLayer
+namespace scene
 {
     Skybox::Skybox()
         : IComponent("Skybox")
@@ -30,4 +30,4 @@ namespace SceneLayer
             TexHeap.SetName("Skybox heap");
         }
     }
-} // namespace SceneLayer
+} // namespace scene

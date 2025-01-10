@@ -3,7 +3,7 @@
 #include "Scene/Entity/Components/IComponent.h"
 #include "Scene/Entity/Components/Armature.h"
 
-namespace SceneLayer
+namespace scene
 {
     struct AnimationFrame
     {
@@ -29,4 +29,4 @@ namespace SceneLayer
         float TicksPerSecond;
         float Duration;
     };
-} // namespace SceneLayer
+} // namespace scene

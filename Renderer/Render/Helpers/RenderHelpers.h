@@ -7,12 +7,12 @@ namespace dx12
     class CommandList;
 }
 
-namespace SceneLayer
+namespace scene
 {
     class Scene;
 }
 
 namespace Helpers
 {
-    void SetupSceneDataGPU(SceneLayer::Scene& scene, dx12::CommandList& commandList, CacheGPU* frameCache);
+    void SetupSceneDataGPU(scene::Scene& scene, dx12::CommandList& commandList, CacheGPU* frameCache);
 } // namespace Helpers

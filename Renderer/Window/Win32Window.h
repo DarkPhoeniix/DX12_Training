@@ -3,7 +3,7 @@
 #include "SwapChain.h"
 #include "Window/IWindowEventListener.h"
 
-namespace Core
+namespace core
 {
     class Win32Window
     {
@@ -28,8 +28,8 @@ namespace Core
         void Show();
         void Hide();
 
-        void AddEventListener(Events::IWindowEventListener* listener);
-        void RemoveEventListener(Events::IWindowEventListener* listener);
+        void AddEventListener(events::IWindowEventListener* listener);
+        void RemoveEventListener(events::IWindowEventListener* listener);
 
         void SetSwapChain(dx12::SwapChain* swapChain);
 
@@ -40,7 +40,7 @@ namespace Core
 
         HWND _windowHandle;
 
-        std::vector<Events::IWindowEventListener*> _eventListeners;
+        std::vector<events::IWindowEventListener*> _eventListeners;
 
         dx12::SwapChain* _swapChain;
 
@@ -53,4 +53,4 @@ namespace Core
         bool _vSync;
         bool _fullscreen;
     };
-} // namespace Core
+} // namespace core

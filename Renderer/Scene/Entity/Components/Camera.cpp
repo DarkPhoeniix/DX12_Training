@@ -9,7 +9,7 @@ namespace
 	constexpr float CAMERA_MOVEMENT_SPEED = 0.05f;
 } // namespace unnamed
 
-namespace SceneLayer
+namespace scene
 {
 	Viewport::Viewport()
 		: _viewport(0.0f, 0.0f, 0.0f, 0.0f)
@@ -291,4 +291,4 @@ namespace SceneLayer
 		_viewProjection = _view * _projection;
 		_frustum.BuildFromProjMatrix(_viewProjection);
 	}
-} // namespace SceneLayer
+} // namespace scene

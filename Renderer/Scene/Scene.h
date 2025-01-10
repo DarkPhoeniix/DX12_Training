@@ -8,7 +8,7 @@ namespace dx12
     class CommandList;
 } // namespace dx12
 
-namespace SceneLayer
+namespace scene
 {
     class Camera;
 
@@ -32,4 +32,4 @@ namespace SceneLayer
 
         SceneCache _cache;
     };
-} // namespace SceneLayer
+} // namespace scene

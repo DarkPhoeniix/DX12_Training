@@ -2,16 +2,19 @@
 
 #include "IRenderPass.h"
 
-class DebugBoundingVolumePass : public IRenderPass
+namespace render
 {
-public:
-    // Inherited via IRenderPass
-    void Inititalize() override;
-    void Destroy() override;
+    class DebugBoundingVolumePass : public IRenderPass
+    {
+    public:
+        // Inherited via IRenderPass
+        void Inititalize() override;
+        void Destroy() override;
 
-    void Execute() override;
+        void Execute() override;
 
-private:
-    dx12::PipelineState _AABBpipeline;
-    dx12::PipelineState _OBBpipeline;
-};
+    private:
+        dx12::PipelineState _AABBpipeline;
+        dx12::PipelineState _OBBpipeline;
+    };
+} // namespace render

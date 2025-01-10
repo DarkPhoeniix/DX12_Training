@@ -14,23 +14,23 @@
 
 namespace Helpers
 {
-    void SetupSceneDataGPU(SceneLayer::Scene& scene, dx12::CommandList& commandList, CacheGPU* frameCache)
+    void SetupSceneDataGPU(scene::Scene& scene, dx12::CommandList& commandList, CacheGPU* frameCache)
     {
-        SceneLayer::SceneCache& cache = scene.GetCache();
+        scene::SceneCache& cache = scene.GetCache();
 
         uint32_t lightsNum = 0;
         CacheGPU::DataHandle lightsData = frameCache->RequestPlacement(sizeof(GPULightDesc));
 
-        auto ProcessLight = [&lightsNum, &lightsData](std::shared_ptr<SceneLayer::Entity>& entity)
+        auto ProcessLight = [&lightsNum, &lightsData](std::shared_ptr<scene::Entity>& entity)
             {
-                SceneLayer::SceneCache* cache = entity->GetSceneCache();
+                scene::SceneCache* cache = entity->GetSceneCache();
                 if (ASSERT(cache, "Entity has no scene cache"))
                 {
                     return;
                 }
 
-                SceneLayer::Transformation* transform = entity->GetComponentAs<SceneLayer::Transformation>("Transformation");
-                SceneLayer::Light* light = entity->GetComponentAs<SceneLayer::Light>("Light");
+                scene::Transformation* transform = entity->GetComponentAs<scene::Transformation>("Transformation");
+                scene::Light* light = entity->GetComponentAs<scene::Light>("Light");
                 if (light)
                 {
                     GPULightDesc* data = (GPULightDesc*)lightsData.DataCPU;
@@ -49,11 +49,11 @@ namespace Helpers
                 }
             };
 
-        for (std::shared_ptr<SceneLayer::Entity>& node : scene.GetRootNodes())
+        for (std::shared_ptr<scene::Entity>& node : scene.GetRootNodes())
         {
             ProcessLight(node);
 
-            for (std::shared_ptr<SceneLayer::Entity>& child : node->GetChildrenNodes())
+            for (std::shared_ptr<scene::Entity>& child : node->GetChildrenNodes())
             {
                 ProcessLight(child);
             }
@@ -72,7 +72,7 @@ namespace Helpers
                 return;
             }
 
-            SceneLayer::Camera* camera = cameraEntity->GetComponentAs<SceneLayer::Camera>("Camera");
+            scene::Camera* camera = cameraEntity->GetComponentAs<scene::Camera>("Camera");
 
             sceneDesc->View = camera->View();
             sceneDesc->Projection = camera->Projection();
@@ -84,7 +84,7 @@ namespace Helpers
             sceneDesc->EyeDirection = camera->Look();
             sceneDesc->EyePosition = camera->Poisition();
 
-            const SceneLayer::Viewport& viewport = camera->GetViewport();
+            const scene::Viewport& viewport = camera->GetViewport();
             sceneDesc->WindowSize = {
                 (uint32_t)viewport.GetSize().x,
                 (uint32_t)viewport.GetSize().y

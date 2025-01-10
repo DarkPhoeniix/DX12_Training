@@ -6,7 +6,7 @@
 
 namespace
 {
-    void UpdateBone(SceneLayer::Bone* bone, const DirectX::XMMATRIX parentTransform = DirectX::XMMatrixIdentity())
+    void UpdateBone(scene::Bone* bone, const DirectX::XMMATRIX parentTransform = DirectX::XMMatrixIdentity())
     {
         if (!bone->PendingUpdate)
         {
@@ -16,14 +16,14 @@ namespace
         bone->GlobalTransform = bone->LocalTransform * parentTransform;
         bone->PendingUpdate = false;
 
-        for (SceneLayer::Bone* child : bone->Children)
+        for (scene::Bone* child : bone->Children)
         {
             UpdateBone(child, bone->GlobalTransform);
         }
     }
 } // namespace unnamed
 
-namespace SceneLayer
+namespace scene
 {
     Armature::Armature()
         : IComponent("Armature")
@@ -142,4 +142,4 @@ namespace SceneLayer
 
         return nullptr;
     }
-} // namespace SceneLayer
+} // namespace scene

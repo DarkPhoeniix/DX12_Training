@@ -2,9 +2,9 @@
 
 #include "IEvent.h"
 
-namespace Core
+namespace core
 {
-    namespace Events
+    namespace events
     {
         class MouseScrollEvent : public IEvent
         {
@@ -15,5 +15,5 @@ namespace Core
 
             float scrollDelta;
         };
-    } // namespace Events
-} // namespace Core
+    } // namespace events
+} // namespace core

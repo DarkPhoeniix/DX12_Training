@@ -2,7 +2,7 @@
 
 #include "Scene/Volumes/IVolume.h"
 
-namespace SceneLayer
+namespace scene
 {
     class CapsuleVolume : public IVolume
     {
@@ -10,4 +10,4 @@ namespace SceneLayer
         DirectX::XMVECTOR Points[2];
         float Radius;
     };
-} // namespace SceneLayer
+} // namespace scene

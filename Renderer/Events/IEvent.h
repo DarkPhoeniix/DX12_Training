@@ -1,8 +1,8 @@
 #pragma once
 
-namespace Core
+namespace core
 {
-    namespace Events
+    namespace events
     {
         class IEvent
         {
@@ -10,5 +10,5 @@ namespace Core
             virtual ~IEvent()
             {   }
         };
-    } // namespace Events
-} // namespace Core
+    } // namespace events
+} // namespace core

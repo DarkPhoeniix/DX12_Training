@@ -2,7 +2,7 @@
 
 #include "Scene/Volumes/IVolume.h"
 
-namespace SceneLayer
+namespace scene
 {
     class AABBVolume;
 
@@ -15,4 +15,4 @@ namespace SceneLayer
 
         DirectX::XMVECTOR planes[6];
     };
-} // namespace SceneLayer
+} // namespace scene

@@ -22,7 +22,7 @@ namespace
     };
 } // namespace unnamed
 
-namespace SceneLayer
+namespace scene
 {
     AABBVolume CombineOBBs(const std::vector<OBBVolume>& volumes)
     {
@@ -43,4 +43,4 @@ namespace SceneLayer
 
         return result;
     }
-} // namespace SceneLayer
+} // namespace scene

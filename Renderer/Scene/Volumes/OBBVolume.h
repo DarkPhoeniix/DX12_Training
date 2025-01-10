@@ -2,7 +2,7 @@
 
 #include "Scene/Volumes/IVolume.h"
 
-namespace SceneLayer
+namespace scene
 {
     class AABBVolume;
 
@@ -13,4 +13,4 @@ namespace SceneLayer
     };
 
     AABBVolume CombineOBBs(const std::vector<OBBVolume>& volumes);
-} // namespace SceneLayer
+} // namespace scene

@@ -4,7 +4,7 @@
 #include "Scene/Entity/Components/IComponent.h"
 #include "Scene/Entity/Components/Transformation.h"
 
-namespace SceneLayer
+namespace scene
 {
     class Entity
     {
@@ -46,4 +46,4 @@ namespace SceneLayer
     {
         return (Type*)GetComponent(name);
     }
-} // namespace SceneLayer
+} // namespace scene

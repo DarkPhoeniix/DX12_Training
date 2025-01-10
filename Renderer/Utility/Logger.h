@@ -4,20 +4,20 @@
 
 #define ASSERT(statement, message) \
     assert(statement); \
-    AssertUtility::AssertFunction(statement, message)
+    assert_utility::AssertFunction(statement, message)
 
 #define LOG_WARNING(statement, message) \
-    AssertUtility::LogWarningFunction(statement, message)
+    assert_utility::LogWarningFunction(statement, message)
 
 #define LOG_INFO(message) \
-    AssertUtility::LogInfoFunction(message)
+    assert_utility::LogInfoFunction(message)
 
-namespace AssertUtility
+namespace assert_utility
 {
     bool AssertFunction(bool statement, const std::string& message);
     bool LogWarningFunction(bool statement, const std::string& message);
     void LogInfoFunction(const std::string& message);
-} // namespace AssertUtility
+} // namespace assert_utility
 
 enum class LogType
 {

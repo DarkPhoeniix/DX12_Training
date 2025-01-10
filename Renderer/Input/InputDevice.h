@@ -4,26 +4,26 @@
 
 #include <dinput.h>
 
-namespace Core
+namespace core
 {
-    namespace Events
+    namespace events
     {
-        class InputDevice
+        class inputDevice
         {
         public:
-            InputDevice(const InputDevice& copy) = delete;
-            InputDevice& operator=(const InputDevice& copy) = delete;
+            inputDevice(const inputDevice& copy) = delete;
+            inputDevice& operator=(const inputDevice& copy) = delete;
 
             void PollEvents();
 
-            void AddInputObserver(IWindowEventListener* observer);
-            void RemoveInputObserver(IWindowEventListener* observer);
+            void AddinputObserver(IWindowEventListener* observer);
+            void RemoveinputObserver(IWindowEventListener* observer);
 
-            static InputDevice& Instance();
+            static inputDevice& Instance();
 
         private:
-            InputDevice();
-            ~InputDevice();
+            inputDevice();
+            ~inputDevice();
 
             void _CreateKeyboardDevice();
             void _CreateMouseDevice();
@@ -36,7 +36,7 @@ namespace Core
             void _NotifyMouseMoved(int relativeX, int relativeY);
             void _NotifyMouseScrolled(int relativeZ);
 
-            LPDIRECTINPUT8 _directInput;
+            LPDIRECTINPUT8 _directinput;
             LPDIRECTINPUTDEVICE8 _keyboardDevice;
             LPDIRECTINPUTDEVICE8 _mouseDevice;
 
@@ -48,5 +48,5 @@ namespace Core
 
             std::vector<IWindowEventListener*> _inputListeners;
         };
-    } // namespace Events
-} // namespace Core
+    } // namespace events
+} // namespace core

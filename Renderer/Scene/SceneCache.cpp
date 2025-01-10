@@ -10,7 +10,7 @@ namespace
     constexpr uint32_t MAX_LIGHTS_NUM = 64;
 }
 
-namespace SceneLayer
+namespace scene
 {
     SceneCache::SceneCache()
     {
@@ -75,4 +75,4 @@ namespace SceneLayer
     {
         return _currentTime;
     }
-} // namespace SceneLayer
+} // namespace scene

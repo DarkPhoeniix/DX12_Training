@@ -4,7 +4,7 @@
 #include "Scene/Entity/Components/IComponent.h"
 #include "Texture.h"
 
-namespace SceneLayer
+namespace scene
 {
     struct Skybox : public IComponent
     {
@@ -15,4 +15,4 @@ namespace SceneLayer
         dx12::DescriptorHeap DescHeap;
         dx12::Heap TexHeap;
     };
-} // namespace SceneLayer
+} // namespace scene

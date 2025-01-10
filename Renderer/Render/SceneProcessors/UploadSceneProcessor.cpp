@@ -13,7 +13,7 @@
 
 #include "Render/Frame/CacheGPU.h"
 
-using namespace SceneLayer;
+using namespace scene;
 
 void UploadSceneProcessor::Process(Scene& scene, dx12::CommandList& commandList, CacheGPU* frameCache)
 {
@@ -156,7 +156,7 @@ void UploadSceneProcessor::UploadData(dx12::CommandList& commandList, ID3D12Reso
     CD3DX12_HEAP_PROPERTIES heapTypeDefault(D3D12_HEAP_TYPE_DEFAULT);
     CD3DX12_RESOURCE_DESC bufferWithFlags = CD3DX12_RESOURCE_DESC::Buffer(bufferSize, flags);
 
-    Helper::throwIfFailed(dx12::Device::GetDXDevice()->CreateCommittedResource(
+    helpers::throwIfFailed(dx12::Device::GetDXDevice()->CreateCommittedResource(
         &heapTypeDefault,
         D3D12_HEAP_FLAG_NONE,
         &bufferWithFlags,
@@ -171,7 +171,7 @@ void UploadSceneProcessor::UploadData(dx12::CommandList& commandList, ID3D12Reso
     {
         ComPtr<ID3D12Resource> intermediateResource = nullptr;
 
-        Helper::throwIfFailed(dx12::Device::GetDXDevice()->CreateCommittedResource(
+        helpers::throwIfFailed(dx12::Device::GetDXDevice()->CreateCommittedResource(
             &heapTypeUpload,
             D3D12_HEAP_FLAG_NONE,
             &buffer,

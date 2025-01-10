@@ -3,7 +3,7 @@
 #include "Scene/Entity/Components/IComponent.h"
 #include "Scene/Volumes/AABBVolume.h"
 
-namespace SceneLayer
+namespace scene
 {
     struct VertexData
     {
@@ -28,7 +28,7 @@ namespace SceneLayer
         {
         }
 
-        SceneLayer::AABBVolume AABB;
+        scene::AABBVolume AABB;
 
         std::vector<VertexData> VertexData;
         std::vector<SkinningVertexData> SkinningVertexData;
@@ -42,4 +42,4 @@ namespace SceneLayer
         D3D12_VERTEX_BUFFER_VIEW SkinningVertexBufferView;
         D3D12_INDEX_BUFFER_VIEW IndexBufferView;
     };
-} // namespace SceneLayer
+} // namespace scene

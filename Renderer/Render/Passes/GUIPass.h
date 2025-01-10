@@ -2,12 +2,15 @@
 
 #include "IRenderPass.h"
 
-class GUIPass : public IRenderPass
+namespace render
 {
-public:
-    // Inherited via IRenderPass
-    void Inititalize() override;
-    void Destroy() override;
+    class GUIPass : public IRenderPass
+    {
+    public:
+        // Inherited via IRenderPass
+        void Inititalize() override;
+        void Destroy() override;
 
-    void Execute() override;
-};
+        void Execute() override;
+    };
+} // namespace render

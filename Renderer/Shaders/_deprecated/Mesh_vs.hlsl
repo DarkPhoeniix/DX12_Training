@@ -7,7 +7,7 @@
 
 #include "../Common.hlsli"
 
-struct VSInput
+struct VSinput
 {
     float3 Position : POSITION;
     float3 Normal   : NORMAL;
@@ -29,7 +29,7 @@ struct VSOutput
 };
 
 [RootSignature(Mesh_RootSig)]
-VSOutput main(VSInput IN)
+VSOutput main(VSinput IN)
 {
     VSOutput output;
     

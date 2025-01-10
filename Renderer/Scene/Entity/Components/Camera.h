@@ -6,7 +6,7 @@
 
 // TODO: refactor Camera
 
-namespace SceneLayer
+namespace scene
 {
 	class Viewport
 	{
@@ -110,4 +110,4 @@ namespace SceneLayer
 		int _prevX;
 		int _prevY;
 	};
-} // namespace SceneLayer
+} // namespace scene

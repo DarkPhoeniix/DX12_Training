@@ -2,15 +2,18 @@
 
 #include "IRenderPass.h"
 
-class GeometryPass : public IRenderPass
+namespace render
 {
-public:
-    // Inherited via IRenderPass
-    void Inititalize() override;
-    void Destroy() override;
+    class GeometryPass : public IRenderPass
+    {
+    public:
+        // Inherited via IRenderPass
+        void Inititalize() override;
+        void Destroy() override;
 
-    void Execute() override;
+        void Execute() override;
 
-private:
-    dx12::PipelineState _geometryPipeline;
-};
+    private:
+        dx12::PipelineState _geometryPipeline;
+    };
+} // namespace render

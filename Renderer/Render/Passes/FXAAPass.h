@@ -2,18 +2,20 @@
 
 #include "IRenderPass.h"
 
-class FXAAPass : public IRenderPass
+namespace render
 {
-public:
-    // Inherited via IRenderPass
-    void Inititalize() override;
-    void Destroy() override;
+    class FXAAPass : public IRenderPass
+    {
+    public:
+        // Inherited via IRenderPass
+        void Inititalize() override;
+        void Destroy() override;
 
-    void Execute() override;
+        void Execute() override;
 
-private:
-    dx12::PipelineState _FXAAPipeline;
+    private:
+        dx12::PipelineState _FXAAPipeline;
 
-    dx12::Resource _fxaaRTT;
-};
-
+        dx12::Resource _fxaaRTT;
+    };
+} // namespace render

@@ -2,7 +2,7 @@
 
 #include "Scene/Entity/Components/IComponent.h"
 
-namespace SceneLayer
+namespace scene
 {
     struct Transformation : public IComponent
     {
@@ -14,4 +14,4 @@ namespace SceneLayer
 
         DirectX::XMMATRIX Transform;
     };
-} // namespace SceneLayer
+} // namespace scene

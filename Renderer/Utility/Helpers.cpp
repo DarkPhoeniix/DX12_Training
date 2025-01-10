@@ -5,7 +5,7 @@
 
 #include <filesystem>
 
-namespace Helper
+namespace helpers
 {
     std::string HrToString(HRESULT hr)
     {

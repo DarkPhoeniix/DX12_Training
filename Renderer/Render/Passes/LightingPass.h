@@ -2,16 +2,18 @@
 
 #include "IRenderPass.h"
 
-class LightingPass : public IRenderPass
+namespace render
 {
-public:
-    // Inherited via IRenderPass
-    void Inititalize() override;
-    void Destroy() override;
+    class LightingPass : public IRenderPass
+    {
+    public:
+        // Inherited via IRenderPass
+        void Inititalize() override;
+        void Destroy() override;
 
-    void Execute() override;
+        void Execute() override;
 
-private:
-    dx12::PipelineState _deferredPipeline;
-};
-
+    private:
+        dx12::PipelineState _deferredPipeline;
+    };
+} // namespace render

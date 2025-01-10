@@ -31,7 +31,7 @@ namespace dx12
         _dxgiSwapChain = nullptr;
     }
 
-    void SwapChain::Init(const Core::Win32Window& window)
+    void SwapChain::Init(const core::Win32Window& window)
     {
         _windowHandle = window.GetWindowHandle();
         _width = window.GetWidth();
@@ -40,8 +40,8 @@ namespace dx12
 
         _dxgiSwapChain = CreateSwapChain();
 
-        Helper::throwIfFailed(_dxgiSwapChain->GetDesc(&_swapChainDesc));
-        Helper::throwIfFailed(_dxgiSwapChain->ResizeBuffers(BACK_BUFFER_COUNT, _width, _height, _swapChainDesc.BufferDesc.Format, _swapChainDesc.Flags));
+        helpers::throwIfFailed(_dxgiSwapChain->GetDesc(&_swapChainDesc));
+        helpers::throwIfFailed(_dxgiSwapChain->ResizeBuffers(BACK_BUFFER_COUNT, _width, _height, _swapChainDesc.BufferDesc.Format, _swapChainDesc.Flags));
 
         _currentBackBufferIndex = _dxgiSwapChain->GetCurrentBackBufferIndex();
 
@@ -70,7 +70,7 @@ namespace dx12
         for (int i = 0; i < BACK_BUFFER_COUNT; ++i)
         {
             ComPtr<ID3D12Resource> backBuffer;
-            Helper::throwIfFailed(_dxgiSwapChain->GetBuffer(i, IID_PPV_ARGS(&backBuffer)));
+            helpers::throwIfFailed(_dxgiSwapChain->GetBuffer(i, IID_PPV_ARGS(&backBuffer)));
             dx12::Device::GetDXDevice()->CreateRenderTargetView(backBuffer.Get(), nullptr, rtvHandle);
 
             _backBuffers[i].InitFromDXResource(backBuffer);
@@ -83,7 +83,7 @@ namespace dx12
     {
         UINT syncInterval = _vSync ? 1 : 0;
         UINT presentFlags = (_tearingSupport && !_vSync) ? DXGI_PRESENT_ALLOW_TEARING : 0;
-        Helper::throwIfFailed(_dxgiSwapChain->Present(syncInterval, presentFlags));
+        helpers::throwIfFailed(_dxgiSwapChain->Present(syncInterval, presentFlags));
         _currentBackBufferIndex = _dxgiSwapChain->GetCurrentBackBufferIndex();
 
         return _currentBackBufferIndex;
@@ -102,8 +102,8 @@ namespace dx12
             }
 
             DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
-            Helper::throwIfFailed(_dxgiSwapChain->GetDesc(&swapChainDesc));
-            Helper::throwIfFailed(_dxgiSwapChain->ResizeBuffers(BACK_BUFFER_COUNT, _width,
+            helpers::throwIfFailed(_dxgiSwapChain->GetDesc(&swapChainDesc));
+            helpers::throwIfFailed(_dxgiSwapChain->ResizeBuffers(BACK_BUFFER_COUNT, _width,
                 _height, swapChainDesc.BufferDesc.Format, swapChainDesc.Flags));
 
             _currentBackBufferIndex = _dxgiSwapChain->GetCurrentBackBufferIndex();
@@ -121,7 +121,7 @@ namespace dx12
         createFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
 #endif
 
-        Helper::throwIfFailed(CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&dxgiFactory4)));
+        helpers::throwIfFailed(CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&dxgiFactory4)));
 
         DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
         swapChainDesc.Width = _width;
@@ -140,7 +140,7 @@ namespace dx12
         ID3D12CommandQueue* queue = dx12::Device::GetStreamQueue();
 
         ComPtr<IDXGISwapChain1> swapChain1;
-        Helper::throwIfFailed(dxgiFactory4->CreateSwapChainForHwnd(
+        helpers::throwIfFailed(dxgiFactory4->CreateSwapChainForHwnd(
             queue,
             _windowHandle,
             &swapChainDesc,
@@ -150,8 +150,8 @@ namespace dx12
 
         // Disable the Alt+Enter fullscreen toggle feature. Switching to fullscreen
         // will be handled manually.
-        Helper::throwIfFailed(dxgiFactory4->MakeWindowAssociation(_windowHandle, DXGI_MWA_NO_ALT_ENTER));
-        Helper::throwIfFailed(swapChain1.As(&dxgiSwapChain4));
+        helpers::throwIfFailed(dxgiFactory4->MakeWindowAssociation(_windowHandle, DXGI_MWA_NO_ALT_ENTER));
+        helpers::throwIfFailed(swapChain1.As(&dxgiSwapChain4));
 
         _currentBackBufferIndex = dxgiSwapChain4->GetCurrentBackBufferIndex();
 
@@ -180,7 +180,7 @@ namespace dx12
     ComPtr<IDXGIOutput> SwapChain::GetContainingOutput()
     {
         ComPtr<IDXGIOutput> output;
-        Helper::throwIfFailed(_dxgiSwapChain->GetContainingOutput(&output));
+        helpers::throwIfFailed(_dxgiSwapChain->GetContainingOutput(&output));
         return output;
     }
 } // namespace dx12

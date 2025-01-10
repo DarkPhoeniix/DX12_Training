@@ -2,9 +2,9 @@
 
 #include "IEvent.h"
 
-namespace Core
+namespace core
 {
-    namespace Events
+    namespace events
     {
         class RenderEvent : public IEvent
         {
@@ -19,5 +19,5 @@ namespace Core
             double totalTime;
             unsigned int frameIndex;
         };
-    } // namespace Events
-} // namespace Core
+    } // namespace events
+} // namespace core
