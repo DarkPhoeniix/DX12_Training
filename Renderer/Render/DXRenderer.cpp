@@ -26,11 +26,6 @@
 using namespace DirectX;
 using namespace core;
 
-namespace
-{
-    constexpr float MOVE_SPEED = 200.0f;
-} // namespace unnamed
-
 namespace render
 {
     DXRenderer::DXRenderer(HWND windowHandle)
@@ -69,6 +64,7 @@ namespace render
             cameraComponent->LookAt(pos, target, up);
             cameraComponent->SetViewport(scene::Viewport({ windowWidth, windowHeight }));
             cameraComponent->SetLens(45.0f, 0.1f, 1000.0f);
+            cameraComponent->SetSpeed(70.0f);
 
             std::shared_ptr<scene::Transformation> transformComponent = std::make_shared<scene::Transformation>();
             transformComponent->Transform = cameraComponent->View();
@@ -163,19 +159,19 @@ namespace render
         XMVECTOR dir = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
         if (e.keyCode == DIKeyCode::DIK_W)
         {
-            dir += _cameraComponent->Look() * _deltaTime * MOVE_SPEED;
+            dir += _cameraComponent->Look() * _deltaTime;
         }
         if (e.keyCode == DIKeyCode::DIK_S)
         {
-            dir -= _cameraComponent->Look() * _deltaTime * MOVE_SPEED;
+            dir -= _cameraComponent->Look() * _deltaTime;
         }
         if (e.keyCode == DIKeyCode::DIK_D)
         {
-            dir += _cameraComponent->Right() * _deltaTime * MOVE_SPEED;
+            dir += _cameraComponent->Right() * _deltaTime;
         }
         if (e.keyCode == DIKeyCode::DIK_A)
         {
-            dir -= _cameraComponent->Right() * _deltaTime * MOVE_SPEED;
+            dir -= _cameraComponent->Right() * _deltaTime;
         }
         _cameraComponent->Update(dir);
 

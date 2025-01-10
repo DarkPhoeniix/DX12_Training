@@ -105,9 +105,6 @@
     <ClCompile Include="Scene\Entity\Entity.cpp">
       <Filter>Scene\ECS</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\Entity\Components\Camera.cpp">
-      <Filter>Scene</Filter>
-    </ClCompile>
     <ClCompile Include="Render\Frame\AllocatorPool.cpp">
       <Filter>Render\Frame</Filter>
     </ClCompile>
@@ -191,6 +188,9 @@
     </ClCompile>
     <ClCompile Include="Render\Frame\CacheGPU.cpp">
       <Filter>Render\Frame</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Entity\Components\Camera.cpp">
+      <Filter>Scene\ECS\Components</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -283,9 +283,6 @@
     <ClInclude Include="Scene\Entity\Entity.h">
       <Filter>Scene\ECS</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\Entity\Components\Camera.h">
-      <Filter>Scene</Filter>
-    </ClInclude>
     <ClInclude Include="Render\Frame\AllocatorPool.h">
       <Filter>Render\Frame</Filter>
     </ClInclude>
@@ -375,6 +372,9 @@
     </ClInclude>
     <ClInclude Include="Input\DirectInputKeyCodes.h">
       <Filter>Input</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Entity\Components\Camera.h">
+      <Filter>Scene\ECS\Components</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

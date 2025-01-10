@@ -82,7 +82,7 @@ namespace Helpers
             sceneDesc->InvProjection = DirectX::XMMatrixInverse(nullptr, sceneDesc->Projection);
 
             sceneDesc->EyeDirection = camera->Look();
-            sceneDesc->EyePosition = camera->Poisition();
+            sceneDesc->EyePosition = camera->Position();
 
             const scene::Viewport& viewport = camera->GetViewport();
             sceneDesc->WindowSize = {

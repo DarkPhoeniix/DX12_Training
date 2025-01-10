@@ -6,7 +6,7 @@ using namespace DirectX;
 
 namespace
 {
-	constexpr float CAMERA_MOVEMENT_SPEED = 0.05f;
+	constexpr float CAMERA_ROTATION_SPEED = 0.1f;
 } // namespace unnamed
 
 namespace scene
@@ -81,15 +81,47 @@ namespace scene
 		, _projection(XMMatrixIdentity())
 		, _viewProjection(XMMatrixIdentity())
 		, _position(XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f))
-		, _right(XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f))
 		, _up(XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f))
-		, _look(XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f))
 		, _viewport()
 		, _speed(100.0f)
-		, _prevX(1280)
-		, _prevY(720)
 	{
 		_UpdateFrustum();
+	}
+
+	void Camera::Update()
+	{
+		_BuildView();
+		_BuildProjection();
+	}
+
+	void Camera::Update(XMVECTOR direction)
+	{
+		XMMATRIX movement = XMMatrixTranslationFromVector(direction * _speed);
+
+		_position = XMVector4Transform(_position, movement);
+		_target = XMVector4Transform(_target, movement);
+
+		// Rebuild the view matrix to reflect changes.
+		_BuildView();
+	}
+
+	void Camera::Update(int xDelta, int yDelta)
+	{
+		float xRotationDelta = XMConvertToRadians((yDelta) * CAMERA_ROTATION_SPEED);
+		float yRotationDelta = XMConvertToRadians((xDelta) * CAMERA_ROTATION_SPEED);
+
+		XMMATRIX position = XMMatrixTranslationFromVector(_position);
+		XMMATRIX invPosition = XMMatrixTranslationFromVector(XMVectorNegate(_position));
+		XMMATRIX rotateAroundUp = XMMatrixRotationAxis(_up, yRotationDelta);
+		XMMATRIX rotateAroundRight = XMMatrixRotationAxis(Right(), xRotationDelta);
+
+		XMMATRIX positionTransofrm = invPosition * rotateAroundUp * rotateAroundRight * position;
+
+		_target = XMVector4Transform(_target, positionTransofrm);
+		//_up = XMVector3Transform(_up, vectorTransofrm);
+
+		// Rebuild the view matrix to reflect changes
+		_BuildView();
 	}
 
 	const XMMATRIX& Camera::View() const
@@ -107,43 +139,38 @@ namespace scene
 		return _viewProjection;
 	}
 
-	const XMVECTOR& Camera::Right() const
+	XMVECTOR Camera::Right() const
 	{
-		return _right;
+		return XMMatrixTranspose(_view).r[0];
 	}
 
-	const XMVECTOR& Camera::Up() const
+	XMVECTOR Camera::Up() const
 	{
-		return _up;
+		return XMMatrixTranspose(_view).r[1];
 	}
 
-	const XMVECTOR& Camera::Look() const
+	XMVECTOR Camera::Look() const
 	{
-		return _look;
+		return XMMatrixTranspose(_view).r[2];
 	}
 
-	const DirectX::XMVECTOR& Camera::Poisition() const
+	DirectX::XMVECTOR Camera::Position() const
 	{
 		return _position;
+	}
+
+	void Camera::LookAt(XMVECTOR& pos, XMVECTOR& target, XMVECTOR& up)
+	{
+		_position = pos;
+		_target = target;
+		_up = XMVector3Normalize(up);
+
+		_BuildView();
 	}
 
 	const FrustumVolume& Camera::GetViewFrustum() const
 	{
 		return _frustum;
-	}
-
-	void Camera::LookAt(XMVECTOR& pos, XMVECTOR& target, XMVECTOR& up)
-	{
-		XMVECTOR L = XMVector3Normalize(target - pos);
-		XMVECTOR R = XMVector3Normalize(XMVector3Cross(up, L));
-		XMVECTOR U = XMVector3Normalize(XMVector3Cross(L, R));
-
-		_position = pos;
-		_right = R;
-		_up = up;
-		_look = L;
-
-		_BuildView();
 	}
 
 	void Camera::SetViewport(const Viewport& viewport)
@@ -154,16 +181,6 @@ namespace scene
 	Viewport& Camera::GetViewport()
 	{
 		return _viewport;
-	}
-
-	CD3DX12_VIEWPORT Camera::GetDXViewport() const
-	{
-		return _viewport.GetDXViewport();
-	}
-
-	CD3DX12_RECT Camera::GetDXScissorRectangle() const
-	{
-		return _viewport.GetScissorRectangle();
 	}
 
 	void Camera::SetLens(float fov, float nearZ, float farZ)
@@ -221,62 +238,10 @@ namespace scene
 		return _speed;
 	}
 
-	void Camera::Update()
-	{
-		_BuildView();
-		_BuildProjection();
-	}
-
-	void Camera::Update(XMVECTOR direction)
-	{
-		_position += direction * CAMERA_MOVEMENT_SPEED;
-
-		// Rebuild the view matrix to reflect changes.
-		_BuildView();
-	}
-
-	void Camera::Update(int xDelta, int yDelta)
-	{
-		float xRotationDelta = -XMConvertToRadians((-yDelta) / 5.5f);
-		float yRotationDelta = -XMConvertToRadians((-xDelta) * 5.5f);
-
-		// Rotate camera's look and up vectors around the camera's right vector.
-		XMMATRIX R = XMMatrixRotationAxis(_right, xRotationDelta);
-		_look = XMVector3TransformCoord(_look, R);
-		_up = XMVector3TransformCoord(_up, R);
-
-
-		// Rotate camera axes about the world's y-axis.
-		XMMATRIX U = XMMatrixRotationY(XMConvertToRadians(yRotationDelta));
-		_right = XMVector3Transform(_right, U);
-		_up = XMVector3Transform(_up, U);
-		_look = XMVector3Transform(_look, U);
-
-		// Rebuild the view matrix to reflect changes
-		_BuildView();
-		_prevX = xDelta;
-		_prevY = yDelta;
-	}
-
 	void Camera::_BuildView()
 	{
-		// Keep camera's axes orthogonal to each other and of unit length.
-		_look = XMVector3Normalize(_look);
-		_right = XMVector3Normalize(XMVector3Cross(_up, _look));
-		_up = XMVector3Normalize(XMVector3Cross(_look, _right));
+		_view = XMMatrixLookAtLH(_position, _target, _up);
 
-		// Fill in the view matrix entries.
-
-		float x = -XMVectorGetX(XMVector3Dot(_position, _right));
-		float y = -XMVectorGetY(XMVector3Dot(_position, _up));
-		float z = -XMVectorGetZ(XMVector3Dot(_position, _look));
-
-		_view = XMMatrixTranspose(XMMatrixSet(XMVectorGetX(_right), XMVectorGetY(_right), XMVectorGetZ(_right), x,
-			XMVectorGetX(_up), XMVectorGetY(_up), XMVectorGetZ(_up), y,
-			XMVectorGetX(_look), XMVectorGetY(_look), XMVectorGetZ(_look), z,
-			0.0f, 0.0f, 0.0f, 1.0f));
-
-		_frustum.transform = _view;
 		_UpdateFrustum();
 	}
 
@@ -288,6 +253,8 @@ namespace scene
 
 	void Camera::_UpdateFrustum()
 	{
+		_frustum.transform = _view;
+
 		_viewProjection = _view * _projection;
 		_frustum.BuildFromProjMatrix(_viewProjection);
 	}
