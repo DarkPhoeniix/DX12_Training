@@ -5,7 +5,7 @@
 namespace dx12
 {
     class CommandList;
-} // namespace Core
+} // namespace core
 
 class TaskGPU
 {

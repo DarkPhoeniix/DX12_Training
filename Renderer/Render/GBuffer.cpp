@@ -4,7 +4,7 @@
 
 #include "CommandList.h"
 
-namespace Core
+namespace render
 {
     void GBuffer::Init(const DirectX::XMUINT2& size)
     {
@@ -172,4 +172,4 @@ namespace Core
     {
         return _RTVDescriptorsHeap.GetResourceGPUHandle(&_albedoMetalness, dx12::ResourceViewType::RTV);
     }
-} // namespace Core
+} // namespace render

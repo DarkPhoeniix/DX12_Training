@@ -36,11 +36,13 @@ void Frame::Init(const DirectX::XMUINT2& size, uint32_t cacheSize)
     {
         dx12::ResourceDescription desc = {};
         desc.SetSize({ _16MB, 1 });
+        desc.SetStride(256);
         desc.SetFormat(DXGI_FORMAT_UNKNOWN);
-        desc.SetResourceType(dx12::EResourceType::Buffer | dx12::EResourceType::Dynamic);
+        desc.SetResourceType(dx12::EResourceType::Buffer | dx12::EResourceType::Dynamic | dx12::EResourceType::Aligned);
 
         std::shared_ptr<dx12::Resource> frameCachedMemory = std::make_shared<dx12::Resource>();
         frameCachedMemory->CreateCommitedResource(desc, D3D12_RESOURCE_STATE_COMMON);
+        frameCachedMemory->SetName(std::format("Frame cache {}", Index));
 
         _cache.SetResource(frameCachedMemory);
     }
@@ -97,6 +99,8 @@ void Frame::Init(const DirectX::XMUINT2& size, uint32_t cacheSize)
     {
         dx12::Device::CreateRenderTargetView(_targetTexture.GetAsRTV(), _RTVHeap);
     }
+
+    _tasks.reserve(128);
 }
 
 TaskGPU* Frame::CreateTask(D3D12_COMMAND_LIST_TYPE type, dx12::PipelineState* rootSignature)

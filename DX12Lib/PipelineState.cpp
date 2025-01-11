@@ -312,7 +312,7 @@ namespace dx12
         if (!fileRoot["VS"].isNull())
         {
             std::string vertexShaderFilepath = fileRoot["VS"].asCString();
-            Helper::throwIfFailed(D3DReadFileToBlob(std::wstring(vertexShaderFilepath.begin(), vertexShaderFilepath.end()).c_str(), &vertexShaderBlob));
+            helpers::throwIfFailed(D3DReadFileToBlob(std::wstring(vertexShaderFilepath.begin(), vertexShaderFilepath.end()).c_str(), &vertexShaderBlob));
         }
 
         // Load the geometry shader
@@ -320,7 +320,7 @@ namespace dx12
         if (!fileRoot["GS"].isNull())
         {
             std::string geometryShaderFilepath = fileRoot["GS"].asCString();
-            Helper::throwIfFailed(D3DReadFileToBlob(std::wstring(geometryShaderFilepath.begin(), geometryShaderFilepath.end()).c_str(), &geometryShaderBlob));
+            helpers::throwIfFailed(D3DReadFileToBlob(std::wstring(geometryShaderFilepath.begin(), geometryShaderFilepath.end()).c_str(), &geometryShaderBlob));
         }
 
         // Load the pixel shader
@@ -328,7 +328,7 @@ namespace dx12
         if (!fileRoot["PS"].isNull())
         {
             std::string pixelShaderFilepath = fileRoot["PS"].asCString();
-            Helper::throwIfFailed(D3DReadFileToBlob(std::wstring(pixelShaderFilepath.begin(), pixelShaderFilepath.end()).c_str(), &pixelShaderBlob));
+            helpers::throwIfFailed(D3DReadFileToBlob(std::wstring(pixelShaderFilepath.begin(), pixelShaderFilepath.end()).c_str(), &pixelShaderBlob));
         }
 
         // Create the vertex input layout
@@ -351,8 +351,14 @@ namespace dx12
             }
         }
 
-        Helper::throwIfFailed(device->CreateRootSignature(0, vertexShaderBlob->GetBufferPointer(),
+        helpers::throwIfFailed(device->CreateRootSignature(0, vertexShaderBlob->GetBufferPointer(),
             vertexShaderBlob->GetBufferSize(), IID_PPV_ARGS(&_rootSignature)));
+
+        {
+            std::string type = fileRoot["Type"].asCString();
+            std::wstring name(type.begin(), type.end());
+            _rootSignature->SetName(name.c_str());
+        }
 
         const std::string blendPipelineDescFilepath = fileRoot["Blend"].asCString();
         const std::string rasterPipelineDescFilepath = fileRoot["Raster"].asCString();
@@ -389,7 +395,13 @@ namespace dx12
         pipelineStateDescription.SampleDesc.Count = 1; // must be the same sample description as the swapChain and depth/stencil buffer
         pipelineStateDescription.SampleMask = 0xffffffff; // sample mask has to do with multi-sampling. 0xffffffff means point sampling is done
 
-        Helper::throwIfFailed(device->CreateGraphicsPipelineState(&pipelineStateDescription, IID_PPV_ARGS(&_pipelineState)));
+        helpers::throwIfFailed(device->CreateGraphicsPipelineState(&pipelineStateDescription, IID_PPV_ARGS(&_pipelineState)));
+
+        {
+            std::string type = fileRoot["Type"].asCString();
+            std::wstring name(type.begin(), type.end());
+            _pipelineState->SetName(name.c_str());
+        }
 
         delete[] inputLayout;
     }
@@ -403,11 +415,17 @@ namespace dx12
         if (!fileRoot["CS"].isNull())
         {
             std::string computeShaderFilepath = fileRoot["CS"].asCString();
-            Helper::throwIfFailed(D3DReadFileToBlob(std::wstring(computeShaderFilepath.begin(), computeShaderFilepath.end()).c_str(), &computeShaderBlob));
+            helpers::throwIfFailed(D3DReadFileToBlob(std::wstring(computeShaderFilepath.begin(), computeShaderFilepath.end()).c_str(), &computeShaderBlob));
         }
 
-        Helper::throwIfFailed(device->CreateRootSignature(0, computeShaderBlob->GetBufferPointer(),
+        helpers::throwIfFailed(device->CreateRootSignature(0, computeShaderBlob->GetBufferPointer(),
             computeShaderBlob->GetBufferSize(), IID_PPV_ARGS(&_rootSignature)));
+
+        {
+            std::string type = fileRoot["Type"].asCString();
+            std::wstring name(type.begin(), type.end());
+            _rootSignature->SetName(name.c_str());
+        }
 
         D3D12_COMPUTE_PIPELINE_STATE_DESC pipelineStateDescription = {};
         pipelineStateDescription.pRootSignature = _rootSignature.Get();
@@ -416,11 +434,13 @@ namespace dx12
             pipelineStateDescription.CS = CD3DX12_SHADER_BYTECODE(computeShaderBlob.Get());
         }
 
-        Helper::throwIfFailed(device->CreateComputePipelineState(&pipelineStateDescription, IID_PPV_ARGS(&_pipelineState)));
+        helpers::throwIfFailed(device->CreateComputePipelineState(&pipelineStateDescription, IID_PPV_ARGS(&_pipelineState)));
 
-        std::string type = fileRoot["Type"].asCString();
-        std::wstring name(type.begin(), type.end());
-        _pipelineState->SetName(name.c_str());
+        {
+            std::string type = fileRoot["Type"].asCString();
+            std::wstring name(type.begin(), type.end());
+            _pipelineState->SetName(name.c_str());
+        }
     }
 
     D3D12_BLEND_DESC PipelineState::ParseBlendDescription(const std::string& filepath)

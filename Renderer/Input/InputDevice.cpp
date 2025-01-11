@@ -1,12 +1,12 @@
 #include "RendererPCH.h"
 
-#include "InputDevice.h"
+#include "inputDevice.h"
 
-namespace Core
+namespace core
 {
-    namespace Events
+    namespace events
     {
-        void InputDevice::PollEvents()
+        void inputDevice::PollEvents()
         {
             // Poll keyboard state
             {
@@ -68,33 +68,33 @@ namespace Core
             }
         }
 
-        void InputDevice::AddInputObserver(IWindowEventListener* observer)
+        void inputDevice::AddinputObserver(IWindowEventListener* observer)
         {
             _inputListeners.push_back(observer);
         }
 
-        void InputDevice::RemoveInputObserver(IWindowEventListener* observer)
+        void inputDevice::RemoveinputObserver(IWindowEventListener* observer)
         {
             std::erase(_inputListeners, observer);
         }
 
-        InputDevice& InputDevice::Instance()
+        inputDevice& inputDevice::Instance()
         {
-            static InputDevice device;
+            static inputDevice device;
             return device;
         }
 
-        InputDevice::InputDevice()
+        inputDevice::inputDevice()
         {
-            // Create a DirectInput device
-            HRESULT result = DirectInput8Create(GetModuleHandle(NULL), DIRECTINPUT_VERSION, IID_IDirectInput8, (VOID**)&_directInput, NULL);
-            ASSERT(SUCCEEDED(result), "Failed to create DirectInput device");
+            // Create a Directinput device
+            HRESULT result = DirectInput8Create(GetModuleHandle(NULL), DIRECTINPUT_VERSION, IID_IDirectInput8, (VOID**)&_directinput, NULL);
+            ASSERT(SUCCEEDED(result), "Failed to create Directinput device");
 
             _CreateKeyboardDevice();
             _CreateMouseDevice();
         }
 
-        InputDevice::~InputDevice()
+        inputDevice::~inputDevice()
         {
             if (_keyboardDevice)
             {
@@ -111,9 +111,9 @@ namespace Core
             }
         }
 
-        void InputDevice::_CreateKeyboardDevice()
+        void inputDevice::_CreateKeyboardDevice()
         {
-            HRESULT result = _directInput->CreateDevice(GUID_SysKeyboard, &_keyboardDevice, NULL);
+            HRESULT result = _directinput->CreateDevice(GUID_SysKeyboard, &_keyboardDevice, NULL);
 
             ASSERT(SUCCEEDED(result), "Failed to create keyboard input device device");
 
@@ -122,9 +122,9 @@ namespace Core
             _keyboardDevice->Acquire();
         }
 
-        void InputDevice::_CreateMouseDevice()
+        void inputDevice::_CreateMouseDevice()
         {
-            HRESULT result = _directInput->CreateDevice(GUID_SysMouse, &_mouseDevice, NULL);
+            HRESULT result = _directinput->CreateDevice(GUID_SysMouse, &_mouseDevice, NULL);
 
             ASSERT(SUCCEEDED(result), "Failed to create mouse input device device");
 
@@ -133,7 +133,7 @@ namespace Core
             _mouseDevice->Acquire();
         }
 
-        void InputDevice::_NotifyKeyPressed(DIKeyCode keyCode)
+        void inputDevice::_NotifyKeyPressed(DIKeyCode keyCode)
         {
             KeyEvent keyEvent(keyCode);
             for (IWindowEventListener* listener : _inputListeners)
@@ -142,7 +142,7 @@ namespace Core
             }
         }
 
-        void InputDevice::_NotifyKeyReleased(DIKeyCode keyCode)
+        void inputDevice::_NotifyKeyReleased(DIKeyCode keyCode)
         {
             KeyEvent keyEvent(keyCode);
             for (IWindowEventListener* listener : _inputListeners)
@@ -151,7 +151,7 @@ namespace Core
             }
         }
 
-        void InputDevice::_NotifyMouseButtonPressed()
+        void inputDevice::_NotifyMouseButtonPressed()
         {
             MouseButtonEvent mouseButtonEvent(_currentMouseState.rgbButtons[0], _currentMouseState.rgbButtons[2], _currentMouseState.rgbButtons[1], 0, 0);
             for (IWindowEventListener* listener : _inputListeners)
@@ -160,7 +160,7 @@ namespace Core
             }
         }
 
-        void InputDevice::_NotifyMouseButtonReleased()
+        void inputDevice::_NotifyMouseButtonReleased()
         {
             MouseButtonEvent mouseButtonEvent(_currentMouseState.rgbButtons[0], _currentMouseState.rgbButtons[2], _currentMouseState.rgbButtons[1], 0, 0);
             for (IWindowEventListener* listener : _inputListeners)
@@ -169,7 +169,7 @@ namespace Core
             }
         }
 
-        void InputDevice::_NotifyMouseMoved(int relativeX, int relativeY)
+        void inputDevice::_NotifyMouseMoved(int relativeX, int relativeY)
         {
             MouseMoveEvent mouseMoveEvent;
             mouseMoveEvent.relativeX = relativeX;
@@ -181,7 +181,7 @@ namespace Core
             }
         }
 
-        void InputDevice::_NotifyMouseScrolled(int relativeZ)
+        void inputDevice::_NotifyMouseScrolled(int relativeZ)
         {
             MouseScrollEvent mouseScrollEvent(relativeZ);
 
@@ -190,5 +190,5 @@ namespace Core
                 listener->OnMouseScroll(mouseScrollEvent);
             }
         }
-    } // namespace Events
-} // namespace Core
+    } // namespace events
+} // namespace core

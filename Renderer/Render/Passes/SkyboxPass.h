@@ -1,0 +1,19 @@
+#pragma once
+
+#include "IRenderPass.h"
+
+namespace render
+{
+    class SkyboxPass : public IRenderPass
+    {
+    public:
+        // Inherited via IRenderPass
+        void Inititalize() override;
+        void Destroy() override;
+
+        void Execute() override;
+
+    private:
+        dx12::PipelineState _skyboxPipeline;
+    };
+} // namespace render

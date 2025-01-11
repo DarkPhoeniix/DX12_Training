@@ -29,6 +29,4 @@ struct LightDesc
     float Range;
     
     uint Type;
-    
-    uint pad;
 };

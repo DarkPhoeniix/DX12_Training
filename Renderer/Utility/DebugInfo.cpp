@@ -2,7 +2,7 @@
 
 #include "DebugInfo.h"
 
-#include "Events/UpdateEvent.h"
+#include "events/UpdateEvent.h"
 
 DebugInfo* DebugInfo::_instance = nullptr;
 
@@ -23,7 +23,7 @@ void DebugInfo::Destroy()
     _instance = nullptr;
 }
 
-void DebugInfo::Update(Core::Events::UpdateEvent& updateEvent)
+void DebugInfo::Update(core::events::UpdateEvent& updateEvent)
 {
     static uint64_t frameCount = 0;
     static double totalTime = 0.0;

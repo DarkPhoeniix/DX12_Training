@@ -5,7 +5,7 @@
 #include "DescriptorHeap.h"
 #include "PipelineState.h"
 #include "Heap.h"
-#include "Scene/Viewport.h"
+#include "Scene/Entity/Components/Camera.h"
 
 namespace
 {
@@ -179,7 +179,7 @@ namespace dx12
         _commandList->OMSetRenderTargets(renderTargetDescriptors.size(), renderTargetDescriptors.data(), FALSE, depthStencilDescriptor);
     }
 
-    void CommandList::SetViewport(const SceneLayer::Viewport& viewport)
+    void CommandList::SetViewport(const scene::Viewport& viewport)
     {
         if (ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list"))
         {
@@ -211,7 +211,7 @@ namespace dx12
         }
     }
 
-    void CommandList::ClearRTV(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetView, const FLOAT color[4], SceneLayer::Viewport* viewport)
+    void CommandList::ClearRTV(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetView, const FLOAT color[4], scene::Viewport* viewport)
     {
         if (ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list"))
         {
@@ -228,7 +228,7 @@ namespace dx12
         _commandList->ClearRenderTargetView(renderTargetView, color, numRects, rect);
     }
 
-    void CommandList::ClearDSV(D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, D3D12_CLEAR_FLAGS clearFlags, FLOAT depth, UINT8 stencil, SceneLayer::Viewport* viewport)
+    void CommandList::ClearDSV(D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, D3D12_CLEAR_FLAGS clearFlags, FLOAT depth, UINT8 stencil, scene::Viewport* viewport)
     {
         if (ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list"))
         {
@@ -263,6 +263,16 @@ namespace dx12
         }
 
         _commandList->DrawIndexedInstanced(indexCount, instanceCount, startIndex, baseVertex, startInstance);
+    }
+
+    void CommandList::Dispatch(uint32_t xThreadGroupsCount, uint32_t yThreadGroupsCount, uint32_t zThreadGroupsCount)
+    {
+        if (ASSERT(_type == CommandListType::Compute, "Wrond type of the command list"))
+        {
+            return;
+        }
+
+        _commandList->Dispatch(xThreadGroupsCount, yThreadGroupsCount, zThreadGroupsCount);
     }
 
     void CommandList::SetDescriptorHeaps(const std::vector<ID3D12DescriptorHeap*> descriptorHeaps)

@@ -2,17 +2,18 @@
 
 #include "Application.h"
 
-#include "SwapChain.h"
-#include "Events/RenderEvent.h"
-#include "Events/UpdateEvent.h"
+#include "events/RenderEvent.h"
+#include "events/UpdateEvent.h"
 #include "GUI/GUI.h"
-#include "Input/InputDevice.h"
+#include "input/inputDevice.h"
 #include "Render/DXRenderer.h"
+#include "Resources/Resources.h"
+#include "SwapChain.h"
 #include "Utility/DebugInfo.h"
-#include "Utility/Resources.h"
 #include "Window/Win32Window.h"
 
-using namespace Core;
+using namespace core;
+using namespace render;
 
 namespace
 {
@@ -38,7 +39,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPara
     break;
     }
 
-    Core::Win32Window* window = (Core::Win32Window*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    core::Win32Window* window = (core::Win32Window*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
     if (window)
     {
@@ -103,7 +104,7 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
 
     _win32Window->AddEventListener(pApp.get());
 
-    Events::InputDevice::Instance().AddInputObserver(pApp.get());
+    events::inputDevice::Instance().AddinputObserver(pApp.get());
 
     TaskGPU* uploadTask = _currentFrame->CreateTask(D3D12_COMMAND_LIST_TYPE_COPY, nullptr);
     if (!pApp->LoadContent(uploadTask))
@@ -122,7 +123,7 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
             DispatchMessage(&msg);
         }
 
-        Events::InputDevice::Instance().PollEvents();
+        events::inputDevice::Instance().PollEvents();
 
         GUI::NewFrame();
 
@@ -163,9 +164,9 @@ Application* Application::Instance()
     return _instance;
 }
 
-std::shared_ptr<Core::Win32Window> Application::CreateWin32Window(int width, int height, const std::wstring& title, bool vSync)
+std::shared_ptr<core::Win32Window> Application::CreateWin32Window(int width, int height, const std::wstring& title, bool vSync)
 {
-    std::shared_ptr<Core::Win32Window> pWindow = std::make_shared<Core::Win32Window>(Instance()->_hInstance, width, height, title, vSync);
+    std::shared_ptr<core::Win32Window> pWindow = std::make_shared<core::Win32Window>(Instance()->_hInstance, width, height, title, vSync);
     Instance()->_win32Window = pWindow;
 
     pWindow->Show();
@@ -200,7 +201,7 @@ void Application::_UpdateCall(std::shared_ptr<DXRenderer> pApp)
 {
     _updateClock.Tick();
 
-    Events::UpdateEvent updateEvent(_updateClock.GetDeltaSeconds(), _updateClock.GetTotalSeconds(), _currentFrame->Index);
+    events::UpdateEvent updateEvent(_updateClock.GetDeltaSeconds(), _updateClock.GetTotalSeconds(), _currentFrame->Index);
     pApp->OnUpdate(updateEvent);
 }
 
@@ -208,8 +209,9 @@ void Application::_RenderCall(std::shared_ptr<DXRenderer> pApp)
 {
     _renderClock.Tick();
 
-    Events::RenderEvent renderEvent(_updateClock.GetDeltaSeconds(), _updateClock.GetTotalSeconds(), _currentFrame->Index);
-    pApp->OnRender(renderEvent, *_currentFrame);
+    events::RenderEvent renderEvent(_updateClock.GetDeltaSeconds(), _updateClock.GetTotalSeconds(), _currentFrame->Index);
+    pApp->SetFrame(*_currentFrame);
+    pApp->OnRender(renderEvent);
 }
 
 void Application::_ExecuteFrameTasks()

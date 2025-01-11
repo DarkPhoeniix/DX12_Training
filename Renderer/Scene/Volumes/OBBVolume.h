@@ -2,11 +2,15 @@
 
 #include "Scene/Volumes/IVolume.h"
 
-namespace SceneLayer
+namespace scene
 {
+    class AABBVolume;
+
     class OBBVolume : public IVolume
     {
     public:
         DirectX::XMMATRIX Bounds = DirectX::XMMatrixIdentity();
     };
-} // namespace SceneLayer
+
+    AABBVolume CombineOBBs(const std::vector<OBBVolume>& volumes);
+} // namespace scene

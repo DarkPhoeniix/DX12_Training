@@ -4,8 +4,8 @@
 
 #include "CommandList.h"
 
-#include "Scene/Camera.h"
-#include "Scene/ECS/EntityLoader.h"
+#include "Scene/Entity/Components/Camera.h"
+#include "Scene/Entity/EntityLoader.h"
 
 #include <queue>
 
@@ -30,23 +30,12 @@ namespace
     };
 } // namespace unnamed
 
-namespace SceneLayer
+namespace scene
 {
-    Scene::Scene()
+    void Scene::AddRootNode(std::shared_ptr<Entity> entity)
     {
-        dx12::ResourceDescription sceneDataDescription;
-        {
-            sceneDataDescription.SetResourceType(dx12::EResourceType::Buffer | dx12::EResourceType::Dynamic | dx12::EResourceType::Aligned);
-            sceneDataDescription.SetSize({ sizeof(SceneDesc), 1 });
-            sceneDataDescription.SetStride(1);
-            sceneDataDescription.SetFormat(DXGI_FORMAT::DXGI_FORMAT_UNKNOWN);
-
-            _gpuDesc.CreateCommitedResource(sceneDataDescription, D3D12_RESOURCE_STATE_GENERIC_READ);
-        }
+        _rootNodes.push_back(entity);
     }
-
-    Scene::~Scene()
-    {   }
 
     std::vector<std::shared_ptr<Entity>>& Scene::GetRootNodes()
     {
@@ -106,16 +95,6 @@ namespace SceneLayer
         return _cache;
     }
 
-    void Scene::SetCamera(Camera& camera)
-    {
-        _cache.SetCamera(&camera);
-    }
-
-    dx12::Resource& Scene::GetGPUDesc()
-    {
-        return _gpuDesc;
-    }
-
     bool Scene::LoadScene(const std::string& filepath, dx12::CommandList& commandList)
     {
         std::ifstream in(filepath, std::ifstream::in | std::ifstream::binary);
@@ -135,4 +114,4 @@ namespace SceneLayer
 
         return true;
     }
-} // namespace SceneLayer
+} // namespace scene

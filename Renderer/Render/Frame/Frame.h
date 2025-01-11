@@ -12,7 +12,7 @@
 namespace dx12
 {
     class PipelineState;
-} // namespace Core
+} // namespace core
 
 class Frame
 {

@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="DXObjects">
-      <UniqueIdentifier>{2f262470-38c3-4bc4-82f1-04c6cdc1e9b1}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Shaders">
       <UniqueIdentifier>{1fa8204c-e6b6-4306-9e69-716675047cee}</UniqueIdentifier>
     </Filter>
@@ -43,9 +40,6 @@
     <Filter Include="Render\SceneProcessors">
       <UniqueIdentifier>{17a82661-fd05-4dfb-bc37-88dd30baf974}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Render\GPUStructs">
-      <UniqueIdentifier>{f14915d8-8f19-4ff9-a19a-1f9833380e9c}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Render\Frame">
       <UniqueIdentifier>{44759726-0daa-4ba7-bf3a-b40616f9303b}</UniqueIdentifier>
     </Filter>
@@ -54,6 +48,12 @@
     </Filter>
     <Filter Include="Scene\ECS\Components">
       <UniqueIdentifier>{05d20807-e1a0-4371-b0a8-d9373812ca6a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Passes">
+      <UniqueIdentifier>{e3d14e23-d7cf-4e44-b718-02c3994f742c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Helpers">
+      <UniqueIdentifier>{f14915d8-8f19-4ff9-a19a-1f9833380e9c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -99,20 +99,11 @@
     <ClCompile Include="GUI\GUI.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\ECS\ComponentFactory.cpp">
+    <ClCompile Include="Scene\Entity\Components\IComponent.cpp">
       <Filter>Scene\ECS</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\ECS\Components.cpp">
+    <ClCompile Include="Scene\Entity\Entity.cpp">
       <Filter>Scene\ECS</Filter>
-    </ClCompile>
-    <ClCompile Include="Scene\ECS\Entity.cpp">
-      <Filter>Scene\ECS</Filter>
-    </ClCompile>
-    <ClCompile Include="Scene\Camera.cpp">
-      <Filter>Scene</Filter>
-    </ClCompile>
-    <ClCompile Include="Scene\Viewport.cpp">
-      <Filter>Scene</Filter>
     </ClCompile>
     <ClCompile Include="Render\Frame\AllocatorPool.cpp">
       <Filter>Render\Frame</Filter>
@@ -129,43 +120,31 @@
     <ClCompile Include="Render\Frame\TaskGPU.cpp">
       <Filter>Render\Frame</Filter>
     </ClCompile>
-    <ClCompile Include="Render\SceneProcessors\DrawSceneProcessor.cpp">
-      <Filter>Render\SceneProcessors</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\SceneProcessors\SetupCachedDataProcessor.cpp">
-      <Filter>Render\SceneProcessors</Filter>
-    </ClCompile>
     <ClCompile Include="Render\SceneProcessors\UploadSceneProcessor.cpp">
       <Filter>Render\SceneProcessors</Filter>
     </ClCompile>
-    <ClCompile Include="Render\GPUStructs\GPUModelDesc.cpp">
-      <Filter>Render\GPUStructs</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\GPUStructs\GPUSceneDesc.cpp">
-      <Filter>Render\GPUStructs</Filter>
-    </ClCompile>
-    <ClCompile Include="Scene\ECS\EntityLoader.cpp">
+    <ClCompile Include="Scene\Entity\EntityLoader.cpp">
       <Filter>Scene\ECS</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\ECS\Components\Animation.cpp">
+    <ClCompile Include="Scene\Entity\Components\Animation.cpp">
       <Filter>Scene\ECS\Components</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\ECS\Components\Armature.cpp">
+    <ClCompile Include="Scene\Entity\Components\Armature.cpp">
       <Filter>Scene\ECS\Components</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\ECS\Components\Light.cpp">
+    <ClCompile Include="Scene\Entity\Components\Light.cpp">
       <Filter>Scene\ECS\Components</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\ECS\Components\Material.cpp">
+    <ClCompile Include="Scene\Entity\Components\Material.cpp">
       <Filter>Scene\ECS\Components</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\ECS\Components\Mesh.cpp">
+    <ClCompile Include="Scene\Entity\Components\Mesh.cpp">
       <Filter>Scene\ECS\Components</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\ECS\Components\Skybox.cpp">
+    <ClCompile Include="Scene\Entity\Components\Skybox.cpp">
       <Filter>Scene\ECS\Components</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\ECS\Components\Transformation.cpp">
+    <ClCompile Include="Scene\Entity\Components\Transformation.cpp">
       <Filter>Scene\ECS\Components</Filter>
     </ClCompile>
     <ClCompile Include="Scene\Volumes\AABBVolume.cpp">
@@ -174,13 +153,45 @@
     <ClCompile Include="Scene\Volumes\OBBVolume.cpp">
       <Filter>Scene\Volumes</Filter>
     </ClCompile>
-    <ClCompile Include="Render\SceneProcessors\UpdateSceneProcessor.cpp">
-      <Filter>Render\SceneProcessors</Filter>
+    <ClCompile Include="Render\Passes\ClearBuffersPass.cpp">
+      <Filter>Render\Passes</Filter>
     </ClCompile>
-    <ClCompile Include="Render\GPUStructs\GPULightDesc.cpp">
-      <Filter>Render\GPUStructs</Filter>
+    <ClCompile Include="Render\Passes\DebugArmaturePass.cpp">
+      <Filter>Render\Passes</Filter>
     </ClCompile>
-    <ClCompile Include="Render\Frame\CacheGPU.cpp" />
+    <ClCompile Include="Render\Passes\DebugBoundingVolumePass.cpp">
+      <Filter>Render\Passes</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Passes\FXAAPass.cpp">
+      <Filter>Render\Passes</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Passes\GeometryPass.cpp">
+      <Filter>Render\Passes</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Passes\GUIPass.cpp">
+      <Filter>Render\Passes</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Passes\IRenderPass.cpp">
+      <Filter>Render\Passes</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Passes\LightingPass.cpp">
+      <Filter>Render\Passes</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Passes\SkyboxPass.cpp">
+      <Filter>Render\Passes</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Helpers\GPUStructs.cpp">
+      <Filter>Render\Helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Helpers\RenderHelpers.cpp">
+      <Filter>Render\Helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Frame\CacheGPU.cpp">
+      <Filter>Render\Frame</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\Entity\Components\Camera.cpp">
+      <Filter>Scene\ECS\Components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Events\IEvent.h">
@@ -216,16 +227,10 @@
     <ClInclude Include="Utility\Defines.h">
       <Filter>Utility</Filter>
     </ClInclude>
-    <ClInclude Include="Utility\DirectInputKeyCodes.h">
-      <Filter>Utility</Filter>
-    </ClInclude>
     <ClInclude Include="Utility\Helpers.h">
       <Filter>Utility</Filter>
     </ClInclude>
     <ClInclude Include="Utility\HighResolutionClock.h">
-      <Filter>Utility</Filter>
-    </ClInclude>
-    <ClInclude Include="Utility\KeyCodes.h">
       <Filter>Utility</Filter>
     </ClInclude>
     <ClInclude Include="Utility\Logger.h">
@@ -263,7 +268,7 @@
     </ClInclude>
     <ClInclude Include="Application.h" />
     <ClInclude Include="RendererPCH.h" />
-    <ClInclude Include="Utility\Resources.h">
+    <ClInclude Include="Resources\Resources.h">
       <Filter>Resources</Filter>
     </ClInclude>
     <ClInclude Include="Resources\resource1.h">
@@ -272,20 +277,11 @@
     <ClInclude Include="GUI\GUI.h">
       <Filter>GUI</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\ECS\ComponentFactory.h">
+    <ClInclude Include="Scene\Entity\Components\IComponent.h">
       <Filter>Scene\ECS</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\ECS\Components.h">
+    <ClInclude Include="Scene\Entity\Entity.h">
       <Filter>Scene\ECS</Filter>
-    </ClInclude>
-    <ClInclude Include="Scene\ECS\Entity.h">
-      <Filter>Scene\ECS</Filter>
-    </ClInclude>
-    <ClInclude Include="Scene\Camera.h">
-      <Filter>Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="Scene\Viewport.h">
-      <Filter>Scene</Filter>
     </ClInclude>
     <ClInclude Include="Render\Frame\AllocatorPool.h">
       <Filter>Render\Frame</Filter>
@@ -302,61 +298,84 @@
     <ClInclude Include="Render\Frame\TaskGPU.h">
       <Filter>Render\Frame</Filter>
     </ClInclude>
-    <ClInclude Include="Render\SceneProcessors\DrawSceneProcessor.h">
-      <Filter>Render\SceneProcessors</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\SceneProcessors\SetupCachedDataProcessor.h">
-      <Filter>Render\SceneProcessors</Filter>
-    </ClInclude>
     <ClInclude Include="Render\SceneProcessors\UploadSceneProcessor.h">
       <Filter>Render\SceneProcessors</Filter>
     </ClInclude>
     <ClInclude Include="Render\SceneProcessors\ISceneProcessor.h">
       <Filter>Render\SceneProcessors</Filter>
     </ClInclude>
-    <ClInclude Include="Render\GPUStructs\GPUModelDesc.h">
-      <Filter>Render\GPUStructs</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\GPUStructs\GPUSceneDesc.h">
-      <Filter>Render\GPUStructs</Filter>
-    </ClInclude>
-    <ClInclude Include="Scene\ECS\EntityLoader.h">
+    <ClInclude Include="Scene\Entity\EntityLoader.h">
       <Filter>Scene\ECS</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\ECS\Components\Animation.h">
+    <ClInclude Include="Scene\Entity\Components\Animation.h">
       <Filter>Scene\ECS\Components</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\ECS\Components\Armature.h">
+    <ClInclude Include="Scene\Entity\Components\Armature.h">
       <Filter>Scene\ECS\Components</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\ECS\Components\Light.h">
+    <ClInclude Include="Scene\Entity\Components\Light.h">
       <Filter>Scene\ECS\Components</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\ECS\Components\Material.h">
+    <ClInclude Include="Scene\Entity\Components\Material.h">
       <Filter>Scene\ECS\Components</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\ECS\Components\Mesh.h">
+    <ClInclude Include="Scene\Entity\Components\Mesh.h">
       <Filter>Scene\ECS\Components</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\ECS\Components\Skybox.h">
+    <ClInclude Include="Scene\Entity\Components\Skybox.h">
       <Filter>Scene\ECS\Components</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\ECS\Components\Transformation.h">
+    <ClInclude Include="Scene\Entity\Components\Transformation.h">
       <Filter>Scene\ECS\Components</Filter>
     </ClInclude>
     <ClInclude Include="Scene\Volumes\OBBVolume.h">
       <Filter>Scene\Volumes</Filter>
     </ClInclude>
-    <ClInclude Include="Render\SceneProcessors\UpdateSceneProcessor.h">
-      <Filter>Render\SceneProcessors</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\GPUStructs\GPULightDesc.h">
-      <Filter>Render\GPUStructs</Filter>
-    </ClInclude>
     <ClInclude Include="Scene\Volumes\CapsuleVolume.h">
       <Filter>Scene\Volumes</Filter>
     </ClInclude>
-    <ClInclude Include="Render\Frame\CacheGPU.h" />
+    <ClInclude Include="Render\Passes\ClearBuffersPass.h">
+      <Filter>Render\Passes</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Passes\DebugArmaturePass.h">
+      <Filter>Render\Passes</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Passes\DebugBoundingVolumePass.h">
+      <Filter>Render\Passes</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Passes\FXAAPass.h">
+      <Filter>Render\Passes</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Passes\GeometryPass.h">
+      <Filter>Render\Passes</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Passes\GUIPass.h">
+      <Filter>Render\Passes</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Passes\IRenderPass.h">
+      <Filter>Render\Passes</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Passes\LightingPass.h">
+      <Filter>Render\Passes</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Passes\SkyboxPass.h">
+      <Filter>Render\Passes</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Helpers\GPUStructs.h">
+      <Filter>Render\Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Helpers\RenderHelpers.h">
+      <Filter>Render\Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Frame\CacheGPU.h">
+      <Filter>Render\Frame</Filter>
+    </ClInclude>
+    <ClInclude Include="Input\DirectInputKeyCodes.h">
+      <Filter>Input</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\Entity\Components\Camera.h">
+      <Filter>Scene\ECS\Components</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\AABB_gs.hlsl">

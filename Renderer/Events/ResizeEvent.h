@@ -2,9 +2,9 @@
 
 #include "IEvent.h"
 
-namespace Core
+namespace core
 {
-    namespace Events
+    namespace events
     {
         class ResizeEvent : public IEvent
         {
@@ -17,5 +17,5 @@ namespace Core
             int width;      // The new width of the window
             int height;     // The new height of the window
         };
-    } // namespace Events
-} // namespace Core
+    } // namespace events
+} // namespace core

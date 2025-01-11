@@ -1,20 +1,20 @@
 
 #include "Armature_rootsig.hlsli"
 
-struct VertexInput
+struct Vertexinput
 {
     uint primitive : SV_InstanceID;
 };
 
-struct GeometryInput
+struct Geometryinput
 {
     uint primitive : INDEX;
 };
 
 [RootSignature(Armature_RootSig)]
-GeometryInput main(VertexInput input)
+Geometryinput main(Vertexinput input)
 {
-    GeometryInput output;
+    Geometryinput output;
     output.primitive = input.primitive;
 	
     return output;

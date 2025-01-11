@@ -2,9 +2,9 @@
 
 #include "IEvent.h"
 
-namespace Core
+namespace core
 {
-    namespace Events
+    namespace events
     {
         class MouseButtonEvent : public IEvent
         {
@@ -24,5 +24,5 @@ namespace Core
             int x;                  // The X-position of the cursor relative to the upper-left corner of the client area.
             int y;                  // The Y-position of the cursor relative to the upper-left corner of the client area.
         };
-    } // namespace Events
-} // namespace Core
+    } // namespace events
+} // namespace core

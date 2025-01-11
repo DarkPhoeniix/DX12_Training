@@ -1,11 +1,11 @@
 #pragma once
 
-#include "Events/IEvent.h"
-#include "Utility/DirectInputKeyCodes.h"
+#include "events/IEvent.h"
+#include "input/DirectinputKeyCodes.h"
 
-namespace Core
+namespace core
 {
-    namespace Events
+    namespace events
     {
         class KeyEvent : public IEvent
         {
@@ -16,5 +16,5 @@ namespace Core
 
             DIKeyCode keyCode;
         };
-    } // namespace Events
-} // namespace Core
+    } // namespace events
+} // namespace core

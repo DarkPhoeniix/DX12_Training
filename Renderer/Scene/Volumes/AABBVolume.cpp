@@ -2,6 +2,6 @@
 
 #include "AABBVolume.h"
 
-namespace SceneLayer
+namespace scene
 {
-} // namespace SceneLayer
+} // namespace scene

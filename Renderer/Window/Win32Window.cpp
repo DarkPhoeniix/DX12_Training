@@ -2,17 +2,17 @@
 
 #include "Win32Window.h"
 
-#include "Events/MouseButtonEvent.h"
-#include "Events/MouseScrollEvent.h"
-#include "Events/MouseMoveEvent.h"
-#include "Events/ResizeEvent.h"
+#include "events/MouseButtonEvent.h"
+#include "events/MouseScrollEvent.h"
+#include "events/MouseMoveEvent.h"
+#include "events/ResizeEvent.h"
 
-namespace Core
+namespace core
 {
-    using Events::MouseMoveEvent;
-    using Events::MouseScrollEvent;
-    using Events::MouseButtonEvent;
-    using Events::ResizeEvent;
+    using events::MouseMoveEvent;
+    using events::MouseScrollEvent;
+    using events::MouseButtonEvent;
+    using events::ResizeEvent;
 
     Win32Window::Win32Window(HINSTANCE hInstance, int width, int height, const std::wstring& title, bool vSync)
         : _eventListeners{}
@@ -49,12 +49,12 @@ namespace Core
         ::ShowWindow(_windowHandle, SW_HIDE);
     }
 
-    void Win32Window::AddEventListener(Events::IWindowEventListener* listener)
+    void Win32Window::AddEventListener(events::IWindowEventListener* listener)
     {
         _eventListeners.push_back(listener);
     }
 
-    void Win32Window::RemoveEventListener(Events::IWindowEventListener* listener)
+    void Win32Window::RemoveEventListener(events::IWindowEventListener* listener)
     {
         auto it = std::find(_eventListeners.begin(), _eventListeners.end(), listener);
 
@@ -145,7 +145,7 @@ namespace Core
             _height = windowRect.bottom - windowRect.top;
 
             ResizeEvent resizeEventArgs(width, height);
-            for (Events::IWindowEventListener* listener : _eventListeners)
+            for (events::IWindowEventListener* listener : _eventListeners)
             {
                 listener->OnResize(resizeEventArgs);
             }
@@ -180,7 +180,7 @@ namespace Core
                 // Get the settings of the display on which the app's window is currently displayed
                 ComPtr<IDXGIOutput> pOutput = _swapChain->GetContainingOutput();
                 DXGI_OUTPUT_DESC Desc;
-                Helper::throwIfFailed(pOutput->GetDesc(&Desc));
+                helpers::throwIfFailed(pOutput->GetDesc(&Desc));
                 fullscreenWindowRect = Desc.DesktopCoordinates;
             }
             else
@@ -226,4 +226,4 @@ namespace Core
             ShowWindow(_windowHandle, SW_NORMAL);
         }
     }
-} // namespace Core
+} // namespace core

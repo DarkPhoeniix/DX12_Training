@@ -3,12 +3,12 @@
 #include "Heap.h"
 #include "Texture.h"
 
-namespace SceneLayer
+namespace scene
 {
     class Scene;
-} // namespace SceneLayer
+} // namespace scene
 
-namespace Core
+namespace render
 {
     class GBuffer
     {
@@ -45,4 +45,4 @@ namespace Core
         dx12::DescriptorHeap _SRVDescriptorsHeap;
         dx12::Heap _heap;
     };
-} // namespace Core
+} // namespace render

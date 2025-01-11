@@ -3,7 +3,7 @@
 
 #include "Common.hlsli"
 
-struct VSInput
+struct VSinput
 {
     float3 Position         : POSITION;
     float3 Normal           : NORMAL;
@@ -30,13 +30,13 @@ struct BoneDesc
 StructuredBuffer<BoneDesc> Bones : register(t1);
 
 [RootSignature(GPass_RootSig)]
-VSOutput main(VSInput IN)
+VSOutput main(VSinput IN)
 {
     row_major matrix boneTransform = float4x4(
         float4(1.0f, 0.0f, 0.0f, 0.0f),
         float4(0.0f, 1.0f, 0.0f, 0.0f),
         float4(0.0f, 0.0f, 1.0f, 0.0f),
-        float4(0.0f, 1.0f, 0.0f, 1.0f));
+        float4(0.0f, 0.0f, 0.0f, 1.0f));
     boneTransform            = Bones[IN.BoneIds[0]].Transform * IN.BoneWeights[0];
     boneTransform           += Bones[IN.BoneIds[1]].Transform * IN.BoneWeights[1];
     boneTransform           += Bones[IN.BoneIds[2]].Transform * IN.BoneWeights[2];

@@ -1,20 +1,20 @@
 
 #include "AABB_rootsig.hlsli"
 
-struct VertexInput
+struct Vertexinput
 {
     uint primitive : SV_InstanceID;
 };
 
-struct GeometryInput
+struct Geometryinput
 {
     uint primitive : INDEX;
 };
 
 [RootSignature(AABB_RootSig)]
-GeometryInput main(VertexInput input)
+Geometryinput main(Vertexinput input)
 {
-    GeometryInput output = (GeometryInput) 0;
+    Geometryinput output = (Geometryinput) 0;
 	
     output.primitive = input.primitive;
 	

@@ -7,7 +7,11 @@
 #include "Utility/HighResolutionClock.h"
 
 class Win32Window;
-class DXRenderer;
+
+namespace render
+{
+    class DXRenderer;
+} // namespace render
 
 class Application
 {
@@ -16,12 +20,12 @@ public:
     Application& operator=(const Application& copy) = delete;
 
     static void Init(HINSTANCE hInstance);
-    int Run(std::shared_ptr<DXRenderer> pApp);
+    int Run(std::shared_ptr<render::DXRenderer> pApp);
     static void Quit(int exitCode = 0);
 
     static Application* Instance();
 
-    static std::shared_ptr<Core::Win32Window> CreateWin32Window(int width, int height, const std::wstring& title, bool vSync = false);
+    static std::shared_ptr<core::Win32Window> CreateWin32Window(int width, int height, const std::wstring& title, bool vSync = false);
 
 private:
     Application(HINSTANCE hInstance);
@@ -29,8 +33,8 @@ private:
 
     void _RegisterWindowClass(HINSTANCE hInstance);
 
-    void _UpdateCall(std::shared_ptr<DXRenderer> pApp);
-    void _RenderCall(std::shared_ptr<DXRenderer> pApp);
+    void _UpdateCall(std::shared_ptr<render::DXRenderer> pApp);
+    void _RenderCall(std::shared_ptr<render::DXRenderer> pApp);
     void _ExecuteFrameTasks();
 
     friend LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
@@ -38,7 +42,7 @@ private:
     // The application instance handle that this application was created with.
     HINSTANCE _hInstance;
 
-    std::shared_ptr<Core::Win32Window> _win32Window;
+    std::shared_ptr<core::Win32Window> _win32Window;
     dx12::SwapChain _swapChain;
 
     Frame _frames[3];

@@ -1,28 +1,26 @@
 #pragma once
 
-#include "Scene/Camera.h"
-
 namespace dx12
 {
     class ResourceTable;
 }
 
-namespace SceneLayer
+namespace scene
 {
     class SceneCache
     {
     public:
         SceneCache();
-        ~SceneCache();
+        SceneCache(const SceneCache&) = delete;
+        SceneCache(SceneCache&&) = default;
+        ~SceneCache() = default;
+
+        SceneCache& operator=(const SceneCache&) = delete;
+        SceneCache& operator=(SceneCache&&) = default;
 
         std::shared_ptr<dx12::ResourceTable> GetTextureTable() const;
 
         std::shared_ptr<dx12::ResourceTable> GetLightsTable() const;
-        dx12::Resource& GetLightsSRV();
-
-        // TODO: ...
-        void SetCamera(Camera* camera);
-        Camera* GetCamera() const;
 
         void SetTime(float time);
         float GetTime() const;
@@ -31,12 +29,9 @@ namespace SceneLayer
         std::shared_ptr<dx12::ResourceTable> _texturesTable;
 
         std::shared_ptr<dx12::ResourceTable> _lightsTable;
-        dx12::Resource _lightsView;
-
-        Camera* _camera;
 
         float _currentTime;
         
         std::shared_ptr<dx12::Resource> _gpuDesc;
     };
-} // namespace SceneLayer
+} // namespace scene

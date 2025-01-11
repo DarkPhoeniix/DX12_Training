@@ -6,32 +6,33 @@
 #include "ResourceTable.h"
 
 #include "Scene/Scene.h"
-#include "Scene/ECS/Components/Armature.h"
-#include "Scene/ECS/Components/Animation.h"
-#include "Scene/ECS/Components/Material.h"
-#include "Scene/ECS/Components/Mesh.h"
-#include "Scene/ECS/Components/Skybox.h"
+#include "Scene/Entity/Components/Armature.h"
+#include "Scene/Entity/Components/Material.h"
+#include "Scene/Entity/Components/Mesh.h"
+#include "Scene/Entity/Components/Skybox.h"
 
 #include "Render/Frame/CacheGPU.h"
 
-void UploadSceneProcessor::Process(SceneLayer::Scene& scene, dx12::CommandList& commandList, CacheGPU* frameCache)
-{
-    SceneLayer::SceneCache& cache = scene.GetCache();
+using namespace scene;
 
-    for (std::shared_ptr<SceneLayer::Entity>& node : scene.GetRootNodes())
+void UploadSceneProcessor::Process(Scene& scene, dx12::CommandList& commandList, CacheGPU* frameCache)
+{
+    SceneCache& cache = scene.GetCache();
+
+    for (std::shared_ptr<Entity>& node : scene.GetRootNodes())
     {
         ProcessEntity(*node, commandList, frameCache);
 
-        for (std::shared_ptr<SceneLayer::Entity>& child : node->GetChildrenNodes())
+        for (std::shared_ptr<Entity>& child : node->GetChildrenNodes())
         {
             ProcessEntity(*child, commandList, frameCache);
         }
     }
 }
 
-void UploadSceneProcessor::ProcessEntity(SceneLayer::Entity& entity, dx12::CommandList& commandList, CacheGPU* frameCache)
+void UploadSceneProcessor::ProcessEntity(Entity& entity, dx12::CommandList& commandList, CacheGPU* frameCache)
 {
-    SceneLayer::SceneCache* cache = entity.GetSceneCache();
+    SceneCache* cache = entity.GetSceneCache();
     if (ASSERT(cache, "Entity has no scene cache"))
     {
         return;
@@ -155,7 +156,7 @@ void UploadSceneProcessor::UploadData(dx12::CommandList& commandList, ID3D12Reso
     CD3DX12_HEAP_PROPERTIES heapTypeDefault(D3D12_HEAP_TYPE_DEFAULT);
     CD3DX12_RESOURCE_DESC bufferWithFlags = CD3DX12_RESOURCE_DESC::Buffer(bufferSize, flags);
 
-    Helper::throwIfFailed(dx12::Device::GetDXDevice()->CreateCommittedResource(
+    helpers::throwIfFailed(dx12::Device::GetDXDevice()->CreateCommittedResource(
         &heapTypeDefault,
         D3D12_HEAP_FLAG_NONE,
         &bufferWithFlags,
@@ -170,7 +171,7 @@ void UploadSceneProcessor::UploadData(dx12::CommandList& commandList, ID3D12Reso
     {
         ComPtr<ID3D12Resource> intermediateResource = nullptr;
 
-        Helper::throwIfFailed(dx12::Device::GetDXDevice()->CreateCommittedResource(
+        helpers::throwIfFailed(dx12::Device::GetDXDevice()->CreateCommittedResource(
             &heapTypeUpload,
             D3D12_HEAP_FLAG_NONE,
             &buffer,

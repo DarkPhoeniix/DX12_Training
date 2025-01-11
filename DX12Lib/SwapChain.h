@@ -2,7 +2,7 @@
 
 #include "DescriptorHeap.h"
 
-namespace Core
+namespace core
 {
     class Win32Window;
 }
@@ -17,7 +17,7 @@ namespace dx12
         SwapChain();
         ~SwapChain();
 
-        void Init(const Core::Win32Window& window);
+        void Init(const core::Win32Window& window);
 
         DXGI_SWAP_CHAIN_DESC GetDescription() const;
 

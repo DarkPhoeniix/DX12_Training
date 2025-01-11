@@ -2,7 +2,7 @@
 #include "Common.hlsli"
 #include "LightingCommon.hlsli"
 
-struct PSInput
+struct PSinput
 {
     float4 WorldPosition    : POSITION;
     float4 Position         : SV_Position;
@@ -24,7 +24,7 @@ SamplerState LinearSampler          : register(s0);
 SamplerState PointSampler           : register(s1);
 
 [earlydepthstencil]
-PSOutput main(PSInput IN)
+PSOutput main(PSinput IN)
 {
     // Sample textures
     float2 uv               = IN.Texture;
@@ -45,7 +45,7 @@ PSOutput main(PSInput IN)
 
     // Setup output buffer
     PSOutput output;
-    output.AlbedoMetalness  = float4(albedo, metalness);
+    output.AlbedoMetalness = float4(albedo, metalness);
     output.NormalRougness   = float4(normal, roughness);
     
     return output;

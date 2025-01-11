@@ -24,7 +24,7 @@ namespace
     }
 }
 
-namespace AssertUtility
+namespace assert_utility
 {
     bool AssertFunction(bool statement, const std::string& message)
     {

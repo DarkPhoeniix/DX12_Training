@@ -4,10 +4,10 @@
 
 class Heap;
 
-namespace SceneLayer
+namespace scene
 {
     class Viewport;
-} // namespace SceneLayer
+} // namespace scene
 
 namespace dx12
 {
@@ -43,7 +43,7 @@ namespace dx12
 
         void CopyResource(Resource& sourceResource, Resource& destinationResource);
 
-        // Input Assembly
+        // input Assembly
         void SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY primitiveTopology);
         void SetVertexBuffer(uint32_t slot, const D3D12_VERTEX_BUFFER_VIEW& vertexBufferView);
         void SetIndexBuffer(const D3D12_INDEX_BUFFER_VIEW& indexBufferView);
@@ -53,13 +53,15 @@ namespace dx12
         void SetRenderTargets(const std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> renderTargetDescriptors, D3D12_CPU_DESCRIPTOR_HANDLE* depthStencilDescriptor);
 
         // Rasterizator State
-        void SetViewport(const SceneLayer::Viewport& viewport);
+        void SetViewport(const scene::Viewport& viewport);
         void SetPipelineState(const PipelineState& rootSignature);
 
-        void ClearRTV(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetView, const FLOAT color[4], SceneLayer::Viewport* viewport = nullptr);
-        void ClearDSV(D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, D3D12_CLEAR_FLAGS clearFlags = D3D12_CLEAR_FLAG_DEPTH, FLOAT depth = 1.0f, UINT8 stencil = 0, SceneLayer::Viewport* viewport = nullptr);
+        void ClearRTV(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetView, const FLOAT color[4], scene::Viewport* viewport = nullptr);
+        void ClearDSV(D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, D3D12_CLEAR_FLAGS clearFlags = D3D12_CLEAR_FLAG_DEPTH, FLOAT depth = 1.0f, UINT8 stencil = 0, scene::Viewport* viewport = nullptr);
         void Draw(uint32_t vertexCount, uint32_t instanceCount = 1, uint32_t startVertex = 0, uint32_t startInstance = 0);
         void DrawIndexed(uint32_t indexCount, uint32_t instanceCount = 1, uint32_t startIndex = 0, int32_t baseVertex = 0, uint32_t startInstance = 0);
+
+        void Dispatch(uint32_t xThreadGroupsCount = 1, uint32_t yThreadGroupsCount = 1, uint32_t zThreadGroupsCount = 1);
 
         void SetDescriptorHeaps(const std::vector<ID3D12DescriptorHeap*> descriptorHeaps);
 

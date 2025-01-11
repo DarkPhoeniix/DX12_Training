@@ -2,9 +2,9 @@
 
 #include "IEvent.h"
 
-namespace Core
+namespace core
 {
-    namespace Events
+    namespace events
     {
         class MouseMoveEvent : public IEvent
         {
@@ -28,5 +28,5 @@ namespace Core
             int relativeX;           // How far the mouse moved since the last event.
             int relativeY;           // How far the mouse moved since the last event.
         };
-    } // namespace Events
-} // namespace Core
+    } // namespace events
+} // namespace core

@@ -1,10 +1,10 @@
 
-struct GeometryInput
+struct Geometryinput
 {
     uint primitive : INDEX;
 };
 
-struct PixelInput
+struct Pixelinput
 {
     float4 posH : SV_POSITION;
 };
@@ -48,7 +48,7 @@ const static uint _kusBoxIndeces[24] =
 };
 
 [maxvertexcount(24)]
-void main(point GeometryInput input[1], inout LineStream<PixelInput> lineStream)
+void main(point Geometryinput input[1], inout LineStream<Pixelinput> lineStream)
 {
 	// temp box values 
     float4 _kBoxVertsW[8];
@@ -67,10 +67,10 @@ void main(point GeometryInput input[1], inout LineStream<PixelInput> lineStream)
 	
 	// for each pair of line, adding to stream
 	[unroll]
-    for (i = 0; i < 24; i += 2)
+    for (uint i = 0; i < 24; i += 2)
     {
-        lineStream.Append((PixelInput) _kBoxVertsW[_kusBoxIndeces[i + 0]]);
-        lineStream.Append((PixelInput) _kBoxVertsW[_kusBoxIndeces[i + 1]]);
+        lineStream.Append((Pixelinput) _kBoxVertsW[_kusBoxIndeces[i + 0]]);
+        lineStream.Append((Pixelinput) _kBoxVertsW[_kusBoxIndeces[i + 1]]);
 		
         lineStream.RestartStrip();
     }
