@@ -3,7 +3,7 @@
 #include "LightingCommon.hlsli"
 
 // Trowbridge-Reitz GGX normal distribution function (D)
-float CalculateSpecular(in Surface surface, in LightDesc light)
+float CalculateSpecular(in Surface surface)
 {    
     float a2 = surface.Roughness * surface.Roughness;
     float NdotH2 = surface.NdotH * surface.NdotH;
@@ -24,7 +24,7 @@ float GeometrySchlickGGX(in Surface surface, in float k)
     return nom / denom;
 }
 
-float GeometrySmith(in Surface surface, in LightDesc light)
+float GeometrySmith(in Surface surface)
 {
     float k = (surface.Roughness + 1.0f) * (surface.Roughness + 1.0f) / 8.0f;
     

@@ -27,6 +27,8 @@ struct GPUModelDesc
     UINT NormalMapTextureIndex = -1;
     UINT MetalnessTextureIndex = -1;
     UINT RoughnessTextureIndex = -1;
+
+    bool UseSkinning = false;
 };
 
 struct GPULightDesc
@@ -39,6 +41,4 @@ struct GPULightDesc
     float range;
 
     uint32_t type;
-
-    uint32_t pad;
 };

@@ -15,19 +15,23 @@ RWTexture2D<float4> TargetTexture           : register(u0);
 
 void SetLightParams(in LightDesc light, inout Surface surface)
 {
-    float3 eyeDir = normalize(Scene.EyePosition - surface.Positon).xyz;
+    float3 eyeDir = normalize(Scene.EyePosition - surface.Position).xyz;
     
     float3 lightDirection;
+    float distanceToLight = 0.0f;
     if (light.Type == LIGHT_TYPE_DIRECTIONAL)
     {
         lightDirection = -normalize(light.Direction).xyz;
     }
     else if (light.Type == LIGHT_TYPE_POINT)
     {
-        lightDirection = normalize(light.Position - surface.Positon).xyz;
+        float3 direction = (light.Position - surface.Position).xyz;
+        lightDirection = normalize(direction);
+        distanceToLight = sqrt(dot(direction, direction));
     }
     float3 halfway = normalize(eyeDir + lightDirection);
         
+    surface.DistanceToL = min(light.Range, distanceToLight);
     surface.NdotV = max(dot(surface.Normal.xyz, eyeDir), 0.0f);
     surface.NdotL = max(dot(surface.Normal.xyz, lightDirection), 0.0f);
     surface.NdotH = max(dot(surface.Normal.xyz, halfway), 0.0f);
@@ -46,13 +50,13 @@ void main(uint3 DTid : SV_DispatchThreadID)
     
     // Setup surface
     Surface surface;
-    surface.Positon         = ReconstructPosW(depth, DTid.xy, Scene.WindowSize, Scene.InvProjection, Scene.InvView);
+    surface.Position        = ReconstructPosW(depth, DTid.xy, Scene.WindowSize, Scene.InvProjection, Scene.InvView);
     surface.Albedo          = float4(AlbedoMetalnessTexture.Load(uint3(DTid.xy, 0)).rgb, 1.0f);
     surface.Normal          = float4(NormalRoughnessTexture.Load(uint3(DTid.xy, 0)).xyz, 0.0f);
     surface.Metalness       = AlbedoMetalnessTexture.Load(uint3(DTid.xy, 0)).a;
     surface.Roughness       = NormalRoughnessTexture.Load(uint3(DTid.xy, 0)).a;
     
-    surface.FinalColor = 0.0f * surface.Albedo; // Ambient
+    surface.FinalColor = 0.05f * surface.Albedo; // Ambient
     for (int i = 0; i < Scene.LightsNum; ++i)
     {
         SetLightParams(Lights[i], surface);
@@ -62,12 +66,13 @@ void main(uint3 DTid : SV_DispatchThreadID)
         
         // (F * G * D) / (4 * NdotL * NdotV)
         float3 F = FresnelSchlick(surface, F0);
-        float G = GeometrySmith(surface, Lights[i]);
-        float D = CalculateSpecular(surface, Lights[i]);
+        float G = GeometrySmith(surface);
+        float D = CalculateSpecular(surface);
         float3 cookTorrance = (F * G * D) / max(0.00001f, (4.0f * surface.NdotL * surface.NdotV));
         
         float3 diffuseColor = surface.Albedo.rgb * (1.0f - surface.Metalness);
-        float3 lightingModel = (diffuseColor + cookTorrance) * surface.NdotL;
+        float lightAttenuation = CalculateInverseSquareAttenuation(Lights[i], surface);
+        float3 lightingModel = (diffuseColor + cookTorrance) * surface.NdotL * lightAttenuation * Lights[i].Color.rgb;
         
         float4 finalDiffuse = float4(lightingModel, 1.0f);
         

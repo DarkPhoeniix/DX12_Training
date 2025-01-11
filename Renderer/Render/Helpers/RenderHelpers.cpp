@@ -12,54 +12,58 @@
 #include "Render/Frame/CacheGPU.h"
 #include "Render/Helpers/GPUStructs.h"
 
+namespace
+{
+    void CheckLightsNum(std::shared_ptr<scene::Entity> node, uint32_t& lightsNum)
+    {
+        if (node->GetComponentAs<scene::Light>("Light"))
+        {
+            ++lightsNum;
+        }
+
+        for (std::shared_ptr<scene::Entity>& child : node->GetChildrenNodes())
+        {
+            CheckLightsNum(child, lightsNum);
+        }
+    }
+
+    void SetupLightToGPU(std::shared_ptr<scene::Entity> node, CacheGPU::DataHandle& dataHandle, uint32_t& index)
+    {
+        scene::Transformation* transform = node->GetComponentAs<scene::Transformation>("Transformation");
+        scene::Light* light = node->GetComponentAs<scene::Light>("Light");
+        if (light)
+        {
+            GPULightDesc* data = (GPULightDesc*)dataHandle.DataCPU;
+
+            GPULightDesc lightDesc;
+            {
+                lightDesc.position = transform->Transform.r[3];
+                lightDesc.direction = light->Direction;
+                lightDesc.color = light->Color;
+                lightDesc.range = light->Range;
+                lightDesc.intensity = light->Intensity;
+                lightDesc.type = (uint32_t)light->Type;
+            }
+
+            data[index++] = lightDesc;
+        }
+
+        for (std::shared_ptr<scene::Entity>& child : node->GetChildrenNodes())
+        {
+            SetupLightToGPU(child, dataHandle, index);
+        }
+    }
+} // namespace unnamed
+
 namespace Helpers
 {
     void SetupSceneDataGPU(scene::Scene& scene, dx12::CommandList& commandList, CacheGPU* frameCache)
     {
-        scene::SceneCache& cache = scene.GetCache();
-
         uint32_t lightsNum = 0;
-        CacheGPU::DataHandle lightsData = frameCache->RequestPlacement(sizeof(GPULightDesc));
-
-        auto ProcessLight = [&lightsNum, &lightsData](std::shared_ptr<scene::Entity>& entity)
-            {
-                scene::SceneCache* cache = entity->GetSceneCache();
-                if (ASSERT(cache, "Entity has no scene cache"))
-                {
-                    return;
-                }
-
-                scene::Transformation* transform = entity->GetComponentAs<scene::Transformation>("Transformation");
-                scene::Light* light = entity->GetComponentAs<scene::Light>("Light");
-                if (light)
-                {
-                    GPULightDesc* data = (GPULightDesc*)lightsData.DataCPU;
-
-                    GPULightDesc lightDesc;
-                    {
-                        lightDesc.position = transform->Transform.r[3];
-                        lightDesc.direction = light->Direction;
-                        lightDesc.color = light->Color;
-                        lightDesc.range = light->Range;
-                        lightDesc.intensity = light->Intensity;
-                        lightDesc.type = (uint32_t)light->Type;
-                    }
-
-                    data[lightsNum++] = lightDesc;
-                }
-            };
-
         for (std::shared_ptr<scene::Entity>& node : scene.GetRootNodes())
         {
-            ProcessLight(node);
-
-            for (std::shared_ptr<scene::Entity>& child : node->GetChildrenNodes())
-            {
-                ProcessLight(child);
-            }
+            CheckLightsNum(node, lightsNum);
         }
-
-        commandList.SetSRV(2, lightsData.DataGPU);
 
         // Setup scene data
         CacheGPU::DataHandle sceneDataHandle = frameCache->RequestPlacement(sizeof(GPUSceneDesc));
@@ -99,5 +103,16 @@ namespace Helpers
         }
 
         commandList.SetCBV(0, sceneDataHandle.DataGPU);
+
+        CacheGPU::DataHandle lightsData = frameCache->RequestPlacement(sizeof(GPULightDesc) * lightsNum);
+
+        uint32_t lightCounter = 0;
+        for (std::shared_ptr<scene::Entity>& node : scene.GetRootNodes())
+        {
+            SetupLightToGPU(node, lightsData, lightCounter);
+        }
+
+        commandList.SetSRV(2, lightsData.DataGPU);
+
     }
 } // namespace Helpers

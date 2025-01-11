@@ -34,8 +34,8 @@ float4 main(PixelShaderinput IN) : SV_Target
 
     // Setup surface
     Surface surface;
-    surface.Positon     = IN.WorldPosition;
-    surface.Albedo = Materials[Model.AlbedoTextureIndex].Sample(LinearSampler, uv);
+    surface.Position    = IN.WorldPosition;
+    surface.Albedo      = Materials[Model.AlbedoTextureIndex].Sample(LinearSampler, uv);
     surface.Normal      = float4(normalize(mul(normal.xyz, TBN)), 0.0f);
     surface.Metalness   = Materials[Model.MetalnessTextureIndex].Sample(PointSampler, uv).r;
 

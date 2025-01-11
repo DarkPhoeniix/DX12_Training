@@ -19,7 +19,7 @@ float4 CalculateDiffuse(in Surface surface, in LightDesc light)
     }
     else if (light.Type == LIGHT_TYPE_POINT)
     {
-        float4 lightDirection = normalize(light.Position - surface.Positon);
+        float4 lightDirection = normalize(light.Position - surface.Position);
         diffuseFactor = max(dot(surface.Normal, lightDirection), 0.0f);
     }
     
