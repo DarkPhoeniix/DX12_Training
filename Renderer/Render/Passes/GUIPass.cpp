@@ -24,7 +24,7 @@ namespace render
     {
         TaskGPU* task = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
         task->SetName("gui");
-        task->AddDependency("aabb");
+        _tasks.push_back(task);
 
         dx12::CommandList& commandList = *task->GetCommandLists().front();
         commandList.SetName("Render GUI command list");

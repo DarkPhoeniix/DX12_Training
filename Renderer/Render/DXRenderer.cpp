@@ -126,12 +126,19 @@ namespace render
             _renderPasses[i]->SetRenderFrame(*_currentFrame);
 
             _renderPasses[i]->Execute();
+
+            if (i != 0)
+            {
+                TaskGPU* dependency = _renderPasses[i - 1]->GetTasks().back();
+                _renderPasses[i]->GetTasks().front()->AddDependency(dependency->GetName());
+            }
         }
 
         // Present
         {
             TaskGPU* task = _currentFrame->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
             task->SetName("present");
+            task->AddDependency(_renderPasses.back()->GetTasks().back()->GetName());
 
             dx12::CommandList& commandList = *task->GetCommandLists().front();
             commandList.SetName("Present");

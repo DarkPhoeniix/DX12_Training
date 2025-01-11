@@ -13,12 +13,18 @@ namespace render
 
     void IRenderPass::SetRenderFrame(Frame& currentFrame)
     {
+        _tasks.clear();
         _frame = &currentFrame;
     }
 
     void IRenderPass::SetGeometryBuffer(GBuffer& gBuffer)
     {
         _gBuffer = &gBuffer;
+    }
+
+    const std::vector<TaskGPU*>& IRenderPass::GetTasks() const
+    {
+        return _tasks;
     }
 
     const std::string& IRenderPass::GetName() const

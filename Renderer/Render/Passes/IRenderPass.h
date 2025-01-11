@@ -15,6 +15,8 @@ namespace render
         void SetRenderFrame(Frame& currentFrame);
         void SetGeometryBuffer(GBuffer& gBuffer);
 
+        const std::vector<TaskGPU*>& GetTasks() const;
+
         const std::string& GetName() const;
 
         virtual void Inititalize();
@@ -28,6 +30,8 @@ namespace render
         GBuffer* _gBuffer;
 
         scene::Camera* _activeCamera;
+
+        std::vector<TaskGPU*> _tasks;
 
         std::string _name;
     };

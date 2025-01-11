@@ -30,7 +30,7 @@ namespace render
     {
         TaskGPU* task = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, &_OBBpipeline);
         task->SetName("aabb");
-        task->AddDependency("armature");
+        _tasks.push_back(task);
 
         dx12::CommandList& commandList = *task->GetCommandLists().front();
         commandList.SetName("Debug volumes command list");

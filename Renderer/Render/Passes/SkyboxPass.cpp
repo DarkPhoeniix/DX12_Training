@@ -26,7 +26,7 @@ namespace render
     {
         TaskGPU* task = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE, &_skyboxPipeline);
         task->SetName("skybox");
-        task->AddDependency("deferred");
+        _tasks.push_back(task);
 
         std::shared_ptr<scene::Entity> entity = _scene->FindNodeByComponentName("Skybox");
         if (!entity)

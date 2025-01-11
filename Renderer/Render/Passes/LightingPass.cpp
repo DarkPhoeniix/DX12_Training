@@ -25,7 +25,7 @@ namespace render
     {
         TaskGPU* task = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE, &_deferredPipeline);
         task->SetName("deferred");
-        task->AddDependency("g-pass");
+        _tasks.push_back(task);
 
         dx12::CommandList& commandList = *task->GetCommandLists().front();
         commandList.SetName("Lighting pass command list");

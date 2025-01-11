@@ -24,6 +24,7 @@ namespace render
         // Create task and dedicated command list
         TaskGPU* task = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
         task->SetName("clean");
+        _tasks.push_back(task);
 
         dx12::CommandList& commandList = *task->GetCommandLists().front();
         commandList.SetName("Clear buffers command list");

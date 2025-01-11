@@ -36,7 +36,7 @@ namespace render
         {
             TaskGPU* task = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
             task->SetName("transitionToFXAA");
-            task->AddDependency("skybox");
+            _tasks.push_back(task);
 
             dx12::CommandList& commandList = *task->GetCommandLists().front();
             commandList.SetName("Transition to FXAA command list");
@@ -51,6 +51,7 @@ namespace render
             TaskGPU* task = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE, &_FXAAPipeline);
             task->SetName("fxaa");
             task->AddDependency("transitionToFXAA");
+            _tasks.push_back(task);
 
             dx12::CommandList& commandList = *task->GetCommandLists().front();
             commandList.SetName("FXAA command list");
@@ -90,6 +91,7 @@ namespace render
             TaskGPU* task = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
             task->SetName("transitionFromFXAA");
             task->AddDependency("fxaa");
+            _tasks.push_back(task);
 
             dx12::CommandList& commandList = *task->GetCommandLists().front();
             commandList.SetName("Transition from FXAA command list");

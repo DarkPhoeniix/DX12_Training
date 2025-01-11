@@ -25,7 +25,7 @@ namespace render
     {
         TaskGPU* task = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, &_debugArmaturePipeline);
         task->SetName("armature");
-        task->AddDependency("transitionFromFXAA");
+        _tasks.push_back(task);
 
         dx12::CommandList& commandList = *task->GetCommandLists().front();
         commandList.SetName("Debug armature command list");

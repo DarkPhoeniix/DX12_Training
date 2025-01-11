@@ -35,7 +35,7 @@ namespace render
     {
         TaskGPU* task = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, &_geometryPipeline);
         task->SetName("g-pass");
-        task->AddDependency("clear");
+        _tasks.push_back(task);
 
         dx12::CommandList& commandList = *task->GetCommandLists().front();
         commandList.SetName("Geometry pass command list");

@@ -99,6 +99,8 @@ void Frame::Init(const DirectX::XMUINT2& size, uint32_t cacheSize)
     {
         dx12::Device::CreateRenderTargetView(_targetTexture.GetAsRTV(), _RTVHeap);
     }
+
+    _tasks.reserve(128);
 }
 
 TaskGPU* Frame::CreateTask(D3D12_COMMAND_LIST_TYPE type, dx12::PipelineState* rootSignature)
