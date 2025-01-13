@@ -25,5 +25,8 @@ namespace scene
 
         float Intensity;
         float Range;
+
+        float OuterAngle;
+        float InnerAngle;
     };
 }

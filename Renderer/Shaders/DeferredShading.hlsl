@@ -29,6 +29,12 @@ void SetLightParams(in LightDesc light, inout Surface surface)
         lightDirection = normalize(direction);
         distanceToLight = sqrt(dot(direction, direction));
     }
+    else if (light.Type == LIGHT_TYPE_SPOT)
+    {
+        float3 direction = (light.Position - surface.Position).xyz;
+        lightDirection = normalize(direction).xyz;
+        distanceToLight = sqrt(dot(normalize(direction), normalize(direction)));
+    }
     float3 halfway = normalize(eyeDir + lightDirection);
         
     surface.DistanceToL = min(light.Range, distanceToLight);
@@ -71,7 +77,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
         float3 cookTorrance = (F * G * D) / max(0.00001f, (4.0f * surface.NdotL * surface.NdotV));
         
         float3 diffuseColor = surface.Albedo.rgb * (1.0f - surface.Metalness);
-        float lightAttenuation = CalculateInverseSquareAttenuation(Lights[i], surface);
+        float lightAttenuation = CalculateAttenuation(Lights[i], surface);
         float3 lightingModel = (diffuseColor + cookTorrance) * surface.NdotL * lightAttenuation * Lights[i].Color.rgb;
         
         float4 finalDiffuse = float4(lightingModel, 1.0f);

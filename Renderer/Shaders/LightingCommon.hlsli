@@ -19,6 +19,7 @@ struct Surface
 
 #define LIGHT_TYPE_DIRECTIONAL 0
 #define LIGHT_TYPE_POINT 1
+#define LIGHT_TYPE_SPOT 2
 
 struct LightDesc
 {
@@ -29,12 +30,38 @@ struct LightDesc
     float Intesity;
     float Range;
     
+    float OuterAngle;
+    float InnerAngle;
+    
     uint Type;
     
-    uint pad;
+    uint pad[3];
 };
 
-float CalculateInverseSquareAttenuation(LightDesc light, Surface surface)
+float CalculatePointLightAttenuation(LightDesc light, Surface surface)
+{
+    return saturate(((surface.DistanceToL * surface.DistanceToL) / (light.Range * light.Range)) * (((2 * surface.DistanceToL) / light.Range) - 3.0f) + 1.0f);
+}
+
+float CalculateSpotLightAttenuation(LightDesc light, Surface surface)
+{
+    float3 toLight = normalize(light.Position - surface.Position);
+    float cosAngle = dot(-light.Direction.xyz, toLight);
+    float cosOuterAngle = cos(light.OuterAngle);
+    float cosInnerAngle = cos(light.InnerAngle);
+    
+    float coneAttenuation = saturate((cosAngle - cosOuterAngle) / (cosInnerAngle - cosOuterAngle));
+    coneAttenuation *= coneAttenuation;
+    
+    float rangeRcp = 1.0f / light.Range;
+    float distanceToLightNorm = 1.0f - saturate(surface.DistanceToL * rangeRcp);
+    
+    float attenuation = distanceToLightNorm * distanceToLightNorm;
+
+    return attenuation * coneAttenuation;
+}
+
+float CalculateAttenuation(LightDesc light, Surface surface)
 {
     if (light.Type == LIGHT_TYPE_DIRECTIONAL)
     {
@@ -42,10 +69,12 @@ float CalculateInverseSquareAttenuation(LightDesc light, Surface surface)
     }
     else if (light.Type == LIGHT_TYPE_POINT)
     {
-        return saturate(((surface.DistanceToL * surface.DistanceToL) / (light.Range * light.Range)) * (((2 * surface.DistanceToL) / light.Range) - 3.0f) + 1.0f);
+        return CalculatePointLightAttenuation(light, surface);
     }
-    else
+    else if (light.Type == LIGHT_TYPE_SPOT)
     {
-        return 0.0f;
+        return CalculateSpotLightAttenuation(light, surface);
     }
+    
+    return 0.0f;
 }
