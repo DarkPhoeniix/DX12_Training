@@ -27,6 +27,8 @@ struct ModelDesc
     uint                NormalTextureIndex;
     uint                MetalnessTextureIndex;
     uint                RoughnessTextureIndex;
+    
+    bool                useSkinning;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

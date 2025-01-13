@@ -2,7 +2,7 @@
 
 struct Surface
 {
-    float4 Positon;
+    float4 Position;
     
     float4 Albedo;
     float4 Normal;
@@ -11,6 +11,7 @@ struct Surface
     
     float4 FinalColor;
     
+    float DistanceToL;
     float NdotV;
     float NdotL;
     float NdotH;
@@ -29,4 +30,22 @@ struct LightDesc
     float Range;
     
     uint Type;
+    
+    uint pad;
 };
+
+float CalculateInverseSquareAttenuation(LightDesc light, Surface surface)
+{
+    if (light.Type == LIGHT_TYPE_DIRECTIONAL)
+    {
+        return 1.0f;
+    }
+    else if (light.Type == LIGHT_TYPE_POINT)
+    {
+        return saturate(((surface.DistanceToL * surface.DistanceToL) / (light.Range * light.Range)) * (((2 * surface.DistanceToL) / light.Range) - 3.0f) + 1.0f);
+    }
+    else
+    {
+        return 0.0f;
+    }
+}

@@ -69,6 +69,8 @@ namespace render
                         return;
                     }
 
+                    scene::Animation* animation = entity->GetComponentAs<scene::Animation>("Animation");
+                    scene::Armature* armature = entity->GetComponentAs<scene::Armature>("Armature");
                     scene::Transformation transform = entity->GetGlobalTransform();
                     scene::Material* material = entity->GetComponentAs<scene::Material>("Material");
                     scene::Mesh* mesh = entity->GetComponentAs<scene::Mesh>("Mesh");
@@ -92,13 +94,16 @@ namespace render
                             modelDesc->NormalMapTextureIndex = textureTable->GetResourceIndex(material->NormalMap.get(), dx12::ResourceViewType::SRV);
                             modelDesc->MetalnessTextureIndex = textureTable->GetResourceIndex(material->Metalness.get(), dx12::ResourceViewType::SRV);
                             modelDesc->RoughnessTextureIndex = textureTable->GetResourceIndex(material->Roughness.get(), dx12::ResourceViewType::SRV);
+
+                            if (armature)
+                            {
+                                modelDesc->UseSkinning = true;
+                            }
                         }
                     }
 
                     commandList.SetCBV(1, modelDescHandle.DataGPU);
 
-                    scene::Animation* animation = entity->GetComponentAs<scene::Animation>("Animation");
-                    scene::Armature* armature = entity->GetComponentAs<scene::Armature>("Armature");
                     // Update and setup animantion
                     if (armature && animation)
                     {
