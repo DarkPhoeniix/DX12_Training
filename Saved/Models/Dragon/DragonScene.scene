@@ -2,12 +2,12 @@
     "Name": "AnimTest",
     "Nodes": [
         "Dragon.node",
-        "Pink.node",
         "Floor.node",
         "Wall01.node",
         "Wall02.node",
         "Blue.node",
+        "Pink.node",
         "Skybox.node",
-        "Sun.node"
+        "SpotLight.node"
     ]
 }
