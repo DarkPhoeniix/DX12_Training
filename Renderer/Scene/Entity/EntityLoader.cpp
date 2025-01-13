@@ -327,6 +327,8 @@ namespace scene
             component->Color = ParseVector(lightData["Color"].asString());
             component->Intensity = lightData["Intensity"].asFloat();
             component->Range = lightData["Range"].asFloat();
+            component->OuterAngle = lightData["OuterRadius"].asFloat();
+            component->InnerAngle = lightData["InnerRadius"].asFloat();
         }
 
         void EntityLoader::LoadComponent(Json::Value& jsonValue, const std::shared_ptr<Skybox>& component)

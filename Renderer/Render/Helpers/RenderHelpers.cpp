@@ -42,6 +42,8 @@ namespace
                 lightDesc.color = light->Color;
                 lightDesc.range = light->Range;
                 lightDesc.intensity = light->Intensity;
+                lightDesc.outerAngle = light->OuterAngle;
+                lightDesc.innerAngle = light->InnerAngle;
                 lightDesc.type = (uint32_t)light->Type;
             }
 

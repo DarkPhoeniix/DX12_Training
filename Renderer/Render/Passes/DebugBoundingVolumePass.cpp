@@ -37,6 +37,10 @@ namespace render
 
         PIXBeginEvent(commandList.GetDXCommandList().Get(), 8, "AABB");
         {
+            commandList.TransitionBarrier(_gBuffer->GetDepthTexture(), D3D12_RESOURCE_STATE_DEPTH_WRITE);
+            commandList.TransitionBarrier(_gBuffer->GetAlbedoMetalnessTexture(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+            commandList.TransitionBarrier(_gBuffer->GetNormalTexture(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+
             commandList.SetPipelineState(_OBBpipeline);
 
             std::vector<scene::OBBVolume> volumes;

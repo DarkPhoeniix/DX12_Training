@@ -40,5 +40,8 @@ struct GPULightDesc
     float intensity;
     float range;
 
+    float outerAngle;
+    float innerAngle;
+
     uint32_t type;
 };
