@@ -1,9 +1,9 @@
 {   
     "Direction": "0.0 0.0 -1.0 0.0",
-    "Color": "0.1 1.0 0.1 1.0",
+    "Color": "1.0 0.9 0.7 1.0",
     "Energy": 7000.0,
     "Type": "Spot",
-    "Range": 400.0,
-    "OuterRadius": 0.425,
-    "InnerRadius": 0.350
+    "Range": 60.0,
+    "OuterAngle": 60.0,
+    "InnerAngle": 30.0
 }

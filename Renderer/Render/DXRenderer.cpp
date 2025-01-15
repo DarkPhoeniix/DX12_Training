@@ -21,6 +21,7 @@
 #include "Render/Passes/GeometryPass.h"
 #include "Render/Passes/GUIPass.h"
 #include "Render/Passes/LightingPass.h"
+#include "Render/Passes/ShadowPass.h"
 #include "Render/Passes/SkyboxPass.h"
 
 using namespace DirectX;
@@ -56,14 +57,14 @@ namespace render
         // Camera Setup
         std::shared_ptr<scene::Entity> cameraEntity = std::make_shared<scene::Entity>(&_scene.GetCache());
         {
-            XMVECTOR pos = XMVectorSet(15.0f, 23.0f, 20.0f, 1.0f);
-            XMVECTOR target = XMVectorSet(0.0f, 20.0f, 0.0f, 1.0f);
+            XMVECTOR pos = XMVectorSet(0.0f, 20.0f, 25.0f, 1.0f);
+            XMVECTOR target = XMVectorSet(0.0f, 20.0f, -25.0f, 1.0f);
             XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
             std::shared_ptr<scene::Camera> cameraComponent = std::make_shared<scene::Camera>();
             cameraComponent->LookAt(pos, target, up);
             cameraComponent->SetViewport(scene::Viewport({ windowWidth, windowHeight }));
-            cameraComponent->SetLens(45.0f, 0.1f, 1000.0f);
+            cameraComponent->SetLens(60.0f, 0.1f, 1000.0f);
             cameraComponent->SetSpeed(70.0f);
 
             std::shared_ptr<scene::Transformation> transformComponent = std::make_shared<scene::Transformation>();
@@ -245,6 +246,7 @@ namespace render
         _renderPasses.clear();
 
         _renderPasses.push_back(std::make_unique<ClearBuffersPass>());
+        _renderPasses.push_back(std::make_unique<ShadowPass>());
         _renderPasses.push_back(std::make_unique<GeometryPass>());
         _renderPasses.push_back(std::make_unique<LightingPass>());
         _renderPasses.push_back(std::make_unique<SkyboxPass>());

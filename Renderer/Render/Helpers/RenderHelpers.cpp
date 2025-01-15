@@ -3,6 +3,7 @@
 #include "RenderHelpers.h"
 
 #include "CommandList.h"
+#include "ResourceTable.h"
 
 #include "Scene/Entity/Components/Camera.h"
 #include "Scene/Entity/Components/Light.h"
@@ -11,6 +12,8 @@
 
 #include "Render/Frame/CacheGPU.h"
 #include "Render/Helpers/GPUStructs.h"
+
+using namespace DirectX;
 
 namespace
 {
@@ -25,6 +28,27 @@ namespace
         {
             CheckLightsNum(child, lightsNum);
         }
+    }
+
+    std::pair<DirectX::XMMATRIX, DirectX::XMMATRIX> GetLightViewProj(std::shared_ptr<scene::Entity> node)
+    {
+        scene::Transformation* transform = node->GetComponentAs<scene::Transformation>("Transformation");
+        scene::Light* light = node->GetComponentAs<scene::Light>("Light");
+
+        XMMATRIX view;
+        XMMATRIX proj;
+
+        XMVECTOR lightDir = XMVector3Normalize(light->Direction);
+        XMVECTOR lightPos = transform->Transform.r[3];
+        XMVECTOR lightTar = lightPos + lightDir * light->Range;
+
+        view = XMMatrixLookAtLH(lightPos, lightTar, XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
+
+        float angle = XMConvertToRadians(light->OuterAngle);
+        float s = std::cos(angle) / std::sin(angle);
+        float q = (light->Range) / (light->Range - 0.5f);
+        proj = XMMatrixPerspectiveFovLH(angle, 1.0f, 0.5f, light->Range);
+        return std::make_pair(view, proj);
     }
 
     void SetupLightToGPU(std::shared_ptr<scene::Entity> node, CacheGPU::DataHandle& dataHandle, uint32_t& index)
@@ -42,9 +66,13 @@ namespace
                 lightDesc.color = light->Color;
                 lightDesc.range = light->Range;
                 lightDesc.intensity = light->Intensity;
-                lightDesc.outerAngle = light->OuterAngle;
-                lightDesc.innerAngle = light->InnerAngle;
+                lightDesc.outerAngle = std::cosf(DirectX::XMConvertToRadians(light->OuterAngle * 0.5f));
+                lightDesc.innerAngle = std::cosf(DirectX::XMConvertToRadians(light->InnerAngle * 0.5f));
+                lightDesc.view= GetLightViewProj(node).first;
+                lightDesc.Proj= GetLightViewProj(node).second;
                 lightDesc.type = (uint32_t)light->Type;
+                lightDesc.CastShadows = true;
+                lightDesc.ShadowMapIndex = node->GetSceneCache()->GetTextureTable()->GetResourceIndex("ShadowMap", dx12::ResourceViewType::DSV);
             }
 
             data[index++] = lightDesc;

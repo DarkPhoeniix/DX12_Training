@@ -23,10 +23,11 @@ namespace dx12
 
         ASSERT((_resources.size() < _numDescriptors), "Resource table is full");
 
-        InternalResourceDesc value = { _resources.size(), viewType };
+        InternalResourceDesc value = { resource, _resources.size(), viewType };
         std::string key = resource->GetName();
 
         _resources.insert(std::make_pair(key, value));
+        _descriptorHeap.PlaceResource(resource, viewType);
         _heap.PlaceResource(*resource);
 
         return true;
@@ -42,9 +43,29 @@ namespace dx12
         return _descriptorHeap.GetResourceGPUHandle(resource, viewType);
     }
 
+    D3D12_CPU_DESCRIPTOR_HANDLE ResourceTable::GetResourceCPUHandle(const std::string& resourceName, ResourceViewType viewType)
+    {
+        return _descriptorHeap.GetResourceCPUHandle(resourceName, viewType);
+    }
+
+    D3D12_GPU_DESCRIPTOR_HANDLE ResourceTable::GetResourceGPUHandle(const std::string& resourceName, ResourceViewType viewType)
+    {
+        return _descriptorHeap.GetResourceGPUHandle(resourceName, viewType);
+    }
+
     UINT ResourceTable::GetResourceIndex(Resource* resource, ResourceViewType viewType)
     {
         return _descriptorHeap.GetResourceIndex(resource, viewType);
+    }
+
+    UINT ResourceTable::GetResourceIndex(const std::string& resourceName, ResourceViewType viewType)
+    {
+        return _descriptorHeap.GetResourceIndex(resourceName, viewType);
+    }
+
+    Resource* ResourceTable::GetResourceByName(const std::string& resourceName, ResourceViewType viewType)
+    {
+        return _descriptorHeap.GetResourceByName(resourceName, viewType);
     }
 
     DescriptorHeap& ResourceTable::GetDescriptorHeap()

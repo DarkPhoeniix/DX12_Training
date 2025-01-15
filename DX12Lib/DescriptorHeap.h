@@ -43,7 +43,13 @@ namespace dx12
         D3D12_CPU_DESCRIPTOR_HANDLE GetResourceCPUHandle(Resource* resource, ResourceViewType viewType);
         D3D12_GPU_DESCRIPTOR_HANDLE GetResourceGPUHandle(Resource* resource, ResourceViewType viewType);
 
+        D3D12_CPU_DESCRIPTOR_HANDLE GetResourceCPUHandle(const std::string& resourceName, ResourceViewType viewType);
+        D3D12_GPU_DESCRIPTOR_HANDLE GetResourceGPUHandle(const std::string& resourceName, ResourceViewType viewType);
+
         UINT GetResourceIndex(Resource* resource, ResourceViewType viewType);
+        UINT GetResourceIndex(const std::string& resourceName, ResourceViewType viewType);
+
+        Resource* GetResourceByName(const std::string& name, ResourceViewType viewType);
 
         void SetDescription(const DescriptorHeapDescription& description);
         const DescriptorHeapDescription& GetDescription() const;
@@ -58,6 +64,7 @@ namespace dx12
         {
             using ResourceIndex = std::uint32_t;
 
+            Resource* Res;
             ResourceIndex HeapIndex = -1;
             ResourceViewType Type = ResourceViewType::Unknown;
         };

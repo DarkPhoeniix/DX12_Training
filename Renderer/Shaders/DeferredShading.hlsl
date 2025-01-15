@@ -11,7 +11,35 @@ StructuredBuffer<LightDesc> Lights          : register(t0);
 Texture2D<float4>   PositionTexture         : register(t1);
 Texture2D<float4>   AlbedoMetalnessTexture  : register(t2);
 Texture2D<float4>   NormalRoughnessTexture  : register(t3);
+Texture2D<float4>   ShadowMap               : register(t4);
 RWTexture2D<float4> TargetTexture           : register(u0);
+
+SamplerState LinearSampler : register(s0);
+
+float CalculateShadowAttenuation(LightDesc light, Surface surface)
+{
+    float4 surfacePos = mul(surface.Position, mul(light.View, light.Proj));
+    surfacePos /= surfacePos.w;
+    
+    if (surfacePos.x < -1.0f || surfacePos.x > 1.0f ||
+        surfacePos.y < -1.0f || surfacePos.y > 1.0f ||
+        surfacePos.z <  0.0f || surfacePos.z > 1.0f)
+        return 0.0f;
+    
+    float2 UV;
+    UV.x = (surfacePos.x /  2.0f) + 0.5f;
+    UV.y = (surfacePos.y / -2.0f) + 0.5f;
+    surfacePos.z -= 0.001f;
+    
+    float depth = ShadowMap.SampleLevel(LinearSampler, UV, 0).r;
+    
+    if (depth < surfacePos.z)
+    {
+        return 0.0f;
+    }
+
+    return 1.0f;
+}
 
 void SetLightParams(in LightDesc light, inout Surface surface)
 {
@@ -57,6 +85,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
     // Setup surface
     Surface surface;
     surface.Position        = ReconstructPosW(depth, DTid.xy, Scene.WindowSize, Scene.InvProjection, Scene.InvView);
+    surface.NDCPosition     = mul(surface.Position, Scene.ViewProjection);
     surface.Albedo          = float4(AlbedoMetalnessTexture.Load(uint3(DTid.xy, 0)).rgb, 1.0f);
     surface.Normal          = float4(NormalRoughnessTexture.Load(uint3(DTid.xy, 0)).xyz, 0.0f);
     surface.Metalness       = AlbedoMetalnessTexture.Load(uint3(DTid.xy, 0)).a;
@@ -78,7 +107,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
         
         float3 diffuseColor = surface.Albedo.rgb * (1.0f - surface.Metalness);
         float lightAttenuation = CalculateAttenuation(Lights[i], surface);
-        float3 lightingModel = (diffuseColor + cookTorrance) * surface.NdotL * lightAttenuation * Lights[i].Color.rgb;
+        float3 lightingModel = (diffuseColor + cookTorrance) * surface.NdotL * lightAttenuation * Lights[i].Color.rgb * CalculateShadowAttenuation(Lights[i], surface);
         
         float4 finalDiffuse = float4(lightingModel, 1.0f);
         

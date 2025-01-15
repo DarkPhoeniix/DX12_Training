@@ -47,7 +47,7 @@ namespace dx12
 
     void DescriptorHeap::PlaceResource(Resource* resource, ResourceViewType viewType)
     {
-        InternalResourceDesc value = { _resources.size(), viewType };
+        InternalResourceDesc value = { resource, _resources.size(), viewType };
         std::string key = resource->GetName();
 
         _resources.insert(std::make_pair(key, value));
@@ -55,7 +55,7 @@ namespace dx12
 
     void DescriptorHeap::CopyResourceDescriptor(Resource* resource, ResourceViewType viewType, D3D12_CPU_DESCRIPTOR_HANDLE descriptor)
     {
-        InternalResourceDesc value = { _resources.size(), viewType };
+        InternalResourceDesc value = { resource, _resources.size(), viewType };
         std::string key = resource->GetName();
 
         _resources.insert(std::make_pair(key, value));
@@ -118,18 +118,85 @@ namespace dx12
         return handle;
     }
 
-    UINT DescriptorHeap::GetResourceIndex(Resource* resource, ResourceViewType viewType)
+    D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetResourceCPUHandle(const std::string& resourceName, ResourceViewType viewType)
     {
-        std::string key = resource->GetName();
-        auto result = _resources.find(key);
-        while (result->first == key && result->second.Type != viewType)
+        auto result = _resources.find(resourceName);
+        while (result != _resources.end() && result->first == resourceName && result->second.Type != viewType)
         {
             ++result;
         }
 
         ASSERT((result != _resources.end()), "Trying to Get invalid resource GPU handle from descriptor heap");
 
+        D3D12_CPU_DESCRIPTOR_HANDLE handle = _descriptorHeap->GetCPUDescriptorHandleForHeapStart();
+        handle.ptr += _heapIncrementSize * result->second.HeapIndex;
+
+        return handle;
+    }
+
+    D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetResourceGPUHandle(const std::string& resourceName, ResourceViewType viewType)
+    {
+        auto result = _resources.find(resourceName);
+        while (result != _resources.end() && result->first == resourceName && result->second.Type != viewType)
+        {
+            ++result;
+        }
+
+        ASSERT((result != _resources.end()), "Trying to Get invalid resource GPU handle from descriptor heap");
+
+        D3D12_GPU_DESCRIPTOR_HANDLE handle = _descriptorHeap->GetGPUDescriptorHandleForHeapStart();
+        handle.ptr += _heapIncrementSize * result->second.HeapIndex;
+
+        return handle;
+    }
+
+    UINT DescriptorHeap::GetResourceIndex(Resource* resource, ResourceViewType viewType)
+    {
+        std::string key = resource->GetName();
+        auto result = _resources.find(key);
+        while (result != _resources.end() && result->first == key && result->second.Type != viewType)
+        {
+            ++result;
+        }
+
+        if (ASSERT((result != _resources.end()), "Trying to Get invalid resource GPU handle from descriptor heap"))
+        {
+            return -1;
+        }
+
         return result->second.HeapIndex;
+    }
+
+    UINT DescriptorHeap::GetResourceIndex(const std::string& resourceName, ResourceViewType viewType)
+    {
+        auto result = _resources.find(resourceName);
+        while (result != _resources.end() && result->first == resourceName && result->second.Type != viewType)
+        {
+            ++result;
+        }
+
+        if (result == _resources.end())
+        {
+            return -1;
+        }
+
+        return result->second.HeapIndex;
+    }
+
+    Resource* DescriptorHeap::GetResourceByName(const std::string& name, ResourceViewType viewType)
+    {
+        auto result = _resources.find(name);
+        while (result != _resources.end() && result->first == name && result->second.Type != viewType)
+        {
+            ++result;
+        }
+
+        if (result == _resources.end())
+        {
+            return nullptr;
+        }
+
+        return result->second.Res;
     }
 
     void DescriptorHeap::SetDescription(const DescriptorHeapDescription& description)

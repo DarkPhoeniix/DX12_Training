@@ -43,5 +43,11 @@ struct GPULightDesc
     float outerAngle;
     float innerAngle;
 
+    DirectX::XMMATRIX view;
+    DirectX::XMMATRIX Proj;
+
     uint32_t type;
+
+    bool CastShadows = false;
+    UINT ShadowMapIndex = -1;
 };

@@ -1,8 +1,11 @@
 #include "RendererPCH.h"
 
-#include "GeometryPass.h"
+#include "ShadowPass.h"
 
 #include "ResourceTable.h"
+
+#include "Render/Helpers/GPUStructs.h"
+#include "Render/Helpers/RenderHelpers.h"
 
 #include "Scene/Entity/Components/Animation.h"
 #include "Scene/Entity/Components/Armature.h"
@@ -11,55 +14,72 @@
 #include "Scene/Entity/Components/Mesh.h"
 #include "Scene/Entity/Components/Transformation.h"
 
-#include "Render/Helpers/GPUStructs.h"
-#include "Render/Helpers/RenderHelpers.h"
-#include "Utility/DebugInfo.h"
 
 namespace render
 {
-    void GeometryPass::Inititalize()
+    void ShadowPass::Inititalize()
     {
         IRenderPass::Inititalize();
 
-        _name = "GeometryPass";
+        _shadowsPipeline.Parse("PipelineDescriptions\\PCFShadows.tech");
 
-        _geometryPipeline.Parse("PipelineDescriptions\\GPassPipeline.tech");
+        {
+            dx12::ResourceDescription desc = {};
+            desc.SetSize(_activeCamera->GetViewport().GetSize());
+            desc.SetDimension(D3D12_RESOURCE_DIMENSION_TEXTURE2D);
+            desc.SetFormat(DXGI_FORMAT_D32_FLOAT);
+
+            D3D12_CLEAR_VALUE clearValue;
+            clearValue.Format = DXGI_FORMAT_D32_FLOAT;
+            clearValue.DepthStencil.Depth = 1;
+            clearValue.DepthStencil.Stencil = 0;
+
+            desc.SetClearValue(clearValue);
+            desc.SetResourceType(dx12::EResourceType::Texture | dx12::EResourceType::DepthStencil);
+
+            _shadowTexture.CreateCommitedResource(desc);
+            _shadowTexture.SetName("ShadowMap");
+
+            _scene->GetCache().GetTextureTable()->AddResource(&_shadowTexture, dx12::ResourceViewType::DSV);
+        }
+
+        {
+            _vp.SetSize(_activeCamera->GetViewport().GetSize());
+        }
     }
 
-    void GeometryPass::Destroy()
+    void ShadowPass::Destroy()
     {
         IRenderPass::Destroy();
     }
 
-    void GeometryPass::Execute()
+    void ShadowPass::Execute()
     {
-        TaskGPU* task = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, &_geometryPipeline);
-        task->SetName("g-pass");
+        TaskGPU* task = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, &_shadowsPipeline);
+        task->SetName("shadows");
         _tasks.push_back(task);
 
         dx12::CommandList& commandList = *task->GetCommandLists().front();
-        commandList.SetName("Geometry pass command list");
+        commandList.SetName("Shadow pass command list");
 
-        PIXBeginEvent(commandList.GetDXCommandList().Get(), 2, "Geometry Pass");
+        PIXBeginEvent(commandList.GetDXCommandList().Get(), 2, "Shadow Pass");
         {
-            D3D12_CPU_DESCRIPTOR_HANDLE albedoMetalnessHandle = _gBuffer->GetAlbedoMetalnessTextureCPUHandle();
-            D3D12_CPU_DESCRIPTOR_HANDLE normalSpecularHandle = _gBuffer->GetNormalTextureCPUHandle();
-            D3D12_CPU_DESCRIPTOR_HANDLE depthHandle = _gBuffer->GetDepthTextureCPUHandle();
+            commandList.SetPipelineState(_shadowsPipeline);
+            
+            dx12::DescriptorHeap& dsvHeap = _frame->GetDescriptorHeap(dx12::DescriptorHeapType::DSV);
 
-            commandList.SetPipelineState(_geometryPipeline);
+            dx12::Device::CreateDepthStencilView(_shadowTexture.GetAsDSV(), dsvHeap);
 
-            commandList.SetViewport(_activeCamera->GetViewport());
-            commandList.SetRenderTargets({ albedoMetalnessHandle, normalSpecularHandle }, &depthHandle);
+            D3D12_CPU_DESCRIPTOR_HANDLE depthHandle = dsvHeap.GetResourceCPUHandle(&_shadowTexture, dx12::ResourceViewType::DSV);
 
-#if defined(_DEBUG)
-            DebugInfo::StartStatCollecting(commandList);
-#endif
+            commandList.TransitionBarrier(_shadowTexture, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+
+            commandList.ClearDSV(depthHandle, D3D12_CLEAR_FLAG_DEPTH);
+
+            commandList.SetViewport(_vp);
+            commandList.SetRenderTargets({ }, &depthHandle);
 
             Helpers::SetupSceneDataGPU(*_scene, commandList, &_frame->GetCache());
-
-            // Setup textures
-            commandList.SetDescriptorHeaps({ _scene->GetCache().GetTextureTable()->GetDescriptorHeap().GetDXDescriptorHeap().Get() });
-            commandList.SetDescriptorTable(4, _scene->GetCache().GetTextureTable()->GetDescriptorHeap().GetHeapStartGPUHandle());
 
             auto DrawEntity = [&commandList](std::shared_ptr<scene::Entity>& entity, CacheGPU& frameCache)
                 {
@@ -90,7 +110,7 @@ namespace render
                         {
                             std::shared_ptr<dx12::ResourceTable> textureTable = entity->GetSceneCache()->GetTextureTable();
 
-                            modelDesc->AlbedoTextureIndex = textureTable->GetResourceIndex(material->Albedo.get(), dx12::ResourceViewType::SRV);
+                            modelDesc->AlbedoTextureIndex    = textureTable->GetResourceIndex(material->Albedo.get(), dx12::ResourceViewType::SRV);
                             modelDesc->NormalMapTextureIndex = textureTable->GetResourceIndex(material->NormalMap.get(), dx12::ResourceViewType::SRV);
                             modelDesc->MetalnessTextureIndex = textureTable->GetResourceIndex(material->Metalness.get(), dx12::ResourceViewType::SRV);
                             modelDesc->RoughnessTextureIndex = textureTable->GetResourceIndex(material->Roughness.get(), dx12::ResourceViewType::SRV);
@@ -151,15 +171,6 @@ namespace render
                 }
             }
 
-#if defined(_DEBUG)
-            DebugInfo::EndStatCollecting(commandList);
-#endif
-
-            auto table = _scene->GetCache().GetTextureTable();
-            commandList.TransitionBarrier(_gBuffer->GetDepthTexture(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-            commandList.TransitionBarrier(_gBuffer->GetAlbedoMetalnessTexture(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-            commandList.TransitionBarrier(_gBuffer->GetNormalTexture(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-            commandList.TransitionBarrier(*table->GetResourceByName("ShadowMap", dx12::ResourceViewType::DSV), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
         }
         PIXEndEvent(commandList.GetDXCommandList().Get());
 

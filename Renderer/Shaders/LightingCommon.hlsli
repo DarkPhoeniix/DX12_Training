@@ -2,6 +2,7 @@
 
 struct Surface
 {
+    float4 NDCPosition;
     float4 Position;
     
     float4 Albedo;
@@ -33,9 +34,15 @@ struct LightDesc
     float OuterAngle;
     float InnerAngle;
     
+    row_major matrix View;
+    row_major matrix Proj;
+    
     uint Type;
     
-    uint pad[3];
+    bool CastShadows;
+    uint ShadowMapIndex;
+    
+    uint pad;
 };
 
 float CalculatePointLightAttenuation(LightDesc light, Surface surface)
@@ -47,8 +54,8 @@ float CalculateSpotLightAttenuation(LightDesc light, Surface surface)
 {
     float3 toLight = normalize(light.Position - surface.Position);
     float cosAngle = dot(-light.Direction.xyz, toLight);
-    float cosOuterAngle = cos(light.OuterAngle);
-    float cosInnerAngle = cos(light.InnerAngle);
+    float cosOuterAngle = light.OuterAngle;
+    float cosInnerAngle = light.InnerAngle;
     
     float coneAttenuation = saturate((cosAngle - cosOuterAngle) / (cosInnerAngle - cosOuterAngle));
     coneAttenuation *= coneAttenuation;
