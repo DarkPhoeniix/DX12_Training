@@ -10,6 +10,7 @@
 #include "Scene/Entity/Components/Material.h"
 #include "Scene/Entity/Components/Mesh.h"
 #include "Scene/Entity/Components/Skybox.h"
+#include "Scene/Entity/Components/Light.h"
 
 #include "Render/Frame/CacheGPU.h"
 
@@ -141,6 +142,14 @@ void UploadSceneProcessor::ProcessEntity(Entity& entity, dx12::CommandList& comm
         skybox->TexHeap.PlaceResource(*skybox->SkydomeTexture);
         skybox->SkydomeTexture->UploadToGPU(commandList);
         textureTable->PlaceResource(skybox->SkydomeTexture.get(), dx12::ResourceViewType::SRV);
+    }
+
+    Light* light = entity.GetComponentAs<Light>("Light");
+    if (light)
+    {
+        std::shared_ptr<dx12::ResourceTable> textureTable = cache->GetTextureTable();
+        textureTable->PlaceResource(light->ShadowMap.get(), dx12::ResourceViewType::DSV);
+        textureTable->PlaceResource(light->ShadowMap.get(), dx12::ResourceViewType::SRV);
     }
 }
 

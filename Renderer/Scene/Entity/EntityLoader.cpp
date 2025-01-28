@@ -181,7 +181,7 @@ namespace scene
             if (!jsonRoot["Light"].isNull())
             {
                 std::shared_ptr<Light> component = std::make_shared<Light>();
-                LoadComponent(jsonRoot, component);
+                LoadComponent(jsonRoot, component, entity->GetName());
                 entity->AddComponent(component);
             }
             if (!jsonRoot["Skybox"].isNull())
@@ -300,7 +300,7 @@ namespace scene
             }
         }
 
-        void EntityLoader::LoadComponent(Json::Value& jsonValue, const std::shared_ptr<Light>& component)
+        void EntityLoader::LoadComponent(Json::Value& jsonValue, const std::shared_ptr<Light>& component, const std::string& name)
         {
             std::string lightFilepth = _parentFilepath + '/' + jsonValue["Light"].asString();
 
@@ -322,13 +322,33 @@ namespace scene
             {
                 component->Type = LightType::Spot;
             }
-
             component->Direction = ParseVector(lightData["Direction"].asString());
             component->Color = ParseVector(lightData["Color"].asString());
             component->Intensity = lightData["Intensity"].asFloat();
             component->Range = lightData["Range"].asFloat();
             component->OuterAngle = lightData["OuterAngle"].asFloat();
             component->InnerAngle = lightData["InnerAngle"].asFloat();
+            component->CastShadows = lightData["CastShadows"].asBool();
+
+            if (component->CastShadows)
+            {
+                dx12::ResourceDescription desc = {};
+                desc.SetSize({ 1024, 1024 });
+                desc.SetDimension(D3D12_RESOURCE_DIMENSION_TEXTURE2D);
+                desc.SetFormat(DXGI_FORMAT_D32_FLOAT);
+
+                D3D12_CLEAR_VALUE clearValue;
+                clearValue.Format = DXGI_FORMAT_D32_FLOAT;
+                clearValue.DepthStencil.Depth = 1;
+                clearValue.DepthStencil.Stencil = 0;
+
+                desc.SetClearValue(clearValue);
+                desc.SetResourceType(dx12::EResourceType::Texture | dx12::EResourceType::DepthStencil);
+
+                component->ShadowMap = std::make_shared<dx12::Resource>();
+                component->ShadowMap->CreateCommitedResource(desc);
+                component->ShadowMap->SetName(name + "_ShadowMap");
+            }
         }
 
         void EntityLoader::LoadComponent(Json::Value& jsonValue, const std::shared_ptr<Skybox>& component)

@@ -43,22 +43,20 @@ namespace render
             dx12::Resource* target = &_frame->GetTargetTexture();
             dx12::Resource* albedoMetalness = &_gBuffer->GetAlbedoMetalnessTexture();
             dx12::Resource* normalSpecular = &_gBuffer->GetNormalTexture();
-            dx12::Resource* shadowMap = sceneTable->GetResourceByName("ShadowMap", dx12::ResourceViewType::DSV);
             dx12::Resource* depth = &_gBuffer->GetDepthTexture();
 
             frameTable.CopyDescriptor(albedoMetalness, dx12::ResourceViewType::SRV, gBufferTable);
             frameTable.CopyDescriptor(normalSpecular, dx12::ResourceViewType::SRV, gBufferTable);
             frameTable.CopyDescriptor(depth, dx12::ResourceViewType::SRV, gBufferTable);
-            frameTable.CopyDescriptor(shadowMap, dx12::ResourceViewType::SRV, *sceneTable);
 
             _frame->BindDescriptorHeaps(commandList);
 
-            Helpers::SetupSceneDataGPU(*_scene, commandList, &_frame->GetCache());
+            Helpers::SetupSceneDataGPU(*_scene, commandList, _frame);
 
             commandList.SetDescriptorTable(3, frameTable.GetResourceGPUHandle(depth, dx12::ResourceViewType::SRV));
             commandList.SetDescriptorTable(4, frameTable.GetResourceGPUHandle(albedoMetalness, dx12::ResourceViewType::SRV));
             commandList.SetDescriptorTable(5, frameTable.GetResourceGPUHandle(normalSpecular, dx12::ResourceViewType::SRV));
-            commandList.SetDescriptorTable(6, frameTable.GetResourceGPUHandle(shadowMap, dx12::ResourceViewType::SRV));
+            commandList.SetDescriptorTable(6, frameTable.GetDescriptorHeap(dx12::ResourceViewType::SRV).GetHeapStartGPUHandle());
             commandList.SetDescriptorTable(7, frameTable.GetResourceGPUHandle(target, dx12::ResourceViewType::UAV));
 
             DirectX::XMUINT2 viewportSize = _activeCamera->GetViewport().GetSize();

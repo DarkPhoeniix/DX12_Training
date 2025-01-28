@@ -43,7 +43,7 @@ namespace render
         {
             commandList.SetPipelineState(_skyboxPipeline);
 
-            Helpers::SetupSceneDataGPU(*_scene, commandList, &_frame->GetCache());
+            Helpers::SetupSceneDataGPU(*_scene, commandList, _frame);
 
             dx12::ResourceTable& sceneTable = *_scene->GetCache().GetTextureTable();
             dx12::ResourceTable& frameTable = _frame->GetResourceTable();

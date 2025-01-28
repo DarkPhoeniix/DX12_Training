@@ -28,7 +28,7 @@ namespace scene
             void LoadComponent(Json::Value& jsonValue, const std::shared_ptr<Transformation>& component);
             void LoadComponent(Json::Value& jsonValue, const std::shared_ptr<Material>& component);
             void LoadComponent(Json::Value& jsonValue, const std::shared_ptr<Mesh>& component);
-            void LoadComponent(Json::Value& jsonValue, const std::shared_ptr<Light>& component);
+            void LoadComponent(Json::Value& jsonValue, const std::shared_ptr<Light>& component, const std::string& name);
             void LoadComponent(Json::Value& jsonValue, const std::shared_ptr<Skybox>& component);
 
             void LoadRawMesh(const std::string& filepath, const std::shared_ptr<Mesh>& meshComponent);

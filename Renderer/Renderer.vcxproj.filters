@@ -438,7 +438,6 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\PCFShadows_vs.hlsl" />
-    <FxCompile Include="Shaders\PCFShadows_ps.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

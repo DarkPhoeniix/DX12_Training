@@ -24,6 +24,12 @@ struct BoneDesc
     row_major matrix Transform;
 };
 
+struct LI
+{
+    uint Index;
+};
+
+ConstantBuffer<LI> LightIndex : register(b3);
 StructuredBuffer<LightDesc> Lights : register(t0);
 StructuredBuffer<BoneDesc> Bones : register(t1);
 
@@ -46,8 +52,7 @@ VSOutput main(VSinput IN)
     float4 position = float4(IN.Position, 1.0f);
     position = mul(position, boneTransform);
     position = mul(position, Model.Transform);
-    position = mul(position, Lights[0].View);
-    position = mul(position, Lights[0].Proj);
+    position = mul(position, Lights[LightIndex.Index].ViewProj);
     
     VSOutput output;
     output.Position = position;

@@ -34,8 +34,7 @@ struct LightDesc
     float OuterAngle;
     float InnerAngle;
     
-    row_major matrix View;
-    row_major matrix Proj;
+    row_major matrix ViewProj;
     
     uint Type;
     

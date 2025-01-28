@@ -58,7 +58,7 @@ namespace render
             DebugInfo::StartStatCollecting(commandList);
 #endif
 
-            Helpers::SetupSceneDataGPU(*_scene, commandList, &_frame->GetCache());
+            Helpers::SetupSceneDataGPU(*_scene, commandList, _frame);
 
             // Setup textures
             _frame->BindDescriptorHeaps(commandList);
@@ -168,7 +168,6 @@ namespace render
             commandList.TransitionBarrier(_gBuffer->GetDepthTexture(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
             commandList.TransitionBarrier(_gBuffer->GetAlbedoMetalnessTexture(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
             commandList.TransitionBarrier(_gBuffer->GetNormalTexture(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-            commandList.TransitionBarrier(*table->GetResourceByName("ShadowMap", dx12::ResourceViewType::DSV), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
         }
         PIXEndEvent(commandList.GetDXCommandList().Get());
 

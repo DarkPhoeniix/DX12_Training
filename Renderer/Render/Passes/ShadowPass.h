@@ -2,8 +2,6 @@
 
 #include "IRenderPass.h"
 
-#include "Scene/Entity/Components/Camera.h"
-
 namespace render
 {
     class ShadowPass : public IRenderPass
@@ -17,8 +15,5 @@ namespace render
 
     private:
         dx12::PipelineState _shadowsPipeline;
-
-        scene::Viewport _vp;
-        dx12::Texture _shadowTexture;
     };
 } // namespace render

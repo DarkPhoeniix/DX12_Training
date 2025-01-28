@@ -90,6 +90,32 @@ namespace scene
         return nullptr;
     }
 
+    std::vector<std::shared_ptr<Entity>> Scene::FilterNodesByComponent(const std::string& componentName) const
+    {
+        std::vector<std::shared_ptr<Entity>> nodes;
+
+        std::shared_ptr<Entity> currentEntity = nullptr;
+
+        std::queue<std::shared_ptr<Entity>> entities;
+        for (const auto& rootNode : _rootNodes)
+        {
+            entities.push(rootNode);
+        }
+
+        while (!entities.empty())
+        {
+            currentEntity = entities.front();
+            entities.pop();
+
+            if (currentEntity->GetComponent(componentName))
+            {
+                nodes.push_back(currentEntity);
+            }
+        }
+
+        return nodes;
+    }
+
     SceneCache& Scene::GetCache()
     {
         return _cache;

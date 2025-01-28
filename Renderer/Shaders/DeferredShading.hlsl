@@ -11,14 +11,14 @@ StructuredBuffer<LightDesc> Lights          : register(t0);
 Texture2D<float4>   PositionTexture         : register(t1);
 Texture2D<float4>   AlbedoMetalnessTexture  : register(t2);
 Texture2D<float4>   NormalRoughnessTexture  : register(t3);
-Texture2D<float4>   ShadowMap               : register(t4);
+Texture2D Textures[]                       : register(t4);
 RWTexture2D<float4> TargetTexture           : register(u0);
 
 SamplerState LinearSampler : register(s0);
 
 float CalculateShadowAttenuation(LightDesc light, Surface surface)
 {
-    float4 surfacePos = mul(surface.Position, mul(light.View, light.Proj));
+    float4 surfacePos = mul(surface.Position, light.ViewProj);
     surfacePos /= surfacePos.w;
     
     if (surfacePos.x < -1.0f || surfacePos.x > 1.0f ||
@@ -31,7 +31,7 @@ float CalculateShadowAttenuation(LightDesc light, Surface surface)
     UV.y = (surfacePos.y / -2.0f) + 0.5f;
     surfacePos.z -= 0.001f;
     
-    float depth = ShadowMap.SampleLevel(LinearSampler, UV, 0).r;
+    float depth = Textures[light.ShadowMapIndex].SampleLevel(LinearSampler, UV, 0).r;
     
     if (depth < surfacePos.z)
     {
@@ -106,8 +106,11 @@ void main(uint3 DTid : SV_DispatchThreadID)
         float3 cookTorrance = (F * G * D) / max(0.00001f, (4.0f * surface.NdotL * surface.NdotV));
         
         float3 diffuseColor = surface.Albedo.rgb * (1.0f - surface.Metalness);
-        float lightAttenuation = CalculateAttenuation(Lights[i], surface);
-        float3 lightingModel = (diffuseColor + cookTorrance) * surface.NdotL * lightAttenuation * Lights[i].Color.rgb * CalculateShadowAttenuation(Lights[i], surface);
+        float3 lightAttenuation = CalculateAttenuation(Lights[i], surface) * Lights[i].Color.rgb;
+        float shadowAttenuation = CalculateShadowAttenuation(Lights[i], surface);
+        float3 surfaceColor = (diffuseColor + cookTorrance) * surface.NdotL;
+        
+        float3 lightingModel = surfaceColor * lightAttenuation * shadowAttenuation;
         
         float4 finalDiffuse = float4(lightingModel, 1.0f);
         

@@ -21,6 +21,8 @@ namespace scene
         std::shared_ptr<Entity> FindNodeByName(const std::string& name) const;
         std::shared_ptr<Entity> FindNodeByComponentName(const std::string& componentName) const;
 
+        std::vector<std::shared_ptr<Entity>> FilterNodesByComponent(const std::string& componentName) const;
+
         SceneCache& GetCache();
 
         bool LoadScene(const std::string& filepath, dx12::CommandList& commandList);

@@ -10,7 +10,7 @@
 #include "Scene/Scene.h"
 #include "Scene/SceneCache.h"
 
-#include "Render/Frame/CacheGPU.h"
+#include "Render/Frame/Frame.h"
 #include "Render/Helpers/GPUStructs.h"
 
 using namespace DirectX;
@@ -30,7 +30,7 @@ namespace
         }
     }
 
-    std::pair<DirectX::XMMATRIX, DirectX::XMMATRIX> GetLightViewProj(std::shared_ptr<scene::Entity> node)
+    XMMATRIX GetLightViewProj(std::shared_ptr<scene::Entity> node)
     {
         scene::Transformation* transform = node->GetComponentAs<scene::Transformation>("Transformation");
         scene::Light* light = node->GetComponentAs<scene::Light>("Light");
@@ -43,36 +43,38 @@ namespace
         XMVECTOR lightTar = lightPos + lightDir * light->Range;
 
         view = XMMatrixLookAtLH(lightPos, lightTar, XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
+        proj = XMMatrixPerspectiveFovLH(XMConvertToRadians(light->OuterAngle), 1.0f, 0.5f, light->Range);
 
-        float angle = XMConvertToRadians(light->OuterAngle);
-        float s = std::cos(angle) / std::sin(angle);
-        float q = (light->Range) / (light->Range - 0.5f);
-        proj = XMMatrixPerspectiveFovLH(angle, 1.0f, 0.5f, light->Range);
-        return std::make_pair(view, proj);
+        return view * proj;
     }
 
-    void SetupLightToGPU(std::shared_ptr<scene::Entity> node, CacheGPU::DataHandle& dataHandle, uint32_t& index)
+    void SetupLightToGPU(std::shared_ptr<scene::Entity> node, CacheGPU::DataHandle& dataHandle, Frame* frame, uint32_t& index)
     {
         scene::Transformation* transform = node->GetComponentAs<scene::Transformation>("Transformation");
         scene::Light* light = node->GetComponentAs<scene::Light>("Light");
+
         if (light)
         {
             GPULightDesc* data = (GPULightDesc*)dataHandle.DataCPU;
 
             GPULightDesc lightDesc;
             {
-                lightDesc.position = transform->Transform.r[3];
-                lightDesc.direction = light->Direction;
-                lightDesc.color = light->Color;
-                lightDesc.range = light->Range;
-                lightDesc.intensity = light->Intensity;
-                lightDesc.outerAngle = std::cosf(DirectX::XMConvertToRadians(light->OuterAngle * 0.5f));
-                lightDesc.innerAngle = std::cosf(DirectX::XMConvertToRadians(light->InnerAngle * 0.5f));
-                lightDesc.view= GetLightViewProj(node).first;
-                lightDesc.Proj= GetLightViewProj(node).second;
-                lightDesc.type = (uint32_t)light->Type;
-                lightDesc.CastShadows = true;
-                lightDesc.ShadowMapIndex = node->GetSceneCache()->GetTextureTable()->GetResourceIndex("ShadowMap", dx12::ResourceViewType::DSV);
+                lightDesc.Position = transform->Transform.r[3];
+                lightDesc.Direction = light->Direction;
+                lightDesc.Color = light->Color;
+
+                lightDesc.Range = light->Range;
+                lightDesc.Intensity = light->Intensity;
+
+                lightDesc.OuterAngle = std::cosf(XMConvertToRadians(light->OuterAngle * 0.5f));
+                lightDesc.InnerAngle = std::cosf(XMConvertToRadians(light->InnerAngle * 0.5f));
+
+                lightDesc.ViewProj= GetLightViewProj(node);
+
+                lightDesc.Type = (uint32_t)light->Type;
+
+                lightDesc.CastShadows = light->CastShadows;
+                lightDesc.ShadowMapIndex = frame->GetResourceTable().GetResourceIndex(light->ShadowMap.get(), dx12::ResourceViewType::SRV);
             }
 
             data[index++] = lightDesc;
@@ -80,14 +82,14 @@ namespace
 
         for (std::shared_ptr<scene::Entity>& child : node->GetChildrenNodes())
         {
-            SetupLightToGPU(child, dataHandle, index);
+            SetupLightToGPU(child, dataHandle, frame, index);
         }
     }
 } // namespace unnamed
 
 namespace Helpers
 {
-    void SetupSceneDataGPU(scene::Scene& scene, dx12::CommandList& commandList, CacheGPU* frameCache)
+    void SetupSceneDataGPU(scene::Scene& scene, dx12::CommandList& commandList, Frame* frame)
     {
         uint32_t lightsNum = 0;
         for (std::shared_ptr<scene::Entity>& node : scene.GetRootNodes())
@@ -96,7 +98,7 @@ namespace Helpers
         }
 
         // Setup scene data
-        CacheGPU::DataHandle sceneDataHandle = frameCache->RequestPlacement(sizeof(GPUSceneDesc));
+        CacheGPU::DataHandle sceneDataHandle = frame->GetCache().RequestPlacement(sizeof(GPUSceneDesc));
 
         GPUSceneDesc* sceneDesc = (GPUSceneDesc*)sceneDataHandle.DataCPU;
         {
@@ -112,8 +114,8 @@ namespace Helpers
             sceneDesc->Projection = camera->Projection();
             sceneDesc->ViewProjection = camera->ViewProjection();
 
-            sceneDesc->InvView = DirectX::XMMatrixInverse(nullptr, sceneDesc->View);
-            sceneDesc->InvProjection = DirectX::XMMatrixInverse(nullptr, sceneDesc->Projection);
+            sceneDesc->InvView = XMMatrixInverse(nullptr, sceneDesc->View);
+            sceneDesc->InvProjection = XMMatrixInverse(nullptr, sceneDesc->Projection);
 
             sceneDesc->EyeDirection = camera->Look();
             sceneDesc->EyePosition = camera->Position();
@@ -134,12 +136,12 @@ namespace Helpers
 
         commandList.SetCBV(0, sceneDataHandle.DataGPU);
 
-        CacheGPU::DataHandle lightsData = frameCache->RequestPlacement(sizeof(GPULightDesc) * lightsNum);
+        CacheGPU::DataHandle lightsData = frame->GetCache().RequestPlacement(sizeof(GPULightDesc) * lightsNum);
 
         uint32_t lightCounter = 0;
         for (std::shared_ptr<scene::Entity>& node : scene.GetRootNodes())
         {
-            SetupLightToGPU(node, lightsData, lightCounter);
+            SetupLightToGPU(node, lightsData, frame, lightCounter);
         }
 
         commandList.SetSRV(2, lightsData.DataGPU);
