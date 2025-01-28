@@ -7,6 +7,8 @@
 #include "Scene/Volumes/AABBVolume.h"
 #include "Scene/Volumes/OBBVolume.h"
 
+#include "Render/Helpers/DrawHelpers.h"
+
 using namespace DirectX;
 
 namespace render
@@ -88,6 +90,9 @@ namespace render
             commandList.SetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
 
             commandList.Draw(1);
+
+
+            DrawHelper::DrawSphere(commandList, *_activeCamera, 10.0f, DirectX::XMVectorSet(0.0f, 20.0f, 0.0f, 1.0f));
         }
         PIXEndEvent(commandList.GetDXCommandList().Get());
 

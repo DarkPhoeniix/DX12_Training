@@ -193,6 +193,7 @@
       <Filter>Scene\ECS\Components</Filter>
     </ClCompile>
     <ClCompile Include="Render\Passes\ShadowPass.cpp" />
+    <ClCompile Include="Render\Helpers\DrawHelpers.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Events\IEvent.h">
@@ -378,6 +379,7 @@
       <Filter>Scene\ECS\Components</Filter>
     </ClInclude>
     <ClInclude Include="Render\Passes\ShadowPass.h" />
+    <ClInclude Include="Render\Helpers\DrawHelpers.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\AABB_gs.hlsl">
@@ -438,6 +440,9 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\PCFShadows_vs.hlsl" />
+    <FxCompile Include="Shaders\DebugDraw\Sphere_vs.hlsl" />
+    <FxCompile Include="Shaders\DebugDraw\Sphere_ps.hlsl" />
+    <FxCompile Include="Shaders\DebugDraw\Sphere_gs.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -499,6 +504,8 @@
     <None Include="PipelineDescriptions\PCFShadows.blend" />
     <None Include="PipelineDescriptions\PCFShadows.depth" />
     <None Include="PipelineDescriptions\PCFShadows.tech" />
+    <None Include="Shaders\DebugDraw\Sphere_rootsig.hlsli" />
+    <None Include="PipelineDescriptions\DebugSpherePipeline.tech" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resources\Resource.rc">
