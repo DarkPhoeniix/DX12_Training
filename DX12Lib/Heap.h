@@ -17,6 +17,8 @@ namespace dx12
         void Create(const HeapDescription& description);
         void PlaceResource(Resource& resource, D3D12_RESOURCE_STATES state = D3D12_RESOURCE_STATE_COPY_DEST, UINT64 offset = (UINT64)-1);
 
+        void Reset();
+
         void SetDescription(const HeapDescription& description);
         HeapDescription GetDescription() const;
 

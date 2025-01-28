@@ -29,10 +29,11 @@ namespace render
         dx12::CommandList& commandList = *task->GetCommandLists().front();
         commandList.SetName("Render GUI command list");
 
-        dx12::DescriptorHeap& RTVHeap = _frame->GetDescriptorHeap(dx12::DescriptorHeapType::RTV);
+        dx12::ResourceTable& frameTable = _frame->GetResourceTable();
+        dx12::ResourceTable& gBufferTable = _gBuffer->GetResourceTable();
 
-        D3D12_CPU_DESCRIPTOR_HANDLE rtv = RTVHeap.GetResourceCPUHandle(&_frame->GetTargetTexture(), dx12::ResourceViewType::RTV);
-        D3D12_CPU_DESCRIPTOR_HANDLE dsv = _gBuffer->GetDepthTextureCPUHandle();
+        D3D12_CPU_DESCRIPTOR_HANDLE rtv = frameTable.GetResourceCPUHandle(&_frame->GetTargetTexture(), dx12::ResourceViewType::RTV);
+        D3D12_CPU_DESCRIPTOR_HANDLE dsv = gBufferTable.GetResourceCPUHandle(&_gBuffer->GetDepthTexture(), dx12::ResourceViewType::DSV);
 
         PIXBeginEvent(commandList.GetDXCommandList().Get(), 5, "GUI");
         {

@@ -1,11 +1,13 @@
 #pragma once
 
+#include "DescriptorHeap.h"
+#include "ResourceTable.h"
+
 #include "Render/Frame/AllocatorPool.h"
 #include "Render/Frame/Executor.h"
 #include "Render/Frame/TaskGPU.h"
 #include "Render/Frame/FencePool.h"
 #include "Render/Frame/CacheGPU.h"
-#include "DescriptorHeap.h"
 
 // TODO: refactor the Frame class
 
@@ -25,7 +27,7 @@ public:
     TaskGPU* CreateTask(D3D12_COMMAND_LIST_TYPE type, dx12::PipelineState* rootSignature = nullptr);
 
     void BindDescriptorHeaps(dx12::CommandList& commandList);
-    dx12::DescriptorHeap& GetDescriptorHeap(dx12::DescriptorHeapType type);
+    dx12::ResourceTable& GetResourceTable();
 
     void WaitCPU();
     void ResetGPU();
@@ -57,11 +59,9 @@ private:
     FencePool* _fencePool;
     dx12::Fence* _syncPoint;
 
-    dx12::DescriptorHeap _DSVHeap;
-    dx12::DescriptorHeap _RTVHeap;
-    dx12::DescriptorHeap _BuffersHeap;
-
     dx12::Heap _resourcesHeap;
+
+    dx12::ResourceTable _resourceTable;
     CacheGPU _cache;
 
     dx12::Resource _targetTexture;

@@ -42,9 +42,12 @@ namespace render
 
         PIXBeginEvent(commandList.GetDXCommandList().Get(), 2, "Geometry Pass");
         {
-            D3D12_CPU_DESCRIPTOR_HANDLE albedoMetalnessHandle = _gBuffer->GetAlbedoMetalnessTextureCPUHandle();
-            D3D12_CPU_DESCRIPTOR_HANDLE normalSpecularHandle = _gBuffer->GetNormalTextureCPUHandle();
-            D3D12_CPU_DESCRIPTOR_HANDLE depthHandle = _gBuffer->GetDepthTextureCPUHandle();
+            dx12::ResourceTable& gBufferTable = _gBuffer->GetResourceTable();
+            dx12::ResourceTable& frameTable = _frame->GetResourceTable();
+
+            D3D12_CPU_DESCRIPTOR_HANDLE albedoMetalnessHandle = gBufferTable.GetResourceCPUHandle(&_gBuffer->GetAlbedoMetalnessTexture(), dx12::ResourceViewType::RTV);
+            D3D12_CPU_DESCRIPTOR_HANDLE normalSpecularHandle = gBufferTable.GetResourceCPUHandle(&_gBuffer->GetNormalTexture(), dx12::ResourceViewType::RTV);
+            D3D12_CPU_DESCRIPTOR_HANDLE depthHandle = gBufferTable.GetResourceCPUHandle(&_gBuffer->GetDepthTexture(), dx12::ResourceViewType::DSV);
 
             commandList.SetPipelineState(_geometryPipeline);
 
@@ -58,10 +61,10 @@ namespace render
             Helpers::SetupSceneDataGPU(*_scene, commandList, &_frame->GetCache());
 
             // Setup textures
-            commandList.SetDescriptorHeaps({ _scene->GetCache().GetTextureTable()->GetDescriptorHeap().GetDXDescriptorHeap().Get() });
-            commandList.SetDescriptorTable(4, _scene->GetCache().GetTextureTable()->GetDescriptorHeap().GetHeapStartGPUHandle());
+            _frame->BindDescriptorHeaps(commandList);
+            commandList.SetDescriptorTable(4, frameTable.GetDescriptorHeap(dx12::ResourceViewType::SRV).GetHeapStartGPUHandle());
 
-            auto DrawEntity = [&commandList](std::shared_ptr<scene::Entity>& entity, CacheGPU& frameCache)
+            auto DrawEntity = [&commandList, this](std::shared_ptr<scene::Entity>& entity, CacheGPU& frameCache)
                 {
                     scene::SceneCache* cache = entity->GetSceneCache();
                     if (ASSERT(cache, "Entity has no scene cache"))
@@ -88,17 +91,23 @@ namespace render
 
                         if (material)
                         {
+                            dx12::ResourceTable& frameTable = _frame->GetResourceTable();
                             std::shared_ptr<dx12::ResourceTable> textureTable = entity->GetSceneCache()->GetTextureTable();
 
-                            modelDesc->AlbedoTextureIndex = textureTable->GetResourceIndex(material->Albedo.get(), dx12::ResourceViewType::SRV);
-                            modelDesc->NormalMapTextureIndex = textureTable->GetResourceIndex(material->NormalMap.get(), dx12::ResourceViewType::SRV);
-                            modelDesc->MetalnessTextureIndex = textureTable->GetResourceIndex(material->Metalness.get(), dx12::ResourceViewType::SRV);
-                            modelDesc->RoughnessTextureIndex = textureTable->GetResourceIndex(material->Roughness.get(), dx12::ResourceViewType::SRV);
+                            frameTable.CopyDescriptor(material->Albedo.get(), dx12::ResourceViewType::SRV, *textureTable);
+                            frameTable.CopyDescriptor(material->NormalMap.get(), dx12::ResourceViewType::SRV, *textureTable);
+                            frameTable.CopyDescriptor(material->Metalness.get(), dx12::ResourceViewType::SRV, *textureTable);
+                            frameTable.CopyDescriptor(material->Roughness.get(), dx12::ResourceViewType::SRV, *textureTable);
 
-                            if (armature)
-                            {
-                                modelDesc->UseSkinning = true;
-                            }
+                            modelDesc->AlbedoTextureIndex    = frameTable.GetResourceIndex(material->Albedo.get(), dx12::ResourceViewType::SRV);
+                            modelDesc->NormalMapTextureIndex = frameTable.GetResourceIndex(material->NormalMap.get(), dx12::ResourceViewType::SRV);
+                            modelDesc->MetalnessTextureIndex = frameTable.GetResourceIndex(material->Metalness.get(), dx12::ResourceViewType::SRV);
+                            modelDesc->RoughnessTextureIndex = frameTable.GetResourceIndex(material->Roughness.get(), dx12::ResourceViewType::SRV);
+                        }
+
+                        if (armature)
+                        {
+                            modelDesc->UseSkinning = true;
                         }
                     }
 

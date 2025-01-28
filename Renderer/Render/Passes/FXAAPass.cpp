@@ -23,6 +23,11 @@ namespace render
             desc.SetResourceType(dx12::EResourceType::Texture | dx12::EResourceType::Unordered);
 
             _fxaaRTT.CreateCommitedResource(desc);
+
+            dx12::ResourceTable& sceneTable = *_scene->GetCache().GetTextureTable();
+
+            sceneTable.PlaceResource(&_fxaaRTT, dx12::ResourceViewType::UAV);
+
         }
     }
 
@@ -60,17 +65,17 @@ namespace render
             {
                 commandList.SetPipelineState(_FXAAPipeline);
 
-                Helpers::SetupSceneDataGPU(*_scene, commandList, &_frame->GetCache());
+                dx12::ResourceTable& sceneTable = *_scene->GetCache().GetTextureTable();
+                dx12::ResourceTable& frameTable = _frame->GetResourceTable();
 
-                dx12::DescriptorHeap buffersHeap = _frame->GetDescriptorHeap(dx12::DescriptorHeapType::CBV_SRV_UAV);
-
-                dx12::Device::CreateUnorderedAccessView(_fxaaRTT.GetAsUAV(), buffersHeap);
-                dx12::Device::CreateShaderResourceView(_frame->GetTargetTexture().GetAsSRV(), buffersHeap);
+                frameTable.CopyDescriptor(&_fxaaRTT, dx12::ResourceViewType::UAV, sceneTable);
 
                 _frame->BindDescriptorHeaps(commandList);
 
-                D3D12_GPU_DESCRIPTOR_HANDLE targetTextureHandle = buffersHeap.GetResourceGPUHandle(&_frame->GetTargetTexture(), dx12::ResourceViewType::SRV);
-                D3D12_GPU_DESCRIPTOR_HANDLE fxaaTextureHandle = buffersHeap.GetResourceGPUHandle(&_fxaaRTT, dx12::ResourceViewType::UAV);
+                D3D12_GPU_DESCRIPTOR_HANDLE targetTextureHandle = frameTable.GetResourceGPUHandle(&_frame->GetTargetTexture(), dx12::ResourceViewType::SRV);
+                D3D12_GPU_DESCRIPTOR_HANDLE fxaaTextureHandle = frameTable.GetResourceGPUHandle(&_fxaaRTT, dx12::ResourceViewType::UAV);
+                
+                Helpers::SetupSceneDataGPU(*_scene, commandList, &_frame->GetCache());
 
                 commandList.SetDescriptorTable(3, targetTextureHandle);
                 commandList.SetDescriptorTable(4, fxaaTextureHandle);

@@ -40,7 +40,8 @@ namespace render
             _shadowTexture.CreateCommitedResource(desc);
             _shadowTexture.SetName("ShadowMap");
 
-            _scene->GetCache().GetTextureTable()->AddResource(&_shadowTexture, dx12::ResourceViewType::DSV);
+            _scene->GetCache().GetTextureTable()->PlaceResource(&_shadowTexture, dx12::ResourceViewType::DSV);
+            _scene->GetCache().GetTextureTable()->PlaceResource(&_shadowTexture, dx12::ResourceViewType::SRV);
         }
 
         {
@@ -66,11 +67,12 @@ namespace render
         {
             commandList.SetPipelineState(_shadowsPipeline);
             
-            dx12::DescriptorHeap& dsvHeap = _frame->GetDescriptorHeap(dx12::DescriptorHeapType::DSV);
+            dx12::ResourceTable& sceneTable = *_scene->GetCache().GetTextureTable();
+            dx12::ResourceTable& frameTable = _frame->GetResourceTable();
 
-            dx12::Device::CreateDepthStencilView(_shadowTexture.GetAsDSV(), dsvHeap);
+            frameTable.CopyDescriptor(&_shadowTexture, dx12::ResourceViewType::DSV, sceneTable);
 
-            D3D12_CPU_DESCRIPTOR_HANDLE depthHandle = dsvHeap.GetResourceCPUHandle(&_shadowTexture, dx12::ResourceViewType::DSV);
+            D3D12_CPU_DESCRIPTOR_HANDLE depthHandle = frameTable.GetResourceCPUHandle(&_shadowTexture, dx12::ResourceViewType::DSV);
 
             commandList.TransitionBarrier(_shadowTexture, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 
