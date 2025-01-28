@@ -8,6 +8,7 @@ namespace render
 {
     void GBuffer::Init(const DirectX::XMUINT2& size)
     {
+        _resourceTable.Reset();
         _resourceTable.Init(4);
 
         // Create textures
