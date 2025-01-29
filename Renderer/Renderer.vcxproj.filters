@@ -443,6 +443,9 @@
     <FxCompile Include="Shaders\DebugDraw\Sphere_vs.hlsl" />
     <FxCompile Include="Shaders\DebugDraw\Sphere_ps.hlsl" />
     <FxCompile Include="Shaders\DebugDraw\Sphere_gs.hlsl" />
+    <FxCompile Include="Shaders\DebugDraw\Cone_gs.hlsl" />
+    <FxCompile Include="Shaders\DebugDraw\Cone_ps.hlsl" />
+    <FxCompile Include="Shaders\DebugDraw\Cone_vs.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -506,6 +509,8 @@
     <None Include="PipelineDescriptions\PCFShadows.tech" />
     <None Include="Shaders\DebugDraw\Sphere_rootsig.hlsli" />
     <None Include="PipelineDescriptions\DebugSpherePipeline.tech" />
+    <None Include="Shaders\DebugDraw\Cone_rootsig.hlsli" />
+    <None Include="PipelineDescriptions\DebugConePipeline.tech" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resources\Resource.rc">

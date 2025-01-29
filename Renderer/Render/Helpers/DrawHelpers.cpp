@@ -8,11 +8,24 @@ namespace render
     {
         commandList.SetPipelineState(Instance()._sphereDebug);
 
-        DirectX::XMVECTOR pos = DirectX::XMVectorSet(0.0f, 30.0f, 0.0f, 25.0f);
         commandList.SetConstants(0, 16, &camera.ViewProjection());
-        commandList.SetConstants(1, 4, &pos);
-        DirectX::XMVECTOR col = DirectX::XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f);
-        commandList.SetConstants(2, 4, &col);
+        commandList.SetConstants(1, 3, &position);
+        commandList.SetConstants(1, 1, &radius, 3);
+        commandList.SetConstants(2, 4, &color);
+
+        commandList.Draw(1);
+    }
+
+    void DrawHelper::DrawCone(dx12::CommandList& commandList, const scene::Camera& camera, float angle, float height, const DirectX::XMVECTOR& position, const DirectX::XMVECTOR& direction, const DirectX::XMVECTOR& color)
+    {
+        commandList.SetPipelineState(Instance()._coneDebug);
+
+        commandList.SetConstants(0, 16, &camera.ViewProjection());
+        commandList.SetConstants(1, 3, &position);
+        commandList.SetConstants(1, 1, &angle, 3);
+        commandList.SetConstants(1, 3, &direction, 4);
+        commandList.SetConstants(1, 1, &height, 7);
+        commandList.SetConstants(2, 4, &color);
 
         commandList.Draw(1);
     }
@@ -20,6 +33,7 @@ namespace render
     DrawHelper::DrawHelper()
     {
         _sphereDebug.Parse("PipelineDescriptions\\DebugSpherePipeline.tech");
+        _coneDebug.Parse("PipelineDescriptions\\DebugConePipeline.tech");
     }
 
     DrawHelper& DrawHelper::Instance()
