@@ -12,6 +12,7 @@ struct Surface
     
     float4 FinalColor;
     
+    float4 ToLight;
     float DistanceToL;
     float NdotV;
     float NdotL;
@@ -30,18 +31,15 @@ struct LightDesc
     
     float Intesity;
     float Range;
-    
     float OuterAngle;
     float InnerAngle;
     
-    row_major matrix ViewProj;
+    row_major matrix ViewProj[6];
     
     uint Type;
-    
     bool CastShadows;
-    uint ShadowMapIndex;
     
-    uint pad;
+    uint ShadowMapIndexes[6];
 };
 
 float CalculatePointLightAttenuation(LightDesc light, Surface surface)
@@ -85,36 +83,22 @@ float CalculateAttenuation(LightDesc light, Surface surface)
     return 0.0f;
 }
 
-float CalculateShadowAttenuation_PCF3x3(Texture2D shadowMap, SamplerComparisonState shadowSampler, LightDesc light, Surface surface)
+uint GetCubeFaceIndex(float3 toPixel)
 {
-    float4 surfacePos = mul(surface.Position, light.ViewProj);
-    surfacePos /= surfacePos.w;
-    
-    if (surfacePos.x < -1.0f || surfacePos.x > 1.0f ||
-        surfacePos.y < -1.0f || surfacePos.y > 1.0f ||
-        surfacePos.z < 0.0f || surfacePos.z > 1.0f)
-        return 0.0f;
-    
-    float3 UVD;
-    UVD.x = (surfacePos.x / 2.0f) + 0.5f;
-    UVD.y = (surfacePos.y / -2.0f) + 0.5f;
-    UVD.z = surfacePos.z - 0.001f;
-    
-    float2 offsets[9] =
+    float3 vAbs = abs(toPixel);
+    uint faceIndex = 0;
+    if (vAbs.z >= vAbs.x && vAbs.z >= vAbs.y)
     {
-        float2(-1, -1), float2(-1, 0), float2(-1, 1),
-        float2(0, -1), float2(0, 0), float2(0, 1),
-        float2(1, -1), float2(1, 0), float2(1, 1)
-    };
-    
-    float shadowFactor = 0.0f;
-    
-    [unroll(9)]
-    for (uint i = 0; i < 9; ++i)
-    {
-        shadowFactor += shadowMap.SampleCmpLevelZero(shadowSampler, UVD.xy, UVD.z, offsets[i]);
+        faceIndex = toPixel.z < 0 ? 5 : 4;
     }
-    shadowFactor /= 9.0f;
+    else if (vAbs.y >= vAbs.x)
+    {
+        faceIndex = toPixel.y < 0 ? 3 : 2;
+    }
+    else
+    {
+        faceIndex = toPixel.x < 0 ? 1 : 0;
+    }
     
-    return shadowFactor;
+    return faceIndex;
 }

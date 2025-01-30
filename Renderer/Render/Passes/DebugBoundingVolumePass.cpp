@@ -85,12 +85,20 @@ namespace render
 
             commandList.SetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
 
-            commandList.Draw(1);
+            //commandList.Draw(1);
 
+            commandList.TransitionBarrier(_gBuffer->GetDepthTexture(), D3D12_RESOURCE_STATE_DEPTH_WRITE);
+            commandList.TransitionBarrier(_gBuffer->GetAlbedoMetalnessTexture(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+            commandList.TransitionBarrier(_gBuffer->GetNormalTexture(), D3D12_RESOURCE_STATE_RENDER_TARGET);
 
-            //DrawHelper::DrawSphere(commandList, *_activeCamera, 10.0f, DirectX::XMVectorSet(0.0f, 20.0f, 0.0f, 1.0f));
-            DrawHelper::DrawCone(commandList, *_activeCamera, 29.0f, 100.0f, DirectX::XMVectorSet(0.0f, 50.0f, 10.0f, 1.0f), DirectX::XMVectorSet(0.0f, -0.9f, -0.2f, 0.0f), DirectX::XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f));
-            DrawHelper::DrawCone(commandList, *_activeCamera, 29.0f, 60.0f, DirectX::XMVectorSet(0.0f, 20.0f, 25.0f, 1.0f), DirectX::XMVectorSet(0.0f, 0.0f, -1.0f, 0.0f), DirectX::XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f));
+            DrawHelper::DrawSphere(commandList, *_activeCamera, 80.0f, DirectX::XMVectorSet(-15.0f, 15.0f, 10.0f, 1.0f));
+            //DrawHelper::DrawCone(commandList, *_activeCamera, 29.0f, 100.0f, DirectX::XMVectorSet(0.0f, 50.0f, 10.0f, 1.0f), DirectX::XMVectorSet(0.0f, -0.9f, -0.2f, 0.0f), DirectX::XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f));
+            //DrawHelper::DrawCone(commandList, *_activeCamera, 29.0f, 60.0f, DirectX::XMVectorSet(0.0f, 20.0f, 25.0f, 1.0f), DirectX::XMVectorSet(0.0f, 0.0f, -1.0f, 0.0f), DirectX::XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f));
+
+            commandList.TransitionBarrier(_gBuffer->GetDepthTexture(), D3D12_RESOURCE_STATE_COMMON);
+            commandList.TransitionBarrier(_gBuffer->GetAlbedoMetalnessTexture(), D3D12_RESOURCE_STATE_COMMON);
+            commandList.TransitionBarrier(_gBuffer->GetNormalTexture(), D3D12_RESOURCE_STATE_COMMON);
+
         }
         PIXEndEvent(commandList.GetDXCommandList().Get());
 

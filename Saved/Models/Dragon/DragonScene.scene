@@ -6,7 +6,6 @@
         "Wall01.node",
         "Wall02.node",
         "Skybox.node",
-        "SpotLight.node",
-        "SpotLight1.node"
+        "Pink.node"
     ]
 }

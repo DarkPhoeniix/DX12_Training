@@ -344,10 +344,26 @@ namespace scene
 
                 desc.SetClearValue(clearValue);
                 desc.SetResourceType(dx12::EResourceType::Texture | dx12::EResourceType::DepthStencil);
-
-                component->ShadowMap = std::make_shared<dx12::Resource>();
-                component->ShadowMap->CreateCommitedResource(desc);
-                component->ShadowMap->SetName(name + "_ShadowMap");
+                switch (component->Type)
+                {
+                case LightType::Spot:
+                {
+                    component->ShadowMaps[0] = std::make_shared<dx12::Resource>();
+                    component->ShadowMaps[0]->CreateCommitedResource(desc);
+                    component->ShadowMaps[0]->SetName(name + "_ShadowMap");
+                }
+                break;
+                case LightType::Point:
+                {
+                    for (size_t i = 0; i < 6; ++i)
+                    {
+                        component->ShadowMaps[i] = std::make_shared<dx12::Resource>();
+                        component->ShadowMaps[i]->CreateCommitedResource(desc);
+                        component->ShadowMaps[i]->SetName(std::format("{}_ShadowMap_{}", name, i));
+                    }
+                }
+                break;
+                }
             }
         }
 

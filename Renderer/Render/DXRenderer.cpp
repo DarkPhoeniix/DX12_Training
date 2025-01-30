@@ -252,7 +252,7 @@ namespace render
         _renderPasses.push_back(std::make_unique<SkyboxPass>());
         //_renderPasses.push_back(std::make_unique<FXAAPass>());
         //_renderPasses.push_back(std::make_unique<DebugArmaturePass>());
-        //_renderPasses.push_back(std::make_unique<DebugBoundingVolumePass>());
+        _renderPasses.push_back(std::make_unique<DebugBoundingVolumePass>());
         _renderPasses.push_back(std::make_unique<GUIPass>());
 
         for (auto& pass : _renderPasses)
