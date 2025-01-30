@@ -38,6 +38,9 @@ namespace render
             D3D12_CPU_DESCRIPTOR_HANDLE dsv = gBufferTable.GetResourceCPUHandle(&_gBuffer->GetDepthTexture(), dx12::ResourceViewType::DSV);
 
             commandList.TransitionBarrier(_frame->GetTargetTexture(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+            commandList.TransitionBarrier(_gBuffer->GetDepthTexture(), D3D12_RESOURCE_STATE_DEPTH_WRITE);
+            commandList.TransitionBarrier(_gBuffer->GetAlbedoMetalnessTexture(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+            commandList.TransitionBarrier(_gBuffer->GetNormalTexture(), D3D12_RESOURCE_STATE_RENDER_TARGET);
 
             FLOAT clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 

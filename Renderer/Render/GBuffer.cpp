@@ -36,7 +36,7 @@ namespace render
             textureDesc.SetFormat(DXGI_FORMAT_R8G8B8A8_UNORM);
             textureDesc.SetClearValue(clearValue);
 
-            _albedoMetalness.CreateCommitedResource(textureDesc, D3D12_RESOURCE_STATE_RENDER_TARGET);
+            _albedoMetalness.CreateCommitedResource(textureDesc);
             _albedoMetalness.SetName("G-Buffer Albedo+Metalness");
 
             // Create NormalSpecular texture
@@ -45,7 +45,7 @@ namespace render
             textureDesc.SetFormat(DXGI_FORMAT_R32G32B32A32_FLOAT);
             textureDesc.SetClearValue(clearValue);
 
-            _normalSpecular.CreateCommitedResource(textureDesc, D3D12_RESOURCE_STATE_RENDER_TARGET);
+            _normalSpecular.CreateCommitedResource(textureDesc);
             _normalSpecular.SetName("G-Buffer Normal+Specular");
 
             // Create DepthStencil texture
@@ -58,7 +58,7 @@ namespace render
             textureDesc.SetClearValue(clearValue);
             textureDesc.SetResourceType(dx12::EResourceType::Texture | dx12::EResourceType::DepthStencil);
 
-            _depthStencil.CreateCommitedResource(textureDesc, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+            _depthStencil.CreateCommitedResource(textureDesc);
             _depthStencil.SetName("G-Buffer DepthStencil");
         }
 

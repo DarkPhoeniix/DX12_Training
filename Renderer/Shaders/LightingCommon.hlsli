@@ -84,3 +84,37 @@ float CalculateAttenuation(LightDesc light, Surface surface)
     
     return 0.0f;
 }
+
+float CalculateShadowAttenuation_PCF3x3(Texture2D shadowMap, SamplerComparisonState shadowSampler, LightDesc light, Surface surface)
+{
+    float4 surfacePos = mul(surface.Position, light.ViewProj);
+    surfacePos /= surfacePos.w;
+    
+    if (surfacePos.x < -1.0f || surfacePos.x > 1.0f ||
+        surfacePos.y < -1.0f || surfacePos.y > 1.0f ||
+        surfacePos.z < 0.0f || surfacePos.z > 1.0f)
+        return 0.0f;
+    
+    float3 UVD;
+    UVD.x = (surfacePos.x / 2.0f) + 0.5f;
+    UVD.y = (surfacePos.y / -2.0f) + 0.5f;
+    UVD.z = surfacePos.z - 0.001f;
+    
+    float2 offsets[9] =
+    {
+        float2(-1, -1), float2(-1, 0), float2(-1, 1),
+        float2(0, -1), float2(0, 0), float2(0, 1),
+        float2(1, -1), float2(1, 0), float2(1, 1)
+    };
+    
+    float shadowFactor = 0.0f;
+    
+    [unroll(9)]
+    for (uint i = 0; i < 9; ++i)
+    {
+        shadowFactor += shadowMap.SampleCmpLevelZero(shadowSampler, UVD.xy, UVD.z, offsets[i]);
+    }
+    shadowFactor /= 9.0f;
+    
+    return shadowFactor;
+}

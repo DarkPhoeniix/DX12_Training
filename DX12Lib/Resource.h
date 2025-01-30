@@ -39,9 +39,9 @@ namespace dx12
 
         void Reset();
 
-        ComPtr<ID3D12Resource> CreateCommitedResource(D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_COPY_DEST);
-        ComPtr<ID3D12Resource> CreateCommitedResource(const ResourceDescription& resourceDesc, D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_COPY_DEST);
-        ComPtr<ID3D12Resource> CreatePlacedResource(ComPtr<ID3D12Heap> heap, unsigned int offset, D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_COPY_DEST);
+        ComPtr<ID3D12Resource> CreateCommitedResource(D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_COMMON);
+        ComPtr<ID3D12Resource> CreateCommitedResource(const ResourceDescription& resourceDesc, D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_COMMON);
+        ComPtr<ID3D12Resource> CreatePlacedResource(ComPtr<ID3D12Heap> heap, unsigned int offset, D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_COMMON);
         ComPtr<ID3D12Resource> CreatePlacedResource(const ResourceDescription& resourceDesc, ComPtr<ID3D12Heap> heap, unsigned int offset, D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_COPY_DEST);
 
         RenderTargetView GetAsRTV();

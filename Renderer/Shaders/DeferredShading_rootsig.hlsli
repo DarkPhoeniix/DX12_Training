@@ -16,7 +16,8 @@
     "DescriptorTable(SRV(t4, numDescriptors = unbounded, flags = DESCRIPTORS_VOLATILE), visibility = SHADER_VISIBILITY_ALL)," \
     "DescriptorTable(UAV(u0), visibility=SHADER_VISIBILITY_ALL)," \
     "StaticSampler(s0," \
-        "addressU = TEXTURE_ADDRESS_WRAP," \
-        "addressV = TEXTURE_ADDRESS_WRAP," \
-        "addressW = TEXTURE_ADDRESS_WRAP," \
-        "filter = FILTER_MIN_MAG_MIP_POINT)"
+        "addressU = TEXTURE_ADDRESS_BORDER," \
+        "addressV = TEXTURE_ADDRESS_BORDER," \
+        "addressW = TEXTURE_ADDRESS_BORDER," \
+        "filter = FILTER_COMPARISON_MIN_MAG_MIP_LINEAR," \
+        "comparisonFunc = COMPARISON_LESS)"
