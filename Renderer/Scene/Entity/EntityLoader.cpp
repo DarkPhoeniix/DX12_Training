@@ -328,7 +328,7 @@ namespace scene
             component->Range = lightData["Range"].asFloat();
             component->OuterAngle = lightData["OuterAngle"].asFloat();
             component->InnerAngle = lightData["InnerAngle"].asFloat();
-            component->CastShadows = lightData["CastShadows"].asBool();
+            component->CastShadows = lightData["CastShadows"].asUInt();
 
             if (component->CastShadows)
             {

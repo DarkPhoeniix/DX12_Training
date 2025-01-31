@@ -47,7 +47,7 @@ void SetLightParams(in LightDesc light, inout Surface surface)
     surface.NdotH = max(dot(surface.Normal.xyz, halfway), 0.0f);
 }
 
-float CalculateShadowAttenuation_PCF3x3(LightDesc light, Surface surface)
+float CalculateShadowAttenuation_PCF3x3(in LightDesc light, in Surface surface)
 {
     uint shadowMapIndex = 0;
     if (light.Type == LIGHT_TYPE_POINT)
@@ -62,11 +62,13 @@ float CalculateShadowAttenuation_PCF3x3(LightDesc light, Surface surface)
     if (surfacePos.x < -1.0f || surfacePos.x > 1.0f ||
         surfacePos.y < -1.0f || surfacePos.y > 1.0f ||
         surfacePos.z <  0.0f || surfacePos.z > 1.0f)
+    {
         return 0.0f;
+    }
     
     float3 UVD;
-    UVD.x = (surfacePos.x / 2.0f) + 0.5f;
-    UVD.y = (surfacePos.y / -2.0f) + 0.5f;
+    UVD.x = (surfacePos.x *  0.5f) + 0.5f;
+    UVD.y = (surfacePos.y * -0.5f) + 0.5f;
     UVD.z = surfacePos.z - 0.001f;
     
     float2 offsets[9] =
@@ -78,10 +80,10 @@ float CalculateShadowAttenuation_PCF3x3(LightDesc light, Surface surface)
     
     float shadowFactor = 0.0f;
     
+    uint shadowMapTextureIndex = light.ShadowMapIndexes[shadowMapIndex];
     [unroll(9)]
     for (uint i = 0; i < 9; ++i)
     {
-        uint shadowMapTextureIndex = light.ShadowMapIndexes[shadowMapIndex];
         shadowFactor += Textures[shadowMapTextureIndex].SampleCmpLevelZero(ShadowSampler, UVD.xy, UVD.z, offsets[i]);
     }
     shadowFactor /= 9.0f;
@@ -100,7 +102,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
     
     // Setup surface
     Surface surface;
-    float depth = PositionTexture.Load(uint3(DTid.xy, 0)).r;
+    float depth             = PositionTexture.Load(uint3(DTid.xy, 0)).r;
     surface.Position        = ReconstructPosW(depth, DTid.xy, Scene.WindowSize, Scene.InvProjection, Scene.InvView);
     surface.NDCPosition     = mul(surface.Position, Scene.ViewProjection);
     surface.Albedo          = float4(AlbedoMetalnessTexture.Load(uint3(DTid.xy, 0)).rgb, 1.0f);
@@ -131,7 +133,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
         float3 surfaceColor = (diffuseColor + specularColor) * surface.NdotL;
         
         float3 lightingModel = surfaceColor * lightAttenuation;
-        if (Lights[i].CastShadows)
+        if (Lights[i].CastShadows != 0)
         {
             lightingModel *= shadowAttenuation;
         }

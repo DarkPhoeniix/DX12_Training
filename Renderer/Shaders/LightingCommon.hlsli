@@ -29,17 +29,17 @@ struct LightDesc
     float4 Position;
     float4 Color;
     
+    uint Type;
+    uint CastShadows;
+    
     float Intesity;
     float Range;
     float OuterAngle;
     float InnerAngle;
     
-    row_major matrix ViewProj[6];
-    
-    uint Type;
-    bool CastShadows;
-    
     uint ShadowMapIndexes[6];
+    
+    row_major matrix ViewProj[6];
 };
 
 float CalculatePointLightAttenuation(LightDesc light, Surface surface)

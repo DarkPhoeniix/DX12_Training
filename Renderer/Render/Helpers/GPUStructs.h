@@ -37,15 +37,15 @@ struct GPULightDesc
     DirectX::XMVECTOR Position;
     DirectX::XMVECTOR Color;
 
+    uint32_t Type;
+    uint32_t CastShadows = 0;
+
     float Intensity;
     float Range;
     float OuterAngle;
     float InnerAngle;
 
-    std::array<DirectX::XMMATRIX, 6> ViewProj;
-
-    uint32_t Type;
-    bool CastShadows = false;
-
     std::array<UINT, 6> ShadowMapIndexes;
+
+    std::array<DirectX::XMMATRIX, 6> ViewProj;
 };
