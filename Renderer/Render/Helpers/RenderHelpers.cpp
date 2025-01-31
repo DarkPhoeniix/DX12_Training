@@ -8,7 +8,6 @@
 #include "Scene/Entity/Components/Camera.h"
 #include "Scene/Entity/Components/Light.h"
 #include "Scene/Scene.h"
-#include "Scene/SceneCache.h"
 
 #include "Render/Frame/Frame.h"
 #include "Render/Helpers/GPUStructs.h"
@@ -96,7 +95,7 @@ namespace
         return result;
     }
 
-    void SetupLightToGPU(std::shared_ptr<scene::Entity> node, CacheGPU::DataHandle& dataHandle, Frame* frame, uint32_t& index)
+    void SetupLightToGPU(std::shared_ptr<scene::Entity> node, CacheGPU::DataHandle& dataHandle, dx12::ResourceTable& frameTable, uint32_t& index)
     {
         scene::Transformation* transform = node->GetComponentAs<scene::Transformation>("Transformation");
         scene::Light* light = node->GetComponentAs<scene::Light>("Light");
@@ -126,7 +125,7 @@ namespace
                 {
                     if (light->ShadowMaps[i])
                     {
-                        lightDesc.ShadowMapIndexes[i] = frame->GetResourceTable().GetResourceIndex(light->ShadowMaps[i].get(), dx12::ResourceViewType::SRV);
+                        lightDesc.ShadowMapIndexes[i] = frameTable.GetResourceIndex(light->ShadowMaps[i].get(), dx12::ResourceViewType::SRV);
                     }
                 }
             }
@@ -136,7 +135,7 @@ namespace
 
         for (std::shared_ptr<scene::Entity>& child : node->GetChildrenNodes())
         {
-            SetupLightToGPU(child, dataHandle, frame, index);
+            SetupLightToGPU(child, dataHandle, frameTable, index);
         }
     }
 } // namespace unnamed
@@ -195,10 +194,9 @@ namespace Helpers
         uint32_t lightCounter = 0;
         for (std::shared_ptr<scene::Entity>& node : scene.GetRootNodes())
         {
-            SetupLightToGPU(node, lightsData, frame, lightCounter);
+            SetupLightToGPU(node, lightsData, frame->GetResourceTable(), lightCounter);
         }
 
         commandList.SetSRV(2, lightsData.DataGPU);
-
     }
 } // namespace Helpers

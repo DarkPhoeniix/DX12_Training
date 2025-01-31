@@ -27,10 +27,11 @@ public:
     TaskGPU* CreateTask(D3D12_COMMAND_LIST_TYPE type, dx12::PipelineState* rootSignature = nullptr);
 
     void BindDescriptorHeaps(dx12::CommandList& commandList);
-    dx12::ResourceTable& GetResourceTable();
 
     void WaitCPU();
     void ResetGPU();
+
+    dx12::ResourceTable& GetResourceTable();
 
     CacheGPU& GetCache();
     void ResetCache();

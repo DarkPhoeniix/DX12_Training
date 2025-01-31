@@ -4,11 +4,6 @@
 
 #include "ResourceTable.h"
 
-namespace
-{
-    constexpr uint32_t MAX_LIGHTS_NUM = 64;
-}
-
 namespace scene
 {
     SceneCache::SceneCache()

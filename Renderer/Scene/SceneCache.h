@@ -35,7 +35,5 @@ namespace scene
         dx12::Heap _texturesHeap;
 
         float _currentTime;
-        
-        std::shared_ptr<dx12::Resource> _gpuDesc;
     };
 } // namespace scene
