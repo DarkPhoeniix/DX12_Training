@@ -6,6 +6,8 @@
         "Wall01.node",
         "Wall02.node",
         "Skybox.node",
-        "Pink.node"
+        "SpotLight1.node",
+        "Pink.node",
+        "Icosphere.node"
     ]
 }
