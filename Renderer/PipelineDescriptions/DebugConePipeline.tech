@@ -1,0 +1,21 @@
+{
+	"Type": "DebugSphereTechnique",
+
+	"IsGraphicsPipeline": true,
+
+	"TopologyType": "point",
+
+	"Blend": "PipelineDescriptions\\AABBRenderPipeline.blend",
+	"Raster": "PipelineDescriptions\\Raster_Solid.raster",
+	"Depth": "PipelineDescriptions\\Depth_LE_WriteAll.depth",
+
+	"RenderTargets": [
+		"R8G8B8A8_UNORM"
+	],
+	"DepthBuffer": "BackBufferDepth",
+	"Layout": null,
+
+	"VS": "Shaders\\Cone_vs.cso",
+	"GS": "Shaders\\Cone_gs.cso",
+	"PS": "Shaders\\Cone_ps.cso"
+}

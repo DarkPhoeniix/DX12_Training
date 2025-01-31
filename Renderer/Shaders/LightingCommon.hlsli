@@ -2,6 +2,7 @@
 
 struct Surface
 {
+    float4 NDCPosition;
     float4 Position;
     
     float4 Albedo;
@@ -11,6 +12,7 @@ struct Surface
     
     float4 FinalColor;
     
+    float4 ToLight;
     float DistanceToL;
     float NdotV;
     float NdotL;
@@ -27,15 +29,17 @@ struct LightDesc
     float4 Position;
     float4 Color;
     
+    uint Type;
+    uint CastShadows;
+    
     float Intesity;
     float Range;
-    
     float OuterAngle;
     float InnerAngle;
     
-    uint Type;
+    uint ShadowMapIndexes[6];
     
-    uint pad[3];
+    row_major matrix ViewProj[6];
 };
 
 float CalculatePointLightAttenuation(LightDesc light, Surface surface)
@@ -47,8 +51,8 @@ float CalculateSpotLightAttenuation(LightDesc light, Surface surface)
 {
     float3 toLight = normalize(light.Position - surface.Position);
     float cosAngle = dot(-light.Direction.xyz, toLight);
-    float cosOuterAngle = cos(light.OuterAngle);
-    float cosInnerAngle = cos(light.InnerAngle);
+    float cosOuterAngle = light.OuterAngle;
+    float cosInnerAngle = light.InnerAngle;
     
     float coneAttenuation = saturate((cosAngle - cosOuterAngle) / (cosInnerAngle - cosOuterAngle));
     coneAttenuation *= coneAttenuation;
@@ -77,4 +81,24 @@ float CalculateAttenuation(LightDesc light, Surface surface)
     }
     
     return 0.0f;
+}
+
+uint GetCubeFaceIndex(float3 toPixel)
+{
+    float3 vAbs = abs(toPixel);
+    uint faceIndex = 0;
+    if (vAbs.z >= vAbs.x && vAbs.z >= vAbs.y)
+    {
+        faceIndex = toPixel.z < 0 ? 5 : 4;
+    }
+    else if (vAbs.y >= vAbs.x)
+    {
+        faceIndex = toPixel.y < 0 ? 3 : 2;
+    }
+    else
+    {
+        faceIndex = toPixel.x < 0 ? 1 : 0;
+    }
+    
+    return faceIndex;
 }

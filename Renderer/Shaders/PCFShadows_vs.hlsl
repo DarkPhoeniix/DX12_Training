@@ -1,0 +1,63 @@
+
+#include "PCFShadows_rootsig.hlsli"
+
+#include "Common.hlsli"
+#include "LightingCommon.hlsli"
+
+struct VSinput
+{
+    float3 Position     : POSITION;
+    float3 Normal       : NORMAL;
+    float3 Tangent      : TANGENT;
+    float2 Texture      : TEXCOORD;
+    uint4  BoneIds      : BONE_IDS;
+    float4 BoneWeights  : BONE_WEIGHTS;
+};
+
+struct VSOutput
+{
+    float4 Position     : SV_Position;
+};
+
+struct BoneDesc
+{
+    row_major matrix Transform;
+};
+
+struct ShadowData
+{
+    uint LightIndex;
+    uint VPIndex;
+};
+
+ConstantBuffer<ShadowData> Shadow : register(b3);
+StructuredBuffer<LightDesc> Lights : register(t0);
+StructuredBuffer<BoneDesc> Bones : register(t1);
+
+[RootSignature(PCFShadows_RootSig)]
+VSOutput main(VSinput IN)
+{
+    row_major matrix boneTransform = float4x4(
+        float4(1.0f, 0.0f, 0.0f, 0.0f),
+        float4(0.0f, 1.0f, 0.0f, 0.0f),
+        float4(0.0f, 0.0f, 1.0f, 0.0f),
+        float4(0.0f, 0.0f, 0.0f, 1.0f));
+    if (Model.useSkinning)
+    {
+        boneTransform  = Bones[IN.BoneIds[0]].Transform * IN.BoneWeights[0];
+        boneTransform += Bones[IN.BoneIds[1]].Transform * IN.BoneWeights[1];
+        boneTransform += Bones[IN.BoneIds[2]].Transform * IN.BoneWeights[2];
+        boneTransform += Bones[IN.BoneIds[3]].Transform * IN.BoneWeights[3];
+    }
+    
+    float4 positionWS = float4(IN.Position, 1.0f);
+    positionWS = mul(positionWS, boneTransform);
+    positionWS = mul(positionWS, Model.Transform);
+    
+    float4 positionLS = mul(positionWS, Lights[Shadow.LightIndex].ViewProj[Shadow.VPIndex]);
+    
+    VSOutput output;
+    output.Position = positionLS;
+    
+    return output;
+}

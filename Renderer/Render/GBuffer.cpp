@@ -8,28 +8,8 @@ namespace render
 {
     void GBuffer::Init(const DirectX::XMUINT2& size)
     {
-        _RTVDescriptorsHeap.Reset();
-        _DSVDescriptorsHeap.Reset();
-        _SRVDescriptorsHeap.Reset();
-
-        // Create descriptor heaps (RTV/DSV/SRV)
-        {
-            dx12::DescriptorHeapDescription desc;
-            desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_NONE);
-            desc.SetNumDescriptors(4);
-
-            desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-            _RTVDescriptorsHeap.Create(desc);
-            _RTVDescriptorsHeap.SetName("G-Buffer RTV descriptor heap");
-
-            desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-            _DSVDescriptorsHeap.Create(desc);
-            _DSVDescriptorsHeap.SetName("G-Buffer DSV descriptor heap");
-
-            desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-            _SRVDescriptorsHeap.Create(desc);
-            _SRVDescriptorsHeap.SetName("G-Buffer SRV descriptor heap");
-        }
+        _resourceTable.Reset();
+        _resourceTable.Init(4);
 
         // Create textures
         {
@@ -56,7 +36,7 @@ namespace render
             textureDesc.SetFormat(DXGI_FORMAT_R8G8B8A8_UNORM);
             textureDesc.SetClearValue(clearValue);
 
-            _albedoMetalness.CreateCommitedResource(textureDesc, D3D12_RESOURCE_STATE_RENDER_TARGET);
+            _albedoMetalness.CreateCommitedResource(textureDesc);
             _albedoMetalness.SetName("G-Buffer Albedo+Metalness");
 
             // Create NormalSpecular texture
@@ -65,7 +45,7 @@ namespace render
             textureDesc.SetFormat(DXGI_FORMAT_R32G32B32A32_FLOAT);
             textureDesc.SetClearValue(clearValue);
 
-            _normalSpecular.CreateCommitedResource(textureDesc, D3D12_RESOURCE_STATE_RENDER_TARGET);
+            _normalSpecular.CreateCommitedResource(textureDesc);
             _normalSpecular.SetName("G-Buffer Normal+Specular");
 
             // Create DepthStencil texture
@@ -78,19 +58,20 @@ namespace render
             textureDesc.SetClearValue(clearValue);
             textureDesc.SetResourceType(dx12::EResourceType::Texture | dx12::EResourceType::DepthStencil);
 
-            _depthStencil.CreateCommitedResource(textureDesc, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+            _depthStencil.CreateCommitedResource(textureDesc);
             _depthStencil.SetName("G-Buffer DepthStencil");
         }
 
         // Create resource views
         {
-            dx12::Device::CreateRenderTargetView(_albedoMetalness.GetAsRTV(), _RTVDescriptorsHeap);
-            dx12::Device::CreateRenderTargetView(_normalSpecular.GetAsRTV(), _RTVDescriptorsHeap);
+            _resourceTable.PlaceResource(&_albedoMetalness, dx12::ResourceViewType::RTV);
+            _resourceTable.PlaceResource(&_normalSpecular, dx12::ResourceViewType::RTV);
 
-            dx12::Device::CreateDepthStencilView(_depthStencil.GetAsDSV(), _DSVDescriptorsHeap);
+            _resourceTable.PlaceResource(&_depthStencil, dx12::ResourceViewType::DSV);
 
-            dx12::Device::CreateShaderResourceView(_albedoMetalness.GetAsSRV(), _SRVDescriptorsHeap);
-            dx12::Device::CreateShaderResourceView(_normalSpecular.GetAsSRV(), _SRVDescriptorsHeap);
+            _resourceTable.PlaceResource(&_albedoMetalness, dx12::ResourceViewType::SRV);
+            _resourceTable.PlaceResource(&_normalSpecular, dx12::ResourceViewType::SRV);
+            _resourceTable.PlaceResource(&_depthStencil, dx12::ResourceViewType::SRV);
         }
     }
 
@@ -98,19 +79,14 @@ namespace render
     {
         FLOAT clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
-        commandList.ClearRTV(GetAlbedoMetalnessTextureCPUHandle(), clearColor);
-        commandList.ClearRTV(GetNormalTextureCPUHandle(), clearColor);
-        commandList.ClearDSV(GetDepthTextureCPUHandle());
+        commandList.ClearRTV(_resourceTable.GetResourceCPUHandle(&_albedoMetalness, dx12::ResourceViewType::RTV), clearColor);
+        commandList.ClearRTV(_resourceTable.GetResourceCPUHandle(&_normalSpecular, dx12::ResourceViewType::RTV), clearColor);
+        commandList.ClearDSV(_resourceTable.GetResourceCPUHandle(&_depthStencil, dx12::ResourceViewType::DSV));
     }
 
-    dx12::DescriptorHeap& GBuffer::GetDescHeap()
+    dx12::ResourceTable& GBuffer::GetResourceTable()
     {
-        return _RTVDescriptorsHeap;
-    }
-
-    dx12::DescriptorHeap& GBuffer::GetUAVHeap()
-    {
-        return _SRVDescriptorsHeap;
+        return _resourceTable;
     }
 
     dx12::Texture& GBuffer::GetDepthTexture()
@@ -123,16 +99,6 @@ namespace render
         return _depthStencil;
     }
 
-    D3D12_CPU_DESCRIPTOR_HANDLE GBuffer::GetDepthTextureCPUHandle()
-    {
-        return _DSVDescriptorsHeap.GetResourceCPUHandle(&_depthStencil, dx12::ResourceViewType::DSV);
-    }
-
-    D3D12_GPU_DESCRIPTOR_HANDLE GBuffer::GetDepthTextureGPUHandle()
-    {
-        return _DSVDescriptorsHeap.GetResourceGPUHandle(&_depthStencil, dx12::ResourceViewType::DSV);
-    }
-
     dx12::Texture& GBuffer::GetNormalTexture()
     {
         return _normalSpecular;
@@ -143,16 +109,6 @@ namespace render
         return _normalSpecular;
     }
 
-    D3D12_CPU_DESCRIPTOR_HANDLE GBuffer::GetNormalTextureCPUHandle()
-    {
-        return _RTVDescriptorsHeap.GetResourceCPUHandle(&_normalSpecular, dx12::ResourceViewType::RTV);
-    }
-
-    D3D12_GPU_DESCRIPTOR_HANDLE GBuffer::GetNormalTextureGPUHandle()
-    {
-        return _RTVDescriptorsHeap.GetResourceGPUHandle(&_normalSpecular, dx12::ResourceViewType::RTV);
-    }
-
     dx12::Texture& GBuffer::GetAlbedoMetalnessTexture()
     {
         return _albedoMetalness;
@@ -161,15 +117,5 @@ namespace render
     const dx12::Texture& GBuffer::GetAlbedoMetalnessTexture() const
     {
         return _albedoMetalness;
-    }
-    
-    D3D12_CPU_DESCRIPTOR_HANDLE GBuffer::GetAlbedoMetalnessTextureCPUHandle()
-    {
-        return _RTVDescriptorsHeap.GetResourceCPUHandle(&_albedoMetalness, dx12::ResourceViewType::RTV);
-    }
-
-    D3D12_GPU_DESCRIPTOR_HANDLE GBuffer::GetAlbedoMetalnessTextureGPUHandle()
-    {
-        return _RTVDescriptorsHeap.GetResourceGPUHandle(&_albedoMetalness, dx12::ResourceViewType::RTV);
     }
 } // namespace render

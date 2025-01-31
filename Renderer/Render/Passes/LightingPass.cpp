@@ -2,6 +2,8 @@
 
 #include "LightingPass.h"
 
+#include "ResourceTable.h"
+
 #include "Scene/Entity/Components/Camera.h"
 #include "Render/Helpers/RenderHelpers.h"
 
@@ -34,26 +36,28 @@ namespace render
         {
             commandList.SetPipelineState(_deferredPipeline);
 
-            Helpers::SetupSceneDataGPU(*_scene, commandList, &_frame->GetCache());
-
-            dx12::DescriptorHeap& buffersHeap = _frame->GetDescriptorHeap(dx12::DescriptorHeapType::CBV_SRV_UAV);
+            dx12::ResourceTable& frameTable = _frame->GetResourceTable();
+            auto sceneTable = _scene->GetCache().GetTextureTable();
+            dx12::ResourceTable& gBufferTable = _gBuffer->GetResourceTable();
 
             dx12::Resource* target = &_frame->GetTargetTexture();
             dx12::Resource* albedoMetalness = &_gBuffer->GetAlbedoMetalnessTexture();
             dx12::Resource* normalSpecular = &_gBuffer->GetNormalTexture();
             dx12::Resource* depth = &_gBuffer->GetDepthTexture();
 
-            dx12::Device::CreateShaderResourceView(albedoMetalness->GetAsSRV(), buffersHeap);
-            dx12::Device::CreateShaderResourceView(normalSpecular->GetAsSRV(), buffersHeap);
-            dx12::Device::CreateShaderResourceView(depth->GetAsSRV(), buffersHeap);
-            dx12::Device::CreateUnorderedAccessView(target->GetAsUAV(), buffersHeap);
+            frameTable.CopyDescriptor(albedoMetalness, dx12::ResourceViewType::SRV, gBufferTable);
+            frameTable.CopyDescriptor(normalSpecular, dx12::ResourceViewType::SRV, gBufferTable);
+            frameTable.CopyDescriptor(depth, dx12::ResourceViewType::SRV, gBufferTable);
 
             _frame->BindDescriptorHeaps(commandList);
 
-            commandList.SetDescriptorTable(3, buffersHeap.GetResourceGPUHandle(depth, dx12::ResourceViewType::SRV));
-            commandList.SetDescriptorTable(4, buffersHeap.GetResourceGPUHandle(albedoMetalness, dx12::ResourceViewType::SRV));
-            commandList.SetDescriptorTable(5, buffersHeap.GetResourceGPUHandle(normalSpecular, dx12::ResourceViewType::SRV));
-            commandList.SetDescriptorTable(6, buffersHeap.GetResourceGPUHandle(target, dx12::ResourceViewType::UAV));
+            Helpers::SetupSceneDataGPU(*_scene, commandList, _frame);
+
+            commandList.SetDescriptorTable(3, frameTable.GetResourceGPUHandle(depth, dx12::ResourceViewType::SRV));
+            commandList.SetDescriptorTable(4, frameTable.GetResourceGPUHandle(albedoMetalness, dx12::ResourceViewType::SRV));
+            commandList.SetDescriptorTable(5, frameTable.GetResourceGPUHandle(normalSpecular, dx12::ResourceViewType::SRV));
+            commandList.SetDescriptorTable(6, frameTable.GetDescriptorHeap(dx12::ResourceViewType::SRV).GetHeapStartGPUHandle());
+            commandList.SetDescriptorTable(7, frameTable.GetResourceGPUHandle(target, dx12::ResourceViewType::UAV));
 
             DirectX::XMUINT2 viewportSize = _activeCamera->GetViewport().GetSize();
             int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 8.0f);

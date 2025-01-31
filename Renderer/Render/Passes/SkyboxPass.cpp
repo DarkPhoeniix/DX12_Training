@@ -43,21 +43,22 @@ namespace render
         {
             commandList.SetPipelineState(_skyboxPipeline);
 
-            Helpers::SetupSceneDataGPU(*_scene, commandList, &_frame->GetCache());
+            Helpers::SetupSceneDataGPU(*_scene, commandList, _frame);
 
-            dx12::DescriptorHeap& buffersHeap = _frame->GetDescriptorHeap(dx12::DescriptorHeapType::CBV_SRV_UAV);
+            dx12::ResourceTable& sceneTable = *_scene->GetCache().GetTextureTable();
+            dx12::ResourceTable& frameTable = _frame->GetResourceTable();
 
             dx12::Resource* target = &_frame->GetTargetTexture();
             dx12::Resource* skyboxTexture = skybox->SkydomeTexture.get();
             dx12::Resource* depth = &_gBuffer->GetDepthTexture();
-
-            dx12::Device::CreateShaderResourceView(skyboxTexture->GetAsSRV(), buffersHeap);
+            
+            frameTable.CopyDescriptor(skyboxTexture, dx12::ResourceViewType::SRV, sceneTable);
 
             _frame->BindDescriptorHeaps(commandList);
 
-            commandList.SetDescriptorTable(3, buffersHeap.GetResourceGPUHandle(depth, dx12::ResourceViewType::SRV));
-            commandList.SetDescriptorTable(4, buffersHeap.GetResourceGPUHandle(skyboxTexture, dx12::ResourceViewType::SRV));
-            commandList.SetDescriptorTable(5, buffersHeap.GetResourceGPUHandle(target, dx12::ResourceViewType::UAV));
+            commandList.SetDescriptorTable(3, frameTable.GetResourceGPUHandle(depth, dx12::ResourceViewType::SRV));
+            commandList.SetDescriptorTable(4, frameTable.GetResourceGPUHandle(skyboxTexture, dx12::ResourceViewType::SRV));
+            commandList.SetDescriptorTable(5, frameTable.GetResourceGPUHandle(target, dx12::ResourceViewType::UAV));
 
             DirectX::XMUINT2 viewportSize = _activeCamera->GetViewport().GetSize();
             int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 8.0f);

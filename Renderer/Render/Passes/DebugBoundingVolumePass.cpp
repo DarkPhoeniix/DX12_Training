@@ -7,6 +7,8 @@
 #include "Scene/Volumes/AABBVolume.h"
 #include "Scene/Volumes/OBBVolume.h"
 
+#include "Render/Helpers/DrawHelpers.h"
+
 using namespace DirectX;
 
 namespace render
@@ -37,10 +39,6 @@ namespace render
 
         PIXBeginEvent(commandList.GetDXCommandList().Get(), 8, "AABB");
         {
-            commandList.TransitionBarrier(_gBuffer->GetDepthTexture(), D3D12_RESOURCE_STATE_DEPTH_WRITE);
-            commandList.TransitionBarrier(_gBuffer->GetAlbedoMetalnessTexture(), D3D12_RESOURCE_STATE_RENDER_TARGET);
-            commandList.TransitionBarrier(_gBuffer->GetNormalTexture(), D3D12_RESOURCE_STATE_RENDER_TARGET);
-
             commandList.SetPipelineState(_OBBpipeline);
 
             std::vector<scene::OBBVolume> volumes;
@@ -65,10 +63,11 @@ namespace render
                 }
             }
 
-            dx12::DescriptorHeap& RTVHeap = _frame->GetDescriptorHeap(dx12::DescriptorHeapType::RTV);
+            dx12::ResourceTable& frameTable = _frame->GetResourceTable();
+            dx12::ResourceTable& gBufferTable = _gBuffer->GetResourceTable();
 
-            D3D12_CPU_DESCRIPTOR_HANDLE rtv = RTVHeap.GetResourceCPUHandle(&_frame->GetTargetTexture(), dx12::ResourceViewType::RTV);
-            D3D12_CPU_DESCRIPTOR_HANDLE dsv = _gBuffer->GetDepthTextureCPUHandle();
+            D3D12_CPU_DESCRIPTOR_HANDLE rtv = frameTable.GetResourceCPUHandle(&_frame->GetTargetTexture(), dx12::ResourceViewType::RTV);
+            D3D12_CPU_DESCRIPTOR_HANDLE dsv = gBufferTable.GetResourceCPUHandle(&_gBuffer->GetDepthTexture(), dx12::ResourceViewType::DSV);
 
             commandList.SetViewport(_activeCamera->GetViewport());
             commandList.SetRenderTarget(&rtv, &dsv);
@@ -86,7 +85,20 @@ namespace render
 
             commandList.SetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
 
-            commandList.Draw(1);
+            //commandList.Draw(1);
+
+            commandList.TransitionBarrier(_gBuffer->GetDepthTexture(), D3D12_RESOURCE_STATE_DEPTH_WRITE);
+            commandList.TransitionBarrier(_gBuffer->GetAlbedoMetalnessTexture(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+            commandList.TransitionBarrier(_gBuffer->GetNormalTexture(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+            DrawHelper::DrawSphere(commandList, *_activeCamera, 80.0f, DirectX::XMVectorSet(-15.0f, 15.0f, 10.0f, 1.0f));
+            //DrawHelper::DrawCone(commandList, *_activeCamera, 29.0f, 100.0f, DirectX::XMVectorSet(0.0f, 50.0f, 10.0f, 1.0f), DirectX::XMVectorSet(0.0f, -0.9f, -0.2f, 0.0f), DirectX::XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f));
+            //DrawHelper::DrawCone(commandList, *_activeCamera, 29.0f, 60.0f, DirectX::XMVectorSet(0.0f, 20.0f, 25.0f, 1.0f), DirectX::XMVectorSet(0.0f, 0.0f, -1.0f, 0.0f), DirectX::XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f));
+
+            commandList.TransitionBarrier(_gBuffer->GetDepthTexture(), D3D12_RESOURCE_STATE_COMMON);
+            commandList.TransitionBarrier(_gBuffer->GetAlbedoMetalnessTexture(), D3D12_RESOURCE_STATE_COMMON);
+            commandList.TransitionBarrier(_gBuffer->GetNormalTexture(), D3D12_RESOURCE_STATE_COMMON);
+
         }
         PIXEndEvent(commandList.GetDXCommandList().Get());
 

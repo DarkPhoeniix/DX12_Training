@@ -10,6 +10,7 @@
 #include "Scene/Entity/Components/Material.h"
 #include "Scene/Entity/Components/Mesh.h"
 #include "Scene/Entity/Components/Skybox.h"
+#include "Scene/Entity/Components/Light.h"
 
 #include "Render/Frame/CacheGPU.h"
 
@@ -91,29 +92,25 @@ void UploadSceneProcessor::ProcessEntity(Entity& entity, dx12::CommandList& comm
         std::shared_ptr<dx12::ResourceTable> textureTable = cache->GetTextureTable();
         ASSERT(textureTable.get(), "Resource table is nullptr");
 
-        if (textureTable->AddResource(material->Albedo.get(), dx12::ResourceViewType::SRV))
-        {
-            material->Albedo->SetDescriptorHeap(&textureTable->GetDescriptorHeap());
-            material->Albedo->UploadToGPU(commandList);
-        }
+        material->Albedo->SetDescriptorHeap(&textureTable->GetDescriptorHeap(dx12::ResourceViewType::SRV));
+        cache->GetTextureHeap().PlaceResource(*material->Albedo);
+        material->Albedo->UploadToGPU(commandList);
+        textureTable->PlaceResource(material->Albedo.get(), dx12::ResourceViewType::SRV);
 
-        if (textureTable->AddResource(material->NormalMap.get(), dx12::ResourceViewType::SRV))
-        {
-            material->NormalMap->SetDescriptorHeap(&textureTable->GetDescriptorHeap());
-            material->NormalMap->UploadToGPU(commandList);
-        }
+        material->NormalMap->SetDescriptorHeap(&textureTable->GetDescriptorHeap(dx12::ResourceViewType::SRV));
+        cache->GetTextureHeap().PlaceResource(*material->NormalMap);
+        material->NormalMap->UploadToGPU(commandList);
+        textureTable->PlaceResource(material->NormalMap.get(), dx12::ResourceViewType::SRV);
 
-        if (textureTable->AddResource(material->Metalness.get(), dx12::ResourceViewType::SRV))
-        {
-            material->Metalness->SetDescriptorHeap(&textureTable->GetDescriptorHeap());
-            material->Metalness->UploadToGPU(commandList);
-        }
+        material->Metalness->SetDescriptorHeap(&textureTable->GetDescriptorHeap(dx12::ResourceViewType::SRV));
+        cache->GetTextureHeap().PlaceResource(*material->Metalness);
+        material->Metalness->UploadToGPU(commandList);
+        textureTable->PlaceResource(material->Metalness.get(), dx12::ResourceViewType::SRV);
 
-        if (textureTable->AddResource(material->Roughness.get(), dx12::ResourceViewType::SRV))
-        {
-            material->Roughness->SetDescriptorHeap(&textureTable->GetDescriptorHeap());
-            material->Roughness->UploadToGPU(commandList);
-        }
+        material->Roughness->SetDescriptorHeap(&textureTable->GetDescriptorHeap(dx12::ResourceViewType::SRV));
+        cache->GetTextureHeap().PlaceResource(*material->Roughness);
+        material->Roughness->UploadToGPU(commandList);
+        textureTable->PlaceResource(material->Roughness.get(), dx12::ResourceViewType::SRV);
     }
 
     Armature* armature = entity.GetComponentAs<Armature>("Armature");
@@ -122,7 +119,7 @@ void UploadSceneProcessor::ProcessEntity(Entity& entity, dx12::CommandList& comm
         dx12::ResourceDescription desc;
         {
             desc.SetResourceType(dx12::EResourceType::Buffer | dx12::EResourceType::Dynamic);
-            desc.SetSize({ (uint32_t)armature->GetBones().size() * (uint32_t)sizeof(DirectX::XMMATRIX), 1});
+            desc.SetSize({ (uint32_t)armature->GetBones().size() * (uint32_t)sizeof(DirectX::XMMATRIX), 1 });
             desc.SetFormat(DXGI_FORMAT_UNKNOWN);
             desc.SetFlags(D3D12_RESOURCE_FLAG_NONE);
         }
@@ -139,13 +136,26 @@ void UploadSceneProcessor::ProcessEntity(Entity& entity, dx12::CommandList& comm
     Skybox* skybox = entity.GetComponentAs<Skybox>("Skybox");
     if (skybox)
     {
-        skybox->SkydomeTexture->SetDescriptorHeap(&skybox->DescHeap);
+        std::shared_ptr<dx12::ResourceTable> textureTable = cache->GetTextureTable();
+        skybox->SkydomeTexture->SetDescriptorHeap(&textureTable->GetDescriptorHeap(dx12::ResourceViewType::SRV));
 
-        skybox->DescHeap.PlaceResource(skybox->SkydomeTexture.get(), dx12::ResourceViewType::SRV);
         skybox->TexHeap.PlaceResource(*skybox->SkydomeTexture);
         skybox->SkydomeTexture->UploadToGPU(commandList);
+        textureTable->PlaceResource(skybox->SkydomeTexture.get(), dx12::ResourceViewType::SRV);
+    }
 
-        dx12::Device::CreateShaderResourceView(skybox->SkydomeTexture->GetAsSRV(), skybox->DescHeap);
+    Light* light = entity.GetComponentAs<Light>("Light");
+    if (light)
+    {
+        std::shared_ptr<dx12::ResourceTable> textureTable = cache->GetTextureTable();
+        for (auto& shadowMap : light->ShadowMaps)
+        {
+            if (shadowMap)
+            {
+                textureTable->PlaceResource(shadowMap.get(), dx12::ResourceViewType::DSV);
+                textureTable->PlaceResource(shadowMap.get(), dx12::ResourceViewType::SRV);
+            }
+        }
     }
 }
 

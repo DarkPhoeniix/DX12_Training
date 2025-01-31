@@ -57,7 +57,7 @@ namespace dx12
 
         UpdateSubresources(commandList.GetDXCommandList().Get(), _resource.Get(), _intermediateResource.Get(), 0, 0, subresources.size(), subresources.data());
 
-        dx12::Device::CreateShaderResourceView(GetAsSRV(), *_descritptorHeap);
+        //dx12::Device::CreateShaderResourceView(GetAsSRV(), *_descritptorHeap);
     }
 
     void Texture::SetDescriptorHeap(DescriptorHeap* descriptorHeap)

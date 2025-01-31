@@ -52,6 +52,11 @@ namespace dx12
         _resourceOffset += Math::AlignUp(size, D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT);
     }
 
+    void Heap::Reset()
+    {
+        _resourceOffset = 0;
+    }
+
     void Heap::SetDescription(const HeapDescription& description)
     {
         _description = description;

@@ -4,56 +4,222 @@
 
 namespace dx12
 {
-    ResourceTable::ResourceTable(DescriptorHeapDescription descriptorHeapDesc, HeapDescription heapDesc)
-        : _numDescriptors(descriptorHeapDesc.GetNumDescriptors())
+    void ResourceTable::Init(int numDescriptors, bool shaderVisible)
     {
-        _heap.Create(heapDesc);
-        _heap.SetName("Heap of resource table");
+        _numDescriptors = numDescriptors;
 
-        _descriptorHeap.Create(descriptorHeapDesc);
-        _descriptorHeap.SetName("Descriptor heap of resource table");
+        dx12::DescriptorHeapDescription descriptorHeapDesc;
+        descriptorHeapDesc.SetNumDescriptors(numDescriptors);
+        descriptorHeapDesc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_NONE);
+
+        descriptorHeapDesc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+        _RTVDescriptorHeap.Create(descriptorHeapDesc);
+        _RTVDescriptorHeap.SetName("RTV Descriptor heap of resource table");
+
+        descriptorHeapDesc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+        _DSVDescriptorHeap.Create(descriptorHeapDesc);
+        _DSVDescriptorHeap.SetName("DSV Descriptor heap of resource table");
+
+        descriptorHeapDesc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+        if (shaderVisible)
+        {
+            descriptorHeapDesc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
+        }
+        _BuffersDescriptorHeap.Create(descriptorHeapDesc);
+        _BuffersDescriptorHeap.SetName("Buffers Descriptor heap of resource table");
     }
 
-    bool ResourceTable::AddResource(Resource* resource, ResourceViewType viewType)
+    void ResourceTable::Reset()
+    {
+        _RTVResources.clear();
+        _DSVResources.clear();
+        _BufferResources.clear();
+
+        _RTVDescriptorHeap.Reset();
+        _DSVDescriptorHeap.Reset();
+        _BuffersDescriptorHeap.Reset();
+    }
+
+    bool ResourceTable::CopyDescriptor(Resource* resource, ResourceViewType viewType, ResourceTable& srcTable)
+    {
+        ResourceTable::ResourceMap& resources = _GetResourceMap(viewType);
+        DescriptorHeap& descriptorHeap = GetDescriptorHeap(viewType);
+
+        ResourceKey key = { resource->GetName(), viewType };
+        if (resources.find(key) != resources.end())
+        {
+            return false;
+        }
+
+        InternalResourceDesc value = { resource, descriptorHeap.GetCurrentOffset(), viewType };
+        resources.insert(std::make_pair(key, value));
+
+        D3D12_CPU_DESCRIPTOR_HANDLE srcHandle = srcTable.GetResourceCPUHandle(resource, viewType);
+        descriptorHeap.CopyResourceDescriptor(resource, viewType, srcHandle);
+
+        return true;
+    }
+
+    bool ResourceTable::PlaceResource(Resource* resource, ResourceViewType viewType)
     {
         if (ASSERT(resource, "Trying to add a nullptr resource to resource table"))
         {
             return false;
         }
 
-        ASSERT((_resources.size() < _numDescriptors), "Resource table is full");
+        ResourceTable::ResourceMap& resources = _GetResourceMap(viewType);
+        DescriptorHeap& descriptorHeap = GetDescriptorHeap(viewType);
 
-        InternalResourceDesc value = { _resources.size(), viewType };
-        std::string key = resource->GetName();
+        ASSERT((resources.size() < _numDescriptors), "Resource table is full");
 
-        _resources.insert(std::make_pair(key, value));
-        _heap.PlaceResource(*resource);
+        ResourceKey key = { resource->GetName(), viewType };
+        InternalResourceDesc value = { resource, descriptorHeap.GetCurrentOffset(), viewType};
+
+        resources.insert(std::make_pair(key, value));
+        switch (viewType)
+        {
+        case ResourceViewType::RTV:
+            dx12::Device::CreateRenderTargetView(resource->GetAsRTV(), descriptorHeap);
+            break;
+        case ResourceViewType::DSV:
+            dx12::Device::CreateDepthStencilView(resource->GetAsDSV(), descriptorHeap);
+            break;
+        case ResourceViewType::CBV:
+            dx12::Device::CreateConstantBufferView(resource->GetAsCBV(), descriptorHeap);
+            break;
+        case ResourceViewType::SRV:
+            dx12::Device::CreateShaderResourceView(resource->GetAsSRV(), descriptorHeap);
+            break;
+        case ResourceViewType::UAV:
+            dx12::Device::CreateUnorderedAccessView(resource->GetAsUAV(), descriptorHeap);
+            break;
+        default:
+            ASSERT(false, "TODO");
+            break;
+        };
 
         return true;
     }
 
     D3D12_CPU_DESCRIPTOR_HANDLE ResourceTable::GetResourceCPUHandle(Resource* resource, ResourceViewType viewType)
     {
-        return _descriptorHeap.GetResourceCPUHandle(resource, viewType);
+        ResourceTable::ResourceMap resources = _GetResourceMap(viewType);
+        DescriptorHeap& descriptorHeap = GetDescriptorHeap(viewType);
+
+        ResourceKey key = { resource->GetName(), viewType };
+        std::uint32_t resourceIndex = resources[key].HeapIndex;
+
+        return descriptorHeap.GetCPUHandleWithOffset(resourceIndex);
     }
 
     D3D12_GPU_DESCRIPTOR_HANDLE ResourceTable::GetResourceGPUHandle(Resource* resource, ResourceViewType viewType)
     {
-        return _descriptorHeap.GetResourceGPUHandle(resource, viewType);
+        ResourceTable::ResourceMap resources = _GetResourceMap(viewType);
+        DescriptorHeap& descriptorHeap = GetDescriptorHeap(viewType);
+
+        ResourceKey key = { resource->GetName(), viewType };
+        std::uint32_t resourceIndex = resources[key].HeapIndex;
+
+        return descriptorHeap.GetGPUHandleWithOffset(resourceIndex);
+    }
+
+    D3D12_CPU_DESCRIPTOR_HANDLE ResourceTable::GetResourceCPUHandle(const std::string& resourceName, ResourceViewType viewType)
+    {
+        ResourceTable::ResourceMap resources = _GetResourceMap(viewType);
+        DescriptorHeap& descriptorHeap = GetDescriptorHeap(viewType);
+
+        ResourceKey key = { resourceName, viewType };
+        std::uint32_t resourceIndex = resources[key].HeapIndex;
+
+        return descriptorHeap.GetCPUHandleWithOffset(resourceIndex);
+    }
+
+    D3D12_GPU_DESCRIPTOR_HANDLE ResourceTable::GetResourceGPUHandle(const std::string& resourceName, ResourceViewType viewType)
+    {
+        ResourceTable::ResourceMap resources = _GetResourceMap(viewType);
+        DescriptorHeap& descriptorHeap = GetDescriptorHeap(viewType);
+
+        ResourceKey key = { resourceName, viewType };
+        std::uint32_t resourceIndex = resources[key].HeapIndex;
+
+        return descriptorHeap.GetGPUHandleWithOffset(resourceIndex);
     }
 
     UINT ResourceTable::GetResourceIndex(Resource* resource, ResourceViewType viewType)
     {
-        return _descriptorHeap.GetResourceIndex(resource, viewType);
+        ResourceTable::ResourceMap resources = _GetResourceMap(viewType);
+        ResourceKey key = { resource->GetName(), viewType };
+        auto it = resources.find(key);
+        if (it == resources.end())
+        {
+            return -1;
+        }
+
+        return it->second.HeapIndex;
     }
 
-    DescriptorHeap& ResourceTable::GetDescriptorHeap()
+    UINT ResourceTable::GetResourceIndex(const std::string& resourceName, ResourceViewType viewType)
     {
-        return _descriptorHeap;
+        ResourceTable::ResourceMap resources = _GetResourceMap(viewType);
+        ResourceKey key = { resourceName, viewType };
+        auto it = resources.find(key);
+        if (it == resources.end())
+        {
+            return -1;
+        }
+
+        return it->second.HeapIndex;
     }
 
-    const DescriptorHeap& ResourceTable::GetDescriptorHeap() const
+    Resource* ResourceTable::GetResourceByName(const std::string& resourceName, ResourceViewType viewType)
     {
-        return _descriptorHeap;
+        ResourceTable::ResourceMap resources = _GetResourceMap(viewType);
+        ResourceKey key = { resourceName, viewType };
+        auto it = resources.find(key);
+        if (it == resources.end())
+        {
+            return nullptr;
+        }
+
+        return it->second.PlacedResource;
+    }
+
+    DescriptorHeap& ResourceTable::GetDescriptorHeap(ResourceViewType viewType)
+    {
+        switch (viewType)
+        {
+        case ResourceViewType::RTV:
+            return _RTVDescriptorHeap;
+        case ResourceViewType::DSV:
+            return _DSVDescriptorHeap;
+        default: // CBV / SRV / UAV
+            return _BuffersDescriptorHeap;
+        }
+    }
+
+    const DescriptorHeap& ResourceTable::GetDescriptorHeap(ResourceViewType viewType) const
+    {
+        switch (viewType)
+        {
+        case ResourceViewType::RTV:
+            return _RTVDescriptorHeap;
+        case ResourceViewType::DSV:
+            return _DSVDescriptorHeap;
+        default: // CBV / SRV / UAV
+            return _BuffersDescriptorHeap;
+        }
+    }
+
+    ResourceTable::ResourceMap& ResourceTable::_GetResourceMap(ResourceViewType viewType)
+    {
+        switch (viewType)
+        {
+        case ResourceViewType::RTV:
+            return _RTVResources;
+        case ResourceViewType::DSV:
+            return _DSVResources;
+        default: // CBV / SRV / UAV
+            return _BufferResources;
+        }
     }
 } // namespace dx12

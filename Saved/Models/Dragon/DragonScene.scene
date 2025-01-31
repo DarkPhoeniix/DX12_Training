@@ -5,9 +5,9 @@
         "Floor.node",
         "Wall01.node",
         "Wall02.node",
-        "Blue.node",
-        "Pink.node",
         "Skybox.node",
-        "SpotLight.node"
+        "SpotLight1.node",
+        "Pink.node",
+        "Icosphere.node"
     ]
 }

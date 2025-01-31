@@ -33,15 +33,19 @@ struct GPUModelDesc
 
 struct GPULightDesc
 {
-    DirectX::XMVECTOR direction;
-    DirectX::XMVECTOR position;
-    DirectX::XMVECTOR color;
+    DirectX::XMVECTOR Direction;
+    DirectX::XMVECTOR Position;
+    DirectX::XMVECTOR Color;
 
-    float intensity;
-    float range;
+    uint32_t Type;
+    uint32_t CastShadows = 0;
 
-    float outerAngle;
-    float innerAngle;
+    float Intensity;
+    float Range;
+    float OuterAngle;
+    float InnerAngle;
 
-    uint32_t type;
+    std::array<UINT, 6> ShadowMapIndexes;
+
+    std::array<DirectX::XMMATRIX, 6> ViewProj;
 };

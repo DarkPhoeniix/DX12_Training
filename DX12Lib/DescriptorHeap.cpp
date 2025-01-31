@@ -8,12 +8,14 @@ namespace dx12
         : _descriptorHeap(nullptr)
         , _description{}
         , _heapIncrementSize(0)
+        , _currentOffset(0)
     {   }
 
     DescriptorHeap::DescriptorHeap(const DescriptorHeapDescription& description)
         : _descriptorHeap(nullptr)
         , _description(description)
         , _heapIncrementSize(0)
+        , _currentOffset(0)
     {   }
 
     DescriptorHeap::~DescriptorHeap()
@@ -42,29 +44,17 @@ namespace dx12
 
     void DescriptorHeap::Reset()
     {
-        _resources.clear();
+        _currentOffset = 0;
     }
 
-    void DescriptorHeap::PlaceResource(Resource* resource, ResourceViewType viewType)
+    std::uint32_t DescriptorHeap::CopyResourceDescriptor(Resource* resource, ResourceViewType viewType, D3D12_CPU_DESCRIPTOR_HANDLE descriptor)
     {
-        InternalResourceDesc value = { _resources.size(), viewType };
-        std::string key = resource->GetName();
-
-        _resources.insert(std::make_pair(key, value));
-    }
-
-    void DescriptorHeap::CopyResourceDescriptor(Resource* resource, ResourceViewType viewType, D3D12_CPU_DESCRIPTOR_HANDLE descriptor)
-    {
-        InternalResourceDesc value = { _resources.size(), viewType };
-        std::string key = resource->GetName();
-
-        _resources.insert(std::make_pair(key, value));
-
-        uint32_t offset = value.HeapIndex;
         D3D12_CPU_DESCRIPTOR_HANDLE handle = _descriptorHeap->GetCPUDescriptorHandleForHeapStart();
-        handle.ptr += _heapIncrementSize * offset;
+        handle.ptr += _heapIncrementSize * _currentOffset;
 
         dx12::Device::GetDXDevice()->CopyDescriptorsSimple(1, handle, descriptor, _description.GetType());
+
+        return _currentOffset++;
     }
 
     D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetHeapStartCPUHandle()
@@ -77,59 +67,30 @@ namespace dx12
         return _descriptorHeap->GetGPUDescriptorHandleForHeapStart();
     }
 
-    D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetResourceCPUHandle(Resource* resource, ResourceViewType viewType)
+    D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetCPUHandleWithOffset(std::uint32_t offset)
     {
-        ASSERT(dx12::Device::GetDXDevice(), "Device is nullptr when trying to Get CPU descriptor handle increment size");
-        ASSERT(resource, "Trying to Get CPU handle for nullptr resource");
-
-        std::string key = resource->GetName();
-        auto result = _resources.find(key);
-        while (result->first == key && result->second.Type != viewType)
-        {
-            ASSERT((result != _resources.end()), "Trying to Get invalid resource CPU handle from descriptor heap");
-            ++result;
-        }
-        
-        ASSERT((result != _resources.end()), "Trying to Get invalid resource CPU handle from descriptor heap");
-
         D3D12_CPU_DESCRIPTOR_HANDLE handle = _descriptorHeap->GetCPUDescriptorHandleForHeapStart();
-        handle.ptr += _heapIncrementSize * result->second.HeapIndex;
-
+        handle.ptr += (offset * _heapIncrementSize);
         return handle;
     }
 
-    D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetResourceGPUHandle(Resource* resource, ResourceViewType viewType)
+    D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetGPUHandleWithOffset(std::uint32_t offset)
     {
-        ASSERT(dx12::Device::GetDXDevice(), "Device is nullptr when trying to Get GPU descriptor handle increment size");
-        ASSERT(resource, "Trying to Get GPU handle for nullptr resource");
-
-        std::string key = resource->GetName();
-        auto result = _resources.find(key);
-        while (result->first == key && result->second.Type != viewType)
-        {
-            ++result;
-        }
-
-        ASSERT((result != _resources.end()), "Trying to Get invalid resource GPU handle from descriptor heap");
-
         D3D12_GPU_DESCRIPTOR_HANDLE handle = _descriptorHeap->GetGPUDescriptorHandleForHeapStart();
-        handle.ptr += _heapIncrementSize * result->second.HeapIndex;
-
+        handle.ptr += (offset * _heapIncrementSize);
         return handle;
     }
 
-    UINT DescriptorHeap::GetResourceIndex(Resource* resource, ResourceViewType viewType)
+    std::uint32_t DescriptorHeap::Offset()
     {
-        std::string key = resource->GetName();
-        auto result = _resources.find(key);
-        while (result->first == key && result->second.Type != viewType)
-        {
-            ++result;
-        }
+        std::uint32_t offset = _currentOffset;
+        ++_currentOffset;
+        return offset;
+    }
 
-        ASSERT((result != _resources.end()), "Trying to Get invalid resource GPU handle from descriptor heap");
-
-        return result->second.HeapIndex;
+    std::uint32_t DescriptorHeap::GetCurrentOffset() const
+    {
+        return _currentOffset;
     }
 
     void DescriptorHeap::SetDescription(const DescriptorHeapDescription& description)
