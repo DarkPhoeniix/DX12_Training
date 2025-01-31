@@ -24,6 +24,8 @@
 #include "Render/Passes/ShadowPass.h"
 #include "Render/Passes/SkyboxPass.h"
 
+#include "Render/Helpers/DrawHelpers.h"
+
 using namespace DirectX;
 using namespace core;
 
@@ -49,6 +51,8 @@ namespace render
 
     bool DXRenderer::LoadContent(TaskGPU* loadTask)
     {
+        render::DrawHelper::Init();
+
         RECT windowSize;
         GetWindowRect(_windowHandle, &windowSize);
         uint32_t windowWidth = windowSize.right - windowSize.left;
@@ -99,6 +103,8 @@ namespace render
 
     void DXRenderer::UnloadContent()
     {
+        render::DrawHelper::Destroy();
+
         _contentLoaded = false;
     }
 

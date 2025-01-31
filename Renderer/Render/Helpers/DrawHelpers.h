@@ -1,13 +1,25 @@
 #pragma once
 
 #include "CommandList.h"
-#include "Scene/Entity/Components/Camera.h"
+
+namespace scene
+{
+    class Camera;
+} // namespace scene
 
 namespace render
 {
     class DrawHelper
     {
     public:
+        ~DrawHelper() = default;
+
+        DrawHelper(const DrawHelper&) = delete;
+        DrawHelper& operator=(const DrawHelper&) = delete;
+
+        static void Init();
+        static void Destroy();
+
         static void DrawSphere(dx12::CommandList& commandList,
             const scene::Camera& camera,
             float radius = 1.0f,
@@ -24,11 +36,10 @@ namespace render
 
     private:
         DrawHelper();
-        ~DrawHelper() = default;
-
-        static DrawHelper& Instance();
 
         dx12::PipelineState _sphereDebug;
         dx12::PipelineState _coneDebug;
+
+        static std::unique_ptr<DrawHelper> _instance;
     };
 } // namespace render
