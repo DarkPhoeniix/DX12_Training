@@ -448,7 +448,6 @@
     <FxCompile Include="Shaders\DebugDraw\Cone_vs.hlsl" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
     <None Include="Shaders\AABB_rootsig.hlsli">
       <Filter>Shaders</Filter>
     </None>
