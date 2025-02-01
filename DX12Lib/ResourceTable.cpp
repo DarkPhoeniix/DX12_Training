@@ -103,7 +103,7 @@ namespace dx12
 
     D3D12_CPU_DESCRIPTOR_HANDLE ResourceTable::GetResourceCPUHandle(Resource* resource, ResourceViewType viewType)
     {
-        ResourceTable::ResourceMap resources = _GetResourceMap(viewType);
+        ResourceTable::ResourceMap& resources = _GetResourceMap(viewType);
         DescriptorHeap& descriptorHeap = GetDescriptorHeap(viewType);
 
         ResourceKey key = { resource->GetName(), viewType };
@@ -114,7 +114,7 @@ namespace dx12
 
     D3D12_GPU_DESCRIPTOR_HANDLE ResourceTable::GetResourceGPUHandle(Resource* resource, ResourceViewType viewType)
     {
-        ResourceTable::ResourceMap resources = _GetResourceMap(viewType);
+        ResourceTable::ResourceMap& resources = _GetResourceMap(viewType);
         DescriptorHeap& descriptorHeap = GetDescriptorHeap(viewType);
 
         ResourceKey key = { resource->GetName(), viewType };
@@ -125,7 +125,7 @@ namespace dx12
 
     D3D12_CPU_DESCRIPTOR_HANDLE ResourceTable::GetResourceCPUHandle(const std::string& resourceName, ResourceViewType viewType)
     {
-        ResourceTable::ResourceMap resources = _GetResourceMap(viewType);
+        ResourceTable::ResourceMap& resources = _GetResourceMap(viewType);
         DescriptorHeap& descriptorHeap = GetDescriptorHeap(viewType);
 
         ResourceKey key = { resourceName, viewType };
@@ -136,7 +136,7 @@ namespace dx12
 
     D3D12_GPU_DESCRIPTOR_HANDLE ResourceTable::GetResourceGPUHandle(const std::string& resourceName, ResourceViewType viewType)
     {
-        ResourceTable::ResourceMap resources = _GetResourceMap(viewType);
+        ResourceTable::ResourceMap& resources = _GetResourceMap(viewType);
         DescriptorHeap& descriptorHeap = GetDescriptorHeap(viewType);
 
         ResourceKey key = { resourceName, viewType };
@@ -147,7 +147,7 @@ namespace dx12
 
     UINT ResourceTable::GetResourceIndex(Resource* resource, ResourceViewType viewType)
     {
-        ResourceTable::ResourceMap resources = _GetResourceMap(viewType);
+        ResourceTable::ResourceMap& resources = _GetResourceMap(viewType);
         ResourceKey key = { resource->GetName(), viewType };
         auto it = resources.find(key);
         if (it == resources.end())
@@ -160,7 +160,7 @@ namespace dx12
 
     UINT ResourceTable::GetResourceIndex(const std::string& resourceName, ResourceViewType viewType)
     {
-        ResourceTable::ResourceMap resources = _GetResourceMap(viewType);
+        ResourceTable::ResourceMap& resources = _GetResourceMap(viewType);
         ResourceKey key = { resourceName, viewType };
         auto it = resources.find(key);
         if (it == resources.end())
@@ -173,7 +173,7 @@ namespace dx12
 
     Resource* ResourceTable::GetResourceByName(const std::string& resourceName, ResourceViewType viewType)
     {
-        ResourceTable::ResourceMap resources = _GetResourceMap(viewType);
+        ResourceTable::ResourceMap& resources = _GetResourceMap(viewType);
         ResourceKey key = { resourceName, viewType };
         auto it = resources.find(key);
         if (it == resources.end())
