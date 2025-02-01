@@ -83,10 +83,6 @@ namespace render
                                 return;
                             }
 
-                            scene::Animation* animation = entity->GetComponentAs<scene::Animation>("Animation");
-                            scene::Armature* armature = entity->GetComponentAs<scene::Armature>("Armature");
-                            scene::Transformation transform = entity->GetGlobalTransform();
-                            scene::Material* material = entity->GetComponentAs<scene::Material>("Material");
                             scene::Mesh* mesh = entity->GetComponentAs<scene::Mesh>("Mesh");
 
                             if (!mesh)
@@ -94,24 +90,28 @@ namespace render
                                 return;
                             }
 
-                            CacheGPU::DataHandle modelDescHandle = frameCache.RequestPlacement(sizeof(GPUModelDesc));
+                            scene::Animation* animation = entity->GetComponentAs<scene::Animation>("Animation");
+                            scene::Armature* armature = entity->GetComponentAs<scene::Armature>("Armature");
+                            scene::Transformation transform = entity->GetGlobalTransform();
+                            scene::Material* material = entity->GetComponentAs<scene::Material>("Material");
 
-                            GPUModelDesc* modelDesc = (GPUModelDesc*)modelDescHandle.DataCPU;
+                            CacheGPU::DataHandle modelDescHandle = frameCache.RequestPlacement(sizeof(GPUModelDesc));
+                            GPUModelDesc* modelData = (GPUModelDesc*)modelDescHandle.DataCPU;
                             {
-                                modelDesc->Transform = transform.Transform;
+                                modelData->Transform = transform.Transform;
 
                                 if (material)
                                 {
                                     std::shared_ptr<dx12::ResourceTable> textureTable = entity->GetSceneCache()->GetTextureTable();
 
-                                    modelDesc->AlbedoTextureIndex = textureTable->GetResourceIndex(material->Albedo.get(), dx12::ResourceViewType::SRV);
-                                    modelDesc->NormalMapTextureIndex = textureTable->GetResourceIndex(material->NormalMap.get(), dx12::ResourceViewType::SRV);
-                                    modelDesc->MetalnessTextureIndex = textureTable->GetResourceIndex(material->Metalness.get(), dx12::ResourceViewType::SRV);
-                                    modelDesc->RoughnessTextureIndex = textureTable->GetResourceIndex(material->Roughness.get(), dx12::ResourceViewType::SRV);
+                                    modelData->AlbedoTextureIndex = textureTable->GetResourceIndex(material->Albedo.get(), dx12::ResourceViewType::SRV);
+                                    modelData->NormalMapTextureIndex = textureTable->GetResourceIndex(material->NormalMap.get(), dx12::ResourceViewType::SRV);
+                                    modelData->MetalnessTextureIndex = textureTable->GetResourceIndex(material->Metalness.get(), dx12::ResourceViewType::SRV);
+                                    modelData->RoughnessTextureIndex = textureTable->GetResourceIndex(material->Roughness.get(), dx12::ResourceViewType::SRV);
 
                                     if (armature)
                                     {
-                                        modelDesc->UseSkinning = true;
+                                        modelData->UseSkinning = true;
                                     }
                                 }
                             }
@@ -121,19 +121,14 @@ namespace render
                             // Update and setup animantion
                             if (armature && animation)
                             {
-                                CacheGPU::DataHandle bonesDescHandle = frameCache.RequestPlacement(armature->BoneTransforms.GetResourceDescription().GetSize().x);
+                                const std::vector<scene::Bone*>& bones = armature->GetSortedBones();
 
+                                CacheGPU::DataHandle bonesDescHandle = frameCache.RequestPlacement(sizeof(DirectX::XMMATRIX) * bones.size());
                                 DirectX::XMMATRIX* data = (DirectX::XMMATRIX*)bonesDescHandle.DataCPU;
 
-                                const auto& transforms = animation->GetBonesTransforms(cache->GetTime());
-                                armature->ApplyAnimation(transforms);
-                                armature->UpdateGlobalTransformations();
-
-                                const std::vector<scene::Bone*>& bones = armature->GetSortedBones();
                                 for (int i = 0; i < bones.size(); ++i)
                                 {
-                                    DirectX::XMMATRIX result = bones[i]->Offset * bones[i]->GlobalTransform;
-                                    data[i] = result;
+                                    data[i] = bones[i]->Offset * bones[i]->GlobalTransform;
                                 }
 
                                 commandList.SetSRV(3, bonesDescHandle.DataGPU);
@@ -155,12 +150,10 @@ namespace render
 
                     for (std::shared_ptr<scene::Entity>& node : _scene->GetRootNodes())
                     {
-                        node->UpdateGlobalTransform();
                         DrawEntity(node, _frame->GetCache());
 
                         for (std::shared_ptr<scene::Entity>& child : node->GetChildrenNodes())
                         {
-                            child->UpdateGlobalTransform(&node->GetGlobalTransform());
                             DrawEntity(node, _frame->GetCache());
                         }
                     }
