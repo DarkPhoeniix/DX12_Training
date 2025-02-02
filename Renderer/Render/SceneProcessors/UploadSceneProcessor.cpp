@@ -145,13 +145,10 @@ void UploadSceneProcessor::ProcessEntity(Entity& entity, dx12::CommandList& comm
     if (light)
     {
         std::shared_ptr<dx12::ResourceTable> textureTable = cache->GetTextureTable();
-        for (auto& shadowMap : light->ShadowMaps)
+        if (light->ShadowMap)
         {
-            if (shadowMap)
-            {
-                textureTable->PlaceResource(shadowMap.get(), dx12::ResourceViewType::DSV);
-                textureTable->PlaceResource(shadowMap.get(), dx12::ResourceViewType::SRV);
-            }
+            textureTable->PlaceResource(light->ShadowMap.get(), dx12::ResourceViewType::DSV);
+            textureTable->PlaceResource(light->ShadowMap.get(), dx12::ResourceViewType::SRV);
         }
     }
 }

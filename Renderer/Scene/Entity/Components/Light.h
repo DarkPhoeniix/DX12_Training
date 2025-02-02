@@ -30,6 +30,6 @@ namespace scene
         float InnerAngle;
 
         bool CastShadows;
-        std::array<std::shared_ptr<dx12::Resource>, 6> ShadowMaps;
+        std::shared_ptr<dx12::Resource> ShadowMap;
     };
 }

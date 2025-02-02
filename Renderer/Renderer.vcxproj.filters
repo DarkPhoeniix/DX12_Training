@@ -439,13 +439,15 @@
     <FxCompile Include="Shaders\OBB_ps.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\PCFShadows_vs.hlsl" />
+    <FxCompile Include="Shaders\Shadows\ShadowMapping_SpotLight_vs.hlsl" />
     <FxCompile Include="Shaders\DebugDraw\Sphere_vs.hlsl" />
     <FxCompile Include="Shaders\DebugDraw\Sphere_ps.hlsl" />
     <FxCompile Include="Shaders\DebugDraw\Sphere_gs.hlsl" />
     <FxCompile Include="Shaders\DebugDraw\Cone_gs.hlsl" />
     <FxCompile Include="Shaders\DebugDraw\Cone_ps.hlsl" />
     <FxCompile Include="Shaders\DebugDraw\Cone_vs.hlsl" />
+    <FxCompile Include="Shaders\Shadows\ShadowMapping_PointLight_vs.hlsl" />
+    <FxCompile Include="Shaders\Shadows\ShadowMapping_PointLight_gs.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\AABB_rootsig.hlsli">
@@ -502,14 +504,14 @@
     <None Include="PipelineDescriptions\FXAAPipeline.tech">
       <Filter>PipelineDescriptions</Filter>
     </None>
-    <None Include="Shaders\PCFShadows_rootsig.hlsli" />
+    <None Include="Shaders\Shadows\ShadowMapping_rootsig.hlsli" />
     <None Include="PipelineDescriptions\PCFShadows.blend" />
-    <None Include="PipelineDescriptions\PCFShadows.depth" />
-    <None Include="PipelineDescriptions\PCFShadows.tech" />
+    <None Include="PipelineDescriptions\Shadow_SpotLight.tech" />
     <None Include="Shaders\DebugDraw\Sphere_rootsig.hlsli" />
     <None Include="PipelineDescriptions\DebugSpherePipeline.tech" />
     <None Include="Shaders\DebugDraw\Cone_rootsig.hlsli" />
     <None Include="PipelineDescriptions\DebugConePipeline.tech" />
+    <None Include="PipelineDescriptions\Shadow_PointLight.tech" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resources\Resource.rc">

@@ -7,7 +7,7 @@
 
 	"Blend": "PipelineDescriptions\\PCFShadows.blend",
 	"Raster": "PipelineDescriptions\\Raster_Solid.raster",
-	"Depth": "PipelineDescriptions\\PCFShadows.depth",
+	"Depth": "PipelineDescriptions\\Depth_LE_WriteAll.depth",
 
 	"RenderTargets": [],
 	"DepthBuffer": "BackBufferDepth",
@@ -56,5 +56,5 @@
 		}
 	],
 
-	"VS": "Shaders\\PCFShadows_vs.cso"
+	"VS": "Shaders\\ShadowMapping_SpotLight_vs.cso"
 }

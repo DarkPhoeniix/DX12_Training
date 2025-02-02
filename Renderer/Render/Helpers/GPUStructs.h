@@ -31,21 +31,22 @@ struct GPUModelDesc
     bool UseSkinning = false;
 };
 
-struct GPULightDesc
+struct alignas(16) GPULightDesc
 {
     DirectX::XMVECTOR Direction;
     DirectX::XMVECTOR Position;
     DirectX::XMVECTOR Color;
-
-    uint32_t Type;
-    uint32_t CastShadows = 0;
 
     float Intensity;
     float Range;
     float OuterAngle;
     float InnerAngle;
 
-    std::array<UINT, 6> ShadowMapIndexes;
+    uint32_t Type;
+    uint32_t CastShadows = 0;
 
+    float PerspectiveValues[2];
     std::array<DirectX::XMMATRIX, 6> ViewProj;
+
+    uint32_t ShadowMapIndex;
 };

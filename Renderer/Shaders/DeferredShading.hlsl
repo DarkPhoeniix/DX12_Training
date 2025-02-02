@@ -6,15 +6,17 @@
 #include "DepthFuncs.hlsli"
 #include "PBR.hlsli"
 
-StructuredBuffer<LightDesc> Lights                  : register(t0);
+StructuredBuffer<LightDesc> Lights : register(t0);
 
-Texture2D<float4>           PositionTexture         : register(t1);
-Texture2D<float4>           AlbedoMetalnessTexture  : register(t2);
-Texture2D<float4>           NormalRoughnessTexture  : register(t3);
-Texture2D                   Textures[]              : register(t4);
-RWTexture2D<float4>         TargetTexture           : register(u0);
+Texture2D<float4> PositionTexture : register(t1);
+Texture2D<float4> AlbedoMetalnessTexture : register(t2);
+Texture2D<float4> NormalRoughnessTexture : register(t3);
+Texture2D Textures2D[] : register(t4, space0);
+TextureCube TexturesCube[] : register(t5, space1);
+RWTexture2D<float4> TargetTexture : register(u0);
 
-SamplerComparisonState      ShadowSampler           : register(s0);
+SamplerComparisonState ShadowSampler : register(s0);
+SamplerState PointSampler : register(s1);
 
 void SetLightParams(in LightDesc light, inout Surface surface)
 {
@@ -49,46 +51,41 @@ void SetLightParams(in LightDesc light, inout Surface surface)
 
 float CalculateShadowAttenuation_PCF3x3(in LightDesc light, in Surface surface)
 {
-    uint shadowMapIndex = 0;
-    if (light.Type == LIGHT_TYPE_POINT)
-    {
-        shadowMapIndex = GetCubeFaceIndex(surface.Position.xyz - light.Position.xyz);
-    }
-    
-    row_major matrix VP = light.ViewProj[shadowMapIndex];
+    row_major matrix VP = light.ViewProj[0];
     float4 surfacePos = mul(surface.Position, VP);
     surfacePos /= surfacePos.w;
     
-    if (surfacePos.x < -1.0f || surfacePos.x > 1.0f ||
-        surfacePos.y < -1.0f || surfacePos.y > 1.0f ||
-        surfacePos.z <  0.0f || surfacePos.z > 1.0f)
-    {
-        return 0.0f;
-    }
+    //if (surfacePos.x < -1.0f || surfacePos.x > 1.0f ||
+    //    surfacePos.y < -1.0f || surfacePos.y > 1.0f ||
+    //    surfacePos.z <  0.0f || surfacePos.z > 1.0f)
+    //{
+    //    return 0.0f;
+    //}
     
     float3 UVD;
-    UVD.x = (surfacePos.x *  0.5f) + 0.5f;
+    UVD.x = (surfacePos.x * 0.5f) + 0.5f;
     UVD.y = (surfacePos.y * -0.5f) + 0.5f;
     UVD.z = surfacePos.z - 0.001f;
     
-    float2 offsets[9] =
-    {
-        float2(-1, -1), float2(-1, 0), float2(-1, 1),
-        float2( 0, -1), float2( 0, 0), float2( 0, 1),
-        float2( 1, -1), float2( 1, 0), float2( 1, 1)
-    };
-    
     float shadowFactor = 0.0f;
+    float4 test = float4(1.0f, 1.0f, 1.0f, 1.0f);
     
-    uint shadowMapTextureIndex = light.ShadowMapIndexes[shadowMapIndex];
-    [unroll(9)]
-    for (uint i = 0; i < 9; ++i)
+    uint shadowMapTextureIndex = light.ShadowMapIndex;
+    if (light.Type == 1)
     {
-        shadowFactor += Textures[shadowMapTextureIndex].SampleCmpLevelZero(ShadowSampler, UVD.xy, UVD.z, offsets[i]);
+        float3 loc = surface.Position.xyz - light.Position.xyz;
+        float3 locabc = abs(loc);
+        float Z = max(locabc.x, max(locabc.y, locabc.z));
+        float Depth = (light.PerspectiveValues[0] * Z + light.PerspectiveValues[1]) / Z;
+        shadowFactor = TexturesCube[shadowMapTextureIndex].SampleCmpLevelZero(ShadowSampler, loc, Depth - 0.001f);
+        test = TexturesCube[shadowMapTextureIndex].SampleLevel(PointSampler, loc, 0.0f);
     }
-    shadowFactor /= 9.0f;
+    else if (light.Type == 2)
+    {
+        shadowFactor = Textures2D[shadowMapTextureIndex].SampleCmpLevelZero(ShadowSampler, UVD.xy, (UVD.z - 0.001f));
+    }
     
-    return shadowFactor;
+    return shadowFactor + (test * 0.00001f);
 }
 
 [RootSignature(DeferredShading_RootSig)]
@@ -102,13 +99,13 @@ void main(uint3 DTid : SV_DispatchThreadID)
     
     // Setup surface
     Surface surface;
-    float depth             = PositionTexture.Load(uint3(DTid.xy, 0)).r;
-    surface.Position        = ReconstructPosW(depth, DTid.xy, Scene.WindowSize, Scene.InvProjection, Scene.InvView);
-    surface.NDCPosition     = mul(surface.Position, Scene.ViewProjection);
-    surface.Albedo          = float4(AlbedoMetalnessTexture.Load(uint3(DTid.xy, 0)).rgb, 1.0f);
-    surface.Normal          = float4(NormalRoughnessTexture.Load(uint3(DTid.xy, 0)).xyz, 0.0f);
-    surface.Metalness       = AlbedoMetalnessTexture.Load(uint3(DTid.xy, 0)).a;
-    surface.Roughness       = NormalRoughnessTexture.Load(uint3(DTid.xy, 0)).a;
+    float depth = PositionTexture.Load(uint3(DTid.xy, 0)).r;
+    surface.Position = ReconstructPosW(depth, DTid.xy, Scene.WindowSize, Scene.InvProjection, Scene.InvView);
+    surface.NDCPosition = mul(surface.Position, Scene.ViewProjection);
+    surface.Albedo = float4(AlbedoMetalnessTexture.Load(uint3(DTid.xy, 0)).rgb, 1.0f);
+    surface.Normal = float4(NormalRoughnessTexture.Load(uint3(DTid.xy, 0)).xyz, 0.0f);
+    surface.Metalness = AlbedoMetalnessTexture.Load(uint3(DTid.xy, 0)).a;
+    surface.Roughness = NormalRoughnessTexture.Load(uint3(DTid.xy, 0)).a;
     
     surface.FinalColor = 0.05f * surface.Albedo; // Ambient
     for (int i = 0; i < Scene.LightsNum; ++i)
@@ -129,7 +126,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
         
         float3 diffuseColor = surface.Albedo.rgb * (1.0f - surface.Metalness);
         float3 lightAttenuation = CalculateAttenuation(Lights[i], surface) * Lights[i].Color.rgb;
-        float  shadowAttenuation = CalculateShadowAttenuation_PCF3x3(Lights[i], surface);
+        float shadowAttenuation = CalculateShadowAttenuation_PCF3x3(Lights[i], surface);
         float3 surfaceColor = (diffuseColor + specularColor) * surface.NdotL;
         
         float3 lightingModel = surfaceColor * lightAttenuation;

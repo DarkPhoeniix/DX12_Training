@@ -1,0 +1,61 @@
+{
+	"Type": "PCFShadowsTechnique",
+
+	"IsGraphicsPipeline": true,
+
+	"TopologyType": "triangle",
+
+	"Blend": "PipelineDescriptions\\PCFShadows.blend",
+	"Raster": "PipelineDescriptions\\Raster_Solid.raster",
+	"Depth": "PipelineDescriptions\\Depth_LE_WriteAll.depth",
+
+	"RenderTargets": [],
+	"DepthBuffer": "BackBufferDepth",
+	"Layout": [
+		{
+			"Name": "POSITION",
+			"Slot": 0,
+			"Offset": 0,
+			"Format": "float3",
+			"SemanticIndex": 0
+		},
+		{
+			"Name": "NORMAL",
+			"Slot": 0,
+			"Offset": 12,
+			"Format": "float3",
+			"SemanticIndex": 0
+		},
+		{
+			"Name": "TANGENT",
+			"Slot": 0,
+			"Offset": 24,
+			"Format": "float3",
+			"SemanticIndex": 0
+		},
+		{
+			"Name": "TEXCOORD",
+			"Slot": 0,
+			"Offset": 36,
+			"Format": "float2",
+			"SemanticIndex": 0
+		},
+		{
+			"Name": "BONE_IDS",
+			"Slot": 1,
+			"Offset": 0,
+			"Format": "uint4",
+			"SemanticIndex": 0
+		},
+		{
+			"Name": "BONE_WEIGHTS",
+			"Slot": 1,
+			"Offset": 16,
+			"Format": "float4",
+			"SemanticIndex": 0
+		}
+	],
+
+	"VS": "Shaders\\ShadowMapping_PointLight_vs.cso",
+	"GS": "Shaders\\ShadowMapping_PointLight_gs.cso"
+}
