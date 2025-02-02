@@ -51,7 +51,7 @@ namespace render
 
             _frame->BindDescriptorHeaps(commandList);
 
-            Helpers::SetupSceneDataGPU(*_scene, commandList, _frame);
+            helpers::SetupSceneDataGPU(*_scene, commandList, _frame);
 
             commandList.SetDescriptorTable(3, frameTable.GetResourceGPUHandle(depth, dx12::ResourceViewType::SRV));
             commandList.SetDescriptorTable(4, frameTable.GetResourceGPUHandle(albedoMetalness, dx12::ResourceViewType::SRV));

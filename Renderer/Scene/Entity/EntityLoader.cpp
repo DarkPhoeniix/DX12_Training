@@ -123,7 +123,7 @@ namespace
 
 namespace scene
 {
-    namespace Helpers
+    namespace helpers
     {
         EntityLoader::EntityLoader(const std::string& filepath)
             : _entityFilepath(filepath)
@@ -477,5 +477,5 @@ namespace scene
                 }
             }
         }
-    } // namespace Helpers
+    } // namespace helpers
 } // namespace scene

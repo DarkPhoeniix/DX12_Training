@@ -75,7 +75,7 @@ namespace render
                 D3D12_GPU_DESCRIPTOR_HANDLE targetTextureHandle = frameTable.GetResourceGPUHandle(&_frame->GetTargetTexture(), dx12::ResourceViewType::SRV);
                 D3D12_GPU_DESCRIPTOR_HANDLE fxaaTextureHandle = frameTable.GetResourceGPUHandle(&_fxaaRTT, dx12::ResourceViewType::UAV);
                 
-                Helpers::SetupSceneDataGPU(*_scene, commandList, _frame);
+                helpers::SetupSceneDataGPU(*_scene, commandList, _frame);
 
                 commandList.SetDescriptorTable(3, targetTextureHandle);
                 commandList.SetDescriptorTable(4, fxaaTextureHandle);

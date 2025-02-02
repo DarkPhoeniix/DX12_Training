@@ -279,8 +279,8 @@ namespace render
         _renderPasses.clear();
 
         _renderPasses.push_back(std::make_unique<ClearBuffersPass>());
-        _renderPasses.push_back(std::make_unique<ShadowPass>());
         _renderPasses.push_back(std::make_unique<GeometryPass>());
+        _renderPasses.push_back(std::make_unique<ShadowPass>());
         _renderPasses.push_back(std::make_unique<LightingPass>());
         _renderPasses.push_back(std::make_unique<SkyboxPass>());
         //_renderPasses.push_back(std::make_unique<FXAAPass>());

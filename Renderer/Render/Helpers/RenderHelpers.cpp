@@ -140,7 +140,7 @@ namespace
     }
 } // namespace unnamed
 
-namespace Helpers
+namespace helpers
 {
     void SetupSceneDataGPU(scene::Scene& scene, dx12::CommandList& commandList, Frame* frame)
     {
@@ -151,7 +151,7 @@ namespace Helpers
         }
 
         // Setup scene data
-        CacheGPU::DataHandle sceneDataHandle = frame->GetCache().RequestPlacement(sizeof(GPUSceneDesc));
+        CacheGPU::DataHandle sceneDataHandle = frame->GetCache().GetOrPlaceResource("SceneCB", sizeof(GPUSceneDesc));
 
         GPUSceneDesc* sceneDesc = (GPUSceneDesc*)sceneDataHandle.DataCPU;
         {
@@ -189,7 +189,7 @@ namespace Helpers
 
         commandList.SetCBV(0, sceneDataHandle.DataGPU);
 
-        CacheGPU::DataHandle lightsData = frame->GetCache().RequestPlacement(sizeof(GPULightDesc) * lightsNum);
+        CacheGPU::DataHandle lightsData = frame->GetCache().GetOrPlaceResource("LightsCB", sizeof(GPULightDesc) * lightsNum);
 
         uint32_t lightCounter = 0;
         for (std::shared_ptr<scene::Entity>& node : scene.GetRootNodes())
@@ -199,4 +199,4 @@ namespace Helpers
 
         commandList.SetSRV(2, lightsData.DataGPU);
     }
-} // namespace Helpers
+} // namespace helpers

@@ -58,7 +58,7 @@ namespace render
             DebugInfo::StartStatCollecting(commandList);
 #endif
 
-            Helpers::SetupSceneDataGPU(*_scene, commandList, _frame);
+            helpers::SetupSceneDataGPU(*_scene, commandList, _frame);
 
             // Setup textures
             _frame->BindDescriptorHeaps(commandList);
@@ -83,7 +83,7 @@ namespace render
                         return;
                     }
 
-                    CacheGPU::DataHandle modelDescHandle = frameCache.RequestPlacement(sizeof(GPUModelDesc));
+                    CacheGPU::DataHandle modelDescHandle = frameCache.RequestPlacement(entity->GetName(), sizeof(GPUModelDesc));
 
                     GPUModelDesc* modelDesc = (GPUModelDesc*)modelDescHandle.DataCPU;
                     {
@@ -118,7 +118,7 @@ namespace render
                     {
                         const std::vector<scene::Bone*>& bones = armature->GetSortedBones();
 
-                        CacheGPU::DataHandle bonesDescHandle = frameCache.RequestPlacement(sizeof(DirectX::XMMATRIX) * bones.size());
+                        CacheGPU::DataHandle bonesDescHandle = frameCache.RequestPlacement(entity->GetName() + "_bones", sizeof(DirectX::XMMATRIX) * bones.size());
                         DirectX::XMMATRIX* data = (DirectX::XMMATRIX*)bonesDescHandle.DataCPU;
 
                         for (int i = 0; i < bones.size(); ++i)
