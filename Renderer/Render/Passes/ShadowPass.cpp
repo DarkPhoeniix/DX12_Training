@@ -45,7 +45,7 @@ namespace
             DrawEntity(child, commandList, frameCache);
         }
     }
-}
+} // namespace unnamed
 
 namespace render
 {
