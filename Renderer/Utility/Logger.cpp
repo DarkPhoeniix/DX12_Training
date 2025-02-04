@@ -28,11 +28,17 @@ namespace assert_utility
 {
     bool AssertFunction(bool statement, const std::string& message)
     {
+        return AssertFunction(statement, message.c_str());
+    }
+
+    bool AssertFunction(bool statement, const char* message)
+    {
         if (!statement)
         {
             Logger::Log(LogType::Error, message);
 #if defined(_DEBUG)
-            OutputDebugStringA((message + "\n").c_str());
+            OutputDebugStringA(message);
+            OutputDebugStringA("\n");
 #endif
         }
         return !statement;
@@ -40,17 +46,28 @@ namespace assert_utility
 
     bool LogWarningFunction(bool statement, const std::string& message)
     {
+        return LogWarningFunction(statement, message.c_str());
+    }
+
+    bool LogWarningFunction(bool statement, const char* message)
+    {
         if (!statement)
         {
             Logger::Log(LogType::Warning, message);
 #if defined(_DEBUG)
-            OutputDebugStringA((message + "\n").c_str());
+            OutputDebugStringA(message);
+            OutputDebugStringA("\n");
 #endif
         }
         return !statement;
     }
 
     void LogInfoFunction(const std::string& message)
+    {
+        LogInfoFunction(message.c_str());
+    }
+
+    void LogInfoFunction(const char* message)
     {
 #if defined(_DEBUG)
         Logger::Log(LogType::Info, message);
@@ -72,13 +89,15 @@ Logger& Logger::Instance()
 
 void Logger::Log(LogType type, const std::string& message)
 {
+    Log(type, message.c_str());
+}
+
+void Logger::Log(LogType type, const char* message)
+{
     std::chrono::time_point t = std::chrono::system_clock::now();
-    //time_t tim = std::chrono::system_clock::to_time_t(t);
-    //std::chrono::time_point<std::chrono::system_clock> time = std::chrono::zoned_time(std::chrono::current_zone(), std::chrono::system_clock::now()).get_sys_time();
     auto time = std::chrono::zoned_time(std::chrono::current_zone(), std::chrono::system_clock::now()).get_local_time();
 
-    std::string output = std::format("{0:%T}", time) + " | " + logType(type) + ": " + message + '\n';
-    Instance()._logFile << output;
+    Instance()._logFile << std::format("{0:%T}", time) << " | " << logType(type) << ": " << message << std::endl;
 }
 
 void Logger::SetLogLevel(LogType logLevel)
