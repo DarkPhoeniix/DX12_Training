@@ -30,7 +30,7 @@ namespace dx12
     private:
         struct ResourceKey
         {
-            std::string Name;
+            std::string_view Name;
             ResourceViewType ViewType;
 
             bool operator==(const ResourceKey& other) const
@@ -43,7 +43,7 @@ namespace dx12
         {
             std::size_t operator()(const ResourceKey& key) const
             {
-                return std::hash<std::string>{}(key.Name);
+                return std::hash<std::string_view>{}(key.Name);
             }
         };
 

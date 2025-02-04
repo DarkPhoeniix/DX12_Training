@@ -45,7 +45,7 @@ namespace dx12
         ResourceTable::ResourceMap& resources = _GetResourceMap(viewType);
         DescriptorHeap& descriptorHeap = GetDescriptorHeap(viewType);
 
-        ResourceKey key = { resource->GetName(), viewType };
+        ResourceKey key = { resource->GetName().c_str(), viewType };
         if (resources.find(key) != resources.end())
         {
             return false;
@@ -72,7 +72,7 @@ namespace dx12
 
         ASSERT((resources.size() < _numDescriptors), "Resource table is full");
 
-        ResourceKey key = { resource->GetName(), viewType };
+        ResourceKey key = { resource->GetName().c_str(), viewType};
         InternalResourceDesc value = { resource, descriptorHeap.GetCurrentOffset(), viewType};
 
         resources.insert(std::make_pair(key, value));
@@ -106,7 +106,7 @@ namespace dx12
         ResourceTable::ResourceMap& resources = _GetResourceMap(viewType);
         DescriptorHeap& descriptorHeap = GetDescriptorHeap(viewType);
 
-        ResourceKey key = { resource->GetName(), viewType };
+        ResourceKey key = { resource->GetName().c_str(), viewType };
         std::uint32_t resourceIndex = resources[key].HeapIndex;
 
         return descriptorHeap.GetCPUHandleWithOffset(resourceIndex);
@@ -117,7 +117,7 @@ namespace dx12
         ResourceTable::ResourceMap& resources = _GetResourceMap(viewType);
         DescriptorHeap& descriptorHeap = GetDescriptorHeap(viewType);
 
-        ResourceKey key = { resource->GetName(), viewType };
+        ResourceKey key = { resource->GetName().c_str(), viewType };
         std::uint32_t resourceIndex = resources[key].HeapIndex;
 
         return descriptorHeap.GetGPUHandleWithOffset(resourceIndex);
@@ -128,7 +128,7 @@ namespace dx12
         ResourceTable::ResourceMap& resources = _GetResourceMap(viewType);
         DescriptorHeap& descriptorHeap = GetDescriptorHeap(viewType);
 
-        ResourceKey key = { resourceName, viewType };
+        ResourceKey key = { resourceName.c_str(), viewType };
         std::uint32_t resourceIndex = resources[key].HeapIndex;
 
         return descriptorHeap.GetCPUHandleWithOffset(resourceIndex);
@@ -148,7 +148,7 @@ namespace dx12
     UINT ResourceTable::GetResourceIndex(Resource* resource, ResourceViewType viewType)
     {
         ResourceTable::ResourceMap& resources = _GetResourceMap(viewType);
-        ResourceKey key = { resource->GetName(), viewType };
+        ResourceKey key = { resource->GetName().c_str(), viewType};
         auto it = resources.find(key);
         if (it == resources.end())
         {
@@ -161,7 +161,7 @@ namespace dx12
     UINT ResourceTable::GetResourceIndex(const std::string& resourceName, ResourceViewType viewType)
     {
         ResourceTable::ResourceMap& resources = _GetResourceMap(viewType);
-        ResourceKey key = { resourceName, viewType };
+        ResourceKey key = { resourceName.c_str(), viewType };
         auto it = resources.find(key);
         if (it == resources.end())
         {
@@ -174,7 +174,7 @@ namespace dx12
     Resource* ResourceTable::GetResourceByName(const std::string& resourceName, ResourceViewType viewType)
     {
         ResourceTable::ResourceMap& resources = _GetResourceMap(viewType);
-        ResourceKey key = { resourceName, viewType };
+        ResourceKey key = { resourceName.c_str(), viewType };
         auto it = resources.find(key);
         if (it == resources.end())
         {

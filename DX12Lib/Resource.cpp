@@ -53,7 +53,7 @@ namespace dx12
 		}
 	}
 
-	std::string Resource::GetName() const
+	const std::string& Resource::GetName() const
 	{
 		return _name;
 	}

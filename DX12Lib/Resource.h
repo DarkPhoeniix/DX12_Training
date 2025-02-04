@@ -22,7 +22,7 @@ namespace dx12
         ComPtr<ID3D12Resource>& GetDXResource();
 
         void SetName(const std::string& name);
-        std::string GetName() const;
+        const std::string& GetName() const;
 
         void SetResourceDescription(const ResourceDescription& resourceDesc);
         ResourceDescription GetResourceDescription() const;
