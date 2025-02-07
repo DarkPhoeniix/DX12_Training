@@ -12,7 +12,7 @@ namespace scene
     class Scene;
 }
 
-namespace Helpers
+namespace helpers
 {
     void SetupSceneDataGPU(scene::Scene& scene, dx12::CommandList& commandList, Frame* frame);
-} // namespace Helpers
+} // namespace helpers

@@ -45,7 +45,6 @@ namespace scene
         void SetName(const std::string& name);
         const std::string& GetName() const;
 
-        dx12::Resource BoneTransforms;
         dx12::Resource BoneDebugTransforms;
 
     private:

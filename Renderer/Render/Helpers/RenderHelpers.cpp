@@ -52,44 +52,42 @@ namespace
         }
         else if (light->Type == scene::LightType::Point)
         {
-            XMMATRIX proj = XMMatrixPerspectiveFovLH(XMConvertToRadians(90.0f), 1.0f, 0.5f, light->Range);
-
             XMVECTOR lightPos = transform->Transform.r[3];
             XMVECTOR lightTar = lightPos + XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
-            XMVECTOR up       = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+            XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
             XMMATRIX view = XMMatrixLookAtLH(lightPos, lightTar, up);
 
-            result[0] = view * proj;
+            result[0] = view;
 
             lightTar = lightPos + XMVectorSet(-1.0f, 0.0f, 0.0f, 0.0f);
             up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
             view = XMMatrixLookAtLH(lightPos, lightTar, up);
 
-            result[1] = view * proj;
+            result[1] = view;
 
             lightTar = lightPos + XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
             up = XMVectorSet(0.0f, 0.0f, -1.0f, 0.0f);
             view = XMMatrixLookAtLH(lightPos, lightTar, up);
 
-            result[2] = view * proj;
+            result[2] = view;
 
             lightTar = lightPos + XMVectorSet(0.0f, -1.0f, 0.0f, 0.0f);
             up = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
             view = XMMatrixLookAtLH(lightPos, lightTar, up);
 
-            result[3] = view * proj;
+            result[3] = view;
 
             lightTar = lightPos + XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
             up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
             view = XMMatrixLookAtLH(lightPos, lightTar, up);
 
-            result[4] = view * proj;
+            result[4] = view;
 
             lightTar = lightPos + XMVectorSet(0.0f, 0.0f, -1.0f, 0.0f);
             up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
             view = XMMatrixLookAtLH(lightPos, lightTar, up);
 
-            result[5] = view * proj;
+            result[5] = view;
         }
 
         return result;
@@ -117,16 +115,35 @@ namespace
                 lightDesc.InnerAngle = std::cosf(XMConvertToRadians(light->InnerAngle * 0.5f));
 
                 lightDesc.ViewProj = GetLightViewProj(node);
+                switch (light->Type)
+                {
+                case scene::LightType::Spot:
+                {
+                    XMMATRIX proj = XMMatrixPerspectiveFovLH(XMConvertToRadians(light->OuterAngle), 1.0f, 0.5f, light->Range);
+                    lightDesc.ViewProj[0] *= proj;
+                    lightDesc.PerspectiveValues[0] = proj.r[2].m128_f32[2];
+                    lightDesc.PerspectiveValues[1] = proj.r[3].m128_f32[2];
+                }
+                break;
+                case scene::LightType::Point:
+                {
+                    XMMATRIX proj = XMMatrixPerspectiveFovLH(XMConvertToRadians(90.0f), 1.0f, 0.5f, light->Range);
+                    for (size_t i = 0; i < lightDesc.ViewProj.size(); ++i)
+                    {
+                        lightDesc.ViewProj[i] *= proj;
+                    }
+                    lightDesc.PerspectiveValues[0] = proj.r[2].m128_f32[2];
+                    lightDesc.PerspectiveValues[1] = proj.r[3].m128_f32[2];
+                }
+                break;
+                }
 
                 lightDesc.Type = (uint32_t)light->Type;
 
                 lightDesc.CastShadows = light->CastShadows;
-                for (size_t i = 0; i < light->ShadowMaps.size(); ++i)
+                if (light->ShadowMap)
                 {
-                    if (light->ShadowMaps[i])
-                    {
-                        lightDesc.ShadowMapIndexes[i] = frameTable.GetResourceIndex(light->ShadowMaps[i].get(), dx12::ResourceViewType::SRV);
-                    }
+                    lightDesc.ShadowMapIndex = frameTable.GetResourceIndex(light->ShadowMap.get(), dx12::ResourceViewType::SRV);
                 }
             }
 
@@ -140,7 +157,7 @@ namespace
     }
 } // namespace unnamed
 
-namespace Helpers
+namespace helpers
 {
     void SetupSceneDataGPU(scene::Scene& scene, dx12::CommandList& commandList, Frame* frame)
     {
@@ -151,7 +168,7 @@ namespace Helpers
         }
 
         // Setup scene data
-        CacheGPU::DataHandle sceneDataHandle = frame->GetCache().RequestPlacement(sizeof(GPUSceneDesc));
+        CacheGPU::DataHandle sceneDataHandle = frame->GetCache().GetOrPlaceResource("SceneCB", sizeof(GPUSceneDesc));
 
         GPUSceneDesc* sceneDesc = (GPUSceneDesc*)sceneDataHandle.DataCPU;
         {
@@ -189,7 +206,7 @@ namespace Helpers
 
         commandList.SetCBV(0, sceneDataHandle.DataGPU);
 
-        CacheGPU::DataHandle lightsData = frame->GetCache().RequestPlacement(sizeof(GPULightDesc) * lightsNum);
+        CacheGPU::DataHandle lightsData = frame->GetCache().GetOrPlaceResource("LightsCB", sizeof(GPULightDesc) * lightsNum);
 
         uint32_t lightCounter = 0;
         for (std::shared_ptr<scene::Entity>& node : scene.GetRootNodes())
@@ -199,4 +216,4 @@ namespace Helpers
 
         commandList.SetSRV(2, lightsData.DataGPU);
     }
-} // namespace Helpers
+} // namespace helpers

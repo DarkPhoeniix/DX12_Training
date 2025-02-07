@@ -1,8 +1,8 @@
 
-#include "PCFShadows_rootsig.hlsli"
+#include "ShadowMapping_rootsig.hlsli"
 
-#include "Common.hlsli"
-#include "LightingCommon.hlsli"
+#include "../Common.hlsli"
+#include "../LightingCommon.hlsli"
 
 struct VSinput
 {
@@ -16,7 +16,7 @@ struct VSinput
 
 struct VSOutput
 {
-    float4 Position     : SV_Position;
+    float4 Position : SV_Position;
 };
 
 struct BoneDesc
@@ -24,17 +24,9 @@ struct BoneDesc
     row_major matrix Transform;
 };
 
-struct ShadowData
-{
-    uint LightIndex;
-    uint VPIndex;
-};
-
-ConstantBuffer<ShadowData> Shadow : register(b3);
-StructuredBuffer<LightDesc> Lights : register(t0);
 StructuredBuffer<BoneDesc> Bones : register(t1);
 
-[RootSignature(PCFShadows_RootSig)]
+[RootSignature(ShadowMapping_RootSig)]
 VSOutput main(VSinput IN)
 {
     row_major matrix boneTransform = float4x4(
@@ -54,10 +46,8 @@ VSOutput main(VSinput IN)
     positionWS = mul(positionWS, boneTransform);
     positionWS = mul(positionWS, Model.Transform);
     
-    float4 positionLS = mul(positionWS, Lights[Shadow.LightIndex].ViewProj[Shadow.VPIndex]);
-    
     VSOutput output;
-    output.Position = positionLS;
+    output.Position = positionWS;
     
     return output;
 }

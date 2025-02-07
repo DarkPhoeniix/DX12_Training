@@ -15,8 +15,11 @@
 namespace assert_utility
 {
     bool AssertFunction(bool statement, const std::string& message);
+    bool AssertFunction(bool statement, const char* message);
     bool LogWarningFunction(bool statement, const std::string& message);
+    bool LogWarningFunction(bool statement, const char* message);
     void LogInfoFunction(const std::string& message);
+    void LogInfoFunction(const char* message);
 } // namespace assert_utility
 
 enum class LogType
@@ -36,6 +39,7 @@ public:
     static Logger& Instance();
 
     static void Log(LogType type, const std::string& message);
+    static void Log(LogType type, const char* message);
     static void SetLogLevel(LogType logLevel);
     static LogType GetLogLevel();
 

@@ -71,7 +71,7 @@ namespace dx12
 		_resourceDescription.DepthOrArraySize = depthOrArraySize;
 	}
 
-	UINT16 ResourceDescription::getDepthOrArraySize() const
+	UINT16 ResourceDescription::GetDepthOrArraySize() const
 	{
 		return _resourceDescription.DepthOrArraySize;
 	}

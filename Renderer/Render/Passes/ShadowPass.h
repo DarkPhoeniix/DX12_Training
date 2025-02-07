@@ -14,6 +14,10 @@ namespace render
         void Execute() override;
 
     private:
-        dx12::PipelineState _shadowsPipeline;
+        void SpotLightsPass();
+        void PointLightsPass();
+
+        dx12::PipelineState _shadowSpotLightPipeline;
+        dx12::PipelineState _shadowPointLightPipeline;
     };
 } // namespace render
