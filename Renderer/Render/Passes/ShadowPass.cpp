@@ -39,7 +39,7 @@ namespace render
         dx12::CommandList& commandList = *task->GetCommandLists().front();
         commandList.SetName("Shadow pass command list");
 
-        PIXBeginEvent(commandList.GetDXCommandList().Get(), 2, "Shadow Pass");
+        PIXBeginEvent(commandList.GetDXCommandList().Get(), 0, "Shadow Pass");
         {
             dx12::ResourceTable& sceneTable = *_scene->GetCache().GetTextureTable();
             dx12::ResourceTable& frameTable = _frame->GetResourceTable();

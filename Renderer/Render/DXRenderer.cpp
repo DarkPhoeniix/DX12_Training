@@ -23,6 +23,7 @@
 #include "Render/Passes/LightingPass.h"
 #include "Render/Passes/ShadowPass.h"
 #include "Render/Passes/SkyboxPass.h"
+#include "Render/Passes/ToneMappingPass.h"
 
 #include "Render/Helpers/DrawHelpers.h"
 
@@ -256,6 +257,7 @@ namespace render
         _renderPasses.push_back(std::make_unique<GeometryPass>());
         _renderPasses.push_back(std::make_unique<LightingPass>());
         _renderPasses.push_back(std::make_unique<SkyboxPass>());
+        _renderPasses.push_back(std::make_unique<ToneMappingPass>());
         //_renderPasses.push_back(std::make_unique<FXAAPass>());
         //_renderPasses.push_back(std::make_unique<DebugArmaturePass>());
         _renderPasses.push_back(std::make_unique<DebugBoundingVolumePass>());

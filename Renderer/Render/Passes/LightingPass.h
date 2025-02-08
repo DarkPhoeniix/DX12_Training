@@ -15,5 +15,7 @@ namespace render
 
     private:
         dx12::PipelineState _deferredPipeline;
+
+        dx12::Resource _HDRTexture;
     };
 } // namespace render

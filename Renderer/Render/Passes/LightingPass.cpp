@@ -16,6 +16,24 @@ namespace render
         _name = "LightingPass";
 
         _deferredPipeline.Parse("PipelineDescriptions\\DeferredShading.tech");
+
+        {
+            dx12::ResourceDescription textureDesc;
+            D3D12_CLEAR_VALUE clearValue;
+            {
+                textureDesc.SetSize(_activeCamera->GetViewport().GetSize());
+                textureDesc.SetFormat(DXGI_FORMAT_R16G16B16A16_FLOAT);
+                textureDesc.SetDimension(D3D12_RESOURCE_DIMENSION_TEXTURE2D);
+                textureDesc.SetResourceType(dx12::EResourceType::Texture | dx12::EResourceType::Unordered);
+            }
+
+            _HDRTexture.CreateCommitedResource(textureDesc, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+            _HDRTexture.SetName("HDR_Lightpass");
+
+            std::shared_ptr<dx12::ResourceTable> sceneTable = _scene->GetCache().GetTextureTable();
+            sceneTable->PlaceResource(&_HDRTexture, dx12::ResourceViewType::SRV);
+            sceneTable->PlaceResource(&_HDRTexture, dx12::ResourceViewType::UAV);
+        }
     }
 
     void LightingPass::Destroy()
@@ -37,14 +55,15 @@ namespace render
             commandList.SetPipelineState(_deferredPipeline);
 
             dx12::ResourceTable& frameTable = _frame->GetResourceTable();
-            auto sceneTable = _scene->GetCache().GetTextureTable();
+            dx12::ResourceTable& sceneTable = *_scene->GetCache().GetTextureTable();
             dx12::ResourceTable& gBufferTable = _gBuffer->GetResourceTable();
 
-            dx12::Resource* target = &_frame->GetTargetTexture();
+            dx12::Resource* target = &_HDRTexture;
             dx12::Resource* albedoMetalness = &_gBuffer->GetAlbedoMetalnessTexture();
             dx12::Resource* normalSpecular = &_gBuffer->GetNormalTexture();
             dx12::Resource* depth = &_gBuffer->GetDepthTexture();
 
+            frameTable.CopyDescriptor(target, dx12::ResourceViewType::UAV, sceneTable);
             frameTable.CopyDescriptor(albedoMetalness, dx12::ResourceViewType::SRV, gBufferTable);
             frameTable.CopyDescriptor(normalSpecular, dx12::ResourceViewType::SRV, gBufferTable);
             frameTable.CopyDescriptor(depth, dx12::ResourceViewType::SRV, gBufferTable);
