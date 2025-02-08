@@ -70,13 +70,14 @@ namespace render
 
             _frame->BindDescriptorHeaps(commandList);
 
-            Helpers::SetupSceneDataGPU(*_scene, commandList, _frame);
+            helpers::SetupSceneDataGPU(*_scene, commandList, _frame);
 
             commandList.SetDescriptorTable(3, frameTable.GetResourceGPUHandle(depth, dx12::ResourceViewType::SRV));
             commandList.SetDescriptorTable(4, frameTable.GetResourceGPUHandle(albedoMetalness, dx12::ResourceViewType::SRV));
             commandList.SetDescriptorTable(5, frameTable.GetResourceGPUHandle(normalSpecular, dx12::ResourceViewType::SRV));
             commandList.SetDescriptorTable(6, frameTable.GetDescriptorHeap(dx12::ResourceViewType::SRV).GetHeapStartGPUHandle());
-            commandList.SetDescriptorTable(7, frameTable.GetResourceGPUHandle(target, dx12::ResourceViewType::UAV));
+            commandList.SetDescriptorTable(7, frameTable.GetDescriptorHeap(dx12::ResourceViewType::SRV).GetHeapStartGPUHandle());
+            commandList.SetDescriptorTable(8, frameTable.GetResourceGPUHandle(target, dx12::ResourceViewType::UAV));
 
             DirectX::XMUINT2 viewportSize = _activeCamera->GetViewport().GetSize();
             int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 8.0f);

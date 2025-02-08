@@ -48,7 +48,7 @@ namespace dx12
         DirectX::XMUINT2 GetSize() const;
 
         void SetDepthOrArraySize(UINT16 depthOrArraySize);
-        UINT16 getDepthOrArraySize() const;
+        UINT16 GetDepthOrArraySize() const;
 
         void SetMipLevels(UINT16 mipLevels);
         UINT16 GetMipLevels() const;

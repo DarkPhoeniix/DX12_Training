@@ -123,7 +123,7 @@ namespace
 
 namespace scene
 {
-    namespace Helpers
+    namespace helpers
     {
         EntityLoader::EntityLoader(const std::string& filepath)
             : _entityFilepath(filepath)
@@ -348,19 +348,17 @@ namespace scene
                 {
                 case LightType::Spot:
                 {
-                    component->ShadowMaps[0] = std::make_shared<dx12::Resource>();
-                    component->ShadowMaps[0]->CreateCommitedResource(desc);
-                    component->ShadowMaps[0]->SetName(name + "_ShadowMap");
+                    component->ShadowMap = std::make_shared<dx12::Resource>();
+                    component->ShadowMap->CreateCommitedResource(desc);
+                    component->ShadowMap->SetName(name + "_ShadowMap");
                 }
                 break;
                 case LightType::Point:
                 {
-                    for (size_t i = 0; i < 6; ++i)
-                    {
-                        component->ShadowMaps[i] = std::make_shared<dx12::Resource>();
-                        component->ShadowMaps[i]->CreateCommitedResource(desc);
-                        component->ShadowMaps[i]->SetName(std::format("{}_ShadowMap_{}", name, i));
-                    }
+                    component->ShadowMap = std::make_shared<dx12::Resource>();
+                    desc.SetDepthOrArraySize(6);
+                    component->ShadowMap->CreateCommitedResource(desc);
+                    component->ShadowMap->SetName(std::format("{}_ShadowMap", name));
                 }
                 break;
                 }
@@ -477,5 +475,5 @@ namespace scene
                 }
             }
         }
-    } // namespace Helpers
+    } // namespace helpers
 } // namespace scene

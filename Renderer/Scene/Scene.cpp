@@ -133,7 +133,7 @@ namespace scene
         // Parse children nodes
         for (auto& node : root["Nodes"])
         {
-            Helpers::EntityLoader loader(std::filesystem::path(filepath).parent_path().string() + '/' + node.asString());
+            helpers::EntityLoader loader(std::filesystem::path(filepath).parent_path().string() + '/' + node.asString());
             
             _rootNodes.push_back(loader.LoadEntity(&_cache));
         }

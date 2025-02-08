@@ -53,7 +53,7 @@ namespace dx12
 		}
 	}
 
-	std::string Resource::GetName() const
+	const std::string& Resource::GetName() const
 	{
 		return _name;
 	}
@@ -226,7 +226,15 @@ namespace dx12
 	{
 		DepthStencilView view = {};
 
-		view.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+		if (_resourceDesc.GetDepthOrArraySize() == 6)
+		{
+			view.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DARRAY;
+			view.Texture2DArray.ArraySize = _resourceDesc.GetDepthOrArraySize();
+		}
+		else
+		{
+			view.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+		}
 		view.Texture2D.MipSlice = 0;
 		view.Owner = this;
 
@@ -263,8 +271,16 @@ namespace dx12
 		}
 		else if ((type & EResourceType::Texture) != EResourceType::None)
 		{
-			view.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-			view.Texture2D.MipLevels = 1;
+			if (_resourceDesc.GetDepthOrArraySize() == 6)
+			{
+				view.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+				view.TextureCube.MipLevels = 1;
+			}
+			else
+			{
+				view.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+				view.Texture2D.MipLevels = 1;
+			}
 		}
 
 		if ((type & EResourceType::DepthStencil) != EResourceType::None)

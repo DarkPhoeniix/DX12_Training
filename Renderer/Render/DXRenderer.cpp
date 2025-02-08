@@ -9,11 +9,14 @@
 #include "Events/MouseMoveEvent.h"
 #include "Events/RenderEvent.h"
 #include "Events/UpdateEvent.h"
-#include "Render/Frame/TaskGPU.h"
+
+#include "Scene/Entity/Components/Armature.h"
+#include "Scene/Entity/Components/Animation.h"
 #include "Scene/Entity/Components/Camera.h"
 #include "Scene/Entity/Entity.h"
 #include "Utility/DebugInfo.h"
 
+#include "Render/Frame/TaskGPU.h"
 #include "Render/Passes/ClearBuffersPass.h"
 #include "Render/Passes/DebugArmaturePass.h"
 #include "Render/Passes/DebugBoundingVolumePass.h"
@@ -121,6 +124,31 @@ namespace render
         _scene.GetCache().SetTime(updateEvent.totalTime * _timeMiltiplier);
 
         _deltaTime = updateEvent.elapsedTime * _timeMiltiplier;
+
+        std::function<void(std::shared_ptr<scene::Entity>)> updateEntity = [&](std::shared_ptr<scene::Entity> entity)
+            {
+                entity->UpdateGlobalTransform();
+
+                scene::Armature* armature = entity->GetComponentAs<scene::Armature>("Armature");
+                scene::Animation* animation = entity->GetComponentAs<scene::Animation>("Animation");
+
+                if (armature && animation)
+                {
+                    const auto& transforms = animation->GetBonesTransforms(updateEvent.totalTime);
+                    armature->ApplyAnimation(transforms);
+                    armature->UpdateGlobalTransformations();
+                }
+
+                for (const auto& child : entity->GetChildrenNodes())
+                {
+                    updateEntity(child);
+                }
+            };
+
+        for (const auto& entity : _scene.GetRootNodes())
+        {
+            updateEntity(entity);
+        }
     }
 
     void DXRenderer::OnRender(events::RenderEvent& renderEvent)
@@ -253,8 +281,8 @@ namespace render
         _renderPasses.clear();
 
         _renderPasses.push_back(std::make_unique<ClearBuffersPass>());
-        _renderPasses.push_back(std::make_unique<ShadowPass>());
         _renderPasses.push_back(std::make_unique<GeometryPass>());
+        _renderPasses.push_back(std::make_unique<ShadowPass>());
         _renderPasses.push_back(std::make_unique<LightingPass>());
         _renderPasses.push_back(std::make_unique<SkyboxPass>());
         _renderPasses.push_back(std::make_unique<ToneMappingPass>());

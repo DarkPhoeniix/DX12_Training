@@ -13,7 +13,7 @@ namespace scene
     class Skybox;
     class Transformation;
 
-    namespace Helpers
+    namespace helpers
     {
         class EntityLoader
         {
@@ -36,5 +36,5 @@ namespace scene
             const std::string _entityFilepath;
             const std::string _parentFilepath;
         };
-    } // namespace Helpers
+    } // namespace helpers
 } // namespace scene
