@@ -122,6 +122,6 @@ void DownScale4to1(uint dispatchThreadId, uint groupThreadId, uint groupId, floa
         fFinalAvgLum /= 1024.0;
         // Write the final value into the 1D UAV which
         // will be used on the next step
-        AverageLum[groupId] = fFinalAvgLum;
+        AverageLum[groupId] = max(fFinalAvgLum, 0.0001f);
     }
 }

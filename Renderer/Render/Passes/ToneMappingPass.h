@@ -23,5 +23,6 @@ namespace render
         dx12::PipelineState _toneMappingPipeline;
 
         dx12::Resource _averageLuminance;
+        float _adaptation;
     };
 } // namespace render

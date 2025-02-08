@@ -62,14 +62,17 @@ namespace render
 
             DirectX::XMUINT2 viewportSize = _activeCamera->GetViewport().GetSize();
             DirectX::XMUINT2 downscaledTexSize = { viewportSize.x / 4, viewportSize.y / 4 };
-            std::uint32_t domainSize = (viewportSize.x * viewportSize.y) / 16;
-            std::uint32_t xThreadGroups = domainSize / 1024;
-            commandList.SetConstant(0, downscaledTexSize.x);
-            commandList.SetConstant(0, downscaledTexSize.y, 1);
-            commandList.SetConstant(0, domainSize, 2);
-            commandList.SetConstant(0, xThreadGroups, 3);
+            std::uint32_t domainSize = downscaledTexSize.x * downscaledTexSize.y;
+            std::uint32_t xThreadGroups = (uint32_t)std::ceilf((viewportSize.x * viewportSize.y) / float(16 * 1024));
+
+            CacheGPU::DataHandle avgLuminance = _frame->GetCache().RequestPlacement("avgLum", xThreadGroups);
+
+            commandList.SetConstants(0, 1, &downscaledTexSize.x);
+            commandList.SetConstants(0, 1, &downscaledTexSize.y, 1);
+            commandList.SetConstants(0, 1, &domainSize, 2);
+            commandList.SetConstants(0, 1, &xThreadGroups, 3);
             commandList.SetDescriptorTable(1, frameTable.GetResourceGPUHandle(target, dx12::ResourceViewType::SRV));
-            commandList.SetUAV(2, _averageLuminance.OffsetGPU(0));
+            commandList.SetUAV(2, avgLuminance.DataGPU);
 
             commandList.Dispatch(xThreadGroups);
         }
@@ -90,7 +93,7 @@ namespace render
 
         PIXBeginEvent(commandList.GetDXCommandList().Get(), 6, "Luminance downscale - pass 2");
         {
-            commandList.SetPipelineState(_lumDownscale1Pipeline);
+            commandList.SetPipelineState(_lumDownscale2Pipeline);
 
             dx12::ResourceTable& frameTable = _frame->GetResourceTable();
             dx12::Resource* target = frameTable.GetResourceByName("HDR_Lightpass", dx12::ResourceViewType::SRV);
@@ -99,14 +102,27 @@ namespace render
 
             DirectX::XMUINT2 viewportSize = _activeCamera->GetViewport().GetSize();
             DirectX::XMUINT2 downscaledTexSize = { viewportSize.x / 4, viewportSize.y / 4 };
-            std::uint32_t domainSize = (viewportSize.x * viewportSize.y) / 16;
-            std::uint32_t xThreadGroups = domainSize / 1024;
-            commandList.SetConstant(0, downscaledTexSize.x);
-            commandList.SetConstant(0, downscaledTexSize.y, 1);
-            commandList.SetConstant(0, domainSize, 2);
-            commandList.SetConstant(0, xThreadGroups, 3);
-            commandList.SetDescriptorTable(1, frameTable.GetResourceGPUHandle(target, dx12::ResourceViewType::SRV));
-            commandList.SetUAV(2, _averageLuminance.OffsetGPU(0));
+            std::uint32_t domainSize = downscaledTexSize.x * downscaledTexSize.y;
+            std::uint32_t xThreadGroups = (uint32_t)std::ceilf((viewportSize.x * viewportSize.y) / float(16 * 1024));
+
+            CacheGPU::DataHandle avgLuminance = _frame->GetCache().GetResourcePlacement("avgLum");
+            CacheGPU::DataHandle avgLuminanceFinal = _frame->GetCache().RequestPlacement("avgLumFinal", 4);
+            CacheGPU::DataHandle prevAvgLuminance = _frame->GetCache().RequestPlacement("prevAvgLum", 4);
+            CacheGPU::DataHandle handle = _frame->Prev->GetCache().GetResourcePlacement("avgLumFinal");
+            float* lumData = (float*)prevAvgLuminance.DataCPU;
+            if (handle.DataCPU)
+            lumData[0] = *((float*)handle.DataCPU);
+
+            _adaptation = std::min((_scene->GetCache().GetDeltaTime() * 1.5f), 1.0f);
+
+            commandList.SetConstants(0, 1, &downscaledTexSize.x);
+            commandList.SetConstants(0, 1, &downscaledTexSize.y, 1);
+            commandList.SetConstants(0, 1, &domainSize, 2);
+            commandList.SetConstants(0, 1, &xThreadGroups, 3);
+            commandList.SetConstants(0, 1, &_adaptation, 4);
+            commandList.SetSRV(1, avgLuminance.DataGPU);
+            commandList.SetSRV(2, prevAvgLuminance.DataGPU);
+            commandList.SetUAV(3, avgLuminanceFinal.DataGPU);
 
             int groupNum = (viewportSize.x * viewportSize.y) / 64;
             commandList.Dispatch(groupNum);
@@ -136,11 +152,13 @@ namespace render
 
             _frame->BindDescriptorHeaps(commandList);
 
-            float grey = 0.5025f;
-            float white = 2.5f;
+            CacheGPU::DataHandle avgLuminance = _frame->GetCache().GetResourcePlacement("avgLumFinal");
+
+            float grey = 0.825f;
+            float white = 4.5f;
             commandList.SetConstants(0, 1, &grey);
             commandList.SetConstants(0, 1, &white, 1);
-            commandList.SetSRV(1, _averageLuminance.OffsetGPU(0));
+            commandList.SetSRV(1, avgLuminance.DataGPU);
             commandList.SetDescriptorTable(2, frameTable.GetResourceGPUHandle(hdr, dx12::ResourceViewType::SRV));
             commandList.SetDescriptorTable(3, frameTable.GetResourceGPUHandle(target, dx12::ResourceViewType::UAV));
 

@@ -8,8 +8,9 @@
 		"DENY_GEOMETRY_SHADER_ROOT_ACCESS | " \
 		"DENY_PIXEL_SHADER_ROOT_ACCESS " \
 	"), " \
-    "RootConstants(num32BitConstants = 4, b0, visibility = SHADER_VISIBILITY_ALL), " \
-    "DescriptorTable(SRV(t0), visibility = SHADER_VISIBILITY_ALL)," \
+    "RootConstants(num32BitConstants = 5, b0, visibility = SHADER_VISIBILITY_ALL), " \
+    "SRV(t0, visibility = SHADER_VISIBILITY_ALL)," \
+    "SRV(t1, visibility = SHADER_VISIBILITY_ALL)," \
     "UAV(u0, visibility = SHADER_VISIBILITY_ALL), " \
     "StaticSampler(s0," \
         "addressU = TEXTURE_ADDRESS_WRAP," \
@@ -27,9 +28,12 @@ cbuffer DownscaleConstants : register(b0)
     uint Domain : packoffset(c0.z);
     // Number of groups dispached on the first pass
     uint GroupSize : packoffset(c0.w);
+    // Adaptation factor
+    float Adaptation : packoffset(c1);
 }
 StructuredBuffer<float> AverageValues1D : register(t0);
-RWStructuredBuffer<float> AverageLum : register(u0);
+StructuredBuffer<float> PrevAverageLum  : register(t1);
+RWStructuredBuffer<float> AverageLum    : register(u0);
 
 // Group shared memory to store the intermediate results
 groupshared float SharedAvgFinal[MAX_GROUPS];
@@ -86,6 +90,7 @@ void main(uint3 groupId : SV_GroupID, uint3 groupThreadId : SV_GroupThreadID, ui
         fFinalLumValue += dispatchThreadId.x + 48 < GroupSize ? SharedAvgFinal[dispatchThreadId.x + 48] : avgLum;
         fFinalLumValue /= 64.0;
         
-        AverageLum[0] = fFinalLumValue;
+        float adaptedAverageLuminance = lerp(PrevAverageLum[0], fFinalLumValue, Adaptation);
+        AverageLum[0] = max(adaptedAverageLuminance, 0.0001f);
     }
 }
