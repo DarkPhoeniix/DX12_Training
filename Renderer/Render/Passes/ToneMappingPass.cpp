@@ -111,9 +111,15 @@ namespace render
             CacheGPU::DataHandle handle = _frame->Prev->GetCache().GetResourcePlacement("avgLumFinal");
             float* lumData = (float*)prevAvgLuminance.DataCPU;
             if (handle.DataCPU)
-            lumData[0] = *((float*)handle.DataCPU);
-
-            _adaptation = std::min((_scene->GetCache().GetDeltaTime() * 1.5f), 1.0f);
+            {
+                lumData[0] = *((float*)handle.DataCPU);
+                _adaptation = std::min((_scene->GetCache().GetDeltaTime() * 2.5f), 1.0f);
+            }
+            else
+            {
+                lumData[0] = 0.0001f;
+                _adaptation = 0.0f;
+            }
 
             commandList.SetConstants(0, 1, &downscaledTexSize.x);
             commandList.SetConstants(0, 1, &downscaledTexSize.y, 1);
@@ -154,8 +160,8 @@ namespace render
 
             CacheGPU::DataHandle avgLuminance = _frame->GetCache().GetResourcePlacement("avgLumFinal");
 
-            float grey = 0.825f;
-            float white = 4.5f;
+            float grey = 0.725f;
+            float white = 5.5f;
             commandList.SetConstants(0, 1, &grey);
             commandList.SetConstants(0, 1, &white, 1);
             commandList.SetSRV(1, avgLuminance.DataGPU);
