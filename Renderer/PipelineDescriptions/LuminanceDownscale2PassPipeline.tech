@@ -1,7 +1,0 @@
-{
-	"Type": "LuminanceDownscale_2Pass",
-
-	"IsGraphicsPipeline": false,
-
-	"CS": "Shaders\\LuminanceDownscale_2Pass.cso"
-}

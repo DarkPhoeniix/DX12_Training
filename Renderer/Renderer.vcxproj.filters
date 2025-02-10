@@ -17,8 +17,6 @@
     <FxCompile Include="Shaders\FXAA_cs.hlsl" />
     <FxCompile Include="Shaders\GPass_ps.hlsl" />
     <FxCompile Include="Shaders\GPass_vs.hlsl" />
-    <FxCompile Include="Shaders\HDR\LuminanceDownscale_1Pass.hlsl" />
-    <FxCompile Include="Shaders\HDR\LuminanceDownscale_2Pass.hlsl" />
     <FxCompile Include="Shaders\HDR\ToneMapping.hlsl" />
     <FxCompile Include="Shaders\OBB_gs.hlsl" />
     <FxCompile Include="Shaders\OBB_ps.hlsl" />
@@ -161,8 +159,6 @@
     <None Include="PipelineDescriptions\DebugConePipeline.tech" />
     <None Include="PipelineDescriptions\DebugSpherePipeline.tech" />
     <None Include="PipelineDescriptions\FXAAPipeline.tech" />
-    <None Include="PipelineDescriptions\LuminanceDownscale1PassPipeline.tech" />
-    <None Include="PipelineDescriptions\LuminanceDownscale2PassPipeline.tech" />
     <None Include="PipelineDescriptions\PCFShadows.blend" />
     <None Include="PipelineDescriptions\Shadow_PointLight.tech" />
     <None Include="PipelineDescriptions\Shadow_SpotLight.tech" />
