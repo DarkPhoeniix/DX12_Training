@@ -8,7 +8,7 @@
 		"DENY_GEOMETRY_SHADER_ROOT_ACCESS | " \
 		"DENY_PIXEL_SHADER_ROOT_ACCESS " \
 	"), " \
-    "RootConstants(num32BitConstants = 5, b0, visibility = SHADER_VISIBILITY_ALL), " \
+    "RootConstants(num32BitConstants = 4, b0, visibility = SHADER_VISIBILITY_ALL), " \
     "SRV(t0, visibility = SHADER_VISIBILITY_ALL)," \
     "UAV(u0, visibility = SHADER_VISIBILITY_ALL)," \
     "UAV(u1, visibility = SHADER_VISIBILITY_ALL)"
@@ -19,10 +19,8 @@ cbuffer LuminanceHistogramParametersCB          : register(b0)
 {
     uint  PixelCount                            : packoffset(c0.x);
     float MinLogLuminance                       : packoffset(c0.y);
-    float LogLuminanceRange                     : packoffset(c0.z);
-    float DeltaTime                             : packoffset(c0.w);
-    
-    float Adaptation                            : packoffset(c1.x);
+    float LogLuminanceRange                     : packoffset(c0.z);    
+    float Adaptation                            : packoffset(c0.w);
 };
 StructuredBuffer<float>     PrevAverageLum      : register(t0);
 RWStructuredBuffer<uint>    LuminanceHistogram  : register(u0);

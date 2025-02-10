@@ -15,18 +15,13 @@ namespace render
 
     private:
         void BuildLuminanceHistogram();
-        void AvgLuminance();
-        void Downscale1();
-        void Downscale2();
-        void Tonemapping();
+        void CalculateAverageLuminance();
+        void ApplyTonemapping();
 
-        dx12::PipelineState _lumHistogramPipeline;
-        dx12::PipelineState _avglumHistogramPipeline;
-        dx12::PipelineState _lumDownscale1Pipeline;
-        dx12::PipelineState _lumDownscale2Pipeline;
+        dx12::PipelineState _luminanceHistogramPipeline;
+        dx12::PipelineState _averageluminanceHistogramPipeline;
         dx12::PipelineState _toneMappingPipeline;
 
-        dx12::Resource _averageLuminance;
-        float _adaptation;
+        float _adaptationSpeed;
     };
 } // namespace render
