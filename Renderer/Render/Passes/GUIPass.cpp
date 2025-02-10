@@ -13,11 +13,15 @@ namespace render
         IRenderPass::Inititalize();
 
         _name = "GUIPass";
+
+        _sceneWidget = std::make_shared<gui::SceneTreeWidget>(*_scene);
     }
 
     void GUIPass::Destroy()
     {
         IRenderPass::Destroy();
+
+        _sceneWidget->Destroy();
     }
 
     void GUIPass::Execute()
@@ -39,6 +43,8 @@ namespace render
         {
             commandList.SetViewport(_activeCamera->GetViewport());
             commandList.SetRenderTarget(&rtv, &dsv);
+
+            _sceneWidget->Update();
 
             if (ImGui::Begin("Debug Info"), true, ImGuiWindowFlags_AlwaysAutoResize)
             {

@@ -18,6 +18,8 @@ namespace scene
         void AddRootNode(std::shared_ptr<Entity> entity);
 
         std::vector<std::shared_ptr<Entity>>& GetRootNodes();
+        const std::vector<std::shared_ptr<Entity>>& GetRootNodes() const;
+
         std::shared_ptr<Entity> FindNodeByName(const std::string& name) const;
         std::shared_ptr<Entity> FindNodeByComponentName(const std::string& componentName) const;
 
