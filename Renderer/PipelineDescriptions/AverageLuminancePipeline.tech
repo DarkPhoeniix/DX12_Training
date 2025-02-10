@@ -1,0 +1,7 @@
+{
+	"Type": "AverageLuminanceTechnique",
+
+	"IsGraphicsPipeline": false,
+
+	"CS": "Shaders\\AverageLuminance.cso"
+}

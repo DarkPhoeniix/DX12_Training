@@ -75,7 +75,7 @@ namespace dx12
         ResourceKey key = { resource->GetName().c_str(), viewType};
         InternalResourceDesc value = { resource, descriptorHeap.GetCurrentOffset(), viewType};
 
-        resources.insert(std::make_pair(key, value));
+        resources.insert_or_assign(key, value);
         switch (viewType)
         {
         case ResourceViewType::RTV:

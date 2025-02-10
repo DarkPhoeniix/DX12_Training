@@ -48,7 +48,7 @@ namespace render
             dx12::ResourceTable& sceneTable = *_scene->GetCache().GetTextureTable();
             dx12::ResourceTable& frameTable = _frame->GetResourceTable();
 
-            dx12::Resource* target = &_frame->GetTargetTexture();
+            dx12::Resource* target = frameTable.GetResourceByName("HDR_Lightpass", dx12::ResourceViewType::UAV);
             dx12::Resource* skyboxTexture = skybox->SkydomeTexture.get();
             dx12::Resource* depth = &_gBuffer->GetDepthTexture();
             

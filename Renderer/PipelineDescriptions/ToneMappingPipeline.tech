@@ -1,0 +1,7 @@
+{
+	"Type": "ToneMapping",
+
+	"IsGraphicsPipeline": false,
+
+	"CS": "Shaders\\ToneMapping.cso"
+}

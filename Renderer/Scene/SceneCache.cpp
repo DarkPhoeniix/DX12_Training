@@ -52,4 +52,14 @@ namespace scene
     {
         return _currentTime;
     }
+
+    void SceneCache::SetDeltaTime(float deltaTime)
+    {
+        _deltaTime = deltaTime;
+    }
+    
+    float SceneCache::GetDeltaTime() const
+    {
+        return _deltaTime;
+    }
 } // namespace scene

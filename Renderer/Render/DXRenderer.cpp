@@ -26,6 +26,8 @@
 #include "Render/Passes/LightingPass.h"
 #include "Render/Passes/ShadowPass.h"
 #include "Render/Passes/SkyboxPass.h"
+#include "Render/Passes/ToneMappingPass.h"
+
 #include "Render/Helpers/DrawHelpers.h"
 
 using namespace DirectX;
@@ -63,8 +65,8 @@ namespace render
         // Camera Setup
         std::shared_ptr<scene::Entity> cameraEntity = std::make_shared<scene::Entity>(&_scene.GetCache());
         {
-            XMVECTOR pos = XMVectorSet(0.0f, 20.0f, 25.0f, 1.0f);
-            XMVECTOR target = XMVectorSet(0.0f, 20.0f, -25.0f, 1.0f);
+            XMVECTOR pos = XMVectorSet(15.0f, 25.0f, 35.0f, 1.0f);
+            XMVECTOR target = XMVectorSet(-5.0f, 18.0f, -5.0f, 1.0f);
             XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
             std::shared_ptr<scene::Camera> cameraComponent = std::make_shared<scene::Camera>();
@@ -120,6 +122,7 @@ namespace render
         DebugInfo::Update(updateEvent);
 
         _scene.GetCache().SetTime(updateEvent.totalTime * _timeMiltiplier);
+        _scene.GetCache().SetDeltaTime(updateEvent.elapsedTime * _timeMiltiplier);
 
         _deltaTime = updateEvent.elapsedTime * _timeMiltiplier;
 
@@ -283,9 +286,10 @@ namespace render
         _renderPasses.push_back(std::make_unique<ShadowPass>());
         _renderPasses.push_back(std::make_unique<LightingPass>());
         _renderPasses.push_back(std::make_unique<SkyboxPass>());
+        _renderPasses.push_back(std::make_unique<ToneMappingPass>());
         //_renderPasses.push_back(std::make_unique<FXAAPass>());
         //_renderPasses.push_back(std::make_unique<DebugArmaturePass>());
-        _renderPasses.push_back(std::make_unique<DebugBoundingVolumePass>());
+        //_renderPasses.push_back(std::make_unique<DebugBoundingVolumePass>());
         _renderPasses.push_back(std::make_unique<GUIPass>());
 
         for (auto& pass : _renderPasses)

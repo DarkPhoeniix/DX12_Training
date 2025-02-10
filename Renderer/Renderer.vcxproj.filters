@@ -1,559 +1,204 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Shaders">
-      <UniqueIdentifier>{1fa8204c-e6b6-4306-9e69-716675047cee}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Events">
-      <UniqueIdentifier>{d11677a7-4cb4-4b20-8dc3-1be37916da49}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="GUI">
-      <UniqueIdentifier>{48559464-e5a2-4e44-8bd9-d9d4f3dfd2b0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Input">
-      <UniqueIdentifier>{0e0a974a-7aab-4339-b615-91ca2f5c7915}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="PipelineDescriptions">
-      <UniqueIdentifier>{0bbffeb4-ef93-4886-80cb-821c2cd7a64c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Utility">
-      <UniqueIdentifier>{ba85e162-2625-422d-95dc-de4a24460236}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Window">
-      <UniqueIdentifier>{6a822050-4c04-4aa1-a359-660b6fd1d08b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Scene">
-      <UniqueIdentifier>{1fdf81e1-e0d3-4b7f-94f6-2ec2bac3effc}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Scene\Volumes">
-      <UniqueIdentifier>{18be97cf-5507-4265-81fd-923551e9ad11}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Render">
-      <UniqueIdentifier>{f810bfa3-b12c-49ee-985b-530d44b7abf6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Resources">
-      <UniqueIdentifier>{52dbdf78-39a3-44ef-a91a-4b59e168b2d5}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Scene\ECS">
-      <UniqueIdentifier>{f3830d58-ce55-44a7-9f20-9b1fc14cae98}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Render\SceneProcessors">
-      <UniqueIdentifier>{17a82661-fd05-4dfb-bc37-88dd30baf974}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Render\Frame">
-      <UniqueIdentifier>{44759726-0daa-4ba7-bf3a-b40616f9303b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Shaders\_deprecated">
-      <UniqueIdentifier>{0cff9de6-f4ea-4a7a-b3cc-8484eb782352}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Scene\ECS\Components">
-      <UniqueIdentifier>{05d20807-e1a0-4371-b0a8-d9373812ca6a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Render\Passes">
-      <UniqueIdentifier>{e3d14e23-d7cf-4e44-b718-02c3994f742c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Render\Helpers">
-      <UniqueIdentifier>{f14915d8-8f19-4ff9-a19a-1f9833380e9c}</UniqueIdentifier>
-    </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="Input\InputDevice.cpp">
-      <Filter>Input</Filter>
-    </ClCompile>
-    <ClCompile Include="Utility\DebugInfo.cpp">
-      <Filter>Utility</Filter>
-    </ClCompile>
-    <ClCompile Include="Utility\Helpers.cpp">
-      <Filter>Utility</Filter>
-    </ClCompile>
-    <ClCompile Include="Utility\HighResolutionClock.cpp">
-      <Filter>Utility</Filter>
-    </ClCompile>
-    <ClCompile Include="Utility\Logger.cpp">
-      <Filter>Utility</Filter>
-    </ClCompile>
-    <ClCompile Include="Utility\PoissonDiskDistribution.cpp">
-      <Filter>Utility</Filter>
-    </ClCompile>
-    <ClCompile Include="Window\Win32Window.cpp">
-      <Filter>Window</Filter>
-    </ClCompile>
-    <ClCompile Include="Scene\Scene.cpp">
-      <Filter>Scene</Filter>
-    </ClCompile>
-    <ClCompile Include="Scene\SceneCache.cpp">
-      <Filter>Scene</Filter>
-    </ClCompile>
-    <ClCompile Include="Scene\Volumes\FrustumVolume.cpp">
-      <Filter>Scene\Volumes</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\DXRenderer.cpp">
-      <Filter>Render</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\GBuffer.cpp">
-      <Filter>Render</Filter>
-    </ClCompile>
-    <ClCompile Include="RendererPCH.cpp" />
-    <ClCompile Include="Application.cpp" />
-    <ClCompile Include="Main.cpp" />
-    <ClCompile Include="GUI\GUI.cpp">
-      <Filter>GUI</Filter>
-    </ClCompile>
-    <ClCompile Include="Scene\Entity\Components\IComponent.cpp">
-      <Filter>Scene\ECS</Filter>
-    </ClCompile>
-    <ClCompile Include="Scene\Entity\Entity.cpp">
-      <Filter>Scene\ECS</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\Frame\AllocatorPool.cpp">
-      <Filter>Render\Frame</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\Frame\Executor.cpp">
-      <Filter>Render\Frame</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\Frame\FencePool.cpp">
-      <Filter>Render\Frame</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\Frame\Frame.cpp">
-      <Filter>Render\Frame</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\Frame\TaskGPU.cpp">
-      <Filter>Render\Frame</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\SceneProcessors\UploadSceneProcessor.cpp">
-      <Filter>Render\SceneProcessors</Filter>
-    </ClCompile>
-    <ClCompile Include="Scene\Entity\EntityLoader.cpp">
-      <Filter>Scene\ECS</Filter>
-    </ClCompile>
-    <ClCompile Include="Scene\Entity\Components\Animation.cpp">
-      <Filter>Scene\ECS\Components</Filter>
-    </ClCompile>
-    <ClCompile Include="Scene\Entity\Components\Armature.cpp">
-      <Filter>Scene\ECS\Components</Filter>
-    </ClCompile>
-    <ClCompile Include="Scene\Entity\Components\Light.cpp">
-      <Filter>Scene\ECS\Components</Filter>
-    </ClCompile>
-    <ClCompile Include="Scene\Entity\Components\Material.cpp">
-      <Filter>Scene\ECS\Components</Filter>
-    </ClCompile>
-    <ClCompile Include="Scene\Entity\Components\Mesh.cpp">
-      <Filter>Scene\ECS\Components</Filter>
-    </ClCompile>
-    <ClCompile Include="Scene\Entity\Components\Skybox.cpp">
-      <Filter>Scene\ECS\Components</Filter>
-    </ClCompile>
-    <ClCompile Include="Scene\Entity\Components\Transformation.cpp">
-      <Filter>Scene\ECS\Components</Filter>
-    </ClCompile>
-    <ClCompile Include="Scene\Volumes\AABBVolume.cpp">
-      <Filter>Scene\Volumes</Filter>
-    </ClCompile>
-    <ClCompile Include="Scene\Volumes\OBBVolume.cpp">
-      <Filter>Scene\Volumes</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\Passes\ClearBuffersPass.cpp">
-      <Filter>Render\Passes</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\Passes\DebugArmaturePass.cpp">
-      <Filter>Render\Passes</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\Passes\DebugBoundingVolumePass.cpp">
-      <Filter>Render\Passes</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\Passes\FXAAPass.cpp">
-      <Filter>Render\Passes</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\Passes\GeometryPass.cpp">
-      <Filter>Render\Passes</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\Passes\GUIPass.cpp">
-      <Filter>Render\Passes</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\Passes\IRenderPass.cpp">
-      <Filter>Render\Passes</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\Passes\LightingPass.cpp">
-      <Filter>Render\Passes</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\Passes\SkyboxPass.cpp">
-      <Filter>Render\Passes</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\Helpers\GPUStructs.cpp">
-      <Filter>Render\Helpers</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\Helpers\RenderHelpers.cpp">
-      <Filter>Render\Helpers</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\Frame\CacheGPU.cpp">
-      <Filter>Render\Frame</Filter>
-    </ClCompile>
-    <ClCompile Include="Scene\Entity\Components\Camera.cpp">
-      <Filter>Scene\ECS\Components</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\Passes\ShadowPass.cpp" />
-    <ClCompile Include="Render\Helpers\DrawHelpers.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Events\IEvent.h">
-      <Filter>Events</Filter>
-    </ClInclude>
-    <ClInclude Include="Events\MouseButtonEvent.h">
-      <Filter>Events</Filter>
-    </ClInclude>
-    <ClInclude Include="Events\MouseMoveEvent.h">
-      <Filter>Events</Filter>
-    </ClInclude>
-    <ClInclude Include="Events\MouseScrollEvent.h">
-      <Filter>Events</Filter>
-    </ClInclude>
-    <ClInclude Include="Events\KeyEvent.h">
-      <Filter>Events</Filter>
-    </ClInclude>
-    <ClInclude Include="Events\RenderEvent.h">
-      <Filter>Events</Filter>
-    </ClInclude>
-    <ClInclude Include="Events\ResizeEvent.h">
-      <Filter>Events</Filter>
-    </ClInclude>
-    <ClInclude Include="Events\UpdateEvent.h">
-      <Filter>Events</Filter>
-    </ClInclude>
-    <ClInclude Include="Input\InputDevice.h">
-      <Filter>Input</Filter>
-    </ClInclude>
-    <ClInclude Include="Utility\DebugInfo.h">
-      <Filter>Utility</Filter>
-    </ClInclude>
-    <ClInclude Include="Utility\Defines.h">
-      <Filter>Utility</Filter>
-    </ClInclude>
-    <ClInclude Include="Utility\Helpers.h">
-      <Filter>Utility</Filter>
-    </ClInclude>
-    <ClInclude Include="Utility\HighResolutionClock.h">
-      <Filter>Utility</Filter>
-    </ClInclude>
-    <ClInclude Include="Utility\Logger.h">
-      <Filter>Utility</Filter>
-    </ClInclude>
-    <ClInclude Include="Utility\PoissonDiskDistribution.h">
-      <Filter>Utility</Filter>
-    </ClInclude>
-    <ClInclude Include="Window\Win32Window.h">
-      <Filter>Window</Filter>
-    </ClInclude>
-    <ClInclude Include="Window\IWindowEventListener.h">
-      <Filter>Window</Filter>
-    </ClInclude>
-    <ClInclude Include="Scene\Scene.h">
-      <Filter>Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="Scene\SceneCache.h">
-      <Filter>Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="Scene\Volumes\AABBVolume.h">
-      <Filter>Scene\Volumes</Filter>
-    </ClInclude>
-    <ClInclude Include="Scene\Volumes\FrustumVolume.h">
-      <Filter>Scene\Volumes</Filter>
-    </ClInclude>
-    <ClInclude Include="Scene\Volumes\IVolume.h">
-      <Filter>Scene\Volumes</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\DXRenderer.h">
-      <Filter>Render</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\GBuffer.h">
-      <Filter>Render</Filter>
-    </ClInclude>
-    <ClInclude Include="Application.h" />
-    <ClInclude Include="RendererPCH.h" />
-    <ClInclude Include="Resources\Resources.h">
-      <Filter>Resources</Filter>
-    </ClInclude>
-    <ClInclude Include="Resources\resource1.h">
-      <Filter>Resources</Filter>
-    </ClInclude>
-    <ClInclude Include="GUI\GUI.h">
-      <Filter>GUI</Filter>
-    </ClInclude>
-    <ClInclude Include="Scene\Entity\Components\IComponent.h">
-      <Filter>Scene\ECS</Filter>
-    </ClInclude>
-    <ClInclude Include="Scene\Entity\Entity.h">
-      <Filter>Scene\ECS</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\Frame\AllocatorPool.h">
-      <Filter>Render\Frame</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\Frame\Executor.h">
-      <Filter>Render\Frame</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\Frame\FencePool.h">
-      <Filter>Render\Frame</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\Frame\Frame.h">
-      <Filter>Render\Frame</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\Frame\TaskGPU.h">
-      <Filter>Render\Frame</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\SceneProcessors\UploadSceneProcessor.h">
-      <Filter>Render\SceneProcessors</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\SceneProcessors\ISceneProcessor.h">
-      <Filter>Render\SceneProcessors</Filter>
-    </ClInclude>
-    <ClInclude Include="Scene\Entity\EntityLoader.h">
-      <Filter>Scene\ECS</Filter>
-    </ClInclude>
-    <ClInclude Include="Scene\Entity\Components\Animation.h">
-      <Filter>Scene\ECS\Components</Filter>
-    </ClInclude>
-    <ClInclude Include="Scene\Entity\Components\Armature.h">
-      <Filter>Scene\ECS\Components</Filter>
-    </ClInclude>
-    <ClInclude Include="Scene\Entity\Components\Light.h">
-      <Filter>Scene\ECS\Components</Filter>
-    </ClInclude>
-    <ClInclude Include="Scene\Entity\Components\Material.h">
-      <Filter>Scene\ECS\Components</Filter>
-    </ClInclude>
-    <ClInclude Include="Scene\Entity\Components\Mesh.h">
-      <Filter>Scene\ECS\Components</Filter>
-    </ClInclude>
-    <ClInclude Include="Scene\Entity\Components\Skybox.h">
-      <Filter>Scene\ECS\Components</Filter>
-    </ClInclude>
-    <ClInclude Include="Scene\Entity\Components\Transformation.h">
-      <Filter>Scene\ECS\Components</Filter>
-    </ClInclude>
-    <ClInclude Include="Scene\Volumes\OBBVolume.h">
-      <Filter>Scene\Volumes</Filter>
-    </ClInclude>
-    <ClInclude Include="Scene\Volumes\CapsuleVolume.h">
-      <Filter>Scene\Volumes</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\Passes\ClearBuffersPass.h">
-      <Filter>Render\Passes</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\Passes\DebugArmaturePass.h">
-      <Filter>Render\Passes</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\Passes\DebugBoundingVolumePass.h">
-      <Filter>Render\Passes</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\Passes\FXAAPass.h">
-      <Filter>Render\Passes</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\Passes\GeometryPass.h">
-      <Filter>Render\Passes</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\Passes\GUIPass.h">
-      <Filter>Render\Passes</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\Passes\IRenderPass.h">
-      <Filter>Render\Passes</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\Passes\LightingPass.h">
-      <Filter>Render\Passes</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\Passes\SkyboxPass.h">
-      <Filter>Render\Passes</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\Helpers\GPUStructs.h">
-      <Filter>Render\Helpers</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\Helpers\RenderHelpers.h">
-      <Filter>Render\Helpers</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\Frame\CacheGPU.h">
-      <Filter>Render\Frame</Filter>
-    </ClInclude>
-    <ClInclude Include="Input\DirectInputKeyCodes.h">
-      <Filter>Input</Filter>
-    </ClInclude>
-    <ClInclude Include="Scene\Entity\Components\Camera.h">
-      <Filter>Scene\ECS\Components</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\Passes\ShadowPass.h" />
-    <ClInclude Include="Render\Helpers\DrawHelpers.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="Shaders\AABB_gs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\AABB_ps.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\AABB_vs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\DeferredShading.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\GPass_ps.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\GPass_vs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\Skybox_cs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\_deprecated\Mesh_ps.hlsl">
-      <Filter>Shaders\_deprecated</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\_deprecated\Mesh_vs.hlsl">
-      <Filter>Shaders\_deprecated</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\_deprecated\NegativePostFX_cs.hlsl">
-      <Filter>Shaders\_deprecated</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\_deprecated\PostFX_cs.hlsl">
-      <Filter>Shaders\_deprecated</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\_deprecated\SwirlPostFX_cs.hlsl">
-      <Filter>Shaders\_deprecated</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\Armature_gs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\Armature_ps.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\Armature_vs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\OBB_vs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\FXAA_cs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\OBB_gs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\OBB_ps.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\Shadows\ShadowMapping_SpotLight_vs.hlsl" />
-    <FxCompile Include="Shaders\DebugDraw\Sphere_vs.hlsl" />
-    <FxCompile Include="Shaders\DebugDraw\Sphere_ps.hlsl" />
-    <FxCompile Include="Shaders\DebugDraw\Sphere_gs.hlsl" />
+    <FxCompile Include="Shaders\AABB_gs.hlsl" />
+    <FxCompile Include="Shaders\AABB_ps.hlsl" />
+    <FxCompile Include="Shaders\AABB_vs.hlsl" />
+    <FxCompile Include="Shaders\Armature_gs.hlsl" />
+    <FxCompile Include="Shaders\Armature_ps.hlsl" />
+    <FxCompile Include="Shaders\Armature_vs.hlsl" />
     <FxCompile Include="Shaders\DebugDraw\Cone_gs.hlsl" />
     <FxCompile Include="Shaders\DebugDraw\Cone_ps.hlsl" />
     <FxCompile Include="Shaders\DebugDraw\Cone_vs.hlsl" />
+    <FxCompile Include="Shaders\DebugDraw\Sphere_gs.hlsl" />
+    <FxCompile Include="Shaders\DebugDraw\Sphere_ps.hlsl" />
+    <FxCompile Include="Shaders\DebugDraw\Sphere_vs.hlsl" />
+    <FxCompile Include="Shaders\DeferredShading.hlsl" />
+    <FxCompile Include="Shaders\FXAA_cs.hlsl" />
+    <FxCompile Include="Shaders\GPass_ps.hlsl" />
+    <FxCompile Include="Shaders\GPass_vs.hlsl" />
+    <FxCompile Include="Shaders\HDR\ToneMapping.hlsl" />
+    <FxCompile Include="Shaders\OBB_gs.hlsl" />
+    <FxCompile Include="Shaders\OBB_ps.hlsl" />
+    <FxCompile Include="Shaders\OBB_vs.hlsl" />
     <FxCompile Include="Shaders\Shadows\ShadowMapping_PointLight_vs.hlsl" />
     <FxCompile Include="Shaders\Shadows\ShadowMapping_PointLight_gs.hlsl" />
+    <FxCompile Include="Shaders\Shadows\ShadowMapping_SpotLight_vs.hlsl" />
+    <FxCompile Include="Shaders\_deprecated\Mesh_ps.hlsl" />
+    <FxCompile Include="Shaders\_deprecated\Mesh_vs.hlsl" />
+    <FxCompile Include="Shaders\_deprecated\NegativePostFX_cs.hlsl" />
+    <FxCompile Include="Shaders\_deprecated\PostFX_cs.hlsl" />
+    <FxCompile Include="Shaders\Skybox_cs.hlsl" />
+    <FxCompile Include="Shaders\_deprecated\SwirlPostFX_cs.hlsl" />
+    <FxCompile Include="Shaders\HDR\BuildLuminanceHistogram.hlsl" />
+    <FxCompile Include="Shaders\HDR\AverageLuminance.hlsl" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\AABB_rootsig.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\DeferredShading_rootsig.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\DepthFuncs.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\GPass_rootsig.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\LightingCommon.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\Common.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\Skybox_rootsig.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\PBR.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\_deprecated\LambertLighting.hlsli">
-      <Filter>Shaders\_deprecated</Filter>
-    </None>
-    <None Include="Shaders\_deprecated\Mesh_rootsig.hlsli">
-      <Filter>Shaders\_deprecated</Filter>
-    </None>
-    <None Include="Shaders\_deprecated\PostFX_rootsig.hlsli">
-      <Filter>Shaders\_deprecated</Filter>
-    </None>
-    <None Include="Shaders\_deprecated\SemiAmbientLighting.hlsli">
-      <Filter>Shaders\_deprecated</Filter>
-    </None>
-    <None Include="Shaders\Armature_rootsig.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="PipelineDescriptions\Raster_Solid_CullBack.raster">
-      <Filter>PipelineDescriptions</Filter>
-    </None>
-    <None Include="Shaders\FXAA_helpers.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\FXAA_rootsig.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\OBB_rootsig.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="PipelineDescriptions\FXAAPipeline.tech">
-      <Filter>PipelineDescriptions</Filter>
-    </None>
-    <None Include="Shaders\Shadows\ShadowMapping_rootsig.hlsli" />
-    <None Include="PipelineDescriptions\PCFShadows.blend" />
-    <None Include="PipelineDescriptions\Shadow_SpotLight.tech" />
-    <None Include="Shaders\DebugDraw\Sphere_rootsig.hlsli" />
-    <None Include="PipelineDescriptions\DebugSpherePipeline.tech" />
-    <None Include="Shaders\DebugDraw\Cone_rootsig.hlsli" />
+    <ClCompile Include="Render\Helpers\DrawHelpers.cpp" />
+    <ClCompile Include="Render\Passes\DebugArmaturePass.cpp" />
+    <ClCompile Include="Render\Frame\CacheGPU.cpp" />
+    <ClCompile Include="Render\Helpers\GPUStructs.cpp" />
+    <ClCompile Include="Render\Helpers\RenderHelpers.cpp" />
+    <ClCompile Include="Render\Passes\ClearBuffersPass.cpp" />
+    <ClCompile Include="Render\Passes\DebugBoundingVolumePass.cpp" />
+    <ClCompile Include="Render\Passes\FXAAPass.cpp" />
+    <ClCompile Include="Render\Passes\GeometryPass.cpp" />
+    <ClCompile Include="Render\Passes\GUIPass.cpp" />
+    <ClCompile Include="Render\Passes\IRenderPass.cpp" />
+    <ClCompile Include="Render\Passes\LightingPass.cpp" />
+    <ClCompile Include="Scene\Volumes\OBBVolume.cpp" />
+    <ClCompile Include="Scene\Entity\Components\Armature.cpp" />
+    <ClCompile Include="Scene\Entity\Components\Animation.cpp" />
+    <ClCompile Include="Scene\Entity\Components\Light.cpp" />
+    <ClCompile Include="Scene\Entity\Components\Material.cpp" />
+    <ClCompile Include="Scene\Entity\Components\Mesh.cpp" />
+    <ClCompile Include="Scene\Entity\EntityLoader.cpp" />
+    <ClCompile Include="Scene\Entity\Entity.cpp" />
+    <ClCompile Include="GUI\GUI.cpp" />
+    <ClCompile Include="Render\GBuffer.cpp" />
+    <ClCompile Include="Scene\Entity\Components\IComponent.cpp" />
+    <ClCompile Include="Scene\SceneCache.cpp" />
+    <ClCompile Include="Render\SceneProcessors\UploadSceneProcessor.cpp" />
+    <ClCompile Include="Scene\Entity\Components\Transformation.cpp" />
+    <ClCompile Include="Scene\Entity\Components\Skybox.cpp" />
+    <ClCompile Include="Scene\Volumes\AABBVolume.cpp" />
+    <ClCompile Include="Render\Passes\SkyboxPass.cpp" />
+    <ClCompile Include="Render\Passes\ShadowPass.cpp" />
+    <ClCompile Include="Render\Passes\ToneMappingPass.cpp" />
+    <ClCompile Include="Utility\DebugInfo.cpp" />
+    <ClCompile Include="Input\InputDevice.cpp" />
+    <ClCompile Include="Window\Win32Window.cpp" />
+    <ClCompile Include="Scene\Volumes\FrustumVolume.cpp" />
+    <ClCompile Include="Render\Frame\FencePool.cpp" />
+    <ClCompile Include="Render\Frame\AllocatorPool.cpp" />
+    <ClCompile Include="Render\Frame\Executor.cpp" />
+    <ClCompile Include="Render\Frame\Frame.cpp" />
+    <ClCompile Include="Scene\Entity\Components\Camera.cpp" />
+    <ClCompile Include="Render\Frame\TaskGPU.cpp" />
+    <ClCompile Include="Scene\Scene.cpp" />
+    <ClCompile Include="Utility\PoissonDiskDistribution.cpp" />
+    <ClCompile Include="RendererPCH.cpp" />
+    <ClCompile Include="Utility\Logger.cpp" />
+    <ClCompile Include="Render\DXRenderer.cpp" />
+    <ClCompile Include="Utility\Helpers.cpp" />
+    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Application.cpp" />
+    <ClCompile Include="Utility\HighResolutionClock.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Render\Helpers\DrawHelpers.h" />
+    <ClInclude Include="Render\Passes\DebugArmaturePass.h" />
+    <ClInclude Include="Render\Frame\CacheGPU.h" />
+    <ClInclude Include="Render\Helpers\GPUStructs.h" />
+    <ClInclude Include="Render\Helpers\RenderHelpers.h" />
+    <ClInclude Include="Render\Passes\ClearBuffersPass.h" />
+    <ClInclude Include="Render\Passes\DebugBoundingVolumePass.h" />
+    <ClInclude Include="Render\Passes\FXAAPass.h" />
+    <ClInclude Include="Render\Passes\GeometryPass.h" />
+    <ClInclude Include="Render\Passes\GUIPass.h" />
+    <ClInclude Include="Render\Passes\IRenderPass.h" />
+    <ClInclude Include="Render\Passes\LightingPass.h" />
+    <ClInclude Include="Scene\Volumes\OBBVolume.h" />
+    <ClInclude Include="Scene\Entity\Components\Armature.h" />
+    <ClInclude Include="Scene\Entity\Components\Animation.h" />
+    <ClInclude Include="Scene\Entity\Components\Light.h" />
+    <ClInclude Include="Scene\Entity\Components\Material.h" />
+    <ClInclude Include="Scene\Entity\Components\Mesh.h" />
+    <ClInclude Include="Render\SceneProcessors\ISceneProcessor.h" />
+    <ClInclude Include="Scene\Entity\EntityLoader.h" />
+    <ClInclude Include="Scene\Entity\Entity.h" />
+    <ClInclude Include="GUI\GUI.h" />
+    <ClInclude Include="Render\GBuffer.h" />
+    <ClInclude Include="Resources\resource1.h" />
+    <ClInclude Include="Scene\Entity\Components\IComponent.h" />
+    <ClInclude Include="Scene\SceneCache.h" />
+    <ClInclude Include="Render\SceneProcessors\UploadSceneProcessor.h" />
+    <ClInclude Include="Scene\Entity\Components\Transformation.h" />
+    <ClInclude Include="Scene\Entity\Components\Skybox.h" />
+    <ClInclude Include="Scene\Volumes\CapsuleVolume.h" />
+    <ClInclude Include="Render\Passes\SkyboxPass.h" />
+    <ClInclude Include="Render\Passes\ShadowPass.h" />
+    <ClInclude Include="Render\Passes\ToneMappingPass.h" />
+    <ClInclude Include="Utility\DebugInfo.h" />
+    <ClInclude Include="Events\IEvent.h" />
+    <ClInclude Include="Input\InputDevice.h" />
+    <ClInclude Include="Input\DirectInputKeyCodes.h" />
+    <ClInclude Include="Resources\Resources.h" />
+    <ClInclude Include="Window\IWindowEventListener.h" />
+    <ClInclude Include="Window\Win32Window.h" />
+    <ClInclude Include="Scene\Volumes\FrustumVolume.h" />
+    <ClInclude Include="Scene\Volumes\AABBVolume.h" />
+    <ClInclude Include="Scene\Volumes\IVolume.h" />
+    <ClInclude Include="Render\Frame\FencePool.h" />
+    <ClInclude Include="Render\Frame\AllocatorPool.h" />
+    <ClInclude Include="Render\Frame\Executor.h" />
+    <ClInclude Include="Render\Frame\Frame.h" />
+    <ClInclude Include="Scene\Entity\Components\Camera.h" />
+    <ClInclude Include="Events\KeyEvent.h" />
+    <ClInclude Include="Events\MouseButtonEvent.h" />
+    <ClInclude Include="Events\MouseMoveEvent.h" />
+    <ClInclude Include="Events\MouseScrollEvent.h" />
+    <ClInclude Include="Events\RenderEvent.h" />
+    <ClInclude Include="Events\ResizeEvent.h" />
+    <ClInclude Include="Events\UpdateEvent.h" />
+    <ClInclude Include="Render\Frame\TaskGPU.h" />
+    <ClInclude Include="Scene\Scene.h" />
+    <ClInclude Include="Utility\Defines.h" />
+    <ClInclude Include="Utility\PoissonDiskDistribution.h" />
+    <ClInclude Include="RendererPCH.h" />
+    <ClInclude Include="Utility\Logger.h" />
+    <ClInclude Include="Render\DXRenderer.h" />
+    <ClInclude Include="Utility\Helpers.h" />
+    <ClInclude Include="Application.h" />
+    <ClInclude Include="Utility\HighResolutionClock.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resources\Resource.rc" />
+  </ItemGroup>
+  <ItemGroup>
     <None Include="PipelineDescriptions\DebugConePipeline.tech" />
+    <None Include="PipelineDescriptions\DebugSpherePipeline.tech" />
+    <None Include="PipelineDescriptions\FXAAPipeline.tech" />
+    <None Include="PipelineDescriptions\PCFShadows.blend" />
     <None Include="PipelineDescriptions\Shadow_PointLight.tech" />
+    <None Include="PipelineDescriptions\Shadow_SpotLight.tech" />
+    <None Include="PipelineDescriptions\Raster_Solid_CullBack.raster" />
+    <None Include="PipelineDescriptions\ToneMappingPipeline.tech" />
+    <None Include="Shaders\AABB_rootsig.hlsli" />
+    <None Include="Shaders\Armature_rootsig.hlsli" />
+    <None Include="Shaders\Common.hlsli" />
+    <None Include="Shaders\DebugDraw\Cone_rootsig.hlsli" />
+    <None Include="Shaders\DebugDraw\Sphere_rootsig.hlsli" />
+    <None Include="Shaders\DeferredShading_rootsig.hlsli" />
+    <None Include="Shaders\DepthFuncs.hlsli" />
+    <None Include="Shaders\FXAA_helpers.hlsli" />
+    <None Include="Shaders\FXAA_rootsig.hlsli" />
+    <None Include="Shaders\GPass_rootsig.hlsli" />
+    <None Include="Shaders\HDR\ToneMapping.hlsli" />
+    <None Include="Shaders\OBB_rootsig.hlsli" />
+    <None Include="Shaders\Shadows\ShadowMapping_rootsig.hlsli" />
+    <None Include="Shaders\_deprecated\LambertLighting.hlsli" />
+    <None Include="Shaders\LightingCommon.hlsli" />
+    <None Include="Shaders\PBR.hlsli" />
+    <None Include="Shaders\_deprecated\PostFX_rootsig.hlsli" />
+    <None Include="Shaders\_deprecated\SemiAmbientLighting.hlsli" />
+    <None Include="Shaders\_deprecated\Mesh_rootsig.hlsli" />
+    <None Include="Shaders\Skybox_rootsig.hlsli" />
+    <None Include="PipelineDescriptions\BuildLuminanceHistogramPipeline.tech" />
+    <None Include="PipelineDescriptions\AverageLuminancePipeline.tech" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Resources\Resource.rc">
-      <Filter>Resources</Filter>
-    </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="PipelineDescriptions\SkyboxPipeline.tech">
-      <Filter>PipelineDescriptions</Filter>
-    </Text>
-    <Text Include="PipelineDescriptions\AABBRenderPipeline.blend">
-      <Filter>PipelineDescriptions</Filter>
-    </Text>
-    <Text Include="PipelineDescriptions\AABBRenderPipeline.tech">
-      <Filter>PipelineDescriptions</Filter>
-    </Text>
-    <Text Include="PipelineDescriptions\DeferredShading.tech">
-      <Filter>PipelineDescriptions</Filter>
-    </Text>
-    <Text Include="PipelineDescriptions\GPassPipeline.blend">
-      <Filter>PipelineDescriptions</Filter>
-    </Text>
-    <Text Include="PipelineDescriptions\GPassPipeline.tech">
-      <Filter>PipelineDescriptions</Filter>
-    </Text>
-    <Text Include="PipelineDescriptions\ArmatureDebugPipeline.blend">
-      <Filter>PipelineDescriptions</Filter>
-    </Text>
-    <Text Include="PipelineDescriptions\ArmatureDebugPipeline.tech">
-      <Filter>PipelineDescriptions</Filter>
-    </Text>
-    <Text Include="PipelineDescriptions\Depth_LE_WriteAll.depth">
-      <Filter>PipelineDescriptions</Filter>
-    </Text>
-    <Text Include="PipelineDescriptions\Depth_None.depth">
-      <Filter>PipelineDescriptions</Filter>
-    </Text>
-    <Text Include="PipelineDescriptions\OBBRenderPipeline.tech">
-      <Filter>PipelineDescriptions</Filter>
-    </Text>
-    <Text Include="PipelineDescriptions\Raster_Solid.raster">
-      <Filter>PipelineDescriptions</Filter>
-    </Text>
+    <Text Include="PipelineDescriptions\AABBRenderPipeline.blend" />
+    <Text Include="PipelineDescriptions\AABBRenderPipeline.tech" />
+    <Text Include="PipelineDescriptions\ArmatureDebugPipeline.blend" />
+    <Text Include="PipelineDescriptions\ArmatureDebugPipeline.tech" />
+    <Text Include="PipelineDescriptions\DeferredShading.tech" />
+    <Text Include="PipelineDescriptions\GPassPipeline.blend" />
+    <Text Include="PipelineDescriptions\GPassPipeline.tech" />
+    <Text Include="PipelineDescriptions\OBBRenderPipeline.tech" />
+    <Text Include="PipelineDescriptions\Raster_Solid.raster" />
+    <Text Include="PipelineDescriptions\SkyboxPipeline.tech" />
+    <Text Include="PipelineDescriptions\Depth_LE_WriteAll.depth" />
+    <Text Include="PipelineDescriptions\Depth_None.depth" />
   </ItemGroup>
 </Project>

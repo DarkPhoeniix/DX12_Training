@@ -1,0 +1,7 @@
+{
+	"Type": "BuildLuminanceHistogramTechnique",
+
+	"IsGraphicsPipeline": false,
+
+	"CS": "Shaders\\BuildLuminanceHistogram.cso"
+}

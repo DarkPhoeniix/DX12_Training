@@ -28,6 +28,9 @@ namespace scene
         void SetTime(float time);
         float GetTime() const;
 
+        void SetDeltaTime(float deltaTime);
+        float GetDeltaTime() const;
+
     private:
         std::shared_ptr<dx12::ResourceTable> _texturesTable;
         std::shared_ptr<dx12::ResourceTable> _lightsTable;
@@ -35,5 +38,6 @@ namespace scene
         dx12::Heap _texturesHeap;
 
         float _currentTime;
+        float _deltaTime;
     };
 } // namespace scene
