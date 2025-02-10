@@ -14,10 +14,14 @@ namespace render
         void Execute() override;
 
     private:
+        void BuildLuminanceHistogram();
+        void AvgLuminance();
         void Downscale1();
         void Downscale2();
         void Tonemapping();
 
+        dx12::PipelineState _lumHistogramPipeline;
+        dx12::PipelineState _avglumHistogramPipeline;
         dx12::PipelineState _lumDownscale1Pipeline;
         dx12::PipelineState _lumDownscale2Pipeline;
         dx12::PipelineState _toneMappingPipeline;

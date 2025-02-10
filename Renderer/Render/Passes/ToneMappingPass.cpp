@@ -3,7 +3,6 @@
 #include "ToneMappingPass.h"
 
 #include "Scene/Entity/Components/Camera.h"
-#include "Render/Helpers/RenderHelpers.h"
 
 namespace render
 {
@@ -13,6 +12,8 @@ namespace render
 
         _name = "ToneMappingPass";
 
+        _lumHistogramPipeline.Parse("PipelineDescriptions\\BuildLuminanceHistogramPipeline.tech");
+        _avglumHistogramPipeline.Parse("PipelineDescriptions\\AverageLuminancePipeline.tech");
         _lumDownscale1Pipeline.Parse("PipelineDescriptions\\LuminanceDownscale1PassPipeline.tech");
         _lumDownscale2Pipeline.Parse("PipelineDescriptions\\LuminanceDownscale2PassPipeline.tech");
         _toneMappingPipeline.Parse("PipelineDescriptions\\ToneMappingPipeline.tech");
@@ -34,9 +35,123 @@ namespace render
 
     void ToneMappingPass::Execute()
     {
-        Downscale1();
-        Downscale2();
+        BuildLuminanceHistogram();
+        AvgLuminance();
         Tonemapping();
+    }
+
+    void ToneMappingPass::BuildLuminanceHistogram()
+    {
+        TaskGPU* task = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE, &_lumDownscale1Pipeline);
+        task->SetName("lum_histogram");
+        _tasks.push_back(task);
+
+        dx12::CommandList& commandList = *task->GetCommandLists().front();
+        commandList.SetName("Luminance histogram pass command list");
+
+        PIXBeginEvent(commandList.GetDXCommandList().Get(), 5, "Luminance histogram");
+        {
+            commandList.SetPipelineState(_lumHistogramPipeline);
+
+            dx12::ResourceTable& frameTable = _frame->GetResourceTable();
+            dx12::ResourceTable& sceneTable = *_scene->GetCache().GetTextureTable();
+            dx12::Resource* target = sceneTable.GetResourceByName("HDR_Lightpass", dx12::ResourceViewType::SRV);
+
+            frameTable.CopyDescriptor(target, dx12::ResourceViewType::SRV, sceneTable);
+
+            _frame->BindDescriptorHeaps(commandList);
+
+            DirectX::XMUINT2 viewportSize = _activeCamera->GetViewport().GetSize();
+            //DirectX::XMUINT2 downscaledTexSize = { viewportSize.x / 4, viewportSize.y / 4 };
+            //std::uint32_t domainSize = downscaledTexSize.x * downscaledTexSize.y;
+            //std::uint32_t xThreadGroups = (uint32_t)std::ceilf((viewportSize.x * viewportSize.y) / float(16 * 1024));
+
+            constexpr auto minLogLuminance = -10.0f;
+            constexpr auto maxLogLuminance = 2.0f;
+            constexpr auto logLuminanceRange = 1.0f / (maxLogLuminance - minLogLuminance);
+
+            CacheGPU::DataHandle histogram = _frame->GetCache().RequestPlacement("lumHist", 256 * sizeof(std::uint32_t));
+
+            commandList.SetConstants(0, 1, &viewportSize.x);
+            commandList.SetConstants(0, 1, &viewportSize.y, 1);
+            commandList.SetConstants(0, 1, &minLogLuminance, 2);
+            commandList.SetConstants(0, 1, &logLuminanceRange, 3);
+            commandList.SetDescriptorTable(1, frameTable.GetResourceGPUHandle(target, dx12::ResourceViewType::SRV));
+            commandList.SetUAV(2, histogram.DataGPU);
+
+            int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 16.0f);
+            int yThreadGroups = (uint32_t)std::ceilf(viewportSize.y / 16.0f);
+            commandList.Dispatch(xThreadGroups, yThreadGroups);
+        }
+        PIXEndEvent(commandList.GetDXCommandList().Get());
+
+        commandList.Close();
+    }
+
+    void ToneMappingPass::AvgLuminance()
+    {
+        TaskGPU* task = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE, &_lumDownscale1Pipeline);
+        task->SetName("avg_lum");
+        task->AddDependency("lum_histogram");
+        _tasks.push_back(task);
+
+        dx12::CommandList& commandList = *task->GetCommandLists().front();
+        commandList.SetName("Average luminance pass command list");
+
+        PIXBeginEvent(commandList.GetDXCommandList().Get(), 5, "Average luminance");
+        {
+            commandList.SetPipelineState(_avglumHistogramPipeline);
+
+            dx12::ResourceTable& frameTable = _frame->GetResourceTable();
+            dx12::ResourceTable& sceneTable = *_scene->GetCache().GetTextureTable();
+            dx12::Resource* target = sceneTable.GetResourceByName("HDR_Lightpass", dx12::ResourceViewType::SRV);
+
+            frameTable.CopyDescriptor(target, dx12::ResourceViewType::SRV, sceneTable);
+
+            _frame->BindDescriptorHeaps(commandList);
+
+            DirectX::XMUINT2 viewportSize = _activeCamera->GetViewport().GetSize();
+
+            constexpr auto minLogLuminance = -10.0f;
+            constexpr auto maxLogLuminance = 4.0f;
+            constexpr auto logLuminanceRange = (maxLogLuminance - minLogLuminance);
+
+            CacheGPU::DataHandle histogram = _frame->GetCache().GetResourcePlacement("lumHist");
+            CacheGPU::DataHandle avgLum = _frame->GetCache().RequestPlacement("avgLumHist", sizeof(std::uint32_t));
+            CacheGPU::DataHandle prevAvgLuminance = _frame->GetCache().RequestPlacement("prevAvgLum1", sizeof(std::uint32_t));
+            CacheGPU::DataHandle handle = _frame->Prev->GetCache().GetResourcePlacement("avgLumHist");
+            float* lumData = (float*)prevAvgLuminance.DataCPU;
+            if (handle.DataCPU)
+            {
+                lumData[0] = *((float*)handle.DataCPU);
+                _adaptation = std::min((_scene->GetCache().GetDeltaTime() * 2.5f), 1.0f);
+            }
+            else
+            {
+                lumData[0] = 0.0001f;
+                _adaptation = 0.0f;
+            }
+
+            std::uint32_t size = viewportSize.x * viewportSize.y;
+            float delta = _scene->GetCache().GetDeltaTime();
+            float tau = 1.1f;
+
+            commandList.SetConstants(0, 1, &size);
+            commandList.SetConstants(0, 1, &minLogLuminance, 1);
+            commandList.SetConstants(0, 1, &logLuminanceRange, 2);
+            commandList.SetConstants(0, 1, &delta, 3);
+            commandList.SetConstants(0, 1, &_adaptation, 4);
+            commandList.SetSRV(1, prevAvgLuminance.DataGPU);
+            commandList.SetUAV(2, histogram.DataGPU);
+            commandList.SetUAV(3, avgLum.DataGPU);
+
+            int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 16.0f);
+            int yThreadGroups = (uint32_t)std::ceilf(viewportSize.y / 16.0f);
+            commandList.Dispatch();
+        }
+        PIXEndEvent(commandList.GetDXCommandList().Get());
+
+        commandList.Close();
     }
 
     void ToneMappingPass::Downscale1()
@@ -142,7 +257,7 @@ namespace render
     {
         TaskGPU* task = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE, &_toneMappingPipeline);
         task->SetName("tonemapping");
-        task->AddDependency("downscale2");
+        task->AddDependency("avg_lum");
         _tasks.push_back(task);
 
         dx12::CommandList& commandList = *task->GetCommandLists().front();
@@ -158,7 +273,7 @@ namespace render
 
             _frame->BindDescriptorHeaps(commandList);
 
-            CacheGPU::DataHandle avgLuminance = _frame->GetCache().GetResourcePlacement("avgLumFinal");
+            CacheGPU::DataHandle avgLuminance = _frame->GetCache().GetResourcePlacement("avgLumHist");
 
             float grey = 0.725f;
             float white = 5.5f;

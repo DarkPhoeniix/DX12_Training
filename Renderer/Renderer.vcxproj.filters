@@ -32,6 +32,8 @@
     <FxCompile Include="Shaders\_deprecated\PostFX_cs.hlsl" />
     <FxCompile Include="Shaders\Skybox_cs.hlsl" />
     <FxCompile Include="Shaders\_deprecated\SwirlPostFX_cs.hlsl" />
+    <FxCompile Include="Shaders\HDR\BuildLuminanceHistogram.hlsl" />
+    <FxCompile Include="Shaders\HDR\AverageLuminance.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Render\Helpers\DrawHelpers.cpp" />
@@ -186,6 +188,8 @@
     <None Include="Shaders\_deprecated\SemiAmbientLighting.hlsli" />
     <None Include="Shaders\_deprecated\Mesh_rootsig.hlsli" />
     <None Include="Shaders\Skybox_rootsig.hlsli" />
+    <None Include="PipelineDescriptions\BuildLuminanceHistogramPipeline.tech" />
+    <None Include="PipelineDescriptions\AverageLuminancePipeline.tech" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="PipelineDescriptions\AABBRenderPipeline.blend" />
