@@ -32,6 +32,9 @@ namespace core
             _windowStyle, CW_USEDEFAULT, CW_USEDEFAULT,
             _width, _height, nullptr, nullptr, hInstance, this);
 
+        _width = width;
+        _height = height;
+
         if (!_windowHandle)
         {
             MessageBoxA(NULL, "Could not create the render window.", "Error", MB_OK | MB_ICONERROR);
@@ -135,16 +138,10 @@ namespace core
         break;
         case WM_SIZE:
         {
-            int width = ((int)(short)LOWORD(lParam));
-            int height = ((int)(short)HIWORD(lParam));
+            _width = ((int)(short)LOWORD(lParam));
+            _height = ((int)(short)HIWORD(lParam));
 
-            RECT windowRect = { 0, 0, width, height };
-            AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
-
-            _width = windowRect.right - windowRect.left;
-            _height = windowRect.bottom - windowRect.top;
-
-            ResizeEvent resizeEventArgs(width, height);
+            ResizeEvent resizeEventArgs(_width, _height);
             for (events::IWindowEventListener* listener : _eventListeners)
             {
                 listener->OnResize(resizeEventArgs);
