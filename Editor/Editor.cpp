@@ -140,6 +140,13 @@ namespace gui
         ImGui::DestroyContext();
 
         Instance()._srvDescriptorHeap.reset();
+
+        if (_instance)
+        {
+            delete _instance;
+        }
+
+        _instance = nullptr;
     }
 
     void Editor::NewFrame()

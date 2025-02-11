@@ -3,7 +3,6 @@
 #include "GUIPass.h"
 
 #include "Editor.h"
-
 #include "Scene/Entity/Components/Camera.h"
 
 namespace render
