@@ -98,8 +98,6 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
 
             frame.Init({ (uint32_t)_win32Window->GetWidth(), (uint32_t)_win32Window->GetHeight() });
         }
-
-        gui::Editor::Init(_win32Window->GetWindowHandle());
     }
 
     _win32Window->AddEventListener(pApp.get());
@@ -113,6 +111,8 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
     }
     _currentFrame->SetSyncPoint(uploadTask->GetFence());
     _ExecuteFrameTasks();
+
+    gui::Editor::Init(_win32Window->GetWindowHandle());
 
     MSG msg = { 0 };
     while (msg.message != WM_QUIT)

@@ -2,6 +2,11 @@
 
 #include "Editor.h"
 
+#include "Scene/Scene.h"
+#include "Scene/Entity/Components/Camera.h"
+#include "Widgets/DebugInfoWidget.h"
+#include "Widgets/SceneTreeWidget.h"
+
 #include "CommandList.h"
 #include "SwapChain.h"
 
@@ -124,6 +129,8 @@ namespace gui
                 }
             }
         }
+
+        CreateWidgets();
     }
 
     void Editor::Destroy()
@@ -143,6 +150,39 @@ namespace gui
         ImGui::NewFrame();
     }
 
+    void Editor::Update()
+    {
+        std::shared_ptr<scene::Entity> activeCamera = Instance()._scene->FindNodeByComponentName("Camera");
+        scene::Camera* cameraComponent = activeCamera->GetComponentAs<scene::Camera>("Camera");
+        scene::Viewport vp = cameraComponent->GetViewport();
+
+        DirectX::XMUINT2 viewportSize = vp.GetSize();
+
+        float positionX = (float)(viewportSize.x - (viewportSize.x * 0.2f));
+        float positionY = 0.0f;
+        float sizeX = (float)(viewportSize.x * 0.2f);
+        float sizeY = (float)(viewportSize.y);
+
+        ImGui::SetNextWindowPos({ 0.0f, 0.0f });
+        ImGui::SetNextWindowSize({ 0.0f, 0.0f });
+
+        if (ImGui::Begin("Debug Information", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            Instance()._debugInfoWidget->Update();
+
+            ImGui::End();
+        }
+
+        ImGui::SetNextWindowPos({ positionX, positionY });
+        ImGui::SetNextWindowSize({ sizeX, sizeY });
+
+        ImGui::Begin("Scene", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove);
+        {
+            Instance()._sceneTreeWidget->Update();
+        }
+        ImGui::End();
+    }
+
     void Editor::Render(dx12::CommandList& commandList)
     {
         ImGui::Render();
@@ -150,7 +190,18 @@ namespace gui
         ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList.GetDXCommandList().Get());
     }
 
+    void Editor::SetScene(scene::Scene* scene)
+    {
+        Instance()._scene = scene;
+    }
+
+    scene::Scene* Editor::GetScene()
+    {
+        return Instance()._scene;
+    }
+
     Editor::Editor()
+        : _scene(nullptr)
     {
         dx12::DescriptorHeapDescription desc;
         desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
@@ -160,6 +211,14 @@ namespace gui
         _srvDescriptorHeap = std::make_shared<dx12::DescriptorHeap>();
         _srvDescriptorHeap->Create(desc);
         _srvDescriptorHeap->SetName("GUI SRV descriptor heap");
+    }
+
+    void Editor::CreateWidgets()
+    {
+        ASSERT(Instance()._scene, "Scene is not initialized");
+
+        Instance()._sceneTreeWidget = std::make_shared<SceneTreeWidget>();
+        Instance()._debugInfoWidget = std::make_shared<DebugInfoWidget>();
     }
 
     Editor& Editor::Instance()

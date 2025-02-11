@@ -2,29 +2,31 @@
 
 #include "SceneTreeWidget.h"
 
+#include "Editor.h"
 #include "Scene/Scene.h"
 #include "Scene/Entity/Components/Camera.h"
 
 namespace gui
 {
-    SceneTreeWidget::SceneTreeWidget(const scene::Scene& scene)
-        : _scene(&scene)
-    {
-    }
-
     void SceneTreeWidget::Init()
     {
-        std::shared_ptr<scene::Entity> activeCamera = _scene->FindNodeByComponentName("Camera");
-        scene::Camera* cameraComponent = activeCamera->GetComponentAs<scene::Camera>("Camera");
-        _viewport = &cameraComponent->GetViewport();
+        IWidget::Init();
     }
 
     void SceneTreeWidget::Destroy()
     {
+        IWidget::Destroy();
     }
 
     void SceneTreeWidget::Update()
     {
+        IWidget::Update();
+
+        scene::Scene* scene = Editor::GetScene();
+        std::shared_ptr<scene::Entity> activeCamera = scene->FindNodeByComponentName("Camera");
+        scene::Camera* cameraComponent = activeCamera->GetComponentAs<scene::Camera>("Camera");
+        _viewport = &cameraComponent->GetViewport();
+
         DirectX::XMUINT2 viewportSize = _viewport->GetSize();
 
         float positionX = (float)(viewportSize.x - (viewportSize.x * 0.2f));
@@ -32,16 +34,14 @@ namespace gui
         float sizeX = (float)(viewportSize.x * 0.2f);
         float sizeY = (float)(viewportSize.y);
 
-        ImGui::SetNextWindowPos({ positionX, positionY });
-        ImGui::SetNextWindowSize({ sizeX, sizeY });
-
-        ImGui::Begin("Scene Tree");
-        for (const auto& root : _scene->GetRootNodes())
+        ImGui::BeginChild("Scene Tree", {0, sizeY * 0.4f}, ImGuiChildFlags_FrameStyle);
+        ImGui::SeparatorText("Scene Hierarchy");
+        for (const auto& root : scene->GetRootNodes())
         {
             Update(root);
         }
 
-        ImGui::End();
+        ImGui::EndChild();
     }
 
     void SceneTreeWidget::Update(const std::shared_ptr<scene::Entity>& entity)
@@ -52,7 +52,6 @@ namespace gui
             {
                 Update(child);
             }
-
             ImGui::TreePop();
         }
     }
