@@ -1,5 +1,10 @@
 #pragma once
 
+namespace scene
+{
+    class Viewport;
+}
+
 namespace gui
 {
     class IWidget

@@ -2,7 +2,7 @@
 
 #include "IRenderPass.h"
 
-#include "GUI/Widgets/SceneTreeWidget.h"
+#include "Widgets/SceneTreeWidget.h"
 
 namespace render
 {

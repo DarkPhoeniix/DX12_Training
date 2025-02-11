@@ -4,7 +4,7 @@
 
 #include "events/RenderEvent.h"
 #include "events/UpdateEvent.h"
-#include "GUI/GUI.h"
+#include "Editor.h"
 #include "input/inputDevice.h"
 #include "Render/DXRenderer.h"
 #include "Resources/Resources.h"
@@ -99,7 +99,7 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
             frame.Init({ (uint32_t)_win32Window->GetWidth(), (uint32_t)_win32Window->GetHeight() });
         }
 
-        GUI::Init(_win32Window->GetWindowHandle());
+        gui::Editor::Init(_win32Window->GetWindowHandle());
     }
 
     _win32Window->AddEventListener(pApp.get());
@@ -125,7 +125,7 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
 
         events::inputDevice::Instance().PollEvents();
 
-        GUI::NewFrame();
+        gui::Editor::NewFrame();
 
         _UpdateCall(pApp);
         _RenderCall(pApp);
@@ -146,7 +146,7 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
 
 void Application::Quit(int exitCode)
 {
-    GUI::Destroy();
+    gui::Editor::Destroy();
     DebugInfo::Destroy();
     dx12::Device::Destroy();
 

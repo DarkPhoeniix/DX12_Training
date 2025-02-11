@@ -1,6 +1,8 @@
-#include "RendererPCH.h"
+#include "EditorPCH.h"
 
 #include "IWidget.h"
+
+#include "Scene/Entity/Components/Camera.h"
 
 namespace gui
 {
