@@ -1,3 +1,3 @@
-# DX12 Sandbox
+# DX12 Render Engine
 
-![PBR demo](Saved/Screenshots/Demo_PBR.png)
+![Demo](Saved/Screenshots/Demo.png)
