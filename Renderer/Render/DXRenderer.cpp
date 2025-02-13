@@ -58,13 +58,15 @@ namespace render
         render::DrawHelper::Init();
 
         RECT windowSize;
-        GetWindowRect(_windowHandle, &windowSize);
+        GetClientRect(_windowHandle, &windowSize);
         uint32_t windowWidth = windowSize.right - windowSize.left;
         uint32_t windowHeight = windowSize.bottom - windowSize.top;
 
         // Camera Setup
         std::shared_ptr<scene::Entity> cameraEntity = std::make_shared<scene::Entity>(&_scene.GetCache());
         {
+            cameraEntity->SetName("Camera");
+
             XMVECTOR pos = XMVectorSet(15.0f, 25.0f, 35.0f, 1.0f);
             XMVECTOR target = XMVectorSet(-5.0f, 18.0f, -5.0f, 1.0f);
             XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
@@ -73,7 +75,7 @@ namespace render
             cameraComponent->LookAt(pos, target, up);
             cameraComponent->SetViewport(scene::Viewport({ windowWidth, windowHeight }));
             cameraComponent->SetLens(60.0f, 0.1f, 1000.0f);
-            cameraComponent->SetSpeed(70.0f);
+            cameraComponent->Speed = 70.0f;
 
             std::shared_ptr<scene::Transformation> transformComponent = std::make_shared<scene::Transformation>();
             transformComponent->Transform = cameraComponent->View();

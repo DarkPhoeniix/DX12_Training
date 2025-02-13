@@ -83,7 +83,7 @@ namespace scene
 		, _position(XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f))
 		, _up(XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f))
 		, _viewport()
-		, _speed(100.0f)
+		, Speed(100.0f)
 	{
 		_UpdateFrustum();
 	}
@@ -96,7 +96,7 @@ namespace scene
 
 	void Camera::Update(XMVECTOR direction)
 	{
-		XMMATRIX movement = XMMatrixTranslationFromVector(direction * _speed);
+		XMMATRIX movement = XMMatrixTranslationFromVector(direction * Speed);
 
 		_position = XMVector4Transform(_position, movement);
 		_target = XMVector4Transform(_target, movement);
@@ -185,57 +185,11 @@ namespace scene
 
 	void Camera::SetLens(float fov, float nearZ, float farZ)
 	{
-		_fov = fov;
-		_nearZ = nearZ;
-		_farZ = farZ;
+		FoV = fov;
+		NearZ = nearZ;
+		FarZ = farZ;
 
 		_BuildProjection();
-	}
-
-	void Camera::SetFOV(float fov)
-	{
-		_fov = fov;
-
-		_BuildProjection();
-	}
-
-	float Camera::GetFOV() const
-	{
-		return _fov;
-	}
-
-	void Camera::SetNearZ(float nearZ)
-	{
-		_nearZ = nearZ;
-
-		_BuildProjection();
-	}
-
-	float Camera::GetNearZ() const
-	{
-		return _nearZ;
-	}
-
-	void Camera::SetFarZ(float farZ)
-	{
-		_farZ = farZ;
-
-		_BuildProjection();
-	}
-
-	float Camera::GetFarZ() const
-	{
-		return _farZ;
-	}
-
-	void Camera::SetSpeed(float s)
-	{
-		_speed = s;
-	}
-
-	float Camera::GetSpeed() const
-	{
-		return _speed;
 	}
 
 	void Camera::_BuildView()
@@ -247,7 +201,7 @@ namespace scene
 
 	void Camera::_BuildProjection()
 	{
-		_projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(_fov), _viewport.GetAspectRatio(), _nearZ, _farZ);
+		_projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(FoV), _viewport.GetAspectRatio(), NearZ, FarZ);
 		_UpdateFrustum();
 	}
 

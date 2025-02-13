@@ -57,6 +57,11 @@ namespace dx12
         return _instance->_device;
     }
 
+    ComPtr<IDXGIAdapter4> Device::GetDXAdapter()
+    {
+        return _instance->_adapter;
+    }
+
     ID3D12CommandQueue* Device::GetStreamQueue()
     {
         return _instance->_queueStream.Get();

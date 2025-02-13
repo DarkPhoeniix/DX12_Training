@@ -42,6 +42,11 @@ namespace scene
         return _rootNodes;
     }
 
+    const std::vector<std::shared_ptr<Entity>>& Scene::GetRootNodes() const
+    {
+        return _rootNodes;
+    }
+
     std::shared_ptr<Entity> Scene::FindNodeByName(const std::string& name) const
     {
         std::shared_ptr<Entity> currentEntity = nullptr;

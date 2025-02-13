@@ -8,6 +8,7 @@
         "Skybox.node",
         "SpotLight1.node",
         "Pink.node",
+        "Blue.node",
         "Icosphere.node"
     ]
 }

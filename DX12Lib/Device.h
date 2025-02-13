@@ -18,6 +18,7 @@ namespace dx12
         static void BindSwapChain(SwapChain* swapChain);
 
         static ComPtr<ID3D12Device2> GetDXDevice();
+        static ComPtr<IDXGIAdapter4> GetDXAdapter();
 
         static ID3D12CommandQueue* GetComputeQueue();
         static ID3D12CommandQueue* GetStreamQueue();

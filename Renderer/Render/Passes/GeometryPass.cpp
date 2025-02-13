@@ -128,9 +128,7 @@ namespace render
             commandList.SetViewport(_activeCamera->GetViewport());
             commandList.SetRenderTargets({ albedoMetalnessHandle, normalSpecularHandle }, &depthHandle);
 
-#if defined(_DEBUG)
             DebugInfo::StartStatCollecting(commandList);
-#endif
 
             helpers::SetupSceneDataGPU(*_scene, commandList, _frame);
 
@@ -143,9 +141,7 @@ namespace render
                 DrawEntity(node, commandList, _frame);
             }
 
-#if defined(_DEBUG)
             DebugInfo::EndStatCollecting(commandList);
-#endif
 
             commandList.TransitionBarrier(_gBuffer->GetDepthTexture(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
             commandList.TransitionBarrier(_gBuffer->GetAlbedoMetalnessTexture(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
