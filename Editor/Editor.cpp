@@ -171,8 +171,6 @@ namespace gui
         float sizeX = (float)(viewportSize.x * 0.2f);
         float sizeY = (float)(viewportSize.y);
 
-        ImGui::ShowDemoWindow();
-
         ImGui::SetNextWindowPos({ 0.0f, 0.0f });
         ImGui::SetNextWindowSize({ 0.0f, 0.0f });
 
