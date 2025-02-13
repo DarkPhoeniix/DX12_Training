@@ -199,7 +199,7 @@ namespace helpers
                 (1.0f / (float)viewport.GetSize().x),
                 (1.0f / (float)viewport.GetSize().y)
             };
-            sceneDesc->NearFar = { camera->GetNearZ(), camera->GetFarZ() };
+            sceneDesc->NearFar = { camera->NearZ, camera->FarZ };
 
             sceneDesc->LightsNum = lightsNum;
         }

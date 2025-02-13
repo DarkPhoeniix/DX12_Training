@@ -59,17 +59,13 @@ namespace scene
 
 		void SetLens(float fov, float nearZ, float farZ);
 
-		void SetFOV(float fov);
-		float GetFOV() const;
+		// Lens params
+		float FoV;
+		float NearZ;
+		float FarZ;
 
-		void SetNearZ(float nearZ);
-		float GetNearZ() const;
-
-		void SetFarZ(float farZ);
-		float GetFarZ() const;
-
-		void SetSpeed(float s);
-		float GetSpeed() const;
+		// Camera speed
+		float Speed;
 
 	private:
 		// Constructs the view matrix based on the camera's basis
@@ -92,13 +88,5 @@ namespace scene
 		FrustumVolume _frustum;
 
 		Viewport _viewport;
-
-		// Lens params
-		float _fov;
-		float _nearZ;
-		float _farZ;
-
-		// Camera speed
-		float _speed;
 	};
 } // namespace scene

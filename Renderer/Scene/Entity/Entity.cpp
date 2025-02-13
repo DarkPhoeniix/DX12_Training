@@ -10,6 +10,11 @@ namespace scene
     {
     }
 
+    const std::vector<std::shared_ptr<IComponent>>& Entity::GetComponents() const
+    {
+        return _components;
+    }
+
     IComponent* Entity::GetComponent(const std::string_view& name)
     {
         IComponent* result = nullptr;

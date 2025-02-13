@@ -6,6 +6,7 @@
 #include "Scene/Entity/Components/Camera.h"
 #include "Widgets/DebugInfoWidget.h"
 #include "Widgets/SceneTreeWidget.h"
+#include "Widgets/EntityComponentsWidget.h"
 
 #include "CommandList.h"
 #include "SwapChain.h"
@@ -170,15 +171,16 @@ namespace gui
         float sizeX = (float)(viewportSize.x * 0.2f);
         float sizeY = (float)(viewportSize.y);
 
+        ImGui::ShowDemoWindow();
+
         ImGui::SetNextWindowPos({ 0.0f, 0.0f });
         ImGui::SetNextWindowSize({ 0.0f, 0.0f });
 
         if (ImGui::Begin("Debug Information", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize))
         {
             Instance()._debugInfoWidget->Update();
-
-            ImGui::End();
         }
+        ImGui::End();
 
         ImGui::SetNextWindowPos({ positionX, positionY });
         ImGui::SetNextWindowSize({ sizeX, sizeY });
@@ -186,6 +188,7 @@ namespace gui
         ImGui::Begin("Scene", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove);
         {
             Instance()._sceneTreeWidget->Update();
+            Instance()._entityComponentsWidget->Update();
         }
         ImGui::End();
     }
@@ -207,8 +210,19 @@ namespace gui
         return Instance()._scene;
     }
 
+    void Editor::SetSelectedEntity(scene::Entity* entity)
+    {
+        Instance()._selectedEntity = entity;
+    }
+
+    scene::Entity* Editor::GetSelectedEntity()
+    {
+        return Instance()._selectedEntity;
+    }
+
     Editor::Editor()
         : _scene(nullptr)
+        , _selectedEntity(nullptr)
     {
         dx12::DescriptorHeapDescription desc;
         desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
@@ -226,6 +240,7 @@ namespace gui
 
         Instance()._sceneTreeWidget = std::make_shared<SceneTreeWidget>();
         Instance()._debugInfoWidget = std::make_shared<DebugInfoWidget>();
+        Instance()._entityComponentsWidget = std::make_shared<EntityComponentsWidget>();
     }
 
     Editor& Editor::Instance()

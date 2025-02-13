@@ -11,6 +11,7 @@ namespace scene
     public:
         explicit Entity(SceneCache* sceneCache, Entity* parent = nullptr);
 
+        const std::vector<std::shared_ptr<IComponent>>& GetComponents() const;
         IComponent* GetComponent(const std::string_view& name);
         template<typename Type>
         Type* GetComponentAs(const std::string_view& name);

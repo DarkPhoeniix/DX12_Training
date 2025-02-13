@@ -2,13 +2,25 @@
 
 #include "DebugInfoWidget.h"
 
-#include "Editor.h"
 #include "Utility/DebugInfo.h"
-#include "Scene/Scene.h"
-#include "Scene/Entity/Components/Camera.h"
 
 namespace gui
 {
+    namespace
+    {
+        std::string ConvertWCharToString(const WCHAR* wideStr)
+        {
+            if (!wideStr) return "";
+
+            size_t size_needed = 128;
+            std::string result(size_needed, 0);
+            size_t i;
+            wcstombs_s(&i, &result[0], size_needed, wideStr, size_needed - 1);
+
+            return result;
+        }
+    }
+
     void DebugInfoWidget::Init()
     {
         IWidget::Init();
@@ -50,7 +62,20 @@ namespace gui
                 ImGui::Text("Mouse delta: (%g, %g)", io.MouseDelta.x, io.MouseDelta.y);
             }
 
-            ImGui::EndChild();
+            if (ImGui::CollapsingHeader("Adapter"))
+            {
+                DXGI_ADAPTER_DESC desc;
+                dx12::Device::GetDXAdapter()->GetDesc(&desc);
+                std::string a = ConvertWCharToString(desc.Description);
+                ImGui::Text("Adapter: %s", a.c_str());
+
+                DXGI_QUERY_VIDEO_MEMORY_INFO memoryInfo = {};
+                dx12::Device::GetDXAdapter()->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &memoryInfo);
+
+                ImGui::Text("Memory usage:  %i MB", memoryInfo.CurrentUsage / (1024 * 1024));
+                ImGui::Text("Memory budget: %i MB", memoryInfo.Budget / (1024 * 1024));
+            }
         }
+        ImGui::EndChild();
     }
 } // namespace gui

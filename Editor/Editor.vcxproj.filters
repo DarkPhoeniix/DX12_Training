@@ -30,6 +30,9 @@
     <ClInclude Include="Widgets\DebugInfoWidget.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Widgets\EntityComponentsWidget.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="EditorPCH.cpp">
@@ -45,6 +48,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Widgets\DebugInfoWidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Widgets\EntityComponentsWidget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

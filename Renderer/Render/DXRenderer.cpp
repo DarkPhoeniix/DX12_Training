@@ -75,7 +75,7 @@ namespace render
             cameraComponent->LookAt(pos, target, up);
             cameraComponent->SetViewport(scene::Viewport({ windowWidth, windowHeight }));
             cameraComponent->SetLens(60.0f, 0.1f, 1000.0f);
-            cameraComponent->SetSpeed(70.0f);
+            cameraComponent->Speed = 70.0f;
 
             std::shared_ptr<scene::Transformation> transformComponent = std::make_shared<scene::Transformation>();
             transformComponent->Transform = cameraComponent->View();

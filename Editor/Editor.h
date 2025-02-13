@@ -9,6 +9,7 @@ namespace dx12
 
 namespace scene
 {
+    class Entity;
     class Scene;
 } // namespace scene
 
@@ -18,6 +19,7 @@ namespace gui
 {
     class DebugInfoWidget;
     class SceneTreeWidget;
+    class EntityComponentsWidget;
     
     class Editor
     {
@@ -35,6 +37,9 @@ namespace gui
         static void SetScene(scene::Scene* scene);
         static scene::Scene* GetScene();
 
+        static void SetSelectedEntity(scene::Entity* entity);
+        static scene::Entity* GetSelectedEntity();
+
     private:
         Editor();
         ~Editor() = default;
@@ -44,9 +49,11 @@ namespace gui
         static Editor& Instance();
 
         scene::Scene* _scene;
+        scene::Entity* _selectedEntity;
 
         std::shared_ptr<SceneTreeWidget> _sceneTreeWidget;
         std::shared_ptr<DebugInfoWidget> _debugInfoWidget;
+        std::shared_ptr<EntityComponentsWidget> _entityComponentsWidget;
 
         std::shared_ptr<dx12::DescriptorHeap> _srvDescriptorHeap;
 

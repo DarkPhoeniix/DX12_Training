@@ -46,8 +46,17 @@ namespace gui
 
     void SceneTreeWidget::Update(const std::shared_ptr<scene::Entity>& entity)
     {
-        if (ImGui::TreeNodeEx(entity->GetName().c_str()))
+        bool hasChildren = entity->GetChildrenNodes().empty();
+        ImGuiTreeNodeFlags flags = 0;
+        flags |= hasChildren ? ImGuiTreeNodeFlags_Leaf : 0;
+
+        if (ImGui::TreeNodeEx(entity->GetName().c_str(), flags))
         {
+            if (ImGui::IsItemClicked())
+            {
+                Editor::SetSelectedEntity(entity.get());
+            }
+
             for (const auto& child : entity->GetChildrenNodes())
             {
                 Update(child);
