@@ -3,7 +3,7 @@
 #include "EntityComponentsWidget.h"
 
 #include "Editor.h"
-#include "Scene/Scene.h"
+#include "Scene/Entity/Entity.h"
 #include "Scene/Entity/Components/Animation.h"
 #include "Scene/Entity/Components/Armature.h"
 #include "Scene/Entity/Components/Camera.h"
@@ -12,8 +12,6 @@
 #include "Scene/Entity/Components/Mesh.h"
 #include "Scene/Entity/Components/Skybox.h"
 #include "Scene/Entity/Components/Transformation.h"
-
-#include <format>
 
 namespace gui
 {
@@ -218,10 +216,10 @@ namespace gui
     {
         if (ImGui::CollapsingHeader(material->ComponentName.c_str()))
         {
-            ImGui::Text(std::format("Albedo: {}", material->Albedo->GetName()).c_str());
-            ImGui::Text(std::format("Metalness: {}", material->Metalness->GetName()).c_str());
-            ImGui::Text(std::format("Roughness: {}", material->Roughness->GetName()).c_str());
-            ImGui::Text(std::format("Normal map: {}", material->NormalMap->GetName()).c_str());
+            ImGui::Text("Albedo: %s", material->Albedo->GetName());
+            ImGui::Text("Metalness: %s", material->Metalness->GetName());
+            ImGui::Text("Roughness: %s", material->Roughness->GetName());
+            ImGui::Text("Normal map: %s", material->NormalMap->GetName());
         }
     }
 
@@ -229,7 +227,7 @@ namespace gui
     {
         if (ImGui::CollapsingHeader(mesh->ComponentName.c_str()))
         {
-            ImGui::Text(std::format("Triangles: {}", (mesh->IndexData.size() / 3)).c_str());
+            ImGui::Text("Triangles: %i", (mesh->IndexData.size() / 3));
         }
     }
 
@@ -237,7 +235,7 @@ namespace gui
     {
         if (ImGui::CollapsingHeader(skybox->ComponentName.c_str()))
         {
-            ImGui::Text(std::format("Texture: {}", skybox->SkydomeTexture->GetName()).c_str());
+            ImGui::Text("Texture: %s", skybox->SkydomeTexture->GetName());
         }
     }
 

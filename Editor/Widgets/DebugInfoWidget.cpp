@@ -42,13 +42,13 @@ namespace gui
             if (ImGui::CollapsingHeader("Pipeline statistics"))
             {
                 D3D12_QUERY_DATA_PIPELINE_STATISTICS stats = DebugInfo::GetPipelineStatisctics();
-                ImGui::Text(std::string("Primitives: " + std::to_string(stats.IAPrimitives)).c_str());
-                ImGui::Text(std::string("VS invocs: " + std::to_string(stats.VSInvocations)).c_str());
-                ImGui::Text(std::string("GS invocs: " + std::to_string(stats.GSInvocations)).c_str());
-                ImGui::Text(std::string("PS invocs: " + std::to_string(stats.PSInvocations)).c_str());
+                ImGui::Text("Primitives: %i", stats.IAPrimitives);
+                ImGui::Text("VS invocs: %i", stats.VSInvocations);
+                ImGui::Text("GS invocs: %i", stats.GSInvocations);
+                ImGui::Text("PS invocs: %i", stats.PSInvocations);
             }
         
-            if (ImGui::CollapsingHeader("inputs"))
+            if (ImGui::CollapsingHeader("Inputs"))
             {
                 ImGuiIO& io = ImGui::GetIO();
                 if (ImGui::IsMousePosValid())

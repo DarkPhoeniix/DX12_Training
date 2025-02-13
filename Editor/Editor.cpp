@@ -185,7 +185,7 @@ namespace gui
         ImGui::SetNextWindowPos({ positionX, positionY });
         ImGui::SetNextWindowSize({ sizeX, sizeY });
 
-        ImGui::Begin("Scene", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove);
+        if (ImGui::Begin("Scene", nullptr, ImGuiWindowFlags_NoMove))
         {
             Instance()._sceneTreeWidget->Update();
             Instance()._entityComponentsWidget->Update();
