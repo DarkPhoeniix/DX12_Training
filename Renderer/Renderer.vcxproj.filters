@@ -1,26 +1,26 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <FxCompile Include="Shaders\AABB_gs.hlsl" />
-    <FxCompile Include="Shaders\AABB_ps.hlsl" />
-    <FxCompile Include="Shaders\AABB_vs.hlsl" />
-    <FxCompile Include="Shaders\Armature_gs.hlsl" />
-    <FxCompile Include="Shaders\Armature_ps.hlsl" />
-    <FxCompile Include="Shaders\Armature_vs.hlsl" />
+    <FxCompile Include="Shaders\DebugDraw\AABB_gs.hlsl" />
+    <FxCompile Include="Shaders\DebugDraw\AABB_ps.hlsl" />
+    <FxCompile Include="Shaders\DebugDraw\AABB_vs.hlsl" />
+    <FxCompile Include="Shaders\DebugDraw\Armature_gs.hlsl" />
+    <FxCompile Include="Shaders\DebugDraw\Armature_ps.hlsl" />
+    <FxCompile Include="Shaders\DebugDraw\Armature_vs.hlsl" />
     <FxCompile Include="Shaders\DebugDraw\Cone_gs.hlsl" />
     <FxCompile Include="Shaders\DebugDraw\Cone_ps.hlsl" />
     <FxCompile Include="Shaders\DebugDraw\Cone_vs.hlsl" />
     <FxCompile Include="Shaders\DebugDraw\Sphere_gs.hlsl" />
     <FxCompile Include="Shaders\DebugDraw\Sphere_ps.hlsl" />
     <FxCompile Include="Shaders\DebugDraw\Sphere_vs.hlsl" />
-    <FxCompile Include="Shaders\DeferredShading.hlsl" />
-    <FxCompile Include="Shaders\FXAA_cs.hlsl" />
-    <FxCompile Include="Shaders\GPass_ps.hlsl" />
-    <FxCompile Include="Shaders\GPass_vs.hlsl" />
+    <FxCompile Include="Shaders\DeferredShading\DeferredShading.hlsl" />
+    <FxCompile Include="Shaders\AntiAliasing\FXAA_cs.hlsl" />
+    <FxCompile Include="Shaders\GeometryPass\GPass_ps.hlsl" />
+    <FxCompile Include="Shaders\GeometryPass\GPass_vs.hlsl" />
     <FxCompile Include="Shaders\HDR\ToneMapping.hlsl" />
-    <FxCompile Include="Shaders\OBB_gs.hlsl" />
-    <FxCompile Include="Shaders\OBB_ps.hlsl" />
-    <FxCompile Include="Shaders\OBB_vs.hlsl" />
+    <FxCompile Include="Shaders\DebugDraw\OBB_gs.hlsl" />
+    <FxCompile Include="Shaders\DebugDraw\OBB_ps.hlsl" />
+    <FxCompile Include="Shaders\DebugDraw\OBB_vs.hlsl" />
     <FxCompile Include="Shaders\Shadows\ShadowMapping_PointLight_vs.hlsl" />
     <FxCompile Include="Shaders\Shadows\ShadowMapping_PointLight_gs.hlsl" />
     <FxCompile Include="Shaders\Shadows\ShadowMapping_SpotLight_vs.hlsl" />
@@ -28,7 +28,7 @@
     <FxCompile Include="Shaders\_deprecated\Mesh_vs.hlsl" />
     <FxCompile Include="Shaders\_deprecated\NegativePostFX_cs.hlsl" />
     <FxCompile Include="Shaders\_deprecated\PostFX_cs.hlsl" />
-    <FxCompile Include="Shaders\Skybox_cs.hlsl" />
+    <FxCompile Include="Shaders\Skybox\Skybox_cs.hlsl" />
     <FxCompile Include="Shaders\_deprecated\SwirlPostFX_cs.hlsl" />
     <FxCompile Include="Shaders\HDR\BuildLuminanceHistogram.hlsl" />
     <FxCompile Include="Shaders\HDR\AverageLuminance.hlsl" />
@@ -162,18 +162,18 @@
     <None Include="PipelineDescriptions\Shadow_SpotLight.tech" />
     <None Include="PipelineDescriptions\Raster_Solid_CullBack.raster" />
     <None Include="PipelineDescriptions\ToneMappingPipeline.tech" />
-    <None Include="Shaders\AABB_rootsig.hlsli" />
-    <None Include="Shaders\Armature_rootsig.hlsli" />
+    <None Include="Shaders\DebugDraw\AABB_rootsig.hlsli" />
+    <None Include="Shaders\DebugDraw\Armature_rootsig.hlsli" />
     <None Include="Shaders\Common.hlsli" />
     <None Include="Shaders\DebugDraw\Cone_rootsig.hlsli" />
     <None Include="Shaders\DebugDraw\Sphere_rootsig.hlsli" />
-    <None Include="Shaders\DeferredShading_rootsig.hlsli" />
+    <None Include="Shaders\DeferredShading\DeferredShading_rootsig.hlsli" />
     <None Include="Shaders\DepthFuncs.hlsli" />
-    <None Include="Shaders\FXAA_helpers.hlsli" />
-    <None Include="Shaders\FXAA_rootsig.hlsli" />
-    <None Include="Shaders\GPass_rootsig.hlsli" />
+    <None Include="Shaders\AntiAliasing\FXAA_helpers.hlsli" />
+    <None Include="Shaders\AntiAliasing\FXAA_rootsig.hlsli" />
+    <None Include="Shaders\GeometryPass\GPass_rootsig.hlsli" />
     <None Include="Shaders\HDR\ToneMapping.hlsli" />
-    <None Include="Shaders\OBB_rootsig.hlsli" />
+    <None Include="Shaders\DebugDraw\OBB_rootsig.hlsli" />
     <None Include="Shaders\Shadows\ShadowMapping_rootsig.hlsli" />
     <None Include="Shaders\_deprecated\LambertLighting.hlsli" />
     <None Include="Shaders\LightingCommon.hlsli" />
@@ -181,7 +181,7 @@
     <None Include="Shaders\_deprecated\PostFX_rootsig.hlsli" />
     <None Include="Shaders\_deprecated\SemiAmbientLighting.hlsli" />
     <None Include="Shaders\_deprecated\Mesh_rootsig.hlsli" />
-    <None Include="Shaders\Skybox_rootsig.hlsli" />
+    <None Include="Shaders\Skybox\Skybox_rootsig.hlsli" />
     <None Include="PipelineDescriptions\BuildLuminanceHistogramPipeline.tech" />
     <None Include="PipelineDescriptions\AverageLuminancePipeline.tech" />
   </ItemGroup>

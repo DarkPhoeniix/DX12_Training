@@ -1,5 +1,5 @@
 
-#include "Common.hlsli"
+#include "../Common.hlsli"
 
 float rgbToLuma(float3 rgb)
 {

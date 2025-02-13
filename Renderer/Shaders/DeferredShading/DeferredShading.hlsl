@@ -1,22 +1,22 @@
 
 #include "DeferredShading_rootsig.hlsli"
 
-#include "Common.hlsli"
-#include "LightingCommon.hlsli"
-#include "DepthFuncs.hlsli"
-#include "PBR.hlsli"
+#include "../Common.hlsli"
+#include "../LightingCommon.hlsli"
+#include "../DepthFuncs.hlsli"
+#include "../PBR.hlsli"
 
-StructuredBuffer<LightDesc> Lights : register(t0);
+StructuredBuffer<LightDesc> Lights          : register(t0);
 
-Texture2D<float4> PositionTexture : register(t1);
-Texture2D<float4> AlbedoMetalnessTexture : register(t2);
-Texture2D<float4> NormalRoughnessTexture : register(t3);
-Texture2D Textures2D[] : register(t4, space0);
-TextureCube TexturesCube[] : register(t5, space1);
-RWTexture2D<float4> TargetTexture : register(u0);
+Texture2D<float4> PositionTexture           : register(t1);
+Texture2D<float4> AlbedoMetalnessTexture    : register(t2);
+Texture2D<float4> NormalRoughnessTexture    : register(t3);
+Texture2D Textures2D[]                      : register(t4, space0);
+TextureCube TexturesCube[]                  : register(t4, space1);
+RWTexture2D<float4> TargetTexture           : register(u0);
 
-SamplerComparisonState ShadowSampler : register(s0);
-SamplerState PointSampler : register(s1);
+SamplerComparisonState ShadowSampler        : register(s0);
+SamplerState PointSampler                   : register(s1);
 
 void SetLightParams(in LightDesc light, inout Surface surface)
 {
@@ -55,20 +55,12 @@ float CalculateShadowAttenuation_PCF3x3(in LightDesc light, in Surface surface)
     float4 surfacePos = mul(surface.Position, VP);
     surfacePos /= surfacePos.w;
     
-    //if (surfacePos.x < -1.0f || surfacePos.x > 1.0f ||
-    //    surfacePos.y < -1.0f || surfacePos.y > 1.0f ||
-    //    surfacePos.z <  0.0f || surfacePos.z > 1.0f)
-    //{
-    //    return 0.0f;
-    //}
-    
     float3 UVD;
     UVD.x = (surfacePos.x * 0.5f) + 0.5f;
     UVD.y = (surfacePos.y * -0.5f) + 0.5f;
     UVD.z = surfacePos.z - 0.001f;
     
     float shadowFactor = 0.0f;
-    float4 test = float4(1.0f, 1.0f, 1.0f, 1.0f);
     
     uint shadowMapTextureIndex = light.ShadowMapIndex;
     if (light.Type == 1)
@@ -78,14 +70,13 @@ float CalculateShadowAttenuation_PCF3x3(in LightDesc light, in Surface surface)
         float Z = max(locabc.x, max(locabc.y, locabc.z));
         float Depth = (light.PerspectiveValues[0] * Z + light.PerspectiveValues[1]) / Z;
         shadowFactor = TexturesCube[shadowMapTextureIndex].SampleCmpLevelZero(ShadowSampler, loc, Depth - 0.001f);
-        test = TexturesCube[shadowMapTextureIndex].SampleLevel(PointSampler, loc, 0.0f);
     }
     else if (light.Type == 2)
     {
-        shadowFactor = Textures2D[shadowMapTextureIndex].SampleCmpLevelZero(ShadowSampler, UVD.xy, (UVD.z - 0.001f));
+        shadowFactor = Textures2D[shadowMapTextureIndex].SampleCmpLevelZero(ShadowSampler, UVD.xy, (UVD.z + 0.001f));
     }
     
-    return shadowFactor + (test * 0.00001f);
+    return shadowFactor;
 }
 
 [RootSignature(DeferredShading_RootSig)]

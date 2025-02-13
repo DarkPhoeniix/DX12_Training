@@ -5,7 +5,7 @@
 
 #include "FXAA_rootsig.hlsli"
 
-#include "Common.hlsli"
+#include "../Common.hlsli"
 #include "FXAA_helpers.hlsli"
 
 #define THREAD_NUM 8

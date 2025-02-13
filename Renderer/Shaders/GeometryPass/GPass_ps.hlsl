@@ -1,6 +1,6 @@
 
-#include "Common.hlsli"
-#include "LightingCommon.hlsli"
+#include "../Common.hlsli"
+#include "../LightingCommon.hlsli"
 
 struct PSinput
 {

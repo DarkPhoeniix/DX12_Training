@@ -1,8 +1,8 @@
 
 #include "Skybox_rootsig.hlsli"
-#include "Common.hlsli"
+#include "../Common.hlsli"
 
-#include "DepthFuncs.hlsli"
+#include "../DepthFuncs.hlsli"
 
 Texture2D<float4> DepthTexture      : register(t1);
 Texture2D<float4> SkyboxTexture : register(t2);
