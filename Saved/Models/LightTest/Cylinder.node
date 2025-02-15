@@ -1,0 +1,12 @@
+{
+    "Name": "Cylinder",
+    "Transform": {
+        "r0": "1.0 0.0 0.0 0.0",
+        "r1": "0.0 0.0 -1.0 0.0",
+        "r2": "0.0 1.0 0.0 0.0",
+        "r3": "-10.9285 0.9 -3.3113 1.0"
+    },
+    "Children": [],
+    "Material": "Cylinder.mat",
+    "Mesh": "Cylinder.mesh"
+}

@@ -1,0 +1,24 @@
+{
+    "Name": "LightTest",
+    "Nodes": [
+        "Cube.node",
+        "Cone.node",
+        "Torus.node",
+        "Cube.001.node",
+        "Suzanne.node",
+        "Cube.002.node",
+        "Cylinder.node",
+        "Icosphere.node",
+        "Sphere.node",
+        "Suzanne.001.node",
+        "Cube.003.node",
+        "Cube.004.node",
+        "Cylinder.001.node",
+        "Cone.001.node",
+        "RedPoint.node",
+        "BluePoint.node",
+        "GreenPoint.node",
+        "WhitePoint.node",
+        "Skybox.node"
+    ]
+}
