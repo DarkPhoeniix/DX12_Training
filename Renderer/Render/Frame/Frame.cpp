@@ -33,7 +33,7 @@ Frame::~Frame()
 void Frame::Init(const DirectX::XMUINT2& size, uint32_t cacheSize)
 {
     {
-        _resourceTable.Init(64, true);
+        _resourceTable.Init(256, true);
     }
 
     // Initialize cache heap

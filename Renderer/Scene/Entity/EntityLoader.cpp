@@ -333,7 +333,7 @@ namespace scene
             if (component->CastShadows)
             {
                 dx12::ResourceDescription desc = {};
-                desc.SetSize({ 1024, 1024 });
+                desc.SetSize({ 2048, 2048 });
                 desc.SetDimension(D3D12_RESOURCE_DIMENSION_TEXTURE2D);
                 desc.SetFormat(DXGI_FORMAT_D32_FLOAT);
 

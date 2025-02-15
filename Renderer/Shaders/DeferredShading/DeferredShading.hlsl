@@ -69,7 +69,7 @@ float CalculateShadowAttenuation_PCF3x3(in LightDesc light, in Surface surface)
         float3 locabc = abs(loc);
         float Z = max(locabc.x, max(locabc.y, locabc.z));
         float Depth = (light.PerspectiveValues[0] * Z + light.PerspectiveValues[1]) / Z;
-        shadowFactor = TexturesCube[shadowMapTextureIndex].SampleCmpLevelZero(ShadowSampler, loc, Depth - 0.001f);
+        shadowFactor = TexturesCube[shadowMapTextureIndex].SampleCmpLevelZero(ShadowSampler, loc, Depth - 0.0001f);
     }
     else if (light.Type == 2)
     {

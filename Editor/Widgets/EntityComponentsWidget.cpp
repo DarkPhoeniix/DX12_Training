@@ -216,10 +216,10 @@ namespace gui
     {
         if (ImGui::CollapsingHeader(material->ComponentName.c_str()))
         {
-            ImGui::Text("Albedo: %s", material->Albedo->GetName());
-            ImGui::Text("Metalness: %s", material->Metalness->GetName());
-            ImGui::Text("Roughness: %s", material->Roughness->GetName());
-            ImGui::Text("Normal map: %s", material->NormalMap->GetName());
+            ImGui::Text("Albedo: %s", material->Albedo->GetName().c_str());
+            ImGui::Text("Metalness: %s", material->Metalness->GetName().c_str());
+            ImGui::Text("Roughness: %s", material->Roughness->GetName().c_str());
+            ImGui::Text("Normal map: %s", material->NormalMap->GetName().c_str());
         }
     }
 
@@ -235,7 +235,7 @@ namespace gui
     {
         if (ImGui::CollapsingHeader(skybox->ComponentName.c_str()))
         {
-            ImGui::Text("Texture: %s", skybox->SkydomeTexture->GetName());
+            ImGui::Text("Texture: %s", skybox->SkydomeTexture->GetName().c_str());
         }
     }
 

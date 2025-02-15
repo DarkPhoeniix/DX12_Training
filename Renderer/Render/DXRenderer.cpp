@@ -93,7 +93,8 @@ namespace render
             loadTask->SetName("Upload Data");
             dx12::CommandList& commandList = *loadTask->GetCommandLists().front();
 
-            _scene.LoadScene("Dragon\\DragonScene.scene", commandList);
+            _scene.LoadScene("LightTest\\LightTest.scene", commandList);
+            //_scene.LoadScene("Dragon\\DragonScene.scene", commandList);
             _uploadProcessor.Process(_scene, commandList, nullptr);
 
             _scene.AddRootNode(cameraEntity);
