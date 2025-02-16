@@ -31,6 +31,11 @@ namespace
             {
                 modelDesc->Transform = transform.Transform;
 
+                if (mesh)
+                {
+                    modelDesc->HasMesh = 1;
+                }
+
                 if (material)
                 {
                     dx12::ResourceTable& frameTable = frame->GetResourceTable();

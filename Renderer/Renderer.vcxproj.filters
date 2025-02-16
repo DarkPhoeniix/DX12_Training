@@ -32,6 +32,7 @@
     <FxCompile Include="Shaders\_deprecated\SwirlPostFX_cs.hlsl" />
     <FxCompile Include="Shaders\HDR\BuildLuminanceHistogram.hlsl" />
     <FxCompile Include="Shaders\HDR\AverageLuminance.hlsl" />
+    <FxCompile Include="Shaders\Shadows\LightCulling_PointLight.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Render\Helpers\DrawHelpers.cpp" />
@@ -184,6 +185,7 @@
     <None Include="Shaders\Skybox\Skybox_rootsig.hlsli" />
     <None Include="PipelineDescriptions\BuildLuminanceHistogramPipeline.tech" />
     <None Include="PipelineDescriptions\AverageLuminancePipeline.tech" />
+    <None Include="PipelineDescriptions\LightCulling_PointLight.tech" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="PipelineDescriptions\AABBRenderPipeline.blend" />

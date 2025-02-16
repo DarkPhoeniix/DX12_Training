@@ -3,5 +3,5 @@
     "Energy": 4000.0,
     "CastShadows": 1,
     "Type": "Point",
-    "Range": 100.0
+    "Range": 20.0
 }

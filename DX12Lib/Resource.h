@@ -32,6 +32,8 @@ namespace dx12
 
         const D3D12_RESOURCE_ALLOCATION_INFO& GetAllocationInfo() const;
 
+        void SetUAVCounterOffset(uint32_t offset);
+
         D3D12_GPU_VIRTUAL_ADDRESS OffsetGPU(unsigned int offset) const;
         void* Map();
         void* Map(uint32_t begin, uint32_t end);
@@ -60,6 +62,7 @@ namespace dx12
         D3D12_RESOURCE_STATES _currentState;
 
         D3D12_RESOURCE_ALLOCATION_INFO _allocationInfo;
+        uint32_t _uavCounterOffset;
     };
 
     struct RenderTargetView : public D3D12_RENDER_TARGET_VIEW_DESC

@@ -11,6 +11,7 @@ namespace dx12
         void Reset();
 
         bool CopyDescriptor(Resource* resource, ResourceViewType viewType, ResourceTable& srcTable);
+        bool CopyDescriptor(Resource* resource, ResourceViewType viewType, D3D12_CPU_DESCRIPTOR_HANDLE handle);
         bool PlaceResource(Resource* resource, ResourceViewType viewType);
 
         D3D12_CPU_DESCRIPTOR_HANDLE GetResourceCPUHandle(Resource* resource, ResourceViewType viewType);

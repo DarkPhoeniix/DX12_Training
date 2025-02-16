@@ -33,7 +33,7 @@ namespace dx12
         static void CreateDepthStencilView(const DepthStencilView& view, DescriptorHeap& descriptorHeap);
         static void CreateConstantBufferView(const ConstantBufferView& view, DescriptorHeap& descriptorHeap);
         static void CreateShaderResourceView(const ShaderResourceView& view, DescriptorHeap& descriptorHeap);
-        static void CreateUnorderedAccessView(const UnorderedAccessView& view, DescriptorHeap& descriptorHeap);
+        static void CreateUnorderedAccessView(const UnorderedAccessView& view, DescriptorHeap& descriptorHeap, dx12::Resource* counterResource = nullptr);
 
     private:
         Device();

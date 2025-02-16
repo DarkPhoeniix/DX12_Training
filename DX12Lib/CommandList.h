@@ -42,6 +42,7 @@ namespace dx12
         void AliasingBarrier(const std::shared_ptr<Resource> & = nullptr, const std::shared_ptr<Resource>& afterResource = nullptr, bool flushBarriers = false);
 
         void CopyResource(Resource& sourceResource, Resource& destinationResource);
+        void CopyBufferRegion(Resource& sourceResource, Resource& destinationResource, uint32_t numBytes, uint32_t sourceOffset = 0, uint32_t destinationOffset = 0);
 
         // input Assembly
         void SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY primitiveTopology);
@@ -62,6 +63,8 @@ namespace dx12
         void DrawIndexed(uint32_t indexCount, uint32_t instanceCount = 1, uint32_t startIndex = 0, int32_t baseVertex = 0, uint32_t startInstance = 0);
 
         void Dispatch(uint32_t xThreadGroupsCount = 1, uint32_t yThreadGroupsCount = 1, uint32_t zThreadGroupsCount = 1);
+
+        void ExecuteIndirect(ComPtr<ID3D12CommandSignature> cmdSignature, std::uint32_t maxCommandCount, Resource& argumentBuffer, Resource& countBuffer, std::uint32_t argumentBufferOffset = 0, std::uint32_t countBufferOffset = 0);
 
         void SetDescriptorHeaps(const std::vector<ID3D12DescriptorHeap*> descriptorHeaps);
 

@@ -60,3 +60,8 @@ CacheGPU::DataHandle CacheGPU::GetResourcePlacement(const std::string& name)
 
     return handle;
 }
+
+std::shared_ptr<dx12::Resource> CacheGPU::GetCache()
+{
+    return _cache;
+}

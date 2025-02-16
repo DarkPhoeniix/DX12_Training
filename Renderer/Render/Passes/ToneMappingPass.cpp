@@ -71,6 +71,7 @@ namespace render
 
             DirectX::XMUINT2 viewportSize = _activeCamera->GetViewport().GetSize();
             CacheGPU::DataHandle histogram = _frame->GetCache().RequestPlacement("luminanceHistogram", LUM_HISTOGRAM_BINS_NUM * sizeof(std::uint32_t));
+            memset(histogram.DataCPU, 0, LUM_HISTOGRAM_BINS_NUM * sizeof(std::uint32_t));
 
             // Setup root signature components
 
@@ -133,7 +134,7 @@ namespace render
             }
             else
             {
-                lumData = 0.0001f;
+                lumData = 0.01f;
                 _adaptationSpeed = 0.0f;
             }
 

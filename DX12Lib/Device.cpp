@@ -124,12 +124,13 @@ namespace dx12
         _instance->_device->CreateShaderResourceView(view.Owner->GetDXResource().Get(), &view, heapHeandle);
     }
 
-    void Device::CreateUnorderedAccessView(const UnorderedAccessView& view, DescriptorHeap& descriptorHeap)
+    void Device::CreateUnorderedAccessView(const UnorderedAccessView& view, DescriptorHeap& descriptorHeap, dx12::Resource* counterResource)
     {
         dx12::ResourceViewType viewType = dx12::ResourceViewType::UAV;
 
+        ID3D12Resource* counter = counterResource ? counterResource->GetDXResource().Get() : nullptr;
         D3D12_CPU_DESCRIPTOR_HANDLE heapHeandle = descriptorHeap.GetCPUHandleWithOffset(descriptorHeap.Offset());
-        _instance->_device->CreateUnorderedAccessView(view.Owner->GetDXResource().Get(), nullptr, &view, heapHeandle);
+        _instance->_device->CreateUnorderedAccessView(view.Owner->GetDXResource().Get(), counter, &view, heapHeandle);
     }
 
     Device::Device()

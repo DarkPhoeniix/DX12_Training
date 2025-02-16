@@ -9,6 +9,7 @@ namespace dx12
 		, _resourceDesc{}
 		, _currentState(D3D12_RESOURCE_STATE_COMMON)
 		, _initialState(D3D12_RESOURCE_STATE_COMMON)
+		, _uavCounterOffset(-1)
 	{
 	}
 
@@ -17,6 +18,7 @@ namespace dx12
 		, _resourceDesc(resourceDesc)
 		, _currentState(D3D12_RESOURCE_STATE_COMMON)
 		, _initialState(D3D12_RESOURCE_STATE_COMMON)
+		, _uavCounterOffset(-1)
 	{
 	}
 
@@ -81,6 +83,11 @@ namespace dx12
 	const D3D12_RESOURCE_ALLOCATION_INFO& Resource::GetAllocationInfo() const
 	{
 		return _allocationInfo;
+	}
+
+	void Resource::SetUAVCounterOffset(uint32_t offset)
+	{
+		_uavCounterOffset = offset;
 	}
 
 	void* Resource::Map()
@@ -302,6 +309,12 @@ namespace dx12
 		if ((type & EResourceType::Buffer) != EResourceType::None)
 		{
 			view.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+			view.Buffer.StructureByteStride = _resourceDesc.GetStride();
+			view.Buffer.NumElements = _resourceDesc.GetSize().x / _resourceDesc.GetStride();
+			if (_uavCounterOffset != -1)
+			{
+				view.Buffer.CounterOffsetInBytes = _uavCounterOffset;
+			}
 		}
 		else if ((type & EResourceType::Texture) != EResourceType::None)
 		{
