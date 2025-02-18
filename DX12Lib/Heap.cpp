@@ -36,11 +36,11 @@ namespace dx12
         Create();
     }
 
-    void Heap::PlaceResource(Resource& resource, D3D12_RESOURCE_STATES state, UINT64 offset)
+    void Heap::PlaceResource(Resource& resource, D3D12_RESOURCE_STATES state, std::uint64_t offset)
     {
         ASSERT(dx12::Device::GetDXDevice(), "Device is nullptr when placing resource in a heap");
 
-        bool isDefaultHeapOffset = (offset == (UINT64)-1);
+        bool isDefaultHeapOffset = (offset == (std::uint64_t)-1);
         if (isDefaultHeapOffset)
         {
             offset = _resourceOffset;
@@ -48,7 +48,7 @@ namespace dx12
 
         resource.CreatePlacedResource(_heap, offset, state);
 
-        unsigned int size = resource.GetAllocationInfo().SizeInBytes;
+        std::uint64_t size = resource.GetAllocationInfo().SizeInBytes;
         _resourceOffset += Math::AlignUp(size, D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT);
     }
 

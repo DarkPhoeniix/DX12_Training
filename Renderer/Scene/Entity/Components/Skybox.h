@@ -6,8 +6,9 @@
 
 namespace scene
 {
-    struct Skybox : public IComponent
+    class Skybox : public IComponent
     {
+    public:
         Skybox();
 
         std::shared_ptr<dx12::Texture> SkydomeTexture;

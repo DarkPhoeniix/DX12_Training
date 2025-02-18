@@ -1,4 +1,4 @@
-// pch.h: This is a precompiled header file.
+// DX12LibPCH.h: This is a precompiled header file.
 // Files listed below are compiled only once, improving build performance for future builds.
 // This also affects IntelliSense performance, including code completion and many code browsing features.
 // However, files listed here are ALL re-compiled if any one of them is updated between builds.
@@ -31,16 +31,11 @@ using namespace Microsoft::WRL;
 #include <DirectXTex.h>
 #include <DirectXMath.h>
 
-#include <json/json.h>
-
 #include "Utility/Logger.h"
 #include "Utility/Helpers.h"
 #include "Resource.h"
 #include "Device.h"
 
-#include <filesystem>
-#include <cstdint>
-#include <fstream>
 #include <memory>
 #include <string>
 #include <map>

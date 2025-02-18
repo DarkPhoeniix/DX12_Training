@@ -231,7 +231,7 @@ void Application::_ExecuteFrameTasks()
 
         for (TaskGPU* d : dependencies)
         {
-            task.GetCommandQueue()->Wait(d->GetFence()->GetFence().Get(), d->GetFenceValue());
+            task.GetCommandQueue()->Wait(d->GetFence()->GetDXFence().Get(), d->GetFenceValue());
         }
 
         std::vector<ID3D12CommandList*> frameCommandLists;

@@ -12,8 +12,9 @@ namespace scene
         std::map<BoneId, DirectX::XMVECTOR> Rotations;
     };
 
-    struct Animation : public IComponent
+    class Animation : public IComponent
     {
+    public:
         Animation()
             : IComponent("Animation")
             , TicksPerSecond(0.0f)

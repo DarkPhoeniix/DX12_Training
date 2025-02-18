@@ -4,7 +4,7 @@
 
 namespace dx12
 {
-    void ResourceTable::Init(int numDescriptors, bool shaderVisible)
+    void ResourceTable::Init(std::uint32_t numDescriptors, bool shaderVisible)
     {
         _numDescriptors = numDescriptors;
 
@@ -55,7 +55,7 @@ namespace dx12
         resources.insert(std::make_pair(key, value));
 
         D3D12_CPU_DESCRIPTOR_HANDLE srcHandle = srcTable.GetResourceCPUHandle(resource, viewType);
-        descriptorHeap.CopyResourceDescriptor(resource, viewType, srcHandle);
+        descriptorHeap.CopyResourceDescriptor(srcHandle);
 
         return true;
     }
@@ -145,27 +145,27 @@ namespace dx12
         return descriptorHeap.GetGPUHandleWithOffset(resourceIndex);
     }
 
-    UINT ResourceTable::GetResourceIndex(Resource* resource, ResourceViewType viewType)
+    std::uint32_t ResourceTable::GetResourceIndex(Resource* resource, ResourceViewType viewType)
     {
         ResourceTable::ResourceMap& resources = _GetResourceMap(viewType);
         ResourceKey key = { resource->GetName().c_str(), viewType};
         auto it = resources.find(key);
         if (it == resources.end())
         {
-            return -1;
+            return static_cast<std::uint32_t>(-1);
         }
 
         return it->second.HeapIndex;
     }
 
-    UINT ResourceTable::GetResourceIndex(const std::string& resourceName, ResourceViewType viewType)
+    std::uint32_t ResourceTable::GetResourceIndex(const std::string& resourceName, ResourceViewType viewType)
     {
         ResourceTable::ResourceMap& resources = _GetResourceMap(viewType);
         ResourceKey key = { resourceName.c_str(), viewType };
         auto it = resources.find(key);
         if (it == resources.end())
         {
-            return -1;
+            return static_cast<std::uint32_t>(-1);
         }
 
         return it->second.HeapIndex;

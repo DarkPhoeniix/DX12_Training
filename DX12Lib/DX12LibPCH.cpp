@@ -1,4 +1,4 @@
-// pch.cpp: source file corresponding to the pre-compiled header
+// DX12LibPCH.cpp: source file corresponding to the pre-compiled header
 
 #include "DX12LibPCH.h"
 

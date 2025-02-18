@@ -20,7 +20,7 @@ namespace render
             desc.SetSize(_activeCamera->GetViewport().GetSize());
             desc.SetDimension(D3D12_RESOURCE_DIMENSION_TEXTURE2D);
             desc.SetFormat(DXGI_FORMAT_R8G8B8A8_UNORM);
-            desc.SetResourceType(dx12::EResourceType::Texture | dx12::EResourceType::Unordered);
+            desc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::Unordered);
 
             _fxaaRTT.CreateCommitedResource(desc);
 

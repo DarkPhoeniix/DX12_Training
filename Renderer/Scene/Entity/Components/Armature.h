@@ -24,8 +24,9 @@ namespace scene
         scene::OBBVolume AABB;
     };
 
-    struct Armature : public IComponent
+    class Armature : public IComponent
     {
+    public:
         Armature();
 
         void Init(const std::vector<Bone>& bones);

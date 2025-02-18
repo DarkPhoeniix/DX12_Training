@@ -5,49 +5,75 @@
 namespace core
 {
     class Win32Window;
-}
+} // namespace core
 
 namespace dx12
 {
-    constexpr UINT BACK_BUFFER_COUNT = 3;
+    // Number of back buffers in the swap chain (triple buffering).
+    constexpr std::uint32_t BACK_BUFFER_COUNT = 3;
 
+    // Wrapper for a DXGI swap chain, managing frame buffers and presentation.
     class SwapChain
     {
     public:
+        // Constructs an uninitialized swap chain.
         SwapChain();
+        // Destroys the swap chain and releases associated resources.
         ~SwapChain();
 
+        // Initializes the swap chain for a given Win32 window.
         void Init(const core::Win32Window& window);
 
+        // Retrieves the swap chain description.
         DXGI_SWAP_CHAIN_DESC GetDescription() const;
 
-        Resource* GetBuffer(unsigned int index);
+        // Returns a pointer to the swap chain buffer at the specified index.
+        Resource* GetBuffer(std::uint32_t index);
+        // Returns a pointer to the current back buffer.
         Resource* GetBackBuffer();
 
+        // Updates render target views for all back buffers.
         void UpdateRenderTargetViews();
-        UINT Present();
+        // Presents the current back buffer to the screen and returns the new back buffer index.
+        std::uint32_t Present();
 
+        // Handles swap chain resizing when the window size changes.
         void OnResize(const DirectX::XMUINT2& size);
 
+        // Retrieves the output (monitor) that contains the swap chain window.
         ComPtr<IDXGIOutput> GetContainingOutput();
 
     private:
+        // Creates and configures the DXGI swap chain.
         ComPtr<IDXGISwapChain4> CreateSwapChain();
+        // Checks if variable refresh rate (tearing support) is available.
         bool CheckTearingSupport() const;
 
+        // Description of the swap chain configuration.
         DXGI_SWAP_CHAIN_DESC _swapChainDesc;
+        // Pointer to the DXGI swap chain interface.
         ComPtr<IDXGISwapChain4> _dxgiSwapChain;
+
+        // Descriptor heap for render target views (RTVs).
         DescriptorHeap _RTVDescriptorHeap;
-        UINT _RTVDescriptorSize;
+        // Size of an RTV descriptor in bytes.
+        std::uint32_t _RTVDescriptorSize;
 
+        // Array of back buffers managed by the swap chain.
         Resource _backBuffers[BACK_BUFFER_COUNT];
-        UINT _currentBackBufferIndex;
+        // Index of the current back buffer being rendered to.
+        std::uint32_t _currentBackBufferIndex;
 
+        // Handle to the window associated with the swap chain.
         HWND _windowHandle;
-        int _width;
-        int _height;
+        // Width of the swap chain buffers.
+        std::uint32_t _width;
+        // Height of the swap chain buffers.
+        std::uint32_t _height;
 
+        // Enables or disables vertical synchronization (VSync).
         bool _vSync;
+        // Indicates whether the system supports tearing (variable refresh rate).
         bool _tearingSupport;
     };
 } // namespace dx12
