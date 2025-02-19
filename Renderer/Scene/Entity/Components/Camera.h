@@ -23,7 +23,8 @@ namespace scene
 		DirectX::XMFLOAT2 GetDepth() const;
 
 		void SetScissorRectangle(const CD3DX12_RECT& rect);
-		CD3DX12_RECT GetScissorRectangle() const;
+		CD3DX12_RECT& GetScissorRectangle();
+		const CD3DX12_RECT& GetScissorRectangle() const;
 
 	private:
 		CD3DX12_VIEWPORT _viewport;

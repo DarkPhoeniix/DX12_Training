@@ -21,8 +21,9 @@ namespace scene
         float BoneWeights[MAX_BONES_PER_VERTEX];
     };
 
-    struct Mesh : public IComponent
+    class Mesh : public IComponent
     {
+    public:
         Mesh()
             : IComponent("Mesh")
         {

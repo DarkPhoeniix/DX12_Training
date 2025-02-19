@@ -6,9 +6,10 @@ namespace dx12
 {
 	Resource::Resource()
 		: _resource(nullptr)
-		, _resourceDesc{}
+		, _resourceDesc()
 		, _currentState(D3D12_RESOURCE_STATE_COMMON)
 		, _initialState(D3D12_RESOURCE_STATE_COMMON)
+		, _allocationInfo()
 		, _uavCounterOffset(-1)
 	{
 	}
@@ -18,6 +19,7 @@ namespace dx12
 		, _resourceDesc(resourceDesc)
 		, _currentState(D3D12_RESOURCE_STATE_COMMON)
 		, _initialState(D3D12_RESOURCE_STATE_COMMON)
+		, _allocationInfo()
 		, _uavCounterOffset(-1)
 	{
 	}
@@ -127,7 +129,7 @@ namespace dx12
 		_resource.Reset();
 	}
 
-	D3D12_GPU_VIRTUAL_ADDRESS Resource::OffsetGPU(unsigned int offset) const
+	D3D12_GPU_VIRTUAL_ADDRESS Resource::OffsetGPU(std::uint64_t offset) const
 	{
 		ASSERT(_resource, "Trying to get GPU pointer for an nullptr resource");
 
@@ -151,12 +153,13 @@ namespace dx12
 			heapDesc.CreationNodeMask = 1;
 			heapDesc.VisibleNodeMask = 1;
 
-			if (_resourceDesc.IsType(EResourceType::Dynamic))
+			if (_resourceDesc.IsType(ResourceType::Dynamic))
 			{
 				heapDesc.Type = D3D12_HEAP_TYPE_UPLOAD;
 				_initialState = D3D12_RESOURCE_STATE_GENERIC_READ;
+				_currentState = _initialState;
 			}
-			else if (_resourceDesc.IsType(EResourceType::ReadBack))
+			else if (_resourceDesc.IsType(ResourceType::ReadBack))
 			{
 				heapDesc.Type = D3D12_HEAP_TYPE_READBACK;
 			}
@@ -189,7 +192,7 @@ namespace dx12
 		return CreateCommitedResource(initialState);
 	}
 
-	ComPtr<ID3D12Resource> Resource::CreatePlacedResource(ComPtr<ID3D12Heap> heap, unsigned int offset, D3D12_RESOURCE_STATES initialState)
+	ComPtr<ID3D12Resource> Resource::CreatePlacedResource(ComPtr<ID3D12Heap> heap, std::uint64_t offset, D3D12_RESOURCE_STATES initialState)
 	{
 		_initialState = initialState;
 
@@ -212,7 +215,7 @@ namespace dx12
 		return _resource;
 	}
 
-	ComPtr<ID3D12Resource> Resource::CreatePlacedResource(const ResourceDescription& resourceDesc, ComPtr<ID3D12Heap> heap, unsigned int offset, D3D12_RESOURCE_STATES initialState)
+	ComPtr<ID3D12Resource> Resource::CreatePlacedResource(const ResourceDescription& resourceDesc, ComPtr<ID3D12Heap> heap, std::uint64_t offset, D3D12_RESOURCE_STATES initialState)
 	{
 		_resourceDesc = resourceDesc;
 		return CreatePlacedResource(heap, offset, initialState);
@@ -267,8 +270,8 @@ namespace dx12
 		view.Format = _resourceDesc.GetFormat();
 		view.Owner = this;
 
-		EResourceType type = _resourceDesc.GetResourceType();
-		if ((type & EResourceType::Buffer) != EResourceType::None)
+		ResourceType type = _resourceDesc.GetResourceType();
+		if ((type & ResourceType::Buffer) != ResourceType::None)
 		{
 			view.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
 			view.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
@@ -276,7 +279,7 @@ namespace dx12
 			view.Buffer.StructureByteStride = _resourceDesc.GetStride();
 			view.Buffer.NumElements = _resourceDesc.GetSize().x / _resourceDesc.GetStride();
 		}
-		else if ((type & EResourceType::Texture) != EResourceType::None)
+		else if ((type & ResourceType::Texture) != ResourceType::None)
 		{
 			if (_resourceDesc.GetDepthOrArraySize() == 6)
 			{
@@ -290,7 +293,7 @@ namespace dx12
 			}
 		}
 
-		if ((type & EResourceType::DepthStencil) != EResourceType::None)
+		if ((type & ResourceType::DepthStencil) != ResourceType::None)
 		{
 			view.Format = DXGI_FORMAT_R32_FLOAT;
 		}
@@ -305,8 +308,8 @@ namespace dx12
 		view.Format = _resourceDesc.GetFormat();
 		view.Owner = this;
 
-		EResourceType type = _resourceDesc.GetResourceType();
-		if ((type & EResourceType::Buffer) != EResourceType::None)
+		ResourceType type = _resourceDesc.GetResourceType();
+		if ((type & ResourceType::Buffer) != ResourceType::None)
 		{
 			view.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
 			view.Buffer.StructureByteStride = _resourceDesc.GetStride();
@@ -316,7 +319,7 @@ namespace dx12
 				view.Buffer.CounterOffsetInBytes = _uavCounterOffset;
 			}
 		}
-		else if ((type & EResourceType::Texture) != EResourceType::None)
+		else if ((type & ResourceType::Texture) != ResourceType::None)
 		{
 			view.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
 			view.Texture2D.MipSlice = 0;

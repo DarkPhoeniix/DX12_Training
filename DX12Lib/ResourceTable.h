@@ -4,42 +4,62 @@
 
 namespace dx12
 {
+    // Class that manages a collection of resources with associated descriptors in a DirectX 12 application.
     class ResourceTable
     {
     public:
-        void Init(int numDescriptors, bool shaderVisible = false);
+        // Initializes the resource table with a specified number of descriptors.
+        // Optionally, the descriptors can be shader-visible.
+        void Init(std::uint32_t numDescriptors, bool shaderVisible = false);
+
+        // Resets the resource table, clearing any existing data.
         void Reset();
 
+        // Copies a descriptor from another resource table to the current, specifying the resource type (e.g., RTV, DSV).
         bool CopyDescriptor(Resource* resource, ResourceViewType viewType, ResourceTable& srcTable);
+        // Copies a descriptor handle, specifying the resource type (e.g., RTV, DSV).
         bool CopyDescriptor(Resource* resource, ResourceViewType viewType, D3D12_CPU_DESCRIPTOR_HANDLE handle);
+        // Places a resource into the table, associating it with a descriptor based on the view type (e.g., RTV, DSV).
         bool PlaceResource(Resource* resource, ResourceViewType viewType);
 
+        // Retrieves the CPU descriptor handle for a resource, based on its name and view type.
         D3D12_CPU_DESCRIPTOR_HANDLE GetResourceCPUHandle(Resource* resource, ResourceViewType viewType);
+        // Retrieves the CPU descriptor handle for a resource by its name and view type.
         D3D12_CPU_DESCRIPTOR_HANDLE GetResourceCPUHandle(const std::string& resourceName, ResourceViewType viewType);
 
+        // Retrieves the GPU descriptor handle for a resource by its name and view type.
         D3D12_GPU_DESCRIPTOR_HANDLE GetResourceGPUHandle(const std::string& resourceName, ResourceViewType viewType);
+        // Retrieves the GPU descriptor handle for a resource based on the resource object and view type.
         D3D12_GPU_DESCRIPTOR_HANDLE GetResourceGPUHandle(Resource* resource, ResourceViewType viewType);
 
-        UINT GetResourceIndex(Resource* resource, ResourceViewType viewType);
-        UINT GetResourceIndex(const std::string& resourceName, ResourceViewType viewType);
+        // Retrieves the index of the resource in the underlying descriptor heap, based on the resource pointer and view type.
+        std::uint32_t GetResourceIndex(Resource* resource, ResourceViewType viewType);
+        // Retrieves the index of a resource in  the underlying descriptor heap by its name and view type.
+        std::uint32_t GetResourceIndex(const std::string& resourceName, ResourceViewType viewType);
 
+        // Retrieves a pointer to a resource by its name and view type.
         Resource* GetResourceByName(const std::string& resourceName, ResourceViewType viewType);
 
+        // Retrieves the descriptor heap associated with a specific view type (e.g., RTV, DSV).
         DescriptorHeap& GetDescriptorHeap(ResourceViewType viewType);
+        // Retrieves the constant descriptor heap associated with a specific view type.
         const DescriptorHeap& GetDescriptorHeap(ResourceViewType viewType) const;
 
     private:
+        // A structure representing a unique key for identifying a resource by its name and view type.
         struct ResourceKey
         {
-            std::string_view Name;
-            ResourceViewType ViewType;
+            std::string_view Name;      // Resource's name (e.g., texture name).
+            ResourceViewType ViewType;  // The type of resource view (e.g., RTV, DSV).
 
+            // Equality operator to compare resource keys.
             bool operator==(const ResourceKey& other) const
             {
                 return (Name == other.Name) && (ViewType == other.ViewType);
             }
         };
 
+        // Hash function for the ResourceKey, allowing it to be used as a key in unordered maps.
         struct HashResourceKey
         {
             std::size_t operator()(const ResourceKey& key) const
@@ -48,27 +68,33 @@ namespace dx12
             }
         };
 
+        // Internal structure representing the descriptor and placement details of a resource in the table.
         struct InternalResourceDesc
         {
             using ResourceIndex = std::uint32_t;
 
-            Resource* PlacedResource;
-            ResourceIndex HeapIndex = -1;
-            ResourceViewType Type = ResourceViewType::Unknown;
+            Resource* PlacedResource = nullptr;                         // Pointer to the resource in the table.
+            ResourceIndex HeapIndex = static_cast<std::uint32_t>(-1);   // Index of the resource in the descriptor heap.
+            ResourceViewType Type = ResourceViewType::Unknown;          // The type of resource view (RTV, DSV, etc.).
         };
 
+        // A map that stores resources by their keys, allowing quick access to their descriptors and details.
         using ResourceMap = std::unordered_map<ResourceKey, InternalResourceDesc, HashResourceKey>;
 
+        // Private method to retrieve the resource map associated with a specific view type (e.g., RTV, DSV).
         ResourceMap& _GetResourceMap(ResourceViewType viewType);
 
+        // Resource maps for different types of resources: RTV, DSV, and Buffers.
         ResourceMap _RTVResources;
         ResourceMap _DSVResources;
         ResourceMap _BufferResources;
 
+        // Descriptor heaps for different types of resources: RTV, DSV, and Buffers.
         DescriptorHeap _RTVDescriptorHeap;
         DescriptorHeap _DSVDescriptorHeap;
         DescriptorHeap _BuffersDescriptorHeap;
 
-        int _numDescriptors;
+        // The total number of descriptors allocated in the table.
+        std::uint32_t _numDescriptors;
     };
 } // namespace dx12

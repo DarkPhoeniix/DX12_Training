@@ -68,7 +68,7 @@ namespace dx12
         return _commandList;
     }
 
-    void CommandList::SetPredication(Resource* buffer, UINT64 offset, D3D12_PREDICATION_OP operation)
+    void CommandList::SetPredication(Resource* buffer, std::uint64_t offset, D3D12_PREDICATION_OP operation)
     {
         if (buffer)
         {
@@ -80,9 +80,9 @@ namespace dx12
         }
     }
 
-    void CommandList::BeginQuery(ComPtr<ID3D12QueryHeap> queryHeap, D3D12_QUERY_TYPE type, UINT64 index)
+    void CommandList::BeginQuery(ComPtr<ID3D12QueryHeap> queryHeap, D3D12_QUERY_TYPE type, std::uint32_t index)
     {
-        if (ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list"))
+        if (ASSERT(_type == CommandListType::Graphics, "Wrong type of the command list"))
         {
             return;
         }
@@ -90,9 +90,9 @@ namespace dx12
         _commandList->BeginQuery(queryHeap.Get(), type, index);
     }
 
-    void CommandList::ResolveQueryData(ComPtr<ID3D12QueryHeap> queryHeap, D3D12_QUERY_TYPE type, UINT64 index, Resource& destination, UINT64 offset)
+    void CommandList::ResolveQueryData(ComPtr<ID3D12QueryHeap> queryHeap, D3D12_QUERY_TYPE type, std::uint32_t index, Resource& destination, std::uint64_t offset)
     {
-        if (ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list"))
+        if (ASSERT(_type == CommandListType::Graphics, "Wrong type of the command list"))
         {
             return;
         }
@@ -100,9 +100,9 @@ namespace dx12
         _commandList->ResolveQueryData(queryHeap.Get(), type, index, 1, destination.GetDXResource().Get(), offset);
     }
 
-    void CommandList::EndQuery(ComPtr<ID3D12QueryHeap> queryHeap, D3D12_QUERY_TYPE type, UINT64 index)
+    void CommandList::EndQuery(ComPtr<ID3D12QueryHeap> queryHeap, D3D12_QUERY_TYPE type, std::uint32_t index)
     {
-        if (ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list"))
+        if (ASSERT(_type == CommandListType::Graphics, "Wrong type of the command list"))
         {
             return;
         }
@@ -110,14 +110,14 @@ namespace dx12
         _commandList->EndQuery(queryHeap.Get(), type, index);
     }
 
-    void CommandList::TransitionBarrier(Resource& resource, D3D12_RESOURCE_STATES stateAfter, UINT subresource, bool flushBarriers)
+    void CommandList::TransitionBarrier(Resource& resource, D3D12_RESOURCE_STATES stateAfter, std::uint32_t subresource)
     {
         CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(resource.GetDXResource().Get(), resource.GetCurrentState(), stateAfter, subresource);
         _commandList->ResourceBarrier(1, &barrier);
         resource.SetCurrentState(stateAfter);
     }
 
-    void CommandList::AliasingBarrier(const std::shared_ptr<Resource>& beforeResource, const std::shared_ptr<Resource>& afterResource, bool flushBarriers)
+    void CommandList::AliasingBarrier(const std::shared_ptr<Resource>& beforeResource, const std::shared_ptr<Resource>& afterResource)
     {
         CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Aliasing(beforeResource->GetDXResource().Get(), afterResource->GetDXResource().Get());
         _commandList->ResourceBarrier(1, &barrier);
@@ -135,7 +135,7 @@ namespace dx12
 
     void CommandList::SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY primitiveTopology)
     {
-        if (ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list"))
+        if (ASSERT(_type == CommandListType::Graphics, "Wrong type of the command list"))
         {
             return;
         }
@@ -145,7 +145,7 @@ namespace dx12
 
     void CommandList::SetVertexBuffer(uint32_t slot, const D3D12_VERTEX_BUFFER_VIEW& vertexBufferView)
     {
-        if (ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list"))
+        if (ASSERT(_type == CommandListType::Graphics, "Wrong type of the command list"))
         {
             return;
         }
@@ -155,7 +155,7 @@ namespace dx12
 
     void CommandList::SetIndexBuffer(const D3D12_INDEX_BUFFER_VIEW& indexBufferView)
     {
-        if (ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list"))
+        if (ASSERT(_type == CommandListType::Graphics, "Wrong type of the command list"))
         {
             return;
         }
@@ -165,7 +165,7 @@ namespace dx12
 
     void CommandList::SetRenderTarget(D3D12_CPU_DESCRIPTOR_HANDLE* renderTargetDescriptor, D3D12_CPU_DESCRIPTOR_HANDLE* depthStencilDescriptor)
     {
-        if (ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list"))
+        if (ASSERT(_type == CommandListType::Graphics, "Wrong type of the command list"))
         {
             return;
         }
@@ -176,17 +176,17 @@ namespace dx12
 
     void CommandList::SetRenderTargets(const std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> renderTargetDescriptors, D3D12_CPU_DESCRIPTOR_HANDLE* depthStencilDescriptor)
     {
-        if (ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list"))
+        if (ASSERT(_type == CommandListType::Graphics, "Wrong type of the command list"))
         {
             return;
         }
 
-        _commandList->OMSetRenderTargets(renderTargetDescriptors.size(), renderTargetDescriptors.data(), FALSE, depthStencilDescriptor);
+        _commandList->OMSetRenderTargets(static_cast<std::uint32_t>(renderTargetDescriptors.size()), renderTargetDescriptors.data(), FALSE, depthStencilDescriptor);
     }
 
     void CommandList::SetViewport(const scene::Viewport& viewport)
     {
-        if (ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list"))
+        if (ASSERT(_type == CommandListType::Graphics, "Wrong type of the command list"))
         {
             return;
         }
@@ -199,7 +199,7 @@ namespace dx12
 
     void CommandList::SetPipelineState(const PipelineState& rootSignature)
     {
-        if (ASSERT(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Wrond type of the command list"))
+        if (ASSERT(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Wrong type of the command list"))
         {
             return;
         }
@@ -216,43 +216,35 @@ namespace dx12
         }
     }
 
-    void CommandList::ClearRTV(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetView, const FLOAT color[4], scene::Viewport* viewport)
+    void CommandList::ClearRTV(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetView, const float color[4], scene::Viewport* viewport)
     {
-        if (ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list"))
+        if (ASSERT(_type == CommandListType::Graphics, "Wrong type of the command list"))
         {
             return;
         }
 
-        // TODO: fix this ugly code
-        UINT numRects = viewport ? 1 : 0;
-        CD3DX12_RECT* rect = nullptr;
-        if (viewport)
-        {
-            *rect = viewport->GetScissorRectangle();
-        }
-        _commandList->ClearRenderTargetView(renderTargetView, color, numRects, rect);
+        std::uint32_t numRectangles = viewport ? 1 : 0;
+        CD3DX12_RECT* rectangle = viewport ? &viewport->GetScissorRectangle() : nullptr;
+
+        _commandList->ClearRenderTargetView(renderTargetView, color, numRectangles, rectangle);
     }
 
-    void CommandList::ClearDSV(D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, D3D12_CLEAR_FLAGS clearFlags, FLOAT depth, UINT8 stencil, scene::Viewport* viewport)
+    void CommandList::ClearDSV(D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, D3D12_CLEAR_FLAGS clearFlags, float depth, std::uint8_t stencil, scene::Viewport* viewport)
     {
-        if (ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list"))
+        if (ASSERT(_type == CommandListType::Graphics, "Wrong type of the command list"))
         {
             return;
         }
 
-        // TODO: fix this ugly code
-        UINT numRects = viewport ? 1 : 0;
-        CD3DX12_RECT* rect = nullptr;
-        if (viewport)
-        {
-            *rect = viewport->GetScissorRectangle();
-        }
-        _commandList->ClearDepthStencilView(depthStencilView, clearFlags, depth, stencil, numRects, rect);
+        std::uint32_t numRectangles = viewport ? 1 : 0;
+        CD3DX12_RECT* rectangle = viewport ? &viewport->GetScissorRectangle() : nullptr;
+
+        _commandList->ClearDepthStencilView(depthStencilView, clearFlags, depth, stencil, numRectangles, rectangle);
     }
 
-    void CommandList::Draw(uint32_t vertexCount, uint32_t instanceCount, uint32_t startVertex, uint32_t startInstance)
+    void CommandList::Draw(std::uint32_t vertexCount, std::uint32_t instanceCount, std::uint32_t startVertex, std::uint32_t startInstance)
     {
-        if (ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list"))
+        if (ASSERT(_type == CommandListType::Graphics, "Wrong type of the command list"))
         {
             return;
         }
@@ -260,9 +252,9 @@ namespace dx12
         _commandList->DrawInstanced(vertexCount, instanceCount, startVertex, startInstance);
     }
 
-    void CommandList::DrawIndexed(uint32_t indexCount, uint32_t instanceCount, uint32_t startIndex, int32_t baseVertex, uint32_t startInstance)
+    void CommandList::DrawIndexed(std::uint32_t indexCount, std::uint32_t instanceCount, std::uint32_t startIndex, std::uint32_t baseVertex, std::uint32_t startInstance)
     {
-        if (ASSERT(_type == CommandListType::Graphics, "Wrond type of the command list"))
+        if (ASSERT(_type == CommandListType::Graphics, "Wrong type of the command list"))
         {
             return;
         }
@@ -270,9 +262,9 @@ namespace dx12
         _commandList->DrawIndexedInstanced(indexCount, instanceCount, startIndex, baseVertex, startInstance);
     }
 
-    void CommandList::Dispatch(uint32_t xThreadGroupsCount, uint32_t yThreadGroupsCount, uint32_t zThreadGroupsCount)
+    void CommandList::Dispatch(std::uint32_t xThreadGroupsCount, std::uint32_t yThreadGroupsCount, std::uint32_t zThreadGroupsCount)
     {
-        if (ASSERT(_type == CommandListType::Compute, "Wrond type of the command list"))
+        if (ASSERT(_type == CommandListType::Compute, "Wrong type of the command list"))
         {
             return;
         }
@@ -287,17 +279,17 @@ namespace dx12
 
     void CommandList::SetDescriptorHeaps(const std::vector<ID3D12DescriptorHeap*> descriptorHeaps)
     {
-        if (ASSERT(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Wrond type of the command list"))
+        if (ASSERT(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Wrong type of the command list"))
         {
             return;
         }
 
-        _commandList->SetDescriptorHeaps(descriptorHeaps.size(), descriptorHeaps.data());
+        _commandList->SetDescriptorHeaps(static_cast<std::uint32_t>(descriptorHeaps.size()), descriptorHeaps.data());
     }
 
-    void CommandList::SetConstant(UINT index, UINT data, UINT offset)
+    void CommandList::SetConstant(std::uint32_t index, std::uint32_t data, std::uint32_t offset)
     {
-        if (ASSERT(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Wrond type of the command list"))
+        if (ASSERT(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Wrong type of the command list"))
         {
             return;
         }
@@ -312,9 +304,9 @@ namespace dx12
         }
     }
 
-    void CommandList::SetConstants(UINT index, UINT numValues, const void* data, UINT offset)
+    void CommandList::SetConstants(std::uint32_t index, std::uint32_t numValues, const void* data, std::uint32_t offset)
     {
-        if (ASSERT(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Wrond type of the command list"))
+        if (ASSERT(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Wrong type of the command list"))
         {
             return;
         }
@@ -329,9 +321,9 @@ namespace dx12
         }
     }
 
-    void CommandList::SetCBV(UINT index, D3D12_GPU_VIRTUAL_ADDRESS bufferLocation)
+    void CommandList::SetCBV(std::uint32_t index, D3D12_GPU_VIRTUAL_ADDRESS bufferLocation)
     {
-        if (ASSERT(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Wrond type of the command list"))
+        if (ASSERT(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Wrong type of the command list"))
         {
             return;
         }
@@ -346,9 +338,9 @@ namespace dx12
         }
     }
 
-    void CommandList::SetSRV(UINT index, D3D12_GPU_VIRTUAL_ADDRESS bufferLocation)
+    void CommandList::SetSRV(std::uint32_t index, D3D12_GPU_VIRTUAL_ADDRESS bufferLocation)
     {
-        if (ASSERT(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Wrond type of the command list"))
+        if (ASSERT(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Wrong type of the command list"))
         {
             return;
         }
@@ -363,9 +355,9 @@ namespace dx12
         }
     }
 
-    void CommandList::SetUAV(UINT index, D3D12_GPU_VIRTUAL_ADDRESS bufferLocation)
+    void CommandList::SetUAV(std::uint32_t index, D3D12_GPU_VIRTUAL_ADDRESS bufferLocation)
     {
-        if (ASSERT(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Wrond type of the command list"))
+        if (ASSERT(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Wrong type of the command list"))
         {
             return;
         }
@@ -380,9 +372,9 @@ namespace dx12
         }
     }
 
-    void CommandList::SetDescriptorTable(UINT index, D3D12_GPU_DESCRIPTOR_HANDLE descriptor)
+    void CommandList::SetDescriptorTable(std::uint32_t index, D3D12_GPU_DESCRIPTOR_HANDLE descriptor)
     {
-        if (ASSERT(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Wrond type of the command list"))
+        if (ASSERT(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Wrong type of the command list"))
         {
             return;
         }

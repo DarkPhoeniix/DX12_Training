@@ -4,24 +4,11 @@
 
 namespace dx12
 {
-    Fence::Fence()
-        : _fence(nullptr)
-        , _fenceValue(0)
-        , _isFree(true)
-        , _eventOnCompletion{}
-    {
-    }
-
-    Fence::~Fence()
-    {
-        _fence = nullptr;
-    }
-
     void Fence::Init()
     {
         _fenceValue = 0;
 
-        dx12::Device::GetDXDevice()->CreateFence(_fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&_fence));
+        Device::GetDXDevice()->CreateFence(_fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&_fence));
         _eventOnCompletion = ::CreateEvent(NULL, FALSE, FALSE, NULL);
     }
 
@@ -34,11 +21,6 @@ namespace dx12
 
         this->_fence->SetEventOnCompletion(_fenceValue, _eventOnCompletion);
         ::WaitForSingleObject(_eventOnCompletion, DWORD_MAX);
-    }
-
-    ComPtr<ID3D12Fence> Fence::GetFence()
-    {
-        return _fence;
     }
 
     void Fence::SetValue(UINT64 fenceValue)
@@ -59,5 +41,10 @@ namespace dx12
     bool Fence::IsFree() const
     {
         return _isFree;
+    }
+
+    ComPtr<ID3D12Fence> Fence::GetDXFence()
+    {
+        return _fence;
     }
 } // namespace dx12

@@ -4,15 +4,6 @@
 
 namespace dx12
 {
-    DescriptorHeapDescription::DescriptorHeapDescription()
-        : _description{}
-    {   }
-
-    const D3D12_DESCRIPTOR_HEAP_DESC& DescriptorHeapDescription::GetDXDescription() const
-    {
-        return _description;
-    }
-
     void DescriptorHeapDescription::SetType(D3D12_DESCRIPTOR_HEAP_TYPE type)
     {
         _description.Type = type;
@@ -51,5 +42,10 @@ namespace dx12
     UINT DescriptorHeapDescription::GetNodeMask() const
     {
         return _description.NodeMask;
+    }
+
+    const D3D12_DESCRIPTOR_HEAP_DESC& DescriptorHeapDescription::GetDXDescription() const
+    {
+        return _description;
     }
 } // namespace dx12

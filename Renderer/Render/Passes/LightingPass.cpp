@@ -24,7 +24,7 @@ namespace render
                 textureDesc.SetSize(_activeCamera->GetViewport().GetSize());
                 textureDesc.SetFormat(DXGI_FORMAT_R16G16B16A16_FLOAT);
                 textureDesc.SetDimension(D3D12_RESOURCE_DIMENSION_TEXTURE2D);
-                textureDesc.SetResourceType(dx12::EResourceType::Texture | dx12::EResourceType::Unordered);
+                textureDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::Unordered);
             }
 
             _HDRTexture.CreateCommitedResource(textureDesc, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);

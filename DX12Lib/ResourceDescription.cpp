@@ -6,7 +6,7 @@ namespace dx12
 {
 	ResourceDescription::ResourceDescription()
 		: _resourceDescription{}
-		, _resourceType(EResourceType::None)
+		, _resourceType(ResourceType::None)
 		, _stride(0)
 		, _clearValue(nullptr)
 	{
@@ -28,7 +28,7 @@ namespace dx12
 
 	ResourceDescription::ResourceDescription(const D3D12_RESOURCE_DESC& description)
 		: _resourceDescription(description)
-		, _resourceType(EResourceType::None)
+		, _resourceType(ResourceType::None)
 		, _stride(0)
 		, _clearValue(nullptr)
 	{
@@ -44,12 +44,12 @@ namespace dx12
 		return _resourceDescription.Dimension;
 	}
 
-	void ResourceDescription::SetAlignment(UINT64 alignment)
+	void ResourceDescription::SetAlignment(std::uint64_t alignment)
 	{
 		_resourceDescription.Alignment = alignment;
 	}
 
-	UINT64 ResourceDescription::GetAlignment() const
+	std::uint64_t ResourceDescription::GetAlignment() const
 	{
 		return _resourceDescription.Alignment;
 	}
@@ -63,25 +63,25 @@ namespace dx12
 	DirectX::XMUINT2 ResourceDescription::GetSize() const
 	{
 		// TODO: maybe it's wrong
-		return { (uint32_t)_resourceDescription.Width, (uint32_t)_resourceDescription.Height };
+		return { (std::uint32_t)_resourceDescription.Width, (std::uint32_t)_resourceDescription.Height };
 	}
 
-	void ResourceDescription::SetDepthOrArraySize(UINT16 depthOrArraySize)
+	void ResourceDescription::SetDepthOrArraySize(std::uint16_t depthOrArraySize)
 	{
 		_resourceDescription.DepthOrArraySize = depthOrArraySize;
 	}
 
-	UINT16 ResourceDescription::GetDepthOrArraySize() const
+	std::uint16_t ResourceDescription::GetDepthOrArraySize() const
 	{
 		return _resourceDescription.DepthOrArraySize;
 	}
 
-	void ResourceDescription::SetMipLevels(UINT16 mipLevels)
+	void ResourceDescription::SetMipLevels(std::uint16_t mipLevels)
 	{
 		_resourceDescription.MipLevels = mipLevels;
 	}
 
-	UINT16 ResourceDescription::GetMipLevels() const
+	std::uint16_t ResourceDescription::GetMipLevels() const
 	{
 		return _resourceDescription.MipLevels;
 	}
@@ -131,16 +131,16 @@ namespace dx12
 		return _resourceDescription.Flags;
 	}
 
-	void ResourceDescription::SetResourceType(EResourceType type)
+	void ResourceDescription::SetResourceType(ResourceType type)
 	{
 		_resourceType = type;
 
-		if ((type & EResourceType::Texture) != EResourceType::None)
+		if ((type & ResourceType::Texture) != ResourceType::None)
 		{
 			_resourceDescription.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 			_resourceDescription.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 		}
-		else if ((type & EResourceType::Buffer) != EResourceType::None)
+		else if ((type & ResourceType::Buffer) != ResourceType::None)
 		{
 			_resourceDescription.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
 		}
@@ -148,27 +148,27 @@ namespace dx12
 		UpdateFlags(_resourceType);
 	}
 
-	void ResourceDescription::AddResourceType(EResourceType type)
+	void ResourceDescription::AddResourceType(ResourceType type)
 	{
 		_resourceType |= type;
 	}
 
-	EResourceType ResourceDescription::GetResourceType() const
+	ResourceType ResourceDescription::GetResourceType() const
 	{
 		return _resourceType;
 	}
 
-	bool ResourceDescription::IsType(EResourceType type) const
+	bool ResourceDescription::IsType(ResourceType type) const
 	{
 		return bool(_resourceType & type);
 	}
 
-	void ResourceDescription::SetStride(UINT64 stride)
+	void ResourceDescription::SetStride(std::uint32_t stride)
 	{
 		_stride = stride;
 	}
 
-	UINT64 ResourceDescription::GetStride() const
+	std::uint32_t ResourceDescription::GetStride() const
 	{
 		return _stride;
 	}
@@ -196,21 +196,21 @@ namespace dx12
 		return _resourceDescription;
 	}
 
-	void ResourceDescription::UpdateSize(EResourceType type)
+	void ResourceDescription::UpdateSize(ResourceType type)
 	{
-		if ((type & EResourceType::Buffer) != EResourceType::None)
+		if ((type & ResourceType::Buffer) != ResourceType::None)
 		{
-			UINT64 rowBytes = _resourceDescription.Width;
+			std::uint64_t rowBytes = _resourceDescription.Width;
 
-			if ((type & EResourceType::Aligned) != EResourceType::None)
+			if ((type & ResourceType::Aligned) != ResourceType::None)
 			{
 				// calculate width of buffer
-				UINT64 alligned = _stride;
-				if ((type & EResourceType::Dynamic) != EResourceType::None)
+				std::uint64_t aligned = _stride;
+				if ((type & ResourceType::Dynamic) != ResourceType::None)
 				{
-					alligned = (_stride + 255) & ~255;
+					aligned = (_stride + 255) & ~255;
 				}
-				rowBytes *= alligned;
+				rowBytes *= aligned;
 			}
 			else
 			{
@@ -222,21 +222,21 @@ namespace dx12
 		}
 	}
 
-	void ResourceDescription::UpdateFlags(EResourceType type)
+	void ResourceDescription::UpdateFlags(ResourceType type)
 	{
-		if ((type & EResourceType::Unordered) != EResourceType::None)
+		if ((type & ResourceType::Unordered) != ResourceType::None)
 		{
 			_resourceDescription.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 		}
-		if ((type & EResourceType::RenderTarget) != EResourceType::None)
+		if ((type & ResourceType::RenderTarget) != ResourceType::None)
 		{
 			_resourceDescription.Flags |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
 		}
-		if ((type & EResourceType::DepthStencil) != EResourceType::None)
+		if ((type & ResourceType::DepthStencil) != ResourceType::None)
 		{
 			_resourceDescription.Flags |= D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 		}
-		if ((type & EResourceType::DenyShader) != EResourceType::None)
+		if ((type & ResourceType::DenyShader) != ResourceType::None)
 		{
 			_resourceDescription.Flags |= D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE;
 		}

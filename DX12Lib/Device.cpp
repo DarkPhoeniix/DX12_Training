@@ -94,43 +94,33 @@ namespace dx12
 
     void Device::CreateRenderTargetView(const RenderTargetView& view, DescriptorHeap& descriptorHeap)
     {
-        dx12::ResourceViewType viewType = dx12::ResourceViewType::RTV;
-
-        D3D12_CPU_DESCRIPTOR_HANDLE heapHeandle = descriptorHeap.GetCPUHandleWithOffset(descriptorHeap.Offset());
-        _instance->_device->CreateRenderTargetView(view.Owner->GetDXResource().Get(), &view, heapHeandle);
+        D3D12_CPU_DESCRIPTOR_HANDLE heapHandle = descriptorHeap.GetCPUHandleWithOffset(descriptorHeap.Offset());
+        _instance->_device->CreateRenderTargetView(view.Owner->GetDXResource().Get(), &view, heapHandle);
     }
 
     void Device::CreateDepthStencilView(const DepthStencilView& view, DescriptorHeap& descriptorHeap)
     {
-        dx12::ResourceViewType viewType = dx12::ResourceViewType::DSV;
-
-        D3D12_CPU_DESCRIPTOR_HANDLE heapHeandle = descriptorHeap.GetCPUHandleWithOffset(descriptorHeap.Offset());
-        _instance->_device->CreateDepthStencilView(view.Owner->GetDXResource().Get(), &view, heapHeandle);
+        D3D12_CPU_DESCRIPTOR_HANDLE heapHandle = descriptorHeap.GetCPUHandleWithOffset(descriptorHeap.Offset());
+        _instance->_device->CreateDepthStencilView(view.Owner->GetDXResource().Get(), &view, heapHandle);
     }
 
     void Device::CreateConstantBufferView(const ConstantBufferView& view, DescriptorHeap& descriptorHeap)
     {
-        dx12::ResourceViewType viewType = dx12::ResourceViewType::CBV;
-
-        D3D12_CPU_DESCRIPTOR_HANDLE heapHeandle = descriptorHeap.GetCPUHandleWithOffset(descriptorHeap.Offset());
-        _instance->_device->CreateConstantBufferView(&view, heapHeandle);
+        D3D12_CPU_DESCRIPTOR_HANDLE heapHandle = descriptorHeap.GetCPUHandleWithOffset(descriptorHeap.Offset());
+        _instance->_device->CreateConstantBufferView(&view, heapHandle);
     }
 
     void Device::CreateShaderResourceView(const ShaderResourceView& view, DescriptorHeap& descriptorHeap)
     {
-        dx12::ResourceViewType viewType = dx12::ResourceViewType::SRV;
-
-        D3D12_CPU_DESCRIPTOR_HANDLE heapHeandle = descriptorHeap.GetCPUHandleWithOffset(descriptorHeap.Offset());
-        _instance->_device->CreateShaderResourceView(view.Owner->GetDXResource().Get(), &view, heapHeandle);
+        D3D12_CPU_DESCRIPTOR_HANDLE heapHandle = descriptorHeap.GetCPUHandleWithOffset(descriptorHeap.Offset());
+        _instance->_device->CreateShaderResourceView(view.Owner->GetDXResource().Get(), &view, heapHandle);
     }
 
     void Device::CreateUnorderedAccessView(const UnorderedAccessView& view, DescriptorHeap& descriptorHeap, dx12::Resource* counterResource)
     {
-        dx12::ResourceViewType viewType = dx12::ResourceViewType::UAV;
-
         ID3D12Resource* counter = counterResource ? counterResource->GetDXResource().Get() : nullptr;
-        D3D12_CPU_DESCRIPTOR_HANDLE heapHeandle = descriptorHeap.GetCPUHandleWithOffset(descriptorHeap.Offset());
-        _instance->_device->CreateUnorderedAccessView(view.Owner->GetDXResource().Get(), counter, &view, heapHeandle);
+        D3D12_CPU_DESCRIPTOR_HANDLE heapHandle = descriptorHeap.GetCPUHandleWithOffset(descriptorHeap.Offset());
+        _instance->_device->CreateUnorderedAccessView(view.Owner->GetDXResource().Get(), counter, &view, heapHandle);
     }
 
     Device::Device()

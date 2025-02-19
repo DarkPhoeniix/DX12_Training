@@ -131,7 +131,7 @@ namespace render
                 dx12::ResourceDescription desc;
                 desc.SetSize({ sizeof(UINT), 1 });
                 desc.SetLayout(D3D12_TEXTURE_LAYOUT_ROW_MAJOR);
-                desc.SetResourceType(dx12::EResourceType::Buffer | dx12::EResourceType::Unordered);
+                desc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Unordered);
 
                 _counters.push_back(dx12::Resource());
                 _counters.back().CreateCommitedResource(desc);
@@ -146,7 +146,7 @@ namespace render
                 _counters.back().SetName("Counter buffer 2");
 
                 desc.SetFlags(D3D12_RESOURCE_FLAG_NONE);
-                desc.SetResourceType(dx12::EResourceType::Buffer | dx12::EResourceType::ReadBack);
+                desc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::ReadBack);
 
                 _counterReadBack.CreateCommitedResource(desc);
                 _counterReadBack.SetName("Counter buffer readback");
@@ -157,7 +157,7 @@ namespace render
                 dx12::ResourceDescription cDesc;
                 cDesc.SetSize({ sizeof(UINT), 1 });
                 cDesc.SetLayout(D3D12_TEXTURE_LAYOUT_ROW_MAJOR);
-                cDesc.SetResourceType(dx12::EResourceType::Buffer | dx12::EResourceType::Dynamic);
+                cDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
 
                 _counterReset.CreateCommitedResource(cDesc, D3D12_RESOURCE_STATE_COPY_SOURCE);
                 _counterReset.SetName("Counter reset buffer");
@@ -166,10 +166,10 @@ namespace render
             }
 
             dx12::ResourceDescription desc;
-            desc.SetSize({ 64 * sizeof(IndirectCommand) + sizeof(UINT), 1});
+            desc.SetSize({ 64 * sizeof(IndirectCommand) + sizeof(UINT), 1 });
             desc.SetFormat(DXGI_FORMAT_UNKNOWN);
             desc.SetStride(sizeof(IndirectCommand));
-            desc.SetResourceType(dx12::EResourceType::Buffer | dx12::EResourceType::Unordered);
+            desc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Unordered);
 
             _commandsBuffers.push_back(dx12::Resource());
             _commandsBuffers.back().CreateCommitedResource(desc);
@@ -421,7 +421,7 @@ namespace render
             PIXEndEvent(drawCmd.GetDXCommandList().Get());
 
         }
-            computeCmd.Close();
-            drawCmd.Close();
+        computeCmd.Close();
+        drawCmd.Close();
     }
 } // namespace render
