@@ -2,8 +2,9 @@
 
 namespace scene
 {
-    struct IComponent
+    class IComponent
     {
+    public:
         IComponent() = default;
         IComponent(const std::string& name)
             : ComponentName(name)

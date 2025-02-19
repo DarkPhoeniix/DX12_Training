@@ -118,8 +118,8 @@ void UploadSceneProcessor::ProcessEntity(Entity& entity, dx12::CommandList& comm
     {
         dx12::ResourceDescription desc;
         {
-            desc.SetResourceType(dx12::EResourceType::Buffer | dx12::EResourceType::Dynamic);
-            desc.SetSize({ (uint32_t)armature->GetBones().size() * (uint32_t)sizeof(DirectX::XMMATRIX), 1 });
+            desc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
+            desc.SetSize({ (uint32_t)armature->GetBones().size() * (uint32_t)sizeof(DirectX::XMMATRIX), 1});
             desc.SetFormat(DXGI_FORMAT_UNKNOWN);
             desc.SetFlags(D3D12_RESOURCE_FLAG_NONE);
         }

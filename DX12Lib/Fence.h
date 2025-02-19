@@ -2,29 +2,38 @@
 
 namespace dx12
 {
+    // Wrapper for an ID3D12Fence object to synchronize the CPU and GPU.
     class Fence
     {
     public:
-        Fence();
-        ~Fence();
-
+        // Initializes the fence and marks it as free.
         void Init();
 
+        // Waits until the fence reaches the current value.
         void Wait();
 
-        ComPtr<ID3D12Fence> GetFence();
-
+        // Set the fence value.
         void SetValue(UINT64 fenceValue);
+        // Get the current fence value.
         UINT64 GetValue() const;
 
+        // Set whether the fence is free.
         void SetFree(bool isFree);
+        // Check if the fence is free.
         bool IsFree() const;
 
-    private:
-        ComPtr<ID3D12Fence> _fence;
-        UINT64 _fenceValue;
-        HANDLE _eventOnCompletion;
+        // Get a pointer to the raw D3D12 fence object.
+        ComPtr<ID3D12Fence> GetDXFence();
 
-        bool _isFree;
+    private:
+        // Raw D3D12 fence object.
+        ComPtr<ID3D12Fence> _fence = nullptr;
+        // Event triggered when _fence reaches _fenceValue.
+        HANDLE _eventOnCompletion = nullptr;
+        // Current fence value.
+        UINT64 _fenceValue = 0;
+
+        // Indicates whether the fence is available for use.
+        bool _isFree = true;
     };
 } // namespace dx12

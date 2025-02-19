@@ -11,8 +11,9 @@ namespace scene
         Spot
     };
 
-    struct Light : public IComponent
+    class Light : public IComponent
     {
+    public:
         Light()
             : IComponent("Light")
         {

@@ -4,8 +4,9 @@
 
 namespace scene
 {
-    struct Transformation : public IComponent
+    class Transformation : public IComponent
     {
+    public:
         Transformation()
             : IComponent("Transformation")
             , Transform(DirectX::XMMatrixIdentity())

@@ -53,7 +53,7 @@ namespace dx12
         return _swapChainDesc;
     }
 
-    Resource* SwapChain::GetBuffer(unsigned int index)
+    Resource* SwapChain::GetBuffer(std::uint32_t index)
     {
         return &_backBuffers[index];
     }

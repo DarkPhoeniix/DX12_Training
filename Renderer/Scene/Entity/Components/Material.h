@@ -5,8 +5,9 @@
 
 namespace scene
 {
-    struct Material : public IComponent
+    class Material : public IComponent
     {
+    public:
         Material()
             : IComponent("Material")
         {

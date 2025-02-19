@@ -42,7 +42,7 @@ void Frame::Init(const DirectX::XMUINT2& size, uint32_t cacheSize)
         desc.SetSize({ _16MB, 1 });
         desc.SetStride(256);
         desc.SetFormat(DXGI_FORMAT_UNKNOWN);
-        desc.SetResourceType(dx12::EResourceType::Buffer | dx12::EResourceType::Dynamic | dx12::EResourceType::Aligned);
+        desc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
 
         std::shared_ptr<dx12::Resource> frameCachedMemory = std::make_shared<dx12::Resource>();
         frameCachedMemory->CreateCommitedResource(desc, D3D12_RESOURCE_STATE_COMMON);
@@ -72,7 +72,7 @@ void Frame::Init(const DirectX::XMUINT2& size, uint32_t cacheSize)
             textureDesc.SetFormat(DXGI_FORMAT_R8G8B8A8_UNORM);
             textureDesc.SetFlags(D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
             textureDesc.SetClearValue(clearValueTexTarget);
-            textureDesc.SetResourceType(dx12::EResourceType::Texture | dx12::EResourceType::RenderTarget);
+            textureDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::RenderTarget);
         }
 
         _targetTexture.CreateCommitedResource(textureDesc, D3D12_RESOURCE_STATE_COPY_SOURCE);

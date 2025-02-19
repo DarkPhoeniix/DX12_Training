@@ -47,7 +47,7 @@ namespace dx12
         _currentOffset = 0;
     }
 
-    std::uint32_t DescriptorHeap::CopyResourceDescriptor(Resource* resource, ResourceViewType viewType, D3D12_CPU_DESCRIPTOR_HANDLE descriptor)
+    std::uint32_t DescriptorHeap::CopyResourceDescriptor(D3D12_CPU_DESCRIPTOR_HANDLE descriptor)
     {
         D3D12_CPU_DESCRIPTOR_HANDLE handle = _descriptorHeap->GetCPUDescriptorHandleForHeapStart();
         handle.ptr += _heapIncrementSize * _currentOffset;

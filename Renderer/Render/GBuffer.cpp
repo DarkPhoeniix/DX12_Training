@@ -23,7 +23,7 @@ namespace render
                 textureDesc.SetMipLevels(1);
                 textureDesc.SetAlignment(D3D12_TILED_RESOURCE_TILE_SIZE_IN_BYTES);
                 textureDesc.SetFlags(D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
-                textureDesc.SetResourceType(dx12::EResourceType::Texture | dx12::EResourceType::RenderTarget);
+                textureDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::RenderTarget);
 
                 clearValue.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
                 clearValue.Color[0] = 0.0f;
@@ -56,7 +56,7 @@ namespace render
             textureDesc.SetFormat(DXGI_FORMAT_D32_FLOAT);
             textureDesc.SetFlags(D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
             textureDesc.SetClearValue(clearValue);
-            textureDesc.SetResourceType(dx12::EResourceType::Texture | dx12::EResourceType::DepthStencil);
+            textureDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::DepthStencil);
 
             _depthStencil.CreateCommitedResource(textureDesc);
             _depthStencil.SetName("G-Buffer DepthStencil");

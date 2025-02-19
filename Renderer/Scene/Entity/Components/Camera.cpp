@@ -70,11 +70,16 @@ namespace scene
 		_scissorRectangle = rect;
 	}
 
-	CD3DX12_RECT Viewport::GetScissorRectangle() const
+	CD3DX12_RECT& Viewport::GetScissorRectangle()
 	{
 		return _scissorRectangle;
 	}
 
+	const CD3DX12_RECT& Viewport::GetScissorRectangle() const
+	{
+		return _scissorRectangle;
+	}
+	
 	Camera::Camera()
 		: IComponent("Camera")
 		, _view(XMMatrixIdentity())

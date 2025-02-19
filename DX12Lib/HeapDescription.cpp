@@ -4,9 +4,24 @@
 
 namespace dx12
 {
-    HeapDescription::HeapDescription()
-        : _heapDescription()
+    void HeapDescription::SetHeapType(D3D12_HEAP_TYPE heapType)
     {
+        _heapDescription.Properties.Type = heapType;
+    }
+
+    D3D12_HEAP_TYPE HeapDescription::GetHeapType() const
+    {
+        return _heapDescription.Properties.Type;
+    }
+
+    void HeapDescription::SetSize(UINT64 size)
+    {
+        _heapDescription.SizeInBytes = size;
+    }
+
+    UINT64 HeapDescription::GetSize() const
+    {
+        return _heapDescription.SizeInBytes;
     }
 
     void HeapDescription::SetAlignment(UINT64 alignment)
@@ -27,16 +42,6 @@ namespace dx12
     D3D12_HEAP_FLAGS HeapDescription::GetHeapFlags() const
     {
         return _heapDescription.Flags;
-    }
-
-    void HeapDescription::SetSize(UINT64 size)
-    {
-        _heapDescription.SizeInBytes = size;
-    }
-
-    UINT64 HeapDescription::GetSize() const
-    {
-        return _heapDescription.SizeInBytes;
     }
 
     void HeapDescription::SetCPUPageProperty(D3D12_CPU_PAGE_PROPERTY property)
@@ -77,16 +82,6 @@ namespace dx12
     UINT HeapDescription::GetVisibleNodeMask() const
     {
         return _heapDescription.Properties.VisibleNodeMask;
-    }
-
-    void HeapDescription::SetHeapType(D3D12_HEAP_TYPE heapType)
-    {
-        _heapDescription.Properties.Type = heapType;
-    }
-
-    D3D12_HEAP_TYPE HeapDescription::GetHeapType() const
-    {
-        return _heapDescription.Properties.Type;
     }
 
     const D3D12_HEAP_DESC& HeapDescription::GetDXHeapDescription()

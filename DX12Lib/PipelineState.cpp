@@ -2,8 +2,10 @@
 
 #include "PipelineState.h"
 
-#include <fstream>
+#include <json/json.h>
+
 #include <filesystem>
+#include <fstream>
 
 namespace dx12
 {
@@ -67,8 +69,8 @@ namespace dx12
             { "D3D12_BLEND_INV_SRC1_COLOR", D3D12_BLEND_INV_SRC1_COLOR },
             { "D3D12_BLEND_SRC1_ALPHA", D3D12_BLEND_SRC1_ALPHA },
             { "D3D12_BLEND_INV_SRC1_ALPHA", D3D12_BLEND_INV_SRC1_ALPHA },
-            //        { "D3D12_BLEND_ALPHA_FACTOR", D3D12_BLEND_ALPHA_FACTOR },
-            //        { "D3D12_BLEND_INV_ALPHA_FACTOR", D3D12_BLEND_INV_ALPHA_FACTOR }
+            { "D3D12_BLEND_ALPHA_FACTOR", D3D12_BLEND_ALPHA_FACTOR },
+            { "D3D12_BLEND_INV_ALPHA_FACTOR", D3D12_BLEND_INV_ALPHA_FACTOR }
         };
 
         const std::map<std::string, D3D12_BLEND_OP> BLEND_OP =
@@ -270,7 +272,7 @@ namespace dx12
             Logger::Log(LogType::Warning, "Failed to parse " + str + " from the format description");
             return TEX_FORMAT.begin()->second;
         }
-    } // namespace
+    } // namespace unnamed
 
     ComPtr<ID3D12RootSignature> PipelineState::GetRootSignature() const
     {
@@ -338,7 +340,7 @@ namespace dx12
         if (!fileRoot["Layout"].isNull())
         {
             inputLayout = new D3D12_INPUT_ELEMENT_DESC[layoutElementsNum];
-            for (int i = 0; i < layoutElementsNum; ++i)
+            for (unsigned int i = 0; i < layoutElementsNum; ++i)
             {
                 inputLayout[i] = {};
                 Json::Value layout = fileRoot["Layout"][i];
@@ -388,7 +390,7 @@ namespace dx12
         pipelineStateDescription.DSVFormat = DXGI_FORMAT_D32_FLOAT;
         Json::Value renderTargets = fileRoot["RenderTargets"];
         pipelineStateDescription.NumRenderTargets = renderTargets.size();
-        for (int i = 0; i < renderTargets.size(); ++i)
+        for (unsigned int i = 0; i < renderTargets.size(); ++i)
         {
             pipelineStateDescription.RTVFormats[i] = ParseTexFormat(renderTargets[i].asCString());
         }

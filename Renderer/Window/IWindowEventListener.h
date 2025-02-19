@@ -17,15 +17,15 @@ namespace core
         class IWindowEventListener
         {
         public:
-            virtual void OnUpdate(UpdateEvent& e) {}
-            virtual void OnRender(RenderEvent& e) {}
-            virtual void OnKeyPressed(KeyEvent& e) {}
-            virtual void OnKeyReleased(KeyEvent& e) {}
-            virtual void OnMouseMoved(MouseMoveEvent& e) {}
-            virtual void OnMouseButtonPressed(MouseButtonEvent& e) {}
-            virtual void OnMouseButtonReleased(MouseButtonEvent& e) {}
-            virtual void OnMouseScroll(MouseScrollEvent& e) {}
-            virtual void OnResize(ResizeEvent& e) {}
+            virtual void OnUpdate([[maybe_unused]] UpdateEvent& e) {}
+            virtual void OnRender([[maybe_unused]] RenderEvent& e) {}
+            virtual void OnKeyPressed([[maybe_unused]] KeyEvent& e) {}
+            virtual void OnKeyReleased([[maybe_unused]] KeyEvent& e) {}
+            virtual void OnMouseMoved([[maybe_unused]] MouseMoveEvent& e) {}
+            virtual void OnMouseButtonPressed([[maybe_unused]] MouseButtonEvent& e) {}
+            virtual void OnMouseButtonReleased([[maybe_unused]] MouseButtonEvent& e) {}
+            virtual void OnMouseScroll([[maybe_unused]] MouseScrollEvent& e) {}
+            virtual void OnResize([[maybe_unused]] ResizeEvent& e) {}
         };
     } // namespace events
 } // namespace core

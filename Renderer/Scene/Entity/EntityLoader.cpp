@@ -343,7 +343,7 @@ namespace scene
                 clearValue.DepthStencil.Stencil = 0;
 
                 desc.SetClearValue(clearValue);
-                desc.SetResourceType(dx12::EResourceType::Texture | dx12::EResourceType::DepthStencil);
+                desc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::DepthStencil);
                 switch (component->Type)
                 {
                 case LightType::Spot:

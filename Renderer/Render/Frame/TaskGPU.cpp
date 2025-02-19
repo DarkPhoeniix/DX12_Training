@@ -48,7 +48,7 @@ dx12::Fence* TaskGPU::GetFence() const
 
 ID3D12Fence* TaskGPU::GetDXFence() const
 {
-    return _fence->GetFence().Get();
+    return _fence->GetDXFence().Get();
 }
 
 UINT64 TaskGPU::GetFenceValue() const
