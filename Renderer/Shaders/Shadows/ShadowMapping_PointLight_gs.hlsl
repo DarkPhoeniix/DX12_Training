@@ -9,7 +9,7 @@ struct GSOutput
 
 cbuffer Light : register(b3)
 {
-    uint LightIndex;
+    uint LightIndex : packoffset(c0.x);
 }
 StructuredBuffer<LightDesc> Lights : register(t2);
 

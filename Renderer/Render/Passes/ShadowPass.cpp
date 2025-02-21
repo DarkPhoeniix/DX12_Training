@@ -58,6 +58,11 @@ namespace
             DrawEntity(child, commandList, frameCache);
         }
     }
+
+    std::uint32_t AlignToUAVCounterOffset(std::uint32_t size)
+    {
+        return Math::AlignUp(size, D3D12_UAV_COUNTER_PLACEMENT_ALIGNMENT);
+    }
 } // namespace unnamed
 
 namespace render
@@ -104,94 +109,7 @@ namespace render
 
         }
 
-
-        {
-            dx12::DescriptorHeapDescription desc;
-            desc.SetNumDescriptors(3);
-            desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-            desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_NONE);
-
-            _commandsDescHeap.Create(desc);
-            _commandsDescHeap.SetName("Test desc heap - execute indirect");
-        }
-
-        {
-            D3D12_RESOURCE_DESC counterDesc = {};
-            counterDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-            counterDesc.Width = sizeof(UINT);  // Only need 4 bytes for the counter
-            counterDesc.Height = 1;
-            counterDesc.DepthOrArraySize = 1;
-            counterDesc.MipLevels = 1;
-            counterDesc.Format = DXGI_FORMAT_UNKNOWN;
-            counterDesc.SampleDesc.Count = 1;
-            counterDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-            counterDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-
-            {
-                dx12::ResourceDescription desc;
-                desc.SetSize({ sizeof(UINT), 1 });
-                desc.SetLayout(D3D12_TEXTURE_LAYOUT_ROW_MAJOR);
-                desc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Unordered);
-
-                _counters.push_back(dx12::Resource());
-                _counters.back().CreateCommitedResource(desc);
-                _counters.back().SetName("Counter buffer 0");
-
-                _counters.push_back(dx12::Resource());
-                _counters.back().CreateCommitedResource(desc);
-                _counters.back().SetName("Counter buffer 1");
-
-                _counters.push_back(dx12::Resource());
-                _counters.back().CreateCommitedResource(desc);
-                _counters.back().SetName("Counter buffer 2");
-
-                desc.SetFlags(D3D12_RESOURCE_FLAG_NONE);
-                desc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::ReadBack);
-
-                _counterReadBack.CreateCommitedResource(desc);
-                _counterReadBack.SetName("Counter buffer readback");
-            }
-
-            {
-
-                dx12::ResourceDescription cDesc;
-                cDesc.SetSize({ sizeof(UINT), 1 });
-                cDesc.SetLayout(D3D12_TEXTURE_LAYOUT_ROW_MAJOR);
-                cDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
-
-                _counterReset.CreateCommitedResource(cDesc, D3D12_RESOURCE_STATE_COPY_SOURCE);
-                _counterReset.SetName("Counter reset buffer");
-                UINT* val = (UINT*)_counterReset.Map();
-                val[0] = 0;
-            }
-
-            dx12::ResourceDescription desc;
-            desc.SetSize({ 64 * sizeof(IndirectCommand) + sizeof(UINT), 1 });
-            desc.SetFormat(DXGI_FORMAT_UNKNOWN);
-            desc.SetStride(sizeof(IndirectCommand));
-            desc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Unordered);
-
-            _commandsBuffers.push_back(dx12::Resource());
-            _commandsBuffers.back().CreateCommitedResource(desc);
-            _commandsBuffers.back().SetName("Test res - execute indirect 0");
-            _commandsBuffers.back().SetUAVCounterOffset(4096);
-
-            dx12::Device::CreateUnorderedAccessView(_commandsBuffers.back().GetAsUAV(), _commandsDescHeap, &_commandsBuffers.back());
-
-            _commandsBuffers.push_back(dx12::Resource());
-            _commandsBuffers.back().CreateCommitedResource(desc);
-            _commandsBuffers.back().SetName("Test res - execute indirect 1");
-            _commandsBuffers.back().SetUAVCounterOffset(4096);
-
-            dx12::Device::CreateUnorderedAccessView(_commandsBuffers.back().GetAsUAV(), _commandsDescHeap, &_commandsBuffers.back());
-
-            _commandsBuffers.push_back(dx12::Resource());
-            _commandsBuffers.back().CreateCommitedResource(desc);
-            _commandsBuffers.back().SetName("Test res - execute indirect 2");
-            _commandsBuffers.back().SetUAVCounterOffset(4096);
-
-            dx12::Device::CreateUnorderedAccessView(_commandsBuffers.back().GetAsUAV(), _commandsDescHeap, &_commandsBuffers.back());
-        }
+        CreateCommandBuffers();
     }
 
     void ShadowPass::Destroy()
@@ -220,9 +138,9 @@ namespace render
             dx12::ResourceTable& frameTable = _frame->GetResourceTable();
 
             auto lightEntities = _scene->FilterNodesByComponent("Light");
-            for (uint32_t i = 0; i < lightEntities.size(); ++i)
+            for (uint32_t lightIndex = 0; lightIndex < lightEntities.size(); ++lightIndex)
             {
-                scene::Light* light = lightEntities[i]->GetComponentAs<scene::Light>("Light");
+                scene::Light* light = lightEntities[lightIndex]->GetComponentAs<scene::Light>("Light");
                 if (light->Type != scene::LightType::Spot)
                 {
                     continue;
@@ -248,7 +166,7 @@ namespace render
 
                 helpers::SetupSceneDataGPU(*_scene, commandList, _frame);
 
-                commandList.SetConstant(4, i);
+                commandList.SetConstant(4, lightIndex);
 
                 for (std::shared_ptr<scene::Entity>& node : _scene->GetRootNodes())
                 {
@@ -282,24 +200,22 @@ namespace render
         dx12::CommandList& drawCmd = *drawTask->GetCommandLists().front();
         drawCmd.SetName("Shadow pass (point lights) command list - draw");
 
-
         dx12::ResourceTable& sceneTable = *_scene->GetCache().GetTextureTable();
         dx12::ResourceTable& frameTable = _frame->GetResourceTable();
 
-        dx12::Resource& commandBuffer = _commandsBuffers[_frame->Index];
-        dx12::Resource& counter = _counters[_frame->Index];
-
-        {
-            frameTable.CopyDescriptor(&commandBuffer, dx12::ResourceViewType::UAV, _commandsDescHeap.GetCPUHandleWithOffset(_frame->Index));
-        }
-
         std::vector<std::shared_ptr<scene::Entity>> lightEntities = _scene->FilterNodesByComponent("Light");
-        for (uint32_t i = 0; i < lightEntities.size(); ++i)
+        for (uint32_t lightIndex = 0; lightIndex < lightEntities.size(); ++lightIndex)
         {
-            scene::Light* light = lightEntities[i]->GetComponentAs<scene::Light>("Light");
+            dx12::Resource& commandBuffer = _commandsBuffers[_frame->Index][lightIndex];
+            dx12::Resource& counter = _counters[_frame->Index][lightIndex];
+
+            {
+                frameTable.CopyDescriptor(&commandBuffer, dx12::ResourceViewType::UAV, _commandsDescHeap.GetCPUHandleWithOffset(_frame->Index * lightEntities.size() + lightIndex));
+            }
+
+            scene::Light* light = lightEntities[lightIndex]->GetComponentAs<scene::Light>("Light");
 
             std::vector<IndirectCommand> commands;
-            CacheGPU::DataHandle counterHandle = _frame->GetCache().RequestPlacement(std::format("LightCoutner {}", i), 4);
 
             PIXBeginEvent(computeCmd.GetDXCommandList().Get(), 1, "Shadow Pass - Point lights - test");
             {
@@ -329,7 +245,7 @@ namespace render
                     com.verticesBufferAddress = mesh->VertexBuffer->OffsetGPU(0);
                     com.modelBufferAddress = modelAddress.DataGPU;
                     com.bonesBufferAddress = bonesAddress.DataCPU ? bonesAddress.DataGPU : -1;
-                    com.LightIndex = i;
+                    com.LightIndex = lightIndex;
 
                     com.drawArguments.VertexCountPerInstance = mesh->VertexData.size();
                     com.drawArguments.InstanceCount = 1;
@@ -360,7 +276,8 @@ namespace render
                 computeCmd.TransitionBarrier(commandBuffer, D3D12_RESOURCE_STATE_COPY_DEST);
 
                 // Reset commands counter
-                computeCmd.CopyBufferRegion(_counterReset, commandBuffer, sizeof(UINT), 0, 64 * sizeof(IndirectCommand));
+                uint32_t counterBufferOffset = 4096;
+                computeCmd.CopyBufferRegion(_counterReset, commandBuffer, sizeof(UINT), 0, counterBufferOffset);
 
                 // Transition resources
                 computeCmd.TransitionBarrier(commandBuffer, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
@@ -410,8 +327,10 @@ namespace render
                 drawCmd.SetRenderTargets({ }, &depthHandle);
 
                 drawCmd.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-                //drawCmd.ExecuteIndirect(_cmdSignature, commands.size(), commandBuffer, *_frame->GetCache().GetCache(), 0, counterHandle.Offset);
-                drawCmd.ExecuteIndirect(_cmdSignature, commands.size(), commandBuffer, commandBuffer, 0, 64 * sizeof(IndirectCommand));
+
+                uint32_t commandBufferOffset = (64 * sizeof(IndirectCommand) + 4) * lightIndex;
+                uint32_t counterBufferOffset = (64 * sizeof(IndirectCommand) + 4) * (lightIndex + 1) - 4;
+                drawCmd.ExecuteIndirect(_cmdSignature, commands.size(), commandBuffer, commandBuffer, 0, 4096);
 
                 // Transition resources
                 drawCmd.TransitionBarrier(*shadowMap, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
@@ -423,5 +342,87 @@ namespace render
         }
         computeCmd.Close();
         drawCmd.Close();
+    }
+
+    void ShadowPass::CreateCommandBuffers()
+    {
+        std::vector<std::shared_ptr<scene::Entity>> lightEntities = _scene->FilterNodesByComponent("Light");
+        std::vector<std::shared_ptr<scene::Entity>> meshEntities = _scene->FilterNodesByComponent("Mesh");
+
+        std::uint32_t lightsNum = lightEntities.size();
+        std::uint32_t meshesNum = meshEntities.size();
+
+        {
+            // TODO: hardcoded size
+            dx12::HeapDescription heapDescription;
+            heapDescription.SetSize(_4MB);
+            heapDescription.SetHeapType(D3D12_HEAP_TYPE_DEFAULT);
+
+            _commandsHeap.Create(heapDescription);
+        }
+
+        {
+            dx12::DescriptorHeapDescription desc;
+            desc.SetNumDescriptors(lightsNum * 3);
+            desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+            desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_NONE);
+
+            _commandsDescHeap.Create(desc);
+            _commandsDescHeap.SetName("Command buffers descriptor heap");
+        }
+
+        {
+            dx12::ResourceDescription counterDescription;
+            counterDescription.SetSize({ sizeof(UINT), 1 });
+            counterDescription.SetLayout(D3D12_TEXTURE_LAYOUT_ROW_MAJOR);
+            counterDescription.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Unordered);
+
+            for (size_t frameIndex = 0; frameIndex < 3; ++frameIndex)
+            {
+                _counters[frameIndex].resize(lightsNum);
+
+                for (size_t lightIndex = 0; lightIndex < lightsNum; ++lightIndex)
+                {
+                    _counters[frameIndex][lightIndex].SetResourceDescription(counterDescription);
+                    _counters[frameIndex][lightIndex].SetName(std::format("Command buffer counter {} (frame {})", lightIndex, frameIndex));
+                    _commandsHeap.PlaceResource(_counters[frameIndex][lightIndex], D3D12_RESOURCE_STATE_COMMON);
+
+                }
+            }
+        }
+
+        {
+            dx12::ResourceDescription counterResetBuffer;
+            counterResetBuffer.SetSize({ sizeof(UINT), 1 });
+            counterResetBuffer.SetLayout(D3D12_TEXTURE_LAYOUT_ROW_MAJOR);
+            counterResetBuffer.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
+
+            _counterReset.CreateCommitedResource(counterResetBuffer, D3D12_RESOURCE_STATE_COPY_SOURCE);
+            _counterReset.SetName("Counter reset buffer");
+            UINT* val = (UINT*)_counterReset.Map();
+            val[0] = 0;
+        }
+
+        {
+            dx12::ResourceDescription commandsBufferDescription;
+            commandsBufferDescription.SetSize({ (AlignToUAVCounterOffset(meshesNum * sizeof(IndirectCommand)) + (uint32_t)sizeof(UINT)), 1 });
+            commandsBufferDescription.SetStride(D3D12_UAV_COUNTER_PLACEMENT_ALIGNMENT);
+            commandsBufferDescription.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Unordered);
+
+            for (size_t frameIndex = 0; frameIndex < 3; ++frameIndex)
+            {
+                _commandsBuffers[frameIndex].resize(lightsNum);
+
+                for (size_t lightIndex = 0; lightIndex < lightsNum; ++lightIndex)
+                {
+                    _commandsBuffers[frameIndex][lightIndex].SetResourceDescription(commandsBufferDescription);
+                    _commandsBuffers[frameIndex][lightIndex].SetUAVCounterOffset(AlignToUAVCounterOffset(meshesNum * sizeof(IndirectCommand)));
+                    _commandsBuffers[frameIndex][lightIndex].SetName(std::format("Commands buffer {} (frame {})", lightIndex, frameIndex));
+                    _commandsHeap.PlaceResource(_commandsBuffers[frameIndex][lightIndex], D3D12_RESOURCE_STATE_COMMON);
+
+                    dx12::Device::CreateUnorderedAccessView(_commandsBuffers[frameIndex][lightIndex].GetAsUAV(), _commandsDescHeap, &_commandsBuffers[frameIndex][lightIndex]);
+                }
+            }
+        }
     }
 } // namespace render

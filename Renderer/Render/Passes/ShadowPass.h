@@ -16,6 +16,7 @@ namespace render
     private:
         void SpotLightsPass();
         void PointLightsPass();
+        void CreateCommandBuffers();
 
         dx12::PipelineState _shadowSpotLightPipeline;
         dx12::PipelineState _shadowPointLightPipeline;
@@ -24,9 +25,9 @@ namespace render
         ComPtr<ID3D12CommandSignature> _cmdSignature;
 
         dx12::Resource _counterReset;
-        dx12::Resource _counterReadBack;
-        std::vector<dx12::Resource> _counters;
-        std::vector<dx12::Resource> _commandsBuffers;
+        std::vector<dx12::Resource> _counters[3];
+        std::vector<dx12::Resource> _commandsBuffers[3];
         dx12::DescriptorHeap _commandsDescHeap;
+        dx12::Heap _commandsHeap;
     };
 } // namespace render

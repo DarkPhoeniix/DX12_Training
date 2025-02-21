@@ -15,6 +15,9 @@
         "Cube.004.node",
         "Cylinder.001.node",
         "Cone.001.node",
+        "BluePoint.node",
+        "RedPoint.node",
+        "GreenPoint.node",
         "WhitePoint.node",
         "Skybox.node"
     ]
