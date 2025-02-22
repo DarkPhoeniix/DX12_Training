@@ -7,9 +7,9 @@
 
 namespace render
 {
-    void FXAAPass::Inititalize()
+    void FXAAPass::Initialize()
     {
-        IRenderPass::Inititalize();
+        IRenderPass::Initialize();
 
         _name = "FXAAPass";
 

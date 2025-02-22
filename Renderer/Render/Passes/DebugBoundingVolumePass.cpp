@@ -13,9 +13,9 @@ using namespace DirectX;
 
 namespace render
 {
-    void DebugBoundingVolumePass::Inititalize()
+    void DebugBoundingVolumePass::Initialize()
     {
-        IRenderPass::Inititalize();
+        IRenderPass::Initialize();
 
         _name = "DebugBoundingVolumePass";
 

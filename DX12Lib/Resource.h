@@ -47,7 +47,7 @@ namespace dx12
         const D3D12_RESOURCE_ALLOCATION_INFO& GetAllocationInfo() const;
 
         // Computes the GPU virtual address offset for the resource.
-        D3D12_GPU_VIRTUAL_ADDRESS OffsetGPU(std::uint64_t offset) const;
+        D3D12_GPU_VIRTUAL_ADDRESS OffsetGPU(std::uint64_t offset = 0) const;
 
         void SetUAVCounterOffset(uint32_t offset);
 

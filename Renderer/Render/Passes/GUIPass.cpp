@@ -7,9 +7,9 @@
 
 namespace render
 {
-    void GUIPass::Inititalize()
+    void GUIPass::Initialize()
     {
-        IRenderPass::Inititalize();
+        IRenderPass::Initialize();
 
         _name = "GUIPass";
 

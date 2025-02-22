@@ -300,7 +300,7 @@ namespace render
             pass->SetScene(_scene);
             pass->SetGeometryBuffer(_gBuffer);
 
-            pass->Inititalize();
+            pass->Initialize();
         }
     }
 } // namespace render

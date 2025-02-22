@@ -21,15 +21,25 @@ namespace render
         constexpr float WHITE = 5.5f;
     } // namespace unnamed
 
-    void ToneMappingPass::Inititalize()
+    void ToneMappingPass::Initialize()
     {
-        IRenderPass::Inititalize();
+        IRenderPass::Initialize();
 
         _name = "ToneMappingPass";
 
         _luminanceHistogramPipeline.Parse("PipelineDescriptions\\BuildLuminanceHistogramPipeline.tech");
-        _averageluminanceHistogramPipeline.Parse("PipelineDescriptions\\AverageLuminancePipeline.tech");
+        _averageLuminanceHistogramPipeline.Parse("PipelineDescriptions\\AverageLuminancePipeline.tech");
         _toneMappingPipeline.Parse("PipelineDescriptions\\ToneMappingPipeline.tech");
+
+        {
+            dx12::ResourceDescription resDesc;
+            resDesc.SetSize({ sizeof(float), 1 });
+            resDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
+
+            _averageFrameLum[0].CreateCommitedResource(resDesc);
+            _averageFrameLum[1].CreateCommitedResource(resDesc);
+            _averageFrameLum[2].CreateCommitedResource(resDesc);
+        }
     }
 
     void ToneMappingPass::Destroy()
@@ -41,7 +51,7 @@ namespace render
     {
         BuildLuminanceHistogram();
         CalculateAverageLuminance();
-        ApplyTonemapping();
+        ApplyToneMapping();
     }
 
     void ToneMappingPass::BuildLuminanceHistogram()
@@ -95,7 +105,7 @@ namespace render
 
     void ToneMappingPass::CalculateAverageLuminance()
     {
-        TaskGPU* task = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE, &_averageluminanceHistogramPipeline);
+        TaskGPU* task = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE, &_averageLuminanceHistogramPipeline);
         task->SetName("average_luminance");
         task->AddDependency("luminance_histogram");
         _tasks.push_back(task);
@@ -107,7 +117,7 @@ namespace render
         {
             // Setup pipeline state
 
-            commandList.SetPipelineState(_averageluminanceHistogramPipeline);
+            commandList.SetPipelineState(_averageLuminanceHistogramPipeline);
 
             // Copy and setup needed resources
 
@@ -123,20 +133,8 @@ namespace render
             std::uint32_t size = viewportSize.x * viewportSize.y;
 
             CacheGPU::DataHandle histogram = _frame->GetCache().GetResourcePlacement("luminanceHistogram");
-            CacheGPU::DataHandle avgLum = _frame->GetCache().RequestPlacement("averageLuminanceHistogram", sizeof(std::uint32_t));
-            CacheGPU::DataHandle prevAvgLuminance = _frame->GetCache().RequestPlacement("prevAverageLuminance", sizeof(std::uint32_t));
-            CacheGPU::DataHandle handle = _frame->Prev->GetCache().GetResourcePlacement("averageLuminanceHistogram");
-            float& lumData = *(float*)prevAvgLuminance.DataCPU;
-            if (handle.DataCPU)
-            {
-                lumData = *((float*)handle.DataCPU);
-                _adaptationSpeed = std::min((_scene->GetCache().GetDeltaTime() * 2.5f), 1.0f);
-            }
-            else
-            {
-                lumData = 0.01f;
-                _adaptationSpeed = 0.0f;
-            }
+
+            _adaptationSpeed = std::min((_scene->GetCache().GetDeltaTime() * 2.5f), 1.0f);
 
             // Setup root signature components
 
@@ -144,9 +142,9 @@ namespace render
             commandList.SetConstants(0, 1, &MIN_LOG_LUM, 1);
             commandList.SetConstants(0, 1, &LOG_LUM_RANGE, 2);
             commandList.SetConstants(0, 1, &_adaptationSpeed, 3);
-            commandList.SetSRV(1, prevAvgLuminance.DataGPU);
+            commandList.SetSRV(1, _averageFrameLum[_frame->Prev->Index].OffsetGPU());
             commandList.SetUAV(2, histogram.DataGPU);
-            commandList.SetUAV(3, avgLum.DataGPU);
+            commandList.SetUAV(3, _averageFrameLum[_frame->Index].OffsetGPU());
 
             // Execute
 
@@ -159,7 +157,7 @@ namespace render
         commandList.Close();
     }
 
-    void ToneMappingPass::ApplyTonemapping()
+    void ToneMappingPass::ApplyToneMapping()
     {
         TaskGPU* task = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE, &_toneMappingPipeline);
         task->SetName("tonemapping");
@@ -183,13 +181,11 @@ namespace render
 
             _frame->BindDescriptorHeaps(commandList);
 
-            CacheGPU::DataHandle avgLuminance = _frame->GetCache().GetResourcePlacement("averageLuminanceHistogram");
-
             // Setup root signature components
 
             commandList.SetConstants(0, 1, &MIDDLE_GREY);
             commandList.SetConstants(0, 1, &WHITE, 1);
-            commandList.SetSRV(1, avgLuminance.DataGPU);
+            commandList.SetSRV(1, _averageFrameLum[_frame->Index].OffsetGPU());
             commandList.SetDescriptorTable(2, frameTable.GetResourceGPUHandle(hdr, dx12::ResourceViewType::SRV));
             commandList.SetDescriptorTable(3, frameTable.GetResourceGPUHandle(target, dx12::ResourceViewType::UAV));
 

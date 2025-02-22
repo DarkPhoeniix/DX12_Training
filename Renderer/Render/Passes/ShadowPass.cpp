@@ -67,9 +67,9 @@ namespace
 
 namespace render
 {
-    void ShadowPass::Inititalize()
+    void ShadowPass::Initialize()
     {
-        IRenderPass::Inititalize();
+        IRenderPass::Initialize();
 
         _shadowSpotLightPipeline.Parse("PipelineDescriptions\\Shadow_SpotLight.tech");
         _shadowPointLightPipeline.Parse("PipelineDescriptions\\Shadow_PointLight.tech");

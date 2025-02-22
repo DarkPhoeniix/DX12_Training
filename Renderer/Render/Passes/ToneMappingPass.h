@@ -8,7 +8,7 @@ namespace render
     {
     public:
         // Inherited via IRenderPass
-        void Inititalize() override;
+        void Initialize() override;
         void Destroy() override;
 
         void Execute() override;
@@ -16,11 +16,13 @@ namespace render
     private:
         void BuildLuminanceHistogram();
         void CalculateAverageLuminance();
-        void ApplyTonemapping();
+        void ApplyToneMapping();
 
         dx12::PipelineState _luminanceHistogramPipeline;
-        dx12::PipelineState _averageluminanceHistogramPipeline;
+        dx12::PipelineState _averageLuminanceHistogramPipeline;
         dx12::PipelineState _toneMappingPipeline;
+
+        dx12::Resource _averageFrameLum[3];
 
         float _adaptationSpeed;
     };

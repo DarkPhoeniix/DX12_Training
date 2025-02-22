@@ -8,9 +8,9 @@
 
 namespace render
 {
-    void SkyboxPass::Inititalize()
+    void SkyboxPass::Initialize()
     {
-        IRenderPass::Inititalize();
+        IRenderPass::Initialize();
 
         _name = "SkyboxPass";
 
