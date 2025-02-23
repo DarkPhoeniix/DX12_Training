@@ -7,9 +7,9 @@
 
 namespace render
 {
-    void ClearBuffersPass::Inititalize()
+    void ClearBuffersPass::Initialize()
     {
-        IRenderPass::Inititalize();
+        IRenderPass::Initialize();
 
         _name = "ClearBuffersPass";
     }

@@ -285,10 +285,10 @@ namespace render
 
         _renderPasses.push_back(std::make_unique<ClearBuffersPass>());
         _renderPasses.push_back(std::make_unique<GeometryPass>());
-        _renderPasses.push_back(std::make_unique<ShadowPass>());
+        //_renderPasses.push_back(std::make_unique<ShadowPass>());
         _renderPasses.push_back(std::make_unique<LightingPass>());
-        _renderPasses.push_back(std::make_unique<SkyboxPass>());
-        _renderPasses.push_back(std::make_unique<ToneMappingPass>());
+        //_renderPasses.push_back(std::make_unique<SkyboxPass>());
+        //_renderPasses.push_back(std::make_unique<ToneMappingPass>());
         //_renderPasses.push_back(std::make_unique<FXAAPass>());
         //_renderPasses.push_back(std::make_unique<DebugArmaturePass>());
         //_renderPasses.push_back(std::make_unique<DebugBoundingVolumePass>());
@@ -299,7 +299,7 @@ namespace render
             pass->SetScene(_scene);
             pass->SetGeometryBuffer(_gBuffer);
 
-            pass->Inititalize();
+            pass->Initialize();
         }
     }
 } // namespace render

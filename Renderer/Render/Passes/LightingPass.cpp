@@ -9,9 +9,9 @@
 
 namespace render
 {
-    void LightingPass::Inititalize()
+    void LightingPass::Initialize()
     {
-        IRenderPass::Inititalize();
+        IRenderPass::Initialize();
 
         _name = "LightingPass";
 
@@ -58,7 +58,7 @@ namespace render
             dx12::ResourceTable& sceneTable = *_scene->GetCache().GetTextureTable();
             dx12::ResourceTable& gBufferTable = _gBuffer->GetResourceTable();
 
-            dx12::Resource* target = &_HDRTexture;
+            dx12::Resource* target = &_frame->GetTargetTexture();
             dx12::Resource* albedoMetalness = &_gBuffer->GetAlbedoMetalnessTexture();
             dx12::Resource* normalSpecular = &_gBuffer->GetNormalTexture();
             dx12::Resource* depth = &_gBuffer->GetDepthTexture();

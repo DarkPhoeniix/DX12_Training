@@ -91,9 +91,9 @@ namespace
 
 namespace render
 {
-    void GeometryPass::Inititalize()
+    void GeometryPass::Initialize()
     {
-        IRenderPass::Inititalize();
+        IRenderPass::Initialize();
 
         _name = "GeometryPass";
 

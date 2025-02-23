@@ -8,7 +8,7 @@ namespace render
     {
     public:
         // Inherited via IRenderPass
-        void Inititalize() override;
+        void Initialize() override;
         void Destroy() override;
 
         void Execute() override;

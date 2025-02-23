@@ -21,9 +21,9 @@ namespace render
         constexpr float WHITE = 5.5f;
     } // namespace unnamed
 
-    void ToneMappingPass::Inititalize()
+    void ToneMappingPass::Initialize()
     {
-        IRenderPass::Inititalize();
+        IRenderPass::Initialize();
 
         _name = "ToneMappingPass";
 
