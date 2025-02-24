@@ -17,10 +17,18 @@ namespace
     // Data structure to match the command signature used for ExecuteIndirect.
     struct IndirectCommand
     {
+        D3D12_GPU_VIRTUAL_ADDRESS vertex0BufferAddress;
+        UINT VB0_Size;
+        UINT VB0_Stride;
+        D3D12_GPU_VIRTUAL_ADDRESS vertex1BufferAddress;
+        UINT VB1_Size;
+        UINT VB1_Stride;
+        D3D12_GPU_VIRTUAL_ADDRESS indexBufferAddress;
+        UINT IB_Size;
+        UINT IB_Format;
         D3D12_GPU_VIRTUAL_ADDRESS sceneBufferAddress;
         D3D12_GPU_VIRTUAL_ADDRESS modelBufferAddress;
         D3D12_GPU_VIRTUAL_ADDRESS bonesBufferAddress;
-        D3D12_GPU_VIRTUAL_ADDRESS verticesBufferAddress;
         D3D12_GPU_VIRTUAL_ADDRESS lightsBufferAddress;
         UINT LightIndex;
 
@@ -76,28 +84,34 @@ namespace render
         _pointLightCullingPipeline.Parse("PipelineDescriptions\\LightCulling_PointLight.tech");
 
         {
-            D3D12_INDIRECT_ARGUMENT_DESC argsDesc[7];
-            argsDesc[0].Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT_BUFFER_VIEW;
-            argsDesc[0].ConstantBufferView.RootParameterIndex = 0;
+            // https://microsoft.github.io/DirectX-Specs/d3d/IndirectDrawing.html#root-constants--vertex-buffers
+            D3D12_INDIRECT_ARGUMENT_DESC argsDesc[9];
+            argsDesc[0].Type = D3D12_INDIRECT_ARGUMENT_TYPE_VERTEX_BUFFER_VIEW;
+            argsDesc[0].VertexBuffer.Slot = 0;
 
-            argsDesc[1].Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT_BUFFER_VIEW;
-            argsDesc[1].ConstantBufferView.RootParameterIndex = 1;
+            argsDesc[1].Type = D3D12_INDIRECT_ARGUMENT_TYPE_VERTEX_BUFFER_VIEW;
+            argsDesc[1].VertexBuffer.Slot = 1;
 
-            argsDesc[2].Type = D3D12_INDIRECT_ARGUMENT_TYPE_SHADER_RESOURCE_VIEW;
-            argsDesc[2].ShaderResourceView.RootParameterIndex = 2;
+            argsDesc[2].Type = D3D12_INDIRECT_ARGUMENT_TYPE_INDEX_BUFFER_VIEW;
 
-            argsDesc[3].Type = D3D12_INDIRECT_ARGUMENT_TYPE_SHADER_RESOURCE_VIEW;
-            argsDesc[3].ShaderResourceView.RootParameterIndex = 3;
+            argsDesc[3].Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT_BUFFER_VIEW;
+            argsDesc[3].ConstantBufferView.RootParameterIndex = 0;
 
-            argsDesc[4].Type = D3D12_INDIRECT_ARGUMENT_TYPE_SHADER_RESOURCE_VIEW;
-            argsDesc[4].ShaderResourceView.RootParameterIndex = 4;
+            argsDesc[4].Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT_BUFFER_VIEW;
+            argsDesc[4].ConstantBufferView.RootParameterIndex = 1;
 
-            argsDesc[5].Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT;
-            argsDesc[5].Constant.RootParameterIndex = 5;
-            argsDesc[5].Constant.Num32BitValuesToSet = 1;
-            argsDesc[5].Constant.DestOffsetIn32BitValues = 0;
+            argsDesc[5].Type = D3D12_INDIRECT_ARGUMENT_TYPE_SHADER_RESOURCE_VIEW;
+            argsDesc[5].ShaderResourceView.RootParameterIndex = 2;
 
-            argsDesc[6].Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW;
+            argsDesc[6].Type = D3D12_INDIRECT_ARGUMENT_TYPE_SHADER_RESOURCE_VIEW;
+            argsDesc[6].ShaderResourceView.RootParameterIndex = 3;
+
+            argsDesc[7].Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT;
+            argsDesc[7].Constant.RootParameterIndex = 4;
+            argsDesc[7].Constant.Num32BitValuesToSet = 1;
+            argsDesc[7].Constant.DestOffsetIn32BitValues = 0;
+
+            argsDesc[8].Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED;
 
 
             D3D12_COMMAND_SIGNATURE_DESC commandSignatureDesc = {};
@@ -183,6 +197,14 @@ namespace render
 
     void ShadowPass::PointLightsPass()
     {
+        TaskGPU* clearTask = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
+        clearTask->SetName("shadows_point_clear");
+        clearTask->AddDependency("shadows_spot");
+        _tasks.push_back(clearTask);
+
+        dx12::CommandList& clearCmd = *clearTask->GetCommandLists().front();
+        clearCmd.SetName("Shadow pass (point lights) command list - clear");
+
         TaskGPU* computeTask = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE, &_shadowPointLightPipeline);
         computeTask->SetName("shadows_point_compute");
         computeTask->AddDependency("shadows_spot");
@@ -195,6 +217,7 @@ namespace render
         TaskGPU* drawTask = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, &_shadowPointLightPipeline);
         drawTask->SetName("shadows_point_draw");
         drawTask->AddDependency("shadows_point_compute");
+        drawTask->AddDependency("shadows_point_clear");
         _tasks.push_back(drawTask);
 
         dx12::CommandList& drawCmd = *drawTask->GetCommandLists().front();
@@ -204,6 +227,35 @@ namespace render
         dx12::ResourceTable& frameTable = _frame->GetResourceTable();
 
         std::vector<std::shared_ptr<scene::Entity>> lightEntities = _scene->FilterNodesByComponent("Light");
+
+
+        PIXBeginEvent(clearCmd.GetDXCommandList().Get(), 1, "Shadow Pass - CLEAN!");
+        for (uint32_t lightIndex = 0; lightIndex < lightEntities.size(); ++lightIndex)
+        {
+            scene::Light* light = lightEntities[lightIndex]->GetComponentAs<scene::Light>("Light");
+            {
+                std::shared_ptr<dx12::Resource> shadowMap = light->ShadowMap;
+                if (!shadowMap)
+                {
+                    break;
+                }
+
+                // Copy needed descriptors
+                frameTable.CopyDescriptor(shadowMap.get(), dx12::ResourceViewType::DSV, sceneTable);
+                frameTable.CopyDescriptor(shadowMap.get(), dx12::ResourceViewType::SRV, sceneTable);
+
+                // Transition resources
+                clearCmd.TransitionBarrier(*shadowMap, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+
+                D3D12_CPU_DESCRIPTOR_HANDLE depthHandle = frameTable.GetResourceCPUHandle(shadowMap.get(), dx12::ResourceViewType::DSV);
+                clearCmd.ClearDSV(depthHandle, D3D12_CLEAR_FLAG_DEPTH);
+            }
+        }
+        PIXEndEvent(clearCmd.GetDXCommandList().Get());
+        clearCmd.Close();
+
+        PIXBeginEvent(computeCmd.GetDXCommandList().Get(), 1, "Shadow Pass - Point lights - test");
+        PIXBeginEvent(drawCmd.GetDXCommandList().Get(), 1, "Shadow Pass - Point lights - draw");
         for (uint32_t lightIndex = 0; lightIndex < lightEntities.size(); ++lightIndex)
         {
             dx12::Resource& commandBuffer = _commandsBuffers[_frame->Index][lightIndex];
@@ -217,10 +269,10 @@ namespace render
 
             std::vector<IndirectCommand> commands;
 
-            PIXBeginEvent(computeCmd.GetDXCommandList().Get(), 1, "Shadow Pass - Point lights - test");
             {
                 // Record all draw command to the commandBuffer
-                size_t objectsNum = _scene->GetRootNodes().size();
+                std::vector<std::shared_ptr<scene::Entity>> meshes = _scene->FilterNodesByComponent("Mesh");
+                size_t objectsNum = meshes.size();
 
                 CacheGPU::DataHandle sceneAddress = _frame->GetCache().GetResourcePlacement("SceneCB");
                 CacheGPU::DataHandle lightsAddress = _frame->GetCache().GetResourcePlacement("LightsCB");
@@ -240,11 +292,19 @@ namespace render
 
                     IndirectCommand com;
 
+                    com.vertex0BufferAddress = mesh->VertexBufferView.BufferLocation;
+                    com.VB0_Size = mesh->VertexBufferView.SizeInBytes;
+                    com.VB0_Stride = mesh->VertexBufferView.StrideInBytes;
+                    com.vertex1BufferAddress = mesh->VertexBufferView.BufferLocation;
+                    com.VB1_Size = mesh->VertexBufferView.SizeInBytes;
+                    com.VB1_Stride = mesh->VertexBufferView.StrideInBytes;
+                    com.indexBufferAddress = mesh->IndexBufferView.BufferLocation;
+                    com.IB_Size = mesh->IndexBufferView.SizeInBytes;
+                    com.IB_Format = mesh->IndexBufferView.Format;
                     com.sceneBufferAddress = sceneAddress.DataGPU;
                     com.lightsBufferAddress = lightsAddress.DataGPU;
-                    com.verticesBufferAddress = mesh->VertexBuffer->OffsetGPU(0);
                     com.modelBufferAddress = modelAddress.DataGPU;
-                    com.bonesBufferAddress = bonesAddress.DataCPU ? bonesAddress.DataGPU : -1;
+                    com.bonesBufferAddress = bonesAddress.DataCPU ? bonesAddress.DataGPU : modelAddress.DataGPU;
                     com.LightIndex = lightIndex;
 
                     com.drawArguments.VertexCountPerInstance = mesh->VertexData.size();
@@ -259,16 +319,18 @@ namespace render
                 }
 
                 // Write all models bounding boxes to the buffer
-                CacheGPU::DataHandle AABBs = _frame->GetCache().RequestPlacement("AABBs", commands.size() * sizeof(scene::AABBVolume));
+                CacheGPU::DataHandle AABBs = _frame->GetCache().RequestPlacement("AABBs", commands.size() * sizeof(DirectX::XMVECTOR) * 2);
                 for (size_t j = 0, count = 0; j < objectsNum; ++j)
                 {
                     if (scene::Mesh* mesh = _scene->GetRootNodes()[j]->GetComponentAs<scene::Mesh>("Mesh"))
                     {
                         scene::Transformation* t = _scene->GetRootNodes()[j]->GetComponentAs<scene::Transformation>("Transformation");
+                        
+                        DirectX::XMVECTOR* data = (DirectX::XMVECTOR*)AABBs.DataCPU;
+                        scene::AABBVolume aabb = mesh->AABB.Transform(t->Transform);
 
-                        scene::AABBVolume* aabb = (scene::AABBVolume*)AABBs.DataCPU;
-                        aabb[count++].Min = DirectX::XMVector3TransformCoord(mesh->AABB.Min, t->Transform);
-                        aabb[count++].Max = DirectX::XMVector3TransformCoord(mesh->AABB.Max, t->Transform);
+                        data[count++] = aabb.Min;
+                        data[count++] = aabb.Max;
                     }
                 }
 
@@ -286,11 +348,13 @@ namespace render
                 computeCmd.SetPipelineState(_pointLightCullingPipeline);
                 _frame->BindDescriptorHeaps(computeCmd);
 
+                helpers::SetupSceneDataGPU(*_scene, computeCmd, _frame);
+
                 // Setup root signature
-                computeCmd.SetConstant(2, commands.size());
-                computeCmd.SetSRV(3, AABBs.DataGPU);
-                computeCmd.SetSRV(4, inputCommands.DataGPU);
-                computeCmd.SetDescriptorTable(5, frameTable.GetResourceGPUHandle(&commandBuffer, dx12::ResourceViewType::UAV));
+                computeCmd.SetConstant(3, commands.size());
+                computeCmd.SetSRV(4, AABBs.DataGPU);
+                computeCmd.SetSRV(5, inputCommands.DataGPU);
+                computeCmd.SetDescriptorTable(6, frameTable.GetResourceGPUHandle(&commandBuffer, dx12::ResourceViewType::UAV));
 
                 // Dispatch culling compute shader
                 int xThreadGroups = (uint32_t)std::ceilf(commands.size() / 4.0f);
@@ -300,10 +364,8 @@ namespace render
                 computeCmd.TransitionBarrier(commandBuffer, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
 
             }
-            PIXEndEvent(computeCmd.GetDXCommandList().Get());
 
 
-            PIXBeginEvent(drawCmd.GetDXCommandList().Get(), 1, "Shadow Pass - Point lights - draw");
             {
                 std::shared_ptr<dx12::Resource> shadowMap = light->ShadowMap;
                 if (!shadowMap)
@@ -311,18 +373,10 @@ namespace render
                     break;
                 }
 
-                // Copy needed descriptors
-                frameTable.CopyDescriptor(shadowMap.get(), dx12::ResourceViewType::DSV, sceneTable);
-                frameTable.CopyDescriptor(shadowMap.get(), dx12::ResourceViewType::SRV, sceneTable);
-
-                // Transition resources
-                drawCmd.TransitionBarrier(*shadowMap, D3D12_RESOURCE_STATE_DEPTH_WRITE);
-
                 // Setup pipeline
                 drawCmd.SetPipelineState(_shadowPointLightPipeline);
 
                 D3D12_CPU_DESCRIPTOR_HANDLE depthHandle = frameTable.GetResourceCPUHandle(shadowMap.get(), dx12::ResourceViewType::DSV);
-                drawCmd.ClearDSV(depthHandle, D3D12_CLEAR_FLAG_DEPTH);
                 drawCmd.SetViewport(scene::Viewport(shadowMap->GetResourceDescription().GetSize()));
                 drawCmd.SetRenderTargets({ }, &depthHandle);
 
@@ -337,9 +391,10 @@ namespace render
 
                 commands.clear();
             }
-            PIXEndEvent(drawCmd.GetDXCommandList().Get());
 
         }
+        PIXEndEvent(drawCmd.GetDXCommandList().Get());
+        PIXEndEvent(computeCmd.GetDXCommandList().Get());
         computeCmd.Close();
         drawCmd.Close();
     }
@@ -355,7 +410,7 @@ namespace render
         {
             // TODO: hardcoded size
             dx12::HeapDescription heapDescription;
-            heapDescription.SetSize(_4MB);
+            heapDescription.SetSize(_16MB);
             heapDescription.SetHeapType(D3D12_HEAP_TYPE_DEFAULT);
 
             _commandsHeap.Create(heapDescription);

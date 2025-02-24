@@ -9,8 +9,7 @@
     "CBV(b0, visibility = SHADER_VISIBILITY_ALL), " \
     "CBV(b1, visibility = SHADER_VISIBILITY_VERTEX), " \
     "SRV(t0, visibility = SHADER_VISIBILITY_VERTEX), " \
-    "SRV(t1, visibility = SHADER_VISIBILITY_VERTEX), " \
-	"SRV(t2, visibility = SHADER_VISIBILITY_GEOMETRY), " \
+	"SRV(t1, visibility = SHADER_VISIBILITY_GEOMETRY), " \
     "RootConstants(num32BitConstants=1, b3, visibility=SHADER_VISIBILITY_ALL)"
 
 #include "../Common.hlsli"
@@ -18,7 +17,12 @@
 
 struct VSinput
 {
-    uint VertexID : SV_VertexID;
+    float3 Position     : POSITION;
+    float3 Normal       : NORMAL;
+    float3 Tangent      : TANGENT;
+    float2 Texture      : TEXCOORD;
+    uint4  BoneIds      : BONE_IDS;
+    float4 BoneWeights  : BONE_WEIGHTS;
 };
 
 struct VSOutput
@@ -26,22 +30,12 @@ struct VSOutput
     float4 Position : SV_Position;
 };
 
-struct VertexDesc
-{
-    float3 Position;
-    float3 Normal;
-    float3 Tangent;
-    float2 Texture;
-};
-
 struct BoneDesc
 {
     row_major matrix Transform;
 };
 
-
 StructuredBuffer<BoneDesc> Bones : register(t0);
-StructuredBuffer<VertexDesc> Vertices : register(t1);
 
 [RootSignature(ShadowMapping_Point_RootSig)]
 VSOutput main(VSinput IN)
@@ -59,7 +53,7 @@ VSOutput main(VSinput IN)
     //    boneTransform += Bones[Vertices[IN.VertexID].BoneIds[3]].Transform * Vertices[IN.VertexID].BoneWeights[3];
     //}
     
-    float4 positionWS = float4(Vertices[IN.VertexID].Position, 1.0f);
+    float4 positionWS = float4(IN.Position, 1.0f);
     positionWS = mul(positionWS, boneTransform);
     positionWS = mul(positionWS, Model.Transform);
     

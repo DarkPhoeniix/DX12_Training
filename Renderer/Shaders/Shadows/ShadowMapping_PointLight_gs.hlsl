@@ -11,7 +11,7 @@ cbuffer Light : register(b3)
 {
     uint LightIndex : packoffset(c0.x);
 }
-StructuredBuffer<LightDesc> Lights : register(t2);
+StructuredBuffer<LightDesc> Lights : register(t1);
 
 [maxvertexcount(18)]
 void main(triangle float4 input[3] : SV_POSITION, inout TriangleStream<GSOutput> triangleStream)

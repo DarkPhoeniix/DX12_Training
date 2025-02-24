@@ -4,7 +4,14 @@ struct Pixelinput
     float4 position : SV_POSITION;
 };
 
+struct ColorData
+{
+    float4 Color;
+};
+
+ConstantBuffer<ColorData> Color : register(b2);
+
 float4 main(Pixelinput input) : SV_Target
 {
-    return float4(0.0f, 1.0f, 0.0f, 1.0f);
+    return Color.Color;
 }
