@@ -3,5 +3,6 @@
     "Energy": 10.0,
     "Type": "Point",
     "Range": 20.0,
+    "Intensity": 0.4,
     "CastShadows": 1
 }
