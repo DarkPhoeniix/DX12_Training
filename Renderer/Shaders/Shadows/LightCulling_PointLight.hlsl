@@ -17,19 +17,22 @@
 #include "../Common.hlsli"
 #include "../LightingCommon.hlsli"
 
-#define THREAD_BLOCK_SIZE 4
+#define THREAD_BLOCK_SIZE 16
 
 struct IndirectCommand
 {
-    uint2 Vertex0BufferAddress;
-    uint VB0_Size;
-    uint VB0_Stride;
-    uint2 Vertex1BufferAddress;
-    uint VB1_Size;
-    uint VB1_Stride;
+    uint2 VertexBufferAddress;
+    uint  VertexBufferSize;
+    uint  VertexBufferStride;
+    
+    uint2 SkinBufferAddress;
+    uint  SkinBufferSize;
+    uint  SkinBufferStride;
+    
     uint2 IndexBufferAddress;
-    uint IB_Size;
-    uint IB_Stride;
+    uint  IndexBufferSize;
+    uint  IndexBufferStride;
+    
     uint2 SceneBufferAddress;
     uint2 ModelBufferAddress;
     uint2 BonesBufferAddress;

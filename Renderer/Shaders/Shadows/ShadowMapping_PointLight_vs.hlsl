@@ -1,16 +1,5 @@
 
-#define ShadowMapping_Point_RootSig \
-	"RootFlags " \
-	"( " \
-		"ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | " \
-		"DENY_HULL_SHADER_ROOT_ACCESS | " \
-		"DENY_DOMAIN_SHADER_ROOT_ACCESS " \
-	"), " \
-    "CBV(b0, visibility = SHADER_VISIBILITY_ALL), " \
-    "CBV(b1, visibility = SHADER_VISIBILITY_VERTEX), " \
-    "SRV(t0, visibility = SHADER_VISIBILITY_VERTEX), " \
-	"SRV(t1, visibility = SHADER_VISIBILITY_GEOMETRY), " \
-    "RootConstants(num32BitConstants=1, b3, visibility=SHADER_VISIBILITY_ALL)"
+#include "ShadowMapping_rootsig.hlsli"
 
 #include "../Common.hlsli"
 #include "../LightingCommon.hlsli"
@@ -37,7 +26,7 @@ struct BoneDesc
 
 StructuredBuffer<BoneDesc> Bones : register(t0);
 
-[RootSignature(ShadowMapping_Point_RootSig)]
+[RootSignature(ShadowMapping_RootSig)]
 VSOutput main(VSinput IN)
 {
     row_major matrix boneTransform = float4x4(
@@ -45,13 +34,13 @@ VSOutput main(VSinput IN)
         float4(0.0f, 1.0f, 0.0f, 0.0f),
         float4(0.0f, 0.0f, 1.0f, 0.0f),
         float4(0.0f, 0.0f, 0.0f, 1.0f));
-    //if (Model.useSkinning)
-    //{
-    //    boneTransform  = Bones[Vertices[IN.VertexID].BoneIds[0]].Transform * Vertices[IN.VertexID].BoneWeights[0];
-    //    boneTransform += Bones[Vertices[IN.VertexID].BoneIds[1]].Transform * Vertices[IN.VertexID].BoneWeights[1];
-    //    boneTransform += Bones[Vertices[IN.VertexID].BoneIds[2]].Transform * Vertices[IN.VertexID].BoneWeights[2];
-    //    boneTransform += Bones[Vertices[IN.VertexID].BoneIds[3]].Transform * Vertices[IN.VertexID].BoneWeights[3];
-    //}
+    if (Model.useSkinning)
+    {
+        boneTransform  = Bones[IN.BoneIds[0]].Transform * IN.BoneWeights[0];
+        boneTransform += Bones[IN.BoneIds[1]].Transform * IN.BoneWeights[1];
+        boneTransform += Bones[IN.BoneIds[2]].Transform * IN.BoneWeights[2];
+        boneTransform += Bones[IN.BoneIds[3]].Transform * IN.BoneWeights[3];
+    }
     
     float4 positionWS = float4(IN.Position, 1.0f);
     positionWS = mul(positionWS, boneTransform);

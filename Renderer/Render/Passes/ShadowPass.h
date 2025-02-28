@@ -14,9 +14,11 @@ namespace render
         void Execute() override;
 
     private:
+        void ClearDepthTargets();
+        void RecordCommandBuffers();
         void SpotLightsPass();
         void PointLightsPass();
-        void CreateCommandBuffers();
+        void UpdateCommandBuffers();
 
         dx12::PipelineState _shadowSpotLightPipeline;
         dx12::PipelineState _shadowPointLightPipeline;

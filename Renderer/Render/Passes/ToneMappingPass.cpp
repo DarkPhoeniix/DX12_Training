@@ -18,7 +18,7 @@ namespace render
         constexpr float RCP_LOG_LUM_RANGE = 1.0f / LOG_LUM_RANGE;
 
         constexpr float MIDDLE_GREY = 0.775f;
-        constexpr float WHITE = 1.5f;
+        constexpr float WHITE = 2.5f;
     } // namespace unnamed
 
     void ToneMappingPass::Initialize()
