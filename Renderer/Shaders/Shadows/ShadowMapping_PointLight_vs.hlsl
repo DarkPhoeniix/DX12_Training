@@ -24,7 +24,7 @@ struct BoneDesc
     row_major matrix Transform;
 };
 
-StructuredBuffer<BoneDesc> Bones : register(t1);
+StructuredBuffer<BoneDesc> Bones : register(t0);
 
 [RootSignature(ShadowMapping_RootSig)]
 VSOutput main(VSinput IN)

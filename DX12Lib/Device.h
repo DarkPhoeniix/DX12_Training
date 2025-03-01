@@ -51,7 +51,7 @@ namespace dx12
         // Creates a Shader Resource View (SRV) in the specified descriptor heap.
         static void CreateShaderResourceView(const ShaderResourceView& view, DescriptorHeap& descriptorHeap);
         // Creates an Unordered Access View (UAV) in the specified descriptor heap.
-        static void CreateUnorderedAccessView(const UnorderedAccessView& view, DescriptorHeap& descriptorHeap);
+        static void CreateUnorderedAccessView(const UnorderedAccessView& view, DescriptorHeap& descriptorHeap, dx12::Resource* counterResource = nullptr);
 
     private:
         Device();

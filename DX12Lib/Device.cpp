@@ -116,10 +116,11 @@ namespace dx12
         _instance->_device->CreateShaderResourceView(view.Owner->GetDXResource().Get(), &view, heapHandle);
     }
 
-    void Device::CreateUnorderedAccessView(const UnorderedAccessView& view, DescriptorHeap& descriptorHeap)
+    void Device::CreateUnorderedAccessView(const UnorderedAccessView& view, DescriptorHeap& descriptorHeap, dx12::Resource* counterResource)
     {
+        ID3D12Resource* counter = counterResource ? counterResource->GetDXResource().Get() : nullptr;
         D3D12_CPU_DESCRIPTOR_HANDLE heapHandle = descriptorHeap.GetCPUHandleWithOffset(descriptorHeap.Offset());
-        _instance->_device->CreateUnorderedAccessView(view.Owner->GetDXResource().Get(), nullptr, &view, heapHandle);
+        _instance->_device->CreateUnorderedAccessView(view.Owner->GetDXResource().Get(), counter, &view, heapHandle);
     }
 
     Device::Device()

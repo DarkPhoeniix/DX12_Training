@@ -30,8 +30,8 @@ struct ShadowData
 };
 
 ConstantBuffer<ShadowData>  Shadow  : register(b3);
-StructuredBuffer<LightDesc> Lights  : register(t0);
-StructuredBuffer<BoneDesc>  Bones   : register(t1);
+StructuredBuffer<BoneDesc>  Bones   : register(t0);
+StructuredBuffer<LightDesc> Lights  : register(t1);
 
 [RootSignature(ShadowMapping_RootSig)]
 VSOutput main(VSinput IN)

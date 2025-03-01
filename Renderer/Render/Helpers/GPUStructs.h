@@ -28,6 +28,7 @@ struct GPUModelDesc
     UINT MetalnessTextureIndex = -1;
     UINT RoughnessTextureIndex = -1;
 
+    UINT HasMesh = false;
     bool UseSkinning = false;
 };
 

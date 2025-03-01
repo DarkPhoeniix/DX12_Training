@@ -4,6 +4,8 @@
 
 #include "Scene/Entity/Components/Armature.h"
 #include "Scene/Entity/Components/Camera.h"
+#include "Scene/Entity/Components/Light.h"
+#include "Scene/Entity/Components/Mesh.h"
 #include "Scene/Volumes/AABBVolume.h"
 #include "Scene/Volumes/OBBVolume.h"
 
@@ -91,8 +93,25 @@ namespace render
             commandList.TransitionBarrier(_gBuffer->GetAlbedoMetalnessTexture(), D3D12_RESOURCE_STATE_RENDER_TARGET);
             commandList.TransitionBarrier(_gBuffer->GetNormalTexture(), D3D12_RESOURCE_STATE_RENDER_TARGET);
 
-            DrawHelper::DrawSphere(commandList, *_activeCamera, 80.0f, DirectX::XMVectorSet(-15.0f, 15.0f, 10.0f, 1.0f));
-            //DrawHelper::DrawCone(commandList, *_activeCamera, 29.0f, 100.0f, DirectX::XMVectorSet(0.0f, 50.0f, 10.0f, 1.0f), DirectX::XMVectorSet(0.0f, -0.9f, -0.2f, 0.0f), DirectX::XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f));
+            auto lights = _scene->FilterNodesByComponent("Light");
+            for (auto& entity : lights)
+            {
+                scene::Light* light = entity->GetComponentAs<scene::Light>("Light");
+                scene::Transformation* t = entity->GetComponentAs<scene::Transformation>("Transformation");
+
+                DrawHelper::DrawSphere(commandList, *_activeCamera, light->Range, t->Transform.r[3], light->Color);
+            }
+
+            auto meshes = _scene->FilterNodesByComponent("Mesh");
+            for (auto& entity : meshes)
+            {
+                scene::Mesh* mesh = entity->GetComponentAs<scene::Mesh>("Mesh");
+                scene::Transformation* t = entity->GetComponentAs<scene::Transformation>("Transformation");
+                scene::AABBVolume aabb = mesh->AABB.Transform(t->Transform);
+
+                DrawHelper::DrawBox(commandList, *_activeCamera, aabb.Min, aabb.Max, DirectX::XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f));
+            }
+            DrawHelper::DrawCone(commandList, *_activeCamera, 29.0f, 100.0f, DirectX::XMVectorSet(0.0f, 50.0f, 10.0f, 1.0f), DirectX::XMVectorSet(0.0f, -0.9f, -0.2f, 0.0f), DirectX::XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f));
             //DrawHelper::DrawCone(commandList, *_activeCamera, 29.0f, 60.0f, DirectX::XMVectorSet(0.0f, 20.0f, 25.0f, 1.0f), DirectX::XMVectorSet(0.0f, 0.0f, -1.0f, 0.0f), DirectX::XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f));
 
             commandList.TransitionBarrier(_gBuffer->GetDepthTexture(), D3D12_RESOURCE_STATE_COMMON);

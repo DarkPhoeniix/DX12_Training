@@ -60,6 +60,20 @@ namespace dx12
         return true;
     }
 
+    bool ResourceTable::CopyDescriptor(Resource* resource, ResourceViewType viewType, D3D12_CPU_DESCRIPTOR_HANDLE handle)
+    {
+        ResourceTable::ResourceMap& resources = _GetResourceMap(viewType);
+        DescriptorHeap& descriptorHeap = GetDescriptorHeap(viewType);
+
+        ResourceKey key = { resource->GetName().c_str(), viewType };
+        InternalResourceDesc value = { resource, descriptorHeap.GetCurrentOffset(), viewType };
+        resources.insert(std::make_pair(key, value));
+
+        descriptorHeap.CopyResourceDescriptor(handle);
+
+        return true;
+    }
+
     bool ResourceTable::PlaceResource(Resource* resource, ResourceViewType viewType)
     {
         if (ASSERT(resource, "Trying to add a nullptr resource to resource table"))

@@ -23,6 +23,20 @@ namespace render
         }
     }
 
+    void DrawHelper::DrawBox(dx12::CommandList& commandList, const scene::Camera& camera, const DirectX::XMVECTOR& min, const DirectX::XMVECTOR& max, const DirectX::XMVECTOR& color)
+    {
+        ASSERT(_instance != nullptr, "DrawHelper has not been initialized");
+
+        commandList.SetPipelineState(_instance->_boxDebug);
+
+        commandList.SetConstants(0, 4, &min);
+        commandList.SetConstants(0, 4, &max, 4);
+        commandList.SetConstants(1, 16, &camera.ViewProjection());
+        commandList.SetConstants(2, 4, &color);
+
+        commandList.Draw(1);
+    }
+
     void DrawHelper::DrawSphere(dx12::CommandList& commandList, const scene::Camera& camera, float radius, const DirectX::XMVECTOR& position, const DirectX::XMVECTOR& color)
     {
         ASSERT(_instance != nullptr, "DrawHelper has not been initialized");
@@ -55,6 +69,7 @@ namespace render
 
     DrawHelper::DrawHelper()
     {
+        _boxDebug.Parse("PipelineDescriptions\\AABBRenderPipeline.tech");
         _sphereDebug.Parse("PipelineDescriptions\\DebugSpherePipeline.tech");
         _coneDebug.Parse("PipelineDescriptions\\DebugConePipeline.tech");
     }
