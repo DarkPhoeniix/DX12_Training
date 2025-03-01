@@ -111,7 +111,7 @@ namespace render
 
                 DrawHelper::DrawBox(commandList, *_activeCamera, aabb.Min, aabb.Max, DirectX::XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f));
             }
-            //DrawHelper::DrawCone(commandList, *_activeCamera, 29.0f, 100.0f, DirectX::XMVectorSet(0.0f, 50.0f, 10.0f, 1.0f), DirectX::XMVectorSet(0.0f, -0.9f, -0.2f, 0.0f), DirectX::XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f));
+            DrawHelper::DrawCone(commandList, *_activeCamera, 29.0f, 100.0f, DirectX::XMVectorSet(0.0f, 50.0f, 10.0f, 1.0f), DirectX::XMVectorSet(0.0f, -0.9f, -0.2f, 0.0f), DirectX::XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f));
             //DrawHelper::DrawCone(commandList, *_activeCamera, 29.0f, 60.0f, DirectX::XMVectorSet(0.0f, 20.0f, 25.0f, 1.0f), DirectX::XMVectorSet(0.0f, 0.0f, -1.0f, 0.0f), DirectX::XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f));
 
             commandList.TransitionBarrier(_gBuffer->GetDepthTexture(), D3D12_RESOURCE_STATE_COMMON);

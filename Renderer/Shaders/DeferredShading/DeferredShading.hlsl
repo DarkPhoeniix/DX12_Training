@@ -73,7 +73,7 @@ float CalculateShadowAttenuation_PCF3x3(in LightDesc light, in Surface surface)
     }
     else if (light.Type == 2)
     {
-        shadowFactor = Textures2D[shadowMapTextureIndex].SampleCmpLevelZero(ShadowSampler, UVD.xy, (UVD.z + 0.001f));
+        shadowFactor = Textures2D[shadowMapTextureIndex].SampleCmpLevelZero(ShadowSampler, UVD.xy, (UVD.z - 0.001f));
     }
     
     return shadowFactor;

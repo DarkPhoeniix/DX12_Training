@@ -158,13 +158,8 @@ namespace render
         for (uint32_t lightIndex = 0; lightIndex < lightEntities.size(); ++lightIndex)
         {
             scene::Light* light = lightEntities[lightIndex]->GetComponentAs<scene::Light>("Light");
+            if (std::shared_ptr<dx12::Resource> shadowMap = light->ShadowMap)
             {
-                std::shared_ptr<dx12::Resource> shadowMap = light->ShadowMap;
-                if (!shadowMap)
-                {
-                    break;
-                }
-
                 PIXBeginEvent(clearCmd.GetDXCommandList().Get(), 1, lightEntities[lightIndex]->GetName().c_str());
 
                 // Copy needed descriptors
@@ -305,8 +300,8 @@ namespace render
                     continue;
                 }
 
-                CacheGPU::DataHandle modelAddress = _frame->GetCache().GetResourcePlacement(_scene->GetRootNodes()[j]->GetName());
-                CacheGPU::DataHandle bonesAddress = _frame->GetCache().GetResourcePlacement(_scene->GetRootNodes()[j]->GetName() + "_bones");
+                CacheGPU::DataHandle modelAddress = _frame->GetCache().GetResourcePlacement(meshes[j]->GetName());
+                CacheGPU::DataHandle bonesAddress = _frame->GetCache().GetResourcePlacement(meshes[j]->GetName() + "_bones");
 
                 IndirectCommand command;
 
@@ -314,9 +309,22 @@ namespace render
                 command.VertexBufferSize = mesh->VertexBufferView.SizeInBytes;
                 command.VertexBufferStride = mesh->VertexBufferView.StrideInBytes;
 
-                command.SkinBufferAddress = mesh->VertexBufferView.BufferLocation;
-                command.SkinBufferSize = mesh->VertexBufferView.SizeInBytes;
-                command.SkinBufferStride = mesh->VertexBufferView.StrideInBytes;
+                if (!mesh->SkinningVertexData.empty())
+                {
+                    command.SkinBufferAddress = mesh->SkinningVertexBufferView.BufferLocation;
+                    command.SkinBufferSize = mesh->SkinningVertexBufferView.SizeInBytes;
+                    command.SkinBufferStride = mesh->SkinningVertexBufferView.StrideInBytes;
+
+                    command.BonesBufferAddress = bonesAddress.DataGPU;
+                }
+                else
+                {
+                    command.SkinBufferAddress = mesh->VertexBufferView.BufferLocation;
+                    command.SkinBufferSize = mesh->VertexBufferView.SizeInBytes;
+                    command.SkinBufferStride = mesh->VertexBufferView.StrideInBytes;
+
+                    command.BonesBufferAddress = modelAddress.DataGPU;
+                }
 
                 command.IndexBufferAddress = mesh->IndexBufferView.BufferLocation;
                 command.IndexBufferSize = mesh->IndexBufferView.SizeInBytes;
@@ -325,7 +333,6 @@ namespace render
                 command.SceneBufferAddress = sceneAddress.DataGPU;
                 command.LightsBufferAddress = lightsAddress.DataGPU;
                 command.ModelBufferAddress = modelAddress.DataGPU;
-                command.BonesBufferAddress = bonesAddress.DataCPU ? bonesAddress.DataGPU : modelAddress.DataGPU;
                 command.LightIndex = lightIndex;
 
                 command.DrawArguments.VertexCountPerInstance = mesh->VertexData.size();
@@ -385,17 +392,25 @@ namespace render
     {
         TaskGPU* task = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, &_shadowSpotLightPipeline);
         task->SetName("shadows_spot");
+        task->AddDependency("shadows_clear");
+        task->AddDependency("shadows_compute");
         _tasks.push_back(task);
 
-        dx12::CommandList& commandList = *task->GetCommandLists().front();
-        commandList.SetName("Shadow pass (spot lights) command list");
+        dx12::CommandList& drawCmd = *task->GetCommandLists().front();
+        drawCmd.SetName("Shadow pass (spot lights) cmdList - draw");
 
-        PIXBeginEvent(commandList.GetDXCommandList().Get(), 12, "Shadow Pass - Spot lights");
+        dx12::ResourceTable& frameTable = _frame->GetResourceTable();
+
+        std::vector<std::shared_ptr<scene::Entity>> lightEntities = _scene->FilterNodesByComponent("Light");
+        std::vector<std::shared_ptr<scene::Entity>> meshes = _scene->FilterNodesByComponent("Mesh");
+        size_t objectsNum = meshes.size();
+
+        PIXBeginEvent(drawCmd.GetDXCommandList().Get(), 1, "Shadow Pass (spot lights) | Draw");
         {
-            dx12::ResourceTable& sceneTable = *_scene->GetCache().GetTextureTable();
-            dx12::ResourceTable& frameTable = _frame->GetResourceTable();
+            drawCmd.SetPipelineState(_shadowSpotLightPipeline);
 
-            auto lightEntities = _scene->FilterNodesByComponent("Light");
+            helpers::SetupSceneDataGPU(*_scene, drawCmd, _frame);
+
             for (uint32_t lightIndex = 0; lightIndex < lightEntities.size(); ++lightIndex)
             {
                 scene::Light* light = lightEntities[lightIndex]->GetComponentAs<scene::Light>("Light");
@@ -404,39 +419,33 @@ namespace render
                     continue;
                 }
 
-                commandList.SetPipelineState(_shadowSpotLightPipeline);
-
                 std::shared_ptr<dx12::Resource> shadowMap = light->ShadowMap;
                 if (!shadowMap)
                 {
-                    break;
+                    continue;
                 }
 
-                frameTable.CopyDescriptor(shadowMap.get(), dx12::ResourceViewType::DSV, sceneTable);
-                frameTable.CopyDescriptor(shadowMap.get(), dx12::ResourceViewType::SRV, sceneTable);
+                PIXBeginEvent(drawCmd.GetDXCommandList().Get(), 1, lightEntities[lightIndex]->GetName().c_str());
+
+                dx12::Resource& commandBuffer = _commandsBuffers[_frame->Index][lightIndex];
+
                 D3D12_CPU_DESCRIPTOR_HANDLE depthHandle = frameTable.GetResourceCPUHandle(shadowMap.get(), dx12::ResourceViewType::DSV);
+                drawCmd.SetViewport(scene::Viewport(shadowMap->GetResourceDescription().GetSize()));
+                drawCmd.SetRenderTargets({ }, &depthHandle);
 
-                commandList.TransitionBarrier(*shadowMap, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+                drawCmd.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-                commandList.ClearDSV(depthHandle, D3D12_CLEAR_FLAG_DEPTH);
-                commandList.SetViewport(scene::Viewport(shadowMap->GetResourceDescription().GetSize()));
-                commandList.SetRenderTargets({ }, &depthHandle);
+                std::uint32_t counterBufferOffset = commandBuffer.GetResourceDescription().GetSize().x - sizeof(UINT);
+                drawCmd.ExecuteIndirect(_cmdSignature, objectsNum, commandBuffer, commandBuffer, 0, counterBufferOffset);
 
-                helpers::SetupSceneDataGPU(*_scene, commandList, _frame);
+                drawCmd.TransitionBarrier(*shadowMap, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 
-                commandList.SetConstant(4, lightIndex);
-
-                for (std::shared_ptr<scene::Entity>& node : _scene->GetRootNodes())
-                {
-                    DrawEntity(node, commandList, &_frame->GetCache());
-                }
-
-                commandList.TransitionBarrier(*shadowMap, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+                PIXEndEvent(drawCmd.GetDXCommandList().Get());
             }
         }
-        PIXEndEvent(commandList.GetDXCommandList().Get());
+        PIXEndEvent(drawCmd.GetDXCommandList().Get());
 
-        commandList.Close();
+        drawCmd.Close();
     }
 
     void ShadowPass::PointLightsPass()
@@ -459,14 +468,21 @@ namespace render
         // Setup pipeline
         drawCmd.SetPipelineState(_shadowPointLightPipeline);
 
+        helpers::SetupSceneDataGPU(*_scene, drawCmd, _frame);
+
         PIXBeginEvent(drawCmd.GetDXCommandList().Get(), 1, "Shadow Pass (point lights) | Draw");
         for (uint32_t lightIndex = 0; lightIndex < lightEntities.size(); ++lightIndex)
         {
             scene::Light* light = lightEntities[lightIndex]->GetComponentAs<scene::Light>("Light");
+            if (light->Type != scene::LightType::Point)
+            {
+                continue;
+            }
+
             std::shared_ptr<dx12::Resource> shadowMap = light->ShadowMap;
             if (!shadowMap)
             {
-                break;
+                continue;
             }
 
             PIXBeginEvent(drawCmd.GetDXCommandList().Get(), 1, lightEntities[lightIndex]->GetName().c_str());

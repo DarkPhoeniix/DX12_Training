@@ -200,7 +200,7 @@ namespace gui
                 break;
 
             case scene::LightType::Spot:
-                if (ImGui::DragFloat3("Direction", &direction.x, 0.05f))
+                if (ImGui::DragFloat3("Direction", &direction.x, 0.05f, -1.0f, 1.0f))
                 {
                     light->Direction = DirectX::XMVector3Normalize(DirectX::XMLoadFloat3(&direction));
                     modified = true;
