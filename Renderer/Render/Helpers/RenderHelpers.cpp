@@ -39,16 +39,14 @@ namespace
         if (light->Type == scene::LightType::Spot)
         {
             XMMATRIX view;
-            XMMATRIX proj;
 
             XMVECTOR lightDir = XMVector3Normalize(light->Direction);
             XMVECTOR lightPos = transform->Transform.r[3];
             XMVECTOR lightTar = lightPos + lightDir * light->Range;
 
             view = XMMatrixLookAtLH(lightPos, lightTar, XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
-            proj = XMMatrixPerspectiveFovLH(XMConvertToRadians(light->OuterAngle), 1.0f, 0.5f, light->Range);
 
-            result[0] = view * proj;
+            result[0] = view;
         }
         else if (light->Type == scene::LightType::Point)
         {
@@ -105,7 +103,7 @@ namespace
             GPULightDesc lightDesc;
             {
                 lightDesc.Position = transform->Transform.r[3];
-                lightDesc.Direction = light->Direction;
+                lightDesc.Direction = XMVector3Normalize(light->Direction);
                 lightDesc.Color = light->Color;
 
                 lightDesc.Range = light->Range;
@@ -119,7 +117,7 @@ namespace
                 {
                 case scene::LightType::Spot:
                 {
-                    XMMATRIX proj = XMMatrixPerspectiveFovLH(XMConvertToRadians(light->OuterAngle), 1.0f, 0.5f, light->Range);
+                    XMMATRIX proj = XMMatrixPerspectiveFovLH(XMConvertToRadians(light->OuterAngle), 1.0f, 1.0f, light->Range);
                     lightDesc.ViewProj[0] *= proj;
                     lightDesc.PerspectiveValues[0] = proj.r[2].m128_f32[2];
                     lightDesc.PerspectiveValues[1] = proj.r[3].m128_f32[2];

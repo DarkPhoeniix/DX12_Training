@@ -10,4 +10,4 @@
     "CBV(b1, visibility = SHADER_VISIBILITY_ALL), " \
     "SRV(t0, visibility = SHADER_VISIBILITY_ALL), " \
 	"SRV(t1, visibility = SHADER_VISIBILITY_ALL), " \
-    "RootConstants(num32BitConstants=2, b3, visibility=SHADER_VISIBILITY_ALL)"
+    "RootConstants(num32BitConstants=1, b3, visibility=SHADER_VISIBILITY_ALL)"

@@ -32,7 +32,7 @@ namespace render
         return _name;
     }
 
-    void IRenderPass::Inititalize()
+    void IRenderPass::Initialize()
     {
         ASSERT(_scene, "Scene is not set in Render pass");
         ASSERT(_gBuffer, "Geometry buffer is not set in Render pass");

@@ -19,6 +19,8 @@ public:
     DataHandle GetOrPlaceResource(const std::string& name, uint32_t size);
     DataHandle GetResourcePlacement(const std::string& name);
 
+    std::shared_ptr<dx12::Resource> GetCache();
+
 private:
     std::unordered_map<std::string, DataHandle> _placedResources;
     std::shared_ptr<dx12::Resource> _cache;

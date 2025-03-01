@@ -59,6 +59,7 @@ namespace dx12
 
         // Copies a resource from a source to a destination.
         void CopyResource(Resource& sourceResource, Resource& destinationResource);
+        void CopyBufferRegion(Resource& sourceResource, Resource& destinationResource, uint32_t numBytes, uint32_t sourceOffset = 0, uint32_t destinationOffset = 0);
 
         // Sets the primitive topology for the Input Assembly stage (e.g., points, lines, triangles).
         // This defines how the GPU will interpret the vertex data for each draw call.
@@ -101,6 +102,9 @@ namespace dx12
 
         // Dispatches a compute shader with specified thread group counts in the X, Y, and Z dimensions.
         void Dispatch(std::uint32_t xThreadGroupsCount = 1, std::uint32_t yThreadGroupsCount = 1, std::uint32_t zThreadGroupsCount = 1);
+
+        // TODO: comment ExecuteIndirect
+        void ExecuteIndirect(ComPtr<ID3D12CommandSignature> cmdSignature, std::uint32_t maxCommandCount, Resource& argumentBuffer, Resource& countBuffer, std::uint32_t argumentBufferOffset = 0, std::uint32_t countBufferOffset = 0);
 
         // Sets the descriptor heaps for the command list. Descriptor heaps are used to manage resources like buffers, textures, etc.
         void SetDescriptorHeaps(const std::vector<ID3D12DescriptorHeap*> descriptorHeaps);

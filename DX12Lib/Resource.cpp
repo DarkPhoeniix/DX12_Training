@@ -10,6 +10,7 @@ namespace dx12
 		, _currentState(D3D12_RESOURCE_STATE_COMMON)
 		, _initialState(D3D12_RESOURCE_STATE_COMMON)
 		, _allocationInfo()
+		, _uavCounterOffset(-1)
 	{
 	}
 
@@ -19,6 +20,7 @@ namespace dx12
 		, _currentState(D3D12_RESOURCE_STATE_COMMON)
 		, _initialState(D3D12_RESOURCE_STATE_COMMON)
 		, _allocationInfo()
+		, _uavCounterOffset(-1)
 	{
 	}
 
@@ -83,6 +85,11 @@ namespace dx12
 	const D3D12_RESOURCE_ALLOCATION_INFO& Resource::GetAllocationInfo() const
 	{
 		return _allocationInfo;
+	}
+
+	void Resource::SetUAVCounterOffset(uint32_t offset)
+	{
+		_uavCounterOffset = offset;
 	}
 
 	void* Resource::Map()
@@ -150,6 +157,7 @@ namespace dx12
 			{
 				heapDesc.Type = D3D12_HEAP_TYPE_UPLOAD;
 				_initialState = D3D12_RESOURCE_STATE_GENERIC_READ;
+				_currentState = _initialState;
 			}
 			else if (_resourceDesc.IsType(ResourceType::ReadBack))
 			{
@@ -304,6 +312,12 @@ namespace dx12
 		if ((type & ResourceType::Buffer) != ResourceType::None)
 		{
 			view.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+			view.Buffer.StructureByteStride = _resourceDesc.GetStride();
+			view.Buffer.NumElements = _resourceDesc.GetSize().x / _resourceDesc.GetStride();
+			if (_uavCounterOffset != -1)
+			{
+				view.Buffer.CounterOffsetInBytes = _uavCounterOffset;
+			}
 		}
 		else if ((type & ResourceType::Texture) != ResourceType::None)
 		{

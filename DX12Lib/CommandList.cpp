@@ -128,6 +128,11 @@ namespace dx12
         _commandList->CopyResource(destinationResource.GetDXResource().Get(), sourceResource.GetDXResource().Get());
     }
 
+    void CommandList::CopyBufferRegion(Resource& sourceResource, Resource& destinationResource, uint32_t numBytes, uint32_t sourceOffset, uint32_t destinationOffset)
+    {
+        _commandList->CopyBufferRegion(destinationResource.GetDXResource().Get(), destinationOffset, sourceResource.GetDXResource().Get(), sourceOffset, numBytes);
+    }
+
     void CommandList::SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY primitiveTopology)
     {
         if (ASSERT(_type == CommandListType::Graphics, "Wrong type of the command list"))
@@ -265,6 +270,11 @@ namespace dx12
         }
 
         _commandList->Dispatch(xThreadGroupsCount, yThreadGroupsCount, zThreadGroupsCount);
+    }
+
+    void CommandList::ExecuteIndirect(ComPtr<ID3D12CommandSignature> cmdSignature, std::uint32_t maxCommandCount, Resource& argumentBuffer, Resource& countBuffer, std::uint32_t argumentBufferOffset, std::uint32_t countBufferOffset)
+    {
+        _commandList->ExecuteIndirect(cmdSignature.Get(), maxCommandCount, argumentBuffer.GetDXResource().Get(), argumentBufferOffset, countBuffer.GetDXResource().Get(), countBufferOffset);
     }
 
     void CommandList::SetDescriptorHeaps(const std::vector<ID3D12DescriptorHeap*> descriptorHeaps)

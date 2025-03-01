@@ -1,0 +1,7 @@
+{
+	"Type": "LightCulling_Point",
+
+	"IsGraphicsPipeline": false,
+
+	"CS": "Shaders\\LightCulling_PointLight.cso"
+}

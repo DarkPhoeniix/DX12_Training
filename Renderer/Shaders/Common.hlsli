@@ -28,6 +28,7 @@ struct ModelDesc
     uint                MetalnessTextureIndex;
     uint                RoughnessTextureIndex;
     
+    uint                hasMesh;
     bool                useSkinning;
 };
 

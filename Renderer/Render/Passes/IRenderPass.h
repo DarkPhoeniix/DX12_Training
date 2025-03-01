@@ -19,7 +19,7 @@ namespace render
 
         const std::string& GetName() const;
 
-        virtual void Inititalize();
+        virtual void Initialize();
         virtual void Destroy();
 
         virtual void Execute() = 0;

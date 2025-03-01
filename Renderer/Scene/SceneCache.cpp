@@ -22,7 +22,7 @@ namespace scene
         }
 
         _texturesTable = std::make_shared<dx12::ResourceTable>();
-        _texturesTable->Init(64);
+        _texturesTable->Init(1024);
 
         _lightsTable = std::make_shared<dx12::ResourceTable>();
         _lightsTable->Init(4);

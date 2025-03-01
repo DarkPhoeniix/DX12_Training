@@ -7,9 +7,9 @@
 
 namespace render
 {
-    void DebugArmaturePass::Inititalize()
+    void DebugArmaturePass::Initialize()
     {
-        IRenderPass::Inititalize();
+        IRenderPass::Initialize();
 
         _name = "DebugArmaturePass";
 

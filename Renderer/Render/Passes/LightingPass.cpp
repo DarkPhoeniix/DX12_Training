@@ -9,9 +9,9 @@
 
 namespace render
 {
-    void LightingPass::Inititalize()
+    void LightingPass::Initialize()
     {
-        IRenderPass::Inititalize();
+        IRenderPass::Initialize();
 
         _name = "LightingPass";
 

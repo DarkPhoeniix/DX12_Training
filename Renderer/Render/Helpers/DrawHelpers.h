@@ -20,6 +20,12 @@ namespace render
         static void Init();
         static void Destroy();
 
+        static void DrawBox(dx12::CommandList& commandList,
+            const scene::Camera& camera,
+            const DirectX::XMVECTOR& min,
+            const DirectX::XMVECTOR& max,
+            const DirectX::XMVECTOR& color = DirectX::XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f));
+
         static void DrawSphere(dx12::CommandList& commandList,
             const scene::Camera& camera,
             float radius = 1.0f,
@@ -37,6 +43,7 @@ namespace render
     private:
         DrawHelper();
 
+        dx12::PipelineState _boxDebug;
         dx12::PipelineState _sphereDebug;
         dx12::PipelineState _coneDebug;
 

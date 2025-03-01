@@ -322,13 +322,13 @@ namespace scene
             {
                 component->Type = LightType::Spot;
             }
-            component->Direction = ParseVector(lightData["Direction"].asString());
-            component->Color = ParseVector(lightData["Color"].asString());
-            component->Intensity = lightData["Intensity"].asFloat();
-            component->Range = lightData["Range"].asFloat();
-            component->OuterAngle = lightData["OuterAngle"].asFloat();
-            component->InnerAngle = lightData["InnerAngle"].asFloat();
-            component->CastShadows = lightData["CastShadows"].asUInt();
+            component->Direction    = ParseVector(lightData["Direction"].asString());
+            component->Color        = ParseVector(lightData["Color"].asString());
+            component->Intensity    = lightData["Intensity"].asFloat();
+            component->Range        = lightData["Range"].asFloat();
+            component->OuterAngle   = lightData["OuterAngle"].asFloat();
+            component->InnerAngle   = lightData["InnerAngle"].asFloat();
+            component->CastShadows  = lightData["CastShadows"].asUInt();
 
             if (component->CastShadows)
             {

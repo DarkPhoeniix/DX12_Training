@@ -31,6 +31,11 @@ namespace
             {
                 modelDesc->Transform = transform.Transform;
 
+                if (mesh)
+                {
+                    modelDesc->HasMesh = 1;
+                }
+
                 if (material)
                 {
                     dx12::ResourceTable& frameTable = frame->GetResourceTable();
@@ -91,9 +96,9 @@ namespace
 
 namespace render
 {
-    void GeometryPass::Inititalize()
+    void GeometryPass::Initialize()
     {
-        IRenderPass::Inititalize();
+        IRenderPass::Initialize();
 
         _name = "GeometryPass";
 

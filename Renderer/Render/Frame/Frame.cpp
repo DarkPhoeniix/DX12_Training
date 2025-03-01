@@ -33,7 +33,7 @@ Frame::~Frame()
 void Frame::Init(const DirectX::XMUINT2& size, uint32_t cacheSize)
 {
     {
-        _resourceTable.Init(64, true);
+        _resourceTable.Init(1024, true);
     }
 
     // Initialize cache heap
@@ -45,7 +45,7 @@ void Frame::Init(const DirectX::XMUINT2& size, uint32_t cacheSize)
         desc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
 
         std::shared_ptr<dx12::Resource> frameCachedMemory = std::make_shared<dx12::Resource>();
-        frameCachedMemory->CreateCommitedResource(desc, D3D12_RESOURCE_STATE_COMMON);
+        frameCachedMemory->CreateCommitedResource(desc);
         frameCachedMemory->SetName(std::format("Frame cache {}", Index));
 
         _cache.SetResource(frameCachedMemory);

@@ -17,6 +17,8 @@ namespace scene
             , Max(max)
         {   }
 
+        AABBVolume Transform(const DirectX::XMMATRIX& transform);
+
         DirectX::XMVECTOR Min;
         DirectX::XMVECTOR Max;
     };

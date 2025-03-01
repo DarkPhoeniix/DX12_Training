@@ -73,7 +73,7 @@ float CalculateShadowAttenuation_PCF3x3(in LightDesc light, in Surface surface)
     }
     else if (light.Type == 2)
     {
-        shadowFactor = Textures2D[shadowMapTextureIndex].SampleCmpLevelZero(ShadowSampler, UVD.xy, (UVD.z + 0.001f));
+        shadowFactor = Textures2D[shadowMapTextureIndex].SampleCmpLevelZero(ShadowSampler, UVD.xy, (UVD.z - 0.001f));
     }
     
     return shadowFactor;
@@ -116,7 +116,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
         float3 specularColor = (F * G * D) / max(0.00001f, (4.0f * surface.NdotL * surface.NdotV));
         
         float3 diffuseColor = surface.Albedo.rgb * (1.0f - surface.Metalness);
-        float3 lightAttenuation = CalculateAttenuation(Lights[i], surface) * Lights[i].Color.rgb;
+        float3 lightAttenuation = CalculateAttenuation(Lights[i], surface) * Lights[i].Color.rgb * Lights[i].Intesity;
         float shadowAttenuation = CalculateShadowAttenuation_PCF3x3(Lights[i], surface);
         float3 surfaceColor = (diffuseColor + specularColor) * surface.NdotL;
         
