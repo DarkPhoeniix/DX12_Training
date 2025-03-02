@@ -2,8 +2,20 @@
 
 #include "RenderContext.h"
 
+#include "ResourceTable.h"
+
 namespace rg
 {
+    dx12::ResourceTable* RenderContext::GetResourceTable()
+    {
+        return _frameResourceTable;
+    }
+
+    CacheGPU* RenderContext::GetCache()
+    {
+        return _frameCache;
+    }
+
     std::shared_ptr<dx12::Resource> RenderContext::GetResource(ResourceId id)
     {
         auto resourceIt = _resources.find(id);
@@ -31,7 +43,7 @@ namespace rg
     ResourceId RenderContext::ReadResource(std::string name)
     {
         auto IdIt = _mapNameToId.find(name);
-        if (ASSERT(IdIt == _mapNameToId.end(), "Texture is not exist in render graph context"))
+        if (ASSERT(IdIt != _mapNameToId.end(), "Texture is not exist in render graph context"))
         {
             return ResourceId(-1);
         }
@@ -42,7 +54,7 @@ namespace rg
     ResourceId RenderContext::WriteResource(std::string name)
     {
         auto IdIt = _mapNameToId.find(name);
-        if (ASSERT(IdIt == _mapNameToId.end(), "Texture is not exist in render graph context"))
+        if (ASSERT(IdIt != _mapNameToId.end(), "Texture is not exist in render graph context"))
         {
             return ResourceId(-1);
         }

@@ -36,17 +36,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Render\Helpers\DrawHelpers.cpp" />
-    <ClCompile Include="Render\Passes\DebugArmaturePass.cpp" />
     <ClCompile Include="Render\Frame\CacheGPU.cpp" />
     <ClCompile Include="Render\Helpers\GPUStructs.cpp" />
     <ClCompile Include="Render\Helpers\RenderHelpers.cpp" />
-    <ClCompile Include="Render\Passes\ClearBuffersPass.cpp" />
-    <ClCompile Include="Render\Passes\DebugBoundingVolumePass.cpp" />
-    <ClCompile Include="Render\Passes\FXAAPass.cpp" />
     <ClCompile Include="Render\Passes\GeometryPass.cpp" />
-    <ClCompile Include="Render\Passes\GUIPass.cpp" />
-    <ClCompile Include="Render\Passes\IRenderPass.cpp" />
-    <ClCompile Include="Render\Passes\LightingPass.cpp" />
     <ClCompile Include="Scene\Volumes\OBBVolume.cpp" />
     <ClCompile Include="Scene\Entity\Components\Armature.cpp" />
     <ClCompile Include="Scene\Entity\Components\Animation.cpp" />
@@ -62,9 +55,6 @@
     <ClCompile Include="Scene\Entity\Components\Transformation.cpp" />
     <ClCompile Include="Scene\Entity\Components\Skybox.cpp" />
     <ClCompile Include="Scene\Volumes\AABBVolume.cpp" />
-    <ClCompile Include="Render\Passes\SkyboxPass.cpp" />
-    <ClCompile Include="Render\Passes\ShadowPass.cpp" />
-    <ClCompile Include="Render\Passes\ToneMappingPass.cpp" />
     <ClCompile Include="Utility\DebugInfo.cpp" />
     <ClCompile Include="Input\InputDevice.cpp" />
     <ClCompile Include="Window\Win32Window.cpp" />
@@ -84,20 +74,14 @@
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="Utility\HighResolutionClock.cpp" />
+    <ClCompile Include="Render\Passes\TestCopyPass.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Render\Helpers\DrawHelpers.h" />
-    <ClInclude Include="Render\Passes\DebugArmaturePass.h" />
     <ClInclude Include="Render\Frame\CacheGPU.h" />
     <ClInclude Include="Render\Helpers\GPUStructs.h" />
     <ClInclude Include="Render\Helpers\RenderHelpers.h" />
-    <ClInclude Include="Render\Passes\ClearBuffersPass.h" />
-    <ClInclude Include="Render\Passes\DebugBoundingVolumePass.h" />
-    <ClInclude Include="Render\Passes\FXAAPass.h" />
     <ClInclude Include="Render\Passes\GeometryPass.h" />
-    <ClInclude Include="Render\Passes\GUIPass.h" />
-    <ClInclude Include="Render\Passes\IRenderPass.h" />
-    <ClInclude Include="Render\Passes\LightingPass.h" />
     <ClInclude Include="Scene\Volumes\OBBVolume.h" />
     <ClInclude Include="Scene\Entity\Components\Armature.h" />
     <ClInclude Include="Scene\Entity\Components\Animation.h" />
@@ -115,9 +99,6 @@
     <ClInclude Include="Scene\Entity\Components\Transformation.h" />
     <ClInclude Include="Scene\Entity\Components\Skybox.h" />
     <ClInclude Include="Scene\Volumes\CapsuleVolume.h" />
-    <ClInclude Include="Render\Passes\SkyboxPass.h" />
-    <ClInclude Include="Render\Passes\ShadowPass.h" />
-    <ClInclude Include="Render\Passes\ToneMappingPass.h" />
     <ClInclude Include="Utility\DebugInfo.h" />
     <ClInclude Include="Events\IEvent.h" />
     <ClInclude Include="Input\InputDevice.h" />
@@ -150,6 +131,7 @@
     <ClInclude Include="Utility\Helpers.h" />
     <ClInclude Include="Application.h" />
     <ClInclude Include="Utility\HighResolutionClock.h" />
+    <ClInclude Include="Render\Passes\TestCopyPass.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resources\Resource.rc" />

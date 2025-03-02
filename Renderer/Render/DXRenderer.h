@@ -10,6 +10,8 @@
 
 #include "Window/IWindowEventListener.h"
 
+#include "RenderGraph/RenderGraph.h"
+
 namespace render
 {
     class DXRenderer : public core::events::IWindowEventListener
@@ -39,6 +41,8 @@ namespace render
         HWND _windowHandle;
 
         Frame* _currentFrame;
+
+        rg::RenderGraph _renderGraph;
 
         render::GBuffer _gBuffer;
         scene::Scene _scene;

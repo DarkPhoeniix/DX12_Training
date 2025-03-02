@@ -1,5 +1,8 @@
 #pragma once
 
+#include "ResourceTable.h"
+#include "Render/Frame/CacheGPU.h"
+
 namespace rg
 {
     class RenderGraph;
@@ -10,6 +13,9 @@ namespace rg
     class RenderContext
     {
     public:
+        dx12::ResourceTable* GetResourceTable();
+        CacheGPU* GetCache();
+
         std::shared_ptr<dx12::Resource> GetResource(ResourceId id);
 
     private:
@@ -22,5 +28,8 @@ namespace rg
 
         std::unordered_map<std::string, ResourceId> _mapNameToId;
         std::unordered_map<ResourceId, std::shared_ptr<dx12::Resource>> _resources;
+
+        dx12::ResourceTable* _frameResourceTable;
+        CacheGPU* _frameCache;
     };
 }

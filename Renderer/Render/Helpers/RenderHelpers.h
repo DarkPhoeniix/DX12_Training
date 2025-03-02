@@ -1,6 +1,6 @@
 #pragma once
 
-class Frame;
+class CacheGPU;
 
 namespace dx12
 {
@@ -14,5 +14,5 @@ namespace scene
 
 namespace helpers
 {
-    void SetupSceneDataGPU(scene::Scene& scene, dx12::CommandList& commandList, Frame* frame);
+    void SetupSceneDataGPU(scene::Scene& scene, dx12::CommandList& commandList, CacheGPU* cache);
 } // namespace helpers

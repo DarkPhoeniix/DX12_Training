@@ -36,6 +36,7 @@ namespace rg
                 break;
             }
 
+            task->SetName(_passes[passIndex]->_name);
             _passes[passIndex]->Execute(_context, *task);
         }
     }

@@ -1,12 +1,12 @@
 #pragma once
 
-class TaskGPU;
+#include "Render/Frame/TaskGPU.h"
 
 namespace rg
 {
+    class RenderGraph;
     class RenderPassBuilder;
     class RenderContext;
-    class RenderGraph;
 
     using ResourceId = std::uint64_t;
 

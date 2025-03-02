@@ -22,6 +22,7 @@
 #include "Render/Passes/DebugBoundingVolumePass.h"
 #include "Render/Passes/FXAAPass.h"
 #include "Render/Passes/GeometryPass.h"
+#include "Render/Passes/TestCopyPass.h"
 #include "Render/Passes/GUIPass.h"
 #include "Render/Passes/LightingPass.h"
 #include "Render/Passes/ShadowPass.h"
@@ -101,7 +102,15 @@ namespace render
             commandList.Close();
         }
 
-        SetupRenderPipeline();
+        //SetupRenderPipeline();
+
+        // Render Graph setup
+        {
+            _renderGraph.AddPass(std::make_shared<GeometryPass>(&_scene, _cameraComponent.get()));
+            _renderGraph.AddPass(std::make_shared<TestCopyPass>(&_scene, _cameraComponent.get()));
+
+            _renderGraph.Compile();
+        }
 
         _contentLoaded = true;
         return _contentLoaded;
@@ -160,24 +169,26 @@ namespace render
         _currentFrame->ResetGPU();
         _currentFrame->ResetCache();
 
-        for (size_t i = 0; i < _renderPasses.size(); ++i)
-        {
-            _renderPasses[i]->SetRenderFrame(*_currentFrame);
+        //for (size_t i = 0; i < _renderPasses.size(); ++i)
+        //{
+        //    _renderPasses[i]->SetRenderFrame(*_currentFrame);
 
-            _renderPasses[i]->Execute();
+        //    _renderPasses[i]->Execute();
 
-            if (i != 0)
-            {
-                TaskGPU* dependency = _renderPasses[i - 1]->GetTasks().back();
-                _renderPasses[i]->GetTasks().front()->AddDependency(dependency->GetName());
-            }
-        }
+        //    if (i != 0)
+        //    {
+        //        TaskGPU* dependency = _renderPasses[i - 1]->GetTasks().back();
+        //        _renderPasses[i]->GetTasks().front()->AddDependency(dependency->GetName());
+        //    }
+        //}
+
+        _renderGraph.Execute(*_currentFrame);
 
         // Present
         {
             TaskGPU* task = _currentFrame->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
             task->SetName("present");
-            task->AddDependency(_renderPasses.back()->GetTasks().back()->GetName());
+            task->AddDependency("Test Copy");
 
             dx12::CommandList& commandList = *task->GetCommandLists().front();
             commandList.SetName("Present");
@@ -276,30 +287,30 @@ namespace render
         _cameraComponent->Update();
         _gBuffer.Init(windowSize);
 
-        SetupRenderPipeline();
+        //SetupRenderPipeline();
     }
 
     void DXRenderer::SetupRenderPipeline()
     {
-        _renderPasses.clear();
+        //_renderPasses.clear();
 
-        _renderPasses.push_back(std::make_unique<ClearBuffersPass>());
-        _renderPasses.push_back(std::make_unique<GeometryPass>());
-        //_renderPasses.push_back(std::make_unique<ShadowPass>());
-        _renderPasses.push_back(std::make_unique<LightingPass>());
-        //_renderPasses.push_back(std::make_unique<SkyboxPass>());
-        //_renderPasses.push_back(std::make_unique<ToneMappingPass>());
-        //_renderPasses.push_back(std::make_unique<FXAAPass>());
-        //_renderPasses.push_back(std::make_unique<DebugArmaturePass>());
-        //_renderPasses.push_back(std::make_unique<DebugBoundingVolumePass>());
-        _renderPasses.push_back(std::make_unique<GUIPass>());
+        //_renderPasses.push_back(std::make_unique<ClearBuffersPass>());
+        //_renderPasses.push_back(std::make_unique<GeometryPass>());
+        ////_renderPasses.push_back(std::make_unique<ShadowPass>());
+        //_renderPasses.push_back(std::make_unique<LightingPass>());
+        ////_renderPasses.push_back(std::make_unique<SkyboxPass>());
+        ////_renderPasses.push_back(std::make_unique<ToneMappingPass>());
+        ////_renderPasses.push_back(std::make_unique<FXAAPass>());
+        ////_renderPasses.push_back(std::make_unique<DebugArmaturePass>());
+        ////_renderPasses.push_back(std::make_unique<DebugBoundingVolumePass>());
+        //_renderPasses.push_back(std::make_unique<GUIPass>());
 
-        for (auto& pass : _renderPasses)
-        {
-            pass->SetScene(_scene);
-            pass->SetGeometryBuffer(_gBuffer);
+        //for (auto& pass : _renderPasses)
+        //{
+        //    pass->SetScene(_scene);
+        //    pass->SetGeometryBuffer(_gBuffer);
 
-            pass->Initialize();
-        }
+        //    pass->Initialize();
+        //}
     }
 } // namespace render
