@@ -17,7 +17,6 @@
 #include "Utility/DebugInfo.h"
 
 #include "Render/Frame/TaskGPU.h"
-#include "Render/Passes/ClearBuffersPass.h"
 #include "Render/Passes/DebugArmaturePass.h"
 #include "Render/Passes/DebugBoundingVolumePass.h"
 #include "Render/Passes/FXAAPass.h"
@@ -119,83 +118,6 @@ namespace render
         _currentFrame = &frame;
     }
 
-    void DXRenderer::OnUpdate(events::UpdateEvent& updateEvent)
-    {
-        DebugInfo::Update(updateEvent);
-
-        _scene.GetCache().SetTime(updateEvent.totalTime * _timeMiltiplier);
-        _scene.GetCache().SetDeltaTime(updateEvent.elapsedTime * _timeMiltiplier);
-
-        _deltaTime = updateEvent.elapsedTime * _timeMiltiplier;
-
-        std::function<void(std::shared_ptr<scene::Entity>)> updateEntity = [&](std::shared_ptr<scene::Entity> entity)
-            {
-                entity->UpdateGlobalTransform();
-
-                scene::Armature* armature = entity->GetComponentAs<scene::Armature>("Armature");
-                scene::Animation* animation = entity->GetComponentAs<scene::Animation>("Animation");
-
-                if (armature && animation)
-                {
-                    const auto& transforms = animation->GetBonesTransforms(updateEvent.totalTime);
-                    armature->ApplyAnimation(transforms);
-                    armature->UpdateGlobalTransformations();
-                }
-
-                for (const auto& child : entity->GetChildrenNodes())
-                {
-                    updateEntity(child);
-                }
-            };
-
-        for (const auto& entity : _scene.GetRootNodes())
-        {
-            updateEntity(entity);
-        }
-    }
-
-    void DXRenderer::OnRender(events::RenderEvent& renderEvent)
-    {
-        _currentFrame->WaitCPU();
-        _currentFrame->ResetGPU();
-        _currentFrame->ResetCache();
-
-        for (size_t i = 0; i < _renderPasses.size(); ++i)
-        {
-            _renderPasses[i]->SetRenderFrame(*_currentFrame);
-
-            _renderPasses[i]->Execute();
-
-            if (i != 0)
-            {
-                TaskGPU* dependency = _renderPasses[i - 1]->GetTasks().back();
-                _renderPasses[i]->GetTasks().front()->AddDependency(dependency->GetName());
-            }
-        }
-
-        // Present
-        {
-            TaskGPU* task = _currentFrame->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
-            task->SetName("present");
-            task->AddDependency(_renderPasses.back()->GetTasks().back()->GetName());
-
-            dx12::CommandList& commandList = *task->GetCommandLists().front();
-            commandList.SetName("Present");
-
-            PIXBeginEvent(commandList.GetDXCommandList().Get(), 6, "Present");
-            {
-                dx12::Resource& swapChainTexture = *dx12::Device::GetBackBuffer();
-                commandList.TransitionBarrier(swapChainTexture, D3D12_RESOURCE_STATE_COPY_DEST);
-                commandList.TransitionBarrier(_currentFrame->GetTargetTexture(), D3D12_RESOURCE_STATE_COPY_SOURCE);
-                commandList.CopyResource(_currentFrame->GetTargetTexture(), swapChainTexture);
-                commandList.TransitionBarrier(swapChainTexture, D3D12_RESOURCE_STATE_PRESENT);
-            }
-            PIXEndEvent(commandList.GetDXCommandList().Get());
-
-            commandList.Close();
-        }
-    }
-
     void DXRenderer::OnKeyPressed(events::KeyEvent& e)
     {
         auto cameraEntity = _scene.FindNodeByComponentName("Camera");
@@ -283,7 +205,6 @@ namespace render
     {
         _renderPasses.clear();
 
-        _renderPasses.push_back(std::make_unique<ClearBuffersPass>());
         _renderPasses.push_back(std::make_unique<GeometryPass>());
         _renderPasses.push_back(std::make_unique<ShadowPass>());
         _renderPasses.push_back(std::make_unique<LightingPass>());
@@ -300,6 +221,83 @@ namespace render
             pass->SetGeometryBuffer(_gBuffer);
 
             pass->Initialize();
+        }
+    }
+
+    void DXRenderer::OnUpdate(events::UpdateEvent& updateEvent)
+    {
+        DebugInfo::Update(updateEvent);
+
+        _scene.GetCache().SetTime(updateEvent.totalTime * _timeMiltiplier);
+        _scene.GetCache().SetDeltaTime(updateEvent.elapsedTime * _timeMiltiplier);
+
+        _deltaTime = updateEvent.elapsedTime * _timeMiltiplier;
+
+        std::function<void(std::shared_ptr<scene::Entity>)> updateEntity = [&](std::shared_ptr<scene::Entity> entity)
+            {
+                entity->UpdateGlobalTransform();
+
+                scene::Armature* armature = entity->GetComponentAs<scene::Armature>("Armature");
+                scene::Animation* animation = entity->GetComponentAs<scene::Animation>("Animation");
+
+                if (armature && animation)
+                {
+                    const auto& transforms = animation->GetBonesTransforms(updateEvent.totalTime);
+                    armature->ApplyAnimation(transforms);
+                    armature->UpdateGlobalTransformations();
+                }
+
+                for (const auto& child : entity->GetChildrenNodes())
+                {
+                    updateEntity(child);
+                }
+            };
+
+        for (const auto& entity : _scene.GetRootNodes())
+        {
+            updateEntity(entity);
+        }
+    }
+
+    void DXRenderer::OnRender(events::RenderEvent& renderEvent)
+    {
+        _currentFrame->WaitCPU();
+        _currentFrame->ResetGPU();
+        _currentFrame->ResetCache();
+
+        for (size_t i = 0; i < _renderPasses.size(); ++i)
+        {
+            _renderPasses[i]->SetRenderFrame(*_currentFrame);
+
+            _renderPasses[i]->Execute();
+
+            if (i != 0)
+            {
+                TaskGPU* dependency = _renderPasses[i - 1]->GetTasks().back();
+                _renderPasses[i]->GetTasks().front()->AddDependency(dependency->GetName());
+            }
+        }
+
+        // Present
+        {
+            TaskGPU* task = _currentFrame->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
+            task->SetName("present");
+            task->AddDependency(_renderPasses.back()->GetTasks().back()->GetName());
+
+            dx12::CommandList& commandList = *task->GetCommandLists().front();
+            commandList.SetName("Present");
+
+            PIXBeginEvent(commandList.GetDXCommandList().Get(), 6, "Present");
+            {
+                dx12::Resource& swapChainTexture = *dx12::Device::GetBackBuffer();
+                commandList.TransitionBarrier(swapChainTexture, D3D12_RESOURCE_STATE_COPY_DEST);
+                commandList.TransitionBarrier(_currentFrame->GetTargetTexture(), D3D12_RESOURCE_STATE_COPY_SOURCE);
+                commandList.CopyResource(_currentFrame->GetTargetTexture(), swapChainTexture);
+                commandList.TransitionBarrier(swapChainTexture, D3D12_RESOURCE_STATE_PRESENT);
+            }
+            PIXEndEvent(commandList.GetDXCommandList().Get());
+
+            commandList.Close();
         }
     }
 } // namespace render

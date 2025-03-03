@@ -40,7 +40,6 @@
     <ClCompile Include="Render\Frame\CacheGPU.cpp" />
     <ClCompile Include="Render\Helpers\GPUStructs.cpp" />
     <ClCompile Include="Render\Helpers\RenderHelpers.cpp" />
-    <ClCompile Include="Render\Passes\ClearBuffersPass.cpp" />
     <ClCompile Include="Render\Passes\DebugBoundingVolumePass.cpp" />
     <ClCompile Include="Render\Passes\FXAAPass.cpp" />
     <ClCompile Include="Render\Passes\GeometryPass.cpp" />
@@ -91,7 +90,6 @@
     <ClInclude Include="Render\Frame\CacheGPU.h" />
     <ClInclude Include="Render\Helpers\GPUStructs.h" />
     <ClInclude Include="Render\Helpers\RenderHelpers.h" />
-    <ClInclude Include="Render\Passes\ClearBuffersPass.h" />
     <ClInclude Include="Render\Passes\DebugBoundingVolumePass.h" />
     <ClInclude Include="Render\Passes\FXAAPass.h" />
     <ClInclude Include="Render\Passes\GeometryPass.h" />

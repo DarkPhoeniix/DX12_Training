@@ -23,8 +23,6 @@ namespace render
 
         virtual void SetFrame(Frame& frame);
 
-        virtual void OnUpdate(core::events::UpdateEvent& e) override;
-        virtual void OnRender(core::events::RenderEvent& e) override;
         virtual void OnKeyPressed(core::events::KeyEvent& e) override;
         virtual void OnKeyReleased(core::events::KeyEvent& e) override {}
         virtual void OnMouseMoved(core::events::MouseMoveEvent& e) override;
@@ -32,6 +30,8 @@ namespace render
         virtual void OnMouseButtonReleased(core::events::MouseButtonEvent& e) override;
         virtual void OnMouseScroll(core::events::MouseScrollEvent& e) override {}
         virtual void OnResize(core::events::ResizeEvent& e) override;
+        virtual void OnUpdate(core::events::UpdateEvent& e) override;
+        virtual void OnRender(core::events::RenderEvent& e) override;
 
     private:
         void SetupRenderPipeline();

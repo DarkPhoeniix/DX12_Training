@@ -38,11 +38,15 @@ namespace render
             D3D12_CPU_DESCRIPTOR_HANDLE rtv = frameTable.GetResourceCPUHandle(&_frame->GetTargetTexture(), dx12::ResourceViewType::RTV);
             D3D12_CPU_DESCRIPTOR_HANDLE dsv = gBufferTable.GetResourceCPUHandle(&_gBuffer->GetDepthTexture(), dx12::ResourceViewType::DSV);
 
+            commandList.TransitionBarrier(_frame->GetTargetTexture(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+
             commandList.SetViewport(_activeCamera->GetViewport());
             commandList.SetRenderTarget(&rtv, &dsv);
 
             gui::Editor::Update();
             gui::Editor::Render(commandList);
+
+            commandList.TransitionBarrier(_frame->GetTargetTexture(), D3D12_RESOURCE_STATE_COMMON);
         }
         PIXEndEvent(commandList.GetDXCommandList().Get());
 

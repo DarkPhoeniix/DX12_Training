@@ -124,14 +124,28 @@ namespace render
             dx12::ResourceTable& gBufferTable = _gBuffer->GetResourceTable();
             dx12::ResourceTable& frameTable = _frame->GetResourceTable();
 
-            D3D12_CPU_DESCRIPTOR_HANDLE albedoMetalnessHandle = gBufferTable.GetResourceCPUHandle(&_gBuffer->GetAlbedoMetalnessTexture(), dx12::ResourceViewType::RTV);
-            D3D12_CPU_DESCRIPTOR_HANDLE normalSpecularHandle = gBufferTable.GetResourceCPUHandle(&_gBuffer->GetNormalTexture(), dx12::ResourceViewType::RTV);
-            D3D12_CPU_DESCRIPTOR_HANDLE depthHandle = gBufferTable.GetResourceCPUHandle(&_gBuffer->GetDepthTexture(), dx12::ResourceViewType::DSV);
+            dx12::Resource& albedoMetallic = _gBuffer->GetAlbedoMetalnessTexture();
+            dx12::Resource& normalRoughness = _gBuffer->GetNormalTexture();
+            dx12::Resource& depth = _gBuffer->GetDepthTexture();
+
+            D3D12_CPU_DESCRIPTOR_HANDLE albedoMetallicHandle = gBufferTable.GetResourceCPUHandle(&albedoMetallic, dx12::ResourceViewType::RTV);
+            D3D12_CPU_DESCRIPTOR_HANDLE normalSpecularHandle = gBufferTable.GetResourceCPUHandle(&normalRoughness, dx12::ResourceViewType::RTV);
+            D3D12_CPU_DESCRIPTOR_HANDLE depthHandle = gBufferTable.GetResourceCPUHandle(&depth, dx12::ResourceViewType::DSV);
+
+            frameTable.CopyDescriptor(&albedoMetallic, dx12::ResourceViewType::SRV, gBufferTable);
+            frameTable.CopyDescriptor(&normalRoughness, dx12::ResourceViewType::SRV, gBufferTable);
+            frameTable.CopyDescriptor(&depth, dx12::ResourceViewType::SRV, gBufferTable);
+
+            commandList.TransitionBarrier(_gBuffer->GetAlbedoMetalnessTexture(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+            commandList.TransitionBarrier(_gBuffer->GetNormalTexture(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+            commandList.TransitionBarrier(_gBuffer->GetDepthTexture(), D3D12_RESOURCE_STATE_DEPTH_WRITE);
+
+            _gBuffer->ClearTextures(commandList);
 
             commandList.SetPipelineState(_geometryPipeline);
 
             commandList.SetViewport(_activeCamera->GetViewport());
-            commandList.SetRenderTargets({ albedoMetalnessHandle, normalSpecularHandle }, &depthHandle);
+            commandList.SetRenderTargets({ albedoMetallicHandle, normalSpecularHandle }, &depthHandle);
 
             DebugInfo::StartStatCollecting(commandList);
 
@@ -148,9 +162,9 @@ namespace render
 
             DebugInfo::EndStatCollecting(commandList);
 
-            commandList.TransitionBarrier(_gBuffer->GetDepthTexture(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-            commandList.TransitionBarrier(_gBuffer->GetAlbedoMetalnessTexture(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-            commandList.TransitionBarrier(_gBuffer->GetNormalTexture(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+            commandList.TransitionBarrier(_gBuffer->GetAlbedoMetalnessTexture(), D3D12_RESOURCE_STATE_COMMON);
+            commandList.TransitionBarrier(_gBuffer->GetNormalTexture(), D3D12_RESOURCE_STATE_COMMON);
+            commandList.TransitionBarrier(_gBuffer->GetDepthTexture(), D3D12_RESOURCE_STATE_COMMON);
         }
         PIXEndEvent(commandList.GetDXCommandList().Get());
 
