@@ -112,7 +112,7 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
     _currentFrame->SetSyncPoint(uploadTask->GetFence());
     _ExecuteFrameTasks();
 
-    //gui::Editor::Init(_win32Window->GetWindowHandle());
+    gui::Editor::Init(_win32Window->GetWindowHandle());
 
     MSG msg = { 0 };
     while (msg.message != WM_QUIT)
@@ -124,8 +124,6 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
         }
 
         events::inputDevice::Instance().PollEvents();
-
-        //gui::Editor::NewFrame();
 
         _UpdateCall(pApp);
         _RenderCall(pApp);
@@ -146,7 +144,7 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
 
 void Application::Quit(int exitCode)
 {
-    //gui::Editor::Destroy();
+    gui::Editor::Destroy();
     DebugInfo::Destroy();
     dx12::Device::Destroy();
 

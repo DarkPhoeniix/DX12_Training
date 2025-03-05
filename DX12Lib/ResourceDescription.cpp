@@ -9,6 +9,7 @@ namespace dx12
 		, _resourceType(ResourceType::None)
 		, _stride(0)
 		, _clearValue(nullptr)
+		, _UAVCounterOffset(-1)
 	{
 		_resourceDescription.Format = DXGI_FORMAT::DXGI_FORMAT_UNKNOWN;
 
@@ -189,6 +190,16 @@ namespace dx12
 	std::shared_ptr<D3D12_CLEAR_VALUE> ResourceDescription::GetClearValue() const
 	{
 		return _clearValue;
+	}
+
+	void ResourceDescription::SetUAVCounterOffset(std::uint32_t offset)
+	{
+		_UAVCounterOffset = offset;
+	}
+
+	std::uint32_t ResourceDescription::GetUAVCounterOffset() const
+	{
+		return _UAVCounterOffset;
 	}
 
 	D3D12_RESOURCE_DESC ResourceDescription::CreateDXResourceDescription() const

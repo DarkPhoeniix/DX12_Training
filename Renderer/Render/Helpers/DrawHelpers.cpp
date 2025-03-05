@@ -34,6 +34,8 @@ namespace render
         commandList.SetConstants(1, 16, &camera.ViewProjection());
         commandList.SetConstants(2, 4, &color);
 
+        commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
+
         commandList.Draw(1);
     }
 
@@ -47,6 +49,8 @@ namespace render
         commandList.SetConstants(1, 3, &position);
         commandList.SetConstants(1, 1, &radius, 3);
         commandList.SetConstants(2, 4, &color);
+
+        commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
 
         commandList.Draw(1);
     }
@@ -63,6 +67,8 @@ namespace render
         commandList.SetConstants(1, 3, &direction, 4);
         commandList.SetConstants(1, 1, &height, 7);
         commandList.SetConstants(2, 4, &color);
+
+        commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
 
         commandList.Draw(1);
     }

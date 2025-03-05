@@ -1,8 +1,6 @@
 #pragma once
 
 #include "Render/Frame/Frame.h"
-#include "Render/GBuffer.h"
-#include "Render/Passes/IRenderPass.h"
 
 #include "Scene/Entity/Components/Camera.h"
 #include "Scene/Scene.h"
@@ -44,13 +42,10 @@ namespace render
 
         rg::RenderGraph _renderGraph;
 
-        render::GBuffer _gBuffer;
         scene::Scene _scene;
         std::shared_ptr<scene::Camera> _cameraComponent;
 
         UploadSceneProcessor _uploadProcessor;
-
-        std::vector<std::unique_ptr<IRenderPass>> _renderPasses;
 
         bool _isCameraMoving;
         float _deltaTime;

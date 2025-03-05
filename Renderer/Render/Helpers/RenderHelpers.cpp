@@ -204,4 +204,22 @@ namespace helpers
 
         commandList.SetCBV(0, sceneDataHandle.DataGPU);
     }
+
+    void SetupLightDataGPU(scene::Scene& scene, dx12::CommandList& commandList, CacheGPU* cache, dx12::ResourceTable& resourceTable)
+    {
+        uint32_t lightsNum = 0;
+        for (std::shared_ptr<scene::Entity>& node : scene.GetRootNodes())
+        {
+            CheckLightsNum(node, lightsNum);
+        }
+        CacheGPU::DataHandle lightsData = cache->GetOrPlaceResource("LightsCB", sizeof(GPULightDesc) * lightsNum);
+
+        uint32_t lightCounter = 0;
+        for (std::shared_ptr<scene::Entity>& node : scene.GetRootNodes())
+        {
+            SetupLightToGPU(node, lightsData, resourceTable, lightCounter);
+        }
+
+        commandList.SetSRV(2, lightsData.DataGPU);
+    }
 } // namespace helpers

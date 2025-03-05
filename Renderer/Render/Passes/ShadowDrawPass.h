@@ -1,0 +1,41 @@
+
+#pragma once
+
+#include "RenderGraph/RenderPass.h"
+
+#include "PipelineState.h"
+#include "Scene/Scene.h"
+#include "Scene/Entity/Components/Camera.h"
+
+namespace render
+{
+    struct ShadowDrawPassData
+    {
+        std::vector<rg::ResourceId> LightCommandBuffers[dx12::BACK_BUFFER_COUNT];
+    };
+
+    class ShadowDrawPass : public rg::RenderPass<ShadowDrawPassData>
+    {
+    public:
+        ShadowDrawPass(scene::Scene* scene, scene::Camera* camera);
+
+        // Inherited via RenderPass
+        void Setup(rg::RenderPassBuilder& builder) override;
+        void Execute(rg::RenderContext& context, TaskGPU& task) override;
+
+    private:
+        void ClearShadowMaps(rg::RenderContext& context, TaskGPU& task);
+        void DrawSpotLightShadows(rg::RenderContext& context, TaskGPU& task);
+        void DrawPointLightShadows(rg::RenderContext& context, TaskGPU& task);
+
+        dx12::PipelineState _spotLightShadowsPipeline;
+        dx12::PipelineState _pointLightShadowsPipeline;
+
+        ComPtr<ID3D12CommandSignature> _cmdSignature;
+
+        dx12::Resource _counterReset;
+
+        scene::Scene* _scene;
+        scene::Camera* _camera;
+    };
+} // namespace render

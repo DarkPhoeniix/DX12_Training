@@ -2,47 +2,69 @@
 
 #include "GUIPass.h"
 
+#include "ResourceTable.h"
+
 #include "Editor.h"
 #include "Scene/Entity/Components/Camera.h"
 
+#include "Scene/Entity/Components/Animation.h"
+#include "Scene/Entity/Components/Armature.h"
+#include "Scene/Entity/Components/Camera.h"
+#include "Scene/Entity/Components/Material.h"
+#include "Scene/Entity/Components/Mesh.h"
+#include "Scene/Entity/Components/Transformation.h"
+
+#include "Render/Helpers/GPUStructs.h"
+#include "Render/Helpers/RenderHelpers.h"
+#include "Utility/DebugInfo.h"
+
+#include "RenderGraph/RenderPassBuilder.h"
+#include "RenderGraph/RenderContext.h"
+
+#include "Render/Passes/PassResources.h"
+
 namespace render
 {
-    void GUIPass::Initialize()
+    GUIPass::GUIPass(scene::Scene* scene, scene::Camera* camera)
+        : RenderPass<GUIPassData>("GUI Pass", rg::RenderPassType::Graphics)
+        , _scene(scene)
+        , _camera(camera)
     {
-        IRenderPass::Initialize();
-
-        _name = "GUIPass";
-
-        gui::Editor::SetScene(_scene);
+        gui::Editor::SetScene(_scene); // TODO: remove 
     }
 
-    void GUIPass::Destroy()
+    void GUIPass::Setup(rg::RenderPassBuilder& builder)
     {
-        IRenderPass::Destroy();
+        _data.Target = builder.WriteResource(TARGET);
+        _data.Depth = builder.ReadResource(DEPTH);
     }
 
-    void GUIPass::Execute()
+    void GUIPass::Execute(rg::RenderContext& context, TaskGPU& task)
     {
-        TaskGPU* task = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
-        task->SetName("gui");
-        _tasks.push_back(task);
-
-        dx12::CommandList& commandList = *task->GetCommandLists().front();
+        dx12::CommandList& commandList = *task.GetCommandLists().front();
         commandList.SetName("Render GUI command list");
 
         PIXBeginEvent(commandList.GetDXCommandList().Get(), 5, "GUI");
         {
-            dx12::ResourceTable& frameTable = _frame->GetResourceTable();
-            dx12::ResourceTable& gBufferTable = _gBuffer->GetResourceTable();
+            std::shared_ptr<dx12::Resource> target = context.GetResource(_data.Target);
+            std::shared_ptr<dx12::Resource> depth = context.GetResource(_data.Depth);
 
-            D3D12_CPU_DESCRIPTOR_HANDLE rtv = frameTable.GetResourceCPUHandle(&_frame->GetTargetTexture(), dx12::ResourceViewType::RTV);
-            D3D12_CPU_DESCRIPTOR_HANDLE dsv = gBufferTable.GetResourceCPUHandle(&_gBuffer->GetDepthTexture(), dx12::ResourceViewType::DSV);
+            D3D12_CPU_DESCRIPTOR_HANDLE rtv = context.GetCPUHandle(target->GetAsRTV());
+            D3D12_CPU_DESCRIPTOR_HANDLE dsv = context.GetCPUHandle(depth->GetAsDSV());
 
-            commandList.SetViewport(_activeCamera->GetViewport());
+            commandList.TransitionBarrier(*target, D3D12_RESOURCE_STATE_RENDER_TARGET);
+            commandList.TransitionBarrier(*depth, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+
+            commandList.SetViewport(_camera->GetViewport());
             commandList.SetRenderTarget(&rtv, &dsv);
+
+            gui::Editor::NewFrame();
 
             gui::Editor::Update();
             gui::Editor::Render(commandList);
+
+            commandList.TransitionBarrier(*target, D3D12_RESOURCE_STATE_COMMON);
+            commandList.TransitionBarrier(*depth, D3D12_RESOURCE_STATE_COMMON);
         }
         PIXEndEvent(commandList.GetDXCommandList().Get());
 

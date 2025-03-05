@@ -4,7 +4,7 @@
     "Intensity": 0.8,
     "Type": "Spot",
     "Range": 100.0,
-    "OuterAngle": 60.0,
-    "InnerAngle": 55.0,
+    "OuterAngle": 30.0,
+    "InnerAngle": 20.0,
     "CastShadows": 1
 }

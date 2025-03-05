@@ -87,11 +87,6 @@ namespace dx12
 		return _allocationInfo;
 	}
 
-	void Resource::SetUAVCounterOffset(uint32_t offset)
-	{
-		_uavCounterOffset = offset;
-	}
-
 	void* Resource::Map()
 	{
 		void* data = nullptr;
@@ -314,9 +309,9 @@ namespace dx12
 			view.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
 			view.Buffer.StructureByteStride = _resourceDesc.GetStride();
 			view.Buffer.NumElements = _resourceDesc.GetSize().x / _resourceDesc.GetStride();
-			if (_uavCounterOffset != -1)
+			if (_resourceDesc.GetUAVCounterOffset() != -1)
 			{
-				view.Buffer.CounterOffsetInBytes = _uavCounterOffset;
+				view.Buffer.CounterOffsetInBytes = _resourceDesc.GetUAVCounterOffset();
 			}
 		}
 		else if ((type & ResourceType::Texture) != ResourceType::None)

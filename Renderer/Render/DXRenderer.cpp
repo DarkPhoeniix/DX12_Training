@@ -17,17 +17,20 @@
 #include "Utility/DebugInfo.h"
 
 #include "Render/Frame/TaskGPU.h"
-#include "Render/Passes/ClearBuffersPass.h"
-#include "Render/Passes/DebugArmaturePass.h"
-#include "Render/Passes/DebugBoundingVolumePass.h"
+#include "Render/Passes/Debug/DebugArmaturePass.h"
+#include "Render/Passes/Debug/DebugBoundingVolumePass.h"
 #include "Render/Passes/FXAAPass.h"
 #include "Render/Passes/GeometryPass.h"
 #include "Render/Passes/TestCopyPass.h"
 #include "Render/Passes/GUIPass.h"
 #include "Render/Passes/LightingPass.h"
-#include "Render/Passes/ShadowPass.h"
+#include "Render/Passes/ShadowCullPass.h"
+#include "Render/Passes/ShadowClearPass.h"
+#include "Render/Passes/ShadowDrawPass.h"
 #include "Render/Passes/SkyboxPass.h"
-#include "Render/Passes/ToneMappingPass.h"
+#include "Render/Passes/PFX/LuminanceHistogramPass.h"
+#include "Render/Passes/PFX/AverageLuminancePass.h"
+#include "Render/Passes/PFX/ToneMappingPass.h"
 
 #include "Render/Helpers/DrawHelpers.h"
 
@@ -87,8 +90,6 @@ namespace render
             _cameraComponent = cameraComponent;
         }
 
-        _gBuffer.Init({ windowWidth, windowHeight });
-
         // Load scene
         {
             loadTask->SetName("Upload Data");
@@ -102,15 +103,7 @@ namespace render
             commandList.Close();
         }
 
-        //SetupRenderPipeline();
-
-        // Render Graph setup
-        {
-            _renderGraph.AddPass(std::make_shared<GeometryPass>(&_scene, _cameraComponent.get()));
-            _renderGraph.AddPass(std::make_shared<TestCopyPass>(&_scene, _cameraComponent.get()));
-
-            _renderGraph.Compile();
-        }
+        SetupRenderPipeline();
 
         _contentLoaded = true;
         return _contentLoaded;
@@ -167,39 +160,31 @@ namespace render
     {
         _currentFrame->WaitCPU();
         _currentFrame->ResetGPU();
-        _currentFrame->ResetCache();
-
-        //for (size_t i = 0; i < _renderPasses.size(); ++i)
-        //{
-        //    _renderPasses[i]->SetRenderFrame(*_currentFrame);
-
-        //    _renderPasses[i]->Execute();
-
-        //    if (i != 0)
-        //    {
-        //        TaskGPU* dependency = _renderPasses[i - 1]->GetTasks().back();
-        //        _renderPasses[i]->GetTasks().front()->AddDependency(dependency->GetName());
-        //    }
-        //}
 
         _renderGraph.Execute(*_currentFrame);
+
+        std::shared_ptr<dx12::Resource> target = _renderGraph.ExportResource("Target");
 
         // Present
         {
             TaskGPU* task = _currentFrame->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
             task->SetName("present");
-            task->AddDependency("Test Copy");
+            task->AddDependency("GUI Pass"); // TODO: remove hardcoded render dependency !!!
 
             dx12::CommandList& commandList = *task->GetCommandLists().front();
-            commandList.SetName("Present");
+            commandList.SetName("present");
 
             PIXBeginEvent(commandList.GetDXCommandList().Get(), 6, "Present");
             {
                 dx12::Resource& swapChainTexture = *dx12::Device::GetBackBuffer();
+
                 commandList.TransitionBarrier(swapChainTexture, D3D12_RESOURCE_STATE_COPY_DEST);
-                commandList.TransitionBarrier(_currentFrame->GetTargetTexture(), D3D12_RESOURCE_STATE_COPY_SOURCE);
-                commandList.CopyResource(_currentFrame->GetTargetTexture(), swapChainTexture);
+                commandList.TransitionBarrier(*target, D3D12_RESOURCE_STATE_COPY_SOURCE);
+
+                commandList.CopyResource(*target, swapChainTexture);
+
                 commandList.TransitionBarrier(swapChainTexture, D3D12_RESOURCE_STATE_PRESENT);
+                commandList.TransitionBarrier(*target, D3D12_RESOURCE_STATE_COMMON);
             }
             PIXEndEvent(commandList.GetDXCommandList().Get());
 
@@ -285,32 +270,31 @@ namespace render
         dx12::Device::OnResize(windowSize);
         _cameraComponent->GetViewport().SetSize(windowSize);
         _cameraComponent->Update();
-        _gBuffer.Init(windowSize);
 
-        //SetupRenderPipeline();
+        SetupRenderPipeline();
     }
 
     void DXRenderer::SetupRenderPipeline()
     {
-        //_renderPasses.clear();
+        // Render Graph setup
+        {
+            _renderGraph.Reset();
 
-        //_renderPasses.push_back(std::make_unique<ClearBuffersPass>());
-        //_renderPasses.push_back(std::make_unique<GeometryPass>());
-        ////_renderPasses.push_back(std::make_unique<ShadowPass>());
-        //_renderPasses.push_back(std::make_unique<LightingPass>());
-        ////_renderPasses.push_back(std::make_unique<SkyboxPass>());
-        ////_renderPasses.push_back(std::make_unique<ToneMappingPass>());
-        ////_renderPasses.push_back(std::make_unique<FXAAPass>());
-        ////_renderPasses.push_back(std::make_unique<DebugArmaturePass>());
-        ////_renderPasses.push_back(std::make_unique<DebugBoundingVolumePass>());
-        //_renderPasses.push_back(std::make_unique<GUIPass>());
+            _renderGraph.AddPass(std::make_shared<GeometryPass>(&_scene, _cameraComponent.get()));
+            _renderGraph.AddPass(std::make_shared<ShadowCullPass>(&_scene, _cameraComponent.get()));
+            _renderGraph.AddPass(std::make_shared<ShadowClearPass>(&_scene, _cameraComponent.get()));
+            _renderGraph.AddPass(std::make_shared<ShadowDrawPass>(&_scene, _cameraComponent.get()));
+            _renderGraph.AddPass(std::make_shared<LightingPass>(&_scene, _cameraComponent.get()));
+            _renderGraph.AddPass(std::make_shared<SkyboxPass>(&_scene, _cameraComponent.get()));
+            _renderGraph.AddPass(std::make_shared<LuminanceHistogramPass>(&_scene, _cameraComponent.get()));
+            _renderGraph.AddPass(std::make_shared<AverageLuminancePass>(&_scene, _cameraComponent.get()));
+            _renderGraph.AddPass(std::make_shared<ToneMappingPass>(&_scene, _cameraComponent.get()));
+            //_renderGraph.AddPass(std::make_shared<FXAAPass>(&_scene, _cameraComponent.get()));
+            _renderGraph.AddPass(std::make_shared<DebugBoundingVolumePass>(&_scene, _cameraComponent.get()));
+            //_renderGraph.AddPass(std::make_shared<DebugArmaturePass>(&_scene, _cameraComponent.get()));
+            _renderGraph.AddPass(std::make_shared<GUIPass>(&_scene, _cameraComponent.get()));
 
-        //for (auto& pass : _renderPasses)
-        //{
-        //    pass->SetScene(_scene);
-        //    pass->SetGeometryBuffer(_gBuffer);
-
-        //    pass->Initialize();
-        //}
+            _renderGraph.Compile();
+        }
     }
 } // namespace render

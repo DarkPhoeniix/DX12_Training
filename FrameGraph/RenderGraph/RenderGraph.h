@@ -21,6 +21,7 @@ namespace rg
         RenderGraph& operator=(const RenderGraph&) = delete;
         RenderGraph& operator=(RenderGraph&&) = default;
 
+        void Reset();
         void Compile();
         void Execute(Frame& frame);
 
@@ -41,7 +42,7 @@ namespace rg
         std::vector<std::vector<std::uint32_t>> _adjacencyLists;
         std::vector<std::shared_ptr<IRenderPass>> _passes;
         std::vector<std::uint32_t> _sortedPasses;
-        std::vector<TaskGPU> _GPUTasks;
+        std::vector<TaskGPU*> _GPUTasks;
 
         RenderContext _context;
     };

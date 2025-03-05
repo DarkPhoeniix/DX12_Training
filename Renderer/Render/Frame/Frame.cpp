@@ -75,7 +75,7 @@ void Frame::Init(const DirectX::XMUINT2& size, uint32_t cacheSize)
             textureDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::RenderTarget);
         }
 
-        _targetTexture.CreateCommitedResource(textureDesc, D3D12_RESOURCE_STATE_COPY_SOURCE);
+        _targetTexture.CreateCommitedResource(textureDesc);
         _targetTexture.SetName(std::string("Frame RTT ") + std::to_string(Index));
 
         _resourceTable.PlaceResource(&_targetTexture, dx12::ResourceViewType::RTV);

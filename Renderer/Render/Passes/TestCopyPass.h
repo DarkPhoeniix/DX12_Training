@@ -9,6 +9,7 @@ namespace render
 {
     struct TestCopyPassData
     {
+        rg::ResourceId HDR;
         rg::ResourceId AlbedoMetallic;
         rg::ResourceId Target;
     };

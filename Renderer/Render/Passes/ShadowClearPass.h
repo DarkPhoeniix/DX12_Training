@@ -1,3 +1,4 @@
+
 #pragma once
 
 #include "RenderGraph/RenderPass.h"
@@ -8,23 +9,26 @@
 
 namespace render
 {
-    struct SkyboxPassData
+    struct ShadowClearPassData
     {
-        rg::ResourceId Depth;
-        rg::ResourceId HDRTarget;
     };
 
-    class SkyboxPass : public rg::RenderPass<SkyboxPassData>
+    class ShadowClearPass : public rg::RenderPass<ShadowClearPassData>
     {
     public:
-        SkyboxPass(scene::Scene* scene, scene::Camera* camera);
+        ShadowClearPass(scene::Scene* scene, scene::Camera* camera);
 
         // Inherited via RenderPass
         void Setup(rg::RenderPassBuilder& builder) override;
         void Execute(rg::RenderContext& context, TaskGPU& task) override;
 
     private:
-        dx12::PipelineState _skyboxPipeline;
+        dx12::PipelineState _spotLightShadowsPipeline;
+        dx12::PipelineState _pointLightShadowsPipeline;
+
+        ComPtr<ID3D12CommandSignature> _cmdSignature;
+
+        dx12::Resource _counterReset;
 
         scene::Scene* _scene;
         scene::Camera* _camera;

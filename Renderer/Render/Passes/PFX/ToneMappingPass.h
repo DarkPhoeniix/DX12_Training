@@ -8,23 +8,25 @@
 
 namespace render
 {
-    struct SkyboxPassData
+    struct ToneMappingPassData
     {
-        rg::ResourceId Depth;
         rg::ResourceId HDRTarget;
+        rg::ResourceId AverageLuminance;
+
+        rg::ResourceId Target;
     };
 
-    class SkyboxPass : public rg::RenderPass<SkyboxPassData>
+    class ToneMappingPass : public rg::RenderPass<ToneMappingPassData>
     {
     public:
-        SkyboxPass(scene::Scene* scene, scene::Camera* camera);
+        ToneMappingPass(scene::Scene* scene, scene::Camera* camera);
 
         // Inherited via RenderPass
         void Setup(rg::RenderPassBuilder& builder) override;
         void Execute(rg::RenderContext& context, TaskGPU& task) override;
 
     private:
-        dx12::PipelineState _skyboxPipeline;
+        dx12::PipelineState _toneMappingPipeline;
 
         scene::Scene* _scene;
         scene::Camera* _camera;

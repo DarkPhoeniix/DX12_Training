@@ -18,6 +18,8 @@
 #include "RenderGraph/RenderPassBuilder.h"
 #include "RenderGraph/RenderContext.h"
 
+#include "Render/Passes/PassResources.h"
+
 namespace
 {
     void DrawEntity(std::shared_ptr<scene::Entity> entity, dx12::CommandList& commandList, CacheGPU* cache, dx12::ResourceTable* resourceTable)
@@ -121,7 +123,7 @@ namespace render
             depthDesc.SetClearValue(clearValue);
             depthDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::DepthStencil);
         }
-        _data.Depth = builder.CreateResource("Depth", depthDesc);
+        _data.Depth = builder.CreateResource(DEPTH, depthDesc);
 
         dx12::ResourceDescription albedoMetallicDesc;
         {
@@ -137,7 +139,7 @@ namespace render
             albedoMetallicDesc.SetClearValue(clearValue);
             albedoMetallicDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::RenderTarget);
         }
-        _data.AlbedoMetallic = builder.CreateResource("AlbedoMetallic", albedoMetallicDesc);
+        _data.AlbedoMetallic = builder.CreateResource(ALBEDO_METALLIC, albedoMetallicDesc);
 
         dx12::ResourceDescription normalRoughnessDesc;
         {
@@ -153,7 +155,7 @@ namespace render
             normalRoughnessDesc.SetClearValue(clearValue);
             normalRoughnessDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::RenderTarget);
         }
-        _data.NormalRoughness = builder.CreateResource("NormalRoughness", normalRoughnessDesc);
+        _data.NormalRoughness = builder.CreateResource(NORMAL_ROUGHNESS, normalRoughnessDesc);
     }
 
     void GeometryPass::Execute(rg::RenderContext& context, TaskGPU& task)
@@ -163,15 +165,19 @@ namespace render
 
         PIXBeginEvent(commandList.GetDXCommandList().Get(), 2, "Geometry Pass");
         {
-            std::shared_ptr<dx12::Resource> depth = context.GetResource(_data.Depth);
             std::shared_ptr<dx12::Resource> albedoMetallic = context.GetResource(_data.AlbedoMetallic);
             std::shared_ptr<dx12::Resource> normalRoughness = context.GetResource(_data.NormalRoughness);
+            std::shared_ptr<dx12::Resource> depth = context.GetResource(_data.Depth);
 
-            dx12::ResourceTable* resourceTable = context.GetResourceTable();
+            D3D12_CPU_DESCRIPTOR_HANDLE albedoMetallicHandle = context.GetCPUHandle(albedoMetallic->GetAsRTV());
+            D3D12_CPU_DESCRIPTOR_HANDLE normalSpecularHandle = context.GetCPUHandle(normalRoughness->GetAsRTV());
+            D3D12_CPU_DESCRIPTOR_HANDLE depthHandle = context.GetCPUHandle(depth->GetAsDSV());
 
-            D3D12_CPU_DESCRIPTOR_HANDLE albedoMetallicHandle = resourceTable->GetResourceCPUHandle(albedoMetallic.get(), dx12::ResourceViewType::RTV);
-            D3D12_CPU_DESCRIPTOR_HANDLE normalSpecularHandle = resourceTable->GetResourceCPUHandle(normalRoughness.get(), dx12::ResourceViewType::RTV);
-            D3D12_CPU_DESCRIPTOR_HANDLE depthHandle = resourceTable->GetResourceCPUHandle(depth.get(), dx12::ResourceViewType::DSV);
+            commandList.TransitionBarrier(*albedoMetallic, D3D12_RESOURCE_STATE_RENDER_TARGET);
+            commandList.TransitionBarrier(*normalRoughness, D3D12_RESOURCE_STATE_RENDER_TARGET);
+            commandList.TransitionBarrier(*depth, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+
+            commandList.ClearDSV(depthHandle, D3D12_CLEAR_FLAG_DEPTH);
 
             commandList.SetPipelineState(_geometryPipeline);
 
@@ -180,21 +186,22 @@ namespace render
 
             DebugInfo::StartStatCollecting(commandList);
 
-            helpers::SetupSceneDataGPU(*_scene, commandList, context.GetCache());
+            helpers::SetupSceneDataGPU(*_scene, commandList, &context.GetCache());
 
             // Setup textures
-            commandList.SetDescriptorTable(4, resourceTable->GetDescriptorHeap(dx12::ResourceViewType::SRV).GetHeapStartGPUHandle());
+            commandList.SetDescriptorHeaps({ context.GetResourceTable().GetDescriptorHeap(dx12::ResourceViewType::SRV).GetDXDescriptorHeap().Get() });
+            commandList.SetDescriptorTable(4, context.GetResourceTable().GetDescriptorHeap(dx12::ResourceViewType::SRV).GetHeapStartGPUHandle());
 
             for (std::shared_ptr<scene::Entity>& node : _scene->GetRootNodes())
             {
-                DrawEntity(node, commandList, context.GetCache(), resourceTable);
+                DrawEntity(node, commandList, &context.GetCache(), &context.GetResourceTable());
             }
 
             DebugInfo::EndStatCollecting(commandList);
 
-            commandList.TransitionBarrier(*depth, D3D12_RESOURCE_STATE_COMMON);
             commandList.TransitionBarrier(*albedoMetallic, D3D12_RESOURCE_STATE_COMMON);
             commandList.TransitionBarrier(*normalRoughness, D3D12_RESOURCE_STATE_COMMON);
+            commandList.TransitionBarrier(*depth, D3D12_RESOURCE_STATE_COMMON);
         }
         PIXEndEvent(commandList.GetDXCommandList().Get());
 

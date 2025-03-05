@@ -49,8 +49,6 @@ namespace dx12
         // Computes the GPU virtual address offset for the resource.
         D3D12_GPU_VIRTUAL_ADDRESS OffsetGPU(std::uint64_t offset = 0) const;
 
-        void SetUAVCounterOffset(uint32_t offset);
-
         // Maps the resource to a CPU accessible memory region for reading/writing.
         void* Map();
         void* Map(uint32_t begin, uint32_t end); // Maps a specific range of the resource.

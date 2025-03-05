@@ -1,16 +1,29 @@
 #pragma once
 
-#include "IRenderPass.h"
+#include "RenderGraph/RenderPass.h"
+
+#include "Scene/Scene.h"
+#include "Scene/Entity/Components/Camera.h"
 
 namespace render
 {
-    class GUIPass : public IRenderPass
+    struct GUIPassData
+    {
+        rg::ResourceId Target;
+        rg::ResourceId Depth;
+    };
+
+    class GUIPass : public rg::RenderPass<GUIPassData>
     {
     public:
-        // Inherited via IRenderPass
-        void Initialize() override;
-        void Destroy() override;
+        GUIPass(scene::Scene* scene, scene::Camera* camera);
 
-        void Execute() override;
+        // Inherited via RenderPass
+        void Setup(rg::RenderPassBuilder& builder) override;
+        void Execute(rg::RenderContext& context, TaskGPU& task) override;
+
+    private:
+        scene::Scene* _scene;
+        scene::Camera* _camera;
     };
 } // namespace render

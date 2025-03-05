@@ -8,25 +8,32 @@
 
 namespace render
 {
-    struct SkyboxPassData
+    struct AverageLuminancePassData
     {
-        rg::ResourceId Depth;
-        rg::ResourceId HDRTarget;
+        rg::ResourceId LuminanceHistogram;
+        rg::ResourceId AverageLuminance;
     };
 
-    class SkyboxPass : public rg::RenderPass<SkyboxPassData>
+    class AverageLuminancePass : public rg::RenderPass<AverageLuminancePassData>
     {
     public:
-        SkyboxPass(scene::Scene* scene, scene::Camera* camera);
+        AverageLuminancePass(scene::Scene* scene, scene::Camera* camera);
 
         // Inherited via RenderPass
         void Setup(rg::RenderPassBuilder& builder) override;
         void Execute(rg::RenderContext& context, TaskGPU& task) override;
 
     private:
-        dx12::PipelineState _skyboxPipeline;
+        dx12::PipelineState _averageLuminancePipeline;
+
+        dx12::Resource _prevLuminance;
 
         scene::Scene* _scene;
         scene::Camera* _camera;
     };
 } // namespace render
+
+class AverageLuminancePass
+{
+};
+

@@ -19,6 +19,7 @@ using namespace Microsoft::WRL;
 #include <unordered_map>
 #include <vector>
 #include <functional>
+#include <format>
 
 #include "Utility/Logger.h"
 #include "Utility/Helpers.h"

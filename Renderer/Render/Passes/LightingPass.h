@@ -1,21 +1,35 @@
 #pragma once
 
-#include "IRenderPass.h"
+#include "RenderGraph/RenderPass.h"
+
+#include "PipelineState.h"
+#include "Scene/Scene.h"
+#include "Scene/Entity/Components/Camera.h"
 
 namespace render
 {
-    class LightingPass : public IRenderPass
+    struct LightingPassData
+    {
+        rg::ResourceId AlbedoMetallic;
+        rg::ResourceId NormalRoughness;
+        rg::ResourceId Depth;
+
+        rg::ResourceId HDRTarget;
+    };
+
+    class LightingPass : public rg::RenderPass<LightingPassData>
     {
     public:
-        // Inherited via IRenderPass
-        void Initialize() override;
-        void Destroy() override;
+        LightingPass(scene::Scene* scene, scene::Camera* camera);
 
-        void Execute() override;
+        // Inherited via RenderPass
+        void Setup(rg::RenderPassBuilder& builder) override;
+        void Execute(rg::RenderContext& context, TaskGPU& task) override;
 
     private:
         dx12::PipelineState _deferredPipeline;
 
-        dx12::Resource _HDRTexture;
+        scene::Scene* _scene;
+        scene::Camera* _camera;
     };
 } // namespace render

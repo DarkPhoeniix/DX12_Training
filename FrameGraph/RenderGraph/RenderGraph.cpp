@@ -9,6 +9,20 @@
 
 namespace rg
 {
+    void RenderGraph::Reset()
+    {
+        _context._mapNameToId.clear();
+        _context._resources.clear();
+
+        _passes.clear();
+        _sortedPasses.clear();
+
+        for (auto& cache : _context._cache)
+            cache.Clear();
+        for (auto& table : _context._resourceTable)
+            table.Reset();
+    }
+
     void RenderGraph::Compile()
     {
         BuildAdjacencyLists();
@@ -17,10 +31,16 @@ namespace rg
 
     void RenderGraph::Execute(Frame& frame)
     {
-        for (auto passIndex : _sortedPasses)
+        _context._cache[frame.Index].Clear();
+        _context._resourceTable[frame.Index].Reset();
+        _GPUTasks.clear();
+
+        _context._currentFrameIndex = frame.Index;
+
+        for (auto passIndex : _passes)
         {
             TaskGPU* task = nullptr;
-            switch (_passes[passIndex]->GetType())
+            switch (passIndex->GetType())
             {
             case RenderPassType::Graphics:
                 task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT);
@@ -36,8 +56,18 @@ namespace rg
                 break;
             }
 
-            task->SetName(_passes[passIndex]->_name);
-            _passes[passIndex]->Execute(_context, *task);
+            task->SetName(passIndex->_name);
+            if (!_GPUTasks.empty())
+            {
+                task->AddDependency(_GPUTasks.back()->GetName());
+            }
+
+            if (task)
+            {
+                passIndex->Execute(_context, *task);
+            }
+
+            _GPUTasks.push_back(task);
         }
     }
 

@@ -2,114 +2,94 @@
 
 #include "FXAAPass.h"
 
-#include "Render/Helpers/RenderHelpers.h"
+#include "ResourceTable.h"
+
+#include "Editor.h"
 #include "Scene/Entity/Components/Camera.h"
+
+#include "Scene/Entity/Components/Animation.h"
+#include "Scene/Entity/Components/Armature.h"
+#include "Scene/Entity/Components/Camera.h"
+#include "Scene/Entity/Components/Material.h"
+#include "Scene/Entity/Components/Mesh.h"
+#include "Scene/Entity/Components/Transformation.h"
+
+#include "Render/Helpers/GPUStructs.h"
+#include "Render/Helpers/RenderHelpers.h"
+#include "Utility/DebugInfo.h"
+
+#include "RenderGraph/RenderPassBuilder.h"
+#include "RenderGraph/RenderContext.h"
+
+#include "Render/Passes/PassResources.h"
 
 namespace render
 {
-    void FXAAPass::Initialize()
+    FXAAPass::FXAAPass(scene::Scene* scene, scene::Camera* camera)
+        : RenderPass<FXAAPassData>("FXAA Pass", rg::RenderPassType::Compute)
+        , _scene(scene)
+        , _camera(camera)
     {
-        IRenderPass::Initialize();
-
-        _name = "FXAAPass";
-
         _FXAAPipeline.Parse("PipelineDescriptions\\FXAAPipeline.tech");
-
-        {
-            dx12::ResourceDescription desc = {};
-            desc.SetSize(_activeCamera->GetViewport().GetSize());
-            desc.SetDimension(D3D12_RESOURCE_DIMENSION_TEXTURE2D);
-            desc.SetFormat(DXGI_FORMAT_R8G8B8A8_UNORM);
-            desc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::Unordered);
-
-            _fxaaRTT.CreateCommitedResource(desc);
-
-            dx12::ResourceTable& sceneTable = *_scene->GetCache().GetTextureTable();
-
-            sceneTable.PlaceResource(&_fxaaRTT, dx12::ResourceViewType::UAV);
-
-        }
     }
 
-    void FXAAPass::Destroy()
+    void FXAAPass::Setup(rg::RenderPassBuilder& builder)
     {
-        IRenderPass::Destroy();
+        _data.Target = builder.WriteResource(TARGET);
+
+        dx12::ResourceDescription targetDesc;
+        {
+            targetDesc.SetSize(_camera->GetViewport().GetSize());
+            targetDesc.SetDimension(D3D12_RESOURCE_DIMENSION_TEXTURE2D);
+            targetDesc.SetFormat(DXGI_FORMAT_R8G8B8A8_UNORM);
+            targetDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::Unordered);
+        }
+        _data.FXAATarget = builder.CreateResource("FXAATarget", targetDesc);
     }
 
-    void FXAAPass::Execute()
+    void FXAAPass::Execute(rg::RenderContext& context, TaskGPU& task)
     {
+        dx12::CommandList& commandList = *task.GetCommandLists().front();
+        commandList.SetName("FXAA command list");
+
+        PIXBeginEvent(commandList.GetDXCommandList().Get(), 5, "FXAA Pass");
         {
-            TaskGPU* task = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
-            task->SetName("transitionToFXAA");
-            _tasks.push_back(task);
+            std::shared_ptr<dx12::Resource> target = context.GetResource(_data.Target);
+            std::shared_ptr<dx12::Resource> fxaa = context.GetResource(_data.FXAATarget);
 
-            dx12::CommandList& commandList = *task->GetCommandLists().front();
-            commandList.SetName("Transition to FXAA command list");
+            D3D12_GPU_DESCRIPTOR_HANDLE targetHandle = context.GetGPUHandle(target->GetAsSRV());
+            D3D12_GPU_DESCRIPTOR_HANDLE fxaaHandle = context.GetGPUHandle(fxaa->GetAsUAV());
 
-            commandList.TransitionBarrier(_frame->GetTargetTexture(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-            commandList.TransitionBarrier(_fxaaRTT, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+            commandList.TransitionBarrier(*target, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+            commandList.TransitionBarrier(*fxaa, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
-            commandList.Close();
+            commandList.SetPipelineState(_FXAAPipeline);
+
+            helpers::SetupSceneDataGPU(*_scene, commandList, &context.GetCache());
+
+            commandList.SetDescriptorHeaps({ context.GetResourceTable().GetDescriptorHeap(dx12::ResourceViewType::SRV).GetDXDescriptorHeap().Get() });
+            commandList.SetDescriptorTable(3, targetHandle);
+            commandList.SetDescriptorTable(4, fxaaHandle);
+
+            DirectX::XMUINT2 viewportSize = _camera->GetViewport().GetSize();
+            int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 8.0f);
+            int yThreadGroups = (uint32_t)std::ceilf(viewportSize.y / 8.0f);
+
+            commandList.Dispatch(xThreadGroups, yThreadGroups);
+
+            commandList.TransitionBarrier(*target, D3D12_RESOURCE_STATE_COMMON);
+            commandList.TransitionBarrier(*fxaa, D3D12_RESOURCE_STATE_COMMON);
+
+            commandList.TransitionBarrier(*target, D3D12_RESOURCE_STATE_COPY_DEST);
+            commandList.TransitionBarrier(*fxaa, D3D12_RESOURCE_STATE_COPY_SOURCE);
+
+            commandList.CopyResource(*fxaa, *target);
+
+            commandList.TransitionBarrier(*target, D3D12_RESOURCE_STATE_COMMON);
+            commandList.TransitionBarrier(*fxaa, D3D12_RESOURCE_STATE_COMMON);
         }
+        PIXEndEvent(commandList.GetDXCommandList().Get());
 
-        {
-            TaskGPU* task = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE, &_FXAAPipeline);
-            task->SetName("fxaa");
-            task->AddDependency("transitionToFXAA");
-            _tasks.push_back(task);
-
-            dx12::CommandList& commandList = *task->GetCommandLists().front();
-            commandList.SetName("FXAA command list");
-
-            PIXBeginEvent(commandList.GetDXCommandList().Get(), 10, "FXAA");
-            {
-                commandList.SetPipelineState(_FXAAPipeline);
-
-                dx12::ResourceTable& sceneTable = *_scene->GetCache().GetTextureTable();
-                dx12::ResourceTable& frameTable = _frame->GetResourceTable();
-
-                frameTable.CopyDescriptor(&_fxaaRTT, dx12::ResourceViewType::UAV, sceneTable);
-
-                _frame->BindDescriptorHeaps(commandList);
-
-                D3D12_GPU_DESCRIPTOR_HANDLE targetTextureHandle = frameTable.GetResourceGPUHandle(&_frame->GetTargetTexture(), dx12::ResourceViewType::SRV);
-                D3D12_GPU_DESCRIPTOR_HANDLE fxaaTextureHandle = frameTable.GetResourceGPUHandle(&_fxaaRTT, dx12::ResourceViewType::UAV);
-                
-                helpers::SetupSceneDataGPU(*_scene, commandList, _frame);
-
-                commandList.SetDescriptorTable(3, targetTextureHandle);
-                commandList.SetDescriptorTable(4, fxaaTextureHandle);
-
-                DirectX::XMUINT2 viewportSize = _activeCamera->GetViewport().GetSize();
-                int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 8.0f);
-                int yThreadGroups = (uint32_t)std::ceilf(viewportSize.y / 8.0f);
-
-                commandList.Dispatch(xThreadGroups, yThreadGroups);
-
-            }
-            PIXEndEvent(commandList.GetDXCommandList().Get());
-
-            commandList.Close();
-        }
-
-        {
-            TaskGPU* task = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
-            task->SetName("transitionFromFXAA");
-            task->AddDependency("fxaa");
-            _tasks.push_back(task);
-
-            dx12::CommandList& commandList = *task->GetCommandLists().front();
-            commandList.SetName("Transition from FXAA command list");
-
-            commandList.TransitionBarrier(_frame->GetTargetTexture(), D3D12_RESOURCE_STATE_COPY_DEST);
-            commandList.TransitionBarrier(_fxaaRTT, D3D12_RESOURCE_STATE_COPY_SOURCE);
-
-            commandList.CopyResource(_fxaaRTT, _frame->GetTargetTexture());
-
-            commandList.TransitionBarrier(_frame->GetTargetTexture(), D3D12_RESOURCE_STATE_RENDER_TARGET);
-            commandList.TransitionBarrier(_fxaaRTT, D3D12_RESOURCE_STATE_COMMON);
-
-            commandList.Close();
-        }
+        commandList.Close();
     }
 } // namespace render

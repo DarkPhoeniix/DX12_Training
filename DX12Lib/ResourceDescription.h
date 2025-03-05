@@ -100,6 +100,9 @@ namespace dx12
         // Retrieves the clear value.
         std::shared_ptr<D3D12_CLEAR_VALUE> GetClearValue() const;
 
+        void SetUAVCounterOffset(std::uint32_t offset);
+        std::uint32_t GetUAVCounterOffset() const;
+
         // Creates a D3D12_RESOURCE_DESC based on the current settings.
         D3D12_RESOURCE_DESC CreateDXResourceDescription() const;
 
@@ -115,6 +118,7 @@ namespace dx12
         ResourceType _resourceType;
         // Stride size for structured buffers.
         std::uint32_t _stride;
+        std::uint32_t _UAVCounterOffset;
         // Optional clear value for render targets or depth/stencil buffers.
         std::shared_ptr<D3D12_CLEAR_VALUE> _clearValue;
     };

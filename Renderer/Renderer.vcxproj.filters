@@ -75,6 +75,19 @@
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="Utility\HighResolutionClock.cpp" />
     <ClCompile Include="Render\Passes\TestCopyPass.cpp" />
+    <ClCompile Include="Render\Passes\LightingPass.cpp" />
+    <ClCompile Include="Render\Passes\SkyboxPass.cpp" />
+    <ClCompile Include="Render\Passes\PFX\LuminanceHistogramPass.cpp" />
+    <ClCompile Include="Render\Passes\PFX\AverageLuminancePass.cpp" />
+    <ClCompile Include="Render\Passes\PFX\ToneMappingPass.cpp" />
+    <ClCompile Include="Render\Passes\PassResources.cpp" />
+    <ClCompile Include="Render\Passes\GUIPass.cpp" />
+    <ClCompile Include="Render\Passes\Debug\DebugBoundingVolumePass.cpp" />
+    <ClCompile Include="Render\Passes\FXAAPass.cpp" />
+    <ClCompile Include="Render\Passes\Debug\DebugArmaturePass.cpp" />
+    <ClCompile Include="Render\Passes\ShadowCullPass.cpp" />
+    <ClCompile Include="Render\Passes\ShadowDrawPass.cpp" />
+    <ClCompile Include="Render\Passes\ShadowClearPass.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Render\Helpers\DrawHelpers.h" />
@@ -132,6 +145,19 @@
     <ClInclude Include="Application.h" />
     <ClInclude Include="Utility\HighResolutionClock.h" />
     <ClInclude Include="Render\Passes\TestCopyPass.h" />
+    <ClInclude Include="Render\Passes\LightingPass.h" />
+    <ClInclude Include="Render\Passes\SkyboxPass.h" />
+    <ClInclude Include="Render\Passes\PFX\LuminanceHistogramPass.h" />
+    <ClInclude Include="Render\Passes\PassResources.h" />
+    <ClInclude Include="Render\Passes\PFX\AverageLuminancePass.h" />
+    <ClInclude Include="Render\Passes\PFX\ToneMappingPass.h" />
+    <ClInclude Include="Render\Passes\GUIPass.h" />
+    <ClInclude Include="Render\Passes\Debug\DebugBoundingVolumePass.h" />
+    <ClInclude Include="Render\Passes\FXAAPass.h" />
+    <ClInclude Include="Render\Passes\Debug\DebugArmaturePass.h" />
+    <ClInclude Include="Render\Passes\ShadowCullPass.h" />
+    <ClInclude Include="Render\Passes\ShadowDrawPass.h" />
+    <ClInclude Include="Render\Passes\ShadowClearPass.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resources\Resource.rc" />

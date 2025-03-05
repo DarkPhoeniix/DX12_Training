@@ -2,30 +2,27 @@
 
 #include "RenderGraph/RenderPass.h"
 
-#include "PipelineState.h"
 #include "Scene/Scene.h"
 #include "Scene/Entity/Components/Camera.h"
 
 namespace render
 {
-    struct SkyboxPassData
+    struct DebugBoundingVolumePassData
     {
+        rg::ResourceId Target;
         rg::ResourceId Depth;
-        rg::ResourceId HDRTarget;
     };
 
-    class SkyboxPass : public rg::RenderPass<SkyboxPassData>
+    class DebugBoundingVolumePass : public rg::RenderPass<DebugBoundingVolumePassData>
     {
     public:
-        SkyboxPass(scene::Scene* scene, scene::Camera* camera);
+        DebugBoundingVolumePass(scene::Scene* scene, scene::Camera* camera);
 
         // Inherited via RenderPass
         void Setup(rg::RenderPassBuilder& builder) override;
         void Execute(rg::RenderContext& context, TaskGPU& task) override;
 
     private:
-        dx12::PipelineState _skyboxPipeline;
-
         scene::Scene* _scene;
         scene::Camera* _camera;
     };
