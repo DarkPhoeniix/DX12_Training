@@ -159,6 +159,8 @@ namespace rg
         _mapNameToId[name] = id;
         _resources[id] = resource;
 
+
+        // TODO: this is wrong, views are created for 0 frame only
         dx12::ResourceTable& table = _resourceTable[_currentFrameIndex];
         D3D12_RESOURCE_FLAGS flags = desc.GetFlags();
         if (flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)

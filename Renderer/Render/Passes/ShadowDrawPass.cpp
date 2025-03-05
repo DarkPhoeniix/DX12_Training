@@ -114,47 +114,24 @@ namespace render
                 _data.LightCommandBuffers[frameIndex][i] = builder.ReadResource(std::format("ShadowCullBuffer {} (frame {})", i, frameIndex));
             }
         }
+
+        _data.ShadowMaps.resize(lightsNum, rg::ResourceId(-1));
+        for (size_t lightIndex = 0; lightIndex < lightsNum; ++lightIndex)
+        {
+            std::shared_ptr<scene::Entity> entity = lightEntities[lightIndex];
+            scene::Light* light = entity->GetComponentAs<scene::Light>("Light");
+
+            if (light->CastShadows)
+            {
+                _data.ShadowMaps[lightIndex] = builder.ReadResource(std::format("{}_ShadowMap", entity->GetName()));
+            }
+        }
     }
 
     void ShadowDrawPass::Execute(rg::RenderContext& context, TaskGPU& task)
     {
-        //ClearShadowMaps(context, task);
         DrawSpotLightShadows(context, task);
         DrawPointLightShadows(context, task);
-    }
-
-    void ShadowDrawPass::ClearShadowMaps(rg::RenderContext& context, TaskGPU& task)
-    {
-        dx12::CommandList& commandList = *task.GetCommandLists().front();
-        commandList.SetName("Shadow pass command list - clear");
-        
-        std::vector<std::shared_ptr<scene::Entity>> lightEntities = _scene->FilterNodesByComponent("Light");
-
-        PIXBeginEvent(commandList.GetDXCommandList().Get(), 1, "Shadow Pass | Clear");
-        for (uint32_t lightIndex = 0; lightIndex < lightEntities.size(); ++lightIndex)
-        {
-            scene::Light* light = lightEntities[lightIndex]->GetComponentAs<scene::Light>("Light");
-
-            if (std::shared_ptr<dx12::Resource> shadowMap = light->ShadowMap)
-            {
-                PIXBeginEvent(commandList.GetDXCommandList().Get(), 1, lightEntities[lightIndex]->GetName().c_str());
-
-                // Copy needed descriptors
-                context.GetResourceTable().CopyDescriptor(shadowMap.get(), dx12::ResourceViewType::DSV, *_scene->GetCache().GetTextureTable());
-                context.GetResourceTable().CopyDescriptor(shadowMap.get(), dx12::ResourceViewType::SRV, *_scene->GetCache().GetTextureTable());
-
-                // Transition resources
-                commandList.TransitionBarrier(*shadowMap, D3D12_RESOURCE_STATE_DEPTH_WRITE);
-
-                D3D12_CPU_DESCRIPTOR_HANDLE depthHandle = context.GetCPUHandle(shadowMap->GetAsDSV());
-                commandList.ClearDSV(depthHandle, D3D12_CLEAR_FLAG_DEPTH);
-
-                PIXEndEvent(commandList.GetDXCommandList().Get());
-            }
-        }
-        PIXEndEvent(commandList.GetDXCommandList().Get());
-
-        //commandList.Close();
     }
 
     void ShadowDrawPass::DrawSpotLightShadows(rg::RenderContext& context, TaskGPU& task)
@@ -181,19 +158,20 @@ namespace render
                     continue;
                 }
 
-                std::shared_ptr<dx12::Resource> shadowMap = light->ShadowMap;
-                if (!shadowMap)
+                if (_data.ShadowMaps[lightIndex] == rg::ResourceId(-1))
                 {
                     continue;
                 }
 
                 PIXBeginEvent(commandList.GetDXCommandList().Get(), 1, lightEntities[lightIndex]->GetName().c_str());
 
+                std::shared_ptr<dx12::Resource> shadowMap = context.GetResource(_data.ShadowMaps[lightIndex]);
                 std::shared_ptr<dx12::Resource> commandBuffer = context.GetResource(_data.LightCommandBuffers[context.GetFrameIndex()][lightIndex]);
 
                 // Transition resources
                 commandList.TransitionBarrier(*commandBuffer, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
 
+                D3D12_CPU_DESCRIPTOR_HANDLE testHandle = context.GetCPUHandle(shadowMap->GetAsSRV()); // TODO: remove later
                 D3D12_CPU_DESCRIPTOR_HANDLE depthHandle = context.GetCPUHandle(shadowMap->GetAsDSV());
                 commandList.SetViewport(scene::Viewport(shadowMap->GetResourceDescription().GetSize()));
                 commandList.SetRenderTargets({ }, &depthHandle);
@@ -236,19 +214,20 @@ namespace render
                     continue;
                 }
 
-                std::shared_ptr<dx12::Resource> shadowMap = light->ShadowMap;
-                if (!shadowMap)
+                if (_data.ShadowMaps[lightIndex] == rg::ResourceId(-1))
                 {
                     continue;
                 }
 
                 PIXBeginEvent(commandList.GetDXCommandList().Get(), 1, lightEntities[lightIndex]->GetName().c_str());
 
+                std::shared_ptr<dx12::Resource> shadowMap = context.GetResource(_data.ShadowMaps[lightIndex]);
                 std::shared_ptr<dx12::Resource> commandBuffer = context.GetResource(_data.LightCommandBuffers[context.GetFrameIndex()][lightIndex]);
 
                 // Transition resources
                 commandList.TransitionBarrier(*commandBuffer, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
 
+                D3D12_CPU_DESCRIPTOR_HANDLE testHandle = context.GetCPUHandle(shadowMap->GetAsSRV()); // TODO: remove later
                 D3D12_CPU_DESCRIPTOR_HANDLE depthHandle = context.GetCPUHandle(shadowMap->GetAsDSV());
                 commandList.SetViewport(scene::Viewport(shadowMap->GetResourceDescription().GetSize()));
                 commandList.SetRenderTargets({ }, &depthHandle);

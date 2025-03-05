@@ -11,6 +11,7 @@ namespace render
 {
     struct ShadowDrawPassData
     {
+        std::vector<rg::ResourceId> ShadowMaps;
         std::vector<rg::ResourceId> LightCommandBuffers[dx12::BACK_BUFFER_COUNT];
     };
 
@@ -24,7 +25,6 @@ namespace render
         void Execute(rg::RenderContext& context, TaskGPU& task) override;
 
     private:
-        void ClearShadowMaps(rg::RenderContext& context, TaskGPU& task);
         void DrawSpotLightShadows(rg::RenderContext& context, TaskGPU& task);
         void DrawPointLightShadows(rg::RenderContext& context, TaskGPU& task);
 

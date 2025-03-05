@@ -5,6 +5,7 @@
 #include "ResourceTable.h"
 
 #include "Scene/Entity/Components/Camera.h"
+#include "Scene/Entity/Components/Light.h"
 
 #include "Render/Helpers/RenderHelpers.h"
 #include "Utility/DebugInfo.h"
@@ -29,6 +30,21 @@ namespace render
         _data.AlbedoMetallic = builder.ReadResource(ALBEDO_METALLIC);
         _data.NormalRoughness = builder.ReadResource(NORMAL_ROUGHNESS);
         _data.Depth = builder.ReadResource(DEPTH);
+
+        std::vector<std::shared_ptr<scene::Entity>> lightEntities = _scene->FilterNodesByComponent("Light");
+        size_t lightsNum = lightEntities.size();
+
+        _data.ShadowMaps.resize(lightsNum, rg::ResourceId(-1));
+        for (size_t lightIndex = 0; lightIndex < lightsNum; ++lightIndex)
+        {
+            std::shared_ptr<scene::Entity> entity = lightEntities[lightIndex];
+            scene::Light* light = entity->GetComponentAs<scene::Light>("Light");
+
+            if (light->CastShadows)
+            {
+                _data.ShadowMaps[lightIndex] = builder.ReadResource(std::format("{}_ShadowMap", entity->GetName()));
+            }
+        }
 
         dx12::ResourceDescription targetDesc;
         {
