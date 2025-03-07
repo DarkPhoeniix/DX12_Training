@@ -3,8 +3,6 @@
 #include "RenderPass.h"
 #include "RenderContext.h"
 
-#include "TimestampQuery.h"
-
 class Frame;
 class TaskGPU;
 
@@ -45,8 +43,5 @@ namespace rg
         std::vector<TaskGPU*> _GPUTasks;
 
         RenderContext _context;
-
-        dx12::TimestampQuery _timestampQuery;
-        std::uint64_t _TotalGPUTicks;
     };
 }

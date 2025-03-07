@@ -25,8 +25,6 @@ namespace rg
 
     void RenderGraph::Compile()
     {
-        _timestampQuery.Create();
-
         BuildAdjacencyLists();
         TopologicalSort();
     }
@@ -69,13 +67,10 @@ namespace rg
             if (task)
             {
                 pass->Execute(_context, *task);
-                _timestampQuery.QueryTimestamp(*task->GetCommandLists().front(), passIndex);
             }
 
             _GPUTasks.push_back(task);
         }
-
-        _timestampQuery.ResolveQueryData(*_GPUTasks.back()->GetCommandLists().front());
     }
 
     void RenderGraph::AddPass(std::shared_ptr<IRenderPass> pass)
