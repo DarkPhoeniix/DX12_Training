@@ -123,7 +123,7 @@ namespace render
 
             if (light->CastShadows)
             {
-                _data.ShadowMaps[lightIndex] = builder.ReadResource(std::format("{}_ShadowMap", entity->GetName()));
+                _data.ShadowMaps[lightIndex] = builder.WriteResource(std::format("{}_ShadowMap", entity->GetName()));
             }
         }
     }

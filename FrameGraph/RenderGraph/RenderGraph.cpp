@@ -34,6 +34,7 @@ namespace rg
         _context._cache[frame.Index].Clear();
         _context._resourceTable[frame.Index].Reset();
         _GPUTasks.clear();
+        _GPUTasks.resize(_passes.size(), nullptr);
 
         _context._currentFrameIndex = frame.Index;
 
@@ -58,18 +59,25 @@ namespace rg
                 break;
             }
 
-            task->SetName(pass->_name);
-            if (!_GPUTasks.empty())
+            if (ASSERT(task, "Failed to create a task for the render pass"))
             {
-                task->AddDependency(_GPUTasks.back()->GetName());
-            }
-
-            if (task)
-            {
+                task->SetName(pass->_name);
                 pass->Execute(_context, *task);
             }
 
-            _GPUTasks.push_back(task);
+            _GPUTasks[passIndex] = task;
+        }
+
+        for (auto passIndex : _sortedPasses)
+        {
+            TaskGPU* currentTask = _GPUTasks[passIndex];
+
+            for (auto adjacentPassIndex : _adjacencyLists[passIndex])
+            {
+                TaskGPU* dependentTask = _GPUTasks[adjacentPassIndex];
+                dependentTask->AddDependency(currentTask->GetName());
+                break;
+            }
         }
     }
 
@@ -109,7 +117,8 @@ namespace rg
 
             for (size_t i = passIndex + 1; i < passesCount; ++i)
             {
-                for (ResourceId readId : _passes[i]->_reads)
+                std::shared_ptr<IRenderPass>& otherPass = _passes[i];
+                for (ResourceId readId : otherPass->_reads)
                 {
                     const auto& passWriteIds = pass->_writes;
                     if (std::find(passWriteIds.cbegin(), passWriteIds.cend(), readId) != passWriteIds.cend())
