@@ -48,7 +48,6 @@
     <ClCompile Include="Scene\Entity\Components\Mesh.cpp" />
     <ClCompile Include="Scene\Entity\EntityLoader.cpp" />
     <ClCompile Include="Scene\Entity\Entity.cpp" />
-    <ClCompile Include="Render\GBuffer.cpp" />
     <ClCompile Include="Scene\Entity\Components\IComponent.cpp" />
     <ClCompile Include="Scene\SceneCache.cpp" />
     <ClCompile Include="Render\SceneProcessors\UploadSceneProcessor.cpp" />
@@ -103,7 +102,6 @@
     <ClInclude Include="Render\SceneProcessors\ISceneProcessor.h" />
     <ClInclude Include="Scene\Entity\EntityLoader.h" />
     <ClInclude Include="Scene\Entity\Entity.h" />
-    <ClInclude Include="Render\GBuffer.h" />
     <ClInclude Include="Resources\resource1.h" />
     <ClInclude Include="Scene\Entity\Components\IComponent.h" />
     <ClInclude Include="Scene\SceneCache.h" />

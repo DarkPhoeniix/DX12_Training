@@ -1,11 +1,9 @@
 #pragma once
 
 #include "Render/Frame/Frame.h"
-
 #include "Scene/Entity/Components/Camera.h"
 #include "Scene/Scene.h"
 #include "SceneProcessors/UploadSceneProcessor.h"
-
 #include "Window/IWindowEventListener.h"
 
 #include "RenderGraph/RenderGraph.h"
@@ -49,12 +47,6 @@ namespace render
 
         bool _isCameraMoving;
         float _deltaTime;
-
-        bool _renderArmature;
-        bool _renderAABB;
-        bool _renderSkybox;
-        bool _applyFXAA;
-        float _timeMiltiplier;
 
         bool _contentLoaded;
     };

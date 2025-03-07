@@ -30,7 +30,6 @@
 #include "Render/Passes/ShadowCullPass.h"
 #include "Render/Passes/ShadowDrawPass.h"
 #include "Render/Passes/SkyboxPass.h"
-
 #include "Render/Helpers/DrawHelpers.h"
 
 using namespace DirectX;
@@ -44,11 +43,6 @@ namespace render
         , _contentLoaded(false)
         , _isCameraMoving(false)
         , _deltaTime(0.0f)
-        , _renderArmature(false)
-        , _renderAABB(false)
-        , _applyFXAA(false)
-        , _renderSkybox(true)
-        , _timeMiltiplier(1.0f)
     {
     }
 
@@ -124,10 +118,10 @@ namespace render
     {
         DebugInfo::Update(updateEvent);
 
-        _scene.GetCache().SetTime(updateEvent.totalTime * _timeMiltiplier);
-        _scene.GetCache().SetDeltaTime(updateEvent.elapsedTime * _timeMiltiplier);
+        _scene.GetCache().SetTime(updateEvent.totalTime);
+        _scene.GetCache().SetDeltaTime(updateEvent.elapsedTime);
 
-        _deltaTime = updateEvent.elapsedTime * _timeMiltiplier;
+        _deltaTime = updateEvent.elapsedTime;
 
         std::function<void(std::shared_ptr<scene::Entity>)> updateEntity = [&](std::shared_ptr<scene::Entity> entity)
             {
