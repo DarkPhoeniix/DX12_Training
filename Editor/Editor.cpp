@@ -208,12 +208,12 @@ namespace gui
         return Instance()._scene;
     }
 
-    void Editor::SetSelectedEntity(scene::Entity* entity)
+    void Editor::SetSelectedEntity(std::shared_ptr<scene::Entity> entity)
     {
         Instance()._selectedEntity = entity;
     }
 
-    scene::Entity* Editor::GetSelectedEntity()
+    std::shared_ptr<scene::Entity> Editor::GetSelectedEntity()
     {
         return Instance()._selectedEntity;
     }

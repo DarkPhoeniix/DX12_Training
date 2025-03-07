@@ -31,7 +31,7 @@ namespace
             scene::Transformation transform = entity->GetGlobalTransform();
             scene::Material* material = entity->GetComponentAs<scene::Material>("Material");
 
-            CacheGPU::DataHandle modelDescHandle = cache->RequestPlacement(entity->GetName(), sizeof(GPUModelDesc));
+            CacheGPU::DataHandle modelDescHandle = cache->GetOrPlaceResource(entity->GetName(), sizeof(GPUModelDesc));
             GPUModelDesc* modelDesc = (GPUModelDesc*)modelDescHandle.DataCPU;
             {
                 modelDesc->Transform = transform.Transform;
@@ -69,7 +69,7 @@ namespace
             {
                 const std::vector<scene::Bone*>& bones = armature->GetSortedBones();
 
-                CacheGPU::DataHandle bonesDescHandle = cache->RequestPlacement(entity->GetName() + "_bones", sizeof(DirectX::XMMATRIX) * bones.size());
+                CacheGPU::DataHandle bonesDescHandle = cache->GetOrPlaceResource(entity->GetName() + "_bones", sizeof(DirectX::XMMATRIX) * bones.size());
                 DirectX::XMMATRIX* data = (DirectX::XMMATRIX*)bonesDescHandle.DataCPU;
 
                 for (int i = 0; i < bones.size(); ++i)

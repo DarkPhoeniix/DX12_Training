@@ -37,8 +37,8 @@ namespace gui
         static void SetScene(scene::Scene* scene);
         static scene::Scene* GetScene();
 
-        static void SetSelectedEntity(scene::Entity* entity);
-        static scene::Entity* GetSelectedEntity();
+        static void SetSelectedEntity(std::shared_ptr<scene::Entity> entity);
+        static std::shared_ptr<scene::Entity> GetSelectedEntity();
 
     private:
         Editor();
@@ -49,7 +49,7 @@ namespace gui
         static Editor& Instance();
 
         scene::Scene* _scene;
-        scene::Entity* _selectedEntity;
+        std::shared_ptr<scene::Entity> _selectedEntity;
 
         std::shared_ptr<SceneTreeWidget> _sceneTreeWidget;
         std::shared_ptr<DebugInfoWidget> _debugInfoWidget;

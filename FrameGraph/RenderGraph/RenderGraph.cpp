@@ -25,6 +25,8 @@ namespace rg
 
     void RenderGraph::Compile()
     {
+        _timestampQuery.Create();
+
         BuildAdjacencyLists();
         TopologicalSort();
     }
@@ -37,10 +39,12 @@ namespace rg
 
         _context._currentFrameIndex = frame.Index;
 
-        for (auto passIndex : _passes)
+        for (auto passIndex : _sortedPasses)
         {
+            std::shared_ptr<IRenderPass>& pass = _passes[passIndex];
+
             TaskGPU* task = nullptr;
-            switch (passIndex->GetType())
+            switch (pass->GetType())
             {
             case RenderPassType::Graphics:
                 task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT);
@@ -56,7 +60,7 @@ namespace rg
                 break;
             }
 
-            task->SetName(passIndex->_name);
+            task->SetName(pass->_name);
             if (!_GPUTasks.empty())
             {
                 task->AddDependency(_GPUTasks.back()->GetName());
@@ -64,11 +68,14 @@ namespace rg
 
             if (task)
             {
-                passIndex->Execute(_context, *task);
+                pass->Execute(_context, *task);
+                _timestampQuery.QueryTimestamp(*task->GetCommandLists().front(), passIndex);
             }
 
             _GPUTasks.push_back(task);
         }
+
+        _timestampQuery.ResolveQueryData(*_GPUTasks.back()->GetCommandLists().front());
     }
 
     void RenderGraph::AddPass(std::shared_ptr<IRenderPass> pass)

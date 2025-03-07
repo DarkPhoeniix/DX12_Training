@@ -82,14 +82,16 @@ namespace gui
         IWidget::Update();
 
         ImGui::BeginChild("Entity Components", { 0.0f, 0.0f }, ImGuiChildFlags_FrameStyle);
-        ImGui::SeparatorText("Entity Components");
 
-        scene::Entity* entity = Editor::GetSelectedEntity();
+        std::shared_ptr<scene::Entity> entity = Editor::GetSelectedEntity();
         if (!entity)
         {
+            ImGui::SeparatorText("Entity Components");
             ImGui::EndChild();
             return;
         }
+
+        ImGui::SeparatorText((entity->GetName() + " Components").c_str());
 
         for (const auto& component : entity->GetComponents())
         {

@@ -10,8 +10,8 @@
 #include "Events/RenderEvent.h"
 #include "Events/UpdateEvent.h"
 
-#include "Scene/Entity/Components/Armature.h"
 #include "Scene/Entity/Components/Animation.h"
+#include "Scene/Entity/Components/Armature.h"
 #include "Scene/Entity/Components/Camera.h"
 #include "Scene/Entity/Entity.h"
 #include "Utility/DebugInfo.h"
@@ -21,16 +21,15 @@
 #include "Render/Passes/Debug/DebugBoundingVolumePass.h"
 #include "Render/Passes/FXAAPass.h"
 #include "Render/Passes/GeometryPass.h"
-#include "Render/Passes/TestCopyPass.h"
 #include "Render/Passes/GUIPass.h"
 #include "Render/Passes/LightingPass.h"
-#include "Render/Passes/ShadowCullPass.h"
+#include "Render/Passes/PFX/AverageLuminancePass.h"
+#include "Render/Passes/PFX/LuminanceHistogramPass.h"
+#include "Render/Passes/PFX/ToneMappingPass.h"
 #include "Render/Passes/ShadowClearPass.h"
+#include "Render/Passes/ShadowCullPass.h"
 #include "Render/Passes/ShadowDrawPass.h"
 #include "Render/Passes/SkyboxPass.h"
-#include "Render/Passes/PFX/LuminanceHistogramPass.h"
-#include "Render/Passes/PFX/AverageLuminancePass.h"
-#include "Render/Passes/PFX/ToneMappingPass.h"
 
 #include "Render/Helpers/DrawHelpers.h"
 
@@ -290,7 +289,7 @@ namespace render
             _renderGraph.AddPass(std::make_shared<AverageLuminancePass>(&_scene, _cameraComponent.get()));
             _renderGraph.AddPass(std::make_shared<ToneMappingPass>(&_scene, _cameraComponent.get()));
             //_renderGraph.AddPass(std::make_shared<FXAAPass>(&_scene, _cameraComponent.get()));
-            _renderGraph.AddPass(std::make_shared<DebugBoundingVolumePass>(&_scene, _cameraComponent.get()));
+            //_renderGraph.AddPass(std::make_shared<DebugBoundingVolumePass>(&_scene, _cameraComponent.get()));
             //_renderGraph.AddPass(std::make_shared<DebugArmaturePass>(&_scene, _cameraComponent.get()));
             _renderGraph.AddPass(std::make_shared<GUIPass>(&_scene, _cameraComponent.get()));
 

@@ -37,7 +37,8 @@ namespace gui
 
         if (ImGui::BeginChild("Debug Info", {0,0}, ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY))
         {
-            ImGui::Text("FPS: %i (%.03f ms)", DebugInfo::GetFPS(), DebugInfo::GetMsPerFrame());
+            ImGui::Text("FPS: %i", DebugInfo::GetFPS());
+            ImGui::Text("CPU Time: %.03f ms", DebugInfo::GetMsPerFrame());
         
             if (ImGui::CollapsingHeader("Pipeline statistics"))
             {

@@ -3,6 +3,8 @@
 #include "RenderPass.h"
 #include "RenderContext.h"
 
+#include "TimestampQuery.h"
+
 class Frame;
 class TaskGPU;
 
@@ -26,8 +28,6 @@ namespace rg
         void Execute(Frame& frame);
 
         void AddPass(std::shared_ptr<IRenderPass> pass);
-        template<typename PassData, typename ...Args>
-        void AddPass(Args&& ...args);
 
         void ImportResource(std::shared_ptr<dx12::Resource> resource);
         std::shared_ptr<dx12::Resource> ExportResource(const std::string& name);
@@ -45,15 +45,8 @@ namespace rg
         std::vector<TaskGPU*> _GPUTasks;
 
         RenderContext _context;
+
+        dx12::TimestampQuery _timestampQuery;
+        std::uint64_t _TotalGPUTicks;
     };
-
-    template<typename PassData, typename ...Args>
-    void RenderGraph::AddPass(Args&& ...args)
-    {
-        _passes.emplace_back(std::make_shared<RenderPass<PassData>>(std::forward<Args>(args)...));
-
-        std::shared_ptr<IRenderPass> pass = _passes.back();
-        RenderPassBuilder builder(*this, pass.get());
-        pass->Setup(builder);
-    }
 }

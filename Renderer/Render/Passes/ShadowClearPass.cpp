@@ -81,7 +81,8 @@ namespace render
                     clearValue.DepthStencil.Depth = 1;
                     clearValue.DepthStencil.Stencil = 0;
 
-                    shadowMapDesc.SetSize({ 1024, 1024 });
+                    DirectX::XMUINT2 size = _camera->GetViewport().GetSize();
+                    shadowMapDesc.SetSize({ size.x, size.x });
                     shadowMapDesc.SetFormat(DXGI_FORMAT_D32_FLOAT);
                     shadowMapDesc.SetClearValue(clearValue);
                     switch (light->Type)
