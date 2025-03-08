@@ -3,5 +3,5 @@
     "Intensity": 1.0,
     "Type": "Point",
     "Range": 80.0,
-    "CastShadows": 0
+    "CastShadows": 1
 }

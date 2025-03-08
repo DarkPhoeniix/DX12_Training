@@ -2,88 +2,101 @@
 
 #include "LightingPass.h"
 
-#include "ResourceTable.h"
+#include "CommandList.h"
 
-#include "Scene/Entity/Components/Camera.h"
 #include "Render/Helpers/RenderHelpers.h"
+#include "Render/Passes/PassResources.h"
+#include "Scene/Entity/Components/Light.h"
+
+#include "RenderGraph/RenderContext.h"
+#include "RenderGraph/RenderPassBuilder.h"
 
 namespace render
 {
-    void LightingPass::Initialize()
+    LightingPass::LightingPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
+        : RenderPass<LightingPassData>("Lighting Pass", rg::RenderPassType::Compute)
+        , _scene(scene)
+        , _camera(camera)
     {
-        IRenderPass::Initialize();
-
-        _name = "LightingPass";
-
         _deferredPipeline.Parse("PipelineDescriptions\\DeferredShading.tech");
+    }
 
+    void LightingPass::Setup(rg::RenderPassBuilder& builder)
+    {
+        _data.AlbedoMetallic = builder.ReadResource(ALBEDO_METALLIC);
+        _data.NormalRoughness = builder.ReadResource(NORMAL_ROUGHNESS);
+        _data.Depth = builder.ReadResource(DEPTH);
+
+        std::vector<std::shared_ptr<scene::Entity>> lightEntities = _scene->FilterNodesByComponent("Light");
+        size_t lightsNum = lightEntities.size();
+
+        _data.ShadowMaps.resize(lightsNum, rg::ResourceId(-1));
+        for (size_t lightIndex = 0; lightIndex < lightsNum; ++lightIndex)
         {
-            dx12::ResourceDescription textureDesc;
-            D3D12_CLEAR_VALUE clearValue;
+            std::shared_ptr<scene::Entity> entity = lightEntities[lightIndex];
+            scene::Light* light = entity->GetComponentAs<scene::Light>("Light");
+
+            if (light->CastShadows)
             {
-                textureDesc.SetSize(_activeCamera->GetViewport().GetSize());
-                textureDesc.SetFormat(DXGI_FORMAT_R16G16B16A16_FLOAT);
-                textureDesc.SetDimension(D3D12_RESOURCE_DIMENSION_TEXTURE2D);
-                textureDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::Unordered);
+                _data.ShadowMaps[lightIndex] = builder.ReadResource(std::format("{}_ShadowMap", entity->GetName()));
             }
-
-            _HDRTexture.CreateCommitedResource(textureDesc, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-            _HDRTexture.SetName("HDR_Lightpass");
-
-            std::shared_ptr<dx12::ResourceTable> sceneTable = _scene->GetCache().GetTextureTable();
-            sceneTable->PlaceResource(&_HDRTexture, dx12::ResourceViewType::SRV);
-            sceneTable->PlaceResource(&_HDRTexture, dx12::ResourceViewType::UAV);
         }
+
+        dx12::ResourceDescription targetDesc;
+        {
+            targetDesc.SetSize(_camera->GetViewport().GetSize());
+            targetDesc.SetFormat(DXGI_FORMAT_R8G8B8A8_UNORM);
+            targetDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::Unordered);
+        }
+        _data.HDRTarget = builder.CreateResource(HDR_TARGET, targetDesc);
     }
 
-    void LightingPass::Destroy()
+    void LightingPass::Execute(rg::RenderContext& context, TaskGPU& task)
     {
-        IRenderPass::Destroy();
-    }
-
-    void LightingPass::Execute()
-    {
-        TaskGPU* task = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE, &_deferredPipeline);
-        task->SetName("deferred");
-        _tasks.push_back(task);
-
-        dx12::CommandList& commandList = *task->GetCommandLists().front();
+        dx12::CommandList& commandList = *task.GetCommandLists().front();
         commandList.SetName("Lighting pass command list");
 
         PIXBeginEvent(commandList.GetDXCommandList().Get(), 4, "Deferred Shading");
         {
+            std::shared_ptr<dx12::Resource> hdrTarget = context.GetResource(_data.HDRTarget);
+            std::shared_ptr<dx12::Resource> albedoMetallic = context.GetResource(_data.AlbedoMetallic);
+            std::shared_ptr<dx12::Resource> normalRoughness = context.GetResource(_data.NormalRoughness);
+            std::shared_ptr<dx12::Resource> depth = context.GetResource(_data.Depth);
+
+            D3D12_GPU_DESCRIPTOR_HANDLE hdrTargetHandle = context.GetGPUHandle(hdrTarget->GetAsUAV());
+            D3D12_GPU_DESCRIPTOR_HANDLE albedoMetallicHandle = context.GetGPUHandle(albedoMetallic->GetAsSRV());
+            D3D12_GPU_DESCRIPTOR_HANDLE normalSpecularHandle = context.GetGPUHandle(normalRoughness->GetAsSRV());
+            D3D12_GPU_DESCRIPTOR_HANDLE depthHandle = context.GetGPUHandle(depth->GetAsSRV());
+
+            commandList.TransitionBarrier(*hdrTarget, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+            commandList.TransitionBarrier(*albedoMetallic, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+            commandList.TransitionBarrier(*normalRoughness, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+            commandList.TransitionBarrier(*depth, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+
             commandList.SetPipelineState(_deferredPipeline);
 
-            dx12::ResourceTable& frameTable = _frame->GetResourceTable();
-            dx12::ResourceTable& sceneTable = *_scene->GetCache().GetTextureTable();
-            dx12::ResourceTable& gBufferTable = _gBuffer->GetResourceTable();
+            helpers::SetupSceneDataGPU(*_scene, commandList, &context.GetCache());
+            helpers::SetupLightDataGPU(*_scene, commandList, &context.GetCache(), context.GetResourceTable());
 
-            dx12::Resource* target = &_HDRTexture;
-            dx12::Resource* albedoMetalness = &_gBuffer->GetAlbedoMetalnessTexture();
-            dx12::Resource* normalSpecular = &_gBuffer->GetNormalTexture();
-            dx12::Resource* depth = &_gBuffer->GetDepthTexture();
+            commandList.SetDescriptorHeaps({ context.GetResourceTable().GetDescriptorHeap(dx12::ResourceViewType::SRV).GetDXDescriptorHeap().Get() });
 
-            frameTable.CopyDescriptor(target, dx12::ResourceViewType::UAV, sceneTable);
-            frameTable.CopyDescriptor(albedoMetalness, dx12::ResourceViewType::SRV, gBufferTable);
-            frameTable.CopyDescriptor(normalSpecular, dx12::ResourceViewType::SRV, gBufferTable);
-            frameTable.CopyDescriptor(depth, dx12::ResourceViewType::SRV, gBufferTable);
+            commandList.SetDescriptorTable(3, depthHandle);
+            commandList.SetDescriptorTable(4, albedoMetallicHandle);
+            commandList.SetDescriptorTable(5, normalSpecularHandle);
+            commandList.SetDescriptorTable(6, context.GetResourceTable().GetDescriptorHeap(dx12::ResourceViewType::SRV).GetHeapStartGPUHandle());
+            commandList.SetDescriptorTable(7, context.GetResourceTable().GetDescriptorHeap(dx12::ResourceViewType::SRV).GetHeapStartGPUHandle());
+            commandList.SetDescriptorTable(8, hdrTargetHandle);
 
-            _frame->BindDescriptorHeaps(commandList);
-
-            helpers::SetupSceneDataGPU(*_scene, commandList, _frame);
-
-            commandList.SetDescriptorTable(3, frameTable.GetResourceGPUHandle(depth, dx12::ResourceViewType::SRV));
-            commandList.SetDescriptorTable(4, frameTable.GetResourceGPUHandle(albedoMetalness, dx12::ResourceViewType::SRV));
-            commandList.SetDescriptorTable(5, frameTable.GetResourceGPUHandle(normalSpecular, dx12::ResourceViewType::SRV));
-            commandList.SetDescriptorTable(6, frameTable.GetDescriptorHeap(dx12::ResourceViewType::SRV).GetHeapStartGPUHandle());
-            commandList.SetDescriptorTable(7, frameTable.GetDescriptorHeap(dx12::ResourceViewType::SRV).GetHeapStartGPUHandle());
-            commandList.SetDescriptorTable(8, frameTable.GetResourceGPUHandle(target, dx12::ResourceViewType::UAV));
-
-            DirectX::XMUINT2 viewportSize = _activeCamera->GetViewport().GetSize();
+            DirectX::XMUINT2 viewportSize = _camera->GetViewport().GetSize();
             int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 8.0f);
             int yThreadGroups = (uint32_t)std::ceilf(viewportSize.y / 8.0f);
 
             commandList.Dispatch(xThreadGroups, yThreadGroups);
+
+            commandList.TransitionBarrier(*hdrTarget, D3D12_RESOURCE_STATE_COMMON);
+            commandList.TransitionBarrier(*albedoMetallic, D3D12_RESOURCE_STATE_COMMON);
+            commandList.TransitionBarrier(*normalRoughness, D3D12_RESOURCE_STATE_COMMON);
+            commandList.TransitionBarrier(*depth, D3D12_RESOURCE_STATE_COMMON);
         }
         PIXEndEvent(commandList.GetDXCommandList().Get());
 

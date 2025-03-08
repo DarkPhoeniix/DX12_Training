@@ -105,7 +105,8 @@ namespace dx12
             dx12::Device::CreateShaderResourceView(resource->GetAsSRV(), descriptorHeap);
             break;
         case ResourceViewType::UAV:
-            dx12::Device::CreateUnorderedAccessView(resource->GetAsUAV(), descriptorHeap);
+            dx12::Device::CreateUnorderedAccessView(resource->GetAsUAV(), descriptorHeap, 
+                (resource->GetResourceDescription().GetUAVCounterOffset() != -1) ? resource : nullptr);
             break;
         default:
             ASSERT(false, "TODO");
@@ -113,6 +114,27 @@ namespace dx12
         };
 
         return true;
+    }
+
+    bool ResourceTable::PlaceResourceIfNotExist(Resource* resource, ResourceViewType viewType)
+    {
+        if (ASSERT(resource, "Trying to add a nullptr resource to resource table"))
+        {
+            return false;
+        }
+
+        ResourceTable::ResourceMap& resources = _GetResourceMap(viewType);
+        DescriptorHeap& descriptorHeap = GetDescriptorHeap(viewType);
+
+        ResourceKey key = { resource->GetName().c_str(), viewType };
+        auto resourceIt = resources.find(key);
+
+        if (resourceIt == resources.end())
+        {
+            return PlaceResource(resource, viewType);
+        }
+
+        return false;
     }
 
     D3D12_CPU_DESCRIPTOR_HANDLE ResourceTable::GetResourceCPUHandle(Resource* resource, ResourceViewType viewType)
@@ -142,10 +164,16 @@ namespace dx12
         ResourceTable::ResourceMap& resources = _GetResourceMap(viewType);
         DescriptorHeap& descriptorHeap = GetDescriptorHeap(viewType);
 
-        ResourceKey key = { resourceName.c_str(), viewType };
-        std::uint32_t resourceIndex = resources[key].HeapIndex;
+        D3D12_CPU_DESCRIPTOR_HANDLE descriptor{ 0 };
 
-        return descriptorHeap.GetCPUHandleWithOffset(resourceIndex);
+        ResourceKey key = { resourceName.c_str(), viewType };
+        auto resourceIt = resources.find(key);
+        if (resourceIt != resources.end())
+        {
+            descriptor = descriptorHeap.GetCPUHandleWithOffset(resourceIt->second.HeapIndex);
+        }
+
+        return descriptor;
     }
 
     D3D12_GPU_DESCRIPTOR_HANDLE ResourceTable::GetResourceGPUHandle(const std::string& resourceName, ResourceViewType viewType)
@@ -153,10 +181,16 @@ namespace dx12
         ResourceTable::ResourceMap& resources = _GetResourceMap(viewType);
         DescriptorHeap& descriptorHeap = GetDescriptorHeap(viewType);
 
-        ResourceKey key = { resourceName, viewType };
-        std::uint32_t resourceIndex = resources[key].HeapIndex;
+        D3D12_GPU_DESCRIPTOR_HANDLE descriptor{ 0 };
 
-        return descriptorHeap.GetGPUHandleWithOffset(resourceIndex);
+        ResourceKey key = { resourceName.c_str(), viewType };
+        auto resourceIt = resources.find(key);
+        if (resourceIt != resources.end())
+        {
+            descriptor = descriptorHeap.GetGPUHandleWithOffset(resourceIt->second.HeapIndex);
+        }
+
+        return descriptor;
     }
 
     std::uint32_t ResourceTable::GetResourceIndex(Resource* resource, ResourceViewType viewType)

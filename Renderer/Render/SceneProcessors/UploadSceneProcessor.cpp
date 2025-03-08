@@ -140,17 +140,6 @@ void UploadSceneProcessor::ProcessEntity(Entity& entity, dx12::CommandList& comm
         skybox->SkydomeTexture->UploadToGPU(commandList);
         textureTable->PlaceResource(skybox->SkydomeTexture.get(), dx12::ResourceViewType::SRV);
     }
-
-    Light* light = entity.GetComponentAs<Light>("Light");
-    if (light)
-    {
-        std::shared_ptr<dx12::ResourceTable> textureTable = cache->GetTextureTable();
-        if (light->ShadowMap)
-        {
-            textureTable->PlaceResource(light->ShadowMap.get(), dx12::ResourceViewType::DSV);
-            textureTable->PlaceResource(light->ShadowMap.get(), dx12::ResourceViewType::SRV);
-        }
-    }
 }
 
 void UploadSceneProcessor::UploadData(dx12::CommandList& commandList, ID3D12Resource** destinationResource, size_t numElements, size_t elementSize, const void* bufferData, D3D12_RESOURCE_FLAGS flags)

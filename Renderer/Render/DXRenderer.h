@@ -1,14 +1,12 @@
 #pragma once
 
 #include "Render/Frame/Frame.h"
-#include "Render/GBuffer.h"
-#include "Render/Passes/IRenderPass.h"
-
 #include "Scene/Entity/Components/Camera.h"
 #include "Scene/Scene.h"
 #include "SceneProcessors/UploadSceneProcessor.h"
-
 #include "Window/IWindowEventListener.h"
+
+#include "RenderGraph/RenderGraph.h"
 
 namespace render
 {
@@ -23,15 +21,20 @@ namespace render
 
         virtual void SetFrame(Frame& frame);
 
-        virtual void OnKeyPressed(core::events::KeyEvent& e) override;
-        virtual void OnKeyReleased(core::events::KeyEvent& e) override {}
-        virtual void OnMouseMoved(core::events::MouseMoveEvent& e) override;
-        virtual void OnMouseButtonPressed(core::events::MouseButtonEvent& e) override;
-        virtual void OnMouseButtonReleased(core::events::MouseButtonEvent& e) override;
-        virtual void OnMouseScroll(core::events::MouseScrollEvent& e) override {}
-        virtual void OnResize(core::events::ResizeEvent& e) override;
-        virtual void OnUpdate(core::events::UpdateEvent& e) override;
-        virtual void OnRender(core::events::RenderEvent& e) override;
+        rg::RenderGraph& GetRenderGraph();
+
+        std::shared_ptr<scene::Scene> GetCurrentScene();
+
+        // Inherited via IWindowEventListener
+        void OnUpdate(core::events::UpdateEvent& e) override;
+        void OnRender(core::events::RenderEvent& e) override;
+        void OnKeyPressed(core::events::KeyEvent& e) override;
+        void OnKeyReleased(core::events::KeyEvent& e) override {}
+        void OnMouseMoved(core::events::MouseMoveEvent& e) override;
+        void OnMouseButtonPressed(core::events::MouseButtonEvent& e) override;
+        void OnMouseButtonReleased(core::events::MouseButtonEvent& e) override;
+        void OnMouseScroll(core::events::MouseScrollEvent& e) override {}
+        void OnResize(core::events::ResizeEvent& e) override;
 
     private:
         void SetupRenderPipeline();
@@ -40,22 +43,15 @@ namespace render
 
         Frame* _currentFrame;
 
-        render::GBuffer _gBuffer;
-        scene::Scene _scene;
+        rg::RenderGraph _renderGraph;
+
+        std::shared_ptr<scene::Scene> _scene;
         std::shared_ptr<scene::Camera> _cameraComponent;
 
         UploadSceneProcessor _uploadProcessor;
 
-        std::vector<std::unique_ptr<IRenderPass>> _renderPasses;
-
         bool _isCameraMoving;
         float _deltaTime;
-
-        bool _renderArmature;
-        bool _renderAABB;
-        bool _renderSkybox;
-        bool _applyFXAA;
-        float _timeMiltiplier;
 
         bool _contentLoaded;
     };

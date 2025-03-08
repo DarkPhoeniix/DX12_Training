@@ -10,23 +10,25 @@
 #include "Events/RenderEvent.h"
 #include "Events/UpdateEvent.h"
 
-#include "Scene/Entity/Components/Armature.h"
 #include "Scene/Entity/Components/Animation.h"
+#include "Scene/Entity/Components/Armature.h"
 #include "Scene/Entity/Components/Camera.h"
 #include "Scene/Entity/Entity.h"
 #include "Utility/DebugInfo.h"
 
 #include "Render/Frame/TaskGPU.h"
-#include "Render/Passes/DebugArmaturePass.h"
-#include "Render/Passes/DebugBoundingVolumePass.h"
+#include "Render/Passes/Debug/DebugArmaturePass.h"
+#include "Render/Passes/Debug/DebugBoundingVolumePass.h"
 #include "Render/Passes/FXAAPass.h"
 #include "Render/Passes/GeometryPass.h"
-#include "Render/Passes/GUIPass.h"
 #include "Render/Passes/LightingPass.h"
-#include "Render/Passes/ShadowPass.h"
+#include "Render/Passes/PFX/AverageLuminancePass.h"
+#include "Render/Passes/PFX/LuminanceHistogramPass.h"
+#include "Render/Passes/PFX/ToneMappingPass.h"
+#include "Render/Passes/ShadowClearPass.h"
+#include "Render/Passes/ShadowCullPass.h"
+#include "Render/Passes/ShadowDrawPass.h"
 #include "Render/Passes/SkyboxPass.h"
-#include "Render/Passes/ToneMappingPass.h"
-
 #include "Render/Helpers/DrawHelpers.h"
 
 using namespace DirectX;
@@ -40,16 +42,21 @@ namespace render
         , _contentLoaded(false)
         , _isCameraMoving(false)
         , _deltaTime(0.0f)
-        , _renderArmature(false)
-        , _renderAABB(false)
-        , _applyFXAA(false)
-        , _renderSkybox(true)
-        , _timeMiltiplier(1.0f)
     {
     }
 
     DXRenderer::~DXRenderer()
     {
+    }
+
+    rg::RenderGraph& DXRenderer::GetRenderGraph()
+    {
+        return _renderGraph;
+    }
+
+    std::shared_ptr<scene::Scene> DXRenderer::GetCurrentScene()
+    {
+        return _scene;
     }
 
     bool DXRenderer::LoadContent(TaskGPU* loadTask)
@@ -62,7 +69,7 @@ namespace render
         uint32_t windowHeight = windowSize.bottom - windowSize.top;
 
         // Camera Setup
-        std::shared_ptr<scene::Entity> cameraEntity = std::make_shared<scene::Entity>(&_scene.GetCache());
+        std::shared_ptr<scene::Entity> cameraEntity = std::make_shared<scene::Entity>(&_scene->GetCache());
         {
             cameraEntity->SetName("Camera");
 
@@ -85,17 +92,16 @@ namespace render
             _cameraComponent = cameraComponent;
         }
 
-        _gBuffer.Init({ windowWidth, windowHeight });
-
         // Load scene
         {
             loadTask->SetName("Upload Data");
             dx12::CommandList& commandList = *loadTask->GetCommandLists().front();
 
-            _scene.LoadScene("Dragon\\DragonScene.scene", commandList);
-            _uploadProcessor.Process(_scene, commandList, nullptr);
+            _scene = std::make_shared<scene::Scene>();
+            _scene->LoadScene("Dragon\\DragonScene.scene", commandList);
+            _uploadProcessor.Process(*_scene, commandList, nullptr);
 
-            _scene.AddRootNode(cameraEntity);
+            _scene->AddRootNode(cameraEntity);
 
             commandList.Close();
         }
@@ -118,9 +124,80 @@ namespace render
         _currentFrame = &frame;
     }
 
+    void DXRenderer::OnUpdate(events::UpdateEvent& updateEvent)
+    {
+        DebugInfo::Update(updateEvent);
+
+        _scene->GetCache().SetTime(updateEvent.totalTime);
+        _scene->GetCache().SetDeltaTime(updateEvent.elapsedTime);
+
+        _deltaTime = updateEvent.elapsedTime;
+
+        std::function<void(std::shared_ptr<scene::Entity>)> updateEntity = [&](std::shared_ptr<scene::Entity> entity)
+            {
+                entity->UpdateGlobalTransform();
+
+                scene::Armature* armature = entity->GetComponentAs<scene::Armature>("Armature");
+                scene::Animation* animation = entity->GetComponentAs<scene::Animation>("Animation");
+
+                if (armature && animation)
+                {
+                    const auto& transforms = animation->GetBonesTransforms(updateEvent.totalTime);
+                    armature->ApplyAnimation(transforms);
+                    armature->UpdateGlobalTransformations();
+                }
+
+                for (const auto& child : entity->GetChildrenNodes())
+                {
+                    updateEntity(child);
+                }
+            };
+
+        for (const auto& entity : _scene->GetRootNodes())
+        {
+            updateEntity(entity);
+        }
+    }
+
+    void DXRenderer::OnRender(events::RenderEvent& renderEvent)
+    {
+        _currentFrame->WaitCPU();
+        _currentFrame->ResetGPU();
+
+        _renderGraph.Execute(*_currentFrame);
+
+        std::shared_ptr<dx12::Resource> target = _renderGraph.ExportResource("Target");
+
+        // Present
+        {
+            TaskGPU* task = _currentFrame->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
+            task->SetName("present");
+            task->AddDependency("GUI Pass"); // TODO: remove hardcoded render dependency !!!
+
+            dx12::CommandList& commandList = *task->GetCommandLists().front();
+            commandList.SetName("present");
+
+            PIXBeginEvent(commandList.GetDXCommandList().Get(), 6, "Present");
+            {
+                dx12::Resource& swapChainTexture = *dx12::Device::GetBackBuffer();
+
+                commandList.TransitionBarrier(swapChainTexture, D3D12_RESOURCE_STATE_COPY_DEST);
+                commandList.TransitionBarrier(*target, D3D12_RESOURCE_STATE_COPY_SOURCE);
+
+                commandList.CopyResource(*target, swapChainTexture);
+
+                commandList.TransitionBarrier(swapChainTexture, D3D12_RESOURCE_STATE_PRESENT);
+                commandList.TransitionBarrier(*target, D3D12_RESOURCE_STATE_COMMON);
+            }
+            PIXEndEvent(commandList.GetDXCommandList().Get());
+
+            commandList.Close();
+        }
+    }
+
     void DXRenderer::OnKeyPressed(events::KeyEvent& e)
     {
-        auto cameraEntity = _scene.FindNodeByComponentName("Camera");
+        auto cameraEntity = _scene->FindNodeByComponentName("Camera");
         ASSERT(cameraEntity.get(), "No camera on the scene");
         scene::Camera* camera = cameraEntity->GetComponentAs<scene::Camera>("Camera");
 
@@ -196,108 +273,30 @@ namespace render
         dx12::Device::OnResize(windowSize);
         _cameraComponent->GetViewport().SetSize(windowSize);
         _cameraComponent->Update();
-        _gBuffer.Init(windowSize);
 
         SetupRenderPipeline();
     }
 
     void DXRenderer::SetupRenderPipeline()
     {
-        _renderPasses.clear();
-
-        _renderPasses.push_back(std::make_unique<GeometryPass>());
-        _renderPasses.push_back(std::make_unique<ShadowPass>());
-        _renderPasses.push_back(std::make_unique<LightingPass>());
-        _renderPasses.push_back(std::make_unique<SkyboxPass>());
-        _renderPasses.push_back(std::make_unique<ToneMappingPass>());
-        //_renderPasses.push_back(std::make_unique<FXAAPass>());
-        //_renderPasses.push_back(std::make_unique<DebugArmaturePass>());
-        //_renderPasses.push_back(std::make_unique<DebugBoundingVolumePass>());
-        _renderPasses.push_back(std::make_unique<GUIPass>());
-
-        for (auto& pass : _renderPasses)
+        // Render Graph setup
         {
-            pass->SetScene(_scene);
-            pass->SetGeometryBuffer(_gBuffer);
+            _renderGraph.Reset();
 
-            pass->Initialize();
-        }
-    }
+            _renderGraph.AddPass(std::make_shared<GeometryPass>(_scene, _cameraComponent.get()));
+            _renderGraph.AddPass(std::make_shared<ShadowClearPass>(_scene, _cameraComponent.get()));
+            _renderGraph.AddPass(std::make_shared<ShadowCullPass>(_scene, _cameraComponent.get()));
+            _renderGraph.AddPass(std::make_shared<ShadowDrawPass>(_scene, _cameraComponent.get()));
+            _renderGraph.AddPass(std::make_shared<LightingPass>(_scene, _cameraComponent.get()));
+            _renderGraph.AddPass(std::make_shared<SkyboxPass>(_scene, _cameraComponent.get()));
+            _renderGraph.AddPass(std::make_shared<LuminanceHistogramPass>(_scene, _cameraComponent.get()));
+            _renderGraph.AddPass(std::make_shared<AverageLuminancePass>(_scene, _cameraComponent.get()));
+            _renderGraph.AddPass(std::make_shared<ToneMappingPass>(_scene, _cameraComponent.get()));
+            //_renderGraph.AddPass(std::make_shared<FXAAPass>(_scene, _cameraComponent.get()));
+            //_renderGraph.AddPass(std::make_shared<DebugBoundingVolumePass>(_scene, _cameraComponent.get()));
+            //_renderGraph.AddPass(std::make_shared<DebugArmaturePass>(_scene, _cameraComponent.get()));
 
-    void DXRenderer::OnUpdate(events::UpdateEvent& updateEvent)
-    {
-        DebugInfo::Update(updateEvent);
-
-        _scene.GetCache().SetTime(updateEvent.totalTime * _timeMiltiplier);
-        _scene.GetCache().SetDeltaTime(updateEvent.elapsedTime * _timeMiltiplier);
-
-        _deltaTime = updateEvent.elapsedTime * _timeMiltiplier;
-
-        std::function<void(std::shared_ptr<scene::Entity>)> updateEntity = [&](std::shared_ptr<scene::Entity> entity)
-            {
-                entity->UpdateGlobalTransform();
-
-                scene::Armature* armature = entity->GetComponentAs<scene::Armature>("Armature");
-                scene::Animation* animation = entity->GetComponentAs<scene::Animation>("Animation");
-
-                if (armature && animation)
-                {
-                    const auto& transforms = animation->GetBonesTransforms(updateEvent.totalTime);
-                    armature->ApplyAnimation(transforms);
-                    armature->UpdateGlobalTransformations();
-                }
-
-                for (const auto& child : entity->GetChildrenNodes())
-                {
-                    updateEntity(child);
-                }
-            };
-
-        for (const auto& entity : _scene.GetRootNodes())
-        {
-            updateEntity(entity);
-        }
-    }
-
-    void DXRenderer::OnRender(events::RenderEvent& renderEvent)
-    {
-        _currentFrame->WaitCPU();
-        _currentFrame->ResetGPU();
-        _currentFrame->ResetCache();
-
-        for (size_t i = 0; i < _renderPasses.size(); ++i)
-        {
-            _renderPasses[i]->SetRenderFrame(*_currentFrame);
-
-            _renderPasses[i]->Execute();
-
-            if (i != 0)
-            {
-                TaskGPU* dependency = _renderPasses[i - 1]->GetTasks().back();
-                _renderPasses[i]->GetTasks().front()->AddDependency(dependency->GetName());
-            }
-        }
-
-        // Present
-        {
-            TaskGPU* task = _currentFrame->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
-            task->SetName("present");
-            task->AddDependency(_renderPasses.back()->GetTasks().back()->GetName());
-
-            dx12::CommandList& commandList = *task->GetCommandLists().front();
-            commandList.SetName("Present");
-
-            PIXBeginEvent(commandList.GetDXCommandList().Get(), 6, "Present");
-            {
-                dx12::Resource& swapChainTexture = *dx12::Device::GetBackBuffer();
-                commandList.TransitionBarrier(swapChainTexture, D3D12_RESOURCE_STATE_COPY_DEST);
-                commandList.TransitionBarrier(_currentFrame->GetTargetTexture(), D3D12_RESOURCE_STATE_COPY_SOURCE);
-                commandList.CopyResource(_currentFrame->GetTargetTexture(), swapChainTexture);
-                commandList.TransitionBarrier(swapChainTexture, D3D12_RESOURCE_STATE_PRESENT);
-            }
-            PIXEndEvent(commandList.GetDXCommandList().Get());
-
-            commandList.Close();
+            _renderGraph.Compile();
         }
     }
 } // namespace render

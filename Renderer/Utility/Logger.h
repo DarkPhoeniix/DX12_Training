@@ -2,6 +2,10 @@
 
 #include <fstream>
 
+#define FAIL(message) \
+    assert(false); \
+    assert_utility::FailFunction(message)
+
 #define ASSERT(statement, message) \
     assert(statement); \
     assert_utility::AssertFunction(statement, message)
@@ -14,6 +18,8 @@
 
 namespace assert_utility
 {
+    void FailFunction(const std::string& message);
+    void FailFunction(const char* message);
     bool AssertFunction(bool statement, const std::string& message);
     bool AssertFunction(bool statement, const char* message);
     bool LogWarningFunction(bool statement, const std::string& message);

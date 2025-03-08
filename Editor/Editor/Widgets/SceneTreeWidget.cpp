@@ -1,0 +1,68 @@
+#include "EditorPCH.h"
+
+#include "SceneTreeWidget.h"
+
+#include "Scene/Scene.h"
+#include "Scene/Entity/Components/Camera.h"
+
+namespace gui
+{
+    SceneTreeWidget::SceneTreeWidget(std::shared_ptr<Editor> editor)
+        : IWidget(editor)
+    {
+    }
+
+    void SceneTreeWidget::Init()
+    {
+        IWidget::Init();
+    }
+
+    void SceneTreeWidget::Destroy()
+    {
+        IWidget::Destroy();
+    }
+
+    void SceneTreeWidget::Update()
+    {
+        IWidget::Update();
+
+        DirectX::XMUINT2 viewportSize = _editor->GetViewport()->GetSize();
+
+        float positionX = (float)(viewportSize.x - (viewportSize.x * 0.2f));
+        float positionY = 0.0f;
+        float sizeX = (float)(viewportSize.x * 0.2f);
+        float sizeY = (float)(viewportSize.y);
+
+        ImGui::BeginChild("Scene Tree", {0, sizeY * 0.4f}, ImGuiChildFlags_FrameStyle);
+        ImGui::SeparatorText("Scene Hierarchy");
+        for (const auto& root : _editor->GetScene()->GetRootNodes())
+        {
+            Update(root);
+        }
+
+        ImGui::EndChild();
+    }
+
+    void SceneTreeWidget::Update(const std::shared_ptr<scene::Entity>& entity)
+    {
+        bool hasChildren = entity->GetChildrenNodes().empty();
+        bool isSelected = _editor->GetSelectedEntity() == entity;
+        ImGuiTreeNodeFlags flags = 0;
+        flags |= hasChildren ? ImGuiTreeNodeFlags_Leaf : 0;
+        flags |= isSelected ? ImGuiTreeNodeFlags_Selected : 0;
+
+        if (ImGui::TreeNodeEx(entity->GetName().c_str(), flags))
+        {
+            if (ImGui::IsItemClicked())
+            {
+                _editor->SetSelectedEntity(entity);
+            }
+
+            for (const auto& child : entity->GetChildrenNodes())
+            {
+                Update(child);
+            }
+            ImGui::TreePop();
+        }
+    }
+} // namespace gui

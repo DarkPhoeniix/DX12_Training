@@ -6,7 +6,7 @@ namespace core
 {
     namespace events
     {
-        void inputDevice::PollEvents()
+        void InputDevice::PollEvents()
         {
             // Poll keyboard state
             {
@@ -68,23 +68,23 @@ namespace core
             }
         }
 
-        void inputDevice::AddinputObserver(IWindowEventListener* observer)
+        void InputDevice::AddInputObserver(IWindowEventListener* observer)
         {
             _inputListeners.push_back(observer);
         }
 
-        void inputDevice::RemoveinputObserver(IWindowEventListener* observer)
+        void InputDevice::RemoveinputObserver(IWindowEventListener* observer)
         {
             std::erase(_inputListeners, observer);
         }
 
-        inputDevice& inputDevice::Instance()
+        InputDevice& InputDevice::Instance()
         {
-            static inputDevice device;
+            static InputDevice device;
             return device;
         }
 
-        inputDevice::inputDevice()
+        InputDevice::InputDevice()
         {
             // Create a Directinput device
             HRESULT result = DirectInput8Create(GetModuleHandle(NULL), DIRECTINPUT_VERSION, IID_IDirectInput8, (VOID**)&_directinput, NULL);
@@ -94,7 +94,7 @@ namespace core
             _CreateMouseDevice();
         }
 
-        inputDevice::~inputDevice()
+        InputDevice::~InputDevice()
         {
             if (_keyboardDevice)
             {
@@ -111,7 +111,7 @@ namespace core
             }
         }
 
-        void inputDevice::_CreateKeyboardDevice()
+        void InputDevice::_CreateKeyboardDevice()
         {
             HRESULT result = _directinput->CreateDevice(GUID_SysKeyboard, &_keyboardDevice, NULL);
 
@@ -122,7 +122,7 @@ namespace core
             _keyboardDevice->Acquire();
         }
 
-        void inputDevice::_CreateMouseDevice()
+        void InputDevice::_CreateMouseDevice()
         {
             HRESULT result = _directinput->CreateDevice(GUID_SysMouse, &_mouseDevice, NULL);
 
@@ -133,7 +133,7 @@ namespace core
             _mouseDevice->Acquire();
         }
 
-        void inputDevice::_NotifyKeyPressed(DIKeyCode keyCode)
+        void InputDevice::_NotifyKeyPressed(DIKeyCode keyCode)
         {
             KeyEvent keyEvent(keyCode);
             for (IWindowEventListener* listener : _inputListeners)
@@ -142,7 +142,7 @@ namespace core
             }
         }
 
-        void inputDevice::_NotifyKeyReleased(DIKeyCode keyCode)
+        void InputDevice::_NotifyKeyReleased(DIKeyCode keyCode)
         {
             KeyEvent keyEvent(keyCode);
             for (IWindowEventListener* listener : _inputListeners)
@@ -151,7 +151,7 @@ namespace core
             }
         }
 
-        void inputDevice::_NotifyMouseButtonPressed()
+        void InputDevice::_NotifyMouseButtonPressed()
         {
             MouseButtonEvent mouseButtonEvent(_currentMouseState.rgbButtons[0], _currentMouseState.rgbButtons[2], _currentMouseState.rgbButtons[1], 0, 0);
             for (IWindowEventListener* listener : _inputListeners)
@@ -160,7 +160,7 @@ namespace core
             }
         }
 
-        void inputDevice::_NotifyMouseButtonReleased()
+        void InputDevice::_NotifyMouseButtonReleased()
         {
             MouseButtonEvent mouseButtonEvent(_currentMouseState.rgbButtons[0], _currentMouseState.rgbButtons[2], _currentMouseState.rgbButtons[1], 0, 0);
             for (IWindowEventListener* listener : _inputListeners)
@@ -169,7 +169,7 @@ namespace core
             }
         }
 
-        void inputDevice::_NotifyMouseMoved(int relativeX, int relativeY)
+        void InputDevice::_NotifyMouseMoved(int relativeX, int relativeY)
         {
             MouseMoveEvent mouseMoveEvent;
             mouseMoveEvent.relativeX = relativeX;
@@ -181,7 +181,7 @@ namespace core
             }
         }
 
-        void inputDevice::_NotifyMouseScrolled(int relativeZ)
+        void InputDevice::_NotifyMouseScrolled(int relativeZ)
         {
             MouseScrollEvent mouseScrollEvent(relativeZ);
 

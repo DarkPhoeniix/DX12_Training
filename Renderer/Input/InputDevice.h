@@ -8,22 +8,22 @@ namespace core
 {
     namespace events
     {
-        class inputDevice
+        class InputDevice
         {
         public:
-            inputDevice(const inputDevice& copy) = delete;
-            inputDevice& operator=(const inputDevice& copy) = delete;
+            InputDevice(const InputDevice& copy) = delete;
+            InputDevice& operator=(const InputDevice& copy) = delete;
 
             void PollEvents();
 
-            void AddinputObserver(IWindowEventListener* observer);
+            void AddInputObserver(IWindowEventListener* observer);
             void RemoveinputObserver(IWindowEventListener* observer);
 
-            static inputDevice& Instance();
+            static InputDevice& Instance();
 
         private:
-            inputDevice();
-            ~inputDevice();
+            InputDevice();
+            ~InputDevice();
 
             void _CreateKeyboardDevice();
             void _CreateMouseDevice();

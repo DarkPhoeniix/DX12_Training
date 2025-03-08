@@ -1,19 +1,32 @@
 #pragma once
 
-#include "IRenderPass.h"
+#include "RenderGraph/RenderPass.h"
+
+#include "PipelineState.h"
+#include "Scene/Scene.h"
+#include "Scene/Entity/Components/Camera.h"
 
 namespace render
 {
-    class SkyboxPass : public IRenderPass
+    struct SkyboxPassData
+    {
+        rg::ResourceId Depth;
+        rg::ResourceId HDRTarget;
+    };
+
+    class SkyboxPass : public rg::RenderPass<SkyboxPassData>
     {
     public:
-        // Inherited via IRenderPass
-        void Initialize() override;
-        void Destroy() override;
+        SkyboxPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
 
-        void Execute() override;
+        // Inherited via RenderPass
+        void Setup(rg::RenderPassBuilder& builder) override;
+        void Execute(rg::RenderContext& context, TaskGPU& task) override;
 
     private:
         dx12::PipelineState _skyboxPipeline;
+
+        std::shared_ptr<scene::Scene> _scene;
+        scene::Camera* _camera;
     };
 } // namespace render

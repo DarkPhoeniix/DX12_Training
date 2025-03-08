@@ -9,7 +9,7 @@
 #include "Scene/Entity/Components/Light.h"
 #include "Scene/Scene.h"
 
-#include "Render/Frame/Frame.h"
+#include "Render/Frame/CacheGPU.h"
 #include "Render/Helpers/GPUStructs.h"
 
 using namespace DirectX;
@@ -139,9 +139,9 @@ namespace
                 lightDesc.Type = (uint32_t)light->Type;
 
                 lightDesc.CastShadows = light->CastShadows;
-                if (light->ShadowMap)
+                if (light->CastShadows)
                 {
-                    lightDesc.ShadowMapIndex = frameTable.GetResourceIndex(light->ShadowMap.get(), dx12::ResourceViewType::SRV);
+                    lightDesc.ShadowMapIndex = frameTable.GetResourceIndex(std::format("{}_ShadowMap", node->GetName()), dx12::ResourceViewType::SRV);
                 }
             }
 
@@ -157,7 +157,7 @@ namespace
 
 namespace helpers
 {
-    void SetupSceneDataGPU(scene::Scene& scene, dx12::CommandList& commandList, Frame* frame)
+    void SetupSceneDataGPU(scene::Scene& scene, dx12::CommandList& commandList, CacheGPU* cache)
     {
         uint32_t lightsNum = 0;
         for (std::shared_ptr<scene::Entity>& node : scene.GetRootNodes())
@@ -166,7 +166,7 @@ namespace helpers
         }
 
         // Setup scene data
-        CacheGPU::DataHandle sceneDataHandle = frame->GetCache().GetOrPlaceResource("SceneCB", sizeof(GPUSceneDesc));
+        CacheGPU::DataHandle sceneDataHandle = cache->GetOrPlaceResource("SceneCB", sizeof(GPUSceneDesc));
 
         GPUSceneDesc* sceneDesc = (GPUSceneDesc*)sceneDataHandle.DataCPU;
         {
@@ -203,13 +203,21 @@ namespace helpers
         }
 
         commandList.SetCBV(0, sceneDataHandle.DataGPU);
+    }
 
-        CacheGPU::DataHandle lightsData = frame->GetCache().GetOrPlaceResource("LightsCB", sizeof(GPULightDesc) * lightsNum);
+    void SetupLightDataGPU(scene::Scene& scene, dx12::CommandList& commandList, CacheGPU* cache, dx12::ResourceTable& resourceTable)
+    {
+        uint32_t lightsNum = 0;
+        for (std::shared_ptr<scene::Entity>& node : scene.GetRootNodes())
+        {
+            CheckLightsNum(node, lightsNum);
+        }
+        CacheGPU::DataHandle lightsData = cache->GetOrPlaceResource("LightsCB", sizeof(GPULightDesc) * lightsNum);
 
         uint32_t lightCounter = 0;
         for (std::shared_ptr<scene::Entity>& node : scene.GetRootNodes())
         {
-            SetupLightToGPU(node, lightsData, frame->GetResourceTable(), lightCounter);
+            SetupLightToGPU(node, lightsData, resourceTable, lightCounter);
         }
 
         commandList.SetSRV(2, lightsData.DataGPU);

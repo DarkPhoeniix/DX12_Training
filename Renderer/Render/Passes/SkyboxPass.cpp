@@ -2,68 +2,76 @@
 
 #include "SkyboxPass.h"
 
+#include "CommandList.h"
+
 #include "Render/Helpers/RenderHelpers.h"
+#include "Render/Passes/PassResources.h"
 #include "Scene/Entity/Components/Camera.h"
 #include "Scene/Entity/Components/Skybox.h"
 
+#include "RenderGraph/RenderContext.h"
+#include "RenderGraph/RenderPassBuilder.h"
+
 namespace render
 {
-    void SkyboxPass::Initialize()
+    SkyboxPass::SkyboxPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
+        : RenderPass<SkyboxPassData>("Skybox Pass", rg::RenderPassType::Compute)
+        , _scene(scene)
+        , _camera(camera)
     {
-        IRenderPass::Initialize();
-
-        _name = "SkyboxPass";
-
         _skyboxPipeline.Parse("PipelineDescriptions\\SkyboxPipeline.tech");
     }
 
-    void SkyboxPass::Destroy()
+    void SkyboxPass::Setup(rg::RenderPassBuilder& builder)
     {
-        IRenderPass::Destroy();
+        _data.Depth = builder.ReadResource(DEPTH);
+        _data.HDRTarget = builder.WriteResource(HDR_TARGET);
     }
 
-    void SkyboxPass::Execute()
+    void SkyboxPass::Execute(rg::RenderContext& context, TaskGPU& task)
     {
-        TaskGPU* task = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE, &_skyboxPipeline);
-        task->SetName("skybox");
-        _tasks.push_back(task);
+        dx12::CommandList& commandList = *task.GetCommandLists().front();
+        commandList.SetName("Geometry pass command list");
 
-        dx12::CommandList& commandList = *task->GetCommandLists().front();
-        commandList.SetName("Render skybox command list");
-
-        if (std::shared_ptr<scene::Entity> entity = _scene->FindNodeByComponentName("Skybox"))
+        PIXBeginEvent(commandList.GetDXCommandList().Get(), 2, "Skybox Pass");
         {
-            scene::Skybox* skybox = entity->GetComponentAs<scene::Skybox>("Skybox");
+            std::shared_ptr<scene::Entity> entity = _scene->FindNodeByComponentName("Skybox");
+            scene::Skybox* skyboxC = entity->GetComponentAs<scene::Skybox>("Skybox");
 
-            PIXBeginEvent(commandList.GetDXCommandList().Get(), 3, "Skybox");
-            {
-                commandList.SetPipelineState(_skyboxPipeline);
+            std::shared_ptr<dx12::Resource> skybox = skyboxC->SkydomeTexture;
+            std::shared_ptr<dx12::Resource> target = context.GetResource(_data.HDRTarget);
+            std::shared_ptr<dx12::Resource> depth = context.GetResource(_data.Depth);
 
-                helpers::SetupSceneDataGPU(*_scene, commandList, _frame);
+            D3D12_GPU_DESCRIPTOR_HANDLE targetHandle = context.GetGPUHandle(target->GetAsUAV());
+            D3D12_GPU_DESCRIPTOR_HANDLE depthHandle = context.GetGPUHandle(depth->GetAsSRV());
+            D3D12_GPU_DESCRIPTOR_HANDLE skyboxHandle = context.GetGPUHandle(skybox->GetAsSRV());
 
-                dx12::ResourceTable& sceneTable = *_scene->GetCache().GetTextureTable();
-                dx12::ResourceTable& frameTable = _frame->GetResourceTable();
+            commandList.TransitionBarrier(*target, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+            commandList.TransitionBarrier(*skybox, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+            commandList.TransitionBarrier(*depth, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 
-                dx12::Resource* target = frameTable.GetResourceByName("HDR_Lightpass", dx12::ResourceViewType::UAV);
-                dx12::Resource* skyboxTexture = skybox->SkydomeTexture.get();
-                dx12::Resource* depth = &_gBuffer->GetDepthTexture();
+            commandList.SetPipelineState(_skyboxPipeline);
 
-                frameTable.CopyDescriptor(skyboxTexture, dx12::ResourceViewType::SRV, sceneTable);
+            helpers::SetupSceneDataGPU(*_scene, commandList, &context.GetCache());
 
-                _frame->BindDescriptorHeaps(commandList);
+            // Setup textures
+            commandList.SetDescriptorHeaps({ context.GetResourceTable().GetDescriptorHeap(dx12::ResourceViewType::SRV).GetDXDescriptorHeap().Get() });
 
-                commandList.SetDescriptorTable(3, frameTable.GetResourceGPUHandle(depth, dx12::ResourceViewType::SRV));
-                commandList.SetDescriptorTable(4, frameTable.GetResourceGPUHandle(skyboxTexture, dx12::ResourceViewType::SRV));
-                commandList.SetDescriptorTable(5, frameTable.GetResourceGPUHandle(target, dx12::ResourceViewType::UAV));
+            commandList.SetDescriptorTable(3, depthHandle);
+            commandList.SetDescriptorTable(4, skyboxHandle);
+            commandList.SetDescriptorTable(5, targetHandle);
 
-                DirectX::XMUINT2 viewportSize = _activeCamera->GetViewport().GetSize();
-                int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 8.0f);
-                int yThreadGroups = (uint32_t)std::ceilf(viewportSize.y / 8.0f);
+            DirectX::XMUINT2 viewportSize = _camera->GetViewport().GetSize();
+            int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 8.0f);
+            int yThreadGroups = (uint32_t)std::ceilf(viewportSize.y / 8.0f);
 
-                commandList.Dispatch(xThreadGroups, yThreadGroups);
-            }
-            PIXEndEvent(commandList.GetDXCommandList().Get());
+            commandList.Dispatch(xThreadGroups, yThreadGroups);
+
+            commandList.TransitionBarrier(*target, D3D12_RESOURCE_STATE_COMMON);
+            commandList.TransitionBarrier(*skybox, D3D12_RESOURCE_STATE_COMMON);
+            commandList.TransitionBarrier(*depth, D3D12_RESOURCE_STATE_COMMON);
         }
+        PIXEndEvent(commandList.GetDXCommandList().Get());
 
         commandList.Close();
     }

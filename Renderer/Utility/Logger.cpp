@@ -26,6 +26,21 @@ namespace
 
 namespace assert_utility
 {
+    void FailFunction(const std::string& message)
+    {
+        return FailFunction(message.c_str());
+    }
+
+    void FailFunction(const char* message)
+    {
+        Logger::Log(LogType::Error, message);
+
+#if defined(_DEBUG)
+        OutputDebugStringA(message);
+        OutputDebugStringA("\n");
+#endif
+    }
+
     bool AssertFunction(bool statement, const std::string& message)
     {
         return AssertFunction(statement, message.c_str());

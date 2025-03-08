@@ -1,0 +1,62 @@
+#pragma once
+
+#include "SwapChain.h"
+
+#include "Render/Frame/Frame.h"
+#include "Utility/HighResolutionClock.h"
+
+#include "Editor/Editor.h"
+
+class Win32Window;
+
+namespace render
+{
+    class DXRenderer;
+} // namespace render
+
+class Application
+{
+public:
+    Application(const Application& copy) = delete;
+    Application& operator=(const Application& copy) = delete;
+
+    static void Init(HINSTANCE hInstance);
+    int Run(std::shared_ptr<render::DXRenderer> pApp);
+    static void Quit(int exitCode = 0);
+
+    static Application* Instance();
+
+    static std::shared_ptr<core::Win32Window> CreateWin32Window(int width, int height, const std::wstring& title, bool vSync = false);
+
+private:
+    Application(HINSTANCE hInstance);
+    ~Application();
+
+    void _RegisterWindowClass(HINSTANCE hInstance);
+
+    void _UpdateCall(std::shared_ptr<render::DXRenderer> pApp);
+    void _RenderCall(std::shared_ptr<render::DXRenderer> pApp);
+    void _ExecuteFrameTasks();
+
+    friend LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+
+    // The application instance handle that this application was created with.
+    HINSTANCE _hInstance;
+
+    std::shared_ptr<core::Win32Window> _win32Window;
+    dx12::SwapChain _swapChain;
+
+    Frame _frames[3];
+    Frame* _currentFrame;
+
+    AllocatorPool _allocs;
+    FencePool _fencePool;
+
+    HighResolutionClock _updateClock;
+    HighResolutionClock _renderClock;
+    uint64_t _frameCounter;
+
+    std::shared_ptr<gui::Editor> _editor;
+
+    static Application* _instance;
+};

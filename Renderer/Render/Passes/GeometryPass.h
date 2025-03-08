@@ -1,19 +1,33 @@
 #pragma once
 
-#include "IRenderPass.h"
+#include "RenderGraph/RenderPass.h"
+
+#include "PipelineState.h"
+#include "Scene/Scene.h"
+#include "Scene/Entity/Components/Camera.h"
 
 namespace render
 {
-    class GeometryPass : public IRenderPass
+    struct GeometryPassData
+    {
+        rg::ResourceId Depth;
+        rg::ResourceId AlbedoMetallic;
+        rg::ResourceId NormalRoughness;
+    };
+
+    class GeometryPass : public rg::RenderPass<GeometryPassData>
     {
     public:
-        // Inherited via IRenderPass
-        void Initialize() override;
-        void Destroy() override;
+        GeometryPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
 
-        void Execute() override;
+        // Inherited via RenderPass
+        void Setup(rg::RenderPassBuilder& builder) override;
+        void Execute(rg::RenderContext& context, TaskGPU& task) override;
 
     private:
         dx12::PipelineState _geometryPipeline;
+
+        std::shared_ptr<scene::Scene> _scene;
+        scene::Camera* _camera;
     };
 } // namespace render

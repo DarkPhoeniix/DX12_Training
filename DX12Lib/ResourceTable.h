@@ -21,6 +21,8 @@ namespace dx12
         bool CopyDescriptor(Resource* resource, ResourceViewType viewType, D3D12_CPU_DESCRIPTOR_HANDLE handle);
         // Places a resource into the table, associating it with a descriptor based on the view type (e.g., RTV, DSV).
         bool PlaceResource(Resource* resource, ResourceViewType viewType);
+        // Places a resource into the table if view is not present in the table.
+        bool PlaceResourceIfNotExist(Resource* resource, ResourceViewType viewType);
 
         // Retrieves the CPU descriptor handle for a resource, based on its name and view type.
         D3D12_CPU_DESCRIPTOR_HANDLE GetResourceCPUHandle(Resource* resource, ResourceViewType viewType);
