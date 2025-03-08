@@ -21,6 +21,11 @@ namespace gui
         }
     }
 
+    DebugInfoWidget::DebugInfoWidget(std::shared_ptr<Editor> editor)
+        : IWidget(editor)
+    {
+    }
+
     void DebugInfoWidget::Init()
     {
         IWidget::Init();

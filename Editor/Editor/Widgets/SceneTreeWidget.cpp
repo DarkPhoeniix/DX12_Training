@@ -2,12 +2,16 @@
 
 #include "SceneTreeWidget.h"
 
-#include "Editor.h"
 #include "Scene/Scene.h"
 #include "Scene/Entity/Components/Camera.h"
 
 namespace gui
 {
+    SceneTreeWidget::SceneTreeWidget(std::shared_ptr<Editor> editor)
+        : IWidget(editor)
+    {
+    }
+
     void SceneTreeWidget::Init()
     {
         IWidget::Init();
@@ -22,12 +26,7 @@ namespace gui
     {
         IWidget::Update();
 
-        scene::Scene* scene = Editor::GetScene();
-        std::shared_ptr<scene::Entity> activeCamera = scene->FindNodeByComponentName("Camera");
-        scene::Camera* cameraComponent = activeCamera->GetComponentAs<scene::Camera>("Camera");
-        _viewport = &cameraComponent->GetViewport();
-
-        DirectX::XMUINT2 viewportSize = _viewport->GetSize();
+        DirectX::XMUINT2 viewportSize = _editor->GetViewport()->GetSize();
 
         float positionX = (float)(viewportSize.x - (viewportSize.x * 0.2f));
         float positionY = 0.0f;
@@ -36,7 +35,7 @@ namespace gui
 
         ImGui::BeginChild("Scene Tree", {0, sizeY * 0.4f}, ImGuiChildFlags_FrameStyle);
         ImGui::SeparatorText("Scene Hierarchy");
-        for (const auto& root : scene->GetRootNodes())
+        for (const auto& root : _editor->GetScene()->GetRootNodes())
         {
             Update(root);
         }
@@ -47,7 +46,7 @@ namespace gui
     void SceneTreeWidget::Update(const std::shared_ptr<scene::Entity>& entity)
     {
         bool hasChildren = entity->GetChildrenNodes().empty();
-        bool isSelected = Editor::GetSelectedEntity() == entity;
+        bool isSelected = _editor->GetSelectedEntity() == entity;
         ImGuiTreeNodeFlags flags = 0;
         flags |= hasChildren ? ImGuiTreeNodeFlags_Leaf : 0;
         flags |= isSelected ? ImGuiTreeNodeFlags_Selected : 0;
@@ -56,7 +55,7 @@ namespace gui
         {
             if (ImGui::IsItemClicked())
             {
-                Editor::SetSelectedEntity(entity);
+                _editor->SetSelectedEntity(entity);
             }
 
             for (const auto& child : entity->GetChildrenNodes())

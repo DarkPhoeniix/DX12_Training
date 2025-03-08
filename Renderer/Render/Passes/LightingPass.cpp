@@ -2,22 +2,18 @@
 
 #include "LightingPass.h"
 
-#include "ResourceTable.h"
-
-#include "Scene/Entity/Components/Camera.h"
-#include "Scene/Entity/Components/Light.h"
+#include "CommandList.h"
 
 #include "Render/Helpers/RenderHelpers.h"
-#include "Utility/DebugInfo.h"
-
-#include "RenderGraph/RenderPassBuilder.h"
-#include "RenderGraph/RenderContext.h"
-
 #include "Render/Passes/PassResources.h"
+#include "Scene/Entity/Components/Light.h"
+
+#include "RenderGraph/RenderContext.h"
+#include "RenderGraph/RenderPassBuilder.h"
 
 namespace render
 {
-    LightingPass::LightingPass(scene::Scene* scene, scene::Camera* camera)
+    LightingPass::LightingPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
         : RenderPass<LightingPassData>("Lighting Pass", rg::RenderPassType::Compute)
         , _scene(scene)
         , _camera(camera)

@@ -24,8 +24,6 @@
     <FxCompile Include="Shaders\Shadows\ShadowMapping_PointLight_vs.hlsl" />
     <FxCompile Include="Shaders\Shadows\ShadowMapping_PointLight_gs.hlsl" />
     <FxCompile Include="Shaders\Shadows\ShadowMapping_SpotLight_vs.hlsl" />
-    <FxCompile Include="Shaders\_deprecated\Mesh_ps.hlsl" />
-    <FxCompile Include="Shaders\_deprecated\Mesh_vs.hlsl" />
     <FxCompile Include="Shaders\_deprecated\NegativePostFX_cs.hlsl" />
     <FxCompile Include="Shaders\_deprecated\PostFX_cs.hlsl" />
     <FxCompile Include="Shaders\Skybox\Skybox_cs.hlsl" />
@@ -70,8 +68,6 @@
     <ClCompile Include="Utility\Logger.cpp" />
     <ClCompile Include="Render\DXRenderer.cpp" />
     <ClCompile Include="Utility\Helpers.cpp" />
-    <ClCompile Include="Main.cpp" />
-    <ClCompile Include="Application.cpp" />
     <ClCompile Include="Utility\HighResolutionClock.cpp" />
     <ClCompile Include="Render\Passes\LightingPass.cpp" />
     <ClCompile Include="Render\Passes\SkyboxPass.cpp" />
@@ -79,7 +75,6 @@
     <ClCompile Include="Render\Passes\PFX\AverageLuminancePass.cpp" />
     <ClCompile Include="Render\Passes\PFX\ToneMappingPass.cpp" />
     <ClCompile Include="Render\Passes\PassResources.cpp" />
-    <ClCompile Include="Render\Passes\GUIPass.cpp" />
     <ClCompile Include="Render\Passes\Debug\DebugBoundingVolumePass.cpp" />
     <ClCompile Include="Render\Passes\FXAAPass.cpp" />
     <ClCompile Include="Render\Passes\Debug\DebugArmaturePass.cpp" />
@@ -102,7 +97,6 @@
     <ClInclude Include="Render\SceneProcessors\ISceneProcessor.h" />
     <ClInclude Include="Scene\Entity\EntityLoader.h" />
     <ClInclude Include="Scene\Entity\Entity.h" />
-    <ClInclude Include="Resources\resource1.h" />
     <ClInclude Include="Scene\Entity\Components\IComponent.h" />
     <ClInclude Include="Scene\SceneCache.h" />
     <ClInclude Include="Render\SceneProcessors\UploadSceneProcessor.h" />
@@ -113,7 +107,6 @@
     <ClInclude Include="Events\IEvent.h" />
     <ClInclude Include="Input\InputDevice.h" />
     <ClInclude Include="Input\DirectInputKeyCodes.h" />
-    <ClInclude Include="Resources\Resources.h" />
     <ClInclude Include="Window\IWindowEventListener.h" />
     <ClInclude Include="Window\Win32Window.h" />
     <ClInclude Include="Scene\Volumes\FrustumVolume.h" />
@@ -139,7 +132,6 @@
     <ClInclude Include="Utility\Logger.h" />
     <ClInclude Include="Render\DXRenderer.h" />
     <ClInclude Include="Utility\Helpers.h" />
-    <ClInclude Include="Application.h" />
     <ClInclude Include="Utility\HighResolutionClock.h" />
     <ClInclude Include="Render\Passes\LightingPass.h" />
     <ClInclude Include="Render\Passes\SkyboxPass.h" />
@@ -147,16 +139,12 @@
     <ClInclude Include="Render\Passes\PassResources.h" />
     <ClInclude Include="Render\Passes\PFX\AverageLuminancePass.h" />
     <ClInclude Include="Render\Passes\PFX\ToneMappingPass.h" />
-    <ClInclude Include="Render\Passes\GUIPass.h" />
     <ClInclude Include="Render\Passes\Debug\DebugBoundingVolumePass.h" />
     <ClInclude Include="Render\Passes\FXAAPass.h" />
     <ClInclude Include="Render\Passes\Debug\DebugArmaturePass.h" />
     <ClInclude Include="Render\Passes\ShadowCullPass.h" />
     <ClInclude Include="Render\Passes\ShadowDrawPass.h" />
     <ClInclude Include="Render\Passes\ShadowClearPass.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="Resources\Resource.rc" />
   </ItemGroup>
   <ItemGroup>
     <None Include="PipelineDescriptions\DebugConePipeline.tech" />
@@ -185,7 +173,6 @@
     <None Include="Shaders\PBR.hlsli" />
     <None Include="Shaders\_deprecated\PostFX_rootsig.hlsli" />
     <None Include="Shaders\_deprecated\SemiAmbientLighting.hlsli" />
-    <None Include="Shaders\_deprecated\Mesh_rootsig.hlsli" />
     <None Include="Shaders\Skybox\Skybox_rootsig.hlsli" />
     <None Include="PipelineDescriptions\BuildLuminanceHistogramPipeline.tech" />
     <None Include="PipelineDescriptions\AverageLuminancePipeline.tech" />

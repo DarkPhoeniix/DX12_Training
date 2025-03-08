@@ -2,8 +2,7 @@
 
 #include "RenderGraph/RenderPass.h"
 
-#include "Scene/Scene.h"
-#include "Scene/Entity/Components/Camera.h"
+#include "Editor/Editor.h"
 
 namespace render
 {
@@ -16,14 +15,13 @@ namespace render
     class GUIPass : public rg::RenderPass<GUIPassData>
     {
     public:
-        GUIPass(scene::Scene* scene, scene::Camera* camera);
+        GUIPass(std::shared_ptr<gui::Editor> editor);
 
         // Inherited via RenderPass
         void Setup(rg::RenderPassBuilder& builder) override;
         void Execute(rg::RenderContext& context, TaskGPU& task) override;
 
     private:
-        scene::Scene* _scene;
-        scene::Camera* _camera;
+        std::shared_ptr<gui::Editor> _editor;
     };
 } // namespace render

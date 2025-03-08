@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Editor/Editor.h"
+
 namespace scene
 {
     class Viewport;
@@ -10,6 +12,7 @@ namespace gui
     class IWidget
     {
     public:
+        IWidget(std::shared_ptr<Editor> editor);
         virtual ~IWidget() = default;
 
         virtual void Init();
@@ -18,6 +21,6 @@ namespace gui
         virtual void Update();
 
     protected:
-        scene::Viewport* _viewport;
+        std::shared_ptr<Editor> _editor;
     };
 } // namespace gui

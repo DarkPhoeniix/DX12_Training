@@ -1,6 +1,7 @@
 #pragma once
 
 #include "IWidget.h"
+#include "Editor/Editor.h"
 
 namespace scene
 {
@@ -22,6 +23,9 @@ namespace gui
     class EntityComponentsWidget : IWidget
     {
     public:
+        EntityComponentsWidget(std::shared_ptr<Editor> editor);
+        ~EntityComponentsWidget() = default;
+
         void Init() override;
         void Destroy() override;
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "IWidget.h"
+#include "Editor/Editor.h"
 
 namespace scene
 {
@@ -13,6 +14,9 @@ namespace gui
     class SceneTreeWidget : IWidget
     {
     public:
+        SceneTreeWidget(std::shared_ptr<Editor> editor);
+        ~SceneTreeWidget() = default;
+
         void Init() override;
         void Destroy() override;
 

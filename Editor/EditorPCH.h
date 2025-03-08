@@ -30,11 +30,13 @@ using namespace Microsoft::WRL;
 #include <d3dcompiler.h>        // Contains functions to compile HLSL code at runtime
 #include <DirectXTex.h>
 #include <DirectXMath.h>
+#include <pix3.h>
 
 #include <json/json.h>
 
 #include "Utility/Logger.h"
 #include "Utility/Helpers.h"
+#include "Utility/Defines.h"
 #include "Resource.h"
 #include "Device.h"
 
@@ -43,5 +45,6 @@ using namespace Microsoft::WRL;
 #include <imgui_impl_dx12.h>
 
 #include <memory>
+#include <chrono>
 
 #endif // EDITOR_PCH_H

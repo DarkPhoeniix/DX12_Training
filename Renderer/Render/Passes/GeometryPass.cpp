@@ -2,23 +2,21 @@
 
 #include "GeometryPass.h"
 
-#include "ResourceTable.h"
+#include "CommandList.h"
 
 #include "Scene/Entity/Components/Animation.h"
 #include "Scene/Entity/Components/Armature.h"
-#include "Scene/Entity/Components/Camera.h"
 #include "Scene/Entity/Components/Material.h"
 #include "Scene/Entity/Components/Mesh.h"
 #include "Scene/Entity/Components/Transformation.h"
 
 #include "Render/Helpers/GPUStructs.h"
 #include "Render/Helpers/RenderHelpers.h"
+#include "Render/Passes/PassResources.h"
 #include "Utility/DebugInfo.h"
 
-#include "RenderGraph/RenderPassBuilder.h"
 #include "RenderGraph/RenderContext.h"
-
-#include "Render/Passes/PassResources.h"
+#include "RenderGraph/RenderPassBuilder.h"
 
 namespace
 {
@@ -101,7 +99,7 @@ namespace
 
 namespace render
 {
-    GeometryPass::GeometryPass(scene::Scene* scene, scene::Camera* camera)
+    GeometryPass::GeometryPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
         : RenderPass<GeometryPassData>("Geometry Pass", rg::RenderPassType::Graphics)
         , _scene(scene)
         , _camera(camera)

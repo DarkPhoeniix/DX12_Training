@@ -2,24 +2,14 @@
 
 #include "ShadowDrawPass.h"
 
-#include "ResourceTable.h"
-
-#include "Scene/Entity/Components/Camera.h"
-
-#include "Scene/Entity/Components/Animation.h"
-#include "Scene/Entity/Components/Armature.h"
-#include "Scene/Entity/Components/Material.h"
-#include "Scene/Entity/Components/Mesh.h"
-#include "Scene/Entity/Components/Light.h"
-#include "Scene/Entity/Components/Transformation.h"
+#include "CommandList.h"
 
 #include "Render/Helpers/RenderHelpers.h"
-#include "Utility/DebugInfo.h"
+#include "Scene/Entity/Components/Camera.h"
+#include "Scene/Entity/Components/Light.h"
 
-#include "RenderGraph/RenderPassBuilder.h"
 #include "RenderGraph/RenderContext.h"
-
-#include "Render/Passes/PassResources.h"
+#include "RenderGraph/RenderPassBuilder.h"
 
 namespace
 {
@@ -54,7 +44,7 @@ namespace
 
 namespace render
 {
-    ShadowDrawPass::ShadowDrawPass(scene::Scene* scene, scene::Camera* camera)
+    ShadowDrawPass::ShadowDrawPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
         : RenderPass<ShadowDrawPassData>("Shadow Draw Pass", rg::RenderPassType::Graphics)
         , _scene(scene)
         , _camera(camera)

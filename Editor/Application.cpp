@@ -1,16 +1,18 @@
-#include "RendererPCH.h"
+#include "EditorPCH.h"
 
 #include "Application.h"
 
-#include "events/RenderEvent.h"
-#include "events/UpdateEvent.h"
-#include "Editor.h"
-#include "input/inputDevice.h"
-#include "Render/DXRenderer.h"
-#include "Resources/Resources.h"
 #include "SwapChain.h"
+
+#include "Events/RenderEvent.h"
+#include "Events/UpdateEvent.h"
+#include "Input/InputDevice.h"
+
+#include "Render/DXRenderer.h"
 #include "Utility/DebugInfo.h"
 #include "Window/Win32Window.h"
+
+#include "Resources/Resources.h"
 
 using namespace core;
 using namespace render;
@@ -102,7 +104,7 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
 
     _win32Window->AddEventListener(pApp.get());
 
-    events::inputDevice::Instance().AddinputObserver(pApp.get());
+    events::InputDevice::Instance().AddInputObserver(pApp.get());
 
     TaskGPU* uploadTask = _currentFrame->CreateTask(D3D12_COMMAND_LIST_TYPE_COPY, nullptr);
     if (!pApp->LoadContent(uploadTask))
@@ -112,7 +114,11 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
     _currentFrame->SetSyncPoint(uploadTask->GetFence());
     _ExecuteFrameTasks();
 
-    gui::Editor::Init(_win32Window->GetWindowHandle());
+    _editor = std::make_shared<gui::Editor>(_win32Window->GetWindowHandle());
+    _editor->Init(pApp->GetCurrentScene());
+    _win32Window->AddEventListener(_editor.get());
+    _editor->SetRenderGraph(&pApp->GetRenderGraph());
+    _editor->AddGUIRenderPass();
 
     MSG msg = { 0 };
     while (msg.message != WM_QUIT)
@@ -123,7 +129,7 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
             DispatchMessage(&msg);
         }
 
-        events::inputDevice::Instance().PollEvents();
+        events::InputDevice::Instance().PollEvents();
 
         _UpdateCall(pApp);
         _RenderCall(pApp);
@@ -144,7 +150,6 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
 
 void Application::Quit(int exitCode)
 {
-    gui::Editor::Destroy();
     DebugInfo::Destroy();
     dx12::Device::Destroy();
 

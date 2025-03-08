@@ -17,7 +17,7 @@ namespace render
     class AverageLuminancePass : public rg::RenderPass<AverageLuminancePassData>
     {
     public:
-        AverageLuminancePass(scene::Scene* scene, scene::Camera* camera);
+        AverageLuminancePass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
 
         // Inherited via RenderPass
         void Setup(rg::RenderPassBuilder& builder) override;
@@ -28,7 +28,7 @@ namespace render
 
         dx12::Resource _prevLuminance;
 
-        scene::Scene* _scene;
+        std::shared_ptr<scene::Scene> _scene;
         scene::Camera* _camera;
     };
 } // namespace render

@@ -1,36 +1,21 @@
-#include "RendererPCH.h"
+#include "EditorPCH.h"
 
 #include "GUIPass.h"
 
-#include "ResourceTable.h"
+#include "CommandList.h"
 
-#include "Editor.h"
 #include "Scene/Entity/Components/Camera.h"
-
-#include "Scene/Entity/Components/Animation.h"
-#include "Scene/Entity/Components/Armature.h"
-#include "Scene/Entity/Components/Camera.h"
-#include "Scene/Entity/Components/Material.h"
-#include "Scene/Entity/Components/Mesh.h"
-#include "Scene/Entity/Components/Transformation.h"
-
-#include "Render/Helpers/GPUStructs.h"
-#include "Render/Helpers/RenderHelpers.h"
-#include "Utility/DebugInfo.h"
+#include "Render/Passes/PassResources.h"
 
 #include "RenderGraph/RenderPassBuilder.h"
 #include "RenderGraph/RenderContext.h"
 
-#include "Render/Passes/PassResources.h"
-
 namespace render
 {
-    GUIPass::GUIPass(scene::Scene* scene, scene::Camera* camera)
-        : RenderPass<GUIPassData>("GUI Pass", rg::RenderPassType::Graphics)
-        , _scene(scene)
-        , _camera(camera)
+    GUIPass::GUIPass(std::shared_ptr<gui::Editor> editor)
+        : rg::RenderPass<GUIPassData>("GUI Pass", rg::RenderPassType::Graphics)
+        , _editor(editor)
     {
-        gui::Editor::SetScene(_scene); // TODO: remove 
     }
 
     void GUIPass::Setup(rg::RenderPassBuilder& builder)
@@ -55,13 +40,13 @@ namespace render
             commandList.TransitionBarrier(*target, D3D12_RESOURCE_STATE_RENDER_TARGET);
             commandList.TransitionBarrier(*depth, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 
-            commandList.SetViewport(_camera->GetViewport());
+            commandList.SetViewport(*_editor->GetViewport());
             commandList.SetRenderTarget(&rtv, &dsv);
 
-            gui::Editor::NewFrame();
+            _editor->NewFrame();
 
-            gui::Editor::Update();
-            gui::Editor::Render(commandList);
+            _editor->Update();
+            _editor->Render(commandList);
 
             commandList.TransitionBarrier(*target, D3D12_RESOURCE_STATE_COMMON);
             commandList.TransitionBarrier(*depth, D3D12_RESOURCE_STATE_COMMON);

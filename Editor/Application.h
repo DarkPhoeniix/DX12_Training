@@ -1,10 +1,11 @@
 #pragma once
 
 #include "SwapChain.h"
-#include "Render/Frame/AllocatorPool.h"
-#include "Render/Frame/FencePool.h"
+
 #include "Render/Frame/Frame.h"
 #include "Utility/HighResolutionClock.h"
+
+#include "Editor/Editor.h"
 
 class Win32Window;
 
@@ -54,6 +55,8 @@ private:
     HighResolutionClock _updateClock;
     HighResolutionClock _renderClock;
     uint64_t _frameCounter;
+
+    std::shared_ptr<gui::Editor> _editor;
 
     static Application* _instance;
 };

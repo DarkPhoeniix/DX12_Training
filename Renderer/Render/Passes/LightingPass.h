@@ -22,7 +22,7 @@ namespace render
     class LightingPass : public rg::RenderPass<LightingPassData>
     {
     public:
-        LightingPass(scene::Scene* scene, scene::Camera* camera);
+        LightingPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
 
         // Inherited via RenderPass
         void Setup(rg::RenderPassBuilder& builder) override;
@@ -31,7 +31,7 @@ namespace render
     private:
         dx12::PipelineState _deferredPipeline;
 
-        scene::Scene* _scene;
+        std::shared_ptr<scene::Scene> _scene;
         scene::Camera* _camera;
     };
 } // namespace render

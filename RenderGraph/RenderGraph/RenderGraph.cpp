@@ -25,6 +25,8 @@ namespace rg
 
     void RenderGraph::Compile()
     {
+        _sortedPasses.clear();
+
         BuildAdjacencyLists();
         TopologicalSort();
     }
@@ -59,7 +61,7 @@ namespace rg
                 break;
             }
 
-            if (ASSERT(task, "Failed to create a task for the render pass"))
+            if (task)
             {
                 task->SetName(pass->_name);
                 pass->Execute(_context, *task);
@@ -108,6 +110,7 @@ namespace rg
     {
         size_t passesCount = _passes.size();
 
+        _adjacencyLists.clear();
         _adjacencyLists.resize(passesCount);
 
         for (size_t passIndex = 0; passIndex < passesCount; ++passIndex)

@@ -2,27 +2,19 @@
 
 #include "SkyboxPass.h"
 
-#include "ResourceTable.h"
+#include "CommandList.h"
 
-#include "Scene/Entity/Components/Animation.h"
-#include "Scene/Entity/Components/Armature.h"
+#include "Render/Helpers/RenderHelpers.h"
+#include "Render/Passes/PassResources.h"
 #include "Scene/Entity/Components/Camera.h"
 #include "Scene/Entity/Components/Skybox.h"
-#include "Scene/Entity/Components/Mesh.h"
-#include "Scene/Entity/Components/Transformation.h"
 
-#include "Render/Helpers/GPUStructs.h"
-#include "Render/Helpers/RenderHelpers.h"
-#include "Utility/DebugInfo.h"
-
-#include "RenderGraph/RenderPassBuilder.h"
 #include "RenderGraph/RenderContext.h"
-
-#include "Render/Passes/PassResources.h"
+#include "RenderGraph/RenderPassBuilder.h"
 
 namespace render
 {
-    SkyboxPass::SkyboxPass(scene::Scene* scene, scene::Camera* camera)
+    SkyboxPass::SkyboxPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
         : RenderPass<SkyboxPassData>("Skybox Pass", rg::RenderPassType::Compute)
         , _scene(scene)
         , _camera(camera)

@@ -3,6 +3,7 @@
 #include "RenderGraph/RenderPass.h"
 
 #include "PipelineState.h"
+
 #include "Scene/Scene.h"
 #include "Scene/Entity/Components/Camera.h"
 
@@ -16,7 +17,7 @@ namespace render
     class ShadowCullPass : public rg::RenderPass<ShadowCullPassData>
     {
     public:
-        ShadowCullPass(scene::Scene* scene, scene::Camera* camera);
+        ShadowCullPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
 
         // Inherited via RenderPass
         void Setup(rg::RenderPassBuilder& builder) override;
@@ -30,7 +31,7 @@ namespace render
 
         dx12::Resource _counterReset;
 
-        scene::Scene* _scene;
+        std::shared_ptr<scene::Scene> _scene;
         scene::Camera* _camera;
     };
 } // namespace render

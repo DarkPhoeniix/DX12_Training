@@ -18,7 +18,7 @@ namespace render
     class GeometryPass : public rg::RenderPass<GeometryPassData>
     {
     public:
-        GeometryPass(scene::Scene* scene, scene::Camera* camera);
+        GeometryPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
 
         // Inherited via RenderPass
         void Setup(rg::RenderPassBuilder& builder) override;
@@ -27,7 +27,7 @@ namespace render
     private:
         dx12::PipelineState _geometryPipeline;
 
-        scene::Scene* _scene;
+        std::shared_ptr<scene::Scene> _scene;
         scene::Camera* _camera;
     };
 } // namespace render

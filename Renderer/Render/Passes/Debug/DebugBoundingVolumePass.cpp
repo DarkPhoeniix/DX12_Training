@@ -1,33 +1,19 @@
 #include "RendererPCH.h"
 
 #include "DebugBoundingVolumePass.h"
-#include "RendererPCH.h"
 
-#include "DebugBoundingVolumePass.h"
-
-#include "ResourceTable.h"
-
-#include "Editor.h"
-#include "Scene/Entity/Components/Camera.h"
-
-#include "Scene/Entity/Components/Animation.h"
-#include "Scene/Entity/Components/Armature.h"
+#include "Render/Helpers/DrawHelpers.h"
+#include "Render/Passes/PassResources.h"
 #include "Scene/Entity/Components/Light.h"
 #include "Scene/Entity/Components/Mesh.h"
 #include "Scene/Entity/Components/Transformation.h"
 
-#include "Render/Helpers/GPUStructs.h"
-#include "Render/Helpers/DrawHelpers.h"
-#include "Utility/DebugInfo.h"
-
-#include "RenderGraph/RenderPassBuilder.h"
 #include "RenderGraph/RenderContext.h"
-
-#include "Render/Passes/PassResources.h"
+#include "RenderGraph/RenderPassBuilder.h"
 
 namespace render
 {
-    DebugBoundingVolumePass::DebugBoundingVolumePass(scene::Scene* scene, scene::Camera* camera)
+    DebugBoundingVolumePass::DebugBoundingVolumePass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
         : RenderPass<DebugBoundingVolumePassData>("Debug Volumes Pass", rg::RenderPassType::Graphics)
         , _scene(scene)
         , _camera(camera)

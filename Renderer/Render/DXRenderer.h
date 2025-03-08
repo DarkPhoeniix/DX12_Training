@@ -21,15 +21,20 @@ namespace render
 
         virtual void SetFrame(Frame& frame);
 
-        virtual void OnUpdate(core::events::UpdateEvent& e) override;
-        virtual void OnRender(core::events::RenderEvent& e) override;
-        virtual void OnKeyPressed(core::events::KeyEvent& e) override;
-        virtual void OnKeyReleased(core::events::KeyEvent& e) override {}
-        virtual void OnMouseMoved(core::events::MouseMoveEvent& e) override;
-        virtual void OnMouseButtonPressed(core::events::MouseButtonEvent& e) override;
-        virtual void OnMouseButtonReleased(core::events::MouseButtonEvent& e) override;
-        virtual void OnMouseScroll(core::events::MouseScrollEvent& e) override {}
-        virtual void OnResize(core::events::ResizeEvent& e) override;
+        rg::RenderGraph& GetRenderGraph();
+
+        std::shared_ptr<scene::Scene> GetCurrentScene();
+
+        // Inherited via IWindowEventListener
+        void OnUpdate(core::events::UpdateEvent& e) override;
+        void OnRender(core::events::RenderEvent& e) override;
+        void OnKeyPressed(core::events::KeyEvent& e) override;
+        void OnKeyReleased(core::events::KeyEvent& e) override {}
+        void OnMouseMoved(core::events::MouseMoveEvent& e) override;
+        void OnMouseButtonPressed(core::events::MouseButtonEvent& e) override;
+        void OnMouseButtonReleased(core::events::MouseButtonEvent& e) override;
+        void OnMouseScroll(core::events::MouseScrollEvent& e) override {}
+        void OnResize(core::events::ResizeEvent& e) override;
 
     private:
         void SetupRenderPipeline();
@@ -40,7 +45,7 @@ namespace render
 
         rg::RenderGraph _renderGraph;
 
-        scene::Scene _scene;
+        std::shared_ptr<scene::Scene> _scene;
         std::shared_ptr<scene::Camera> _cameraComponent;
 
         UploadSceneProcessor _uploadProcessor;

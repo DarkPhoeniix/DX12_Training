@@ -17,7 +17,7 @@ namespace render
     class ShadowClearPass : public rg::RenderPass<ShadowClearPassData>
     {
     public:
-        ShadowClearPass(scene::Scene* scene, scene::Camera* camera);
+        ShadowClearPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
 
         // Inherited via RenderPass
         void Setup(rg::RenderPassBuilder& builder) override;
@@ -31,7 +31,7 @@ namespace render
 
         dx12::Resource _counterReset;
 
-        scene::Scene* _scene;
+        std::shared_ptr<scene::Scene> _scene;
         scene::Camera* _camera;
     };
 } // namespace render

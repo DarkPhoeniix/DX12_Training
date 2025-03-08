@@ -17,7 +17,7 @@ namespace render
     class FXAAPass : public rg::RenderPass<FXAAPassData>
     {
     public:
-        FXAAPass(scene::Scene* scene, scene::Camera* camera);
+        FXAAPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
 
         // Inherited via RenderPass
         void Setup(rg::RenderPassBuilder& builder) override;
@@ -26,7 +26,7 @@ namespace render
     private:
         dx12::PipelineState _FXAAPipeline;
 
-        scene::Scene* _scene;
+        std::shared_ptr<scene::Scene> _scene;
         scene::Camera* _camera;
     };
 } // namespace render

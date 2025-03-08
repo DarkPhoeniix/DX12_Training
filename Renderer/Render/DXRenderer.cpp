@@ -21,7 +21,6 @@
 #include "Render/Passes/Debug/DebugBoundingVolumePass.h"
 #include "Render/Passes/FXAAPass.h"
 #include "Render/Passes/GeometryPass.h"
-#include "Render/Passes/GUIPass.h"
 #include "Render/Passes/LightingPass.h"
 #include "Render/Passes/PFX/AverageLuminancePass.h"
 #include "Render/Passes/PFX/LuminanceHistogramPass.h"
@@ -50,6 +49,16 @@ namespace render
     {
     }
 
+    rg::RenderGraph& DXRenderer::GetRenderGraph()
+    {
+        return _renderGraph;
+    }
+
+    std::shared_ptr<scene::Scene> DXRenderer::GetCurrentScene()
+    {
+        return _scene;
+    }
+
     bool DXRenderer::LoadContent(TaskGPU* loadTask)
     {
         render::DrawHelper::Init();
@@ -60,7 +69,7 @@ namespace render
         uint32_t windowHeight = windowSize.bottom - windowSize.top;
 
         // Camera Setup
-        std::shared_ptr<scene::Entity> cameraEntity = std::make_shared<scene::Entity>(&_scene.GetCache());
+        std::shared_ptr<scene::Entity> cameraEntity = std::make_shared<scene::Entity>(&_scene->GetCache());
         {
             cameraEntity->SetName("Camera");
 
@@ -88,10 +97,11 @@ namespace render
             loadTask->SetName("Upload Data");
             dx12::CommandList& commandList = *loadTask->GetCommandLists().front();
 
-            _scene.LoadScene("Dragon\\DragonScene.scene", commandList);
-            _uploadProcessor.Process(_scene, commandList, nullptr);
+            _scene = std::make_shared<scene::Scene>();
+            _scene->LoadScene("Dragon\\DragonScene.scene", commandList);
+            _uploadProcessor.Process(*_scene, commandList, nullptr);
 
-            _scene.AddRootNode(cameraEntity);
+            _scene->AddRootNode(cameraEntity);
 
             commandList.Close();
         }
@@ -118,8 +128,8 @@ namespace render
     {
         DebugInfo::Update(updateEvent);
 
-        _scene.GetCache().SetTime(updateEvent.totalTime);
-        _scene.GetCache().SetDeltaTime(updateEvent.elapsedTime);
+        _scene->GetCache().SetTime(updateEvent.totalTime);
+        _scene->GetCache().SetDeltaTime(updateEvent.elapsedTime);
 
         _deltaTime = updateEvent.elapsedTime;
 
@@ -143,7 +153,7 @@ namespace render
                 }
             };
 
-        for (const auto& entity : _scene.GetRootNodes())
+        for (const auto& entity : _scene->GetRootNodes())
         {
             updateEntity(entity);
         }
@@ -187,7 +197,7 @@ namespace render
 
     void DXRenderer::OnKeyPressed(events::KeyEvent& e)
     {
-        auto cameraEntity = _scene.FindNodeByComponentName("Camera");
+        auto cameraEntity = _scene->FindNodeByComponentName("Camera");
         ASSERT(cameraEntity.get(), "No camera on the scene");
         scene::Camera* camera = cameraEntity->GetComponentAs<scene::Camera>("Camera");
 
@@ -273,19 +283,18 @@ namespace render
         {
             _renderGraph.Reset();
 
-            _renderGraph.AddPass(std::make_shared<GeometryPass>(&_scene, _cameraComponent.get()));
-            _renderGraph.AddPass(std::make_shared<ShadowClearPass>(&_scene, _cameraComponent.get()));
-            _renderGraph.AddPass(std::make_shared<ShadowCullPass>(&_scene, _cameraComponent.get()));
-            _renderGraph.AddPass(std::make_shared<ShadowDrawPass>(&_scene, _cameraComponent.get()));
-            _renderGraph.AddPass(std::make_shared<LightingPass>(&_scene, _cameraComponent.get()));
-            _renderGraph.AddPass(std::make_shared<SkyboxPass>(&_scene, _cameraComponent.get()));
-            _renderGraph.AddPass(std::make_shared<LuminanceHistogramPass>(&_scene, _cameraComponent.get()));
-            _renderGraph.AddPass(std::make_shared<AverageLuminancePass>(&_scene, _cameraComponent.get()));
-            _renderGraph.AddPass(std::make_shared<ToneMappingPass>(&_scene, _cameraComponent.get()));
-            //_renderGraph.AddPass(std::make_shared<FXAAPass>(&_scene, _cameraComponent.get()));
-            //_renderGraph.AddPass(std::make_shared<DebugBoundingVolumePass>(&_scene, _cameraComponent.get()));
-            //_renderGraph.AddPass(std::make_shared<DebugArmaturePass>(&_scene, _cameraComponent.get()));
-            _renderGraph.AddPass(std::make_shared<GUIPass>(&_scene, _cameraComponent.get()));
+            _renderGraph.AddPass(std::make_shared<GeometryPass>(_scene, _cameraComponent.get()));
+            _renderGraph.AddPass(std::make_shared<ShadowClearPass>(_scene, _cameraComponent.get()));
+            _renderGraph.AddPass(std::make_shared<ShadowCullPass>(_scene, _cameraComponent.get()));
+            _renderGraph.AddPass(std::make_shared<ShadowDrawPass>(_scene, _cameraComponent.get()));
+            _renderGraph.AddPass(std::make_shared<LightingPass>(_scene, _cameraComponent.get()));
+            _renderGraph.AddPass(std::make_shared<SkyboxPass>(_scene, _cameraComponent.get()));
+            _renderGraph.AddPass(std::make_shared<LuminanceHistogramPass>(_scene, _cameraComponent.get()));
+            _renderGraph.AddPass(std::make_shared<AverageLuminancePass>(_scene, _cameraComponent.get()));
+            _renderGraph.AddPass(std::make_shared<ToneMappingPass>(_scene, _cameraComponent.get()));
+            //_renderGraph.AddPass(std::make_shared<FXAAPass>(_scene, _cameraComponent.get()));
+            //_renderGraph.AddPass(std::make_shared<DebugBoundingVolumePass>(_scene, _cameraComponent.get()));
+            //_renderGraph.AddPass(std::make_shared<DebugArmaturePass>(_scene, _cameraComponent.get()));
 
             _renderGraph.Compile();
         }

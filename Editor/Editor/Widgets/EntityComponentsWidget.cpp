@@ -2,7 +2,6 @@
 
 #include "EntityComponentsWidget.h"
 
-#include "Editor.h"
 #include "Scene/Entity/Entity.h"
 #include "Scene/Entity/Components/Animation.h"
 #include "Scene/Entity/Components/Armature.h"
@@ -67,6 +66,11 @@ namespace gui
         }
     } // namespace unnamed
 
+    EntityComponentsWidget::EntityComponentsWidget(std::shared_ptr<Editor> editor)
+        : IWidget(editor)
+    {
+    }
+
     void EntityComponentsWidget::Init()
     {
         IWidget::Init();
@@ -83,7 +87,7 @@ namespace gui
 
         ImGui::BeginChild("Entity Components", { 0.0f, 0.0f }, ImGuiChildFlags_FrameStyle);
 
-        std::shared_ptr<scene::Entity> entity = Editor::GetSelectedEntity();
+        std::shared_ptr<scene::Entity> entity = _editor->GetSelectedEntity();
         if (!entity)
         {
             ImGui::SeparatorText("Entity Components");

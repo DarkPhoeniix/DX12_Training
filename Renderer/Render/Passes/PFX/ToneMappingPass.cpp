@@ -2,23 +2,13 @@
 
 #include "ToneMappingPass.h"
 
-#include "ResourceTable.h"
+#include "CommandList.h"
 
-#include "Scene/Entity/Components/Animation.h"
-#include "Scene/Entity/Components/Armature.h"
 #include "Scene/Entity/Components/Camera.h"
-#include "Scene/Entity/Components/Skybox.h"
-#include "Scene/Entity/Components/Mesh.h"
-#include "Scene/Entity/Components/Transformation.h"
-
-#include "Render/Helpers/GPUStructs.h"
-#include "Render/Helpers/RenderHelpers.h"
-#include "Utility/DebugInfo.h"
+#include "Render/Passes/PassResources.h"
 
 #include "RenderGraph/RenderPassBuilder.h"
 #include "RenderGraph/RenderContext.h"
-
-#include "Render/Passes/PassResources.h"
 
 namespace render
 {
@@ -37,7 +27,7 @@ namespace render
         constexpr float WHITE = 2.5f;
     } // namespace unnamed
 
-    ToneMappingPass::ToneMappingPass(scene::Scene* scene, scene::Camera* camera)
+    ToneMappingPass::ToneMappingPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
         : RenderPass<ToneMappingPassData>("Tone Mapping Pass", rg::RenderPassType::Compute)
         , _scene(scene)
         , _camera(camera)
