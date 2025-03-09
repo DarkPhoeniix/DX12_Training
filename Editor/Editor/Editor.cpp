@@ -161,6 +161,11 @@ namespace gui
         ImGui_ImplWin32_Shutdown();
         ImGui::DestroyContext();
 
+        _selectedEntity.reset();
+        _sceneTreeWidget.reset();
+        _debugInfoWidget.reset();
+        _entityComponentsWidget.reset();
+        _scene.reset();
         _srvDescriptorHeap.reset();
     }
 

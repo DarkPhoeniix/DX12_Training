@@ -150,6 +150,7 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
 
 void Application::Quit(int exitCode)
 {
+    Instance()->_editor->Destroy();
     DebugInfo::Destroy();
     dx12::Device::Destroy();
 
