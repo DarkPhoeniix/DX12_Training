@@ -6,8 +6,24 @@ namespace rg::mt
 {
     PassWorker::PassWorker()
         : _isFree(true)
+        , _exit(false)
     {
         _thread = std::thread(&PassWorker::Execute, this);
+    }
+
+    PassWorker::~PassWorker()
+    {
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            _exit = true;
+        }
+        _condition.notify_one();
+
+        if (_thread.joinable())
+        {
+            _thread.join();
+        }
+
     }
 
     void PassWorker::AssignWork(PassWork&& work, CallbackFunc&& callback)
@@ -30,10 +46,17 @@ namespace rg::mt
 
             {
                 std::unique_lock<std::mutex> lock(_mutex);
-                _condition.wait(lock, [this]() { return !_isFree; });
+                _condition.wait(lock, [this]() { return !_isFree || _exit; });
+
+                if (_exit)
+                {
+                    return;
+                }
 
                 if (!_work.RenderPass)  // Ensure work is assigned
+                {
                     continue;
+                }
 
                 work = _work;
                 onComplete = _callback;

@@ -21,6 +21,15 @@ namespace rg::mt
         return std::move(work);
     }
 
+    PassWork WorkQueue::Top()
+    {
+        std::lock_guard<std::mutex> lock(_queueMutex);
+
+        PassWork work = _works.front();
+
+        return work;
+    }
+
     bool WorkQueue::IsEmpty() const
     {
         return _works.empty();

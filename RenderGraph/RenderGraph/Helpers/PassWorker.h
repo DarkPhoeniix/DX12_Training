@@ -23,6 +23,7 @@ namespace rg::mt
         using CallbackFunc = std::function<void()>;
 
         PassWorker();
+        ~PassWorker();
 
         void AssignWork(PassWork&& work, CallbackFunc&& callback);
         void Wait();

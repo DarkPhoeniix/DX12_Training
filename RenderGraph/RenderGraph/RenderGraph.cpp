@@ -10,7 +10,7 @@
 namespace rg
 {
     RenderGraph::RenderGraph()
-        : _workerManager(4)
+        : _workerManager(8)
     {
     }
 

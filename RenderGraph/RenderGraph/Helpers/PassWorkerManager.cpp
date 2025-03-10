@@ -28,7 +28,7 @@ namespace rg::mt
     void PassWorkerManager::Wait()
     {
         std::unique_lock<std::mutex> lock(_mutex);
-        _condition.wait(lock, [this]() { return _workQueue.IsEmpty() && AllWorkersFree(); });
+        _condition.wait(lock, [this]() { return AllWorkersFree() && _workQueue.IsEmpty(); });
     }
 
     void PassWorkerManager::OnWorkerFinished()
@@ -37,12 +37,13 @@ namespace rg::mt
 
         if (!_workQueue.IsEmpty())
         {
-            PassWork nextWork = _workQueue.Pop();
+            PassWork nextWork = _workQueue.Top();
             for (PassWorker& worker : _workers)
             {
                 if (worker.IsFree())
                 {
                     worker.AssignWork(std::move(nextWork), std::bind(&PassWorkerManager::OnWorkerFinished, this));
+                    _workQueue.Pop();
                     return;
                 }
             }
