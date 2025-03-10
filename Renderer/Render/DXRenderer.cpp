@@ -284,9 +284,9 @@ namespace render
             _renderGraph.Reset();
 
             _renderGraph.AddPass(std::make_shared<GeometryPass>(_scene, _cameraComponent.get()));
-            _renderGraph.AddPass(std::make_shared<ShadowClearPass>(_scene, _cameraComponent.get()));
-            _renderGraph.AddPass(std::make_shared<ShadowCullPass>(_scene, _cameraComponent.get()));
-            _renderGraph.AddPass(std::make_shared<ShadowDrawPass>(_scene, _cameraComponent.get()));
+            //_renderGraph.AddPass(std::make_shared<ShadowClearPass>(_scene, _cameraComponent.get()));
+            //_renderGraph.AddPass(std::make_shared<ShadowCullPass>(_scene, _cameraComponent.get()));
+            //_renderGraph.AddPass(std::make_shared<ShadowDrawPass>(_scene, _cameraComponent.get()));
             _renderGraph.AddPass(std::make_shared<LightingPass>(_scene, _cameraComponent.get()));
             _renderGraph.AddPass(std::make_shared<SkyboxPass>(_scene, _cameraComponent.get()));
             _renderGraph.AddPass(std::make_shared<LuminanceHistogramPass>(_scene, _cameraComponent.get()));

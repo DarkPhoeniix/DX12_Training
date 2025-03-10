@@ -3,6 +3,7 @@
 #include "LightingPass.h"
 
 #include "CommandList.h"
+#include "ResourceBarrier.h"
 
 #include "Render/Helpers/RenderHelpers.h"
 #include "Render/Passes/PassResources.h"
@@ -30,22 +31,22 @@ namespace render
         std::vector<std::shared_ptr<scene::Entity>> lightEntities = _scene->FilterNodesByComponent("Light");
         size_t lightsNum = lightEntities.size();
 
-        _data.ShadowMaps.resize(lightsNum, rg::ResourceId(-1));
-        for (size_t lightIndex = 0; lightIndex < lightsNum; ++lightIndex)
-        {
-            std::shared_ptr<scene::Entity> entity = lightEntities[lightIndex];
-            scene::Light* light = entity->GetComponentAs<scene::Light>("Light");
+        //_data.ShadowMaps.resize(lightsNum, rg::ResourceId(-1));
+        //for (size_t lightIndex = 0; lightIndex < lightsNum; ++lightIndex)
+        //{
+        //    std::shared_ptr<scene::Entity> entity = lightEntities[lightIndex];
+        //    scene::Light* light = entity->GetComponentAs<scene::Light>("Light");
 
-            if (light->CastShadows)
-            {
-                _data.ShadowMaps[lightIndex] = builder.ReadResource(std::format("{}_ShadowMap", entity->GetName()));
-            }
-        }
+        //    if (light->CastShadows)
+        //    {
+        //        _data.ShadowMaps[lightIndex] = builder.ReadResource(std::format("{}_ShadowMap", entity->GetName()));
+        //    }
+        //}
 
         dx12::ResourceDescription targetDesc;
         {
             targetDesc.SetSize(_camera->GetViewport().GetSize());
-            targetDesc.SetFormat(DXGI_FORMAT_R8G8B8A8_UNORM);
+            targetDesc.SetFormat(DXGI_FORMAT_R16G16B16A16_FLOAT);
             targetDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::Unordered);
         }
         _data.HDRTarget = builder.CreateResource(HDR_TARGET, targetDesc);
@@ -68,10 +69,14 @@ namespace render
             D3D12_GPU_DESCRIPTOR_HANDLE normalSpecularHandle = context.GetGPUHandle(normalRoughness->GetAsSRV());
             D3D12_GPU_DESCRIPTOR_HANDLE depthHandle = context.GetGPUHandle(depth->GetAsSRV());
 
-            commandList.TransitionBarrier(*hdrTarget, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-            commandList.TransitionBarrier(*albedoMetallic, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-            commandList.TransitionBarrier(*normalRoughness, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-            commandList.TransitionBarrier(*depth, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+            std::vector<dx12::ResourceBarrier> barriers =
+            {
+                { hdrTarget.get(),          D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
+                { albedoMetallic.get(),     D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
+                { normalRoughness.get(),    D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
+                { depth.get(),              D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
+            };
+            commandList.TransitionBarriers(barriers);
 
             commandList.SetPipelineState(_deferredPipeline);
 
@@ -93,10 +98,14 @@ namespace render
 
             commandList.Dispatch(xThreadGroups, yThreadGroups);
 
-            commandList.TransitionBarrier(*hdrTarget, D3D12_RESOURCE_STATE_COMMON);
-            commandList.TransitionBarrier(*albedoMetallic, D3D12_RESOURCE_STATE_COMMON);
-            commandList.TransitionBarrier(*normalRoughness, D3D12_RESOURCE_STATE_COMMON);
-            commandList.TransitionBarrier(*depth, D3D12_RESOURCE_STATE_COMMON);
+            barriers =
+            {
+                { hdrTarget.get(),          D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
+                { albedoMetallic.get(),     D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
+                { normalRoughness.get(),    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
+                { depth.get(),              D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
+            };
+            commandList.TransitionBarriers(barriers);
         }
         PIXEndEvent(commandList.GetDXCommandList().Get());
 

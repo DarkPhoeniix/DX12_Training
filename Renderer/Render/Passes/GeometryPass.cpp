@@ -3,6 +3,7 @@
 #include "GeometryPass.h"
 
 #include "CommandList.h"
+#include "ResourceBarrier.h"
 
 #include "Scene/Entity/Components/Animation.h"
 #include "Scene/Entity/Components/Armature.h"
@@ -57,7 +58,7 @@ namespace
 
                 if (armature)
                 {
-                    modelDesc->UseSkinning = true;
+                    modelDesc->UseSkinning = 1;
                 }
             }
             commandList.SetCBV(1, modelDescHandle.DataGPU);
@@ -171,9 +172,13 @@ namespace render
             D3D12_CPU_DESCRIPTOR_HANDLE normalSpecularHandle = context.GetCPUHandle(normalRoughness->GetAsRTV());
             D3D12_CPU_DESCRIPTOR_HANDLE depthHandle = context.GetCPUHandle(depth->GetAsDSV());
 
-            commandList.TransitionBarrier(*albedoMetallic, D3D12_RESOURCE_STATE_RENDER_TARGET);
-            commandList.TransitionBarrier(*normalRoughness, D3D12_RESOURCE_STATE_RENDER_TARGET);
-            commandList.TransitionBarrier(*depth, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+            std::vector<dx12::ResourceBarrier> barriers =
+            {
+                { albedoMetallic.get(),     D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_RENDER_TARGET },
+                { normalRoughness.get(),    D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_RENDER_TARGET },
+                { depth.get(),              D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_DEPTH_WRITE },
+            };
+            commandList.TransitionBarriers(barriers);
 
             commandList.ClearDSV(depthHandle, D3D12_CLEAR_FLAG_DEPTH);
 
@@ -197,9 +202,13 @@ namespace render
 
             DebugInfo::EndStatCollecting(commandList);
 
-            commandList.TransitionBarrier(*albedoMetallic, D3D12_RESOURCE_STATE_COMMON);
-            commandList.TransitionBarrier(*normalRoughness, D3D12_RESOURCE_STATE_COMMON);
-            commandList.TransitionBarrier(*depth, D3D12_RESOURCE_STATE_COMMON);
+            barriers =
+            {
+                { albedoMetallic.get(),    D3D12_RESOURCE_STATE_RENDER_TARGET,  D3D12_RESOURCE_STATE_COMMON },
+                { normalRoughness.get(),   D3D12_RESOURCE_STATE_RENDER_TARGET,  D3D12_RESOURCE_STATE_COMMON },
+                { depth.get(),             D3D12_RESOURCE_STATE_DEPTH_WRITE,    D3D12_RESOURCE_STATE_COMMON },
+            };
+            commandList.TransitionBarriers(barriers);
         }
         PIXEndEvent(commandList.GetDXCommandList().Get());
 

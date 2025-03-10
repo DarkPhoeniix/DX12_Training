@@ -2,8 +2,6 @@
 
 #include "PipelineState.h"
 
-class Heap;
-
 namespace scene
 {
     // Forward declaration for Viewport class used in setting viewports for the command list.
@@ -12,6 +10,8 @@ namespace scene
 
 namespace dx12
 {
+    class ResourceBarrier;
+
     // Enum representing the different types of DirectX 12 command lists.
     enum class CommandListType
     {
@@ -53,6 +53,10 @@ namespace dx12
         void EndQuery(ComPtr<ID3D12QueryHeap> queryHeap, D3D12_QUERY_TYPE type, std::uint32_t index);
 
         // Sets a resource transition barrier (to change resource states between pipeline stages).
+        void TransitionBarrier(ResourceBarrier& barrier);
+        void TransitionBarriers(std::vector<ResourceBarrier>& barrier);
+        // Sets a resource transition barrier (to change resource states between pipeline stages).
+        // Before state is a current resource state
         void TransitionBarrier(Resource& resource, D3D12_RESOURCE_STATES stateAfter, std::uint32_t subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
         // Sets an aliasing barrier (for aliasing resource states between different resource usages).
         void AliasingBarrier(const std::shared_ptr<Resource> & = nullptr, const std::shared_ptr<Resource>& afterResource = nullptr);

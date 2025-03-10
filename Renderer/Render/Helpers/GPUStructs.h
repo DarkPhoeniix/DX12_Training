@@ -29,7 +29,7 @@ struct GPUModelDesc
     UINT RoughnessTextureIndex = -1;
 
     UINT HasMesh = false;
-    bool UseSkinning = false;
+    UINT UseSkinning = false;
 };
 
 struct alignas(16) GPULightDesc

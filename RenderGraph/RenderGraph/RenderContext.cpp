@@ -159,23 +159,24 @@ namespace rg
         _mapNameToId[name] = id;
         _resources[id] = resource;
 
-
         // TODO: this is wrong, views are created for 0 frame only
-        dx12::ResourceTable& table = _resourceTable[_currentFrameIndex];
-        D3D12_RESOURCE_FLAGS flags = desc.GetFlags();
-        if (flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)
+        for (auto& table : _resourceTable)
         {
-            table.PlaceResource(resource.get(), dx12::ResourceViewType::RTV);
+            D3D12_RESOURCE_FLAGS flags = desc.GetFlags();
+            if (flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)
+            {
+                table.PlaceResource(resource.get(), dx12::ResourceViewType::RTV);
+            }
+            if (flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
+            {
+                table.PlaceResource(resource.get(), dx12::ResourceViewType::DSV);
+            }
+            if (flags & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS)
+            {
+                table.PlaceResource(resource.get(), dx12::ResourceViewType::UAV);
+            }
+            table.PlaceResource(resource.get(), dx12::ResourceViewType::SRV);
         }
-        if (flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
-        {
-            table.PlaceResource(resource.get(), dx12::ResourceViewType::DSV);
-        }
-        if (flags & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS)
-        {
-            table.PlaceResource(resource.get(), dx12::ResourceViewType::UAV);
-        }
-        table.PlaceResource(resource.get(), dx12::ResourceViewType::SRV);
 
         return id;
     }

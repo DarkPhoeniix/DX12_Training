@@ -42,6 +42,8 @@ namespace dx12
 
     bool ResourceTable::CopyDescriptor(Resource* resource, ResourceViewType viewType, ResourceTable& srcTable)
     {
+        std::lock_guard<std::mutex> lock(_rwMutex);
+
         ResourceTable::ResourceMap& resources = _GetResourceMap(viewType);
         DescriptorHeap& descriptorHeap = GetDescriptorHeap(viewType);
 
@@ -62,6 +64,8 @@ namespace dx12
 
     bool ResourceTable::CopyDescriptor(Resource* resource, ResourceViewType viewType, D3D12_CPU_DESCRIPTOR_HANDLE handle)
     {
+        std::lock_guard<std::mutex> lock(_rwMutex);
+
         ResourceTable::ResourceMap& resources = _GetResourceMap(viewType);
         DescriptorHeap& descriptorHeap = GetDescriptorHeap(viewType);
 
@@ -76,6 +80,8 @@ namespace dx12
 
     bool ResourceTable::PlaceResource(Resource* resource, ResourceViewType viewType)
     {
+        std::lock_guard<std::mutex> lock(_rwMutex);
+
         if (ASSERT(resource, "Trying to add a nullptr resource to resource table"))
         {
             return false;
@@ -122,14 +128,17 @@ namespace dx12
         {
             return false;
         }
-
+        bool found = false;
         ResourceTable::ResourceMap& resources = _GetResourceMap(viewType);
         DescriptorHeap& descriptorHeap = GetDescriptorHeap(viewType);
+        {
 
-        ResourceKey key = { resource->GetName().c_str(), viewType };
-        auto resourceIt = resources.find(key);
+            std::lock_guard<std::mutex> lock(_rwMutex);
+            ResourceKey key = { resource->GetName().c_str(), viewType };
+            found = resources.find(key) != resources.end();
+        }
 
-        if (resourceIt == resources.end())
+        if (!found)
         {
             return PlaceResource(resource, viewType);
         }
@@ -139,6 +148,8 @@ namespace dx12
 
     D3D12_CPU_DESCRIPTOR_HANDLE ResourceTable::GetResourceCPUHandle(Resource* resource, ResourceViewType viewType)
     {
+        std::lock_guard<std::mutex> lock(_rwMutex);
+
         ResourceTable::ResourceMap& resources = _GetResourceMap(viewType);
         DescriptorHeap& descriptorHeap = GetDescriptorHeap(viewType);
 
@@ -150,6 +161,8 @@ namespace dx12
 
     D3D12_GPU_DESCRIPTOR_HANDLE ResourceTable::GetResourceGPUHandle(Resource* resource, ResourceViewType viewType)
     {
+        std::lock_guard<std::mutex> lock(_rwMutex);
+
         ResourceTable::ResourceMap& resources = _GetResourceMap(viewType);
         DescriptorHeap& descriptorHeap = GetDescriptorHeap(viewType);
 
@@ -161,6 +174,8 @@ namespace dx12
 
     D3D12_CPU_DESCRIPTOR_HANDLE ResourceTable::GetResourceCPUHandle(const std::string& resourceName, ResourceViewType viewType)
     {
+        std::lock_guard<std::mutex> lock(_rwMutex);
+
         ResourceTable::ResourceMap& resources = _GetResourceMap(viewType);
         DescriptorHeap& descriptorHeap = GetDescriptorHeap(viewType);
 
@@ -178,6 +193,8 @@ namespace dx12
 
     D3D12_GPU_DESCRIPTOR_HANDLE ResourceTable::GetResourceGPUHandle(const std::string& resourceName, ResourceViewType viewType)
     {
+        std::lock_guard<std::mutex> lock(_rwMutex);
+
         ResourceTable::ResourceMap& resources = _GetResourceMap(viewType);
         DescriptorHeap& descriptorHeap = GetDescriptorHeap(viewType);
 
@@ -195,6 +212,8 @@ namespace dx12
 
     std::uint32_t ResourceTable::GetResourceIndex(Resource* resource, ResourceViewType viewType)
     {
+        std::lock_guard<std::mutex> lock(_rwMutex);
+
         ResourceTable::ResourceMap& resources = _GetResourceMap(viewType);
         ResourceKey key = { resource->GetName().c_str(), viewType};
         auto it = resources.find(key);
@@ -208,6 +227,8 @@ namespace dx12
 
     std::uint32_t ResourceTable::GetResourceIndex(const std::string& resourceName, ResourceViewType viewType)
     {
+        std::lock_guard<std::mutex> lock(_rwMutex);
+
         ResourceTable::ResourceMap& resources = _GetResourceMap(viewType);
         ResourceKey key = { resourceName.c_str(), viewType };
         auto it = resources.find(key);
@@ -221,6 +242,8 @@ namespace dx12
 
     Resource* ResourceTable::GetResourceByName(const std::string& resourceName, ResourceViewType viewType)
     {
+        std::lock_guard<std::mutex> lock(_rwMutex);
+
         ResourceTable::ResourceMap& resources = _GetResourceMap(viewType);
         ResourceKey key = { resourceName.c_str(), viewType };
         auto it = resources.find(key);

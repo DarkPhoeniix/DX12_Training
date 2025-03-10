@@ -2,9 +2,8 @@
 
 #include "CommandList.h"
 
-#include "DescriptorHeap.h"
 #include "PipelineState.h"
-#include "Heap.h"
+#include "ResourceBarrier.h"
 #include "Scene/Entity/Components/Camera.h"
 
 namespace
@@ -108,6 +107,36 @@ namespace dx12
         }
 
         _commandList->EndQuery(queryHeap.Get(), type, index);
+    }
+
+    void CommandList::TransitionBarrier(ResourceBarrier& barrier)
+    {
+        CD3DX12_RESOURCE_BARRIER dxBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
+            barrier.Resource->GetDXResource().Get(),
+            barrier.BeforeState, 
+            barrier.AfterState, 
+            D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
+        barrier.Resource->SetCurrentState(barrier.AfterState);
+
+        _commandList->ResourceBarrier(1, &dxBarrier);
+    }
+
+    void CommandList::TransitionBarriers(std::vector<ResourceBarrier>& barriers)
+    {
+        size_t numBarriers = barriers.size();
+        std::vector<CD3DX12_RESOURCE_BARRIER> dxBarriers(numBarriers);
+
+        for (size_t i = 0; i < numBarriers; ++i)
+        {
+            dxBarriers[i] = CD3DX12_RESOURCE_BARRIER::Transition(
+                barriers[i].Resource->GetDXResource().Get(),
+                barriers[i].BeforeState,
+                barriers[i].AfterState,
+                D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
+            barriers[i].Resource->SetCurrentState(barriers[i].AfterState);
+        }
+
+        _commandList->ResourceBarrier(numBarriers, dxBarriers.data());
     }
 
     void CommandList::TransitionBarrier(Resource& resource, D3D12_RESOURCE_STATES stateAfter, std::uint32_t subresource)
@@ -396,7 +425,7 @@ namespace dx12
 
     void CommandList::Close()
     {
-        _commandList->Close();
+        helpers::throwIfFailed(_commandList->Close());
     }
 
     void CommandList::SetName(const std::string& name)

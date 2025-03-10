@@ -3,6 +3,7 @@
 #include "LuminanceHistogramPass.h"
 
 #include "CommandList.h"
+#include "ResourceBarrier.h"
 
 #include "Scene/Entity/Components/Camera.h"
 #include "Render/Passes/PassResources.h"
@@ -68,6 +69,13 @@ namespace render
 
             // Setup root signature components
 
+            std::vector<dx12::ResourceBarrier> barriers =
+            {
+                { hdrTarget.get(),            D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE},
+                { luminanceHistogram.get(),   D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE }
+            };
+            commandList.TransitionBarriers(barriers);
+
             commandList.SetDescriptorHeaps({ context.GetResourceTable().GetDescriptorHeap(dx12::ResourceViewType::SRV).GetDXDescriptorHeap().Get() });
 
             DirectX::XMUINT2 viewportSize = _camera->GetViewport().GetSize();
@@ -83,6 +91,13 @@ namespace render
             std::uint32_t xThreadGroups = (std::uint32_t)std::ceilf(viewportSize.x / float(LUM_HISTOGRAM_THREADS_NUM));
             std::uint32_t yThreadGroups = (std::uint32_t)std::ceilf(viewportSize.y / float(LUM_HISTOGRAM_THREADS_NUM));
             commandList.Dispatch(xThreadGroups, yThreadGroups);
+
+            barriers =
+            {
+                { hdrTarget.get(),            D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
+                { luminanceHistogram.get(),   D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON }
+            };
+            commandList.TransitionBarriers(barriers);
         }
         PIXEndEvent(commandList.GetDXCommandList().Get());
 

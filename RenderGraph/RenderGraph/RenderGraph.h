@@ -2,6 +2,7 @@
 
 #include "RenderPass.h"
 #include "RenderContext.h"
+#include "Helpers/PassWorkerManager.h"
 
 class Frame;
 class TaskGPU;
@@ -13,7 +14,7 @@ namespace rg
     class RenderGraph
     {
     public:
-        RenderGraph() = default;
+        RenderGraph();
         RenderGraph(const RenderGraph&) = delete;
         RenderGraph(RenderGraph&&) = default;
         ~RenderGraph() = default;
@@ -42,5 +43,7 @@ namespace rg
         std::vector<TaskGPU*> _GPUTasks;
 
         RenderContext _context;
+
+        mt::PassWorkerManager _workerManager;
     };
 }

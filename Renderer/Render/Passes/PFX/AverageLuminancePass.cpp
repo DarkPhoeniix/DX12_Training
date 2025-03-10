@@ -3,6 +3,7 @@
 #include "AverageLuminancePass.h"
 
 #include "CommandList.h"
+#include "ResourceBarrier.h"
 
 #include "Scene/Entity/Components/Camera.h"
 #include "Render/Passes/PassResources.h"
@@ -68,13 +69,25 @@ namespace render
             std::shared_ptr<dx12::Resource> luminanceHistogram = context.GetResource(_data.LuminanceHistogram);
             std::shared_ptr<dx12::Resource> averageLuminance = context.GetResource(_data.AverageLuminance);
 
-            commandList.TransitionBarrier(_prevLuminance, D3D12_RESOURCE_STATE_COPY_DEST);
-            commandList.TransitionBarrier(*averageLuminance, D3D12_RESOURCE_STATE_COPY_SOURCE);
+            std::vector<dx12::ResourceBarrier> barriers =
+            {
+                { &_prevLuminance,           D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_COPY_DEST },
+                { averageLuminance.get(),   D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_COPY_SOURCE }
+            };
+            commandList.TransitionBarriers(barriers);
+            //commandList.TransitionBarrier(_prevLuminance, D3D12_RESOURCE_STATE_COPY_DEST);
+            //commandList.TransitionBarrier(*averageLuminance, D3D12_RESOURCE_STATE_COPY_SOURCE);
 
             commandList.CopyResource(*averageLuminance, _prevLuminance);
-
-            commandList.TransitionBarrier(_prevLuminance, D3D12_RESOURCE_STATE_COMMON);
-            commandList.TransitionBarrier(*averageLuminance, D3D12_RESOURCE_STATE_COMMON);
+            
+            barriers =
+            {
+                { &_prevLuminance,           D3D12_RESOURCE_STATE_COPY_DEST,     D3D12_RESOURCE_STATE_COMMON },
+                { averageLuminance.get(),   D3D12_RESOURCE_STATE_COPY_SOURCE,   D3D12_RESOURCE_STATE_COMMON }
+            };
+            commandList.TransitionBarriers(barriers);
+            //commandList.TransitionBarrier(_prevLuminance, D3D12_RESOURCE_STATE_COMMON);
+            //commandList.TransitionBarrier(*averageLuminance, D3D12_RESOURCE_STATE_COMMON);
 
             // Setup pipeline state
 

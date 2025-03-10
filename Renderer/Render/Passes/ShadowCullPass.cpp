@@ -3,6 +3,7 @@
 #include "ShadowCullPass.h"
 
 #include "CommandList.h"
+#include "ResourceBarrier.h"
 
 #include "Scene/Entity/Components/Armature.h"
 #include "Scene/Entity/Components/Light.h"
@@ -261,13 +262,23 @@ namespace render
             }
 
             // Transition resources
-            commandList.TransitionBarrier(*commandBuffer, D3D12_RESOURCE_STATE_COPY_DEST);
+            std::vector<dx12::ResourceBarrier> barriers =
+            {
+                { commandBuffer.get(), D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_COPY_DEST }
+            };
+            commandList.TransitionBarriers(barriers);
+            //commandList.TransitionBarrier(*commandBuffer, D3D12_RESOURCE_STATE_COPY_DEST);
 
             // Reset commands counter
             std::uint32_t counterBufferOffset = commandBuffer->GetResourceDescription().GetSize().x - sizeof(UINT);
             commandList.CopyBufferRegion(_counterReset, *commandBuffer, sizeof(UINT), 0, counterBufferOffset);
 
             // Transition resources
+            barriers =
+            {
+                { commandBuffer.get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_UNORDERED_ACCESS }
+            };
+            commandList.TransitionBarriers(barriers);
             commandList.TransitionBarrier(*commandBuffer, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
             D3D12_GPU_DESCRIPTOR_HANDLE cbHandle = context.GetGPUHandle(commandBuffer->GetAsUAV());

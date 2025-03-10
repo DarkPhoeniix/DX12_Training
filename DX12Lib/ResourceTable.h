@@ -2,6 +2,8 @@
 
 #include "DescriptorHeap.h"
 
+#include <mutex>
+
 namespace dx12
 {
     // Class that manages a collection of resources with associated descriptors in a DirectX 12 application.
@@ -98,5 +100,7 @@ namespace dx12
 
         // The total number of descriptors allocated in the table.
         std::uint32_t _numDescriptors;
+
+        std::mutex _rwMutex;
     };
 } // namespace dx12

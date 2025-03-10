@@ -3,6 +3,7 @@
 #include "ShadowDrawPass.h"
 
 #include "CommandList.h"
+#include "ResourceBarrier.h"
 
 #include "Render/Helpers/RenderHelpers.h"
 #include "Scene/Entity/Components/Camera.h"
@@ -159,7 +160,12 @@ namespace render
                 std::shared_ptr<dx12::Resource> commandBuffer = context.GetResource(_data.LightCommandBuffers[context.GetFrameIndex()][lightIndex]);
 
                 // Transition resources
-                commandList.TransitionBarrier(*commandBuffer, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
+                std::vector<dx12::ResourceBarrier> barriers =
+                {
+                    { commandBuffer.get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT }
+                };
+                commandList.TransitionBarriers(barriers);
+                //commandList.TransitionBarrier(*commandBuffer, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
 
                 D3D12_CPU_DESCRIPTOR_HANDLE testHandle = context.GetCPUHandle(shadowMap->GetAsSRV()); // TODO: remove later
                 D3D12_CPU_DESCRIPTOR_HANDLE depthHandle = context.GetCPUHandle(shadowMap->GetAsDSV());
@@ -171,7 +177,11 @@ namespace render
                 std::uint32_t counterBufferOffset = commandBuffer->GetResourceDescription().GetSize().x - sizeof(UINT);
                 commandList.ExecuteIndirect(_cmdSignature, objectsNum, *commandBuffer, *commandBuffer, 0, counterBufferOffset);
 
-                commandList.TransitionBarrier(*shadowMap, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+                //commandList.TransitionBarrier(*shadowMap, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+                barriers =
+                {
+                    { shadowMap.get(), D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE }
+                };
 
                 PIXEndEvent(commandList.GetDXCommandList().Get());
             }

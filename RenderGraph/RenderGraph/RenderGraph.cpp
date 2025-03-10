@@ -9,6 +9,11 @@
 
 namespace rg
 {
+    RenderGraph::RenderGraph()
+        : _workerManager(4)
+    {
+    }
+
     void RenderGraph::Reset()
     {
         _context._mapNameToId.clear();
@@ -34,7 +39,7 @@ namespace rg
     void RenderGraph::Execute(Frame& frame)
     {
         _context._cache[frame.Index].Clear();
-        _context._resourceTable[frame.Index].Reset();
+        //_context._resourceTable[frame.Index].Reset();
         _GPUTasks.clear();
         _GPUTasks.resize(_passes.size(), nullptr);
 
@@ -42,7 +47,7 @@ namespace rg
 
         for (auto passIndex : _sortedPasses)
         {
-            std::shared_ptr<IRenderPass>& pass = _passes[passIndex];
+            std::shared_ptr<IRenderPass> pass = _passes[passIndex];
 
             TaskGPU* task = nullptr;
             switch (pass->GetType())
@@ -64,12 +69,18 @@ namespace rg
             if (task)
             {
                 task->SetName(pass->_name);
-                pass->Execute(_context, *task);
+
+                // TODO: FIX CACHE SYNC !!!!
+                _workerManager.Submit({ pass.get(), &_context, task});
+                //pass->Execute(_context, *task);
             }
 
             _GPUTasks[passIndex] = task;
         }
 
+        _workerManager.Wait();
+
+        OutputDebugStringA("_ _ _ _ _ _ _ _ _ _ _ _");
         for (auto passIndex : _sortedPasses)
         {
             TaskGPU* currentTask = _GPUTasks[passIndex];
@@ -81,6 +92,8 @@ namespace rg
                 break;
             }
         }
+
+        return;
     }
 
     void RenderGraph::AddPass(std::shared_ptr<IRenderPass> pass)

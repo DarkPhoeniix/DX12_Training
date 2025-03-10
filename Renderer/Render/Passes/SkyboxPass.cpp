@@ -3,6 +3,7 @@
 #include "SkyboxPass.h"
 
 #include "CommandList.h"
+#include "ResourceBarrier.h"
 
 #include "Render/Helpers/RenderHelpers.h"
 #include "Render/Passes/PassResources.h"
@@ -31,7 +32,7 @@ namespace render
     void SkyboxPass::Execute(rg::RenderContext& context, TaskGPU& task)
     {
         dx12::CommandList& commandList = *task.GetCommandLists().front();
-        commandList.SetName("Geometry pass command list");
+        commandList.SetName("Skybox pass command list");
 
         PIXBeginEvent(commandList.GetDXCommandList().Get(), 2, "Skybox Pass");
         {
@@ -46,9 +47,13 @@ namespace render
             D3D12_GPU_DESCRIPTOR_HANDLE depthHandle = context.GetGPUHandle(depth->GetAsSRV());
             D3D12_GPU_DESCRIPTOR_HANDLE skyboxHandle = context.GetGPUHandle(skybox->GetAsSRV());
 
-            commandList.TransitionBarrier(*target, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-            commandList.TransitionBarrier(*skybox, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-            commandList.TransitionBarrier(*depth, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+            std::vector<dx12::ResourceBarrier> barriers =
+            {
+                { target.get(), D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
+                { skybox.get(), D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
+                { depth.get(),  D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE }
+            };
+            commandList.TransitionBarriers(barriers);
 
             commandList.SetPipelineState(_skyboxPipeline);
 
@@ -67,9 +72,13 @@ namespace render
 
             commandList.Dispatch(xThreadGroups, yThreadGroups);
 
-            commandList.TransitionBarrier(*target, D3D12_RESOURCE_STATE_COMMON);
-            commandList.TransitionBarrier(*skybox, D3D12_RESOURCE_STATE_COMMON);
-            commandList.TransitionBarrier(*depth, D3D12_RESOURCE_STATE_COMMON);
+            barriers =
+            {
+                { target.get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
+                { skybox.get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
+                { depth.get(),  D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON }
+            };
+            commandList.TransitionBarriers(barriers);
         }
         PIXEndEvent(commandList.GetDXCommandList().Get());
 

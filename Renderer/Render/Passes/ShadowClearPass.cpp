@@ -3,6 +3,7 @@
 #include "ShadowClearPass.h"
 
 #include "CommandList.h"
+#include "ResourceBarrier.h"
 
 #include "Scene/Entity/Components/Light.h"
 
@@ -109,7 +110,11 @@ namespace render
             std::shared_ptr<dx12::Resource> shadowMap = context.GetResource(_data.ShadowMaps[lightIndex]);
 
             // Transition resources
-            commandList.TransitionBarrier(*shadowMap, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+            std::vector<dx12::ResourceBarrier> barriers =
+            {
+                { shadowMap.get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,    D3D12_RESOURCE_STATE_DEPTH_WRITE }
+            };
+            commandList.TransitionBarriers(barriers);
 
             D3D12_CPU_DESCRIPTOR_HANDLE depthHandle = context.GetCPUHandle(shadowMap->GetAsDSV());
             commandList.ClearDSV(depthHandle, D3D12_CLEAR_FLAG_DEPTH);

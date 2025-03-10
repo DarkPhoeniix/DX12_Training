@@ -17,11 +17,13 @@ void CacheGPU::Clear()
 
 CacheGPU::DataHandle CacheGPU::RequestPlacement(const std::string& name, uint32_t size)
 {
+    std::lock_guard<std::mutex> lock(_cacheMutex);
+
     DataHandle handle = {};
 
     uint32_t newOffset = Math::AlignUp((_currentOffset + size), 256);
 
-    if (ASSERT(newOffset < _size, "GPU cache is full"))  
+    if (ASSERT(newOffset < _size, "GPU cache is full"))
     {
         return handle;
     }
@@ -50,6 +52,8 @@ CacheGPU::DataHandle CacheGPU::GetOrPlaceResource(const std::string& name, uint3
 
 CacheGPU::DataHandle CacheGPU::GetResourcePlacement(const std::string& name)
 {
+    std::lock_guard<std::mutex> lock(_cacheMutex);
+
     DataHandle handle = {};
 
     auto it = _placedResources.find(name);

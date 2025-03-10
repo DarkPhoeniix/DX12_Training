@@ -2,6 +2,8 @@
 
 #include "Heap.h"
 
+#include <mutex>
+
 class CacheGPU
 {
 public:
@@ -22,6 +24,8 @@ public:
     std::shared_ptr<dx12::Resource> GetCache();
 
 private:
+    std::mutex _cacheMutex;
+
     std::unordered_map<std::string, DataHandle> _placedResources;
     std::shared_ptr<dx12::Resource> _cache;
 
