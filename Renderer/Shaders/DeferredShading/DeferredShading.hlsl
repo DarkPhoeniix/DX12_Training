@@ -123,7 +123,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
         float3 lightingModel = surfaceColor * lightAttenuation;
         if (Lights[i].CastShadows != 0)
         {
-            //lightingModel *= shadowAttenuation;
+            lightingModel *= shadowAttenuation;
         }
         
         surface.FinalColor += float4(lightingModel, 1.0f);

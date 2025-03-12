@@ -64,9 +64,9 @@ namespace rg::mt
 
             work.RenderPass->Execute(*work.Context, *work.Task);
 
-            OutputDebugStringA(" - - - > Worker is finished: ");
-            OutputDebugStringA(work.Task->GetName().c_str());
-            OutputDebugStringA("\n");
+            //OutputDebugStringA(" - - - > Worker is finished: ");
+            //OutputDebugStringA(work.Task->GetName().c_str());
+            //OutputDebugStringA("\n");
 
             {
                 std::lock_guard<std::mutex> lock(_mutex);

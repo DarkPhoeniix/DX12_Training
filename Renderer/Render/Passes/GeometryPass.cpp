@@ -30,37 +30,37 @@ namespace
             scene::Transformation transform = entity->GetGlobalTransform();
             scene::Material* material = entity->GetComponentAs<scene::Material>("Material");
 
-            CacheGPU::DataHandle modelDescHandle = cache->GetOrPlaceResource(entity->GetName(), sizeof(GPUModelDesc));
-            GPUModelDesc* modelDesc = (GPUModelDesc*)modelDescHandle.DataCPU;
-            {
-                modelDesc->Transform = transform.Transform;
-
-                if (mesh)
-                {
-                    modelDesc->HasMesh = 1;
-                }
-
-                if (material)
-                {
-                    dx12::ResourceTable& frameTable = *resourceTable;
-                    std::shared_ptr<dx12::ResourceTable> textureTable = entity->GetSceneCache()->GetTextureTable();
-
-                    frameTable.CopyDescriptor(material->Albedo.get(), dx12::ResourceViewType::SRV, *textureTable);
-                    frameTable.CopyDescriptor(material->NormalMap.get(), dx12::ResourceViewType::SRV, *textureTable);
-                    frameTable.CopyDescriptor(material->Metalness.get(), dx12::ResourceViewType::SRV, *textureTable);
-                    frameTable.CopyDescriptor(material->Roughness.get(), dx12::ResourceViewType::SRV, *textureTable);
-
-                    modelDesc->AlbedoTextureIndex = frameTable.GetResourceIndex(material->Albedo.get(), dx12::ResourceViewType::SRV);
-                    modelDesc->NormalMapTextureIndex = frameTable.GetResourceIndex(material->NormalMap.get(), dx12::ResourceViewType::SRV);
-                    modelDesc->MetalnessTextureIndex = frameTable.GetResourceIndex(material->Metalness.get(), dx12::ResourceViewType::SRV);
-                    modelDesc->RoughnessTextureIndex = frameTable.GetResourceIndex(material->Roughness.get(), dx12::ResourceViewType::SRV);
-                }
-
-                if (armature)
-                {
-                    modelDesc->UseSkinning = 1;
-                }
-            }
+            CacheGPU::DataHandle modelDescHandle = cache->GetResourcePlacement(entity->GetName());
+            //GPUModelDesc* modelDesc = (GPUModelDesc*)modelDescHandle.DataCPU;
+            //{
+            //    modelDesc->Transform = transform.Transform;
+            //
+            //    if (mesh)
+            //    {
+            //        modelDesc->HasMesh = 1;
+            //    }
+            //
+            //    if (material)
+            //    {
+            //        dx12::ResourceTable& frameTable = *resourceTable;
+            //        std::shared_ptr<dx12::ResourceTable> textureTable = entity->GetSceneCache()->GetTextureTable();
+            //
+            //        frameTable.CopyDescriptor(material->Albedo.get(), dx12::ResourceViewType::SRV, *textureTable);
+            //        frameTable.CopyDescriptor(material->NormalMap.get(), dx12::ResourceViewType::SRV, *textureTable);
+            //        frameTable.CopyDescriptor(material->Metalness.get(), dx12::ResourceViewType::SRV, *textureTable);
+            //        frameTable.CopyDescriptor(material->Roughness.get(), dx12::ResourceViewType::SRV, *textureTable);
+            //
+            //        modelDesc->AlbedoTextureIndex = frameTable.GetResourceIndex(material->Albedo.get(), dx12::ResourceViewType::SRV);
+            //        modelDesc->NormalMapTextureIndex = frameTable.GetResourceIndex(material->NormalMap.get(), dx12::ResourceViewType::SRV);
+            //        modelDesc->MetalnessTextureIndex = frameTable.GetResourceIndex(material->Metalness.get(), dx12::ResourceViewType::SRV);
+            //        modelDesc->RoughnessTextureIndex = frameTable.GetResourceIndex(material->Roughness.get(), dx12::ResourceViewType::SRV);
+            //    }
+            //
+            //    if (armature)
+            //    {
+            //        modelDesc->UseSkinning = 1;
+            //    }
+            //}
             commandList.SetCBV(1, modelDescHandle.DataGPU);
 
             // Update and setup animantion
@@ -68,13 +68,13 @@ namespace
             {
                 const std::vector<scene::Bone*>& bones = armature->GetSortedBones();
 
-                CacheGPU::DataHandle bonesDescHandle = cache->GetOrPlaceResource(entity->GetName() + "_bones", sizeof(DirectX::XMMATRIX) * bones.size());
-                DirectX::XMMATRIX* data = (DirectX::XMMATRIX*)bonesDescHandle.DataCPU;
-
-                for (int i = 0; i < bones.size(); ++i)
-                {
-                    data[i] = bones[i]->Offset * bones[i]->GlobalTransform;
-                }
+                CacheGPU::DataHandle bonesDescHandle = cache->GetResourcePlacement(entity->GetName() + "_bones");
+                //DirectX::XMMATRIX* data = (DirectX::XMMATRIX*)bonesDescHandle.DataCPU;
+                //
+                //for (int i = 0; i < bones.size(); ++i)
+                //{
+                //    data[i] = bones[i]->Offset * bones[i]->GlobalTransform;
+                //}
 
                 commandList.SetSRV(3, bonesDescHandle.DataGPU);
             }

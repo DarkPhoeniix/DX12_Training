@@ -7,11 +7,32 @@
 #include "Render/Frame/Frame.h"
 #include "Render/Frame/TaskGPU.h"
 
+namespace
+{
+    static constexpr std::uint32_t RENDER_THREADS_NUM = 4;
+}
+
 namespace rg
 {
     RenderGraph::RenderGraph()
-        : _workerManager(8)
+        : _workerManager(RENDER_THREADS_NUM)
     {
+    }
+
+    CacheGPU& RenderGraph::GetCache()
+    {
+        return _context.GetCache();
+    }
+
+    dx12::ResourceTable& RenderGraph::GetResourceTable()
+    {
+        return _context.GetResourceTable();
+    }
+
+    void RenderGraph::SetFrame(Frame& frame)
+    {
+        _frame = &frame;
+        _context._currentFrameIndex = frame.Index;
     }
 
     void RenderGraph::Reset()
@@ -36,14 +57,14 @@ namespace rg
         TopologicalSort();
     }
 
-    void RenderGraph::Execute(Frame& frame)
+    void RenderGraph::Execute()
     {
-        _context._cache[frame.Index].Clear();
+        //_context._cache[frame.Index].Clear();
         //_context._resourceTable[frame.Index].Reset();
         _GPUTasks.clear();
         _GPUTasks.resize(_passes.size(), nullptr);
 
-        _context._currentFrameIndex = frame.Index;
+        //_context._currentFrameIndex = _frame->Index;
 
         for (auto passIndex : _sortedPasses)
         {
@@ -53,13 +74,13 @@ namespace rg
             switch (pass->GetType())
             {
             case RenderPassType::Graphics:
-                task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT);
+                task = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT);
                 break;
             case RenderPassType::Compute:
-                task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE);
+                task = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE);
                 break;
             case RenderPassType::Copy:
-                task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_COPY);
+                task = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_COPY);
                 break;
             defualt:
                 FAIL("Undefined render pass type");
@@ -72,15 +93,24 @@ namespace rg
 
                 // TODO: FIX CACHE SYNC !!!!
                 _workerManager.Submit({ pass.get(), &_context, task});
+                //_workerManager.Wait();
                 //pass->Execute(_context, *task);
             }
 
             _GPUTasks[passIndex] = task;
         }
 
+        //for (size_t i = 0; i < _passes.size(); ++i)
+        //{
+        //    std::shared_ptr<IRenderPass> pass = _passes[i];
+        //    TaskGPU* task = _GPUTasks[i];
+        //    _workerManager.Submit({ pass.get(), &_context, task });
+        //}
+
         _workerManager.Wait();
 
-        OutputDebugStringA("_ _ _ _ _ _ _ _ _ _ _ _");
+        //OutputDebugStringA("\n____ NEW FRAME ____\n\n");
+
         for (auto passIndex : _sortedPasses)
         {
             TaskGPU* currentTask = _GPUTasks[passIndex];

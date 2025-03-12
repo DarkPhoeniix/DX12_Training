@@ -4,6 +4,8 @@
 #include "RenderContext.h"
 #include "Helpers/PassWorkerManager.h"
 
+#include "Scene/Scene.h"
+
 class Frame;
 class TaskGPU;
 
@@ -22,9 +24,14 @@ namespace rg
         RenderGraph& operator=(const RenderGraph&) = delete;
         RenderGraph& operator=(RenderGraph&&) = default;
 
+        CacheGPU& GetCache();
+        dx12::ResourceTable& GetResourceTable();
+
+        void SetFrame(Frame& frame);
+
         void Reset();
         void Compile();
-        void Execute(Frame& frame);
+        void Execute();
 
         void AddPass(std::shared_ptr<IRenderPass> pass);
 
@@ -42,7 +49,10 @@ namespace rg
         std::vector<std::uint32_t> _sortedPasses;
         std::vector<TaskGPU*> _GPUTasks;
 
+        Frame* _frame;
         RenderContext _context;
+
+        std::shared_ptr<scene::Scene> _scene;
 
         mt::PassWorkerManager _workerManager;
     };

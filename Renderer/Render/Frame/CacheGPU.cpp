@@ -60,8 +60,10 @@ CacheGPU::DataHandle CacheGPU::GetResourcePlacement(const std::string& name)
     if (it != _placedResources.end())
     {
         handle = it->second;
+        return handle;
     }
 
+    FAIL(std::format("Failed to retrieve cached data for \"{}\"", name));
     return handle;
 }
 

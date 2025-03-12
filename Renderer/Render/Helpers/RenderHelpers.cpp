@@ -212,7 +212,7 @@ namespace helpers
         {
             CheckLightsNum(node, lightsNum);
         }
-        CacheGPU::DataHandle lightsData = cache->GetOrPlaceResource("LightsCB", sizeof(GPULightDesc) * lightsNum);
+        CacheGPU::DataHandle lightsData = cache->RequestPlacement("LightsCB", sizeof(GPULightDesc) * lightsNum);
 
         uint32_t lightCounter = 0;
         for (std::shared_ptr<scene::Entity>& node : scene.GetRootNodes())

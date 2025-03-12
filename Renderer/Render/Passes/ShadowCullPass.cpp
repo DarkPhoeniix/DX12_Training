@@ -83,7 +83,7 @@ namespace
 
                 if (armature)
                 {
-                    modelDesc->UseSkinning = true;
+                    modelDesc->UseSkinning = 1;
                 }
             }
 
@@ -203,7 +203,11 @@ namespace render
                 SetupEntity(meshes[j], commandList, &context.GetCache(), &context.GetResourceTable());
 
                 CacheGPU::DataHandle modelAddress = context.GetCache().GetResourcePlacement(meshes[j]->GetName());
-                CacheGPU::DataHandle bonesAddress = context.GetCache().GetResourcePlacement(meshes[j]->GetName() + "_bones");
+                CacheGPU::DataHandle bonesAddress = modelAddress;
+                if (scene::Armature* armature = meshes[j]->GetComponentAs<scene::Armature>("Armature"))
+                {
+                    bonesAddress = context.GetCache().GetResourcePlacement(meshes[j]->GetName() + "_bones");
+                }
 
                 IndirectCommand command;
 
@@ -264,7 +268,7 @@ namespace render
             // Transition resources
             std::vector<dx12::ResourceBarrier> barriers =
             {
-                { commandBuffer.get(), D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_COPY_DEST }
+                { commandBuffer.get(), D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT,    D3D12_RESOURCE_STATE_COPY_DEST }
             };
             commandList.TransitionBarriers(barriers);
             //commandList.TransitionBarrier(*commandBuffer, D3D12_RESOURCE_STATE_COPY_DEST);
@@ -279,7 +283,7 @@ namespace render
                 { commandBuffer.get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_UNORDERED_ACCESS }
             };
             commandList.TransitionBarriers(barriers);
-            commandList.TransitionBarrier(*commandBuffer, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+            //commandList.TransitionBarrier(*commandBuffer, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
             D3D12_GPU_DESCRIPTOR_HANDLE cbHandle = context.GetGPUHandle(commandBuffer->GetAsUAV());
 
