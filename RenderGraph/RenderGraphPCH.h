@@ -2,8 +2,6 @@
 #ifndef RENDER_GRAPH_PCH_H
 #define RENDER_GRAPH_PCH_H
 
-//#define RG_MULTITHREADED
-
 // Windows Runtime Library. Needed for ComPtr<> template class
 #include <wrl.h>
 using namespace Microsoft::WRL;

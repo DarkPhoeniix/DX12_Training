@@ -16,7 +16,9 @@ namespace rg::mt
     public:
         void Push(PassWork&& work);
         [[nodiscard]] PassWork&& Pop();
-        [[nodiscard]] PassWork Top();
+
+        [[nodiscard]] PassWork& Top();
+
         bool IsEmpty() const;
 
     private:

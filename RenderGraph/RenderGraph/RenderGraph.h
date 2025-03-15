@@ -1,7 +1,5 @@
 #pragma once
 
-//#define RG_MULTITHREADED
-
 #include "RenderPass.h"
 #include "RenderContext.h"
 

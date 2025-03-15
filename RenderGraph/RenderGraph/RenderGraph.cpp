@@ -47,9 +47,13 @@ namespace rg
         _sortedPasses.clear();
 
         for (auto& cache : _context._cache)
+        {
             cache.Clear();
+        }
         for (auto& table : _context._resourceTable)
+        {
             table.Reset();
+        }
     }
 
     void RenderGraph::Compile()
@@ -62,8 +66,6 @@ namespace rg
 
     void RenderGraph::Execute()
     {
-        //_context._cache[frame.Index].Clear();
-        //_context._resourceTable[frame.Index].Reset();
         _GPUTasks.clear();
         _GPUTasks.resize(_passes.size(), nullptr);
 
