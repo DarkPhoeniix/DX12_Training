@@ -87,7 +87,7 @@ namespace
                 }
             }
 
-            // Update and setup animantion
+            // Update and setup animation
             if (armature)
             {
                 const std::vector<scene::Bone*>& bones = armature->GetSortedBones();
@@ -271,7 +271,6 @@ namespace render
                 { commandBuffer.get(), D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT,    D3D12_RESOURCE_STATE_COPY_DEST }
             };
             commandList.TransitionBarriers(barriers);
-            //commandList.TransitionBarrier(*commandBuffer, D3D12_RESOURCE_STATE_COPY_DEST);
 
             // Reset commands counter
             std::uint32_t counterBufferOffset = commandBuffer->GetResourceDescription().GetSize().x - sizeof(UINT);
@@ -283,7 +282,6 @@ namespace render
                 { commandBuffer.get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_UNORDERED_ACCESS }
             };
             commandList.TransitionBarriers(barriers);
-            //commandList.TransitionBarrier(*commandBuffer, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
             D3D12_GPU_DESCRIPTOR_HANDLE cbHandle = context.GetGPUHandle(commandBuffer->GetAsUAV());
 

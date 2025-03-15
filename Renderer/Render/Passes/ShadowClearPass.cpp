@@ -118,11 +118,7 @@ namespace render
 
             D3D12_CPU_DESCRIPTOR_HANDLE depthHandle = context.GetCPUHandle(shadowMap->GetAsDSV());
             commandList.ClearDSV(depthHandle, D3D12_CLEAR_FLAG_DEPTH);
-            //barriers =
-            //{
-            //    { shadowMap.get(),    D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE }
-            //};
-            //commandList.TransitionBarriers(barriers);
+
             PIXEndEvent(commandList.GetDXCommandList().Get());
         }
         PIXEndEvent(commandList.GetDXCommandList().Get());

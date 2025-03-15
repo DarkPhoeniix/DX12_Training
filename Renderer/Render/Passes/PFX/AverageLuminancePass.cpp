@@ -75,8 +75,6 @@ namespace render
                 { averageLuminance.get(),   D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_COPY_SOURCE }
             };
             commandList.TransitionBarriers(barriers);
-            //commandList.TransitionBarrier(_prevLuminance, D3D12_RESOURCE_STATE_COPY_DEST);
-            //commandList.TransitionBarrier(*averageLuminance, D3D12_RESOURCE_STATE_COPY_SOURCE);
 
             commandList.CopyResource(*averageLuminance, _prevLuminance);
             
@@ -86,8 +84,6 @@ namespace render
                 { averageLuminance.get(),   D3D12_RESOURCE_STATE_COPY_SOURCE,   D3D12_RESOURCE_STATE_COMMON }
             };
             commandList.TransitionBarriers(barriers);
-            //commandList.TransitionBarrier(_prevLuminance, D3D12_RESOURCE_STATE_COMMON);
-            //commandList.TransitionBarrier(*averageLuminance, D3D12_RESOURCE_STATE_COMMON);
 
             // Setup pipeline state
 
