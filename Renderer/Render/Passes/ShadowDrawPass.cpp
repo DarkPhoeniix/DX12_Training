@@ -138,7 +138,9 @@ namespace render
         {
             commandList.SetPipelineState(_spotLightShadowsPipeline);
 
-            helpers::SetupSceneDataGPU(*_scene, commandList, &context.GetCache());
+            CacheGPU::DataHandle sceneDataHandle = context.GetCache().GetResourcePlacement("SceneCB");
+            commandList.SetCBV(0, sceneDataHandle.DataGPU);
+
             helpers::SetupLightDataGPU(*_scene, commandList, &context.GetCache(), context.GetResourceTable());
 
             for (uint32_t lightIndex = 0; lightIndex < lightEntities.size(); ++lightIndex)
@@ -201,7 +203,9 @@ namespace render
         {
             commandList.SetPipelineState(_pointLightShadowsPipeline);
 
-            helpers::SetupSceneDataGPU(*_scene, commandList, &context.GetCache());
+            CacheGPU::DataHandle sceneDataHandle = context.GetCache().GetResourcePlacement("SceneCB");
+            commandList.SetCBV(0, sceneDataHandle.DataGPU);
+
             helpers::SetupLightDataGPU(*_scene, commandList, &context.GetCache(), context.GetResourceTable());
 
             for (uint32_t lightIndex = 0; lightIndex < lightEntities.size(); ++lightIndex)

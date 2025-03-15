@@ -59,7 +59,8 @@ namespace render
 
             commandList.SetPipelineState(_FXAAPipeline);
 
-            helpers::SetupSceneDataGPU(*_scene, commandList, &context.GetCache());
+            CacheGPU::DataHandle sceneDataHandle = context.GetCache().GetResourcePlacement("SceneCB");
+            commandList.SetCBV(0, sceneDataHandle.DataGPU);
 
             commandList.SetDescriptorHeaps({ context.GetResourceTable().GetDescriptorHeap(dx12::ResourceViewType::SRV).GetDXDescriptorHeap().Get() });
             commandList.SetDescriptorTable(3, targetHandle);

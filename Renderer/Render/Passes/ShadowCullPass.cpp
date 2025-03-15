@@ -172,7 +172,9 @@ namespace render
         commandList.SetPipelineState(_cullShadowsPipeline);
         commandList.SetDescriptorHeaps({ context.GetResourceTable().GetDescriptorHeap(dx12::ResourceViewType::SRV).GetDXDescriptorHeap().Get() });
 
-        helpers::SetupSceneDataGPU(*_scene, commandList, &context.GetCache());
+        CacheGPU::DataHandle sceneDataHandle = context.GetCache().GetResourcePlacement("SceneCB");
+        commandList.SetCBV(0, sceneDataHandle.DataGPU);
+
         helpers::SetupLightDataGPU(*_scene, commandList, &context.GetCache(), context.GetResourceTable());
 
         CacheGPU::DataHandle sceneAddress = context.GetCache().GetResourcePlacement("SceneCB");
