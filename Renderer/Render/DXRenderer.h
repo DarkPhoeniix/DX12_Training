@@ -51,6 +51,7 @@ namespace render
 
         UploadSceneProcessor _uploadProcessor;
 
+        bool _isMinimized;
         bool _isCameraMoving;
         float _deltaTime;
 

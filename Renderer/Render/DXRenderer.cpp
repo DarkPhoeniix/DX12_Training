@@ -121,6 +121,7 @@ namespace render
         : _windowHandle(windowHandle)
         , _currentFrame(nullptr)
         , _contentLoaded(false)
+        , _isMinimized(false)
         , _isCameraMoving(false)
         , _deltaTime(0.0f)
     {
@@ -245,6 +246,11 @@ namespace render
         _currentFrame->WaitCPU();
         _currentFrame->ResetGPU();
 
+        if (_isMinimized)
+        {
+            return;
+        }
+
         _renderGraph.SetFrame(*_currentFrame);
         UploadSceneCache(_renderGraph.GetCache(), _renderGraph.GetResourceTable());
 
@@ -338,6 +344,16 @@ namespace render
 
     void DXRenderer::OnResize(core::events::ResizeEvent& e)
     {
+        if (e.width == 0 && e.height == 0)
+        {
+            _isMinimized = true;
+            return; // Do not resize buffers on window minimize (otherwise it'll crash...)
+        }
+        else
+        {
+            _isMinimized = false;
+        }
+
         Frame* current = _currentFrame;
         do
         {
