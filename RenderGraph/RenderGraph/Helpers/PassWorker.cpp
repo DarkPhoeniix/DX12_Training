@@ -41,9 +41,7 @@ namespace rg::mt
     {
         while (true)
         {
-            PassWork work;
             std::function<void()> onComplete;
-
             {
                 std::unique_lock<std::mutex> lock(_mutex);
                 _condition.wait(lock, [this]() { return !_isFree || _exit; });
@@ -58,15 +56,10 @@ namespace rg::mt
                     continue;
                 }
 
-                work = _work;
                 onComplete = _callback;
             }
 
-            work.RenderPass->Execute(*work.Context, *work.Task);
-
-            //OutputDebugStringA(" - - - > Worker is finished: ");
-            //OutputDebugStringA(work.Task->GetName().c_str());
-            //OutputDebugStringA("\n");
+            _work.RenderPass->Execute(*_work.Context, *_work.Task);
 
             {
                 std::lock_guard<std::mutex> lock(_mutex);

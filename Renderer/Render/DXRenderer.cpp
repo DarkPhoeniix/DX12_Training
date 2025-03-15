@@ -376,9 +376,9 @@ namespace render
             _renderGraph.AddPass(std::make_shared<LuminanceHistogramPass>(_scene, _cameraComponent.get()));
             _renderGraph.AddPass(std::make_shared<AverageLuminancePass>(_scene, _cameraComponent.get()));
             _renderGraph.AddPass(std::make_shared<ToneMappingPass>(_scene, _cameraComponent.get()));
-            _renderGraph.AddPass(std::make_shared<FXAAPass>(_scene, _cameraComponent.get()));
-            _renderGraph.AddPass(std::make_shared<DebugBoundingVolumePass>(_scene, _cameraComponent.get()));
-            _renderGraph.AddPass(std::make_shared<DebugArmaturePass>(_scene, _cameraComponent.get()));
+            //_renderGraph.AddPass(std::make_shared<FXAAPass>(_scene, _cameraComponent.get()));
+            //_renderGraph.AddPass(std::make_shared<DebugBoundingVolumePass>(_scene, _cameraComponent.get()));
+            //_renderGraph.AddPass(std::make_shared<DebugArmaturePass>(_scene, _cameraComponent.get()));
 
             _renderGraph.Compile();
         }

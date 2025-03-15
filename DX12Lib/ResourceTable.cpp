@@ -130,7 +130,7 @@ namespace dx12
                     (resource->GetResourceDescription().GetUAVCounterOffset() != -1) ? resource : nullptr);
                 break;
             default:
-                ASSERT(false, "TODO");
+                FAIL("Failed to create resource view");
                 break;
             };
         }
