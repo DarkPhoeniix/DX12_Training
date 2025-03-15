@@ -15,7 +15,10 @@ namespace
 namespace rg
 {
     RenderGraph::RenderGraph()
-        : _workerManager(RENDER_THREADS_NUM)
+        : _frame(nullptr)
+#ifdef RG_MULTITHREADED
+        , _workerManager(RENDER_THREADS_NUM)
+#endif
     {
     }
 
@@ -64,8 +67,6 @@ namespace rg
         _GPUTasks.clear();
         _GPUTasks.resize(_passes.size(), nullptr);
 
-        //_context._currentFrameIndex = _frame->Index;
-
         for (auto passIndex : _sortedPasses)
         {
             std::shared_ptr<IRenderPass> pass = _passes[passIndex];
@@ -91,25 +92,19 @@ namespace rg
             {
                 task->SetName(pass->_name);
 
-                // TODO: FIX CACHE SYNC !!!!
+#ifdef RG_MULTITHREADED
                 _workerManager.Submit({ pass.get(), &_context, task});
-                //_workerManager.Wait();
-                //pass->Execute(_context, *task);
+#else
+                pass->Execute(_context, *task);
+#endif
             }
 
             _GPUTasks[passIndex] = task;
         }
 
-        //for (size_t i = 0; i < _passes.size(); ++i)
-        //{
-        //    std::shared_ptr<IRenderPass> pass = _passes[i];
-        //    TaskGPU* task = _GPUTasks[i];
-        //    _workerManager.Submit({ pass.get(), &_context, task });
-        //}
-
+#ifdef RG_MULTITHREADED
         _workerManager.Wait();
-
-        //OutputDebugStringA("\n____ NEW FRAME ____\n\n");
+#endif
 
         for (auto passIndex : _sortedPasses)
         {
@@ -122,8 +117,6 @@ namespace rg
                 break;
             }
         }
-
-        return;
     }
 
     void RenderGraph::AddPass(std::shared_ptr<IRenderPass> pass)

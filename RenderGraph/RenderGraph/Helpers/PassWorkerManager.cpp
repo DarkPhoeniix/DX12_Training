@@ -37,13 +37,11 @@ namespace rg::mt
 
         if (!_workQueue.IsEmpty())
         {
-            PassWork nextWork = _workQueue.Top();
             for (PassWorker& worker : _workers)
             {
                 if (worker.IsFree())
                 {
-                    worker.AssignWork(std::move(nextWork), std::bind(&PassWorkerManager::OnWorkerFinished, this));
-                    _workQueue.Pop();
+                    worker.AssignWork(std::move(_workQueue.Pop()), std::bind(&PassWorkerManager::OnWorkerFinished, this));
                     return;
                 }
             }

@@ -1,8 +1,13 @@
 #pragma once
 
+//#define RG_MULTITHREADED
+
 #include "RenderPass.h"
 #include "RenderContext.h"
+
+#ifdef RG_MULTITHREADED
 #include "Helpers/PassWorkerManager.h"
+#endif
 
 #include "Scene/Scene.h"
 
@@ -54,6 +59,8 @@ namespace rg
 
         std::shared_ptr<scene::Scene> _scene;
 
+#ifdef RG_MULTITHREADED
         mt::PassWorkerManager _workerManager;
+#endif
     };
 }
