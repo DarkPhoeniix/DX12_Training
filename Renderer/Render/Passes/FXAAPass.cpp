@@ -11,6 +11,8 @@
 #include "RenderGraph/RenderPassBuilder.h"
 #include "RenderGraph/RenderContext.h"
 
+#include "ResourceBarrier.h"
+
 namespace render
 {
     FXAAPass::FXAAPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
@@ -48,8 +50,12 @@ namespace render
             D3D12_GPU_DESCRIPTOR_HANDLE targetHandle = context.GetGPUHandle(target->GetAsSRV());
             D3D12_GPU_DESCRIPTOR_HANDLE fxaaHandle = context.GetGPUHandle(fxaa->GetAsUAV());
 
-            commandList.TransitionBarrier(*target, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-            commandList.TransitionBarrier(*fxaa, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+            std::vector<dx12::ResourceBarrier> barriers =
+            {
+                { target.get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE},
+                { fxaa.get(),   D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS}
+            };
+            commandList.TransitionBarriers(barriers);
 
             commandList.SetPipelineState(_FXAAPipeline);
 
@@ -65,16 +71,21 @@ namespace render
 
             commandList.Dispatch(xThreadGroups, yThreadGroups);
 
-            commandList.TransitionBarrier(*target, D3D12_RESOURCE_STATE_COMMON);
-            commandList.TransitionBarrier(*fxaa, D3D12_RESOURCE_STATE_COMMON);
-
-            commandList.TransitionBarrier(*target, D3D12_RESOURCE_STATE_COPY_DEST);
-            commandList.TransitionBarrier(*fxaa, D3D12_RESOURCE_STATE_COPY_SOURCE);
+            barriers =
+            {
+                { target.get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST},
+                { fxaa.get(),   D3D12_RESOURCE_STATE_UNORDERED_ACCESS,          D3D12_RESOURCE_STATE_COPY_SOURCE}
+            };
+            commandList.TransitionBarriers(barriers);
 
             commandList.CopyResource(*fxaa, *target);
 
-            commandList.TransitionBarrier(*target, D3D12_RESOURCE_STATE_COMMON);
-            commandList.TransitionBarrier(*fxaa, D3D12_RESOURCE_STATE_COMMON);
+            barriers =
+            {
+                { target.get(), D3D12_RESOURCE_STATE_COPY_DEST,   D3D12_RESOURCE_STATE_COMMON },
+                { fxaa.get(),   D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COMMON }
+            };
+            commandList.TransitionBarriers(barriers);
         }
         PIXEndEvent(commandList.GetDXCommandList().Get());
 

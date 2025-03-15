@@ -11,6 +11,8 @@
 #include "RenderGraph/RenderContext.h"
 #include "RenderGraph/RenderPassBuilder.h"
 
+#include "ResourceBarrier.h"
+
 namespace render
 {
     DebugArmaturePass::DebugArmaturePass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
@@ -40,8 +42,12 @@ namespace render
             D3D12_CPU_DESCRIPTOR_HANDLE rtv = context.GetCPUHandle(target->GetAsRTV());
             D3D12_CPU_DESCRIPTOR_HANDLE dsv = context.GetCPUHandle(depth->GetAsDSV());
 
-            commandList.TransitionBarrier(*target, D3D12_RESOURCE_STATE_RENDER_TARGET);
-            commandList.TransitionBarrier(*depth, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+            std::vector<dx12::ResourceBarrier> barriers =
+            {
+                { target.get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RENDER_TARGET },
+                { depth.get(),  D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE }
+            };
+            commandList.TransitionBarriers(barriers);
 
             commandList.SetPipelineState(_debugArmaturePipeline);
 
@@ -81,8 +87,12 @@ namespace render
                 }
             }
 
-            commandList.TransitionBarrier(*target, D3D12_RESOURCE_STATE_COMMON);
-            commandList.TransitionBarrier(*depth, D3D12_RESOURCE_STATE_COMMON);
+            barriers =
+            {
+                { target.get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON},
+                { depth.get(),  D3D12_RESOURCE_STATE_DEPTH_WRITE,   D3D12_RESOURCE_STATE_COMMON}
+            };
+            commandList.TransitionBarriers(barriers);
         }
         PIXEndEvent(commandList.GetDXCommandList().Get());
 
