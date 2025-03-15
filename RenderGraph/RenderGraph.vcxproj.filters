@@ -30,6 +30,15 @@
     <ClInclude Include="RenderGraph\RenderPassBuilder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="RenderGraph\Helpers\PassWorker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderGraph\Helpers\WorkQueue.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderGraph\Helpers\PassWorkerManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderGraphPCH.cpp">
@@ -45,6 +54,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="RenderGraph\RenderPassBuilder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderGraph\Helpers\PassWorker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderGraph\Helpers\WorkQueue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderGraph\Helpers\PassWorkerManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

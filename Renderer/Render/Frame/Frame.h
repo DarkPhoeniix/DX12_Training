@@ -1,7 +1,7 @@
 #pragma once
 
-#include "DescriptorHeap.h"
 #include "ResourceTable.h"
+#include "Heap.h"
 
 #include "Render/Frame/AllocatorPool.h"
 #include "Render/Frame/Executor.h"

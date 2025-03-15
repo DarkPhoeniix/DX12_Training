@@ -4,6 +4,8 @@
 
 void CacheGPU::SetResource(std::shared_ptr<dx12::Resource> memoryBlock)
 {
+    std::unique_lock<std::shared_mutex> lock(_mutex);
+
     _cache = memoryBlock;
     _size = memoryBlock->GetResourceDescription().GetSize().x * memoryBlock->GetResourceDescription().GetSize().y;
     _currentOffset = 0;
@@ -11,21 +13,24 @@ void CacheGPU::SetResource(std::shared_ptr<dx12::Resource> memoryBlock)
 
 void CacheGPU::Clear()
 {
+    std::unique_lock<std::shared_mutex> lock(_mutex);
+
     _currentOffset = 0;
     _placedResources.clear();
 }
 
-CacheGPU::DataHandle CacheGPU::RequestPlacement(const std::string& name, uint32_t size)
+CacheGPU::DataHandle CacheGPU::RequestPlacement(const std::string& name, std::uint32_t size)
 {
-    DataHandle handle = {};
+    std::unique_lock<std::shared_mutex> lock(_mutex);
 
-    uint32_t newOffset = Math::AlignUp((_currentOffset + size), 256);
+    std::uint32_t newOffset = Math::AlignUp((_currentOffset + size), 256);
 
-    if (ASSERT(newOffset < _size, "GPU cache is full"))  
+    if (ASSERT(newOffset < _size, "GPU cache is full"))
     {
-        return handle;
+        return {};
     }
 
+    DataHandle handle;
     handle.DataCPU = (char*)_cache->Map() + _currentOffset;
     handle.DataGPU = _cache->OffsetGPU(_currentOffset);
     handle.Offset = _currentOffset;
@@ -36,7 +41,7 @@ CacheGPU::DataHandle CacheGPU::RequestPlacement(const std::string& name, uint32_
     return handle;
 }
 
-CacheGPU::DataHandle CacheGPU::GetOrPlaceResource(const std::string& name, uint32_t size)
+CacheGPU::DataHandle CacheGPU::GetOrPlaceResource(const std::string& name, std::uint32_t size)
 {
     DataHandle handle = GetResourcePlacement(name);
 
@@ -50,15 +55,16 @@ CacheGPU::DataHandle CacheGPU::GetOrPlaceResource(const std::string& name, uint3
 
 CacheGPU::DataHandle CacheGPU::GetResourcePlacement(const std::string& name)
 {
-    DataHandle handle = {};
+    std::shared_lock<std::shared_mutex> lock(_mutex);
 
     auto it = _placedResources.find(name);
     if (it != _placedResources.end())
     {
-        handle = it->second;
+        return it->second;
     }
 
-    return handle;
+    FAIL(std::format("Failed to retrieve cached data for \"{}\"", name));
+    return {};
 }
 
 std::shared_ptr<dx12::Resource> CacheGPU::GetCache()

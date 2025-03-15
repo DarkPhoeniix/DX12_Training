@@ -13,8 +13,13 @@
 #include "Scene/Entity/Components/Animation.h"
 #include "Scene/Entity/Components/Armature.h"
 #include "Scene/Entity/Components/Camera.h"
+#include "Scene/Entity/Components/Light.h"
+#include "Scene/Entity/Components/Material.h"
+#include "Scene/Entity/Components/Mesh.h"
 #include "Scene/Entity/Entity.h"
 #include "Utility/DebugInfo.h"
+
+#include "Render/Helpers/GPUStructs.h"
 
 #include "Render/Frame/TaskGPU.h"
 #include "Render/Passes/Debug/DebugArmaturePass.h"
@@ -33,6 +38,82 @@
 
 using namespace DirectX;
 using namespace core;
+
+namespace
+{
+    void CheckLightsNum(std::shared_ptr<scene::Entity> node, uint32_t& lightsNum)
+    {
+        if (node->GetComponentAs<scene::Light>("Light"))
+        {
+            ++lightsNum;
+        }
+
+        for (std::shared_ptr<scene::Entity>& child : node->GetChildrenNodes())
+        {
+            CheckLightsNum(child, lightsNum);
+        }
+    }
+
+    void SetupEntity(std::shared_ptr<scene::Entity> entity, CacheGPU& cache, dx12::ResourceTable& resourceTable)
+    {
+        if (scene::Mesh* mesh = entity->GetComponentAs<scene::Mesh>("Mesh"))
+        {
+            scene::Armature* armature = entity->GetComponentAs<scene::Armature>("Armature");
+            scene::Transformation transform = entity->GetGlobalTransform();
+            scene::Material* material = entity->GetComponentAs<scene::Material>("Material");
+
+            CacheGPU::DataHandle modelDescHandle = cache.RequestPlacement(entity->GetName(), sizeof(GPUModelDesc));
+            GPUModelDesc* modelDesc = (GPUModelDesc*)modelDescHandle.DataCPU;
+            {
+                modelDesc->Transform = transform.Transform;
+
+                if (mesh)
+                {
+                    modelDesc->HasMesh = 1;
+                }
+
+                if (material)
+                {
+                    std::shared_ptr<dx12::ResourceTable> textureTable = entity->GetSceneCache()->GetTextureTable();
+
+                    resourceTable.CopyDescriptor(material->Albedo.get(), dx12::ResourceViewType::SRV, *textureTable);
+                    resourceTable.CopyDescriptor(material->NormalMap.get(), dx12::ResourceViewType::SRV, *textureTable);
+                    resourceTable.CopyDescriptor(material->Metalness.get(), dx12::ResourceViewType::SRV, *textureTable);
+                    resourceTable.CopyDescriptor(material->Roughness.get(), dx12::ResourceViewType::SRV, *textureTable);
+
+                    modelDesc->AlbedoTextureIndex = resourceTable.GetResourceIndex(material->Albedo.get(), dx12::ResourceViewType::SRV);
+                    modelDesc->NormalMapTextureIndex = resourceTable.GetResourceIndex(material->NormalMap.get(), dx12::ResourceViewType::SRV);
+                    modelDesc->MetalnessTextureIndex = resourceTable.GetResourceIndex(material->Metalness.get(), dx12::ResourceViewType::SRV);
+                    modelDesc->RoughnessTextureIndex = resourceTable.GetResourceIndex(material->Roughness.get(), dx12::ResourceViewType::SRV);
+                }
+
+                if (armature)
+                {
+                    modelDesc->UseSkinning = 1;
+                }
+            }
+
+            // Update and setup animantion
+            if (armature)
+            {
+                const std::vector<scene::Bone*>& bones = armature->GetSortedBones();
+
+                CacheGPU::DataHandle bonesDescHandle = cache.RequestPlacement(entity->GetName() + "_bones", sizeof(DirectX::XMMATRIX) * bones.size());
+                DirectX::XMMATRIX* data = (DirectX::XMMATRIX*)bonesDescHandle.DataCPU;
+
+                for (int i = 0; i < bones.size(); ++i)
+                {
+                    data[i] = bones[i]->Offset * bones[i]->GlobalTransform;
+                }
+            }
+        }
+
+        for (std::shared_ptr<scene::Entity>& child : entity->GetChildrenNodes())
+        {
+            SetupEntity(child, cache, resourceTable);
+        }
+    }
+}
 
 namespace render
 {
@@ -164,7 +245,10 @@ namespace render
         _currentFrame->WaitCPU();
         _currentFrame->ResetGPU();
 
-        _renderGraph.Execute(*_currentFrame);
+        _renderGraph.SetFrame(*_currentFrame);
+        UploadSceneCache(_renderGraph.GetCache(), _renderGraph.GetResourceTable());
+
+        _renderGraph.Execute();
 
         std::shared_ptr<dx12::Resource> target = _renderGraph.ExportResource("Target");
 
@@ -297,6 +381,59 @@ namespace render
             //_renderGraph.AddPass(std::make_shared<DebugArmaturePass>(_scene, _cameraComponent.get()));
 
             _renderGraph.Compile();
+        }
+    }
+
+    void DXRenderer::UploadSceneCache(CacheGPU& cache, dx12::ResourceTable& table)
+    {
+        cache.Clear();
+
+        uint32_t lightsNum = 0;
+        for (std::shared_ptr<scene::Entity>& node : _scene->GetRootNodes())
+        {
+            CheckLightsNum(node, lightsNum);
+        }
+
+        // Setup scene data
+        CacheGPU::DataHandle sceneDataHandle = cache.RequestPlacement("SceneCB", sizeof(GPUSceneDesc));
+
+        GPUSceneDesc* sceneDesc = (GPUSceneDesc*)sceneDataHandle.DataCPU;
+        {
+            auto cameraEntity = _scene->FindNodeByComponentName("Camera");
+            if (ASSERT(cameraEntity.get(), "No camera on the scene"))
+            {
+                return;
+            }
+
+            scene::Camera* camera = cameraEntity->GetComponentAs<scene::Camera>("Camera");
+
+            sceneDesc->View = camera->View();
+            sceneDesc->Projection = camera->Projection();
+            sceneDesc->ViewProjection = camera->ViewProjection();
+
+            sceneDesc->InvView = XMMatrixInverse(nullptr, sceneDesc->View);
+            sceneDesc->InvProjection = XMMatrixInverse(nullptr, sceneDesc->Projection);
+
+            sceneDesc->EyeDirection = camera->Look();
+            sceneDesc->EyePosition = camera->Position();
+
+            const scene::Viewport& viewport = camera->GetViewport();
+            sceneDesc->WindowSize = {
+                (uint32_t)viewport.GetSize().x,
+                (uint32_t)viewport.GetSize().y
+            };
+            sceneDesc->ReciprocalWindowSize = {
+                (1.0f / (float)viewport.GetSize().x),
+                (1.0f / (float)viewport.GetSize().y)
+            };
+            sceneDesc->NearFar = { camera->NearZ, camera->FarZ };
+
+            sceneDesc->LightsNum = lightsNum;
+        }
+
+        for (auto entity : _scene->GetRootNodes())
+        {
+            SetupEntity(entity, cache, table);
         }
     }
 } // namespace render

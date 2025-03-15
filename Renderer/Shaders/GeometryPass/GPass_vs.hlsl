@@ -37,7 +37,7 @@ VSOutput main(VSinput IN)
         float4(0.0f, 1.0f, 0.0f, 0.0f),
         float4(0.0f, 0.0f, 1.0f, 0.0f),
         float4(0.0f, 0.0f, 0.0f, 1.0f));
-    if (Model.useSkinning)
+    if (Model.useSkinning == 1)
     {
         boneTransform        = Bones[IN.BoneIds[0]].Transform * IN.BoneWeights[0];
         boneTransform       += Bones[IN.BoneIds[1]].Transform * IN.BoneWeights[1];

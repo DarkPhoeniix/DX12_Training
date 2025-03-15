@@ -2,6 +2,8 @@
 
 #include "DescriptorHeap.h"
 
+#include <shared_mutex>
+
 namespace dx12
 {
     // Class that manages a collection of resources with associated descriptors in a DirectX 12 application.
@@ -85,6 +87,7 @@ namespace dx12
 
         // Private method to retrieve the resource map associated with a specific view type (e.g., RTV, DSV).
         ResourceMap& _GetResourceMap(ResourceViewType viewType);
+        auto GetResource(const ResourceKey& key);
 
         // Resource maps for different types of resources: RTV, DSV, and Buffers.
         ResourceMap _RTVResources;
@@ -98,5 +101,7 @@ namespace dx12
 
         // The total number of descriptors allocated in the table.
         std::uint32_t _numDescriptors;
+
+        mutable std::shared_mutex _mutex;
     };
 } // namespace dx12

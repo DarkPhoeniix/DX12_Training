@@ -3,6 +3,7 @@
 #include "GeometryPass.h"
 
 #include "CommandList.h"
+#include "ResourceBarrier.h"
 
 #include "Scene/Entity/Components/Animation.h"
 #include "Scene/Entity/Components/Armature.h"
@@ -29,55 +30,15 @@ namespace
             scene::Transformation transform = entity->GetGlobalTransform();
             scene::Material* material = entity->GetComponentAs<scene::Material>("Material");
 
-            CacheGPU::DataHandle modelDescHandle = cache->GetOrPlaceResource(entity->GetName(), sizeof(GPUModelDesc));
-            GPUModelDesc* modelDesc = (GPUModelDesc*)modelDescHandle.DataCPU;
-            {
-                modelDesc->Transform = transform.Transform;
-
-                if (mesh)
-                {
-                    modelDesc->HasMesh = 1;
-                }
-
-                if (material)
-                {
-                    dx12::ResourceTable& frameTable = *resourceTable;
-                    std::shared_ptr<dx12::ResourceTable> textureTable = entity->GetSceneCache()->GetTextureTable();
-
-                    frameTable.CopyDescriptor(material->Albedo.get(), dx12::ResourceViewType::SRV, *textureTable);
-                    frameTable.CopyDescriptor(material->NormalMap.get(), dx12::ResourceViewType::SRV, *textureTable);
-                    frameTable.CopyDescriptor(material->Metalness.get(), dx12::ResourceViewType::SRV, *textureTable);
-                    frameTable.CopyDescriptor(material->Roughness.get(), dx12::ResourceViewType::SRV, *textureTable);
-
-                    modelDesc->AlbedoTextureIndex = frameTable.GetResourceIndex(material->Albedo.get(), dx12::ResourceViewType::SRV);
-                    modelDesc->NormalMapTextureIndex = frameTable.GetResourceIndex(material->NormalMap.get(), dx12::ResourceViewType::SRV);
-                    modelDesc->MetalnessTextureIndex = frameTable.GetResourceIndex(material->Metalness.get(), dx12::ResourceViewType::SRV);
-                    modelDesc->RoughnessTextureIndex = frameTable.GetResourceIndex(material->Roughness.get(), dx12::ResourceViewType::SRV);
-                }
-
-                if (armature)
-                {
-                    modelDesc->UseSkinning = true;
-                }
-            }
+            CacheGPU::DataHandle modelDescHandle = cache->GetResourcePlacement(entity->GetName());
             commandList.SetCBV(1, modelDescHandle.DataGPU);
 
             // Update and setup animantion
             if (armature && animation)
             {
-                const std::vector<scene::Bone*>& bones = armature->GetSortedBones();
-
-                CacheGPU::DataHandle bonesDescHandle = cache->GetOrPlaceResource(entity->GetName() + "_bones", sizeof(DirectX::XMMATRIX) * bones.size());
-                DirectX::XMMATRIX* data = (DirectX::XMMATRIX*)bonesDescHandle.DataCPU;
-
-                for (int i = 0; i < bones.size(); ++i)
-                {
-                    data[i] = bones[i]->Offset * bones[i]->GlobalTransform;
-                }
-
+                CacheGPU::DataHandle bonesDescHandle = cache->GetResourcePlacement(entity->GetName() + "_bones");
                 commandList.SetSRV(3, bonesDescHandle.DataGPU);
             }
-
 
             commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
             commandList.SetVertexBuffer(0, mesh->VertexBufferView);
@@ -171,9 +132,13 @@ namespace render
             D3D12_CPU_DESCRIPTOR_HANDLE normalSpecularHandle = context.GetCPUHandle(normalRoughness->GetAsRTV());
             D3D12_CPU_DESCRIPTOR_HANDLE depthHandle = context.GetCPUHandle(depth->GetAsDSV());
 
-            commandList.TransitionBarrier(*albedoMetallic, D3D12_RESOURCE_STATE_RENDER_TARGET);
-            commandList.TransitionBarrier(*normalRoughness, D3D12_RESOURCE_STATE_RENDER_TARGET);
-            commandList.TransitionBarrier(*depth, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+            std::vector<dx12::ResourceBarrier> barriers =
+            {
+                { albedoMetallic.get(),     D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_RENDER_TARGET },
+                { normalRoughness.get(),    D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_RENDER_TARGET },
+                { depth.get(),              D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_DEPTH_WRITE },
+            };
+            commandList.TransitionBarriers(barriers);
 
             commandList.ClearDSV(depthHandle, D3D12_CLEAR_FLAG_DEPTH);
 
@@ -184,7 +149,8 @@ namespace render
 
             DebugInfo::StartStatCollecting(commandList);
 
-            helpers::SetupSceneDataGPU(*_scene, commandList, &context.GetCache());
+            CacheGPU::DataHandle sceneDataHandle = context.GetCache().GetResourcePlacement("SceneCB");
+            commandList.SetCBV(0, sceneDataHandle.DataGPU);
 
             // Setup textures
             commandList.SetDescriptorHeaps({ context.GetResourceTable().GetDescriptorHeap(dx12::ResourceViewType::SRV).GetDXDescriptorHeap().Get() });
@@ -197,9 +163,13 @@ namespace render
 
             DebugInfo::EndStatCollecting(commandList);
 
-            commandList.TransitionBarrier(*albedoMetallic, D3D12_RESOURCE_STATE_COMMON);
-            commandList.TransitionBarrier(*normalRoughness, D3D12_RESOURCE_STATE_COMMON);
-            commandList.TransitionBarrier(*depth, D3D12_RESOURCE_STATE_COMMON);
+            barriers =
+            {
+                { albedoMetallic.get(),    D3D12_RESOURCE_STATE_RENDER_TARGET,  D3D12_RESOURCE_STATE_COMMON },
+                { normalRoughness.get(),   D3D12_RESOURCE_STATE_RENDER_TARGET,  D3D12_RESOURCE_STATE_COMMON },
+                { depth.get(),             D3D12_RESOURCE_STATE_DEPTH_WRITE,    D3D12_RESOURCE_STATE_COMMON },
+            };
+            commandList.TransitionBarriers(barriers);
         }
         PIXEndEvent(commandList.GetDXCommandList().Get());
 

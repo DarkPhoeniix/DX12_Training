@@ -3,6 +3,7 @@
 #include "ShadowCullPass.h"
 
 #include "CommandList.h"
+#include "ResourceBarrier.h"
 
 #include "Scene/Entity/Components/Armature.h"
 #include "Scene/Entity/Components/Light.h"
@@ -82,11 +83,11 @@ namespace
 
                 if (armature)
                 {
-                    modelDesc->UseSkinning = true;
+                    modelDesc->UseSkinning = 1;
                 }
             }
 
-            // Update and setup animantion
+            // Update and setup animation
             if (armature)
             {
                 const std::vector<scene::Bone*>& bones = armature->GetSortedBones();
@@ -171,7 +172,9 @@ namespace render
         commandList.SetPipelineState(_cullShadowsPipeline);
         commandList.SetDescriptorHeaps({ context.GetResourceTable().GetDescriptorHeap(dx12::ResourceViewType::SRV).GetDXDescriptorHeap().Get() });
 
-        helpers::SetupSceneDataGPU(*_scene, commandList, &context.GetCache());
+        CacheGPU::DataHandle sceneDataHandle = context.GetCache().GetResourcePlacement("SceneCB");
+        commandList.SetCBV(0, sceneDataHandle.DataGPU);
+
         helpers::SetupLightDataGPU(*_scene, commandList, &context.GetCache(), context.GetResourceTable());
 
         CacheGPU::DataHandle sceneAddress = context.GetCache().GetResourcePlacement("SceneCB");
@@ -202,7 +205,11 @@ namespace render
                 SetupEntity(meshes[j], commandList, &context.GetCache(), &context.GetResourceTable());
 
                 CacheGPU::DataHandle modelAddress = context.GetCache().GetResourcePlacement(meshes[j]->GetName());
-                CacheGPU::DataHandle bonesAddress = context.GetCache().GetResourcePlacement(meshes[j]->GetName() + "_bones");
+                CacheGPU::DataHandle bonesAddress = modelAddress;
+                if (scene::Armature* armature = meshes[j]->GetComponentAs<scene::Armature>("Armature"))
+                {
+                    bonesAddress = context.GetCache().GetResourcePlacement(meshes[j]->GetName() + "_bones");
+                }
 
                 IndirectCommand command;
 
@@ -261,14 +268,22 @@ namespace render
             }
 
             // Transition resources
-            commandList.TransitionBarrier(*commandBuffer, D3D12_RESOURCE_STATE_COPY_DEST);
+            std::vector<dx12::ResourceBarrier> barriers =
+            {
+                { commandBuffer.get(), D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT,    D3D12_RESOURCE_STATE_COPY_DEST }
+            };
+            commandList.TransitionBarriers(barriers);
 
             // Reset commands counter
             std::uint32_t counterBufferOffset = commandBuffer->GetResourceDescription().GetSize().x - sizeof(UINT);
             commandList.CopyBufferRegion(_counterReset, *commandBuffer, sizeof(UINT), 0, counterBufferOffset);
 
             // Transition resources
-            commandList.TransitionBarrier(*commandBuffer, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+            barriers =
+            {
+                { commandBuffer.get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_UNORDERED_ACCESS }
+            };
+            commandList.TransitionBarriers(barriers);
 
             D3D12_GPU_DESCRIPTOR_HANDLE cbHandle = context.GetGPUHandle(commandBuffer->GetAsUAV());
 

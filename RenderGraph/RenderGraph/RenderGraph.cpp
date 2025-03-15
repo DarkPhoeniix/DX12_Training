@@ -7,8 +7,37 @@
 #include "Render/Frame/Frame.h"
 #include "Render/Frame/TaskGPU.h"
 
+namespace
+{
+    static constexpr std::uint32_t RENDER_THREADS_NUM = 4;
+}
+
 namespace rg
 {
+    RenderGraph::RenderGraph()
+        : _frame(nullptr)
+#ifdef RG_MULTITHREADED
+        , _workerManager(RENDER_THREADS_NUM)
+#endif
+    {
+    }
+
+    CacheGPU& RenderGraph::GetCache()
+    {
+        return _context.GetCache();
+    }
+
+    dx12::ResourceTable& RenderGraph::GetResourceTable()
+    {
+        return _context.GetResourceTable();
+    }
+
+    void RenderGraph::SetFrame(Frame& frame)
+    {
+        _frame = &frame;
+        _context._currentFrameIndex = frame.Index;
+    }
+
     void RenderGraph::Reset()
     {
         _context._mapNameToId.clear();
@@ -18,9 +47,13 @@ namespace rg
         _sortedPasses.clear();
 
         for (auto& cache : _context._cache)
+        {
             cache.Clear();
+        }
         for (auto& table : _context._resourceTable)
+        {
             table.Reset();
+        }
     }
 
     void RenderGraph::Compile()
@@ -31,30 +64,26 @@ namespace rg
         TopologicalSort();
     }
 
-    void RenderGraph::Execute(Frame& frame)
+    void RenderGraph::Execute()
     {
-        _context._cache[frame.Index].Clear();
-        _context._resourceTable[frame.Index].Reset();
         _GPUTasks.clear();
         _GPUTasks.resize(_passes.size(), nullptr);
 
-        _context._currentFrameIndex = frame.Index;
-
         for (auto passIndex : _sortedPasses)
         {
-            std::shared_ptr<IRenderPass>& pass = _passes[passIndex];
+            std::shared_ptr<IRenderPass> pass = _passes[passIndex];
 
             TaskGPU* task = nullptr;
             switch (pass->GetType())
             {
             case RenderPassType::Graphics:
-                task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT);
+                task = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT);
                 break;
             case RenderPassType::Compute:
-                task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE);
+                task = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE);
                 break;
             case RenderPassType::Copy:
-                task = frame.CreateTask(D3D12_COMMAND_LIST_TYPE_COPY);
+                task = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_COPY);
                 break;
             defualt:
                 FAIL("Undefined render pass type");
@@ -64,11 +93,20 @@ namespace rg
             if (task)
             {
                 task->SetName(pass->_name);
+
+#ifdef RG_MULTITHREADED
+                _workerManager.Submit({ pass.get(), &_context, task});
+#else
                 pass->Execute(_context, *task);
+#endif
             }
 
             _GPUTasks[passIndex] = task;
         }
+
+#ifdef RG_MULTITHREADED
+        _workerManager.Wait();
+#endif
 
         for (auto passIndex : _sortedPasses)
         {
