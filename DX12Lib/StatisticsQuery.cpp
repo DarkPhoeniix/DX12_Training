@@ -23,7 +23,7 @@ namespace dx12
             statisticsResourceDesc.SetResourceType(ResourceType::Buffer | ResourceType::ReadBack);
             _statisticsResource.SetResourceDescription(statisticsResourceDesc);
         }
-        _statisticsResource.CreateCommitedResource();
+        _statisticsResource.CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_DEST);
     }
 
     void StatisticsQuery::BeginQuery(CommandList& commandList)
