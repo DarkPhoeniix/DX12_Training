@@ -154,6 +154,13 @@ namespace core
             PostQuitMessage(0);
         }
         break;
+        case WM_PIPELINE_CHANGED:
+        {
+            for (events::IWindowEventListener* listener : _eventListeners)
+            {
+                listener->OnPipelineChanged();
+            }
+        }
         default:
             return DefWindowProcW(hwnd, message, wParam, lParam);
         }

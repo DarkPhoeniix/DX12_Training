@@ -21,6 +21,7 @@
 
 #include "Render/Helpers/GPUStructs.h"
 
+#include "Render/RenderSettings.h"
 #include "Render/Frame/TaskGPU.h"
 #include "Render/Passes/Debug/DebugArmaturePass.h"
 #include "Render/Passes/Debug/DebugBoundingVolumePass.h"
@@ -354,16 +355,11 @@ namespace render
             _isMinimized = false;
         }
 
-        Frame* current = _currentFrame;
-        do
-        {
-            current->WaitCPU();
-            current->ResetGPU();
-            current = current->Next;
-        } while (current != _currentFrame);
+        WaitAllFrames();
 
         DirectX::XMUINT2 windowSize = { (uint32_t)e.width, (uint32_t)e.height };
 
+        Frame* current = _currentFrame;
         do
         {
             current->Resize(windowSize);
@@ -375,6 +371,23 @@ namespace render
         _cameraComponent->Update();
 
         SetupRenderPipeline();
+    }
+
+    void DXRenderer::OnPipelineChanged()
+    {
+        WaitAllFrames();
+        SetupRenderPipeline();
+    }
+
+    void DXRenderer::WaitAllFrames()
+    {
+        Frame* current = _currentFrame;
+        do
+        {
+            current->WaitCPU();
+            current->ResetGPU();
+            current = current->Next;
+        } while (current != _currentFrame);
     }
 
     void DXRenderer::SetupRenderPipeline()
@@ -392,9 +405,18 @@ namespace render
             _renderGraph.AddPass(std::make_shared<LuminanceHistogramPass>(_scene, _cameraComponent.get()));
             _renderGraph.AddPass(std::make_shared<AverageLuminancePass>(_scene, _cameraComponent.get()));
             _renderGraph.AddPass(std::make_shared<ToneMappingPass>(_scene, _cameraComponent.get()));
-            //_renderGraph.AddPass(std::make_shared<FXAAPass>(_scene, _cameraComponent.get()));
-            //_renderGraph.AddPass(std::make_shared<DebugBoundingVolumePass>(_scene, _cameraComponent.get()));
-            //_renderGraph.AddPass(std::make_shared<DebugArmaturePass>(_scene, _cameraComponent.get()));
+            if (RenderSettings::UseFXAA())
+            {
+                _renderGraph.AddPass(std::make_shared<FXAAPass>(_scene, _cameraComponent.get()));
+            }
+            if (RenderSettings::RenderDebugVolumes())
+            {
+                _renderGraph.AddPass(std::make_shared<DebugBoundingVolumePass>(_scene, _cameraComponent.get()));
+            }
+            if (RenderSettings::RenderDebugArmature())
+            {
+                _renderGraph.AddPass(std::make_shared<DebugArmaturePass>(_scene, _cameraComponent.get()));
+            }
 
             _renderGraph.Compile();
         }

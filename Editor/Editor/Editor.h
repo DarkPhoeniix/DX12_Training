@@ -55,14 +55,19 @@ namespace gui
         void SetSelectedEntity(std::shared_ptr<scene::Entity> entity);
         std::shared_ptr<scene::Entity> GetSelectedEntity();
 
+        HWND GetWindowHandle() const;
+
         // Inherited via IWindowEventListener
         void OnResize(core::events::ResizeEvent& e) override;
+        void OnPipelineChanged() override;
 
     protected:
         std::shared_ptr<Editor> GetPtr();
 
     private:
         void CreateWidgets();
+
+        HWND _windowHandle;
 
         std::shared_ptr<scene::Scene> _scene;
         scene::Viewport* _activeViewport;

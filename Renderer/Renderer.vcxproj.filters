@@ -81,6 +81,7 @@
     <ClCompile Include="Render\Passes\ShadowCullPass.cpp" />
     <ClCompile Include="Render\Passes\ShadowDrawPass.cpp" />
     <ClCompile Include="Render\Passes\ShadowClearPass.cpp" />
+    <ClCompile Include="Render\RenderSettings.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Render\Helpers\DrawHelpers.h" />
@@ -145,6 +146,7 @@
     <ClInclude Include="Render\Passes\ShadowCullPass.h" />
     <ClInclude Include="Render\Passes\ShadowDrawPass.h" />
     <ClInclude Include="Render\Passes\ShadowClearPass.h" />
+    <ClInclude Include="Render\RenderSettings.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="PipelineDescriptions\DebugConePipeline.tech" />

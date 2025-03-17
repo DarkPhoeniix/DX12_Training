@@ -35,8 +35,10 @@ namespace render
         void OnMouseButtonReleased(core::events::MouseButtonEvent& e) override;
         void OnMouseScroll(core::events::MouseScrollEvent& e) override {}
         void OnResize(core::events::ResizeEvent& e) override;
+        void OnPipelineChanged() override;
 
     private:
+        void WaitAllFrames();
         void SetupRenderPipeline();
         void UploadSceneCache(CacheGPU& cache, dx12::ResourceTable& table);
 

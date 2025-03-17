@@ -8,6 +8,8 @@
 #include "events/MouseScrollEvent.h"
 #include "events/ResizeEvent.h"
 
+#define WM_PIPELINE_CHANGED (WM_USER + 1)
+
 class Frame;
 
 namespace core
@@ -26,6 +28,7 @@ namespace core
             virtual void OnMouseButtonReleased([[maybe_unused]] MouseButtonEvent& e) {}
             virtual void OnMouseScroll([[maybe_unused]] MouseScrollEvent& e) {}
             virtual void OnResize([[maybe_unused]] ResizeEvent& e) {}
+            virtual void OnPipelineChanged() {}
         };
     } // namespace events
 } // namespace core
