@@ -30,7 +30,8 @@ LRESULT GUI_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 namespace gui
 {
     Editor::Editor(HWND windowHandle)
-        : _scene(nullptr)
+        : _windowHandle(windowHandle)
+        , _scene(nullptr)
         , _selectedEntity(nullptr)
     {
         dx12::DescriptorHeapDescription desc;
@@ -258,7 +259,17 @@ namespace gui
         return _selectedEntity;
     }
 
+    HWND Editor::GetWindowHandle() const
+    {
+        return _windowHandle;
+    }
+
     void Editor::OnResize(core::events::ResizeEvent& e)
+    {
+        AddGUIRenderPass();
+    }
+
+    void Editor::OnPipelineChanged()
     {
         AddGUIRenderPass();
     }

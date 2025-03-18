@@ -2,6 +2,7 @@
 
 #include "DebugInfoWidget.h"
 
+#include "Render/RenderSettings.h"
 #include "Utility/DebugInfo.h"
 
 namespace gui
@@ -48,24 +49,35 @@ namespace gui
             if (ImGui::CollapsingHeader("Pipeline statistics"))
             {
                 D3D12_QUERY_DATA_PIPELINE_STATISTICS stats = DebugInfo::GetPipelineStatisctics();
+                ImGui::Text("* Geometry pass only");
                 ImGui::Text("Primitives: %i", stats.IAPrimitives);
-                ImGui::Text("VS invocs: %i", stats.VSInvocations);
-                ImGui::Text("GS invocs: %i", stats.GSInvocations);
-                ImGui::Text("PS invocs: %i", stats.PSInvocations);
+                ImGui::Text("VS invocations: %i", stats.VSInvocations);
+                ImGui::Text("GS invocations: %i", stats.GSInvocations);
+                ImGui::Text("PS invocations: %i", stats.PSInvocations);
             }
         
-            if (ImGui::CollapsingHeader("Inputs"))
+            if (ImGui::CollapsingHeader("Custom render passes"))
             {
-                ImGuiIO& io = ImGui::GetIO();
-                if (ImGui::IsMousePosValid())
+                bool pendingUpdate = false;
+
+                if (ImGui::Checkbox("Use FXAA", &RenderSettings::UseFXAA()))
                 {
-                    ImGui::Text("Mouse pos: (%g, %g)", io.MousePos.x, io.MousePos.y);
+                    pendingUpdate = true;
                 }
-                else
+                if (ImGui::Checkbox("Render debug volumes", &RenderSettings::RenderDebugVolumes()))
                 {
-                    ImGui::Text("Mouse pos: <INVALID>");
+                    pendingUpdate = true;
                 }
-                ImGui::Text("Mouse delta: (%g, %g)", io.MouseDelta.x, io.MouseDelta.y);
+                if (ImGui::Checkbox("Render debug armature", &RenderSettings::RenderDebugArmature()))
+                {
+                    pendingUpdate = true;
+                }
+
+                if (pendingUpdate)
+                {
+                    // TODO: It's the kinda lousy solution... but it works for now
+                    PostMessage(_editor->GetWindowHandle(), WM_PIPELINE_CHANGED, NULL, NULL);
+                }
             }
 
             if (ImGui::CollapsingHeader("Adapter"))
