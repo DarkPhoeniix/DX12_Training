@@ -1,0 +1,7 @@
+{
+	"Type": "FXAA_Pass2V",
+
+	"IsGraphicsPipeline": false,
+
+	"CS": "Shaders\\FXAA_Pass2V_Debug_cs.cso"
+}

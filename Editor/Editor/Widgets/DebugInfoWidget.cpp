@@ -64,6 +64,10 @@ namespace gui
                 {
                     pendingUpdate = true;
                 }
+                if (ImGui::Checkbox("Debug FXAA", &RenderSettings::DebugFXAA()))
+                {
+                    pendingUpdate = true;
+                }
                 if (ImGui::Checkbox("Render debug volumes", &RenderSettings::RenderDebugVolumes()))
                 {
                     pendingUpdate = true;

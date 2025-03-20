@@ -3,7 +3,7 @@
 // https://blog.simonrodriguez.fr/articles/2016/07/implementing_fxaa.html
 // https://gist.github.com/kosua20/0c506b81b3812ac900048059d2383126
 
-#include "FXAA_rootsig.hlsli"
+#include "FXAA_rootsig_old.hlsli"
 
 #include "../Common.hlsli"
 #include "FXAA_helpers.hlsli"

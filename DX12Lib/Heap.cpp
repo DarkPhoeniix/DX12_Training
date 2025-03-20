@@ -45,6 +45,7 @@ namespace dx12
         {
             offset = _resourceOffset;
         }
+        ASSERT((offset + resource.GetAllocationInfo().SizeInBytes) < _description.GetSize(), "Heap is full");
 
         resource.CreatePlacedResource(_heap, offset, state);
 

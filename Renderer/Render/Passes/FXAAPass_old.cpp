@@ -1,0 +1,95 @@
+#include "RendererPCH.h"
+
+#include "FXAAPass_old.h"
+
+#include "CommandList.h"
+
+#include "Scene/Entity/Components/Camera.h"
+#include "Render/Helpers/RenderHelpers.h"
+#include "Render/Passes/PassResources.h"
+
+#include "RenderGraph/RenderPassBuilder.h"
+#include "RenderGraph/RenderContext.h"
+
+#include "ResourceBarrier.h"
+
+namespace render
+{
+    FXAAPass_old::FXAAPass_old(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
+        : RenderPass<FXAAPass_oldData>("FXAA Pass", rg::RenderPassType::Compute)
+        , _scene(scene)
+        , _camera(camera)
+    {
+        _FXAAPipeline.Parse("PipelineDescriptions\\FXAAPipeline.tech");
+    }
+
+    void FXAAPass_old::Setup(rg::RenderPassBuilder& builder)
+    {
+        _data.Target = builder.WriteResource(TARGET);
+
+        dx12::ResourceDescription targetDesc;
+        {
+            targetDesc.SetSize(_camera->GetViewport().GetSize());
+            targetDesc.SetDimension(D3D12_RESOURCE_DIMENSION_TEXTURE2D);
+            targetDesc.SetFormat(DXGI_FORMAT_R8G8B8A8_UNORM);
+            targetDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::Unordered);
+        }
+        _data.FXAATarget = builder.CreateResource("FXAATarget", targetDesc);
+    }
+
+    void FXAAPass_old::Execute(rg::RenderContext& context, TaskGPU& task)
+    {
+        dx12::CommandList& commandList = *task.GetCommandLists().front();
+        commandList.SetName("FXAA command list");
+
+        PIXBeginEvent(commandList.GetDXCommandList().Get(), 5, "FXAA Pass");
+        {
+            std::shared_ptr<dx12::Resource> target = context.GetResource(_data.Target);
+            std::shared_ptr<dx12::Resource> fxaa = context.GetResource(_data.FXAATarget);
+
+            D3D12_GPU_DESCRIPTOR_HANDLE targetHandle = context.GetGPUHandle(target->GetAsSRV());
+            D3D12_GPU_DESCRIPTOR_HANDLE fxaaHandle = context.GetGPUHandle(fxaa->GetAsUAV());
+
+            std::vector<dx12::ResourceBarrier> barriers =
+            {
+                { target.get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE},
+                { fxaa.get(),   D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS}
+            };
+            commandList.TransitionBarriers(barriers);
+
+            commandList.SetPipelineState(_FXAAPipeline);
+
+            CacheGPU::DataHandle sceneDataHandle = context.GetCache().GetResourcePlacement("SceneCB");
+            commandList.SetCBV(0, sceneDataHandle.DataGPU);
+
+            commandList.SetDescriptorHeaps({ context.GetResourceTable().GetDescriptorHeap(dx12::ResourceViewType::SRV).GetDXDescriptorHeap().Get() });
+            commandList.SetDescriptorTable(3, targetHandle);
+            commandList.SetDescriptorTable(4, fxaaHandle);
+
+            DirectX::XMUINT2 viewportSize = _camera->GetViewport().GetSize();
+            int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 8.0f);
+            int yThreadGroups = (uint32_t)std::ceilf(viewportSize.y / 8.0f);
+
+            commandList.Dispatch(xThreadGroups, yThreadGroups);
+
+            barriers =
+            {
+                { target.get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST},
+                { fxaa.get(),   D3D12_RESOURCE_STATE_UNORDERED_ACCESS,          D3D12_RESOURCE_STATE_COPY_SOURCE}
+            };
+            commandList.TransitionBarriers(barriers);
+
+            commandList.CopyResource(*fxaa, *target);
+
+            barriers =
+            {
+                { target.get(), D3D12_RESOURCE_STATE_COPY_DEST,   D3D12_RESOURCE_STATE_COMMON },
+                { fxaa.get(),   D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COMMON }
+            };
+            commandList.TransitionBarriers(barriers);
+        }
+        PIXEndEvent(commandList.GetDXCommandList().Get());
+
+        commandList.Close();
+    }
+} // namespace render

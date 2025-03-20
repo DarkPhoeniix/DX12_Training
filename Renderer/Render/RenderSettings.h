@@ -9,6 +9,7 @@ public:
     static bool& RenderDebugVolumes();
     static bool& RenderDebugArmature();
     static bool& UseFXAA();
+    static bool& DebugFXAA();
 
 private:
     RenderSettings();
@@ -19,4 +20,5 @@ private:
     bool _renderDebugVolumes;
     bool _renderDebugArmature;
     bool _useFXAA;
+    bool _debugFXAA;
 };
