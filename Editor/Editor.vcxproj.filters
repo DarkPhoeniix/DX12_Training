@@ -1,83 +1,73 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    <Filter Include="Editor">
+      <UniqueIdentifier>{464a07a9-d856-4a3a-aa37-ae7459f1aa3e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{c9e9ed6c-1398-4773-921e-04ffba51bf8f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    <Filter Include="Editor\Widgets">
+      <UniqueIdentifier>{c3af7902-a268-4f2b-b9f5-eaffc510ed52}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Editor\Render">
+      <UniqueIdentifier>{92b64790-38c2-4f37-9131-961ae70dd14e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="EditorPCH.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Editor\Editor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Editor\Widgets\IWidget.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Editor\Widgets\SceneTreeWidget.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Editor\Widgets\DebugInfoWidget.h">
-      <Filter>Header Files</Filter>
+      <Filter>Editor\Widgets</Filter>
     </ClInclude>
     <ClInclude Include="Editor\Widgets\EntityComponentsWidget.h">
-      <Filter>Header Files</Filter>
+      <Filter>Editor\Widgets</Filter>
     </ClInclude>
-    <ClInclude Include="Application.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Editor\Widgets\SceneTreeWidget.h">
+      <Filter>Editor\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="Editor\Widgets\IWidget.h">
+      <Filter>Editor\Widgets</Filter>
     </ClInclude>
     <ClInclude Include="Editor\Render\GUIPass.h">
-      <Filter>Header Files</Filter>
+      <Filter>Editor\Render</Filter>
     </ClInclude>
+    <ClInclude Include="Editor\Editor.h">
+      <Filter>Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorPCH.h" />
+    <ClInclude Include="Application.h" />
     <ClInclude Include="Resources\resource1.h">
-      <Filter>Header Files</Filter>
+      <Filter>Resources</Filter>
     </ClInclude>
     <ClInclude Include="Resources\Resources.h">
-      <Filter>Header Files</Filter>
+      <Filter>Resources</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="EditorPCH.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Editor\Editor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Editor\Widgets\IWidget.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Editor\Widgets\SceneTreeWidget.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Editor\Widgets\DebugInfoWidget.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Editor\Widgets</Filter>
     </ClCompile>
     <ClCompile Include="Editor\Widgets\EntityComponentsWidget.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Editor\Widgets</Filter>
     </ClCompile>
-    <ClCompile Include="Main.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Editor\Widgets\SceneTreeWidget.cpp">
+      <Filter>Editor\Widgets</Filter>
     </ClCompile>
-    <ClCompile Include="Application.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Editor\Widgets\IWidget.cpp">
+      <Filter>Editor\Widgets</Filter>
     </ClCompile>
     <ClCompile Include="Editor\Render\GUIPass.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Editor\Render</Filter>
     </ClCompile>
+    <ClCompile Include="Editor\Editor.cpp">
+      <Filter>Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="Application.cpp" />
+    <ClCompile Include="EditorPCH.cpp" />
+    <ClCompile Include="Main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resources\Resource.rc">
-      <Filter>Resource Files</Filter>
+      <Filter>Resources</Filter>
     </ResourceCompile>
   </ItemGroup>
 </Project>

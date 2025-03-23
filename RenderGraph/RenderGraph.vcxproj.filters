@@ -1,74 +1,64 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    <Filter Include="RenderGraph">
+      <UniqueIdentifier>{655a79d2-83a4-4a7a-800d-20d91f7a03d0}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    <Filter Include="RenderGraph\Helpers">
+      <UniqueIdentifier>{eb84723e-d9b7-4ad4-a5d9-700194ae833a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="RenderGraphPCH.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RenderGraph\RenderPass.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="RenderGraph\RenderContext.h">
-      <Filter>Header Files</Filter>
+      <Filter>RenderGraph</Filter>
     </ClInclude>
     <ClInclude Include="RenderGraph\RenderGraph.h">
-      <Filter>Header Files</Filter>
+      <Filter>RenderGraph</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderGraph\RenderPass.h">
+      <Filter>RenderGraph</Filter>
     </ClInclude>
     <ClInclude Include="RenderGraph\RenderPassBuilder.h">
-      <Filter>Header Files</Filter>
+      <Filter>RenderGraph</Filter>
     </ClInclude>
     <ClInclude Include="RenderGraph\Helpers\PassWorker.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RenderGraph\Helpers\WorkQueue.h">
-      <Filter>Header Files</Filter>
+      <Filter>RenderGraph\Helpers</Filter>
     </ClInclude>
     <ClInclude Include="RenderGraph\Helpers\PassWorkerManager.h">
-      <Filter>Header Files</Filter>
+      <Filter>RenderGraph\Helpers</Filter>
     </ClInclude>
+    <ClInclude Include="RenderGraph\Helpers\WorkQueue.h">
+      <Filter>RenderGraph\Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderGraphPCH.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="RenderGraphPCH.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderGraph\RenderPass.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="RenderGraph\RenderContext.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>RenderGraph</Filter>
     </ClCompile>
     <ClCompile Include="RenderGraph\RenderGraph.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>RenderGraph</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderGraph\RenderPass.cpp">
+      <Filter>RenderGraph</Filter>
     </ClCompile>
     <ClCompile Include="RenderGraph\RenderPassBuilder.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>RenderGraph</Filter>
     </ClCompile>
     <ClCompile Include="RenderGraph\Helpers\PassWorker.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderGraph\Helpers\WorkQueue.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>RenderGraph\Helpers</Filter>
     </ClCompile>
     <ClCompile Include="RenderGraph\Helpers\PassWorkerManager.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>RenderGraph\Helpers</Filter>
     </ClCompile>
+    <ClCompile Include="RenderGraph\Helpers\WorkQueue.cpp">
+      <Filter>RenderGraph\Helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderGraphPCH.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="RenderGraph\RenderPass.inl">
-      <Filter>Header Files</Filter>
+      <Filter>RenderGraph</Filter>
     </None>
   </ItemGroup>
 </Project>
