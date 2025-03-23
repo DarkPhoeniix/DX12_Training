@@ -20,8 +20,8 @@ namespace
     {
         float xRcpTextureSize;
         float yRcpTextureSize;
-        float ContrastThreshold = 0.04f; // default = 0.2, lower is more expensive
-        float SubpixelRemoval = 0.85f; // default = 0.75, lower blurs less
+        float ContrastThreshold = 0.1f; // default = 0.2, lower is more expensive
+        float SubpixelRemoval = 0.75f; // default = 0.75, lower blurs less
         std::uint32_t LastQueueIndex;
         std::uint32_t xStartPixel;
         std::uint32_t yStartPixel;
@@ -215,12 +215,9 @@ namespace render
 
                     // Pass 1 end
 
-                    // Pass ResolveWork begin
+                    commandList.UAVBarrier(workCounters);
 
-                    D3D12_RESOURCE_BARRIER bars2[1] = {
-                        CD3DX12_RESOURCE_BARRIER::UAV(workCounters->GetDXResource().Get())
-                    };
-                    commandList.GetDXCommandList()->ResourceBarrier(1, bars2);
+                    // Pass ResolveWork begin
 
                     commandList.SetPipelineState(_FXAA_ResolveWork_Pipeline);
 
@@ -233,12 +230,9 @@ namespace render
 
                     // Pass ResolveWork end
 
-                    // Pass 2 begin
+                    commandList.UAVBarrier(workCounters);
 
-                    D3D12_RESOURCE_BARRIER bars[1] = {
-                        CD3DX12_RESOURCE_BARRIER::UAV(workCounters->GetDXResource().Get())
-                    };
-                    commandList.GetDXCommandList()->ResourceBarrier(1, bars);
+                    // Pass 2 begin
 
                     barriers =
                     {
@@ -261,12 +255,9 @@ namespace render
                     commandList.SetPipelineState(_FXAA_Pass2V_Pipeline);
                     commandList.ExecuteIndirect(_cmdSignature, 1, *indirectArgs, nullptr, 12);
 
-                    D3D12_RESOURCE_BARRIER bars1[1] = {
-                        CD3DX12_RESOURCE_BARRIER::UAV(target->GetDXResource().Get())
-                    };
-                    commandList.GetDXCommandList()->ResourceBarrier(1, bars1);
-
                     // Pass 2 end
+
+                    commandList.UAVBarrier(target);
                 }
             }
 

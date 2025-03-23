@@ -60,6 +60,8 @@ namespace dx12
         void TransitionBarrier(Resource& resource, D3D12_RESOURCE_STATES stateAfter, std::uint32_t subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
         // Sets an aliasing barrier (for aliasing resource states between different resource usages).
         void AliasingBarrier(const std::shared_ptr<Resource> & = nullptr, const std::shared_ptr<Resource>& afterResource = nullptr);
+        // Sets an UAV barrier for the specified resource (all UAV accesses must complete before any future UAV accesses can begin)
+        void UAVBarrier(std::shared_ptr<Resource> resource);
 
         // Copies a resource from a source to a destination.
         void CopyResource(Resource& sourceResource, Resource& destinationResource);

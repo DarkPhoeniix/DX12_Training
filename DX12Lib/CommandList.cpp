@@ -152,6 +152,12 @@ namespace dx12
         _commandList->ResourceBarrier(1, &barrier);
     }
 
+    void CommandList::UAVBarrier(std::shared_ptr<Resource> resource)
+    {
+        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::UAV(resource->GetDXResource().Get());
+        _commandList->ResourceBarrier(1, &barrier);
+    }
+
     void CommandList::CopyResource(Resource& sourceResource, Resource& destinationResource)
     {
         _commandList->CopyResource(destinationResource.GetDXResource().Get(), sourceResource.GetDXResource().Get());
