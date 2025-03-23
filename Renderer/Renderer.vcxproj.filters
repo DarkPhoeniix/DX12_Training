@@ -157,7 +157,6 @@
   <ItemGroup>
     <None Include="PipelineDescriptions\DebugConePipeline.tech" />
     <None Include="PipelineDescriptions\DebugSpherePipeline.tech" />
-    <None Include="PipelineDescriptions\FXAAPipeline.tech" />
     <None Include="PipelineDescriptions\PCFShadows.blend" />
     <None Include="PipelineDescriptions\Shadow_PointLight.tech" />
     <None Include="PipelineDescriptions\Shadow_SpotLight.tech" />

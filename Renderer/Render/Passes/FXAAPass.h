@@ -16,7 +16,6 @@ namespace render
         rg::ResourceId ColorQueue;
         rg::ResourceId LumaBuffer;
         rg::ResourceId IndirectParams;
-        rg::ResourceId FXAATarget;
     };
 
     class FXAAPass : public rg::RenderPass<FXAAPassData>
