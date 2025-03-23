@@ -1,0 +1,6 @@
+{
+    "Albedo": "vase_hanging.dds",
+    "Metalness": "vase_hanging_metalness.dds",
+    "Roughness": "vase_hanging_roughness.dds",
+    "Normal": "vase_hanging_nmap.dds"
+}

@@ -1,0 +1,6 @@
+{
+    "Albedo": "vase_dif.dds",
+    "Metalness": "vase_metalness.dds",
+    "Roughness": "vase_roughness.dds",
+    "Normal": "vase_nmap.dds"
+}

@@ -1,0 +1,6 @@
+{
+    "Albedo": "sponza_arch_diff.dds",
+    "Metalness": "arch_metalness.dds",
+    "Roughness": "arch_roughness.dds",
+    "Normal": "arch_nmap.dds"
+}

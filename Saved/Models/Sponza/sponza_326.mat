@@ -1,0 +1,6 @@
+{
+    "Albedo": "sponza_curtain_blue_diff.dds",
+    "Metalness": "fabric_g_metalness.dds",
+    "Roughness": "fabric_g_roughness.dds",
+    "Normal": "fabric_g_nmap.dds"
+}

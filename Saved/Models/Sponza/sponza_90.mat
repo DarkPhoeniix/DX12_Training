@@ -1,0 +1,6 @@
+{
+    "Albedo": "sponza_column_c_diff.dds",
+    "Metalness": "column_c_metalness.dds",
+    "Roughness": "column_c_roughness.dds",
+    "Normal": "column_c_nmap.dds"
+}

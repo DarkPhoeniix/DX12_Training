@@ -1,0 +1,6 @@
+{
+    "Albedo": "sponza_thorn_diff.dds",
+    "Metalness": "leaf_metalness.dds",
+    "Roughness": "leaf_roughness.dds",
+    "Normal": "leaf_nmap.dds"
+}

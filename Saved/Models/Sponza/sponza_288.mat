@@ -1,0 +1,6 @@
+{
+    "Albedo": "sponza_fabric_diff.dds",
+    "Metalness": "fabric_a_metalness.dds",
+    "Roughness": "fabric_a_roughness.dds",
+    "Normal": "fabric_a_nmap.dds"
+}

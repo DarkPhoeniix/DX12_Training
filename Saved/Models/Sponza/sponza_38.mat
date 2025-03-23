@@ -1,0 +1,6 @@
+{
+    "Albedo": "sponza_ceiling_a_diff.dds",
+    "Metalness": "ceiling_metalness.dds",
+    "Roughness": "ceiling_roughness.dds",
+    "Normal": "ceiling_nmap.dds"
+}

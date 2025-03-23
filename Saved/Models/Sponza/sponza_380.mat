@@ -1,0 +1,6 @@
+{
+    "Albedo": "sponza_roof_diff.dds",
+    "Metalness": "roof_metalness.dds",
+    "Roughness": "roof_roughness.dds",
+    "Normal": "roof_nmap.dds"
+}

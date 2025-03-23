@@ -1,0 +1,6 @@
+{
+    "Albedo": "sponza_flagpole_diff.dds",
+    "Metalness": "flagpole_metalness.dds",
+    "Roughness": "flagpole_roughness.dds",
+    "Normal": "flagpole_nmap.dds"
+}

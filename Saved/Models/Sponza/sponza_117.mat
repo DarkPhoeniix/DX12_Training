@@ -1,0 +1,6 @@
+{
+    "Albedo": "sponza_floor_a_diff.dds",
+    "Metalness": "floor_metalness.dds",
+    "Roughness": "floor_roughness.dds",
+    "Normal": "floor_nmap.dds"
+}

@@ -181,7 +181,7 @@ namespace render
             dx12::CommandList& commandList = *loadTask->GetCommandLists().front();
 
             _scene = std::make_shared<scene::Scene>();
-            _scene->LoadScene("Dragon\\DragonScene.scene", commandList);
+            _scene->LoadScene("Sponza\\Sponza.scene", commandList);
             _uploadProcessor.Process(*_scene, commandList, nullptr);
 
             _scene->AddRootNode(cameraEntity);
