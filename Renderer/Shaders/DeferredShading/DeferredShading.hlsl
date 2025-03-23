@@ -51,32 +51,17 @@ void SetLightParams(in LightDesc light, inout Surface surface)
 
 float CalculateShadowAttenuation_PCF3x3(in LightDesc light, in Surface surface)
 {
-    row_major matrix VP = light.ViewProj[0];
-    float4 surfacePos = mul(surface.Position, VP);
-    surfacePos /= surfacePos.w;
-    
-    float3 UVD;
-    UVD.x = (surfacePos.x * 0.5f) + 0.5f;
-    UVD.y = (surfacePos.y * -0.5f) + 0.5f;
-    UVD.z = surfacePos.z - 0.001f;
-    
-    float shadowFactor = 0.0f;
-    
     uint shadowMapTextureIndex = light.ShadowMapIndex;
     if (light.Type == 1)
     {
-        float3 loc = surface.Position.xyz - light.Position.xyz;
-        float3 locabc = abs(loc);
-        float Z = max(locabc.x, max(locabc.y, locabc.z));
-        float Depth = (light.PerspectiveValues[0] * Z + light.PerspectiveValues[1]) / Z;
-        shadowFactor = TexturesCube[shadowMapTextureIndex].SampleCmpLevelZero(ShadowSampler, loc, Depth - 0.001f);
+        return CalculatePointLightShadowAttenuation(TexturesCube[shadowMapTextureIndex], ShadowSampler, light, surface);
     }
     else if (light.Type == 2)
     {
-        shadowFactor = Textures2D[shadowMapTextureIndex].SampleCmpLevelZero(ShadowSampler, UVD.xy, (UVD.z - 0.001f));
+        return CalculateSpotLightShadowAttenuation(Textures2D[shadowMapTextureIndex], ShadowSampler, light, surface);
     }
     
-    return shadowFactor;
+    return 0.0f;
 }
 
 [RootSignature(DeferredShading_RootSig)]

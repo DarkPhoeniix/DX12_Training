@@ -45,12 +45,12 @@ struct LightDesc
     uint pad[3];
 };
 
-float CalculatePointLightAttenuation(LightDesc light, Surface surface)
+float CalculatePointLightAttenuation(in LightDesc light, in Surface surface)
 {
     return saturate(((surface.DistanceToL * surface.DistanceToL) / (light.Range * light.Range)) * (((2 * surface.DistanceToL) / light.Range) - 3.0f) + 1.0f);
 }
 
-float CalculateSpotLightAttenuation(LightDesc light, Surface surface)
+float CalculateSpotLightAttenuation(in LightDesc light, in Surface surface)
 {
     float3 toLight = normalize(light.Position - surface.Position);
     float cosAngle = dot(-light.Direction.xyz, toLight);
@@ -68,7 +68,7 @@ float CalculateSpotLightAttenuation(LightDesc light, Surface surface)
     return attenuation * coneAttenuation;
 }
 
-float CalculateAttenuation(LightDesc light, Surface surface)
+float CalculateAttenuation(in LightDesc light, in Surface surface)
 {
     if (light.Type == LIGHT_TYPE_DIRECTIONAL)
     {
@@ -104,4 +104,50 @@ uint GetCubeFaceIndex(float3 toPixel)
     }
     
     return faceIndex;
+}
+
+#define CONSTANT_SHADOW_BIAS 0.0001f
+#define SLOPE_SHADOW_BIAS 0.00005f
+
+float CalculatePointLightShadowAttenuation(in TextureCube texture, in SamplerComparisonState cmpSampler, in LightDesc light, in Surface surface)
+{
+    row_major matrix VP = light.ViewProj[0];
+    float4 surfacePos = mul(surface.Position, VP);
+    surfacePos /= surfacePos.w;
+    
+    float3 UVD;
+    UVD.x = (surfacePos.x * 0.5f) + 0.5f;
+    UVD.y = (surfacePos.y * -0.5f) + 0.5f;
+    UVD.z = surfacePos.z - 0.001f;
+    
+    float shadowFactor = 0.0f;
+    float bias = CONSTANT_SHADOW_BIAS + SLOPE_SHADOW_BIAS * tan(acos(surface.NdotL));
+    
+    float3 location = surface.Position.xyz - light.Position.xyz;
+    float3 absLocation = abs(location);
+    float Z = max(absLocation.x, max(absLocation.y, absLocation.z));
+    float Depth = (light.PerspectiveValues[0] * Z + light.PerspectiveValues[1]) / Z;
+    
+    shadowFactor = texture.SampleCmpLevelZero(cmpSampler, location, Depth - bias);
+    
+    return shadowFactor;
+}
+
+float CalculateSpotLightShadowAttenuation(in Texture2D texture, in SamplerComparisonState cmpSampler, in LightDesc light, in Surface surface)
+{
+    row_major matrix VP = light.ViewProj[0];
+    float4 surfacePos = mul(surface.Position, VP);
+    surfacePos /= surfacePos.w;
+    
+    float3 UVD;
+    UVD.x = (surfacePos.x * 0.5f) + 0.5f;
+    UVD.y = (surfacePos.y * -0.5f) + 0.5f;
+    UVD.z = surfacePos.z - 0.001f;
+    
+    float shadowFactor = 0.0f;
+    float bias = CONSTANT_SHADOW_BIAS + SLOPE_SHADOW_BIAS * tan(acos(surface.NdotL));
+    
+    shadowFactor = texture.SampleCmpLevelZero(cmpSampler, UVD.xy, (UVD.z - bias));
+    
+    return shadowFactor;
 }
