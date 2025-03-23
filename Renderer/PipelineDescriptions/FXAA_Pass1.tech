@@ -1,0 +1,7 @@
+{
+	"Type": "FXAA_Pass1",
+
+	"IsGraphicsPipeline": false,
+
+	"CS": "Shaders\\FXAA_Pass1_cs.cso"
+}

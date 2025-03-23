@@ -1,7 +1,0 @@
-{
-	"Type": "FXAATechnique",
-
-	"IsGraphicsPipeline": false,
-
-	"CS": "Shaders\\FXAA_cs.cso"
-}

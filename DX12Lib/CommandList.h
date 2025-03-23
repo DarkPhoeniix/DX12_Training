@@ -60,6 +60,8 @@ namespace dx12
         void TransitionBarrier(Resource& resource, D3D12_RESOURCE_STATES stateAfter, std::uint32_t subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
         // Sets an aliasing barrier (for aliasing resource states between different resource usages).
         void AliasingBarrier(const std::shared_ptr<Resource> & = nullptr, const std::shared_ptr<Resource>& afterResource = nullptr);
+        // Sets an UAV barrier for the specified resource (all UAV accesses must complete before any future UAV accesses can begin)
+        void UAVBarrier(std::shared_ptr<Resource> resource);
 
         // Copies a resource from a source to a destination.
         void CopyResource(Resource& sourceResource, Resource& destinationResource);
@@ -108,7 +110,7 @@ namespace dx12
         void Dispatch(std::uint32_t xThreadGroupsCount = 1, std::uint32_t yThreadGroupsCount = 1, std::uint32_t zThreadGroupsCount = 1);
 
         // TODO: comment ExecuteIndirect
-        void ExecuteIndirect(ComPtr<ID3D12CommandSignature> cmdSignature, std::uint32_t maxCommandCount, Resource& argumentBuffer, Resource& countBuffer, std::uint32_t argumentBufferOffset = 0, std::uint32_t countBufferOffset = 0);
+        void ExecuteIndirect(ComPtr<ID3D12CommandSignature> cmdSignature, std::uint32_t maxCommandCount, Resource& argumentBuffer, std::shared_ptr<Resource> countBuffer, std::uint32_t argumentBufferOffset = 0, std::uint32_t countBufferOffset = 0);
 
         // Sets the descriptor heaps for the command list. Descriptor heaps are used to manage resources like buffers, textures, etc.
         void SetDescriptorHeaps(const std::vector<ID3D12DescriptorHeap*> descriptorHeaps);

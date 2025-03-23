@@ -103,6 +103,7 @@ namespace dx12
         DescriptorHeap& descriptorHeap = GetDescriptorHeap(viewType);
 
         ASSERT((resources.size() < _numDescriptors), "Resource table is full");
+        ASSERT((descriptorHeap.GetCurrentOffset() < _numDescriptors), "Resource table is full");
 
         ResourceKey key = { resource->GetName().c_str(), viewType};
         InternalResourceDesc value = { resource, descriptorHeap.GetCurrentOffset(), viewType};

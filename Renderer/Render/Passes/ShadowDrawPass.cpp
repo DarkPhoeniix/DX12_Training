@@ -177,7 +177,7 @@ namespace render
                 commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
                 std::uint32_t counterBufferOffset = commandBuffer->GetResourceDescription().GetSize().x - sizeof(UINT);
-                commandList.ExecuteIndirect(_cmdSignature, objectsNum, *commandBuffer, *commandBuffer, 0, counterBufferOffset);
+                commandList.ExecuteIndirect(_cmdSignature, objectsNum, *commandBuffer, commandBuffer, 0, counterBufferOffset);
 
                 barriers =
                 {
@@ -242,7 +242,7 @@ namespace render
                 commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
                 std::uint32_t counterBufferOffset = commandBuffer->GetResourceDescription().GetSize().x - sizeof(UINT);
-                commandList.ExecuteIndirect(_cmdSignature, objectsNum, *commandBuffer, *commandBuffer, 0, counterBufferOffset);
+                commandList.ExecuteIndirect(_cmdSignature, objectsNum, *commandBuffer, commandBuffer, 0, counterBufferOffset);
 
                 barriers =
                 {

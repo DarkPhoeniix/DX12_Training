@@ -14,7 +14,6 @@
     <FxCompile Include="Shaders\DebugDraw\Sphere_ps.hlsl" />
     <FxCompile Include="Shaders\DebugDraw\Sphere_vs.hlsl" />
     <FxCompile Include="Shaders\DeferredShading\DeferredShading.hlsl" />
-    <FxCompile Include="Shaders\AntiAliasing\FXAA_cs.hlsl" />
     <FxCompile Include="Shaders\GeometryPass\GPass_ps.hlsl" />
     <FxCompile Include="Shaders\GeometryPass\GPass_vs.hlsl" />
     <FxCompile Include="Shaders\HDR\ToneMapping.hlsl" />
@@ -31,6 +30,13 @@
     <FxCompile Include="Shaders\HDR\BuildLuminanceHistogram.hlsl" />
     <FxCompile Include="Shaders\HDR\AverageLuminance.hlsl" />
     <FxCompile Include="Shaders\Shadows\LightCulling_PointLight.hlsl" />
+    <FxCompile Include="Shaders\AntiAliasing\FXAA_Pass1_cs.hlsl" />
+    <FxCompile Include="Shaders\AntiAliasing\FXAA_Resolve_cs.hlsl" />
+    <FxCompile Include="Shaders\AntiAliasing\FXAA_Pass2_cs.hlsli" />
+    <FxCompile Include="Shaders\AntiAliasing\FXAA_Pass2H_cs.hlsl" />
+    <FxCompile Include="Shaders\AntiAliasing\FXAA_Pass2V_cs.hlsl" />
+    <FxCompile Include="Shaders\AntiAliasing\FXAA_Pass2H_Debug_cs.hlsl" />
+    <FxCompile Include="Shaders\AntiAliasing\FXAA_Pass2V_Debug_cs.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Render\Helpers\DrawHelpers.cpp" />
@@ -76,12 +82,12 @@
     <ClCompile Include="Render\Passes\PFX\ToneMappingPass.cpp" />
     <ClCompile Include="Render\Passes\PassResources.cpp" />
     <ClCompile Include="Render\Passes\Debug\DebugBoundingVolumePass.cpp" />
-    <ClCompile Include="Render\Passes\FXAAPass.cpp" />
     <ClCompile Include="Render\Passes\Debug\DebugArmaturePass.cpp" />
     <ClCompile Include="Render\Passes\ShadowCullPass.cpp" />
     <ClCompile Include="Render\Passes\ShadowDrawPass.cpp" />
     <ClCompile Include="Render\Passes\ShadowClearPass.cpp" />
     <ClCompile Include="Render\RenderSettings.cpp" />
+    <ClCompile Include="Render\Passes\FXAAPass.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Render\Helpers\DrawHelpers.h" />
@@ -141,17 +147,16 @@
     <ClInclude Include="Render\Passes\PFX\AverageLuminancePass.h" />
     <ClInclude Include="Render\Passes\PFX\ToneMappingPass.h" />
     <ClInclude Include="Render\Passes\Debug\DebugBoundingVolumePass.h" />
-    <ClInclude Include="Render\Passes\FXAAPass.h" />
     <ClInclude Include="Render\Passes\Debug\DebugArmaturePass.h" />
     <ClInclude Include="Render\Passes\ShadowCullPass.h" />
     <ClInclude Include="Render\Passes\ShadowDrawPass.h" />
     <ClInclude Include="Render\Passes\ShadowClearPass.h" />
     <ClInclude Include="Render\RenderSettings.h" />
+    <ClInclude Include="Render\Passes\FXAAPass.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="PipelineDescriptions\DebugConePipeline.tech" />
     <None Include="PipelineDescriptions\DebugSpherePipeline.tech" />
-    <None Include="PipelineDescriptions\FXAAPipeline.tech" />
     <None Include="PipelineDescriptions\PCFShadows.blend" />
     <None Include="PipelineDescriptions\Shadow_PointLight.tech" />
     <None Include="PipelineDescriptions\Shadow_SpotLight.tech" />
@@ -164,8 +169,6 @@
     <None Include="Shaders\DebugDraw\Sphere_rootsig.hlsli" />
     <None Include="Shaders\DeferredShading\DeferredShading_rootsig.hlsli" />
     <None Include="Shaders\DepthFuncs.hlsli" />
-    <None Include="Shaders\AntiAliasing\FXAA_helpers.hlsli" />
-    <None Include="Shaders\AntiAliasing\FXAA_rootsig.hlsli" />
     <None Include="Shaders\GeometryPass\GPass_rootsig.hlsli" />
     <None Include="Shaders\HDR\ToneMapping.hlsli" />
     <None Include="Shaders\DebugDraw\OBB_rootsig.hlsli" />
@@ -179,6 +182,14 @@
     <None Include="PipelineDescriptions\BuildLuminanceHistogramPipeline.tech" />
     <None Include="PipelineDescriptions\AverageLuminancePipeline.tech" />
     <None Include="PipelineDescriptions\LightCulling_PointLight.tech" />
+    <None Include="Shaders\AntiAliasing\FXAA_rootsig.hlsli" />
+    <None Include="Shaders\PixelPacking.hlsli" />
+    <None Include="PipelineDescriptions\FXAA_Pass1.tech" />
+    <None Include="PipelineDescriptions\FXAA_Pass2H.tech" />
+    <None Include="PipelineDescriptions\FXAA_Pass2V.tech" />
+    <None Include="PipelineDescriptions\FXAA_ResolveWork.tech" />
+    <None Include="PipelineDescriptions\FXAA_Pass2H_Debug.tech" />
+    <None Include="PipelineDescriptions\FXAA_Pass2V_Debug.tech" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="PipelineDescriptions\AABBRenderPipeline.blend" />
