@@ -121,12 +121,13 @@ float CalculatePointLightShadowAttenuation(in TextureCube texture, in SamplerCom
     UVD.z = surfacePos.z - 0.001f;
     
     float shadowFactor = 0.0f;
-    float bias = CONSTANT_SHADOW_BIAS + SLOPE_SHADOW_BIAS * tan(acos(surface.NdotL));
     
     float3 location = surface.Position.xyz - light.Position.xyz;
     float3 absLocation = abs(location);
     float Z = max(absLocation.x, max(absLocation.y, absLocation.z));
     float Depth = (light.PerspectiveValues[0] * Z + light.PerspectiveValues[1]) / Z;
+    
+    float bias = CONSTANT_SHADOW_BIAS + SLOPE_SHADOW_BIAS * sqrt(1 - surface.NdotL * surface.NdotL) / surface.NdotL;
     
     shadowFactor = texture.SampleCmpLevelZero(cmpSampler, location, Depth - bias);
     
