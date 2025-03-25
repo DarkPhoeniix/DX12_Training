@@ -10,6 +10,7 @@
 #include "Events/RenderEvent.h"
 #include "Events/UpdateEvent.h"
 
+#include "Scene/SceneLoader.h"
 #include "Scene/Entity/Components/Animation.h"
 #include "Scene/Entity/Components/Armature.h"
 #include "Scene/Entity/Components/Camera.h"
@@ -181,7 +182,7 @@ namespace render
             dx12::CommandList& commandList = *loadTask->GetCommandLists().front();
 
             _scene = std::make_shared<scene::Scene>();
-            _scene->LoadScene("Sponza\\Sponza.scene", commandList);
+            _scene = scene::helpers::SceneLoader::LoadScene(commandList, "Sponza\\Sponza.scene");
             _uploadProcessor.Process(*_scene, commandList, nullptr);
 
             _scene->AddRootNode(cameraEntity);
