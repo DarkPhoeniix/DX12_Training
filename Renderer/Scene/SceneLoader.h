@@ -1,5 +1,7 @@
 #pragma once
 
+class TaskGPU;
+
 namespace dx12
 {
     class CommandList;
@@ -25,28 +27,22 @@ namespace scene::helpers
     class SceneLoader
     {
     public:
-        static std::shared_ptr<Scene> LoadScene(dx12::CommandList& commandList, const std::string& filepath);
-    };
-
-    class EntityLoader
-    {
-    public:
-        EntityLoader(const std::string& filepath);
-
-        std::shared_ptr<scene::Entity> LoadEntity(scene::SceneCache* sceneCache, scene::Entity* parent = nullptr);
+        std::shared_ptr<Scene> LoadScene(TaskGPU& task, const std::string& filepath);
 
     private:
-        void LoadComponent(Json::Value& jsonValue, Armature* armature, const std::shared_ptr<Animation>& component);
-        void LoadComponent(Json::Value& jsonValue, const std::shared_ptr<Armature>& component);
-        void LoadComponent(Json::Value& jsonValue, const std::shared_ptr<Transformation>& component);
-        void LoadComponent(Json::Value& jsonValue, const std::shared_ptr<Material>& component);
-        void LoadComponent(Json::Value& jsonValue, const std::shared_ptr<Mesh>& component);
-        void LoadComponent(Json::Value& jsonValue, const std::shared_ptr<Light>& component, const std::string& name);
-        void LoadComponent(Json::Value& jsonValue, const std::shared_ptr<Skybox>& component);
+        std::shared_ptr<scene::Entity> LoadEntity(dx12::CommandList& commandList, const std::string& filepath, scene::Entity* parent = nullptr);
+
+        void LoadComponent(const std::string& filepath, Json::Value& jsonValue, Armature* armature, const std::shared_ptr<Animation>& component);
+        void LoadComponent(const std::string& filepath, Json::Value& jsonValue, const std::shared_ptr<Armature>& component);
+        void LoadComponent(const std::string& filepath, Json::Value& jsonValue, const std::shared_ptr<Transformation>& component);
+        void LoadComponent(const std::string& filepath, Json::Value& jsonValue, const std::shared_ptr<Material>& component);
+        void LoadComponent(const std::string& filepath, Json::Value& jsonValue, const std::shared_ptr<Mesh>& component, dx12::CommandList& commandList);
+        void LoadComponent(const std::string& filepath, Json::Value& jsonValue, const std::shared_ptr<Light>& component, const std::string& name);
+        void LoadComponent(const std::string& filepath, Json::Value& jsonValue, const std::shared_ptr<Skybox>& component);
 
         void LoadRawMesh(const std::string& filepath, const std::shared_ptr<Mesh>& meshComponent);
 
-        const std::string _entityFilepath;
-        const std::string _parentFilepath;
+        scene::SceneCache* _cache;
+        std::vector<dx12::Resource> _intermediates;
     };
 }

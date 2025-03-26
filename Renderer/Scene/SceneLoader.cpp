@@ -2,6 +2,10 @@
 
 #include "SceneLoader.h"
 
+#include "CommandList.h"
+
+#include "Render/Frame/TaskGPU.h"
+
 #include "Scene.h"
 #include "Scene/Entity/Entity.h"
 #include "Scene/Entity/Components/Animation.h"
@@ -123,9 +127,13 @@ namespace
 
 namespace scene::helpers
 {
-    std::shared_ptr<Scene> SceneLoader::LoadScene(dx12::CommandList& commandList, const std::string& filepath)
+    std::shared_ptr<Scene> SceneLoader::LoadScene(TaskGPU& task, const std::string& filepath)
     {
+        dx12::CommandList& commandList = *task.GetCommandLists().front();
+        commandList.SetName("Scene upload command list");
+
         std::shared_ptr<Scene> scene = std::make_shared<Scene>();
+        _cache = &scene->GetCache();
 
         std::ifstream in(filepath, std::ifstream::in | std::ifstream::binary);
 
@@ -137,33 +145,30 @@ namespace scene::helpers
         // Parse children nodes
         for (auto& node : root["Nodes"])
         {
-            helpers::EntityLoader loader(std::filesystem::path(filepath).parent_path().string() + '/' + node.asString());
+            std::string nodePath = std::filesystem::path(filepath).parent_path().string() + '/' + node.asString();
 
-            scene->AddRootNode(loader.LoadEntity(&scene->GetCache()));
+            scene->AddRootNode(LoadEntity(commandList, nodePath));
         }
+
+        scene->GetCache().GetTextureManager().UploadTextures(commandList);
+
+        commandList.Close();
 
         return scene;
     }
 
-
-    EntityLoader::EntityLoader(const std::string& filepath)
-        : _entityFilepath(filepath)
-        , _parentFilepath(std::filesystem::path(_entityFilepath).parent_path().string())
+    std::shared_ptr<Entity> SceneLoader::LoadEntity(dx12::CommandList& commandList, const std::string& filepath, Entity* parent)
     {
-    }
+        LOG_INFO("Parsing node " + filepath);
 
-    std::shared_ptr<Entity> EntityLoader::LoadEntity(SceneCache* sceneCache, Entity* parent)
-    {
-        LOG_INFO("Parsing node " + _entityFilepath);
-
-        if (ASSERT(std::filesystem::exists(std::filesystem::path(_entityFilepath)), std::format("Failed to parse a node from {}", _entityFilepath)))
+        if (ASSERT(std::filesystem::exists(std::filesystem::path(filepath)), std::format("Failed to parse a node from {}", filepath)))
         {
             return nullptr;
         }
 
-        std::shared_ptr<Entity> entity = std::make_shared<Entity>(sceneCache, parent);
+        std::shared_ptr<Entity> entity = std::make_shared<Entity>(_cache, parent);
 
-        std::ifstream in(_entityFilepath, std::ifstream::in | std::ifstream::binary);
+        std::ifstream in(filepath, std::ifstream::in | std::ifstream::binary);
         Json::Value jsonRoot;
         in >> jsonRoot;
 
@@ -173,54 +178,55 @@ namespace scene::helpers
         // Parse children nodes
         for (auto& node : jsonRoot["Children"])
         {
-            std::string nodeFilepath = _parentFilepath + '/' + node.asString();
+            std::string nodeFilepath = filepath + '/' + node.asString();
 
-            EntityLoader loader(nodeFilepath);
-            std::shared_ptr<Entity> childEntity = loader.LoadEntity(sceneCache, entity.get());
+            std::shared_ptr<Entity> childEntity = LoadEntity(commandList, nodeFilepath, entity.get());
 
             entity->AddChild(childEntity);
         }
 
+        std::string parentPath = std::filesystem::path(filepath).parent_path().string();
+
         if (!jsonRoot["Transform"].isNull())
         {
             std::shared_ptr<Transformation> component = std::make_shared<Transformation>();
-            LoadComponent(jsonRoot, component);
+            LoadComponent(parentPath, jsonRoot, component);
             entity->AddComponent(component);
         }
         if (!jsonRoot["Material"].isNull())
         {
             std::shared_ptr<Material> component = std::make_shared<Material>();
-            LoadComponent(jsonRoot, component);
+            LoadComponent(parentPath, jsonRoot, component);
             entity->AddComponent(component);
         }
         if (!jsonRoot["Mesh"].isNull())
         {
             std::shared_ptr<Mesh> component = std::make_shared<Mesh>();
-            LoadComponent(jsonRoot, component);
+            LoadComponent(parentPath, jsonRoot, component, commandList);
             entity->AddComponent(component);
         }
         if (!jsonRoot["Light"].isNull())
         {
             std::shared_ptr<Light> component = std::make_shared<Light>();
-            LoadComponent(jsonRoot, component, entity->GetName());
+            LoadComponent(parentPath, jsonRoot, component, entity->GetName());
             entity->AddComponent(component);
         }
         if (!jsonRoot["Skybox"].isNull())
         {
             std::shared_ptr<Skybox> component = std::make_shared<Skybox>();
-            LoadComponent(jsonRoot, component);
+            LoadComponent(parentPath, jsonRoot, component);
             entity->AddComponent(component);
         }
         if (!jsonRoot["Armature"].isNull())
         {
             std::shared_ptr<Armature> component = std::make_shared<Armature>();
-            LoadComponent(jsonRoot, component);
+            LoadComponent(parentPath, jsonRoot, component);
             entity->AddComponent(component);
         }
         if (!jsonRoot["Animation"].isNull())
         {
             std::shared_ptr<Animation> component = std::make_shared<Animation>();
-            LoadComponent(jsonRoot, entity->GetComponentAs<Armature>("Armature"), component);
+            LoadComponent(parentPath, jsonRoot, entity->GetComponentAs<Armature>("Armature"), component);
             entity->AddComponent(component);
         }
 
@@ -229,9 +235,9 @@ namespace scene::helpers
         return entity;
     }
 
-    void EntityLoader::LoadComponent(Json::Value& jsonValue, Armature* armature, const std::shared_ptr<Animation>& component)
+    void SceneLoader::LoadComponent(const std::string& filepath, Json::Value& jsonValue, Armature* armature, const std::shared_ptr<Animation>& component)
     {
-        std::string animationFilepth = _parentFilepath + '/' + jsonValue["Animation"].asString();
+        std::string animationFilepth = filepath + '/' + jsonValue["Animation"].asString();
 
         std::ifstream file(animationFilepth, std::ios_base::in | std::ios_base::binary);
         Json::Value animationData;
@@ -264,9 +270,9 @@ namespace scene::helpers
         component->Duration = animationData["Duration"].asFloat();
     }
 
-    void EntityLoader::LoadComponent(Json::Value& jsonValue, const std::shared_ptr<Armature>& component)
+    void SceneLoader::LoadComponent(const std::string& filepath, Json::Value& jsonValue, const std::shared_ptr<Armature>& component)
     {
-        std::string armatureFilepth = _parentFilepath + '/' + jsonValue["Armature"].asString();
+        std::string armatureFilepth = filepath + '/' + jsonValue["Armature"].asString();
 
         std::ifstream file(armatureFilepth, std::ios_base::in | std::ios_base::binary);
         Json::Value armatureData;
@@ -281,49 +287,104 @@ namespace scene::helpers
         component->Init(bones);
     }
 
-    void EntityLoader::LoadComponent(Json::Value& jsonValue, const std::shared_ptr<Transformation>& component)
+    void SceneLoader::LoadComponent(const std::string& filepath, Json::Value& jsonValue, const std::shared_ptr<Transformation>& component)
     {
         component->Transform = ParseMatrix(jsonValue["Transform"]);
     }
 
-    void EntityLoader::LoadComponent(Json::Value& jsonValue, const std::shared_ptr<Material>& component)
+    void SceneLoader::LoadComponent(const std::string& filepath, Json::Value& jsonValue, const std::shared_ptr<Material>& component)
     {
-        std::string materialFilepth = _parentFilepath + '/' + jsonValue["Material"].asString();
+        std::string materialFilepath = filepath + '/' + jsonValue["Material"].asString();
 
-        std::ifstream file(materialFilepth, std::ios_base::in | std::ios_base::binary);
+        std::ifstream file(materialFilepath, std::ios_base::in | std::ios_base::binary);
         Json::Value materialData;
         file >> materialData;
 
-        std::string albedoFilepath = _parentFilepath + '/' + materialData["Albedo"].asString();
-        std::string normalFilepath = _parentFilepath + '/' + materialData["Normal"].asString();
-        std::string metalnessFilepath = _parentFilepath + '/' + materialData["Metalness"].asString();
-        std::string roughnessFilepath = _parentFilepath + '/' + materialData["Roughness"].asString();
+        std::string albedoFilepath = filepath + '/' + materialData["Albedo"].asString();
+        std::string normalFilepath = filepath + '/' + materialData["Normal"].asString();
+        std::string metalnessFilepath = filepath + '/' + materialData["Metalness"].asString();
+        std::string roughnessFilepath = filepath + '/' + materialData["Roughness"].asString();
 
-        component->Albedo = dx12::Texture::LoadFromFile(albedoFilepath);
-        component->NormalMap = dx12::Texture::LoadFromFile(normalFilepath);
-        component->Metalness = dx12::Texture::LoadFromFile(metalnessFilepath);
-        component->Roughness = dx12::Texture::LoadFromFile(roughnessFilepath);
+        _cache->GetTextureManager().EnqueueTexture(albedoFilepath);
+        _cache->GetTextureManager().EnqueueTexture(normalFilepath);
+        _cache->GetTextureManager().EnqueueTexture(metalnessFilepath);
+        _cache->GetTextureManager().EnqueueTexture(roughnessFilepath);
+
+        component->Albedo    = materialData["Albedo"].asString();
+        component->NormalMap = materialData["Normal"].asString();
+        component->Metalness = materialData["Metalness"].asString();
+        component->Roughness = materialData["Roughness"].asString();
     }
 
-    void EntityLoader::LoadComponent(Json::Value& jsonValue, const std::shared_ptr<Mesh>& component)
+    void SceneLoader::LoadComponent(const std::string& filepath, Json::Value& jsonValue, const std::shared_ptr<Mesh>& component, dx12::CommandList& commandList)
     {
-        std::string meshFilepth = _parentFilepath + '/' + jsonValue["Mesh"].asString();
+        std::string meshFilepth = filepath + '/' + jsonValue["Mesh"].asString();
 
         LoadRawMesh(meshFilepth, component);
 
-        // TODO: remove for meshes with armature
-        for (const VertexData& vertex : component->VertexData)
-        {
-            XMVECTOR position = XMLoadFloat3(&vertex.Position);
+        auto UploadData = [&](dx12::CommandList& commandList, dx12::Resource& destination, std::uint32_t numElements, std::uint32_t elementSize, const void* data)
+            {
+                std::uint32_t bufferSize = numElements * elementSize;
 
-            component->AABB.Min = XMVectorMin(component->AABB.Min, position);
-            component->AABB.Max = XMVectorMax(component->AABB.Max, position);
+                dx12::ResourceDescription desc;
+                {
+                    desc.SetSize({ bufferSize, 1 });
+                    desc.SetResourceType(dx12::ResourceType::Buffer);
+                }
+                destination.CreateCommitedResource(desc);
+
+                desc.AddResourceType(dx12::ResourceType::Dynamic);
+                _intermediates.emplace_back(desc);
+                _intermediates.back().CreateCommitedResource();
+
+                D3D12_SUBRESOURCE_DATA subresourceData = {};
+                subresourceData.pData = data;
+                subresourceData.RowPitch = bufferSize;
+                subresourceData.SlicePitch = subresourceData.RowPitch;
+
+                UpdateSubresources(commandList.GetDXCommandList().Get(),
+                    destination.GetDXResource().Get(), _intermediates.back().GetDXResource().Get(),
+                    0, 0, 1, &subresourceData);
+            };
+
+        // Upload Vertex buffer
+        {
+            component->VertexBuffer = std::make_shared<dx12::Resource>();
+            UploadData(commandList, *component->VertexBuffer, component->VertexData.size(), sizeof(VertexData), component->VertexData.data());
+            component->VertexBuffer->SetName(jsonValue["Mesh"].asString() + "_VB");
+
+            component->VertexBufferView.BufferLocation = component->VertexBuffer->OffsetGPU(0);
+            component->VertexBufferView.SizeInBytes = static_cast<UINT>(component->VertexData.size() * sizeof(component->VertexData[0]));
+            component->VertexBufferView.StrideInBytes = sizeof(VertexData);
+        }
+
+        // Upload Skinning Vertex buffer
+        if (!component->SkinningVertexData.empty())
+        {
+            component->SkinningVertexBuffer = std::make_shared<dx12::Resource>();
+            UploadData(commandList, *component->SkinningVertexBuffer, component->SkinningVertexData.size(), sizeof(SkinningVertexData), component->SkinningVertexData.data());
+            component->SkinningVertexBuffer->SetName(jsonValue["Mesh"].asString() + "_SVB");
+
+            component->SkinningVertexBufferView.BufferLocation = component->SkinningVertexBuffer->OffsetGPU(0);
+            component->SkinningVertexBufferView.SizeInBytes = static_cast<UINT>(component->SkinningVertexData.size() * sizeof(component->SkinningVertexData[0]));
+            component->SkinningVertexBufferView.StrideInBytes = sizeof(SkinningVertexData);
+        }
+
+        // Upload Index buffer
+        {
+            component->IndexBuffer = std::make_shared<dx12::Resource>();
+            UploadData(commandList, *component->IndexBuffer, component->IndexData.size(), sizeof(UINT), component->IndexData.data());
+            component->IndexBuffer->SetName(jsonValue["Mesh"].asString() + "_IB");
+
+            component->IndexBufferView.BufferLocation = component->IndexBuffer->OffsetGPU(0);
+            component->IndexBufferView.Format = DXGI_FORMAT_R32_UINT;
+            component->IndexBufferView.SizeInBytes = static_cast<UINT>(component->IndexData.size() * sizeof(component->IndexData[0]));
         }
     }
 
-    void EntityLoader::LoadComponent(Json::Value& jsonValue, const std::shared_ptr<Light>& component, const std::string& name)
+    void SceneLoader::LoadComponent(const std::string& filepath, Json::Value& jsonValue, const std::shared_ptr<Light>& component, const std::string& name)
     {
-        std::string lightFilepth = _parentFilepath + '/' + jsonValue["Light"].asString();
+        std::string lightFilepth = filepath + '/' + jsonValue["Light"].asString();
 
         std::ifstream file(lightFilepth, std::ios_base::in | std::ios_base::binary);
         Json::Value lightData;
@@ -352,14 +413,16 @@ namespace scene::helpers
         component->CastShadows = lightData["CastShadows"].asUInt();
     }
 
-    void EntityLoader::LoadComponent(Json::Value& jsonValue, const std::shared_ptr<Skybox>& component)
+    void SceneLoader::LoadComponent(const std::string& filepath, Json::Value& jsonValue, const std::shared_ptr<Skybox>& component)
     {
-        std::string skyboxFilepath = _parentFilepath + '/' + jsonValue["Skybox"].asString();
+        std::string skyboxFilepath = filepath + '/' + jsonValue["Skybox"].asString();
 
-        component->SkydomeTexture = dx12::Texture::LoadFromFile(skyboxFilepath);
+        _cache->GetTextureManager().EnqueueTexture(skyboxFilepath);
+
+        component->SkydomeTexture = jsonValue["Skybox"].asString();
     }
 
-    void EntityLoader::LoadRawMesh(const std::string& filepath, const std::shared_ptr<Mesh>& meshComponent)
+    void SceneLoader::LoadRawMesh(const std::string& filepath, const std::shared_ptr<Mesh>& meshComponent)
     {
         std::vector<XMFLOAT3> points;
         std::vector<XMUINT4> groupIndexes;

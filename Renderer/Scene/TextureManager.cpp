@@ -2,8 +2,13 @@
 
 #include "TextureManager.h"
 
+#include "CommandList.h"
+#include "Texture.h"
+
 namespace
 {
+    constexpr std::uint32_t TEXTURE_TABLE_NUM_DESCRIPTORS = 2048;
+
     const std::string DDS_EXTENSION = ".dds";
     const std::string HDR_EXTENSION = ".hdr";
     const std::string TGA_EXTENSION = ".tga";
@@ -33,7 +38,7 @@ namespace
         return metadata;
     }
 
-    D3D12_RESOURCE_DESC GetTextureDescription(const DirectX::TexMetadata& metadata)
+    dx12::ResourceDescription GetTextureDescription(const DirectX::TexMetadata & metadata)
     {
         D3D12_RESOURCE_DESC textureDesc = {};
         switch (metadata.dimension)
@@ -63,16 +68,73 @@ namespace
             break;
         }
 
-        return textureDesc;
+        dx12::ResourceDescription description(textureDesc);
+        description.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::Aligned);
+
+        return description;
     }
+
+    DirectX::ScratchImage LoadTextureImage(const std::filesystem::path& path)
+    {
+        std::filesystem::path extension = path.extension();
+
+        DirectX::ScratchImage image;
+        if (extension == DDS_EXTENSION)
+        {
+            DirectX::LoadFromDDSFile(path.c_str(), DirectX::DDS_FLAGS_NONE, nullptr, image);
+        }
+        else if (path.extension() == HDR_EXTENSION)
+        {
+            DirectX::LoadFromHDRFile(path.c_str(), nullptr, image);
+        }
+        else if (path.extension() == TGA_EXTENSION)
+        {
+            DirectX::LoadFromTGAFile(path.c_str(), nullptr, image);
+        }
+        else
+        {
+            DirectX::LoadFromWICFile(path.c_str(), DirectX::WIC_FLAGS_NONE, nullptr, image);
+        }
+
+        return image;
+    }
+
+    std::shared_ptr<DirectX::ScratchImage> UploadTextureData(dx12::CommandList& commandList, const std::filesystem::path& path, std::shared_ptr<dx12::Texture> texture, dx12::Resource& intermediateBuffer)
+    {
+        std::shared_ptr<DirectX::ScratchImage> image = std::make_shared<DirectX::ScratchImage>(LoadTextureImage(path));
+
+        std::vector<D3D12_SUBRESOURCE_DATA> subresources(image->GetImageCount());
+        const DirectX::Image* pImages = image->GetImages();
+        for (int i = 0; i < image->GetImageCount(); ++i)
+        {
+            auto& subresource = subresources[i];
+            subresource.RowPitch = pImages[i].rowPitch;
+            subresource.SlicePitch = pImages[i].slicePitch;
+            subresource.pData = pImages[i].pixels;
+        }
+
+        UpdateSubresources(commandList.GetDXCommandList().Get(), 
+                           texture->GetDXResource().Get(), 
+                           intermediateBuffer.GetDXResource().Get(), 
+                           0, 0, static_cast<std::uint32_t>(subresources.size()), 
+                           subresources.data());
+
+        return image;
+    }
+}
+
+
+scene::TextureManager::TextureManager()
+{
+    _texturesTable.Init(TEXTURE_TABLE_NUM_DESCRIPTORS);
 }
 
 void scene::TextureManager::EnqueueTexture(const std::string& filepath)
 {
-    _uploadQueue.push_back(filepath);
+    _uploadQueue.insert(filepath);
 }
 
-void scene::TextureManager::UploadTextures()
+void scene::TextureManager::UploadTextures(dx12::CommandList& commandList)
 {
     std::uint64_t totalRequiredHeapSize = 0;
     std::uint64_t maxTextureSize = 0;
@@ -82,13 +144,52 @@ void scene::TextureManager::UploadTextures()
         std::filesystem::path path(filepath);
 
         DirectX::TexMetadata metadata = GetTextureMetadata(path);
-        D3D12_RESOURCE_DESC description = GetTextureDescription(metadata);
+        dx12::ResourceDescription description = GetTextureDescription(metadata);
+        D3D12_RESOURCE_DESC desc = description.CreateDXResourceDescription();
 
-        D3D12_RESOURCE_ALLOCATION_INFO allocInfo = dx12::Device::GetDXDevice()->GetResourceAllocationInfo(0, 1, &description);
+        const std::string textureName = path.filename().string();
 
-        std::uint64_t requiredSize = Math::AlignUp(allocInfo.SizeInBytes, D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT);
+        _textures[textureName] = std::make_shared<dx12::Texture>();
+        _textures[textureName]->SetResourceDescription(description);
+        _textures[textureName]->SetName(textureName);
+
+        D3D12_RESOURCE_ALLOCATION_INFO allocInfo = dx12::Device::GetDXDevice()->GetResourceAllocationInfo(0, 1, &desc);
+
+        std::uint32_t requiredSize = Math::AlignUp(allocInfo.SizeInBytes, D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT);
+
+        dx12::ResourceDescription intermediateDesc;
+        {
+            intermediateDesc.SetSize({ requiredSize, 1 });
+            intermediateDesc.SetLayout(D3D12_TEXTURE_LAYOUT_ROW_MAJOR);
+            intermediateDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
+        }
+        _intermediateResources.emplace(std::make_pair(textureName, intermediateDesc));
+        _intermediateResources[textureName].CreateCommitedResource();
+        _intermediateResources[textureName].SetName("Texture intermediate buffer");
+
         totalRequiredHeapSize += requiredSize;
         maxTextureSize = (maxTextureSize < requiredSize) ? requiredSize : maxTextureSize;
+    }
+
+    dx12::HeapDescription heapDesc;
+    {
+        heapDesc.SetSize(totalRequiredHeapSize);
+        heapDesc.SetHeapType(D3D12_HEAP_TYPE_DEFAULT);
+        heapDesc.SetHeapFlags(D3D12_HEAP_FLAG_ALLOW_ALL_BUFFERS_AND_TEXTURES);
+    }
+    _texturesHeap.Create(heapDesc);
+
+    for (const std::string& filepath : _uploadQueue)
+    {
+        std::filesystem::path path(filepath);
+        const std::string textureName = path.filename().string();
+
+        std::shared_ptr<dx12::Texture> texture = _textures[textureName];
+
+        _texturesHeap.PlaceResource(*texture);
+        _texturesTable.PlaceResource(texture.get(), dx12::ResourceViewType::SRV);
+
+        _images.push_back(UploadTextureData(commandList, path, texture, _intermediateResources[textureName]));
     }
 }
 
@@ -101,4 +202,9 @@ std::shared_ptr<dx12::Texture> scene::TextureManager::GetTexture(const std::stri
     }
 
     return it->second;
+}
+
+dx12::ResourceTable& scene::TextureManager::GetTextureTable()
+{
+    return _texturesTable;
 }

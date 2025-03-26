@@ -76,17 +76,13 @@ namespace
 
                 if (material)
                 {
-                    std::shared_ptr<dx12::ResourceTable> textureTable = entity->GetSceneCache()->GetTextureTable();
+                    scene::TextureManager& textureManager = entity->GetSceneCache()->GetTextureManager();
+                    dx12::ResourceTable& textureTable = textureManager.GetTextureTable();
 
-                    resourceTable.CopyDescriptor(material->Albedo.get(), dx12::ResourceViewType::SRV, *textureTable);
-                    resourceTable.CopyDescriptor(material->NormalMap.get(), dx12::ResourceViewType::SRV, *textureTable);
-                    resourceTable.CopyDescriptor(material->Metalness.get(), dx12::ResourceViewType::SRV, *textureTable);
-                    resourceTable.CopyDescriptor(material->Roughness.get(), dx12::ResourceViewType::SRV, *textureTable);
-
-                    modelDesc->AlbedoTextureIndex = resourceTable.GetResourceIndex(material->Albedo.get(), dx12::ResourceViewType::SRV);
-                    modelDesc->NormalMapTextureIndex = resourceTable.GetResourceIndex(material->NormalMap.get(), dx12::ResourceViewType::SRV);
-                    modelDesc->MetalnessTextureIndex = resourceTable.GetResourceIndex(material->Metalness.get(), dx12::ResourceViewType::SRV);
-                    modelDesc->RoughnessTextureIndex = resourceTable.GetResourceIndex(material->Roughness.get(), dx12::ResourceViewType::SRV);
+                    modelDesc->AlbedoTextureIndex    = resourceTable.CopyDescriptor(textureManager.GetTexture(material->Albedo).get(), dx12::ResourceViewType::SRV, textureTable);
+                    modelDesc->NormalMapTextureIndex = resourceTable.CopyDescriptor(textureManager.GetTexture(material->NormalMap).get(), dx12::ResourceViewType::SRV, textureTable);
+                    modelDesc->MetalnessTextureIndex = resourceTable.CopyDescriptor(textureManager.GetTexture(material->Metalness).get(), dx12::ResourceViewType::SRV, textureTable);
+                    modelDesc->RoughnessTextureIndex = resourceTable.CopyDescriptor(textureManager.GetTexture(material->Roughness).get(), dx12::ResourceViewType::SRV, textureTable);
                 }
 
                 if (armature)
@@ -179,15 +175,10 @@ namespace render
         // Load scene
         {
             loadTask->SetName("Upload Data");
-            dx12::CommandList& commandList = *loadTask->GetCommandLists().front();
 
-            _scene = std::make_shared<scene::Scene>();
-            _scene = scene::helpers::SceneLoader::LoadScene(commandList, "Sponza\\Sponza.scene");
-            _uploadProcessor.Process(*_scene, commandList, nullptr);
-
+            //_scene = _sceneLoader.LoadScene(*loadTask, "Dragon\\DragonScene.scene");
+            _scene = _sceneLoader.LoadScene(*loadTask, "Sponza\\Sponza.scene");
             _scene->AddRootNode(cameraEntity);
-
-            commandList.Close();
         }
 
         SetupRenderPipeline();

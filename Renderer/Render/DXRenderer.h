@@ -3,7 +3,7 @@
 #include "Render/Frame/Frame.h"
 #include "Scene/Entity/Components/Camera.h"
 #include "Scene/Scene.h"
-#include "SceneProcessors/UploadSceneProcessor.h"
+#include "Scene/SceneLoader.h"
 #include "Window/IWindowEventListener.h"
 
 #include "RenderGraph/RenderGraph.h"
@@ -51,7 +51,8 @@ namespace render
         std::shared_ptr<scene::Scene> _scene;
         std::shared_ptr<scene::Camera> _cameraComponent;
 
-        UploadSceneProcessor _uploadProcessor;
+        scene::helpers::SceneLoader _sceneLoader;
+        //UploadSceneProcessor _uploadProcessor;
 
         bool _isMinimized;
         bool _isCameraMoving;

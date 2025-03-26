@@ -250,9 +250,6 @@
     <ClCompile Include="Render\Frame\CacheGPU.cpp">
       <Filter>Render\Frame</Filter>
     </ClCompile>
-    <ClCompile Include="Render\SceneProcessors\UploadSceneProcessor.cpp">
-      <Filter>Render\SceneProcessors</Filter>
-    </ClCompile>
     <ClCompile Include="Scene\SceneLoader.cpp" />
     <ClCompile Include="Scene\TextureManager.cpp" />
   </ItemGroup>
@@ -434,12 +431,6 @@
     </ClInclude>
     <ClInclude Include="Events\RenderEvent.h">
       <Filter>Events</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\SceneProcessors\UploadSceneProcessor.h">
-      <Filter>Render\SceneProcessors</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\SceneProcessors\ISceneProcessor.h">
-      <Filter>Render\SceneProcessors</Filter>
     </ClInclude>
     <ClInclude Include="Scene\SceneLoader.h" />
     <ClInclude Include="Scene\TextureManager.h" />

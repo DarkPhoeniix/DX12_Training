@@ -45,11 +45,11 @@ namespace dx12
         {
             offset = _resourceOffset;
         }
-        ASSERT((offset + resource.GetAllocationInfo().SizeInBytes) < _description.GetSize(), "Heap is full");
+        std::uint64_t size = resource.GetAllocationInfo().SizeInBytes;
+        ASSERT((offset + size) <= _description.GetSize(), "Heap is full");
 
         resource.CreatePlacedResource(_heap, offset, state);
 
-        std::uint64_t size = resource.GetAllocationInfo().SizeInBytes;
         _resourceOffset += Math::AlignUp(size, D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT);
     }
 

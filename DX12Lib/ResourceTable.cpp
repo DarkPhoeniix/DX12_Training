@@ -49,7 +49,7 @@ namespace dx12
         _BuffersDescriptorHeap.Reset();
     }
 
-    bool ResourceTable::CopyDescriptor(Resource* resource, ResourceViewType viewType, ResourceTable& srcTable)
+    std::uint32_t ResourceTable::CopyDescriptor(Resource* resource, ResourceViewType viewType, ResourceTable& srcTable)
     {
         ResourceTable::ResourceMap& resources = _GetResourceMap(viewType);
         DescriptorHeap& descriptorHeap = GetDescriptorHeap(viewType);
@@ -58,7 +58,7 @@ namespace dx12
         auto it = GetResource(key);
         if (it != resources.end())
         {
-            return false;
+            return resources[key].HeapIndex;
         }
 
         {
@@ -69,27 +69,33 @@ namespace dx12
 
             D3D12_CPU_DESCRIPTOR_HANDLE srcHandle = srcTable.GetResourceCPUHandle(resource, viewType);
             descriptorHeap.CopyResourceDescriptor(srcHandle);
-        }
 
-        return true;
+            return value.HeapIndex;
+        }
     }
 
-    bool ResourceTable::CopyDescriptor(Resource* resource, ResourceViewType viewType, D3D12_CPU_DESCRIPTOR_HANDLE handle)
+    std::uint32_t ResourceTable::CopyDescriptor(Resource* resource, ResourceViewType viewType, D3D12_CPU_DESCRIPTOR_HANDLE handle)
     {
         ResourceTable::ResourceMap& resources = _GetResourceMap(viewType);
         DescriptorHeap& descriptorHeap = GetDescriptorHeap(viewType);
 
+        ResourceKey key = { resource->GetName().c_str(), viewType };
+        auto it = GetResource(key);
+        if (it != resources.end())
+        {
+            return resources[key].HeapIndex;
+        }
+
         {
             std::unique_lock<std::shared_mutex> writeLock(_mutex);
 
-            ResourceKey key = { resource->GetName().c_str(), viewType };
             InternalResourceDesc value = { resource, descriptorHeap.GetCurrentOffset(), viewType };
             resources.insert(std::make_pair(key, value));
 
             descriptorHeap.CopyResourceDescriptor(handle);
-        }
 
-        return true;
+            return value.HeapIndex;
+        }
     }
 
     bool ResourceTable::PlaceResource(Resource* resource, ResourceViewType viewType)

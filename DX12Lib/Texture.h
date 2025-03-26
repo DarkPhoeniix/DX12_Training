@@ -18,9 +18,6 @@ namespace dx12
         // Get the descriptor heap associated with this texture.
         DescriptorHeap* GetDescriptorHeap() const;
 
-        // Load a texture from a file and return a shared pointer to the Texture object.
-        static std::shared_ptr<Texture> LoadFromFile(std::string filepath);
-
     private:
         // Intermediate resource used for staging data before uploading to the GPU.
         ComPtr<ID3D12Resource> _intermediateResource;

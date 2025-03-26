@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Heap.h"
+#include "TextureManager.h"
 
 namespace dx12
 {
@@ -20,10 +21,9 @@ namespace scene
         SceneCache& operator=(const SceneCache&) = delete;
         SceneCache& operator=(SceneCache&&) = default;
 
-        std::shared_ptr<dx12::ResourceTable> GetTextureTable() const;
         std::shared_ptr<dx12::ResourceTable> GetLightsTable() const;
 
-        dx12::Heap& GetTextureHeap();
+        TextureManager& GetTextureManager();
 
         void SetTime(float time);
         float GetTime() const;
@@ -32,10 +32,8 @@ namespace scene
         float GetDeltaTime() const;
 
     private:
-        std::shared_ptr<dx12::ResourceTable> _texturesTable;
+        TextureManager _textureManager;
         std::shared_ptr<dx12::ResourceTable> _lightsTable;
-
-        dx12::Heap _texturesHeap;
 
         float _currentTime;
         float _deltaTime;
