@@ -37,7 +37,6 @@ namespace scene
 
         dx12::ResourceTable _texturesTable;
         dx12::Heap _texturesHeap;
-        std::vector<std::shared_ptr<DirectX::ScratchImage>> _images;
         std::unordered_map<std::string, dx12::Resource> _intermediateResources;
     };
 }

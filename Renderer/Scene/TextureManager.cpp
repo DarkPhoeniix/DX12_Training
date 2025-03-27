@@ -99,13 +99,13 @@ namespace
         return image;
     }
 
-    std::shared_ptr<DirectX::ScratchImage> UploadTextureData(dx12::CommandList& commandList, const std::filesystem::path& path, std::shared_ptr<dx12::Texture> texture, dx12::Resource& intermediateBuffer)
+    void UploadTextureData(dx12::CommandList& commandList, const std::filesystem::path& path, std::shared_ptr<dx12::Texture> texture, dx12::Resource& intermediateBuffer)
     {
-        std::shared_ptr<DirectX::ScratchImage> image = std::make_shared<DirectX::ScratchImage>(LoadTextureImage(path));
+        DirectX::ScratchImage image = LoadTextureImage(path);
 
-        std::vector<D3D12_SUBRESOURCE_DATA> subresources(image->GetImageCount());
-        const DirectX::Image* pImages = image->GetImages();
-        for (int i = 0; i < image->GetImageCount(); ++i)
+        std::vector<D3D12_SUBRESOURCE_DATA> subresources(image.GetImageCount());
+        const DirectX::Image* pImages = image.GetImages();
+        for (int i = 0; i < image.GetImageCount(); ++i)
         {
             auto& subresource = subresources[i];
             subresource.RowPitch = pImages[i].rowPitch;
@@ -118,8 +118,6 @@ namespace
                            intermediateBuffer.GetDXResource().Get(), 
                            0, 0, static_cast<std::uint32_t>(subresources.size()), 
                            subresources.data());
-
-        return image;
     }
 }
 
@@ -189,13 +187,12 @@ void scene::TextureManager::UploadTextures(dx12::CommandList& commandList)
         _texturesHeap.PlaceResource(*texture);
         _texturesTable.PlaceResource(texture.get(), dx12::ResourceViewType::SRV);
 
-        _images.push_back(UploadTextureData(commandList, path, texture, _intermediateResources[textureName]));
+        UploadTextureData(commandList, path, texture, _intermediateResources[textureName]);
     }
 }
 
 void scene::TextureManager::CleanIntermediates()
 {
-    _images.clear();
     _intermediateResources.clear();
 }
 

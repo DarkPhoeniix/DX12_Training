@@ -176,8 +176,8 @@ namespace render
         {
             loadTask->SetName("Upload Data");
 
-            //_scene = _sceneLoader.LoadScene(*loadTask, "Dragon\\DragonScene.scene");
-            _scene = _sceneLoader.LoadScene(*loadTask, "Sponza\\Sponza.scene");
+            _scene = _sceneLoader.LoadScene(*loadTask, "Dragon\\DragonScene.scene");
+            //_scene = _sceneLoader.LoadScene(*loadTask, "Sponza\\Sponza.scene");
             _scene->AddRootNode(cameraEntity);
         }
 
