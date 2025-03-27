@@ -25,6 +25,7 @@ namespace scene
 
         void EnqueueTexture(const std::string& filepath);
         void UploadTextures(dx12::CommandList& commandList);
+        void CleanIntermediates();
 
         std::shared_ptr<dx12::Texture> GetTexture(const std::string& name) const;
 

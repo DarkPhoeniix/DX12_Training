@@ -152,6 +152,8 @@ namespace scene::helpers
 
         scene->GetCache().GetTextureManager().UploadTextures(commandList);
 
+        task.GetFence()->SetCompletionCallback([this]() { CleanIntermediates(); });
+
         commandList.Close();
 
         return scene;
@@ -524,5 +526,11 @@ namespace scene::helpers
                 }
             }
         }
+    }
+
+    void SceneLoader::CleanIntermediates()
+    {
+        _intermediates.clear();
+        _cache->GetTextureManager().CleanIntermediates();
     }
 }

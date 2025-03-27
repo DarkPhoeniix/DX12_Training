@@ -193,6 +193,12 @@ void scene::TextureManager::UploadTextures(dx12::CommandList& commandList)
     }
 }
 
+void scene::TextureManager::CleanIntermediates()
+{
+    _images.clear();
+    _intermediateResources.clear();
+}
+
 std::shared_ptr<dx12::Texture> scene::TextureManager::GetTexture(const std::string& name) const
 {
     auto it = _textures.find(name);

@@ -42,6 +42,8 @@ namespace scene::helpers
 
         void LoadRawMesh(const std::string& filepath, const std::shared_ptr<Mesh>& meshComponent);
 
+        void CleanIntermediates();
+
         scene::SceneCache* _cache;
         std::vector<dx12::Resource> _intermediates;
     };
