@@ -4,6 +4,11 @@
 
 #include "ResourceTable.h"
 
+namespace
+{
+    constexpr std::uint32_t DESCRIPTOR_TABLE_SIZE = 4096;
+}
+
 namespace rg
 {
     RenderContext::RenderContext()
@@ -11,7 +16,7 @@ namespace rg
     {
         for (dx12::ResourceTable& table : _resourceTable)
         {
-            table.Init(1024, true);
+            table.Init(DESCRIPTOR_TABLE_SIZE, true);
         }
 
         // Initialize cache heap

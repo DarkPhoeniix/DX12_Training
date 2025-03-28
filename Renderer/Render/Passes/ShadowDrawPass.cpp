@@ -141,7 +141,8 @@ namespace render
             CacheGPU::DataHandle sceneDataHandle = context.GetCache().GetResourcePlacement("SceneCB");
             commandList.SetCBV(0, sceneDataHandle.DataGPU);
 
-            helpers::SetupLightDataGPU(*_scene, commandList, &context.GetCache(), context.GetResourceTable());
+            CacheGPU::DataHandle lightsData = context.GetCache().GetResourcePlacement("LightsCB");
+            commandList.SetSRV(2, lightsData.DataGPU);
 
             for (uint32_t lightIndex = 0; lightIndex < lightEntities.size(); ++lightIndex)
             {
@@ -159,9 +160,7 @@ namespace render
                 PIXBeginEvent(commandList.GetDXCommandList().Get(), 1, lightEntities[lightIndex]->GetName().c_str());
 
                 std::shared_ptr<dx12::Resource> shadowMap = context.GetResource(_data.ShadowMaps[lightIndex]);
-                ASSERT(shadowMap != nullptr, "Fail here");
                 std::shared_ptr<dx12::Resource> commandBuffer = context.GetResource(_data.LightCommandBuffers[context.GetFrameIndex()][lightIndex]);
-                ASSERT(commandBuffer != nullptr, "Fail here");
 
                 // Transition resources
                 std::vector<dx12::ResourceBarrier> barriers =
@@ -206,7 +205,8 @@ namespace render
             CacheGPU::DataHandle sceneDataHandle = context.GetCache().GetResourcePlacement("SceneCB");
             commandList.SetCBV(0, sceneDataHandle.DataGPU);
 
-            helpers::SetupLightDataGPU(*_scene, commandList, &context.GetCache(), context.GetResourceTable());
+            CacheGPU::DataHandle lightsData = context.GetCache().GetResourcePlacement("LightsCB");
+            commandList.SetSRV(2, lightsData.DataGPU);
 
             for (uint32_t lightIndex = 0; lightIndex < lightEntities.size(); ++lightIndex)
             {
@@ -224,9 +224,7 @@ namespace render
                 PIXBeginEvent(commandList.GetDXCommandList().Get(), 1, lightEntities[lightIndex]->GetName().c_str());
 
                 std::shared_ptr<dx12::Resource> shadowMap = context.GetResource(_data.ShadowMaps[lightIndex]);
-                ASSERT(shadowMap != nullptr, "Fail here");
                 std::shared_ptr<dx12::Resource> commandBuffer = context.GetResource(_data.LightCommandBuffers[context.GetFrameIndex()][lightIndex]);
-                ASSERT(commandBuffer != nullptr, "Fail here");
 
                 // Transition resources
                 std::vector<dx12::ResourceBarrier> barriers =

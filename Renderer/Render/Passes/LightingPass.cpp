@@ -83,7 +83,8 @@ namespace render
             CacheGPU::DataHandle sceneDataHandle = context.GetCache().GetResourcePlacement("SceneCB");
             commandList.SetCBV(0, sceneDataHandle.DataGPU);
 
-            helpers::SetupLightDataGPU(*_scene, commandList, &context.GetCache(), context.GetResourceTable());
+            CacheGPU::DataHandle lightsData = context.GetCache().GetResourcePlacement("LightsCB");
+            commandList.SetSRV(2, lightsData.DataGPU);
 
             commandList.SetDescriptorHeaps({ context.GetResourceTable().GetDescriptorHeap(dx12::ResourceViewType::SRV).GetDXDescriptorHeap().Get() });
 

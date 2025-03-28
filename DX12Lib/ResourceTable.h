@@ -18,8 +18,10 @@ namespace dx12
         void Reset();
 
         // Copies a descriptor from another resource table to the current, specifying the resource type (e.g., RTV, DSV).
+        // Returns index of the placed resource in the descriptor heap
         std::uint32_t CopyDescriptor(Resource* resource, ResourceViewType viewType, ResourceTable& srcTable);
         // Copies a descriptor handle, specifying the resource type (e.g., RTV, DSV).
+        // Returns index of the placed resource in the descriptor heap
         std::uint32_t CopyDescriptor(Resource* resource, ResourceViewType viewType, D3D12_CPU_DESCRIPTOR_HANDLE handle);
         // Places a resource into the table, associating it with a descriptor based on the view type (e.g., RTV, DSV).
         bool PlaceResource(Resource* resource, ResourceViewType viewType);

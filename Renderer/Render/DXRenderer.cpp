@@ -21,6 +21,7 @@
 #include "Utility/DebugInfo.h"
 
 #include "Render/Helpers/GPUStructs.h"
+#include "Render/Helpers/RenderHelpers.h"
 
 #include "Render/RenderSettings.h"
 #include "Render/Frame/TaskGPU.h"
@@ -176,8 +177,7 @@ namespace render
         {
             loadTask->SetName("Upload Data");
 
-            _scene = _sceneLoader.LoadScene(*loadTask, "Dragon\\DragonScene.scene");
-            //_scene = _sceneLoader.LoadScene(*loadTask, "Sponza\\Sponza.scene");
+            _scene = _sceneLoader.LoadScene(*loadTask, "Sponza\\Sponza.scene");
             _scene->AddRootNode(cameraEntity);
         }
 
@@ -418,50 +418,10 @@ namespace render
     {
         cache.Clear();
 
-        uint32_t lightsNum = 0;
-        for (std::shared_ptr<scene::Entity>& node : _scene->GetRootNodes())
-        {
-            CheckLightsNum(node, lightsNum);
-        }
+        helpers::SetupSceneDataGPU(*_scene, &cache);
+        helpers::SetupLightDataGPU(*_scene, &cache, table);
 
-        // Setup scene data
-        CacheGPU::DataHandle sceneDataHandle = cache.RequestPlacement("SceneCB", sizeof(GPUSceneDesc));
-
-        GPUSceneDesc* sceneDesc = (GPUSceneDesc*)sceneDataHandle.DataCPU;
-        {
-            auto cameraEntity = _scene->FindNodeByComponentName("Camera");
-            if (ASSERT(cameraEntity.get(), "No camera on the scene"))
-            {
-                return;
-            }
-
-            scene::Camera* camera = cameraEntity->GetComponentAs<scene::Camera>("Camera");
-
-            sceneDesc->View = camera->View();
-            sceneDesc->Projection = camera->Projection();
-            sceneDesc->ViewProjection = camera->ViewProjection();
-
-            sceneDesc->InvView = XMMatrixInverse(nullptr, sceneDesc->View);
-            sceneDesc->InvProjection = XMMatrixInverse(nullptr, sceneDesc->Projection);
-
-            sceneDesc->EyeDirection = camera->Look();
-            sceneDesc->EyePosition = camera->Position();
-
-            const scene::Viewport& viewport = camera->GetViewport();
-            sceneDesc->WindowSize = {
-                (uint32_t)viewport.GetSize().x,
-                (uint32_t)viewport.GetSize().y
-            };
-            sceneDesc->ReciprocalWindowSize = {
-                (1.0f / (float)viewport.GetSize().x),
-                (1.0f / (float)viewport.GetSize().y)
-            };
-            sceneDesc->NearFar = { camera->NearZ, camera->FarZ };
-
-            sceneDesc->LightsNum = lightsNum;
-        }
-
-        for (auto entity : _scene->GetRootNodes())
+        for (std::shared_ptr<scene::Entity> entity : _scene->GetRootNodes())
         {
             SetupEntity(entity, cache, table);
         }

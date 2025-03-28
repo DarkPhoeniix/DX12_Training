@@ -7,11 +7,9 @@
 
 #include "Scene/Entity/Components/Armature.h"
 #include "Scene/Entity/Components/Light.h"
-#include "Scene/Entity/Components/Material.h"
 #include "Scene/Entity/Components/Mesh.h"
 #include "Scene/Entity/Components/Transformation.h"
 
-#include "Render/Helpers/GPUStructs.h"
 #include "Render/Helpers/RenderHelpers.h"
 
 #include "RenderGraph/RenderContext.h"
@@ -45,63 +43,6 @@ namespace
     std::uint32_t AlignToUAVCounterOffset(std::uint32_t size)
     {
         return Math::AlignUp(size, D3D12_UAV_COUNTER_PLACEMENT_ALIGNMENT);
-    }
-
-    void SetupEntity(std::shared_ptr<scene::Entity> entity, dx12::CommandList& commandList, CacheGPU* cache, dx12::ResourceTable* resourceTable)
-    {
-        if (scene::Mesh* mesh = entity->GetComponentAs<scene::Mesh>("Mesh"))
-        {
-            scene::Armature* armature = entity->GetComponentAs<scene::Armature>("Armature");
-            scene::Transformation transform = entity->GetGlobalTransform();
-            scene::Material* material = entity->GetComponentAs<scene::Material>("Material");
-
-            CacheGPU::DataHandle modelDescHandle = cache->GetOrPlaceResource(entity->GetName(), sizeof(GPUModelDesc));
-            GPUModelDesc* modelDesc = (GPUModelDesc*)modelDescHandle.DataCPU;
-            {
-                modelDesc->Transform = transform.Transform;
-
-                if (mesh)
-                {
-                    modelDesc->HasMesh = 1;
-                }
-
-                if (material)
-                {
-                    dx12::ResourceTable& frameTable = *resourceTable;
-                    scene::TextureManager& textureManager = entity->GetSceneCache()->GetTextureManager();
-                    dx12::ResourceTable& textureTable = textureManager.GetTextureTable();
-
-                    modelDesc->AlbedoTextureIndex    = frameTable.CopyDescriptor(textureManager.GetTexture(material->Albedo).get(), dx12::ResourceViewType::SRV, textureTable);
-                    modelDesc->NormalMapTextureIndex = frameTable.CopyDescriptor(textureManager.GetTexture(material->NormalMap).get(), dx12::ResourceViewType::SRV, textureTable);
-                    modelDesc->MetalnessTextureIndex = frameTable.CopyDescriptor(textureManager.GetTexture(material->Metalness).get(), dx12::ResourceViewType::SRV, textureTable);
-                    modelDesc->RoughnessTextureIndex = frameTable.CopyDescriptor(textureManager.GetTexture(material->Roughness).get(), dx12::ResourceViewType::SRV, textureTable);
-                }
-
-                if (armature)
-                {
-                    modelDesc->UseSkinning = 1;
-                }
-            }
-
-            // Update and setup animation
-            if (armature)
-            {
-                const std::vector<scene::Bone*>& bones = armature->GetSortedBones();
-
-                CacheGPU::DataHandle bonesDescHandle = cache->GetOrPlaceResource(entity->GetName() + "_bones", sizeof(DirectX::XMMATRIX) * bones.size());
-                DirectX::XMMATRIX* data = (DirectX::XMMATRIX*)bonesDescHandle.DataCPU;
-
-                for (int i = 0; i < bones.size(); ++i)
-                {
-                    data[i] = bones[i]->Offset * bones[i]->GlobalTransform;
-                }
-            }
-        }
-
-        for (std::shared_ptr<scene::Entity>& child : entity->GetChildrenNodes())
-        {
-            SetupEntity(child, commandList, cache, resourceTable);
-        }
     }
 } // namespace unnamed
 
@@ -171,7 +112,8 @@ namespace render
         CacheGPU::DataHandle sceneDataHandle = context.GetCache().GetResourcePlacement("SceneCB");
         commandList.SetCBV(0, sceneDataHandle.DataGPU);
 
-        helpers::SetupLightDataGPU(*_scene, commandList, &context.GetCache(), context.GetResourceTable());
+        CacheGPU::DataHandle lightsData = context.GetCache().GetResourcePlacement("LightsCB");
+        commandList.SetSRV(2, lightsData.DataGPU);
 
         CacheGPU::DataHandle sceneAddress = context.GetCache().GetResourcePlacement("SceneCB");
         CacheGPU::DataHandle lightsAddress = context.GetCache().GetResourcePlacement("LightsCB");
@@ -197,8 +139,6 @@ namespace render
                 {
                     continue;
                 }
-
-                SetupEntity(meshes[j], commandList, &context.GetCache(), &context.GetResourceTable());
 
                 CacheGPU::DataHandle modelAddress = context.GetCache().GetResourcePlacement(meshes[j]->GetName());
                 CacheGPU::DataHandle bonesAddress = modelAddress;
