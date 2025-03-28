@@ -29,7 +29,7 @@ namespace scene
         {
         }
 
-        scene::AABBVolume AABB;
+        scene::AABBVolume LocalAABB;
 
         std::vector<VertexData> VertexData;
         std::vector<SkinningVertexData> SkinningVertexData;

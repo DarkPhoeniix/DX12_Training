@@ -324,6 +324,14 @@ namespace scene::helpers
 
         LoadRawMesh(meshFilepth, component);
 
+        for (const VertexData& vertex : component->VertexData)
+        {
+            XMVECTOR position = XMLoadFloat3(&vertex.Position);
+
+            component->LocalAABB.Min = XMVectorMin(component->LocalAABB.Min, position);
+            component->LocalAABB.Max = XMVectorMax(component->LocalAABB.Max, position);
+        }
+
         auto UploadData = [&](dx12::CommandList& commandList, dx12::Resource& destination, std::uint32_t numElements, std::uint32_t elementSize, const void* data)
             {
                 std::uint32_t bufferSize = numElements * elementSize;
