@@ -22,16 +22,6 @@ namespace scene
         return _textureManager;
     }
 
-    void SceneCache::SetTime(float time)
-    {
-        _currentTime = time;
-    }
-
-    float SceneCache::GetTime() const
-    {
-        return _currentTime;
-    }
-
     void SceneCache::SetDeltaTime(float deltaTime)
     {
         _deltaTime = deltaTime;

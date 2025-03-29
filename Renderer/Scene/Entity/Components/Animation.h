@@ -17,17 +17,20 @@ namespace scene
     public:
         Animation()
             : IComponent("Animation")
+            , Frames{}
             , TicksPerSecond(0.0f)
             , Duration(0.0f)
+            , CurrentTime(0.0f)
         {
         }
 
-        std::map<BoneId, DirectX::XMMATRIX> GetBonesTransforms(float time) const;
+        std::map<BoneId, DirectX::XMMATRIX> GetBonesTransforms(float deltaTime);
 
         std::string Name;
 
         std::vector<AnimationFrame> Frames;
         float TicksPerSecond;
         float Duration;
+        float CurrentTime;
     };
 } // namespace scene

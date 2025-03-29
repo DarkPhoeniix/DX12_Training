@@ -24,25 +24,27 @@ namespace
 
 namespace scene
 {
-    std::map<BoneId, XMMATRIX> Animation::GetBonesTransforms(float time) const
+    std::map<BoneId, XMMATRIX> Animation::GetBonesTransforms(float deltaTime)
     {
+        CurrentTime += deltaTime;
+
         std::map<BoneId, XMMATRIX> transforms;
 
-        float normalizedTime = std::fmodf(time * TicksPerSecond, Duration);
-        float interpolation = std::fmodf(time * TicksPerSecond, 1.0f);
+        float normalizedTime = std::fmodf(CurrentTime * TicksPerSecond, Duration);
+        float interpolation  = std::fmodf(CurrentTime * TicksPerSecond, 1.0f);
 
         const auto& interpolatedKeyFrames = GetInterpolatedKeyFrame(Frames, normalizedTime);
-        const AnimationFrame& fisrtFrame = interpolatedKeyFrames.first;
+        const AnimationFrame& firstFrame = interpolatedKeyFrames.first;
         const AnimationFrame& secondFrame = interpolatedKeyFrames.second;
 
-        for (const auto& [boneId, rotationQuat] : fisrtFrame.Rotations)
+        for (const auto& [boneId, rotationQuat] : firstFrame.Rotations)
         {
             XMVECTOR interpolatedRotation = XMQuaternionSlerp(rotationQuat, secondFrame.Rotations.at(boneId), interpolation);
             XMMATRIX rotation = XMMatrixRotationQuaternion(interpolatedRotation);
             transforms[boneId] = rotation;
         }
 
-        for (const auto& [boneId, locationVec] : fisrtFrame.Locations)
+        for (const auto& [boneId, locationVec] : firstFrame.Locations)
         {
             XMVECTOR interpolatedLocation = XMVectorLerp(locationVec, secondFrame.Locations.at(boneId), interpolation);
             XMMATRIX location = XMMatrixTranslationFromVector(interpolatedLocation);

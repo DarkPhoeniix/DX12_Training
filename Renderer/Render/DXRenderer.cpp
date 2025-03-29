@@ -177,7 +177,7 @@ namespace render
         {
             loadTask->SetName("Upload Data");
 
-            _scene = _sceneLoader.LoadScene(*loadTask, "Sponza\\Sponza.scene");
+            _scene = _sceneLoader.LoadScene(*loadTask, "Dragon\\DragonScene.scene");
             _scene->AddRootNode(cameraEntity);
         }
 
@@ -203,27 +203,12 @@ namespace render
     {
         DebugInfo::Update(updateEvent);
 
-        _scene->GetCache().SetTime(updateEvent.totalTime);
-        _scene->GetCache().SetDeltaTime(updateEvent.elapsedTime);
-
         _deltaTime = updateEvent.elapsedTime;
-
-        std::function<void(std::shared_ptr<scene::Entity>)> updateArmatureAABB = [](std::shared_ptr<scene::Entity> entity)
-        {
-            scene::Transformation* transform = entity->GetComponentAs<scene::Transformation>("Transformation");
-            scene::Armature* armature = entity->GetComponentAs<scene::Armature>("Armature");
-            scene::Mesh* mesh = entity->GetComponentAs<scene::Mesh>("Mesh");
-
-            if (!mesh || !armature)
-            {
-                return;
-            }
-
-        };
+        _scene->GetCache().SetDeltaTime(_deltaTime);
 
         for (const auto& entity : _scene->GetRootNodes())
         {
-            UpdateEntity(updateEvent, entity);
+            UpdateEntity(entity);
         }
     }
 
@@ -364,7 +349,7 @@ namespace render
         SetupRenderPipeline();
     }
 
-    void DXRenderer::UpdateEntity(events::UpdateEvent& updateEvent, std::shared_ptr<scene::Entity> entity)
+    void DXRenderer::UpdateEntity(std::shared_ptr<scene::Entity> entity)
     {
         entity->UpdateGlobalTransform();
 
@@ -375,7 +360,7 @@ namespace render
 
         if (armature && animation)
         {
-            const auto& transforms = animation->GetBonesTransforms(updateEvent.totalTime);
+            const auto& transforms = animation->GetBonesTransforms(_deltaTime);
             armature->ApplyAnimation(transforms);
             armature->UpdateGlobalTransformations();
         }
@@ -387,7 +372,7 @@ namespace render
 
         for (const auto& child : entity->GetChildrenNodes())
         {
-            UpdateEntity(updateEvent, child);
+            UpdateEntity(child);
         }
     }
 

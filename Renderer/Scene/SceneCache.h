@@ -25,9 +25,6 @@ namespace scene
 
         TextureManager& GetTextureManager();
 
-        void SetTime(float time);
-        float GetTime() const;
-
         void SetDeltaTime(float deltaTime);
         float GetDeltaTime() const;
 
@@ -35,7 +32,6 @@ namespace scene
         TextureManager _textureManager;
         std::shared_ptr<dx12::ResourceTable> _lightsTable;
 
-        float _currentTime;
         float _deltaTime;
     };
 } // namespace scene
