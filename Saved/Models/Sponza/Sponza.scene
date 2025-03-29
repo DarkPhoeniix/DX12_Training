@@ -382,11 +382,6 @@
         "sponza_97.node",
         "sponza_98.node",
         "sponza_99.node",
-        "Point.node",
-        "Point.001.node",
-        "Point.002.node",
-        "Point.003.node",
-        "sponza_01.001.node",
         "sponza_372.001.node",
         "sponza_371.001.node",
         "sponza_370.001.node",
@@ -396,6 +391,11 @@
         "sponza_366.001.node",
         "sponza_378.001.node",
         "sponza_377.001.node",
+        "sponza_01.001.node",
+        "RedPointLight.node",
+        "GreenPointLight.node",
+        "BluePointLight.node",
+        "WhitePointLight.node",
         "Skybox.node"
     ]
 }
