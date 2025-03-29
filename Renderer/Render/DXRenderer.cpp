@@ -149,19 +149,26 @@ namespace render
         uint32_t windowWidth = windowSize.right - windowSize.left;
         uint32_t windowHeight = windowSize.bottom - windowSize.top;
 
+        // Load scene
+        {
+            loadTask->SetName("Upload Data");
+
+            _scene = _sceneLoader.LoadScene(*loadTask, "Sponza\\Sponza.scene");
+        }
+
         // Camera Setup
         std::shared_ptr<scene::Entity> cameraEntity = std::make_shared<scene::Entity>(&_scene->GetCache());
         {
             cameraEntity->SetName("Camera");
 
-            XMVECTOR pos = XMVectorSet(15.0f, 25.0f, 35.0f, 1.0f);
-            XMVECTOR target = XMVectorSet(-5.0f, 18.0f, -5.0f, 1.0f);
+            XMVECTOR pos = XMVectorSet(70.0f, 45.0f, 10.0f, 1.0f);
+            XMVECTOR target = XMVectorSet(-20.0f, 35.0f, 0.0f, 1.0f);
             XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
             std::shared_ptr<scene::Camera> cameraComponent = std::make_shared<scene::Camera>();
             cameraComponent->LookAt(pos, target, up);
             cameraComponent->SetViewport(scene::Viewport({ windowWidth, windowHeight }));
-            cameraComponent->SetLens(60.0f, 0.1f, 1000.0f);
+            cameraComponent->SetLens(70.0f, 0.1f, 1000.0f);
             cameraComponent->Speed = 30.0f;
 
             std::shared_ptr<scene::Transformation> transformComponent = std::make_shared<scene::Transformation>();
@@ -171,13 +178,7 @@ namespace render
             cameraEntity->AddComponent(transformComponent);
 
             _cameraComponent = cameraComponent;
-        }
 
-        // Load scene
-        {
-            loadTask->SetName("Upload Data");
-
-            _scene = _sceneLoader.LoadScene(*loadTask, "Dragon\\DragonScene.scene");
             _scene->AddRootNode(cameraEntity);
         }
 

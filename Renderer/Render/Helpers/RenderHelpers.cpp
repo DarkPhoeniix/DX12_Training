@@ -34,7 +34,15 @@ namespace
         scene::Transformation* transform = node->GetComponentAs<scene::Transformation>("Transformation");
         scene::Light* light = node->GetComponentAs<scene::Light>("Light");
 
-        std::array<XMMATRIX, 6> result;
+        std::array<XMMATRIX, 6> result = 
+        {
+            XMMatrixIdentity(),
+            XMMatrixIdentity(),
+            XMMatrixIdentity(),
+            XMMatrixIdentity(),
+            XMMatrixIdentity(),
+            XMMatrixIdentity()
+        };
 
         if (light->Type == scene::LightType::Spot)
         {

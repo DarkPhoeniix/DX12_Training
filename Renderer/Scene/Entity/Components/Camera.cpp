@@ -144,24 +144,39 @@ namespace scene
 		return _viewProjection;
 	}
 
-	XMVECTOR Camera::Right() const
+	const XMVECTOR& Camera::Right() const
 	{
 		return XMMatrixTranspose(_view).r[0];
 	}
 
-	XMVECTOR Camera::Up() const
+	const XMVECTOR& Camera::Up() const
 	{
 		return XMMatrixTranspose(_view).r[1];
 	}
 
-	XMVECTOR Camera::Look() const
+	const XMVECTOR& Camera::Look() const
 	{
 		return XMMatrixTranspose(_view).r[2];
 	}
 
-	DirectX::XMVECTOR Camera::Position() const
+	const XMVECTOR& Camera::Position() const
 	{
 		return _position;
+	}
+
+	XMVECTOR& Camera::Position()
+	{
+		return _position;
+	}
+
+	const XMVECTOR& Camera::Target() const
+	{
+		return _target;
+	}
+
+	XMVECTOR& Camera::Target()
+	{
+		return _target;
 	}
 
 	void Camera::LookAt(XMVECTOR& pos, XMVECTOR& target, XMVECTOR& up)
