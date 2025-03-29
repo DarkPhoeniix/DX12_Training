@@ -131,6 +131,8 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
 
         events::InputDevice::Instance().PollEvents();
 
+        _editor->NewFrame();
+
         _UpdateCall(pApp);
         _RenderCall(pApp);
 

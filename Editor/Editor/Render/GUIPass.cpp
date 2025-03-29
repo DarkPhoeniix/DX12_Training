@@ -44,13 +44,9 @@ namespace render
                 { depth.get(),  D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_DEPTH_WRITE }
             };
             commandList.TransitionBarriers(barriers);
-            //commandList.TransitionBarrier(*target, D3D12_RESOURCE_STATE_RENDER_TARGET);
-            //commandList.TransitionBarrier(*depth, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 
             commandList.SetViewport(*_editor->GetViewport());
             commandList.SetRenderTarget(&rtv, &dsv);
-
-            _editor->NewFrame();
 
             _editor->Update();
             _editor->Render(commandList);
@@ -61,8 +57,6 @@ namespace render
                 { depth.get(),  D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_COMMON }
             };
             commandList.TransitionBarriers(barriers);
-            //commandList.TransitionBarrier(*target, D3D12_RESOURCE_STATE_COMMON);
-            //commandList.TransitionBarrier(*depth, D3D12_RESOURCE_STATE_COMMON);
         }
         PIXEndEvent(commandList.GetDXCommandList().Get());
 
