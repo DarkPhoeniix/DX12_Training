@@ -3,7 +3,7 @@
 #include "Render/Frame/Frame.h"
 #include "Scene/Entity/Components/Camera.h"
 #include "Scene/Scene.h"
-#include "SceneProcessors/UploadSceneProcessor.h"
+#include "Scene/SceneLoader.h"
 #include "Window/IWindowEventListener.h"
 
 #include "RenderGraph/RenderGraph.h"
@@ -38,6 +38,9 @@ namespace render
         void OnPipelineChanged() override;
 
     private:
+        void UpdateEntity(core::events::UpdateEvent& updateEvent, std::shared_ptr<scene::Entity> entity);
+        void UpdateBoundingVolumes(std::shared_ptr<scene::Entity> entity);
+
         void WaitAllFrames();
         void SetupRenderPipeline();
         void UploadSceneCache(CacheGPU& cache, dx12::ResourceTable& table);
@@ -51,7 +54,8 @@ namespace render
         std::shared_ptr<scene::Scene> _scene;
         std::shared_ptr<scene::Camera> _cameraComponent;
 
-        UploadSceneProcessor _uploadProcessor;
+        scene::helpers::SceneLoader _sceneLoader;
+        //UploadSceneProcessor _uploadProcessor;
 
         bool _isMinimized;
         bool _isCameraMoving;

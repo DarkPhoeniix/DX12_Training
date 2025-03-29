@@ -72,8 +72,7 @@ namespace render
             for (auto& entity : meshes)
             {
                 scene::Mesh* mesh = entity->GetComponentAs<scene::Mesh>("Mesh");
-                scene::Transformation* t = entity->GetComponentAs<scene::Transformation>("Transformation");
-                scene::AABBVolume aabb = mesh->AABB.Transform(t->Transform);
+                scene::AABBVolume aabb = mesh->GlobalAABB;
 
                 DrawHelper::DrawBox(commandList, *_camera, aabb.Min, aabb.Max, DirectX::XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f));
             }

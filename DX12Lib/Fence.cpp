@@ -21,6 +21,12 @@ namespace dx12
 
         this->_fence->SetEventOnCompletion(_fenceValue, _eventOnCompletion);
         ::WaitForSingleObject(_eventOnCompletion, DWORD_MAX);
+
+        if (_cpuCallback)
+        {
+            _cpuCallback();
+            _cpuCallback = {};
+        }
     }
 
     void Fence::SetValue(UINT64 fenceValue)
@@ -46,5 +52,10 @@ namespace dx12
     ComPtr<ID3D12Fence> Fence::GetDXFence()
     {
         return _fence;
+    }
+
+    void Fence::SetCompletionCallback(const std::function<void()>& callback)
+    {
+        _cpuCallback = callback;
     }
 } // namespace dx12

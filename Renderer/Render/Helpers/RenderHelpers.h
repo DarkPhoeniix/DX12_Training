@@ -15,6 +15,6 @@ namespace scene
 
 namespace helpers
 {
-    void SetupSceneDataGPU(scene::Scene& scene, dx12::CommandList& commandList, CacheGPU* cache);
-    void SetupLightDataGPU(scene::Scene& scene, dx12::CommandList& commandList, CacheGPU* cache, dx12::ResourceTable& resourceTable);
+    void SetupSceneDataGPU(scene::Scene& scene, CacheGPU* cache);
+    void SetupLightDataGPU(scene::Scene& scene, CacheGPU* cache, dx12::ResourceTable& resourceTable);
 } // namespace helpers

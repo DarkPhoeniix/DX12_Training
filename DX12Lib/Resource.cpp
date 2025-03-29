@@ -84,7 +84,8 @@ namespace dx12
 
 	const D3D12_RESOURCE_ALLOCATION_INFO& Resource::GetAllocationInfo() const
 	{
-		return _allocationInfo;
+		D3D12_RESOURCE_DESC desc = _resourceDesc.CreateDXResourceDescription();
+		return dx12::Device::GetDXDevice()->GetResourceAllocationInfo(0, 1, &desc);
 	}
 
 	void* Resource::Map()
@@ -193,8 +194,6 @@ namespace dx12
 
 		D3D12_RESOURCE_DESC resourceDesc = _resourceDesc.CreateDXResourceDescription();
 		D3D12_CLEAR_VALUE* clearValue = _resourceDesc.GetClearValue().get();
-
-		_allocationInfo = dx12::Device::GetDXDevice()->GetResourceAllocationInfo(0, 1, &resourceDesc);
 
 		dx12::Device::GetDXDevice()->CreatePlacedResource(
 			heap.Get(),

@@ -202,9 +202,6 @@
     <ClCompile Include="Scene\Entity\Entity.cpp">
       <Filter>Scene\Entity</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\Entity\EntityLoader.cpp">
-      <Filter>Scene\Entity</Filter>
-    </ClCompile>
     <ClCompile Include="Scene\Scene.cpp">
       <Filter>Scene</Filter>
     </ClCompile>
@@ -253,9 +250,8 @@
     <ClCompile Include="Render\Frame\CacheGPU.cpp">
       <Filter>Render\Frame</Filter>
     </ClCompile>
-    <ClCompile Include="Render\SceneProcessors\UploadSceneProcessor.cpp">
-      <Filter>Render\SceneProcessors</Filter>
-    </ClCompile>
+    <ClCompile Include="Scene\SceneLoader.cpp" />
+    <ClCompile Include="Scene\TextureManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RendererPCH.h" />
@@ -355,9 +351,6 @@
     <ClInclude Include="Scene\Entity\Entity.h">
       <Filter>Scene\Entity</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\Entity\EntityLoader.h">
-      <Filter>Scene\Entity</Filter>
-    </ClInclude>
     <ClInclude Include="Scene\Scene.h">
       <Filter>Scene</Filter>
     </ClInclude>
@@ -439,12 +432,8 @@
     <ClInclude Include="Events\RenderEvent.h">
       <Filter>Events</Filter>
     </ClInclude>
-    <ClInclude Include="Render\SceneProcessors\UploadSceneProcessor.h">
-      <Filter>Render\SceneProcessors</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\SceneProcessors\ISceneProcessor.h">
-      <Filter>Render\SceneProcessors</Filter>
-    </ClInclude>
+    <ClInclude Include="Scene\SceneLoader.h" />
+    <ClInclude Include="Scene\TextureManager.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\DebugDraw\AABB_rootsig.hlsli">

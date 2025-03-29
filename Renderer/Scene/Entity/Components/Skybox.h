@@ -11,7 +11,7 @@ namespace scene
     public:
         Skybox();
 
-        std::shared_ptr<dx12::Texture> SkydomeTexture;
+        std::string SkydomeTexture;
 
         dx12::DescriptorHeap DescHeap;
         dx12::Heap TexHeap;

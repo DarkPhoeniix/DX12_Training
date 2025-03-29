@@ -27,7 +27,8 @@ namespace scene
 
         SceneCache& GetCache();
 
-        bool LoadScene(const std::string& filepath, dx12::CommandList& commandList);
+        void SetName(const std::string& name);
+        const std::string GetName() const;
 
     private:
         std::string _name;

@@ -34,46 +34,51 @@ float3 SphericalToCartesian(float radius, float polar, float azimuth)
     return float3(x, y, z);
 }
 
-static const int NUM_SEGMENTS = 8;
+static const int NUM_SEGMENTS = 32;
 
 [maxvertexcount(256)]
 void main(point Geometryinput input[1], inout LineStream<Pixelinput> lineStream)
 {
+    [unroll(NUM_SEGMENTS)]
     for (int i = 0; i < NUM_SEGMENTS; ++i)
     {
-        for (int j = 0; j < NUM_SEGMENTS; ++j)
-        {
-            int pointIndex = i * NUM_SEGMENTS + j;
+        float polar = (2.0f * PI * i) / NUM_SEGMENTS;
+        float3 position = float3(SphereData.Radius * sin(polar), 0.0f, SphereData.Radius * cos(polar)) + SphereData.Position;
+        float4 worldPosition = mul(float4(position, 1.0f), Instance.ViewProj);
             
-            float polar = PI * (i - 1) / NUM_SEGMENTS;
-            float azimuth = 2.0f * PI * j / NUM_SEGMENTS;
-            float3 position = SphericalToCartesian(SphereData.Radius, polar, azimuth) + SphereData.Position;
-            float4 worldPosition = mul(float4(position, 1.0f), Instance.ViewProj);
+        lineStream.Append((Pixelinput) worldPosition);
+        
+        polar = (2.0f * PI * (i - 1)) / NUM_SEGMENTS;
+        position = float3(SphereData.Radius * sin(polar), 0.0f, SphereData.Radius * cos(polar)) + SphereData.Position;
+        worldPosition = mul(float4(position, 1.0f), Instance.ViewProj);
             
-            lineStream.Append((Pixelinput) worldPosition);
+        lineStream.Append((Pixelinput) worldPosition);
+        lineStream.RestartStrip();
+        
+        polar = (2.0f * PI * i) / NUM_SEGMENTS;
+        position = float3(0.0f, SphereData.Radius * sin(polar), SphereData.Radius * cos(polar)) + SphereData.Position;
+        worldPosition = mul(float4(position, 1.0f), Instance.ViewProj);
             
-            polar = PI * i / NUM_SEGMENTS;
-            azimuth = 2.0f * PI * j / NUM_SEGMENTS;
-            position = SphericalToCartesian(SphereData.Radius, polar, azimuth) + SphereData.Position;
-            worldPosition = mul(float4(position, 1.0f), Instance.ViewProj);
+        lineStream.Append((Pixelinput) worldPosition);
+        
+        polar = (2.0f * PI * (i - 1)) / NUM_SEGMENTS;
+        position = float3(0.0f, SphereData.Radius * sin(polar), SphereData.Radius * cos(polar)) + SphereData.Position;
+        worldPosition = mul(float4(position, 1.0f), Instance.ViewProj);
             
-            lineStream.Append((Pixelinput) worldPosition);
-            lineStream.RestartStrip();
+        lineStream.Append((Pixelinput) worldPosition);
+        lineStream.RestartStrip();
+        
+        polar = (2.0f * PI * i) / NUM_SEGMENTS;
+        position = float3(SphereData.Radius * sin(polar), SphereData.Radius * cos(polar), 0.0f) + SphereData.Position;
+        worldPosition = mul(float4(position, 1.0f), Instance.ViewProj);
             
-            polar = PI * i / NUM_SEGMENTS;
-            azimuth = 2.0f * PI * (j - 1) / NUM_SEGMENTS;
-            position = SphericalToCartesian(SphereData.Radius, polar, azimuth) + SphereData.Position;
-            worldPosition = mul(float4(position, 1.0f), Instance.ViewProj);
+        lineStream.Append((Pixelinput) worldPosition);
+        
+        polar = (2.0f * PI * (i - 1)) / NUM_SEGMENTS;
+        position = float3(SphereData.Radius * sin(polar), SphereData.Radius * cos(polar), 0.0f) + SphereData.Position;
+        worldPosition = mul(float4(position, 1.0f), Instance.ViewProj);
             
-            lineStream.Append((Pixelinput) worldPosition);
-            
-            polar = PI * i / NUM_SEGMENTS;
-            azimuth = 2.0f * PI * j / NUM_SEGMENTS;
-            position = SphericalToCartesian(SphereData.Radius, polar, azimuth) + SphereData.Position;
-            worldPosition = mul(float4(position, 1.0f), Instance.ViewProj);
-            
-            lineStream.Append((Pixelinput) worldPosition);
-            lineStream.RestartStrip();
-        }
+        lineStream.Append((Pixelinput) worldPosition);
+        lineStream.RestartStrip();
     }
 }

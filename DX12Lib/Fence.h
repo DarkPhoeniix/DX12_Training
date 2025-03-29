@@ -25,11 +25,15 @@ namespace dx12
         // Get a pointer to the raw D3D12 fence object.
         ComPtr<ID3D12Fence> GetDXFence();
 
+        void SetCompletionCallback(const std::function<void()>& callback);
+
     private:
         // Raw D3D12 fence object.
         ComPtr<ID3D12Fence> _fence = nullptr;
         // Event triggered when _fence reaches _fenceValue.
         HANDLE _eventOnCompletion = nullptr;
+        // Function to execute after Wait
+        std::function<void()> _cpuCallback;
         // Current fence value.
         UINT64 _fenceValue = 0;
 

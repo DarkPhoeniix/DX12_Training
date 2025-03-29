@@ -10,6 +10,7 @@
 #include "Events/RenderEvent.h"
 #include "Events/UpdateEvent.h"
 
+#include "Scene/SceneLoader.h"
 #include "Scene/Entity/Components/Animation.h"
 #include "Scene/Entity/Components/Armature.h"
 #include "Scene/Entity/Components/Camera.h"
@@ -20,6 +21,7 @@
 #include "Utility/DebugInfo.h"
 
 #include "Render/Helpers/GPUStructs.h"
+#include "Render/Helpers/RenderHelpers.h"
 
 #include "Render/RenderSettings.h"
 #include "Render/Frame/TaskGPU.h"
@@ -75,17 +77,13 @@ namespace
 
                 if (material)
                 {
-                    std::shared_ptr<dx12::ResourceTable> textureTable = entity->GetSceneCache()->GetTextureTable();
+                    scene::TextureManager& textureManager = entity->GetSceneCache()->GetTextureManager();
+                    dx12::ResourceTable& textureTable = textureManager.GetTextureTable();
 
-                    resourceTable.CopyDescriptor(material->Albedo.get(), dx12::ResourceViewType::SRV, *textureTable);
-                    resourceTable.CopyDescriptor(material->NormalMap.get(), dx12::ResourceViewType::SRV, *textureTable);
-                    resourceTable.CopyDescriptor(material->Metalness.get(), dx12::ResourceViewType::SRV, *textureTable);
-                    resourceTable.CopyDescriptor(material->Roughness.get(), dx12::ResourceViewType::SRV, *textureTable);
-
-                    modelDesc->AlbedoTextureIndex = resourceTable.GetResourceIndex(material->Albedo.get(), dx12::ResourceViewType::SRV);
-                    modelDesc->NormalMapTextureIndex = resourceTable.GetResourceIndex(material->NormalMap.get(), dx12::ResourceViewType::SRV);
-                    modelDesc->MetalnessTextureIndex = resourceTable.GetResourceIndex(material->Metalness.get(), dx12::ResourceViewType::SRV);
-                    modelDesc->RoughnessTextureIndex = resourceTable.GetResourceIndex(material->Roughness.get(), dx12::ResourceViewType::SRV);
+                    modelDesc->AlbedoTextureIndex    = resourceTable.CopyDescriptor(textureManager.GetTexture(material->Albedo).get(), dx12::ResourceViewType::SRV, textureTable);
+                    modelDesc->NormalMapTextureIndex = resourceTable.CopyDescriptor(textureManager.GetTexture(material->NormalMap).get(), dx12::ResourceViewType::SRV, textureTable);
+                    modelDesc->MetalnessTextureIndex = resourceTable.CopyDescriptor(textureManager.GetTexture(material->Metalness).get(), dx12::ResourceViewType::SRV, textureTable);
+                    modelDesc->RoughnessTextureIndex = resourceTable.CopyDescriptor(textureManager.GetTexture(material->Roughness).get(), dx12::ResourceViewType::SRV, textureTable);
                 }
 
                 if (armature)
@@ -164,7 +162,7 @@ namespace render
             cameraComponent->LookAt(pos, target, up);
             cameraComponent->SetViewport(scene::Viewport({ windowWidth, windowHeight }));
             cameraComponent->SetLens(60.0f, 0.1f, 1000.0f);
-            cameraComponent->Speed = 70.0f;
+            cameraComponent->Speed = 30.0f;
 
             std::shared_ptr<scene::Transformation> transformComponent = std::make_shared<scene::Transformation>();
             transformComponent->Transform = cameraComponent->View();
@@ -178,15 +176,9 @@ namespace render
         // Load scene
         {
             loadTask->SetName("Upload Data");
-            dx12::CommandList& commandList = *loadTask->GetCommandLists().front();
 
-            _scene = std::make_shared<scene::Scene>();
-            _scene->LoadScene("Sponza\\Sponza.scene", commandList);
-            _uploadProcessor.Process(*_scene, commandList, nullptr);
-
+            _scene = _sceneLoader.LoadScene(*loadTask, "Sponza\\Sponza.scene");
             _scene->AddRootNode(cameraEntity);
-
-            commandList.Close();
         }
 
         SetupRenderPipeline();
@@ -216,29 +208,22 @@ namespace render
 
         _deltaTime = updateEvent.elapsedTime;
 
-        std::function<void(std::shared_ptr<scene::Entity>)> updateEntity = [&](std::shared_ptr<scene::Entity> entity)
+        std::function<void(std::shared_ptr<scene::Entity>)> updateArmatureAABB = [](std::shared_ptr<scene::Entity> entity)
+        {
+            scene::Transformation* transform = entity->GetComponentAs<scene::Transformation>("Transformation");
+            scene::Armature* armature = entity->GetComponentAs<scene::Armature>("Armature");
+            scene::Mesh* mesh = entity->GetComponentAs<scene::Mesh>("Mesh");
+
+            if (!mesh || !armature)
             {
-                entity->UpdateGlobalTransform();
+                return;
+            }
 
-                scene::Armature* armature = entity->GetComponentAs<scene::Armature>("Armature");
-                scene::Animation* animation = entity->GetComponentAs<scene::Animation>("Animation");
-
-                if (armature && animation)
-                {
-                    const auto& transforms = animation->GetBonesTransforms(updateEvent.totalTime);
-                    armature->ApplyAnimation(transforms);
-                    armature->UpdateGlobalTransformations();
-                }
-
-                for (const auto& child : entity->GetChildrenNodes())
-                {
-                    updateEntity(child);
-                }
-            };
+        };
 
         for (const auto& entity : _scene->GetRootNodes())
         {
-            updateEntity(entity);
+            UpdateEntity(updateEvent, entity);
         }
     }
 
@@ -379,6 +364,63 @@ namespace render
         SetupRenderPipeline();
     }
 
+    void DXRenderer::UpdateEntity(events::UpdateEvent& updateEvent, std::shared_ptr<scene::Entity> entity)
+    {
+        entity->UpdateGlobalTransform();
+
+        scene::Armature* armature = entity->GetComponentAs<scene::Armature>("Armature");
+        scene::Animation* animation = entity->GetComponentAs<scene::Animation>("Animation");
+        scene::Transformation* transformation = entity->GetComponentAs<scene::Transformation>("Transformation");
+        scene::Mesh* mesh = entity->GetComponentAs<scene::Mesh>("Mesh");
+
+        if (armature && animation)
+        {
+            const auto& transforms = animation->GetBonesTransforms(updateEvent.totalTime);
+            armature->ApplyAnimation(transforms);
+            armature->UpdateGlobalTransformations();
+        }
+
+        if (mesh)
+        {
+            UpdateBoundingVolumes(entity);
+        }
+
+        for (const auto& child : entity->GetChildrenNodes())
+        {
+            UpdateEntity(updateEvent, child);
+        }
+    }
+
+    void DXRenderer::UpdateBoundingVolumes(std::shared_ptr<scene::Entity> entity)
+    {
+        scene::Armature* armature = entity->GetComponentAs<scene::Armature>("Armature");
+        scene::Transformation* transformation = entity->GetComponentAs<scene::Transformation>("Transformation");
+        scene::Mesh* mesh = entity->GetComponentAs<scene::Mesh>("Mesh");
+
+        if (mesh && armature)
+        {
+            std::vector<scene::OBBVolume> boneOBBs;
+            boneOBBs.reserve(armature->GetBones().size());
+
+            for (const auto& bone : armature->GetSortedBones())
+            {
+                DirectX::XMMATRIX boneOBB = bone->OBB.Bounds;
+                boneOBB *= bone->Offset * bone->GlobalTransform * transformation->Transform;
+
+                scene::OBBVolume obb;
+                obb.Bounds = boneOBB;
+
+                boneOBBs.push_back(obb);
+            }
+
+            mesh->GlobalAABB = scene::CombineOBBs(boneOBBs);
+        }
+        else if (mesh)
+        {
+            mesh->GlobalAABB = mesh->LocalAABB.Transform(transformation->Transform);
+        }
+    }
+
     void DXRenderer::WaitAllFrames()
     {
         Frame* current = _currentFrame;
@@ -426,50 +468,10 @@ namespace render
     {
         cache.Clear();
 
-        uint32_t lightsNum = 0;
-        for (std::shared_ptr<scene::Entity>& node : _scene->GetRootNodes())
-        {
-            CheckLightsNum(node, lightsNum);
-        }
+        helpers::SetupSceneDataGPU(*_scene, &cache);
+        helpers::SetupLightDataGPU(*_scene, &cache, table);
 
-        // Setup scene data
-        CacheGPU::DataHandle sceneDataHandle = cache.RequestPlacement("SceneCB", sizeof(GPUSceneDesc));
-
-        GPUSceneDesc* sceneDesc = (GPUSceneDesc*)sceneDataHandle.DataCPU;
-        {
-            auto cameraEntity = _scene->FindNodeByComponentName("Camera");
-            if (ASSERT(cameraEntity.get(), "No camera on the scene"))
-            {
-                return;
-            }
-
-            scene::Camera* camera = cameraEntity->GetComponentAs<scene::Camera>("Camera");
-
-            sceneDesc->View = camera->View();
-            sceneDesc->Projection = camera->Projection();
-            sceneDesc->ViewProjection = camera->ViewProjection();
-
-            sceneDesc->InvView = XMMatrixInverse(nullptr, sceneDesc->View);
-            sceneDesc->InvProjection = XMMatrixInverse(nullptr, sceneDesc->Projection);
-
-            sceneDesc->EyeDirection = camera->Look();
-            sceneDesc->EyePosition = camera->Position();
-
-            const scene::Viewport& viewport = camera->GetViewport();
-            sceneDesc->WindowSize = {
-                (uint32_t)viewport.GetSize().x,
-                (uint32_t)viewport.GetSize().y
-            };
-            sceneDesc->ReciprocalWindowSize = {
-                (1.0f / (float)viewport.GetSize().x),
-                (1.0f / (float)viewport.GetSize().y)
-            };
-            sceneDesc->NearFar = { camera->NearZ, camera->FarZ };
-
-            sceneDesc->LightsNum = lightsNum;
-        }
-
-        for (auto entity : _scene->GetRootNodes())
+        for (std::shared_ptr<scene::Entity> entity : _scene->GetRootNodes())
         {
             SetupEntity(entity, cache, table);
         }

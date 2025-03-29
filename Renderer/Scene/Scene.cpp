@@ -2,11 +2,6 @@
 
 #include "Scene.h"
 
-#include "CommandList.h"
-
-#include "Scene/Entity/Components/Camera.h"
-#include "Scene/Entity/EntityLoader.h"
-
 #include <queue>
 
 namespace
@@ -126,23 +121,13 @@ namespace scene
         return _cache;
     }
 
-    bool Scene::LoadScene(const std::string& filepath, dx12::CommandList& commandList)
+    void Scene::SetName(const std::string& name)
     {
-        std::ifstream in(filepath, std::ifstream::in | std::ifstream::binary);
+        _name = name;
+    }
 
-        Json::Value root;
-        in >> root;
-
-        _name = root["Name"].asCString();
-
-        // Parse children nodes
-        for (auto& node : root["Nodes"])
-        {
-            helpers::EntityLoader loader(std::filesystem::path(filepath).parent_path().string() + '/' + node.asString());
-            
-            _rootNodes.push_back(loader.LoadEntity(&_cache));
-        }
-
-        return true;
+    const std::string Scene::GetName() const
+    {
+        return _name;
     }
 } // namespace scene
