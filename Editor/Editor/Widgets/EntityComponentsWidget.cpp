@@ -158,6 +158,21 @@ namespace gui
     {
         if (ImGui::CollapsingHeader(camera->ComponentName.c_str()))
         {
+            DirectX::XMFLOAT3 position, target;
+            DirectX::XMStoreFloat3(&position, camera->Position());
+            DirectX::XMStoreFloat3(&target, camera->Target());
+
+            if (ImGui::DragFloat3("Position", &position.x, 0.1f))
+            {
+                camera->Position() = DirectX::XMLoadFloat3(&position);
+                camera->Update();
+            }
+            if (ImGui::DragFloat3("Target", &target.x, 0.1f))
+            {
+                camera->Target() = DirectX::XMLoadFloat3(&target);
+                camera->Update();
+            }
+
             if (ImGui::DragFloat("Field of view", &camera->FoV, 0.1f, 5.0f, 150.0f))
             {
                 camera->Update();
