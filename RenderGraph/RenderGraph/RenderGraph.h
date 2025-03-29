@@ -61,4 +61,4 @@ namespace rg
         mt::PassWorkerManager _workerManager;
 #endif
     };
-}
+} // namespace rg

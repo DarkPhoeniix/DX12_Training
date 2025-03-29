@@ -4,9 +4,6 @@
 #include "RenderGraph/RenderContext.h"
 #include "RenderGraph/RenderPass.h"
 
-#include <thread>
-#include <mutex>
-
 namespace rg::mt
 {
     struct PassWork
@@ -41,8 +38,7 @@ namespace rg::mt
         std::condition_variable _condition;
 
         PassWork _work;
-        WorkFunc _func;
         CallbackFunc _callback;
     };
-}
+} // namespace rg::mt
 

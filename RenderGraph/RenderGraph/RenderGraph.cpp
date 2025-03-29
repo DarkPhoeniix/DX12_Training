@@ -46,11 +46,11 @@ namespace rg
         _passes.clear();
         _sortedPasses.clear();
 
-        for (auto& cache : _context._cache)
+        for (CacheGPU& cache : _context._cache)
         {
             cache.Clear();
         }
-        for (auto& table : _context._resourceTable)
+        for (dx12::ResourceTable& table : _context._resourceTable)
         {
             table.Reset();
         }
@@ -69,7 +69,7 @@ namespace rg
         _GPUTasks.clear();
         _GPUTasks.resize(_passes.size(), nullptr);
 
-        for (auto passIndex : _sortedPasses)
+        for (std::uint32_t passIndex : _sortedPasses)
         {
             std::shared_ptr<IRenderPass> pass = _passes[passIndex];
 
@@ -108,11 +108,11 @@ namespace rg
         _workerManager.Wait();
 #endif
 
-        for (auto passIndex : _sortedPasses)
+        for (std::uint32_t passIndex : _sortedPasses)
         {
             TaskGPU* currentTask = _GPUTasks[passIndex];
 
-            for (auto adjacentPassIndex : _adjacencyLists[passIndex])
+            for (std::uint32_t adjacentPassIndex : _adjacencyLists[passIndex])
             {
                 TaskGPU* dependentTask = _GPUTasks[adjacentPassIndex];
                 dependentTask->AddDependency(currentTask->GetName());
@@ -161,7 +161,7 @@ namespace rg
                 std::shared_ptr<IRenderPass>& otherPass = _passes[i];
                 for (ResourceId readId : otherPass->_reads)
                 {
-                    const auto& passWriteIds = pass->_writes;
+                    const std::vector<rg::ResourceId>& passWriteIds = pass->_writes;
                     if (std::find(passWriteIds.cbegin(), passWriteIds.cend(), readId) != passWriteIds.cend())
                     {
                         passAdjacencyList.push_back(i);
@@ -200,4 +200,4 @@ namespace rg
 
         std::reverse(_sortedPasses.begin(), _sortedPasses.end());
     }
-}
+} // namespace rg

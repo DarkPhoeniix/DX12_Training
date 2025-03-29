@@ -83,4 +83,4 @@ namespace rg::mt
     {
         return _isFree;
     }
-}
+} // namespace rg::mt

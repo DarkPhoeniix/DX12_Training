@@ -64,6 +64,6 @@ namespace rg
     protected:
         PassData _data;
     };
-}
+} // namespace rg
 
 #include "RenderPass.inl"

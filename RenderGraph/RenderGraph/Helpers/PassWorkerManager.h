@@ -24,4 +24,4 @@ namespace rg::mt
         std::condition_variable _condition;
         std::mutex _mutex;
     };
-}
+} // namespace rg::mt

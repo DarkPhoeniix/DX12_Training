@@ -49,4 +49,4 @@ namespace rg
         dx12::ResourceTable _resourceTable[dx12::BACK_BUFFER_COUNT];
         CacheGPU _cache[dx12::BACK_BUFFER_COUNT];
     };
-}
+} // namespace rg

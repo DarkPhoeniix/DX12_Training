@@ -37,4 +37,4 @@ namespace rg
 
         return resourceId;
     }
-}
+} // namespace rg

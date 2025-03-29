@@ -4,6 +4,8 @@
 
 #include "ResourceTable.h"
 
+#include <format>
+
 namespace
 {
     constexpr std::uint32_t DESCRIPTOR_TABLE_SIZE = 4096;
@@ -40,7 +42,7 @@ namespace rg
 
     std::uint32_t RenderContext::GetFrameIndex() const
     {
-        return 0;
+        return _currentFrameIndex;
     }
 
     dx12::ResourceTable& RenderContext::GetResourceTable()
@@ -164,8 +166,7 @@ namespace rg
         _mapNameToId[name] = id;
         _resources[id] = resource;
 
-        // TODO: this is wrong, views are created for 0 frame only
-        for (auto& table : _resourceTable)
+        for (dx12::ResourceTable& table : _resourceTable)
         {
             D3D12_RESOURCE_FLAGS flags = desc.GetFlags();
             if (flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)
@@ -207,4 +208,4 @@ namespace rg
 
         return IdIt->second;
     }
-}
+} // namespace rg

@@ -26,5 +26,5 @@ namespace rg
         IRenderPass* _renderPass;
         RenderGraph& _renderGraph;
     };
-}
+} // namespace rg
 

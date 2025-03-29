@@ -2,12 +2,7 @@
 
 #include "PassWorker.h"
 
-#include "Render/Frame/TaskGPU.h"
-#include "RenderGraph/RenderContext.h"
-#include "RenderGraph/RenderPass.h"
-
 #include <queue>
-#include <mutex>
 
 namespace rg::mt
 {
@@ -17,12 +12,13 @@ namespace rg::mt
         void Push(PassWork&& work);
         [[nodiscard]] PassWork&& Pop();
 
-        [[nodiscard]] PassWork& Top();
+        PassWork& Top();
+        const PassWork& Top() const;
 
         bool IsEmpty() const;
 
     private:
         std::queue<PassWork> _works;
-        std::mutex _queueMutex;
+        mutable std::mutex _queueMutex;
     };
-}
+} // namespace rg::mt

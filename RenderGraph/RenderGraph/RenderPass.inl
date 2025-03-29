@@ -14,4 +14,4 @@ namespace rg
     {
         return _data;
     }
-}
+} // namespace rg

@@ -62,4 +62,4 @@ namespace rg::mt
 
         return true;
     }
-}
+} // namespace rg::mt
