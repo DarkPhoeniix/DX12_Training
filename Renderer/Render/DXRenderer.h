@@ -38,6 +38,9 @@ namespace render
         void OnPipelineChanged() override;
 
     private:
+        void UpdateEntity(core::events::UpdateEvent& updateEvent, std::shared_ptr<scene::Entity> entity);
+        void UpdateBoundingVolumes(std::shared_ptr<scene::Entity> entity);
+
         void WaitAllFrames();
         void SetupRenderPipeline();
         void UploadSceneCache(CacheGPU& cache, dx12::ResourceTable& table);

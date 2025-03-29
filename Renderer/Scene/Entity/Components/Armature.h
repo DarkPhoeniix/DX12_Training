@@ -21,7 +21,7 @@ namespace scene
 
         bool PendingUpdate;
 
-        scene::OBBVolume AABB;
+        scene::OBBVolume OBB;
     };
 
     class Armature : public IComponent

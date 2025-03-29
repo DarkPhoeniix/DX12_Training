@@ -30,6 +30,7 @@ namespace scene
         }
 
         scene::AABBVolume LocalAABB;
+        scene::AABBVolume GlobalAABB;
 
         std::vector<VertexData> VertexData;
         std::vector<SkinningVertexData> SkinningVertexData;

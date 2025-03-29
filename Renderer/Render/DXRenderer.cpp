@@ -208,29 +208,22 @@ namespace render
 
         _deltaTime = updateEvent.elapsedTime;
 
-        std::function<void(std::shared_ptr<scene::Entity>)> updateEntity = [&](std::shared_ptr<scene::Entity> entity)
+        std::function<void(std::shared_ptr<scene::Entity>)> updateArmatureAABB = [](std::shared_ptr<scene::Entity> entity)
+        {
+            scene::Transformation* transform = entity->GetComponentAs<scene::Transformation>("Transformation");
+            scene::Armature* armature = entity->GetComponentAs<scene::Armature>("Armature");
+            scene::Mesh* mesh = entity->GetComponentAs<scene::Mesh>("Mesh");
+
+            if (!mesh || !armature)
             {
-                entity->UpdateGlobalTransform();
+                return;
+            }
 
-                scene::Armature* armature = entity->GetComponentAs<scene::Armature>("Armature");
-                scene::Animation* animation = entity->GetComponentAs<scene::Animation>("Animation");
-
-                if (armature && animation)
-                {
-                    const auto& transforms = animation->GetBonesTransforms(updateEvent.totalTime);
-                    armature->ApplyAnimation(transforms);
-                    armature->UpdateGlobalTransformations();
-                }
-
-                for (const auto& child : entity->GetChildrenNodes())
-                {
-                    updateEntity(child);
-                }
-            };
+        };
 
         for (const auto& entity : _scene->GetRootNodes())
         {
-            updateEntity(entity);
+            UpdateEntity(updateEvent, entity);
         }
     }
 
@@ -369,6 +362,63 @@ namespace render
     {
         WaitAllFrames();
         SetupRenderPipeline();
+    }
+
+    void DXRenderer::UpdateEntity(events::UpdateEvent& updateEvent, std::shared_ptr<scene::Entity> entity)
+    {
+        entity->UpdateGlobalTransform();
+
+        scene::Armature* armature = entity->GetComponentAs<scene::Armature>("Armature");
+        scene::Animation* animation = entity->GetComponentAs<scene::Animation>("Animation");
+        scene::Transformation* transformation = entity->GetComponentAs<scene::Transformation>("Transformation");
+        scene::Mesh* mesh = entity->GetComponentAs<scene::Mesh>("Mesh");
+
+        if (armature && animation)
+        {
+            const auto& transforms = animation->GetBonesTransforms(updateEvent.totalTime);
+            armature->ApplyAnimation(transforms);
+            armature->UpdateGlobalTransformations();
+        }
+
+        if (mesh)
+        {
+            UpdateBoundingVolumes(entity);
+        }
+
+        for (const auto& child : entity->GetChildrenNodes())
+        {
+            UpdateEntity(updateEvent, child);
+        }
+    }
+
+    void DXRenderer::UpdateBoundingVolumes(std::shared_ptr<scene::Entity> entity)
+    {
+        scene::Armature* armature = entity->GetComponentAs<scene::Armature>("Armature");
+        scene::Transformation* transformation = entity->GetComponentAs<scene::Transformation>("Transformation");
+        scene::Mesh* mesh = entity->GetComponentAs<scene::Mesh>("Mesh");
+
+        if (mesh && armature)
+        {
+            std::vector<scene::OBBVolume> boneOBBs;
+            boneOBBs.reserve(armature->GetBones().size());
+
+            for (const auto& bone : armature->GetSortedBones())
+            {
+                DirectX::XMMATRIX boneOBB = bone->OBB.Bounds;
+                boneOBB *= bone->Offset * bone->GlobalTransform * transformation->Transform;
+
+                scene::OBBVolume obb;
+                obb.Bounds = boneOBB;
+
+                boneOBBs.push_back(obb);
+            }
+
+            mesh->GlobalAABB = scene::CombineOBBs(boneOBBs);
+        }
+        else if (mesh)
+        {
+            mesh->GlobalAABB = mesh->LocalAABB.Transform(transformation->Transform);
+        }
     }
 
     void DXRenderer::WaitAllFrames()

@@ -193,10 +193,8 @@ namespace render
             {
                 if (scene::Mesh* mesh = _scene->GetRootNodes()[j]->GetComponentAs<scene::Mesh>("Mesh"))
                 {
-                    scene::Transformation* t = _scene->GetRootNodes()[j]->GetComponentAs<scene::Transformation>("Transformation");
-
                     DirectX::XMVECTOR* data = (DirectX::XMVECTOR*)AABBs.DataCPU;
-                    scene::AABBVolume aabb = mesh->LocalAABB.Transform(t->Transform);
+                    scene::AABBVolume aabb = mesh->GlobalAABB;
 
                     data[count++] = aabb.Min;
                     data[count++] = aabb.Max;
