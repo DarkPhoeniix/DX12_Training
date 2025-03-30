@@ -396,6 +396,7 @@
         "GreenPointLight.node",
         "BluePointLight.node",
         "WhitePointLight.node",
-        "Skybox.node"
+        "Skybox.node",
+        "Camera.node"
     ]
 }

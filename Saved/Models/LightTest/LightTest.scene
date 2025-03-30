@@ -127,6 +127,7 @@
         "Point.022.node",
         "Point.023.node",
         "Point.024.node",
-        "Skybox.node"
+        "Skybox.node",
+        "Camera.node"
     ]
 }
