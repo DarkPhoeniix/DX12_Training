@@ -56,8 +56,8 @@ namespace render
 
             for (auto& node : _scene->GetRootNodes())
             {
-                scene::Armature* arm = node->GetComponentAs<scene::Armature>("Armature");
-                scene::Transformation* transform = node->GetComponentAs<scene::Transformation>("Transformation");
+                std::shared_ptr<scene::Armature> arm = node->GetComponentAs<scene::Armature>("Armature");
+                std::shared_ptr<scene::Transformation> transform = node->GetComponentAs<scene::Transformation>("Transformation");
 
                 if (arm)
                 {

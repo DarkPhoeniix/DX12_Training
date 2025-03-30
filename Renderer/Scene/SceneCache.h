@@ -15,11 +15,11 @@ namespace scene
     public:
         SceneCache();
         SceneCache(const SceneCache&) = delete;
-        SceneCache(SceneCache&&) = default;
+        SceneCache(SceneCache&&);
         ~SceneCache() = default;
 
         SceneCache& operator=(const SceneCache&) = delete;
-        SceneCache& operator=(SceneCache&&) = default;
+        SceneCache& operator=(SceneCache&&);
 
         std::shared_ptr<dx12::ResourceTable> GetLightsTable() const;
 
@@ -27,6 +27,8 @@ namespace scene
 
         void SetDeltaTime(float deltaTime);
         float GetDeltaTime() const;
+
+        void Clear();
 
     private:
         TextureManager _textureManager;

@@ -13,6 +13,30 @@ namespace dx12
         return resources.find(key);
     }
 
+    ResourceTable::ResourceTable(ResourceTable&& other)
+    {
+        _RTVResources = std::move(other._RTVResources);
+        _DSVResources = std::move(other._DSVResources);
+        _BufferResources = std::move(other._BufferResources);
+
+        _RTVDescriptorHeap = std::move(other._RTVDescriptorHeap);
+        _DSVDescriptorHeap = std::move(other._DSVDescriptorHeap);
+        _BuffersDescriptorHeap = std::move(other._BuffersDescriptorHeap);
+    }
+
+    ResourceTable& ResourceTable::operator=(ResourceTable&& other)
+    {
+        _RTVResources = std::move(other._RTVResources);
+        _DSVResources = std::move(other._DSVResources);
+        _BufferResources = std::move(other._BufferResources);
+
+        _RTVDescriptorHeap = std::move(other._RTVDescriptorHeap);
+        _DSVDescriptorHeap = std::move(other._DSVDescriptorHeap);
+        _BuffersDescriptorHeap = std::move(other._BuffersDescriptorHeap);
+
+        return *this;
+    }
+
     void ResourceTable::Init(std::uint32_t numDescriptors, bool shaderVisible)
     {
         _numDescriptors = numDescriptors;

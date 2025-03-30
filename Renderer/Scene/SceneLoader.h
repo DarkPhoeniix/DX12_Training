@@ -15,6 +15,7 @@ namespace scene
 
     class Animation;
     class Armature;
+    class Camera;
     class Light;
     class Material;
     class Mesh;
@@ -27,13 +28,14 @@ namespace scene::helpers
     class SceneLoader
     {
     public:
-        std::shared_ptr<Scene> LoadScene(TaskGPU& task, const std::string& filepath);
+        void LoadScene(TaskGPU& task, const std::string& filepath, std::shared_ptr<Scene> scene);
 
     private:
         std::shared_ptr<scene::Entity> LoadEntity(dx12::CommandList& commandList, const std::string& filepath, scene::Entity* parent = nullptr);
 
-        void LoadComponent(const std::string& filepath, Json::Value& jsonValue, Armature* armature, const std::shared_ptr<Animation>& component);
+        void LoadComponent(const std::string& filepath, Json::Value& jsonValue, std::shared_ptr<Armature> armature, const std::shared_ptr<Animation>& component);
         void LoadComponent(const std::string& filepath, Json::Value& jsonValue, const std::shared_ptr<Armature>& component);
+        void LoadComponent(const std::string& filepath, Json::Value& jsonValue, const std::shared_ptr<Camera>& component);
         void LoadComponent(const std::string& filepath, Json::Value& jsonValue, const std::shared_ptr<Transformation>& component);
         void LoadComponent(const std::string& filepath, Json::Value& jsonValue, const std::shared_ptr<Material>& component);
         void LoadComponent(const std::string& filepath, Json::Value& jsonValue, const std::shared_ptr<Mesh>& component, dx12::CommandList& commandList);

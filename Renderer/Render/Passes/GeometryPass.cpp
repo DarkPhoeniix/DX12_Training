@@ -23,12 +23,12 @@ namespace
 {
     void DrawEntity(std::shared_ptr<scene::Entity> entity, dx12::CommandList& commandList, CacheGPU* cache, dx12::ResourceTable* resourceTable)
     {
-        if (scene::Mesh* mesh = entity->GetComponentAs<scene::Mesh>("Mesh"))
+        if (std::shared_ptr<scene::Mesh> mesh = entity->GetComponentAs<scene::Mesh>("Mesh"))
         {
-            scene::Animation* animation = entity->GetComponentAs<scene::Animation>("Animation");
-            scene::Armature* armature = entity->GetComponentAs<scene::Armature>("Armature");
+            std::shared_ptr<scene::Animation> animation = entity->GetComponentAs<scene::Animation>("Animation");
+            std::shared_ptr<scene::Armature> armature = entity->GetComponentAs<scene::Armature>("Armature");
             scene::Transformation transform = entity->GetGlobalTransform();
-            scene::Material* material = entity->GetComponentAs<scene::Material>("Material");
+            std::shared_ptr<scene::Material> material = entity->GetComponentAs<scene::Material>("Material");
 
             CacheGPU::DataHandle modelDescHandle = cache->GetResourcePlacement(entity->GetName());
             commandList.SetCBV(1, modelDescHandle.DataGPU);

@@ -32,13 +32,13 @@ namespace gui
         void Update() override;
 
     private:
-        void CreateComponentWidget(scene::Animation* animation);
-        void CreateComponentWidget(scene::Armature* armature);
-        void CreateComponentWidget(scene::Camera* camera);
-        void CreateComponentWidget(scene::Light* light);
-        void CreateComponentWidget(scene::Material* material);
-        void CreateComponentWidget(scene::Mesh* mesh);
-        void CreateComponentWidget(scene::Skybox* skybox);
-        void CreateComponentWidget(scene::Transformation* transformation);
+        void CreateComponentWidget(std::shared_ptr<scene::Animation> animation);
+        void CreateComponentWidget(std::shared_ptr<scene::Armature> armature);
+        void CreateComponentWidget(std::shared_ptr<scene::Camera> camera);
+        void CreateComponentWidget(std::shared_ptr<scene::Light> light);
+        void CreateComponentWidget(std::shared_ptr<scene::Material> material);
+        void CreateComponentWidget(std::shared_ptr<scene::Mesh> mesh);
+        void CreateComponentWidget(std::shared_ptr<scene::Skybox> skybox);
+        void CreateComponentWidget(std::shared_ptr<scene::Transformation> transformation);
     };
 } // namespace gui

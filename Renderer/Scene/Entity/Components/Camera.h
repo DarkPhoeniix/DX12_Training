@@ -55,7 +55,7 @@ namespace scene
 		const DirectX::XMVECTOR& Target() const;
 		DirectX::XMVECTOR& Target();
 
-		void LookAt(DirectX::XMVECTOR& pos, DirectX::XMVECTOR& target, DirectX::XMVECTOR& up);
+		void LookAt(const DirectX::XMVECTOR& pos, const DirectX::XMVECTOR& target, const DirectX::XMVECTOR& up);
 
 		const FrustumVolume& GetViewFrustum() const;
 

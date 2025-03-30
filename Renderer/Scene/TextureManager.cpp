@@ -127,6 +127,26 @@ scene::TextureManager::TextureManager()
     _texturesTable.Init(TEXTURE_TABLE_NUM_DESCRIPTORS);
 }
 
+scene::TextureManager::TextureManager(TextureManager&& manager)
+{
+    _textures = std::move(manager._textures);
+    _uploadQueue = std::move(manager._uploadQueue);
+    _texturesTable = std::move(manager._texturesTable);
+    _texturesHeap = std::move(manager._texturesHeap);
+    _intermediateResources = std::move(manager._intermediateResources);
+}
+
+scene::TextureManager& scene::TextureManager::operator=(TextureManager&& manager)
+{
+    _textures = std::move(manager._textures);
+    _uploadQueue = std::move(manager._uploadQueue);
+    _texturesTable = std::move(manager._texturesTable);
+    _texturesHeap = std::move(manager._texturesHeap);
+    _intermediateResources = std::move(manager._intermediateResources);
+
+    return *this;
+}
+
 void scene::TextureManager::EnqueueTexture(const std::string& filepath)
 {
     _uploadQueue.insert(filepath);
@@ -193,6 +213,16 @@ void scene::TextureManager::UploadTextures(dx12::CommandList& commandList)
 
 void scene::TextureManager::CleanIntermediates()
 {
+    _intermediateResources.clear();
+}
+
+void scene::TextureManager::Clear()
+{
+    _texturesTable.Reset();
+    _texturesHeap.Reset();
+
+    _textures.clear();
+    _uploadQueue.clear();
     _intermediateResources.clear();
 }
 

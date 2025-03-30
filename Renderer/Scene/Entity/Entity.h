@@ -9,12 +9,12 @@ namespace scene
     class Entity
     {
     public:
-        explicit Entity(SceneCache* sceneCache, Entity* parent = nullptr);
+        explicit Entity(Entity* parent = nullptr);
 
         const std::vector<std::shared_ptr<IComponent>>& GetComponents() const;
-        IComponent* GetComponent(const std::string_view& name);
+        std::shared_ptr<IComponent> GetComponent(const std::string_view& name);
         template<typename Type>
-        Type* GetComponentAs(const std::string_view& name);
+        std::shared_ptr<Type> GetComponentAs(const std::string_view& name);
 
         void AddComponent(const std::shared_ptr<IComponent>& component);
         void ClearComponents();
@@ -28,8 +28,6 @@ namespace scene
         void SetName(const std::string& name);
         const std::string& GetName() const;
 
-        SceneCache* GetSceneCache();
-
     private:
         std::vector<std::shared_ptr<IComponent>> _components;
         Transformation _globalTransformation;
@@ -37,14 +35,12 @@ namespace scene
         std::vector<std::shared_ptr<Entity>> _children;
         Entity* _parent;
 
-        SceneCache* _sceneCache;
-
         std::string _name;
     };
 
     template<typename Type>
-    Type* Entity::GetComponentAs(const std::string_view& name)
+    std::shared_ptr<Type> Entity::GetComponentAs(const std::string_view& name)
     {
-        return (Type*)GetComponent(name);
+        return std::static_pointer_cast<Type>(GetComponent(name));
     }
 } // namespace scene

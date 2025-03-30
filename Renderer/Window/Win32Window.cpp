@@ -161,6 +161,17 @@ namespace core
                 listener->OnPipelineChanged();
             }
         }
+        break;
+        case WM_LOAD_SCENE:
+        {
+            std::wstring wstr((WCHAR*)lParam);
+            for (events::IWindowEventListener* listener : _eventListeners)
+            {
+                listener->OnLoadScene({ wstr.begin(), wstr.end() });
+            }
+            return 0;
+        }
+        break;
         default:
             return DefWindowProcW(hwnd, message, wParam, lParam);
         }

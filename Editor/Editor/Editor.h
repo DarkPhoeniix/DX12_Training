@@ -60,6 +60,7 @@ namespace gui
         // Inherited via IWindowEventListener
         void OnResize(core::events::ResizeEvent& e) override;
         void OnPipelineChanged() override;
+        void OnLoadScene(const std::string& filepath) override;
 
     protected:
         std::shared_ptr<Editor> GetPtr();
@@ -80,5 +81,7 @@ namespace gui
         std::shared_ptr<EntityComponentsWidget> _entityComponentsWidget;
 
         std::shared_ptr<dx12::DescriptorHeap> _srvDescriptorHeap;
+
+        WCHAR _filepath[2048];
     };
 } // namespace gui

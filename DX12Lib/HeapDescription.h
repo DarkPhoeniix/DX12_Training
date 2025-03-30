@@ -6,6 +6,13 @@ namespace dx12
     class HeapDescription
     {
     public:
+        HeapDescription() = default;
+        HeapDescription(const HeapDescription&) = default;
+        HeapDescription(HeapDescription&&) = default;
+
+        HeapDescription& operator=(const HeapDescription&) = default;
+        HeapDescription& operator=(HeapDescription&&) = default;
+
         // Set the heap type.
         void SetHeapType(D3D12_HEAP_TYPE heapType);
         // Get the heap type.

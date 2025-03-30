@@ -27,6 +27,22 @@ namespace
 
 namespace scene
 {
+    Scene::Scene(Scene&& other)
+    {
+        _name = std::move(other._name);
+        _rootNodes = std::move(other._rootNodes);
+        _cache = std::move(other._cache);
+    }
+
+    Scene& Scene::operator=(Scene&& other)
+    {
+        _name = std::move(other._name);
+        _rootNodes = std::move(other._rootNodes);
+        _cache = std::move(other._cache);
+
+        return *this;
+    }
+
     void Scene::AddRootNode(std::shared_ptr<Entity> entity)
     {
         _rootNodes.push_back(entity);
@@ -114,6 +130,13 @@ namespace scene
         }
 
         return nodes;
+    }
+
+    void Scene::Clear()
+    {
+        _name = "";
+        _rootNodes.clear();
+        _cache.Clear();
     }
 
     SceneCache& Scene::GetCache()

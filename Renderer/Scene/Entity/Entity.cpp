@@ -4,9 +4,8 @@
 
 namespace scene
 {
-    Entity::Entity(SceneCache* sceneCache, Entity* parent)
-        : _sceneCache(sceneCache)
-        , _parent(parent)
+    Entity::Entity(Entity* parent)
+        : _parent(parent)
     {
     }
 
@@ -15,20 +14,17 @@ namespace scene
         return _components;
     }
 
-    IComponent* Entity::GetComponent(const std::string_view& name)
+    std::shared_ptr<IComponent> Entity::GetComponent(const std::string_view& name)
     {
-        IComponent* result = nullptr;
-
         for (const auto& component : _components)
         {
             if (component->ComponentName == name)
             {
-                result = component.get();
-                break;
+                return component;
             }
         }
 
-        return result;
+        return nullptr;
     }
 
     void Entity::AddComponent(const std::shared_ptr<IComponent>& component)
@@ -73,10 +69,5 @@ namespace scene
     const std::string& Entity::GetName() const
     {
         return _name;
-    }
-
-    SceneCache* Entity::GetSceneCache()
-    {
-        return _sceneCache;
     }
 } // namespace scene

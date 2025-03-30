@@ -35,7 +35,7 @@ namespace render
         for (size_t lightIndex = 0; lightIndex < lightsNum; ++lightIndex)
         {
             std::shared_ptr<scene::Entity> entity = lightEntities[lightIndex];
-            scene::Light* light = entity->GetComponentAs<scene::Light>("Light");
+            std::shared_ptr<scene::Light> light = entity->GetComponentAs<scene::Light>("Light");
 
             if (light->CastShadows)
             {

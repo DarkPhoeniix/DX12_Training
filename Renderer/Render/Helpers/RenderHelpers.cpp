@@ -31,8 +31,8 @@ namespace
 
     std::array<XMMATRIX, 6> GetLightViewProj(std::shared_ptr<scene::Entity> node)
     {
-        scene::Transformation* transform = node->GetComponentAs<scene::Transformation>("Transformation");
-        scene::Light* light = node->GetComponentAs<scene::Light>("Light");
+        std::shared_ptr<scene::Transformation> transform = node->GetComponentAs<scene::Transformation>("Transformation");
+        std::shared_ptr<scene::Light> light = node->GetComponentAs<scene::Light>("Light");
 
         std::array<XMMATRIX, 6> result = 
         {
@@ -101,8 +101,8 @@ namespace
 
     void SetupLightToGPU(std::shared_ptr<scene::Entity> node, CacheGPU::DataHandle& dataHandle, dx12::ResourceTable& frameTable, uint32_t& index)
     {
-        scene::Transformation* transform = node->GetComponentAs<scene::Transformation>("Transformation");
-        scene::Light* light = node->GetComponentAs<scene::Light>("Light");
+        std::shared_ptr<scene::Transformation> transform = node->GetComponentAs<scene::Transformation>("Transformation");
+        std::shared_ptr<scene::Light> light = node->GetComponentAs<scene::Light>("Light");
 
         if (light)
         {
@@ -184,7 +184,7 @@ namespace helpers
                 return;
             }
 
-            scene::Camera* camera = cameraEntity->GetComponentAs<scene::Camera>("Camera");
+            std::shared_ptr<scene::Camera> camera = cameraEntity->GetComponentAs<scene::Camera>("Camera");
 
             sceneDesc->View = camera->View();
             sceneDesc->Projection = camera->Projection();

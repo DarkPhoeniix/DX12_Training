@@ -87,7 +87,7 @@ namespace scene
 		, _viewProjection(XMMatrixIdentity())
 		, _position(XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f))
 		, _up(XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f))
-		, _viewport()
+		, _viewport({ 1, 1 })
 		, Speed(100.0f)
 	{
 		_UpdateFrustum();
@@ -120,10 +120,10 @@ namespace scene
 		XMMATRIX rotateAroundUp = XMMatrixRotationAxis(_up, yRotationDelta);
 		XMMATRIX rotateAroundRight = XMMatrixRotationAxis(Right(), xRotationDelta);
 
-		XMMATRIX positionTransofrm = invPosition * rotateAroundUp * rotateAroundRight * position;
+		XMMATRIX positionTransform = invPosition * rotateAroundUp * rotateAroundRight * position;
 
-		_target = XMVector4Transform(_target, positionTransofrm);
-		//_up = XMVector3Transform(_up, vectorTransofrm);
+		_target = XMVector4Transform(_target, positionTransform);
+		//_up = XMVector3Transform(_up, positionTransform);
 
 		// Rebuild the view matrix to reflect changes
 		_BuildView();
@@ -179,7 +179,7 @@ namespace scene
 		return _target;
 	}
 
-	void Camera::LookAt(XMVECTOR& pos, XMVECTOR& target, XMVECTOR& up)
+	void Camera::LookAt(const XMVECTOR& pos, const XMVECTOR& target, const XMVECTOR& up)
 	{
 		_position = pos;
 		_target = target;
@@ -196,6 +196,8 @@ namespace scene
 	void Camera::SetViewport(const Viewport& viewport)
 	{
 		_viewport = viewport;
+
+		_BuildProjection();
 	}
 
 	Viewport& Camera::GetViewport()

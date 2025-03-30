@@ -110,7 +110,7 @@ namespace render
         for (size_t lightIndex = 0; lightIndex < lightsNum; ++lightIndex)
         {
             std::shared_ptr<scene::Entity> entity = lightEntities[lightIndex];
-            scene::Light* light = entity->GetComponentAs<scene::Light>("Light");
+            std::shared_ptr<scene::Light> light = entity->GetComponentAs<scene::Light>("Light");
 
             if (light->CastShadows)
             {
@@ -146,7 +146,7 @@ namespace render
 
             for (uint32_t lightIndex = 0; lightIndex < lightEntities.size(); ++lightIndex)
             {
-                scene::Light* light = lightEntities[lightIndex]->GetComponentAs<scene::Light>("Light");
+                std::shared_ptr<scene::Light> light = lightEntities[lightIndex]->GetComponentAs<scene::Light>("Light");
                 if (light->Type != scene::LightType::Spot)
                 {
                     continue;
@@ -210,7 +210,7 @@ namespace render
 
             for (uint32_t lightIndex = 0; lightIndex < lightEntities.size(); ++lightIndex)
             {
-                scene::Light* light = lightEntities[lightIndex]->GetComponentAs<scene::Light>("Light");
+                std::shared_ptr<scene::Light> light = lightEntities[lightIndex]->GetComponentAs<scene::Light>("Light");
                 if (light->Type != scene::LightType::Point)
                 {
                     continue;

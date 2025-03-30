@@ -101,42 +101,42 @@ namespace gui
         {
             if (component->ComponentName == "Animation")
             {
-                CreateComponentWidget(static_cast<scene::Animation*>(component.get()));
+                CreateComponentWidget(std::static_pointer_cast<scene::Animation>(component));
             }
             else if (component->ComponentName == "Armature")
             {
-                CreateComponentWidget(static_cast<scene::Armature*>(component.get()));
+                CreateComponentWidget(std::static_pointer_cast<scene::Armature>(component));
             }
             else if (component->ComponentName == "Camera")
             {
-                CreateComponentWidget(static_cast<scene::Camera*>(component.get()));
+                CreateComponentWidget(std::static_pointer_cast<scene::Camera>(component));
             }
             else if (component->ComponentName == "Light")
             {
-                CreateComponentWidget(static_cast<scene::Light*>(component.get()));
+                CreateComponentWidget(std::static_pointer_cast<scene::Light>(component));
             }
             else if (component->ComponentName == "Material")
             {
-                CreateComponentWidget(static_cast<scene::Material*>(component.get()));
+                CreateComponentWidget(std::static_pointer_cast<scene::Material>(component));
             }
             else if (component->ComponentName == "Mesh")
             {
-                CreateComponentWidget(static_cast<scene::Mesh*>(component.get()));
+                CreateComponentWidget(std::static_pointer_cast<scene::Mesh>(component));
             }
             else if (component->ComponentName == "Skybox")
             {
-                CreateComponentWidget(static_cast<scene::Skybox*>(component.get()));
+                CreateComponentWidget(std::static_pointer_cast<scene::Skybox>(component));
             }
             else if (component->ComponentName == "Transformation")
             {
-                CreateComponentWidget(static_cast<scene::Transformation*>(component.get()));
+                CreateComponentWidget(std::static_pointer_cast<scene::Transformation>(component));
             }
         }
 
         ImGui::EndChild();
     }
 
-    void EntityComponentsWidget::CreateComponentWidget(scene::Animation* animation)
+    void EntityComponentsWidget::CreateComponentWidget(std::shared_ptr<scene::Animation> animation)
     {
         if (ImGui::CollapsingHeader(animation->ComponentName.c_str()))
         {
@@ -146,7 +146,7 @@ namespace gui
         }
     }
 
-    void EntityComponentsWidget::CreateComponentWidget(scene::Armature* armature)
+    void EntityComponentsWidget::CreateComponentWidget(std::shared_ptr<scene::Armature> armature)
     {
         if (ImGui::CollapsingHeader(armature->ComponentName.c_str()))
         {
@@ -154,22 +154,22 @@ namespace gui
         }
     }
 
-    void EntityComponentsWidget::CreateComponentWidget(scene::Camera* camera)
+    void EntityComponentsWidget::CreateComponentWidget(std::shared_ptr<scene::Camera> camera)
     {
         if (ImGui::CollapsingHeader(camera->ComponentName.c_str()))
         {
-            DirectX::XMFLOAT3 position, target;
-            DirectX::XMStoreFloat3(&position, camera->Position());
-            DirectX::XMStoreFloat3(&target, camera->Target());
+            DirectX::XMFLOAT4 position, target;
+            DirectX::XMStoreFloat4(&position, camera->Position());
+            DirectX::XMStoreFloat4(&target, camera->Target());
 
             if (ImGui::DragFloat3("Position", &position.x, 0.1f))
             {
-                camera->Position() = DirectX::XMLoadFloat3(&position);
+                camera->Position() = DirectX::XMLoadFloat4(&position);
                 camera->Update();
             }
             if (ImGui::DragFloat3("Target", &target.x, 0.1f))
             {
-                camera->Target() = DirectX::XMLoadFloat3(&target);
+                camera->Target() = DirectX::XMLoadFloat4(&target);
                 camera->Update();
             }
 
@@ -192,7 +192,7 @@ namespace gui
         }
     }
 
-    void EntityComponentsWidget::CreateComponentWidget(scene::Light* light)
+    void EntityComponentsWidget::CreateComponentWidget(std::shared_ptr<scene::Light> light)
     {
         if (ImGui::CollapsingHeader(light->ComponentName.c_str()))
         {
@@ -233,7 +233,7 @@ namespace gui
         }
     }
 
-    void EntityComponentsWidget::CreateComponentWidget(scene::Material* material)
+    void EntityComponentsWidget::CreateComponentWidget(std::shared_ptr<scene::Material> material)
     {
         if (ImGui::CollapsingHeader(material->ComponentName.c_str()))
         {
@@ -244,7 +244,7 @@ namespace gui
         }
     }
 
-    void EntityComponentsWidget::CreateComponentWidget(scene::Mesh* mesh)
+    void EntityComponentsWidget::CreateComponentWidget(std::shared_ptr<scene::Mesh> mesh)
     {
         if (ImGui::CollapsingHeader(mesh->ComponentName.c_str()))
         {
@@ -252,7 +252,7 @@ namespace gui
         }
     }
 
-    void EntityComponentsWidget::CreateComponentWidget(scene::Skybox* skybox)
+    void EntityComponentsWidget::CreateComponentWidget(std::shared_ptr<scene::Skybox> skybox)
     {
         if (ImGui::CollapsingHeader(skybox->ComponentName.c_str()))
         {
@@ -260,7 +260,7 @@ namespace gui
         }
     }
 
-    void EntityComponentsWidget::CreateComponentWidget(scene::Transformation* transformation)
+    void EntityComponentsWidget::CreateComponentWidget(std::shared_ptr<scene::Transformation> transformation)
     {
         if (ImGui::CollapsingHeader(transformation->ComponentName.c_str()))
         {
