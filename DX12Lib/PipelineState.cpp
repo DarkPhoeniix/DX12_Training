@@ -274,6 +274,57 @@ namespace dx12
         }
     } // namespace unnamed
 
+    PipelineState::PipelineState()
+        : _rootSignature(nullptr)
+        , _pipelineState(nullptr)
+        , _isGraphicsPipeline(false)
+    {
+    }
+
+    PipelineState::PipelineState(const PipelineState& other)
+        : _rootSignature(other._rootSignature)
+        , _pipelineState(other._pipelineState)
+        , _isGraphicsPipeline(other._isGraphicsPipeline)
+    {
+    }
+
+    PipelineState::PipelineState(PipelineState&& other) noexcept
+        : _rootSignature(std::move(other._rootSignature))
+        , _pipelineState(std::move(other._pipelineState))
+        , _isGraphicsPipeline(other._isGraphicsPipeline)
+    {
+    }
+
+    PipelineState::~PipelineState()
+    {
+        _rootSignature = nullptr;
+        _pipelineState = nullptr;
+    }
+
+    PipelineState& PipelineState::operator=(const PipelineState& other)
+    {
+        if (this != &other)
+        {
+            _rootSignature = other._rootSignature;
+            _pipelineState = other._pipelineState;
+            _isGraphicsPipeline = other._isGraphicsPipeline;
+        }
+
+        return *this;
+    }
+
+    PipelineState& PipelineState::operator=(PipelineState&& other) noexcept
+    {
+        if (this != &other)
+        {
+            _rootSignature = std::move(other._rootSignature);
+            _pipelineState = std::move(other._pipelineState);
+            _isGraphicsPipeline = other._isGraphicsPipeline;
+        }
+
+        return *this;
+    }
+
     ComPtr<ID3D12RootSignature> PipelineState::GetRootSignature() const
     {
         return _rootSignature;
@@ -464,7 +515,7 @@ namespace dx12
             description.RenderTarget[i].DestBlendAlpha = ParseBlend(target["DestBlendAlpha"].asCString());
             description.RenderTarget[i].BlendOpAlpha = ParseBlendOp(target["BlendOpAlpha"].asCString());
 
-            description.RenderTarget[i].RenderTargetWriteMask = ParseColorWriteEnable(target["RenderTargetWriteMask"].asCString());
+            description.RenderTarget[i].RenderTargetWriteMask = static_cast<UINT8>(ParseColorWriteEnable(target["RenderTargetWriteMask"].asCString()));
 
             description.RenderTarget[i].LogicOpEnable = target["LogicOpEnable"].asBool();
             description.RenderTarget[i].LogicOp = ParseLogicOp(target["LogicOp"].asCString());

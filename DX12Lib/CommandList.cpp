@@ -41,9 +41,53 @@ namespace dx12
     {
     }
 
+    CommandList::CommandList(const CommandList& other)
+        : _commandList(other._commandList)
+        , _type(other._type)
+        , _name(other._name)
+    {
+    }
+
+    CommandList::CommandList(CommandList&& other) noexcept
+        : _commandList(other._commandList)
+        , _type(other._type)
+        , _name(other._name)
+    {
+        if (this != &other)
+        {
+            other._commandList = nullptr;
+        }
+    }
+
     CommandList::~CommandList()
     {
         _commandList = nullptr;
+    }
+
+    CommandList& CommandList::operator=(const CommandList& other)
+    {
+        if (this != &other)
+        {
+            _commandList = other._commandList;
+            _type = other._type;
+            _name = other._name;
+        }
+
+        return *this;
+    }
+
+    CommandList& CommandList::operator=(CommandList&& other) noexcept
+    {
+        if (this != &other)
+        {
+            _commandList = other._commandList;
+            _type = other._type;
+            _name = other._name;
+
+            other._commandList = nullptr;
+        }
+
+        return *this;
     }
 
     CommandListType CommandList::GetCommandListType() const
@@ -123,7 +167,7 @@ namespace dx12
 
     void CommandList::TransitionBarriers(std::vector<ResourceBarrier>& barriers)
     {
-        size_t numBarriers = barriers.size();
+        std::uint32_t numBarriers = static_cast<std::uint32_t>(barriers.size());
         std::vector<CD3DX12_RESOURCE_BARRIER> dxBarriers(numBarriers);
 
         for (size_t i = 0; i < numBarriers; ++i)

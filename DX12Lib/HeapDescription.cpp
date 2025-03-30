@@ -4,6 +4,11 @@
 
 namespace dx12
 {
+    HeapDescription::HeapDescription()
+        : _heapDescription()
+    {
+    }
+
     void HeapDescription::SetHeapType(D3D12_HEAP_TYPE heapType)
     {
         _heapDescription.Properties.Type = heapType;

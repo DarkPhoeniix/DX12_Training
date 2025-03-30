@@ -18,9 +18,51 @@ namespace dx12
         , _currentOffset(0)
     {   }
 
+    DescriptorHeap::DescriptorHeap(const DescriptorHeap& other)
+        : _descriptorHeap(other._descriptorHeap)
+        , _description(other._description)
+        , _heapIncrementSize(other._heapIncrementSize)
+        , _currentOffset(other._currentOffset)
+    {
+    }
+
+    DescriptorHeap::DescriptorHeap(DescriptorHeap&& other) noexcept
+        : _descriptorHeap(std::move(other._descriptorHeap))
+        , _description(std::move(other._description))
+        , _heapIncrementSize(other._heapIncrementSize)
+        , _currentOffset(other._currentOffset)
+    {
+    }
+
     DescriptorHeap::~DescriptorHeap()
     {
         _descriptorHeap = nullptr;
+    }
+
+    DescriptorHeap& DescriptorHeap::operator=(const DescriptorHeap& other)
+    {
+        if (this != &other)
+        {
+            _descriptorHeap = other._descriptorHeap;
+            _description = other._description;
+            _heapIncrementSize = other._heapIncrementSize;
+            _currentOffset = other._currentOffset;
+        }
+
+        return *this;
+    }
+
+    DescriptorHeap& DescriptorHeap::operator=(DescriptorHeap&& other) noexcept
+    {
+        if (this != &other)
+        {
+            _descriptorHeap = std::move(other._descriptorHeap);
+            _description = std::move(other._description);
+            _heapIncrementSize = other._heapIncrementSize;
+            _currentOffset = other._currentOffset;
+        }
+
+        return *this;
     }
 
     void DescriptorHeap::Create()

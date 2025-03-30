@@ -11,9 +11,17 @@ namespace dx12
     {
     public:
         ResourceTable() = default;
-        ResourceTable(ResourceTable&& other);
+        // Copy constructor.
+        ResourceTable(const ResourceTable& other);
+        // Move constructor.
+        ResourceTable(ResourceTable&& other) noexcept;
+        // Destructor.
+        ~ResourceTable();
 
-        ResourceTable& operator=(ResourceTable&& other);
+        // Copy assignment operator.
+        ResourceTable& operator=(const ResourceTable& other);
+        // Move assignment operator.
+        ResourceTable& operator=(ResourceTable&& other) noexcept;
 
         // Initializes the resource table with a specified number of descriptors.
         // Optionally, the descriptors can be shader-visible.

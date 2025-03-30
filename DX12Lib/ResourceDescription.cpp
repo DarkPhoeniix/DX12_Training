@@ -9,7 +9,7 @@ namespace dx12
 		, _resourceType(ResourceType::None)
 		, _stride(0)
 		, _clearValue(nullptr)
-		, _UAVCounterOffset(-1)
+		, _UAVCounterOffset(std::uint32_t(-1))
 	{
 		_resourceDescription.Format = DXGI_FORMAT::DXGI_FORMAT_UNKNOWN;
 
@@ -32,7 +32,31 @@ namespace dx12
 		, _resourceType(ResourceType::None)
 		, _stride(0)
 		, _clearValue(nullptr)
+		, _UAVCounterOffset(std::uint32_t(-1))
 	{
+	}
+
+	ResourceDescription::ResourceDescription(const ResourceDescription& other)
+		: _resourceDescription(other._resourceDescription)
+		, _resourceType(other._resourceType)
+		, _stride(other._stride)
+		, _clearValue(other._clearValue)
+		, _UAVCounterOffset(other._UAVCounterOffset)
+	{
+	}
+
+	ResourceDescription& ResourceDescription::operator=(const ResourceDescription& other)
+	{
+		if (this != &other)
+		{
+			_resourceDescription = other._resourceDescription;
+			_resourceType = other._resourceType;
+			_stride = other._stride;
+			_clearValue = other._clearValue;
+			_UAVCounterOffset = other._UAVCounterOffset;
+		}
+
+		return *this;
 	}
 
 	void ResourceDescription::SetDimension(D3D12_RESOURCE_DIMENSION dimension)

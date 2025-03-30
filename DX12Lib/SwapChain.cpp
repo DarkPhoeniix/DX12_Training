@@ -8,6 +8,7 @@ namespace dx12
 {
     SwapChain::SwapChain()
         : _dxgiSwapChain{}
+        , _swapChainDesc()
         , _RTVDescriptorSize(dx12::Device::GetDXDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV))
         , _currentBackBufferIndex(0)
         , _windowHandle{}
@@ -26,9 +27,40 @@ namespace dx12
         _RTVDescriptorHeap.Create();
     }
 
+    SwapChain::SwapChain(SwapChain&& other) noexcept
+        : _dxgiSwapChain(std::move(other._dxgiSwapChain))
+        , _swapChainDesc(other._swapChainDesc)
+        , _RTVDescriptorSize(other._RTVDescriptorSize)
+        , _currentBackBufferIndex(other._currentBackBufferIndex)
+        , _windowHandle(std::move(other._windowHandle))
+        , _width(other._width)
+        , _height(other._height)
+        , _vSync(other._vSync)
+        , _tearingSupport(other._tearingSupport)
+    {
+    }
+
     SwapChain::~SwapChain()
     {
         _dxgiSwapChain = nullptr;
+    }
+
+    SwapChain& SwapChain::operator=(SwapChain&& other) noexcept
+    {
+        if (this != &other)
+        {
+            _dxgiSwapChain = std::move(other._dxgiSwapChain);
+            _swapChainDesc = other._swapChainDesc;
+            _RTVDescriptorSize = other._RTVDescriptorSize;
+            _currentBackBufferIndex = other._currentBackBufferIndex;
+            _windowHandle = std::move(other._windowHandle);
+            _width = other._width;
+            _height = other._height;
+            _vSync = other._vSync;
+            _tearingSupport = other._tearingSupport;
+        }
+
+        return *this;
     }
 
     void SwapChain::Init(const core::Win32Window& window)

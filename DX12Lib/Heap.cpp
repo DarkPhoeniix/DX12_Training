@@ -10,15 +10,47 @@ namespace dx12
         , _resourceOffset(0)
     {   }
 
-    Heap::Heap(const HeapDescription& description)
-        : _heap(nullptr)
-        , _description(description)
-        , _resourceOffset(0)
-    {   }
+    Heap::Heap(const Heap& other)
+        : _heap(other._heap)
+        , _description(other._description)
+        , _resourceOffset(other._resourceOffset)
+    {
+    }
+
+    Heap::Heap(Heap&& other) noexcept
+        : _heap(std::move(other._heap))
+        , _description(std::move(other._description))
+        , _resourceOffset(other._resourceOffset)
+    {
+    }
 
     Heap::~Heap()
     {
         _heap = nullptr;
+    }
+
+    Heap& Heap::operator=(const Heap& other)
+    {
+        if (this != &other)
+        {
+            _heap = other._heap;
+            _description = other._description;
+            _resourceOffset = other._resourceOffset;
+        }
+
+        return *this;
+    }
+
+    Heap& Heap::operator=(Heap&& other) noexcept
+    {
+        if (this != &other)
+        {
+            _heap = std::move(other._heap);
+            _description = std::move(other._description);
+            _resourceOffset = other._resourceOffset;
+        }
+
+        return *this;
     }
 
     void Heap::Create()

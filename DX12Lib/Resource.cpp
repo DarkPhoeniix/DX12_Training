@@ -10,7 +10,7 @@ namespace dx12
 		, _currentState(D3D12_RESOURCE_STATE_COMMON)
 		, _initialState(D3D12_RESOURCE_STATE_COMMON)
 		, _allocationInfo()
-		, _uavCounterOffset(-1)
+		, _uavCounterOffset(std::uint32_t(-1))
 	{
 	}
 
@@ -20,13 +20,63 @@ namespace dx12
 		, _currentState(D3D12_RESOURCE_STATE_COMMON)
 		, _initialState(D3D12_RESOURCE_STATE_COMMON)
 		, _allocationInfo()
-		, _uavCounterOffset(-1)
+		, _uavCounterOffset(std::uint32_t(-1))
+	{
+	}
+
+	Resource::Resource(const Resource& other)
+		: _resource(other._resource)
+		, _resourceDesc(other._resourceDesc)
+		, _currentState(other._currentState)
+		, _initialState(other._initialState)
+		, _allocationInfo(other._allocationInfo)
+		, _uavCounterOffset(other._uavCounterOffset)
+	{
+	}
+
+	Resource::Resource(Resource&& other) noexcept
+		: _resource(std::move(other._resource))
+		, _resourceDesc(other._resourceDesc)
+		, _currentState(other._currentState)
+		, _initialState(other._initialState)
+		, _allocationInfo(other._allocationInfo)
+		, _uavCounterOffset(other._uavCounterOffset)
 	{
 	}
 
 	Resource::~Resource()
 	{
 		_resource = nullptr;
+	}
+
+	Resource& Resource::operator=(const Resource& other)
+	{
+		if (this != &other)
+		{
+			_resource = other._resource;
+			_resourceDesc = other._resourceDesc;
+			_currentState = other._currentState;
+			_initialState = other._initialState;
+			_allocationInfo = other._allocationInfo;
+			_uavCounterOffset = other._uavCounterOffset;
+		}
+
+		return *this;
+	}
+
+	Resource& Resource::operator=(Resource&& other) noexcept
+	{
+		if (this != &other)
+		{
+			_resource = std::move(other._resource);
+			_resourceDesc = other._resourceDesc;
+			_currentState = other._currentState;
+			_initialState = other._initialState;
+			_allocationInfo = other._allocationInfo;
+			_uavCounterOffset = other._uavCounterOffset;
+		}
+
+		return *this;
 	}
 
 	void Resource::InitFromDXResource(ComPtr<ID3D12Resource> resource)
@@ -82,7 +132,7 @@ namespace dx12
 		return _currentState;
 	}
 
-	const D3D12_RESOURCE_ALLOCATION_INFO& Resource::GetAllocationInfo() const
+	D3D12_RESOURCE_ALLOCATION_INFO Resource::GetAllocationInfo() const
 	{
 		D3D12_RESOURCE_DESC desc = _resourceDesc.CreateDXResourceDescription();
 		return dx12::Device::GetDXDevice()->GetResourceAllocationInfo(0, 1, &desc);

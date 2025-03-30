@@ -4,6 +4,11 @@
 
 namespace dx12
 {
+    DescriptorHeapDescription::DescriptorHeapDescription()
+        : _description()
+    {
+    }
+
     void DescriptorHeapDescription::SetType(D3D12_DESCRIPTOR_HEAP_TYPE type)
     {
         _description.Type = type;

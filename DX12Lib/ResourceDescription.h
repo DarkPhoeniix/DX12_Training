@@ -32,6 +32,13 @@ namespace dx12
         ResourceDescription();
         // Constructs a resource description from an existing D3D12_RESOURCE_DESC.
         ResourceDescription(const D3D12_RESOURCE_DESC& description);
+        // Copy constructor.
+        ResourceDescription(const ResourceDescription& other);
+        // Destructor.
+        ~ResourceDescription() = default;
+
+        // Copy assignment operator.
+        ResourceDescription& operator=(const ResourceDescription& other);
 
         // Sets the resource dimension (buffer, texture, etc.).
         void SetDimension(D3D12_RESOURCE_DIMENSION dimension);

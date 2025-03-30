@@ -4,6 +4,56 @@
 
 namespace dx12
 {
+    StatisticsQuery::StatisticsQuery()
+        : _statisticsQueryHeap(nullptr)
+        , _statisticsResource()
+        , _statisticsData(nullptr)
+    {
+    }
+
+    StatisticsQuery::StatisticsQuery(const StatisticsQuery& other)
+        : _statisticsQueryHeap(other._statisticsQueryHeap)
+        , _statisticsResource(other._statisticsResource)
+        , _statisticsData(other._statisticsData)
+    {
+    }
+
+    StatisticsQuery::StatisticsQuery(StatisticsQuery&& other) noexcept
+        : _statisticsQueryHeap(std::move(other._statisticsQueryHeap))
+        , _statisticsResource(std::move(other._statisticsResource))
+        , _statisticsData(std::move(other._statisticsData))
+    {
+    }
+
+    StatisticsQuery::~StatisticsQuery()
+    {
+        _statisticsQueryHeap = nullptr;
+    }
+
+    StatisticsQuery& StatisticsQuery::operator=(const StatisticsQuery& other)
+    {
+        if (this != &other)
+        {
+            _statisticsQueryHeap = other._statisticsQueryHeap;
+            _statisticsResource = other._statisticsResource;
+            _statisticsData = other._statisticsData;
+        }
+
+        return *this;
+    }
+
+    StatisticsQuery& StatisticsQuery::operator=(StatisticsQuery&& other) noexcept
+    {
+        if (this != &other)
+        {
+            _statisticsQueryHeap = std::move(other._statisticsQueryHeap);
+            _statisticsResource = std::move(other._statisticsResource);
+            _statisticsData = std::move(other._statisticsData);
+        }
+
+        return *this;
+    }
+
     void StatisticsQuery::Create()
     {
         // Create the query heap

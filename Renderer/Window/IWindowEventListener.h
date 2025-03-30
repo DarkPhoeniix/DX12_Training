@@ -30,7 +30,7 @@ namespace core
             virtual void OnMouseScroll([[maybe_unused]] MouseScrollEvent& e) {}
             virtual void OnResize([[maybe_unused]] ResizeEvent& e) {}
             virtual void OnPipelineChanged() {}
-            virtual void OnLoadScene(const std::string& filepath) {}
+            virtual void OnLoadScene([[maybe_unused]] const std::string& filepath) {}
         };
     } // namespace events
 } // namespace core

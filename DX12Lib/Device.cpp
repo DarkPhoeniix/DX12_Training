@@ -25,6 +25,31 @@ namespace dx12
 
     Device* Device::_instance = nullptr;
 
+    Device::Device(Device&& other) noexcept
+        : _device(std::move(other._device))
+        , _adapter(std::move(other._adapter))
+        , _queueStream(std::move(other._queueStream))
+        , _queueCompute(std::move(other._queueCompute))
+        , _queueCopy(std::move(other._queueCopy))
+        , _swapChain(std::move(other._swapChain))
+    {
+    }
+
+    Device& Device::operator=(Device&& other) noexcept
+    {
+        if (this != &other)
+        {
+            _device = std::move(other._device);
+            _adapter = std::move(other._adapter);
+            _queueStream = std::move(other._queueStream);
+            _queueCompute = std::move(other._queueCompute);
+            _queueCopy = std::move(other._queueCopy);
+            _swapChain = std::move(other._swapChain);
+        }
+
+        return *this;
+    }
+
     void Device::Init()
     {
         if (_instance)

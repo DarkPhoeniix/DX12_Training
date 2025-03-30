@@ -18,8 +18,17 @@ namespace dx12
     public:
         // Constructs an uninitialized swap chain.
         SwapChain();
+        // Copy constructor (deleted).
+        SwapChain(const SwapChain& other) = delete;
+        // Move constructor.
+        SwapChain(SwapChain&& other) noexcept;
         // Destroys the swap chain and releases associated resources.
         ~SwapChain();
+
+        // Copy assignment operator.
+        SwapChain& operator=(const SwapChain& other) = delete;
+        // Move assignment operator.
+        SwapChain& operator=(SwapChain&& other) noexcept;
 
         // Initializes the swap chain for a given Win32 window.
         void Init(const core::Win32Window& window);

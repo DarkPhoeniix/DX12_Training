@@ -6,6 +6,16 @@ namespace dx12
     class DescriptorHeapDescription
     {
     public:
+        // Default initializaion
+        DescriptorHeapDescription();
+        // Copy constructor.
+        DescriptorHeapDescription(const DescriptorHeapDescription& other) = default;
+        // Destructor.
+        ~DescriptorHeapDescription() = default;
+
+        // Copy assignment operator.
+        DescriptorHeapDescription& operator=(const DescriptorHeapDescription& other) = default;
+
         // Set the type of the descriptor heap.
         void SetType(D3D12_DESCRIPTOR_HEAP_TYPE type);
         // Get the type of the descriptor heap.
@@ -31,6 +41,6 @@ namespace dx12
 
     private:
         // Raw D3D12 descriptor heap description.
-        D3D12_DESCRIPTOR_HEAP_DESC _description = {};
+        D3D12_DESCRIPTOR_HEAP_DESC _description;
     };
 } // namespace dx12

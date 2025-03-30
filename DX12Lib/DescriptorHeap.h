@@ -31,11 +31,17 @@ namespace dx12
         DescriptorHeap();
         // Constructor to initialize a descriptor heap with a given description.
         DescriptorHeap(const DescriptorHeapDescription& description);
-        DescriptorHeap(DescriptorHeap&&) = default;
+        // Copy constructor.
+        DescriptorHeap(const DescriptorHeap& other);
+        // Move constructor.
+        DescriptorHeap(DescriptorHeap&& other) noexcept;
         // Destructor to properly release the descriptor heap.
         ~DescriptorHeap();
 
-        DescriptorHeap& operator=(DescriptorHeap&&) = default;
+        // Copy assignment operator.
+        DescriptorHeap& operator=(const DescriptorHeap& other);
+        // Move assignment operator.
+        DescriptorHeap& operator=(DescriptorHeap&& other) noexcept;
 
         // Creates a descriptor heap based on the stored description.
         void Create();
