@@ -46,9 +46,9 @@ namespace scene
 		const DirectX::XMMATRIX& Projection() const;
 		const DirectX::XMMATRIX& ViewProjection() const;
 
-		const DirectX::XMVECTOR& Right() const;
-		const DirectX::XMVECTOR& Up() const;
-		const DirectX::XMVECTOR& Look() const;
+		[[nodiscard]] DirectX::XMVECTOR Right() const;
+		[[nodiscard]] DirectX::XMVECTOR Up() const;
+		[[nodiscard]] DirectX::XMVECTOR Look() const;
 
 		const DirectX::XMVECTOR& Position() const;
 		DirectX::XMVECTOR& Position();

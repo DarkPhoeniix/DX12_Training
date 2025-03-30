@@ -195,9 +195,9 @@ namespace gui
     {
         std::shared_ptr<scene::Entity> activeCamera = _scene->FindNodeByComponentName("Camera");
         std::shared_ptr<scene::Camera> cameraComponent = activeCamera->GetComponentAs<scene::Camera>("Camera");
-        scene::Viewport vp = cameraComponent->GetViewport();
+        scene::Viewport viewport = cameraComponent->GetViewport();
 
-        DirectX::XMUINT2 viewportSize = vp.GetSize();
+        DirectX::XMUINT2 viewportSize = viewport.GetSize();
 
         float positionX = (float)(viewportSize.x - (viewportSize.x * 0.2f));
         float positionY = 0.0f;
@@ -322,10 +322,6 @@ namespace gui
         _selectedEntity = nullptr;
 
         AddGUIRenderPass();
-
-        std::shared_ptr<scene::Entity> activeCamera = _scene->FindNodeByComponentName("Camera");
-        std::shared_ptr<scene::Camera> cameraComponent = activeCamera->GetComponentAs<scene::Camera>("Camera");
-        _activeViewport = &cameraComponent->GetViewport();
     }
 
     std::shared_ptr<Editor> Editor::GetPtr()

@@ -16,12 +16,12 @@ namespace scene
     {
     public:
         Scene() = default;
-        Scene(const Scene&) = delete; // TODO: temp
-        Scene(Scene&& other);
+        Scene(const Scene& other);
+        Scene(Scene&& other) noexcept;
         ~Scene() = default;
 
-        Scene& operator=(const Scene& other) = delete; // TODO: temp
-        Scene& operator=(Scene&& other);
+        Scene& operator=(const Scene& other);
+        Scene& operator=(Scene&& other) noexcept;
 
         void AddRootNode(std::shared_ptr<Entity> entity);
 

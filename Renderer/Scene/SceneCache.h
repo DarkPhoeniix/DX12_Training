@@ -14,12 +14,12 @@ namespace scene
     {
     public:
         SceneCache();
-        SceneCache(const SceneCache&) = delete;
-        SceneCache(SceneCache&&);
+        SceneCache(const SceneCache& other);
+        SceneCache(SceneCache&& other) noexcept;
         ~SceneCache() = default;
 
-        SceneCache& operator=(const SceneCache&) = delete;
-        SceneCache& operator=(SceneCache&&);
+        SceneCache& operator=(const SceneCache& other);
+        SceneCache& operator=(SceneCache&& other) noexcept;
 
         std::shared_ptr<dx12::ResourceTable> GetLightsTable() const;
 

@@ -27,18 +27,40 @@ namespace
 
 namespace scene
 {
-    Scene::Scene(Scene&& other)
+    Scene::Scene(const Scene& other)
+        : _name(other._name)
+        , _rootNodes(other._rootNodes)
+        , _cache(other._cache)
     {
-        _name = std::move(other._name);
-        _rootNodes = std::move(other._rootNodes);
-        _cache = std::move(other._cache);
     }
 
-    Scene& Scene::operator=(Scene&& other)
+    Scene::Scene(Scene&& other) noexcept
+        : _name(std::move(other._name))
+        , _rootNodes(std::move(other._rootNodes))
+        , _cache(std::move(other._cache))
     {
-        _name = std::move(other._name);
-        _rootNodes = std::move(other._rootNodes);
-        _cache = std::move(other._cache);
+    }
+
+    Scene& Scene::operator=(const Scene& other)
+    {
+        if (this != &other)
+        {
+            _name = other._name;
+            _rootNodes = other._rootNodes;
+            _cache = other._cache;
+        }
+
+        return *this;
+    }
+
+    Scene& Scene::operator=(Scene&& other) noexcept
+    {
+        if (this != &other)
+        {
+            _name = std::move(other._name);
+            _rootNodes = std::move(other._rootNodes);
+            _cache = std::move(other._cache);
+        }
 
         return *this;
     }

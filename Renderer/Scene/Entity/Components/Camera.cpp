@@ -144,17 +144,17 @@ namespace scene
 		return _viewProjection;
 	}
 
-	const XMVECTOR& Camera::Right() const
+	XMVECTOR Camera::Right() const
 	{
 		return XMMatrixTranspose(_view).r[0];
 	}
 
-	const XMVECTOR& Camera::Up() const
+	XMVECTOR Camera::Up() const
 	{
 		return XMMatrixTranspose(_view).r[1];
 	}
 
-	const XMVECTOR& Camera::Look() const
+	XMVECTOR Camera::Look() const
 	{
 		return XMMatrixTranspose(_view).r[2];
 	}

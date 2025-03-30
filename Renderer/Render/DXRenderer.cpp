@@ -261,6 +261,10 @@ namespace render
         {
             dir -= _cameraComponent->Right() * _deltaTime;
         }
+        OutputDebugStringA("Right: ");
+        OutputDebugStringA(std::format("{} {} {} {}\n", DirectX::XMVectorGetX(_cameraComponent->Right()), DirectX::XMVectorGetY(_cameraComponent->Right()), DirectX::XMVectorGetZ(_cameraComponent->Right()), DirectX::XMVectorGetW(_cameraComponent->Right())).c_str());
+        OutputDebugStringA("Movement: ");
+        OutputDebugStringA(std::format("{} {} {} {}\n", DirectX::XMVectorGetX(dir), DirectX::XMVectorGetY(dir), DirectX::XMVectorGetZ(dir), DirectX::XMVectorGetW(dir)).c_str());
         _cameraComponent->Update(dir);
 
         switch (e.keyCode)
