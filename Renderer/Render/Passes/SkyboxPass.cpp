@@ -37,7 +37,7 @@ namespace render
         PIXBeginEvent(commandList.GetDXCommandList().Get(), 2, "Skybox Pass");
         {
             std::shared_ptr<scene::Entity> entity = _scene->FindNodeByComponentName("Skybox");
-            scene::Skybox* skyboxComponent = entity->GetComponentAs<scene::Skybox>("Skybox");
+            std::shared_ptr<scene::Skybox> skyboxComponent = entity->GetComponentAs<scene::Skybox>("Skybox");
 
             scene::TextureManager& textureManager = _scene->GetCache().GetTextureManager();
             std::shared_ptr<dx12::Resource> skybox = textureManager.GetTexture(skyboxComponent->SkydomeTexture);

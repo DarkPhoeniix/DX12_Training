@@ -10,9 +10,15 @@ namespace dx12
     class Device
     {
     public:
-        // Delete copy constructor and assignment to enforce singleton pattern.
-        Device(const Device& copy) = delete;
-        Device operator=(const Device& copy) = delete;
+        // Delete copy constructor to enforce singleton pattern.
+        Device(const Device& other) = delete;
+        // Move constructor.
+        Device(Device&& other) noexcept;
+
+        // Delete copy assignment to enforce singleton pattern.
+        Device& operator=(const Device& other) = delete;
+        // Move assignment operator.
+        Device& operator=(Device&& other) noexcept;
 
         // Initializes the DirectX 12 device and necessary resources.
         static void Init();

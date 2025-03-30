@@ -13,6 +13,68 @@ namespace dx12
         return resources.find(key);
     }
 
+    ResourceTable::ResourceTable(const ResourceTable& other)
+        : _RTVResources(other._RTVResources)
+        , _DSVResources(other._DSVResources)
+        , _BufferResources(other._BufferResources)
+        , _RTVDescriptorHeap(other._RTVDescriptorHeap)
+        , _DSVDescriptorHeap(other._DSVDescriptorHeap)
+        , _BuffersDescriptorHeap(other._BuffersDescriptorHeap)
+        , _numDescriptors(other._numDescriptors)
+    {
+    }
+
+    ResourceTable::ResourceTable(ResourceTable&& other) noexcept
+        : _RTVResources(std::move(other._RTVResources))
+        , _DSVResources(std::move(other._DSVResources))
+        , _BufferResources(std::move(other._BufferResources))
+        , _RTVDescriptorHeap(std::move(other._RTVDescriptorHeap))
+        , _DSVDescriptorHeap(std::move(other._DSVDescriptorHeap))
+        , _BuffersDescriptorHeap(std::move(other._BuffersDescriptorHeap))
+        , _numDescriptors(other._numDescriptors)
+    {
+    }
+
+    ResourceTable::~ResourceTable()
+    {
+    }
+
+    ResourceTable& ResourceTable::operator=(const ResourceTable& other)
+    {
+        if (this != &other)
+        {
+            _RTVResources = other._RTVResources;
+            _DSVResources = other._DSVResources;
+            _BufferResources = other._BufferResources;
+
+            _RTVDescriptorHeap = other._RTVDescriptorHeap;
+            _DSVDescriptorHeap = other._DSVDescriptorHeap;
+            _BuffersDescriptorHeap = other._BuffersDescriptorHeap;
+
+            _numDescriptors = other._numDescriptors;
+        }
+
+        return *this;
+    }
+
+    ResourceTable& ResourceTable::operator=(ResourceTable&& other) noexcept
+    {
+        if (this != &other)
+        {
+            _RTVResources = std::move(other._RTVResources);
+            _DSVResources = std::move(other._DSVResources);
+            _BufferResources = std::move(other._BufferResources);
+
+            _RTVDescriptorHeap = std::move(other._RTVDescriptorHeap);
+            _DSVDescriptorHeap = std::move(other._DSVDescriptorHeap);
+            _BuffersDescriptorHeap = std::move(other._BuffersDescriptorHeap);
+
+            _numDescriptors = other._numDescriptors;
+        }
+
+        return *this;
+    }
+
     void ResourceTable::Init(std::uint32_t numDescriptors, bool shaderVisible)
     {
         _numDescriptors = numDescriptors;
@@ -153,7 +215,6 @@ namespace dx12
         }
 
         ResourceTable::ResourceMap& resources = _GetResourceMap(viewType);
-        DescriptorHeap& descriptorHeap = GetDescriptorHeap(viewType);
         
         ResourceKey key = { resource->GetName().c_str(), viewType };
         auto it = GetResource(key);
@@ -235,7 +296,7 @@ namespace dx12
         if (it == resources.end())
         {
             FAIL("Failed to get resource handle");
-            return -1;
+            return std::uint32_t(-1);
         }
 
         return it->second.HeapIndex;
@@ -250,7 +311,7 @@ namespace dx12
         if (it == resources.end())
         {
             FAIL("Failed to get resource handle");
-            return -1;
+            return std::uint32_t(-1);
         }
 
         return it->second.HeapIndex;

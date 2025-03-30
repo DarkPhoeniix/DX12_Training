@@ -59,7 +59,7 @@ namespace render
         for (size_t lightIndex = 0; lightIndex < lightsNum; ++lightIndex)
         {
             std::shared_ptr<scene::Entity> entity = lightEntities[lightIndex];
-            scene::Light* light = entity->GetComponentAs<scene::Light>("Light");
+            std::shared_ptr<scene::Light> light = entity->GetComponentAs<scene::Light>("Light");
 
             if (light->CastShadows)
             {
@@ -71,7 +71,7 @@ namespace render
                     clearValue.DepthStencil.Stencil = 0;
 
                     DirectX::XMUINT2 size = _camera->GetViewport().GetSize();
-                    shadowMapDesc.SetSize({ size.x, size.x });
+                    shadowMapDesc.SetSize({ size.x / 2, size.x / 2 });
                     shadowMapDesc.SetFormat(DXGI_FORMAT_D32_FLOAT);
                     shadowMapDesc.SetClearValue(clearValue);
                     switch (light->Type)

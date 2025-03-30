@@ -8,6 +8,19 @@ namespace dx12
     class StatisticsQuery
     {
     public:
+        StatisticsQuery();
+        // Copy constructor.
+        StatisticsQuery(const StatisticsQuery& other);
+        // Move constructor.
+        StatisticsQuery(StatisticsQuery&& other) noexcept;
+        // Destructor.
+        ~StatisticsQuery();
+
+        // Copy assignment operator.
+        StatisticsQuery& operator=(const StatisticsQuery& other);
+        // Move assignment operator.
+        StatisticsQuery& operator=(StatisticsQuery&& other) noexcept;
+
         // Create the query heap and an associated resource to store render statistics.
         void Create();
 

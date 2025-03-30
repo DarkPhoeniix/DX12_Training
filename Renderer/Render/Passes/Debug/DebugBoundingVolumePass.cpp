@@ -54,8 +54,8 @@ namespace render
             auto lights = _scene->FilterNodesByComponent("Light");
             for (auto& entity : lights)
             {
-                scene::Light* light = entity->GetComponentAs<scene::Light>("Light");
-                scene::Transformation* t = entity->GetComponentAs<scene::Transformation>("Transformation");
+                std::shared_ptr<scene::Light> light = entity->GetComponentAs<scene::Light>("Light");
+                std::shared_ptr<scene::Transformation> t = entity->GetComponentAs<scene::Transformation>("Transformation");
 
                 switch (light->Type)
                 {
@@ -71,7 +71,7 @@ namespace render
             auto meshes = _scene->FilterNodesByComponent("Mesh");
             for (auto& entity : meshes)
             {
-                scene::Mesh* mesh = entity->GetComponentAs<scene::Mesh>("Mesh");
+                std::shared_ptr<scene::Mesh> mesh = entity->GetComponentAs<scene::Mesh>("Mesh");
                 scene::AABBVolume aabb = mesh->GlobalAABB;
 
                 DrawHelper::DrawBox(commandList, *_camera, aabb.Min, aabb.Max, DirectX::XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f));

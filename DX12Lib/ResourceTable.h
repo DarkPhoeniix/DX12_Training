@@ -10,6 +10,19 @@ namespace dx12
     class ResourceTable
     {
     public:
+        ResourceTable() = default;
+        // Copy constructor.
+        ResourceTable(const ResourceTable& other);
+        // Move constructor.
+        ResourceTable(ResourceTable&& other) noexcept;
+        // Destructor.
+        ~ResourceTable();
+
+        // Copy assignment operator.
+        ResourceTable& operator=(const ResourceTable& other);
+        // Move assignment operator.
+        ResourceTable& operator=(ResourceTable&& other) noexcept;
+
         // Initializes the resource table with a specified number of descriptors.
         // Optionally, the descriptors can be shader-visible.
         void Init(std::uint32_t numDescriptors, bool shaderVisible = false);
@@ -55,6 +68,35 @@ namespace dx12
         // A structure representing a unique key for identifying a resource by its name and view type.
         struct ResourceKey
         {
+            ResourceKey() = default;
+            ResourceKey(std::string_view name, ResourceViewType type)
+                : Name(name), ViewType(type)
+            {   }
+            ResourceKey(const ResourceKey& other)
+            {
+                Name = other.Name;
+                ViewType = other.ViewType;
+            }
+            ResourceKey(ResourceKey&& other)
+            {
+                Name = std::move(other.Name);
+                ViewType = other.ViewType;
+            }
+            ResourceKey& operator=(ResourceKey&& other)
+            {
+                Name = std::move(other.Name);
+                ViewType = other.ViewType;
+
+                return *this;
+            }
+            ResourceKey& operator=(const ResourceKey& other)
+            {
+                Name = other.Name;
+                ViewType = other.ViewType;
+
+                return *this;
+            }
+
             std::string_view Name;      // Resource's name (e.g., texture name).
             ResourceViewType ViewType;  // The type of resource view (e.g., RTV, DSV).
 
@@ -78,6 +120,39 @@ namespace dx12
         struct InternalResourceDesc
         {
             using ResourceIndex = std::uint32_t;
+
+            InternalResourceDesc() = default;
+            InternalResourceDesc(Resource* resource, ResourceIndex index, ResourceViewType type)
+                : PlacedResource(resource), HeapIndex(index), Type(type)
+            {   }
+            InternalResourceDesc(const InternalResourceDesc& other)
+            {
+                PlacedResource = other.PlacedResource;
+                HeapIndex = other.HeapIndex;
+                Type = other.Type;
+            }
+            InternalResourceDesc(InternalResourceDesc&& other)
+            {
+                PlacedResource = other.PlacedResource;
+                HeapIndex = other.HeapIndex;
+                Type = other.Type;
+            }
+            InternalResourceDesc& operator=(InternalResourceDesc&& other)
+            {
+                PlacedResource = other.PlacedResource;
+                HeapIndex = other.HeapIndex;
+                Type = other.Type;
+
+                return *this;
+            }
+            InternalResourceDesc& operator=(const InternalResourceDesc& other)
+            {
+                PlacedResource = other.PlacedResource;
+                HeapIndex = other.HeapIndex;
+                Type = other.Type;
+
+                return *this;
+            }
 
             Resource* PlacedResource = nullptr;                         // Pointer to the resource in the table.
             ResourceIndex HeapIndex = static_cast<std::uint32_t>(-1);   // Index of the resource in the descriptor heap.

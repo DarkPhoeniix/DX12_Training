@@ -10,6 +10,7 @@
 #include "Scene/Entity/Entity.h"
 #include "Scene/Entity/Components/Animation.h"
 #include "Scene/Entity/Components/Armature.h"
+#include "Scene/Entity/Components/Camera.h"
 #include "Scene/Entity/Components/Light.h"
 #include "Scene/Entity/Components/Material.h"
 #include "Scene/Entity/Components/Mesh.h"
@@ -77,9 +78,9 @@ namespace
 
     void CalculateBoundingVolume(std::shared_ptr<scene::Entity> entity)
     {
-        scene::Transformation* transform = entity->GetComponentAs<scene::Transformation>("Transformation");
-        scene::Armature* armature = entity->GetComponentAs<scene::Armature>("Armature");
-        scene::Mesh* mesh = entity->GetComponentAs<scene::Mesh>("Mesh");
+        std::shared_ptr<scene::Transformation> transform = entity->GetComponentAs<scene::Transformation>("Transformation");
+        std::shared_ptr<scene::Armature> armature = entity->GetComponentAs<scene::Armature>("Armature");
+        std::shared_ptr<scene::Mesh> mesh = entity->GetComponentAs<scene::Mesh>("Mesh");
 
         if (!mesh || !armature)
         {
@@ -127,12 +128,13 @@ namespace
 
 namespace scene::helpers
 {
-    std::shared_ptr<Scene> SceneLoader::LoadScene(TaskGPU& task, const std::string& filepath)
+    void SceneLoader::LoadScene(TaskGPU& task, const std::string& filepath, std::shared_ptr<Scene> scene)
     {
         dx12::CommandList& commandList = *task.GetCommandLists().front();
         commandList.SetName("Scene upload command list");
 
-        std::shared_ptr<Scene> scene = std::make_shared<Scene>();
+        scene->Clear();
+
         _cache = &scene->GetCache();
 
         std::ifstream in(filepath, std::ifstream::in | std::ifstream::binary);
@@ -155,8 +157,6 @@ namespace scene::helpers
         task.GetFence()->SetCompletionCallback([this]() { CleanIntermediates(); });
 
         commandList.Close();
-
-        return scene;
     }
 
     std::shared_ptr<Entity> SceneLoader::LoadEntity(dx12::CommandList& commandList, const std::string& filepath, Entity* parent)
@@ -168,7 +168,7 @@ namespace scene::helpers
             return nullptr;
         }
 
-        std::shared_ptr<Entity> entity = std::make_shared<Entity>(_cache, parent);
+        std::shared_ptr<Entity> entity = std::make_shared<Entity>(parent);
 
         std::ifstream in(filepath, std::ifstream::in | std::ifstream::binary);
         Json::Value jsonRoot;
@@ -231,13 +231,19 @@ namespace scene::helpers
             LoadComponent(parentPath, jsonRoot, entity->GetComponentAs<Armature>("Armature"), component);
             entity->AddComponent(component);
         }
+        if (!jsonRoot["Camera"].isNull())
+        {
+            std::shared_ptr<Camera> component = std::make_shared<Camera>();
+            LoadComponent(parentPath, jsonRoot, component);
+            entity->AddComponent(component);
+        }
 
         CalculateBoundingVolume(entity);
 
         return entity;
     }
 
-    void SceneLoader::LoadComponent(const std::string& filepath, Json::Value& jsonValue, Armature* armature, const std::shared_ptr<Animation>& component)
+    void SceneLoader::LoadComponent(const std::string& filepath, Json::Value& jsonValue, std::shared_ptr<Armature> armature, const std::shared_ptr<Animation>& component)
     {
         std::string animationFilepth = filepath + '/' + jsonValue["Animation"].asString();
 
@@ -274,9 +280,9 @@ namespace scene::helpers
 
     void SceneLoader::LoadComponent(const std::string& filepath, Json::Value& jsonValue, const std::shared_ptr<Armature>& component)
     {
-        std::string armatureFilepth = filepath + '/' + jsonValue["Armature"].asString();
+        std::string armatureFilepath = filepath + '/' + jsonValue["Armature"].asString();
 
-        std::ifstream file(armatureFilepth, std::ios_base::in | std::ios_base::binary);
+        std::ifstream file(armatureFilepath, std::ios_base::in | std::ios_base::binary);
         Json::Value armatureData;
         file >> armatureData;
 
@@ -287,6 +293,19 @@ namespace scene::helpers
         ParseBones(armatureData["Armature"], bones);
 
         component->Init(bones);
+    }
+
+    void SceneLoader::LoadComponent(const std::string& filepath, Json::Value& jsonValue, const std::shared_ptr<Camera>& component)
+    {
+        std::string cameraFilepath = filepath + '/' + jsonValue["Camera"].asString();
+
+        std::ifstream file(cameraFilepath, std::ios_base::in | std::ios_base::binary);
+        Json::Value cameraData;
+        file >> cameraData;
+
+        component->LookAt(ParseVector(cameraData["Position"].asString()), ParseVector(cameraData["Target"].asString()), DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
+        component->SetLens(cameraData["FOV"].asFloat(), cameraData["NearZ"].asFloat(), cameraData["FarZ"].asFloat());
+        component->Speed = cameraData["Speed"].asFloat();
     }
 
     void SceneLoader::LoadComponent(const std::string& filepath, Json::Value& jsonValue, const std::shared_ptr<Transformation>& component)

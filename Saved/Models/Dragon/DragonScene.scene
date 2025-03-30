@@ -9,6 +9,7 @@
         "Skybox.node",
         "Pink.node",
         "Blue.node",
-        "SpotLight1.node"
+        "SpotLight1.node",
+        "Camera.node"
     ]
 }

@@ -9,6 +9,7 @@
 #include "events/ResizeEvent.h"
 
 #define WM_PIPELINE_CHANGED (WM_USER + 1)
+#define WM_LOAD_SCENE (WM_USER + 2)
 
 class Frame;
 
@@ -29,6 +30,7 @@ namespace core
             virtual void OnMouseScroll([[maybe_unused]] MouseScrollEvent& e) {}
             virtual void OnResize([[maybe_unused]] ResizeEvent& e) {}
             virtual void OnPipelineChanged() {}
+            virtual void OnLoadScene([[maybe_unused]] const std::string& filepath) {}
         };
     } // namespace events
 } // namespace core

@@ -6,6 +6,15 @@ namespace dx12
     class HeapDescription
     {
     public:
+        HeapDescription();
+        // Copy constructor.
+        HeapDescription(const HeapDescription&) = default;
+        // Destructor.
+        ~HeapDescription() = default;
+
+        // Copy assignment operator.
+        HeapDescription& operator=(const HeapDescription&) = default;
+
         // Set the heap type.
         void SetHeapType(D3D12_HEAP_TYPE heapType);
         // Get the heap type.
@@ -51,6 +60,6 @@ namespace dx12
 
     private:
         // Raw D3D12 heap description.
-        D3D12_HEAP_DESC _heapDescription = {};
+        D3D12_HEAP_DESC _heapDescription;
     };
 } // namespace dx12

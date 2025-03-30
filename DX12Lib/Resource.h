@@ -18,15 +18,24 @@ namespace dx12
         Resource();
         // Constructor to initialize Resource with a given ResourceDescription.
         Resource(ResourceDescription resourceDesc);
+        // Copy constructor.
+        Resource(const Resource& other);
+        // Move constructor.
+        Resource(Resource&& other) noexcept;
         // Virtual destructor for proper cleanup of derived classes.
         virtual ~Resource();
+
+        // Copy assignment operator.
+        Resource& operator=(const Resource& other);
+        // Move assignment operator.
+        Resource& operator=(Resource&& other) noexcept;
 
         // Initializes the Resource from an existing DirectX 12 resource.
         void InitFromDXResource(ComPtr<ID3D12Resource> resource);
 
         // Getter for the raw DirectX 12 resource.
-        ComPtr<ID3D12Resource> GetDXResource() const;
-        ComPtr<ID3D12Resource>& GetDXResource();
+        [[nodiscard]] ComPtr<ID3D12Resource> GetDXResource() const;
+        [[nodiscard]] ComPtr<ID3D12Resource>& GetDXResource();
 
         // Sets the name for the resource for debugging and identification.
         void SetName(const std::string& name);
@@ -36,7 +45,7 @@ namespace dx12
         // Sets the resource description, detailing the resource's properties.
         void SetResourceDescription(const ResourceDescription& resourceDesc);
         // Getter for the resource description.
-        ResourceDescription GetResourceDescription() const;
+        [[nodiscard]] ResourceDescription GetResourceDescription() const;
 
         // Sets the current state of the resource (e.g., copy, render target).
         void SetCurrentState(D3D12_RESOURCE_STATES state);
@@ -44,7 +53,7 @@ namespace dx12
         D3D12_RESOURCE_STATES GetCurrentState() const;
 
         // Getter for resource allocation info (e.g., size, alignment).
-        const D3D12_RESOURCE_ALLOCATION_INFO& GetAllocationInfo() const;
+        [[nodiscard]] D3D12_RESOURCE_ALLOCATION_INFO GetAllocationInfo() const;
 
         // Computes the GPU virtual address offset for the resource.
         D3D12_GPU_VIRTUAL_ADDRESS OffsetGPU(std::uint64_t offset = 0) const;
@@ -69,15 +78,15 @@ namespace dx12
         ComPtr<ID3D12Resource> CreatePlacedResource(const ResourceDescription& resourceDesc, ComPtr<ID3D12Heap> heap, std::uint64_t offset, D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_COPY_DEST);
 
         // Get the resource as a Render Target View (RTV) for rendering operations.
-        RenderTargetView GetAsRTV();
+        [[nodiscard]] RenderTargetView GetAsRTV();
         // Get the resource as a Depth Stencil View (DSV) for depth/stencil operations.
-        DepthStencilView GetAsDSV();
+        [[nodiscard]] DepthStencilView GetAsDSV();
         // Get the resource as a Constant Buffer View (CBV) for constant buffer usage.
-        ConstantBufferView GetAsCBV();
+        [[nodiscard]] ConstantBufferView GetAsCBV();
         // Get the resource as a Shader Resource View (SRV) for shader access.
-        ShaderResourceView GetAsSRV();
+        [[nodiscard]] ShaderResourceView GetAsSRV();
         // Get the resource as an Unordered Access View (UAV) for unordered access operations.
-        UnorderedAccessView GetAsUAV();
+        [[nodiscard]] UnorderedAccessView GetAsUAV();
 
     protected:
         // The DirectX 12 resource pointer (e.g., ID3D12Resource) representing the actual GPU resource.

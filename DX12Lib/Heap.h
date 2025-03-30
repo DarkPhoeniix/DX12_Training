@@ -12,10 +12,17 @@ namespace dx12
     public:
         // Default constructor.
         Heap();
-        // Construct a heap with a given description.
-        Heap(const HeapDescription& description);
+        // Copy constructor.
+        Heap(const Heap& other);
+        // Move constructor.
+        Heap(Heap&& other) noexcept;
         // Destructor.
         ~Heap();
+
+        // Copy assignment operator.
+        Heap& operator=(const Heap& other);
+        // Move assignment operator.
+        Heap& operator=(Heap&& other) noexcept;
 
         // Create the heap using the current description.
         void Create();

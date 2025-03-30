@@ -22,10 +22,17 @@ namespace scene
     {
     public:
         TextureManager();
+        TextureManager(const TextureManager& other);
+        TextureManager(TextureManager&& other) noexcept;
+
+        TextureManager& operator=(const TextureManager& other);
+        TextureManager& operator=(TextureManager&& other) noexcept;
 
         void EnqueueTexture(const std::string& filepath);
         void UploadTextures(dx12::CommandList& commandList);
         void CleanIntermediates();
+
+        void Clear();
 
         std::shared_ptr<dx12::Texture> GetTexture(const std::string& name) const;
 

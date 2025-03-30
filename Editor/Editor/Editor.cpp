@@ -15,6 +15,8 @@
 
 #include "RenderGraph/RenderGraph.h"
 
+#include <commdlg.h>
+
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 LRESULT GUI_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -150,7 +152,7 @@ namespace gui
     {
         _scene = scene;
         std::shared_ptr<scene::Entity> activeCamera = scene->FindNodeByComponentName("Camera");
-        scene::Camera* cameraComponent = activeCamera->GetComponentAs<scene::Camera>("Camera");
+        std::shared_ptr<scene::Camera> cameraComponent = activeCamera->GetComponentAs<scene::Camera>("Camera");
         _activeViewport = &cameraComponent->GetViewport();
 
         CreateWidgets();
@@ -192,10 +194,10 @@ namespace gui
     void Editor::Update()
     {
         std::shared_ptr<scene::Entity> activeCamera = _scene->FindNodeByComponentName("Camera");
-        scene::Camera* cameraComponent = activeCamera->GetComponentAs<scene::Camera>("Camera");
-        scene::Viewport vp = cameraComponent->GetViewport();
+        std::shared_ptr<scene::Camera> cameraComponent = activeCamera->GetComponentAs<scene::Camera>("Camera");
+        scene::Viewport viewport = cameraComponent->GetViewport();
 
-        DirectX::XMUINT2 viewportSize = vp.GetSize();
+        DirectX::XMUINT2 viewportSize = viewport.GetSize();
 
         float positionX = (float)(viewportSize.x - (viewportSize.x * 0.2f));
         float positionY = 0.0f;
@@ -205,13 +207,54 @@ namespace gui
         ImGui::SetNextWindowPos({ 0.0f, 0.0f });
         ImGui::SetNextWindowSize({ 0.0f, 0.0f });
 
+        ImVec2 menuSize = { 0.0f, 0.0f };
+
+        if (ImGui::BeginMainMenuBar())
+        {
+            if (ImGui::BeginMenu("File"))
+            {
+                if (ImGui::MenuItem("Load"))
+                {
+                    OPENFILENAME open;
+                    ZeroMemory(&open, sizeof(open));
+
+                    _filepath[0] = '\0';
+
+                    open.lStructSize = sizeof(OPENFILENAME);
+                    open.lpstrFilter = L".scene\0*.scene\0\0";
+                    open.nFileOffset = 1;
+                    open.nMaxFile = 2048;
+                    open.lpstrTitle = L"Desc...";
+                    open.lpstrFile = _filepath;
+                    open.Flags = OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
+
+                    WCHAR* ecfas;
+                    if (GetOpenFileName(&open))
+                    {
+                        std::wstring wstr(_filepath);
+                        std::string spath(wstr.begin(), wstr.end());
+
+                        PostMessage(_windowHandle, WM_LOAD_SCENE, NULL, (LPARAM)_filepath);
+                    }
+                }
+                ImGui::EndMenu();
+            }
+
+            menuSize = ImGui::GetWindowSize();
+        }
+        ImGui::EndMainMenuBar();
+
+
+        ImGui::SetNextWindowPos({ 0.0f, menuSize.y });
+        ImGui::SetNextWindowSize({ 0.0f, 0.0f });
+
         if (ImGui::Begin("Debug Information", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize))
         {
             _debugInfoWidget->Update();
         }
         ImGui::End();
 
-        ImGui::SetNextWindowPos({ positionX, positionY });
+        ImGui::SetNextWindowPos({ positionX, menuSize.y });
         ImGui::SetNextWindowSize({ sizeX, sizeY });
 
         if (ImGui::Begin("Scene", nullptr, ImGuiWindowFlags_NoMove))
@@ -271,6 +314,13 @@ namespace gui
 
     void Editor::OnPipelineChanged()
     {
+        AddGUIRenderPass();
+    }
+
+    void Editor::OnLoadScene(const std::string& filepath)
+    {
+        _selectedEntity = nullptr;
+
         AddGUIRenderPass();
     }
 

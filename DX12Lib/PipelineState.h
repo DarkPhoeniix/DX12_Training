@@ -12,6 +12,20 @@ namespace dx12
     class PipelineState
     {
     public:
+        // Default null initialization.
+        PipelineState();
+        // Copy constructor.
+        PipelineState(const PipelineState& other);
+        // Move constructor.
+        PipelineState(PipelineState&& other) noexcept;
+        // Destructor.
+        ~PipelineState();
+
+        // Copy assignment operator.
+        PipelineState& operator=(const PipelineState& other);
+        // Move assignment operator.
+        PipelineState& operator=(PipelineState&& other) noexcept;
+
         // Get a pointer to the raw D3D12 root signature object.
         ComPtr<ID3D12RootSignature> GetRootSignature() const;
         // Get a pointer to the raw D3D12 pipeline state object.

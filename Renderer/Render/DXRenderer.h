@@ -16,7 +16,7 @@ namespace render
         DXRenderer(HWND windowHandle);
         ~DXRenderer();
 
-        virtual bool LoadContent(TaskGPU* loadTask);
+        virtual bool LoadContent(TaskGPU* loadTask, const std::string& filepath);
         virtual void UnloadContent();
 
         virtual void SetFrame(Frame& frame);
@@ -36,6 +36,7 @@ namespace render
         void OnMouseScroll(core::events::MouseScrollEvent& e) override {}
         void OnResize(core::events::ResizeEvent& e) override;
         void OnPipelineChanged() override;
+        void OnLoadScene(const std::string& filepath) override;
 
     private:
         void UpdateEntity(std::shared_ptr<scene::Entity> entity);
@@ -55,7 +56,6 @@ namespace render
         std::shared_ptr<scene::Camera> _cameraComponent;
 
         scene::helpers::SceneLoader _sceneLoader;
-        //UploadSceneProcessor _uploadProcessor;
 
         bool _isMinimized;
         bool _isCameraMoving;

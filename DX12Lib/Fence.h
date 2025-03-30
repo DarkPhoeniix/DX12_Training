@@ -6,6 +6,19 @@ namespace dx12
     class Fence
     {
     public:
+        Fence();
+        // Copy constructor.
+        Fence(const Fence& other);
+        // Move constructor.
+        Fence(Fence&& other) noexcept;
+        // Destructor.
+        ~Fence();
+
+        // Copy assignment operator.
+        Fence& operator=(const Fence& other);
+        // Move assignment operator.
+        Fence& operator=(Fence&& other) noexcept;
+
         // Initializes the fence and marks it as free.
         void Init();
 

@@ -15,6 +15,14 @@ namespace scene
     class Scene
     {
     public:
+        Scene() = default;
+        Scene(const Scene& other);
+        Scene(Scene&& other) noexcept;
+        ~Scene() = default;
+
+        Scene& operator=(const Scene& other);
+        Scene& operator=(Scene&& other) noexcept;
+
         void AddRootNode(std::shared_ptr<Entity> entity);
 
         std::vector<std::shared_ptr<Entity>>& GetRootNodes();
@@ -24,6 +32,8 @@ namespace scene
         std::shared_ptr<Entity> FindNodeByComponentName(const std::string& componentName) const;
 
         std::vector<std::shared_ptr<Entity>> FilterNodesByComponent(const std::string& componentName) const;
+
+        void Clear();
 
         SceneCache& GetCache();
 

@@ -29,8 +29,17 @@ namespace dx12
         CommandList();
         // Constructor that initializes a CommandList from an existing DirectX 12 command list.
         CommandList(ComPtr<ID3D12GraphicsCommandList> DXCommandList);
+        // Copy constructor.
+        CommandList(const CommandList& other);
+        // Move constructor.
+        CommandList(CommandList&& other) noexcept;
         // Destructor for cleaning up the command list resources.
         ~CommandList();
+
+        // Copy assignment operator.
+        CommandList& operator=(const CommandList& other);
+        // Move assignment operator.
+        CommandList& operator=(CommandList&& other) noexcept;
 
         // Returns the type of command list (Graphics/Compute/Copy).
         CommandListType GetCommandListType() const;

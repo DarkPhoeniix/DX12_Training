@@ -85,7 +85,7 @@ namespace rg
             case RenderPassType::Copy:
                 task = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_COPY);
                 break;
-            defualt:
+            default:
                 FAIL("Undefined render pass type");
                 break;
             }

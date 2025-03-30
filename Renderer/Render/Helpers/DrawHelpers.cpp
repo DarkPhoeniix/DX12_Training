@@ -10,9 +10,10 @@ namespace render
 
     void DrawHelper::Init()
     {
-        ASSERT(!_instance, "DrawHelper has alreade been initialized");
-
-        _instance = std::unique_ptr<DrawHelper>(new DrawHelper);
+        if (!_instance)
+        {
+            _instance = std::unique_ptr<DrawHelper>(new DrawHelper);
+        }
     }
 
     void DrawHelper::Destroy()

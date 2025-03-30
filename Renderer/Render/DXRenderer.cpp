@@ -57,15 +57,15 @@ namespace
         }
     }
 
-    void SetupEntity(std::shared_ptr<scene::Entity> entity, CacheGPU& cache, dx12::ResourceTable& resourceTable)
+    void SetupEntity(std::shared_ptr<scene::Scene> scene, std::shared_ptr<scene::Entity> entity, CacheGPU& frameCache, dx12::ResourceTable& frameResourceTable)
     {
-        if (scene::Mesh* mesh = entity->GetComponentAs<scene::Mesh>("Mesh"))
+        if (std::shared_ptr<scene::Mesh> mesh = entity->GetComponentAs<scene::Mesh>("Mesh"))
         {
-            scene::Armature* armature = entity->GetComponentAs<scene::Armature>("Armature");
             scene::Transformation transform = entity->GetGlobalTransform();
-            scene::Material* material = entity->GetComponentAs<scene::Material>("Material");
+            std::shared_ptr<scene::Armature> armature = entity->GetComponentAs<scene::Armature>("Armature");
+            std::shared_ptr<scene::Material> material = entity->GetComponentAs<scene::Material>("Material");
 
-            CacheGPU::DataHandle modelDescHandle = cache.RequestPlacement(entity->GetName(), sizeof(GPUModelDesc));
+            CacheGPU::DataHandle modelDescHandle = frameCache.RequestPlacement(entity->GetName(), sizeof(GPUModelDesc));
             GPUModelDesc* modelDesc = (GPUModelDesc*)modelDescHandle.DataCPU;
             {
                 modelDesc->Transform = transform.Transform;
@@ -77,13 +77,13 @@ namespace
 
                 if (material)
                 {
-                    scene::TextureManager& textureManager = entity->GetSceneCache()->GetTextureManager();
+                    scene::TextureManager& textureManager = scene->GetCache().GetTextureManager();
                     dx12::ResourceTable& textureTable = textureManager.GetTextureTable();
 
-                    modelDesc->AlbedoTextureIndex    = resourceTable.CopyDescriptor(textureManager.GetTexture(material->Albedo).get(), dx12::ResourceViewType::SRV, textureTable);
-                    modelDesc->NormalMapTextureIndex = resourceTable.CopyDescriptor(textureManager.GetTexture(material->NormalMap).get(), dx12::ResourceViewType::SRV, textureTable);
-                    modelDesc->MetalnessTextureIndex = resourceTable.CopyDescriptor(textureManager.GetTexture(material->Metalness).get(), dx12::ResourceViewType::SRV, textureTable);
-                    modelDesc->RoughnessTextureIndex = resourceTable.CopyDescriptor(textureManager.GetTexture(material->Roughness).get(), dx12::ResourceViewType::SRV, textureTable);
+                    modelDesc->AlbedoTextureIndex    = frameResourceTable.CopyDescriptor(textureManager.GetTexture(material->Albedo).get(), dx12::ResourceViewType::SRV, textureTable);
+                    modelDesc->NormalMapTextureIndex = frameResourceTable.CopyDescriptor(textureManager.GetTexture(material->NormalMap).get(), dx12::ResourceViewType::SRV, textureTable);
+                    modelDesc->MetalnessTextureIndex = frameResourceTable.CopyDescriptor(textureManager.GetTexture(material->Metalness).get(), dx12::ResourceViewType::SRV, textureTable);
+                    modelDesc->RoughnessTextureIndex = frameResourceTable.CopyDescriptor(textureManager.GetTexture(material->Roughness).get(), dx12::ResourceViewType::SRV, textureTable);
                 }
 
                 if (armature)
@@ -97,7 +97,7 @@ namespace
             {
                 const std::vector<scene::Bone*>& bones = armature->GetSortedBones();
 
-                CacheGPU::DataHandle bonesDescHandle = cache.RequestPlacement(entity->GetName() + "_bones", sizeof(DirectX::XMMATRIX) * bones.size());
+                CacheGPU::DataHandle bonesDescHandle = frameCache.RequestPlacement(entity->GetName() + "_bones", sizeof(DirectX::XMMATRIX) * bones.size());
                 DirectX::XMMATRIX* data = (DirectX::XMMATRIX*)bonesDescHandle.DataCPU;
 
                 for (int i = 0; i < bones.size(); ++i)
@@ -109,7 +109,7 @@ namespace
 
         for (std::shared_ptr<scene::Entity>& child : entity->GetChildrenNodes())
         {
-            SetupEntity(child, cache, resourceTable);
+            SetupEntity(scene, child, frameCache, frameResourceTable);
         }
     }
 }
@@ -123,6 +123,7 @@ namespace render
         , _isMinimized(false)
         , _isCameraMoving(false)
         , _deltaTime(0.0f)
+        , _scene(std::make_shared<scene::Scene>())
     {
     }
 
@@ -140,7 +141,7 @@ namespace render
         return _scene;
     }
 
-    bool DXRenderer::LoadContent(TaskGPU* loadTask)
+    bool DXRenderer::LoadContent(TaskGPU* uploadTask, const std::string& filepath)
     {
         render::DrawHelper::Init();
 
@@ -148,38 +149,22 @@ namespace render
         GetClientRect(_windowHandle, &windowSize);
         uint32_t windowWidth = windowSize.right - windowSize.left;
         uint32_t windowHeight = windowSize.bottom - windowSize.top;
+        
+        _renderGraph.Reset();
 
         // Load scene
         {
-            loadTask->SetName("Upload Data");
+            uploadTask->SetName("Upload Data");
 
-            _scene = _sceneLoader.LoadScene(*loadTask, "Sponza\\Sponza.scene");
+            _sceneLoader.LoadScene(*uploadTask, filepath, _scene);
         }
 
         // Camera Setup
-        std::shared_ptr<scene::Entity> cameraEntity = std::make_shared<scene::Entity>(&_scene->GetCache());
         {
-            cameraEntity->SetName("Camera");
+            std::shared_ptr<scene::Entity> camera = _scene->FilterNodesByComponent("Camera").front();
+            _cameraComponent = camera->GetComponentAs<scene::Camera>("Camera");
 
-            XMVECTOR pos = XMVectorSet(70.0f, 45.0f, 10.0f, 1.0f);
-            XMVECTOR target = XMVectorSet(-20.0f, 35.0f, 0.0f, 1.0f);
-            XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-
-            std::shared_ptr<scene::Camera> cameraComponent = std::make_shared<scene::Camera>();
-            cameraComponent->LookAt(pos, target, up);
-            cameraComponent->SetViewport(scene::Viewport({ windowWidth, windowHeight }));
-            cameraComponent->SetLens(70.0f, 0.1f, 1000.0f);
-            cameraComponent->Speed = 30.0f;
-
-            std::shared_ptr<scene::Transformation> transformComponent = std::make_shared<scene::Transformation>();
-            transformComponent->Transform = cameraComponent->View();
-
-            cameraEntity->AddComponent(cameraComponent);
-            cameraEntity->AddComponent(transformComponent);
-
-            _cameraComponent = cameraComponent;
-
-            _scene->AddRootNode(cameraEntity);
+            _cameraComponent->SetViewport(scene::Viewport({ windowWidth, windowHeight }));
         }
 
         SetupRenderPipeline();
@@ -259,10 +244,6 @@ namespace render
 
     void DXRenderer::OnKeyPressed(events::KeyEvent& e)
     {
-        auto cameraEntity = _scene->FindNodeByComponentName("Camera");
-        ASSERT(cameraEntity.get(), "No camera on the scene");
-        scene::Camera* camera = cameraEntity->GetComponentAs<scene::Camera>("Camera");
-
         XMVECTOR dir = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
         if (e.keyCode == DIKeyCode::DIK_W)
         {
@@ -280,6 +261,10 @@ namespace render
         {
             dir -= _cameraComponent->Right() * _deltaTime;
         }
+        OutputDebugStringA("Right: ");
+        OutputDebugStringA(std::format("{} {} {} {}\n", DirectX::XMVectorGetX(_cameraComponent->Right()), DirectX::XMVectorGetY(_cameraComponent->Right()), DirectX::XMVectorGetZ(_cameraComponent->Right()), DirectX::XMVectorGetW(_cameraComponent->Right())).c_str());
+        OutputDebugStringA("Movement: ");
+        OutputDebugStringA(std::format("{} {} {} {}\n", DirectX::XMVectorGetX(dir), DirectX::XMVectorGetY(dir), DirectX::XMVectorGetZ(dir), DirectX::XMVectorGetW(dir)).c_str());
         _cameraComponent->Update(dir);
 
         switch (e.keyCode)
@@ -350,14 +335,31 @@ namespace render
         SetupRenderPipeline();
     }
 
+    void DXRenderer::OnLoadScene(const std::string& filepath)
+    {
+        WaitAllFrames();
+
+        TaskGPU* uploadTask = _currentFrame->CreateTask(D3D12_COMMAND_LIST_TYPE_COPY, nullptr);
+        LoadContent(uploadTask, filepath);
+
+        dx12::CommandList& commandList = *uploadTask->GetCommandLists().front();
+        _currentFrame->Next->SetSyncPoint(uploadTask->GetFence());
+
+        std::vector<ID3D12CommandList*> frameCommandLists = { commandList.GetDXCommandList().Get() };
+        uploadTask->GetCommandQueue()->ExecuteCommandLists(1, frameCommandLists.data());
+        uploadTask->GetCommandQueue()->Signal(uploadTask->GetDXFence(), uploadTask->GetFenceValue());
+
+        WaitAllFrames();
+    }
+
     void DXRenderer::UpdateEntity(std::shared_ptr<scene::Entity> entity)
     {
         entity->UpdateGlobalTransform();
 
-        scene::Armature* armature = entity->GetComponentAs<scene::Armature>("Armature");
-        scene::Animation* animation = entity->GetComponentAs<scene::Animation>("Animation");
-        scene::Transformation* transformation = entity->GetComponentAs<scene::Transformation>("Transformation");
-        scene::Mesh* mesh = entity->GetComponentAs<scene::Mesh>("Mesh");
+        std::shared_ptr<scene::Armature> armature = entity->GetComponentAs<scene::Armature>("Armature");
+        std::shared_ptr<scene::Animation> animation = entity->GetComponentAs<scene::Animation>("Animation");
+        std::shared_ptr<scene::Transformation> transformation = entity->GetComponentAs<scene::Transformation>("Transformation");
+        std::shared_ptr<scene::Mesh> mesh = entity->GetComponentAs<scene::Mesh>("Mesh");
 
         if (armature && animation)
         {
@@ -379,9 +381,9 @@ namespace render
 
     void DXRenderer::UpdateBoundingVolumes(std::shared_ptr<scene::Entity> entity)
     {
-        scene::Armature* armature = entity->GetComponentAs<scene::Armature>("Armature");
-        scene::Transformation* transformation = entity->GetComponentAs<scene::Transformation>("Transformation");
-        scene::Mesh* mesh = entity->GetComponentAs<scene::Mesh>("Mesh");
+        std::shared_ptr<scene::Armature> armature = entity->GetComponentAs<scene::Armature>("Armature");
+        std::shared_ptr<scene::Transformation> transformation = entity->GetComponentAs<scene::Transformation>("Transformation");
+        std::shared_ptr<scene::Mesh> mesh = entity->GetComponentAs<scene::Mesh>("Mesh");
 
         if (mesh && armature)
         {
@@ -459,7 +461,7 @@ namespace render
 
         for (std::shared_ptr<scene::Entity> entity : _scene->GetRootNodes())
         {
-            SetupEntity(entity, cache, table);
+            SetupEntity(_scene, entity, cache, table);
         }
     }
 } // namespace render

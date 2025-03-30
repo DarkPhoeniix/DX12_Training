@@ -122,7 +122,7 @@ namespace render
         {
             PIXBeginEvent(commandList.GetDXCommandList().Get(), 1, lightEntities[lightIndex]->GetName().c_str());
 
-            scene::Light* light = lightEntities[lightIndex]->GetComponentAs<scene::Light>("Light");
+            std::shared_ptr<scene::Light> light = lightEntities[lightIndex]->GetComponentAs<scene::Light>("Light");
 
             std::shared_ptr<dx12::Resource> commandBuffer = context.GetResource(_data.LightCommandBuffers[context.GetFrameIndex()][lightIndex]);
 
@@ -133,7 +133,7 @@ namespace render
 
             for (size_t j = 0; j < objectsNum; ++j)
             {
-                scene::Mesh* mesh = meshes[j]->GetComponentAs<scene::Mesh>("Mesh");
+                std::shared_ptr<scene::Mesh> mesh = meshes[j]->GetComponentAs<scene::Mesh>("Mesh");
 
                 if (!mesh)
                 {
@@ -142,7 +142,7 @@ namespace render
 
                 CacheGPU::DataHandle modelAddress = context.GetCache().GetResourcePlacement(meshes[j]->GetName());
                 CacheGPU::DataHandle bonesAddress = modelAddress;
-                if (scene::Armature* armature = meshes[j]->GetComponentAs<scene::Armature>("Armature"))
+                if (std::shared_ptr<scene::Armature> armature = meshes[j]->GetComponentAs<scene::Armature>("Armature"))
                 {
                     bonesAddress = context.GetCache().GetResourcePlacement(meshes[j]->GetName() + "_bones");
                 }
@@ -191,7 +191,7 @@ namespace render
             CacheGPU::DataHandle AABBs = context.GetCache().RequestPlacement("AABBs", objectsNum * sizeof(DirectX::XMVECTOR) * 2);
             for (size_t j = 0, count = 0; j < objectsNum; ++j)
             {
-                if (scene::Mesh* mesh = _scene->GetRootNodes()[j]->GetComponentAs<scene::Mesh>("Mesh"))
+                if (std::shared_ptr<scene::Mesh> mesh = _scene->GetRootNodes()[j]->GetComponentAs<scene::Mesh>("Mesh"))
                 {
                     DirectX::XMVECTOR* data = (DirectX::XMVECTOR*)AABBs.DataCPU;
                     scene::AABBVolume aabb = mesh->GlobalAABB;
