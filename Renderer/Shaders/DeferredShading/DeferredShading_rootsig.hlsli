@@ -13,8 +13,9 @@
     "DescriptorTable(SRV(t1), visibility=SHADER_VISIBILITY_ALL)," \
     "DescriptorTable(SRV(t2), visibility=SHADER_VISIBILITY_ALL)," \
     "DescriptorTable(SRV(t3), visibility=SHADER_VISIBILITY_ALL)," \
-    "DescriptorTable(SRV(t4, numDescriptors = unbounded, flags = DESCRIPTORS_VOLATILE), visibility = SHADER_VISIBILITY_ALL)," \
-    "DescriptorTable(SRV(t4, numDescriptors = unbounded, flags = DESCRIPTORS_VOLATILE, space = 1), visibility = SHADER_VISIBILITY_ALL)," \
+    "DescriptorTable(SRV(t4), visibility=SHADER_VISIBILITY_ALL)," \
+    "DescriptorTable(SRV(t5, numDescriptors = unbounded, flags = DESCRIPTORS_VOLATILE), visibility = SHADER_VISIBILITY_ALL)," \
+    "DescriptorTable(SRV(t5, numDescriptors = unbounded, flags = DESCRIPTORS_VOLATILE, space = 1), visibility = SHADER_VISIBILITY_ALL)," \
     "DescriptorTable(UAV(u0), visibility=SHADER_VISIBILITY_ALL)," \
     "StaticSampler(s0," \
         "addressU = TEXTURE_ADDRESS_CLAMP," \
@@ -26,4 +27,4 @@
         "addressU = TEXTURE_ADDRESS_CLAMP," \
         "addressV = TEXTURE_ADDRESS_CLAMP," \
         "addressW = TEXTURE_ADDRESS_CLAMP," \
-        "filter = FILTER_COMPARISON_MIN_MAG_MIP_POINT)"
+        "filter = FILTER_COMPARISON_MIN_MAG_MIP_LINEAR)"

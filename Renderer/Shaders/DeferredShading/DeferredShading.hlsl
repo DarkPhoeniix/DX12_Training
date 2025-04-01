@@ -9,10 +9,11 @@
 StructuredBuffer<LightDesc> Lights          : register(t0);
 
 Texture2D<float4> PositionTexture           : register(t1);
-Texture2D<float4> AlbedoMetalnessTexture    : register(t2);
+Texture2D<float4> AlbedoMetallicTexture     : register(t2);
 Texture2D<float4> NormalRoughnessTexture    : register(t3);
-Texture2D Textures2D[]                      : register(t4, space0);
-TextureCube TexturesCube[]                  : register(t4, space1);
+Texture2DArray<float4> DiffuseIrradiance    : register(t4);
+Texture2D Textures2D[]                      : register(t5, space0);
+TextureCube TexturesCube[]                  : register(t5, space1);
 RWTexture2D<float4> TargetTexture           : register(u0);
 
 SamplerComparisonState ShadowSampler        : register(s0);
@@ -42,6 +43,7 @@ void SetLightParams(in LightDesc light, inout Surface surface)
     float3 eyeDir = normalize(Scene.EyePosition - surface.Position).xyz;
     float3 halfway = normalize(eyeDir + lightDirection);
         
+    surface.ViewDirection = float4(eyeDir, 0.0f);
     surface.ToLight = toLight;
     surface.DistanceToL = min(light.Range, distanceToLight);
     surface.NdotV = max(dot(surface.Normal.xyz, eyeDir), 0.0f);
@@ -61,7 +63,62 @@ float CalculateShadowAttenuation_PCF3x3(in LightDesc light, in Surface surface)
         return CalculateSpotLightShadowAttenuation(Textures2D[shadowMapTextureIndex], ShadowSampler, light, surface);
     }
     
-    return 0.0f;
+    return 1.0f;
+}
+
+float3 SampleCubemapLikeArray(float3 dir)
+{
+    float3 absDir = abs(dir);
+    float maxComponent = max(absDir.x, max(absDir.y, absDir.z));
+    
+    float2 uv;
+    int index;
+
+    if (maxComponent == absDir.x)
+    {
+        if (dir.x > 0)
+        {
+            uv = float2(-dir.z, -dir.y) / absDir.x; // +X
+            index = 0;
+        }
+        else
+        {
+            uv = float2(dir.z, -dir.y) / absDir.x; // -X
+            index = 1;
+        }
+    }
+    else if (maxComponent == absDir.y)
+    {
+        if (dir.y > 0)
+        {
+            uv = float2(dir.x, dir.z) / absDir.y; // +Y
+            index = 2;
+        }
+        else
+        {
+            uv = float2(dir.x, -dir.z) / absDir.y; // -Y
+            index = 3;
+        }
+    }
+    else
+    {
+        if (dir.z > 0)
+        {
+            uv = float2(dir.x, -dir.y) / absDir.z; // +Z
+            index = 4;
+        }
+        else
+        {
+            uv = float2(-dir.x, -dir.y) / absDir.z; // -Z
+            index = 5;
+        }
+    }
+
+    // Convert UVs from [-1,1] to [0,1]
+    uv = uv * 0.5 + 0.5;
+
+    // Sample the texture array
+    return float3(uv, index);
 }
 
 [RootSignature(DeferredShading_RootSig)]
@@ -78,20 +135,27 @@ void main(uint3 DTid : SV_DispatchThreadID)
     float depth = PositionTexture.Load(uint3(DTid.xy, 0)).r;
     surface.Position = ReconstructPosW(depth, DTid.xy, Scene.WindowSize, Scene.InvProjection, Scene.InvView);
     surface.NDCPosition = mul(surface.Position, Scene.ViewProjection);
-    surface.Albedo = float4(AlbedoMetalnessTexture.Load(uint3(DTid.xy, 0)).rgb, 1.0f);
+    surface.Albedo = float4(AlbedoMetallicTexture.Load(uint3(DTid.xy, 0)).rgb, 1.0f);
     surface.Normal = float4(NormalRoughnessTexture.Load(uint3(DTid.xy, 0)).xyz, 0.0f);
-    surface.Metalness = AlbedoMetalnessTexture.Load(uint3(DTid.xy, 0)).a;
+    surface.Metallic = AlbedoMetallicTexture.Load(uint3(DTid.xy, 0)).a;
     surface.Roughness = NormalRoughnessTexture.Load(uint3(DTid.xy, 0)).a;
     
-    surface.FinalColor = 0.05f * surface.Albedo; // Ambient
+    float3 F0 = float3(0.04f, 0.04f, 0.04f);
+    F0 = lerp(F0, surface.Albedo.rgb, surface.Metallic);
+    float3 kS = max(0.0f, FresnelSchlick(surface, F0));
+    float3 kD = 1.0 - kS;
+    kD *= 1.0 - surface.Metallic;
+    float3 irradiance = DiffuseIrradiance.SampleLevel(PointSampler, SampleCubemapLikeArray(surface.Normal.xyz), 0.0f).rgb;
+    float3 ambient = (irradiance * surface.Albedo.rgb) * kD * 1.0f;
+    
+    surface.FinalColor = float4(ambient, 1.0f);
     for (int i = 0; i < Scene.LightsNum; ++i)
     {
         // Setup surface data for current light source
         SetLightParams(Lights[i], surface);
         
-        // Metalness factor
-        float3 F0 = float3(0.04f, 0.04f, 0.04f);
-        F0 = lerp(F0, surface.Albedo.rgb, surface.Metalness);
+        // Metallic factor
+        F0 = lerp(F0, surface.Albedo.rgb, surface.Metallic);
         
         // PBR - BRDF
         // (F * G * D) / (4 * NdotL * NdotV)
@@ -100,7 +164,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
         float D = CalculateSpecular(surface);
         float3 specularColor = (F * G * D) / max(0.00001f, (4.0f * surface.NdotL * surface.NdotV));
         
-        float3 diffuseColor = surface.Albedo.rgb * (1.0f - surface.Metalness);
+        float3 diffuseColor = surface.Albedo.rgb * (1.0f - surface.Metallic);
         float3 lightAttenuation = CalculateAttenuation(Lights[i], surface) * Lights[i].Color.rgb * Lights[i].Intesity;
         float shadowAttenuation = CalculateShadowAttenuation_PCF3x3(Lights[i], surface);
         float3 surfaceColor = (diffuseColor + specularColor) * surface.NdotL;

@@ -28,6 +28,8 @@ namespace render
         _data.NormalRoughness = builder.ReadResource(NORMAL_ROUGHNESS);
         _data.Depth = builder.ReadResource(DEPTH);
 
+        _data.DiffuseIrradianceMap = builder.ReadResource("DiffuseIrradianceMap");
+
         std::vector<std::shared_ptr<scene::Entity>> lightEntities = _scene->FilterNodesByComponent("Light");
         size_t lightsNum = lightEntities.size();
 
@@ -63,18 +65,21 @@ namespace render
             std::shared_ptr<dx12::Resource> albedoMetallic = context.GetResource(_data.AlbedoMetallic);
             std::shared_ptr<dx12::Resource> normalRoughness = context.GetResource(_data.NormalRoughness);
             std::shared_ptr<dx12::Resource> depth = context.GetResource(_data.Depth);
+            std::shared_ptr<dx12::Resource> diffuseIrradianceMap = context.GetResource(_data.DiffuseIrradianceMap);
 
             D3D12_GPU_DESCRIPTOR_HANDLE hdrTargetHandle = context.GetGPUHandle(hdrTarget->GetAsUAV());
             D3D12_GPU_DESCRIPTOR_HANDLE albedoMetallicHandle = context.GetGPUHandle(albedoMetallic->GetAsSRV());
             D3D12_GPU_DESCRIPTOR_HANDLE normalSpecularHandle = context.GetGPUHandle(normalRoughness->GetAsSRV());
             D3D12_GPU_DESCRIPTOR_HANDLE depthHandle = context.GetGPUHandle(depth->GetAsSRV());
+            D3D12_GPU_DESCRIPTOR_HANDLE diffuseIrradianceMapHandle = context.GetGPUHandle(diffuseIrradianceMap->GetAsSRV());
 
             std::vector<dx12::ResourceBarrier> barriers =
             {
-                { hdrTarget.get(),          D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-                { albedoMetallic.get(),     D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-                { normalRoughness.get(),    D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-                { depth.get(),              D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
+                { hdrTarget.get(),              D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
+                { albedoMetallic.get(),         D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
+                { normalRoughness.get(),        D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
+                { depth.get(),                  D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
+                { diffuseIrradianceMap.get(),   D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
             };
             commandList.TransitionBarriers(barriers);
 
@@ -91,9 +96,10 @@ namespace render
             commandList.SetDescriptorTable(3, depthHandle);
             commandList.SetDescriptorTable(4, albedoMetallicHandle);
             commandList.SetDescriptorTable(5, normalSpecularHandle);
-            commandList.SetDescriptorTable(6, context.GetResourceTable().GetDescriptorHeap(dx12::ResourceViewType::SRV).GetHeapStartGPUHandle());
+            commandList.SetDescriptorTable(6, diffuseIrradianceMapHandle);
             commandList.SetDescriptorTable(7, context.GetResourceTable().GetDescriptorHeap(dx12::ResourceViewType::SRV).GetHeapStartGPUHandle());
-            commandList.SetDescriptorTable(8, hdrTargetHandle);
+            commandList.SetDescriptorTable(8, context.GetResourceTable().GetDescriptorHeap(dx12::ResourceViewType::SRV).GetHeapStartGPUHandle());
+            commandList.SetDescriptorTable(9, hdrTargetHandle);
 
             DirectX::XMUINT2 viewportSize = _camera->GetViewport().GetSize();
             int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 8.0f);
@@ -103,10 +109,11 @@ namespace render
 
             barriers =
             {
-                { hdrTarget.get(),          D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
-                { albedoMetallic.get(),     D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
-                { normalRoughness.get(),    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
-                { depth.get(),              D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
+                { hdrTarget.get(),              D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
+                { albedoMetallic.get(),         D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
+                { normalRoughness.get(),        D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
+                { depth.get(),                  D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
+                { diffuseIrradianceMap.get(),   D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
             };
             commandList.TransitionBarriers(barriers);
         }

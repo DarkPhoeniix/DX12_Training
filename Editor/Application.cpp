@@ -106,8 +106,8 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
 
     events::InputDevice::Instance().AddInputObserver(pApp.get());
 
-    TaskGPU* uploadTask = _currentFrame->CreateTask(D3D12_COMMAND_LIST_TYPE_COPY, nullptr);
-    if (!pApp->LoadContent(uploadTask, "Sponza\\Sponza.scene"))
+    TaskGPU* uploadTask = _currentFrame->CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE, nullptr);
+    if (!pApp->LoadContent(uploadTask, "Materials\\MaterialTest.scene"))
     {
         return 1;
     }

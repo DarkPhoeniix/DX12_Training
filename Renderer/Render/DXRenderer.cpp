@@ -3,6 +3,8 @@
 #include "DXRenderer.h"
 
 #include "CommandList.h"
+#include "Texture.h"
+#include "ResourceBarrier.h"
 
 #include "Events/KeyEvent.h"
 #include "Events/MouseButtonEvent.h"
@@ -17,6 +19,7 @@
 #include "Scene/Entity/Components/Light.h"
 #include "Scene/Entity/Components/Material.h"
 #include "Scene/Entity/Components/Mesh.h"
+#include "Scene/Entity/Components/Skybox.h"
 #include "Scene/Entity/Entity.h"
 #include "Utility/DebugInfo.h"
 
@@ -152,10 +155,11 @@ namespace render
         
         _renderGraph.Reset();
 
+        uploadTask->SetName("Upload Data");
+        dx12::CommandList& commandList = *uploadTask->GetCommandLists().front();
+
         // Load scene
         {
-            uploadTask->SetName("Upload Data");
-
             _sceneLoader.LoadScene(*uploadTask, filepath, _scene);
         }
 
@@ -166,6 +170,70 @@ namespace render
 
             _cameraComponent->SetViewport(scene::Viewport({ windowWidth, windowHeight }));
         }
+
+        {
+            std::shared_ptr<scene::Entity> skybox = _scene->FilterNodesByComponent("Skybox").front();
+            std::shared_ptr<scene::Skybox> skyboxComponent = skybox->GetComponentAs<scene::Skybox>("Skybox");
+
+            _IBL_DiffuseIrradianceConvolution.Parse("PipelineDescriptions\\IBL_DiffuseIrradianceConvolution.tech");
+
+            dx12::ResourceDescription textureDesc;
+            {
+                textureDesc.SetSize({ 64, 64 });
+                textureDesc.SetDepthOrArraySize(6);
+                textureDesc.SetFormat(DXGI_FORMAT_R16G16B16A16_FLOAT);
+                textureDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::Unordered | dx12::ResourceType::Array);
+            }
+            _diffuseIrradianceMap = std::make_shared<dx12::Texture>();
+            _diffuseIrradianceMap->SetName("DiffuseIrradianceMap");
+            _diffuseIrradianceMap->CreateCommitedResource(textureDesc);
+
+            dx12::DescriptorHeapDescription desc;
+            {
+                desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+                desc.SetNumDescriptors(2);
+                desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
+            }
+            _descHeap.Reset();
+            _descHeap.Create(desc);
+
+            scene::TextureManager& textureManager = _scene->GetCache().GetTextureManager();
+
+            std::shared_ptr<dx12::Texture> skyboxTexture = textureManager.GetTexture(skyboxComponent->SkydomeTexture);
+
+            dx12::Device::CreateShaderResourceView(skyboxTexture->GetAsSRV(), _descHeap);
+            dx12::Device::CreateUnorderedAccessView(_diffuseIrradianceMap->GetAsUAV(), _descHeap);
+
+            textureManager.AddTexture(_diffuseIrradianceMap, dx12::ResourceViewType::SRV);
+            textureManager.AddTexture(_diffuseIrradianceMap, dx12::ResourceViewType::UAV);
+
+            std::vector<dx12::ResourceBarrier> barriers =
+            {
+                { skyboxTexture.get(),          D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
+                { _diffuseIrradianceMap.get(),  D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_UNORDERED_ACCESS }
+            };
+            commandList.TransitionBarriers(barriers);
+
+            commandList.SetPipelineState(_IBL_DiffuseIrradianceConvolution);
+
+            commandList.SetDescriptorHeaps({ _descHeap.GetDXDescriptorHeap().Get() });
+            commandList.SetDescriptorTable(0, _descHeap.GetGPUHandleWithOffset(0));
+            commandList.SetDescriptorTable(1, _descHeap.GetGPUHandleWithOffset(1));
+;
+            int xThreadGroups = (uint32_t)std::ceilf(textureDesc.GetSize().x / 8.0f);
+            int yThreadGroups = (uint32_t)std::ceilf(textureDesc.GetSize().y / 8.0f);
+
+            commandList.Dispatch(xThreadGroups, yThreadGroups, 6);
+
+            barriers =
+            {
+                { skyboxTexture.get(),          D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
+                { _diffuseIrradianceMap.get(),  D3D12_RESOURCE_STATE_UNORDERED_ACCESS,          D3D12_RESOURCE_STATE_COMMON }
+            };
+            commandList.TransitionBarriers(barriers);
+        }
+
+        commandList.Close();
 
         SetupRenderPipeline();
 
@@ -339,7 +407,7 @@ namespace render
     {
         WaitAllFrames();
 
-        TaskGPU* uploadTask = _currentFrame->CreateTask(D3D12_COMMAND_LIST_TYPE_COPY, nullptr);
+        TaskGPU* uploadTask = _currentFrame->CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE, nullptr);
         LoadContent(uploadTask, filepath);
 
         dx12::CommandList& commandList = *uploadTask->GetCommandLists().front();
@@ -425,6 +493,8 @@ namespace render
         // Render Graph setup
         {
             _renderGraph.Reset();
+
+            _renderGraph.ImportResource(_diffuseIrradianceMap);
 
             _renderGraph.AddPass(std::make_shared<GeometryPass>(_scene, _cameraComponent.get()));
             _renderGraph.AddPass(std::make_shared<ShadowClearPass>(_scene, _cameraComponent.get()));

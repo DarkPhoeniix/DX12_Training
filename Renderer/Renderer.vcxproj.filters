@@ -109,6 +109,8 @@
     <FxCompile Include="Shaders\HDR\ToneMapping.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="Shaders\IBL\IBL_DiffuseIrradianceConvolution_cs.hlsl" />
+    <FxCompile Include="Shaders\IBL\IBL_EquirectangularToCubemap_cs.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RendererPCH.cpp" />
@@ -541,6 +543,8 @@
     <None Include="PipelineDescriptions\ToneMappingPipeline.tech">
       <Filter>PipelineDescriptions</Filter>
     </None>
+    <None Include="Shaders\CommonContants.hlsli" />
+    <None Include="Shaders\IBL\IBL_DiffuseIrradianceConvolution_rootsig.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="PipelineDescriptions\AABBRenderPipeline.blend">
@@ -579,6 +583,7 @@
     <Text Include="PipelineDescriptions\SkyboxPipeline.tech">
       <Filter>PipelineDescriptions</Filter>
     </Text>
+    <Text Include="PipelineDescriptions\IBL_DiffuseIrradianceConvolution.tech" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Render">

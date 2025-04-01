@@ -20,7 +20,8 @@ namespace dx12
 
         // Additional flags.
         Aligned = 1 << 7, // Resource is aligned.
-        DenyShader = 1 << 8  // Resource is inaccessible by shaders.
+        DenyShader = 1 << 8,  // Resource is inaccessible by shaders.
+        Array = 1 << 9  // Resource is array.
     };
     BINARY_OPERATION_TO_ENUM(ResourceType);
 

@@ -34,6 +34,7 @@ namespace scene
 
         void Clear();
 
+        void AddTexture(std::shared_ptr<dx12::Texture> texture, dx12::ResourceViewType viewType);
         std::shared_ptr<dx12::Texture> GetTexture(const std::string& name) const;
 
         dx12::ResourceTable& GetTextureTable();

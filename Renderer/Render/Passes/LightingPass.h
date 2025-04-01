@@ -14,6 +14,8 @@ namespace render
         rg::ResourceId NormalRoughness;
         rg::ResourceId Depth;
 
+        rg::ResourceId DiffuseIrradianceMap;
+
         std::vector<rg::ResourceId> ShadowMaps;
 
         rg::ResourceId HDRTarget;

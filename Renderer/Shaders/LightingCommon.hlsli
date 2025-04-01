@@ -7,11 +7,12 @@ struct Surface
     
     float4 Albedo;
     float4 Normal;
-    float Metalness;
+    float Metallic;
     float Roughness;
     
     float4 FinalColor;
     
+    float4 ViewDirection;
     float4 ToLight;
     float DistanceToL;
     float NdotV;
@@ -106,7 +107,7 @@ uint GetCubeFaceIndex(float3 toPixel)
     return faceIndex;
 }
 
-#define CONSTANT_SHADOW_BIAS 0.0005f
+#define CONSTANT_SHADOW_BIAS 0.005f
 #define SLOPE_SHADOW_BIAS 0.00001f
 
 float CalculatePointLightShadowAttenuation(in TextureCube texture, in SamplerComparisonState cmpSampler, in LightDesc light, in Surface surface)

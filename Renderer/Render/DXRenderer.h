@@ -57,6 +57,10 @@ namespace render
 
         scene::helpers::SceneLoader _sceneLoader;
 
+        dx12::PipelineState _IBL_DiffuseIrradianceConvolution;
+        dx12::DescriptorHeap _descHeap;
+        std::shared_ptr<dx12::Texture> _diffuseIrradianceMap;
+
         bool _isMinimized;
         bool _isCameraMoving;
         float _deltaTime;

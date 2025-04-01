@@ -155,8 +155,6 @@ namespace scene::helpers
         scene->GetCache().GetTextureManager().UploadTextures(commandList);
 
         task.GetFence()->SetCompletionCallback([this]() { CleanIntermediates(); });
-
-        commandList.Close();
     }
 
     std::shared_ptr<Entity> SceneLoader::LoadEntity(dx12::CommandList& commandList, const std::string& filepath, Entity* parent)
