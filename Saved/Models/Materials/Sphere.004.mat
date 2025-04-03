@@ -1,0 +1,6 @@
+{
+    "Albedo": "Material.005_albedo.png",
+    "Metalness": "Material.005_metalness.png",
+    "Roughness": "Material.005_roughness.png",
+    "Normal": "Material.005_nmap.png"
+}
