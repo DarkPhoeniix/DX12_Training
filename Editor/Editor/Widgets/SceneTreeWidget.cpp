@@ -26,7 +26,11 @@ namespace gui
     {
         IWidget::Update();
 
-        DirectX::XMUINT2 viewportSize = _editor->GetViewport()->GetSize();
+        std::shared_ptr<scene::Entity> activeCamera = _editor->GetScene()->FindNodeByComponentName("Camera");
+        std::shared_ptr<scene::Camera> cameraComponent = activeCamera->GetComponentAs<scene::Camera>("Camera");
+        scene::Viewport viewport = cameraComponent->GetViewport();
+
+        DirectX::XMUINT2 viewportSize = viewport.GetSize();
 
         float positionX = (float)(viewportSize.x - (viewportSize.x * 0.2f));
         float positionY = 0.0f;

@@ -5,7 +5,7 @@
 #include "CommandList.h"
 #include "ResourceBarrier.h"
 
-#include "Render/Helpers/RenderHelpers.h"
+#include "Render/RenderSettings.h"
 #include "Render/Passes/PassResources.h"
 #include "Scene/Entity/Components/Light.h"
 
@@ -19,7 +19,14 @@ namespace render
         , _scene(scene)
         , _camera(camera)
     {
-        _deferredPipeline.Parse("PipelineDescriptions\\DeferredShading.tech");
+        if (RenderSettings::UseIBL())
+        {
+            _deferredPipeline.Parse("PipelineDescriptions\\DeferredShading_UseIBL.tech");
+        }
+        else
+        {
+            _deferredPipeline.Parse("PipelineDescriptions\\DeferredShading.tech");
+        }
     }
 
     void LightingPass::Setup(rg::RenderPassBuilder& builder)

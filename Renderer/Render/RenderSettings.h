@@ -6,6 +6,7 @@ public:
     RenderSettings(const RenderSettings&) = delete;
     RenderSettings& operator+(const RenderSettings&) = delete;
 
+    static bool& UseIBL();
     static bool& RenderDebugVolumes();
     static bool& RenderDebugArmature();
     static bool& UseFXAA();
@@ -17,6 +18,7 @@ private:
 
     static RenderSettings& Instance();
 
+    bool _useIBL;
     bool _renderDebugVolumes;
     bool _renderDebugArmature;
     bool _useFXAA;

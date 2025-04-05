@@ -11,8 +11,8 @@ StructuredBuffer<LightDesc> Lights          : register(t0);
 Texture2D<float4> PositionTexture           : register(t1);
 Texture2D<float4> AlbedoMetallicTexture     : register(t2);
 Texture2D<float4> NormalRoughnessTexture    : register(t3);
-TextureCube DiffuseIrradiance    : register(t4);
-TextureCube PreFilteredMap : register(t5);
+TextureCube DiffuseIrradiance               : register(t4);
+TextureCube PreFilteredMap                  : register(t5);
 Texture2D<float2> brdfLUT                   : register(t6);
 Texture2D Textures2D[]                      : register(t7, space0);
 TextureCube TexturesCube[]                  : register(t7, space1);
@@ -20,7 +20,7 @@ RWTexture2D<float4> TargetTexture           : register(u0);
 
 SamplerComparisonState ShadowSampler        : register(s0);
 SamplerState PointSampler                   : register(s1);
-SamplerState PointSampler1                   : register(s2);
+SamplerState PointSampler1                  : register(s2);
 
 void SetLightParams(in LightDesc light, inout Surface surface)
 {
@@ -70,61 +70,6 @@ float CalculateShadowAttenuation_PCF3x3(in LightDesc light, in Surface surface)
     return 1.0f;
 }
 
-float3 SampleCubemapLikeArray(float3 dir)
-{
-    float3 absDir = abs(dir);
-    float maxComponent = max(absDir.x, max(absDir.y, absDir.z));
-    
-    float2 uv;
-    int index;
-
-    if (maxComponent == absDir.x)
-    {
-        if (dir.x > 0)
-        {
-            uv = float2(-dir.z, -dir.y) / absDir.x; // +X
-            index = 0;
-        }
-        else
-        {
-            uv = float2(dir.z, -dir.y) / absDir.x; // -X
-            index = 1;
-        }
-    }
-    else if (maxComponent == absDir.y)
-    {
-        if (dir.y > 0)
-        {
-            uv = float2(dir.x, dir.z) / absDir.y; // +Y
-            index = 2;
-        }
-        else
-        {
-            uv = float2(dir.x, -dir.z) / absDir.y; // -Y
-            index = 3;
-        }
-    }
-    else
-    {
-        if (dir.z > 0)
-        {
-            uv = float2(dir.x, -dir.y) / absDir.z; // +Z
-            index = 4;
-        }
-        else
-        {
-            uv = float2(-dir.x, -dir.y) / absDir.z; // -Z
-            index = 5;
-        }
-    }
-
-    // Convert UVs from [-1,1] to [0,1]
-    uv = uv * 0.5 + 0.5;
-
-    // Sample the texture array
-    return float3(uv, index);
-}
-
 [RootSignature(DeferredShading_RootSig)]
 [numthreads(8, 8, 1)]
 void main(uint3 DTid : SV_DispatchThreadID)
@@ -144,21 +89,40 @@ void main(uint3 DTid : SV_DispatchThreadID)
     surface.Metallic = AlbedoMetallicTexture.Load(uint3(DTid.xy, 0)).a;
     surface.Roughness = NormalRoughnessTexture.Load(uint3(DTid.xy, 0)).a;
     
-    
-    
-    float3 eyeDir = normalize(Scene.EyePosition - surface.Position).xyz;
-        
-    surface.ViewDirection = float4(eyeDir, 0.0f);
-    surface.Reflect = float4(reflect(-eyeDir, surface.Normal.xyz), 0.0f);
-    surface.NdotV = max(dot(surface.Normal.xyz, eyeDir), 0.0f);
-    
-    
     float3 F0 = float3(0.04f, 0.04f, 0.04f);
+    // Metallic factor
     F0 = lerp(F0, surface.Albedo.rgb, surface.Metallic);
     float3 kS = max(0.0f, FresnelSchlick(surface, F0));
     float3 kD = 1.0 - kS;
     kD *= 1.0 - surface.Metallic;
     
+    surface.FinalColor = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    for (int i = 0; i < Scene.LightsNum; ++i)
+    {
+        // Setup surface data for current light source
+        SetLightParams(Lights[i], surface);
+        
+        // PBR - BRDF
+        // (F * G * D) / (4 * NdotL * NdotV)
+        float3 F                = FresnelSchlick(surface, F0);
+        float G                 = GeometrySmith(surface);
+        float D                 = CalculateSpecular(surface);
+        
+        float3 specularColor    = (F * G * D) / max(0.00001f, (4.0f * surface.NdotL * surface.NdotV));
+        
+        float3 lightAttenuation = CalculateAttenuation(Lights[i], surface) * Lights[i].Color.rgb * Lights[i].Intesity;
+        float3 diffuseColor     = surface.Albedo.rgb * kD;
+        float3 surfaceColor     = (diffuseColor + specularColor) * surface.NdotL;
+        
+        float3 lightingModel    = surfaceColor * lightAttenuation;
+        
+        float shadowAttenuation = CalculateShadowAttenuation_PCF3x3(Lights[i], surface);
+        lightingModel          *= (Lights[i].CastShadows != 0) ? shadowAttenuation : 1.0f;
+        
+        surface.FinalColor     += float4(lightingModel, 1.0f);
+    }
+    
+#ifdef USE_IBL
     float3 irradiance = DiffuseIrradiance.SampleLevel(PointSampler1, surface.Normal.xyz, 0.0f).rgb;
     float3 diffuse = irradiance * surface.Albedo.rgb;
     
@@ -170,36 +134,10 @@ void main(uint3 DTid : SV_DispatchThreadID)
     float3 specular = prefilteredColor * (F0 * envBRDF.x + envBRDF.y);    
     
     float3 ambient = kD * diffuse + specular;
-    
-    surface.FinalColor = float4(ambient, 1.0f);
-    for (int i = 0; i < Scene.LightsNum; ++i)
-    {
-        // Setup surface data for current light source
-        SetLightParams(Lights[i], surface);
-        
-        // Metallic factor
-        F0 = lerp(F0, surface.Albedo.rgb, surface.Metallic);
-        
-        // PBR - BRDF
-        // (F * G * D) / (4 * NdotL * NdotV)
-        float3 F = FresnelSchlick(surface, F0);
-        float G = GeometrySmith(surface);
-        float D = CalculateSpecular(surface);
-        float3 specularColor = (F * G * D) / max(0.00001f, (4.0f * surface.NdotL * surface.NdotV));
-        
-        float3 diffuseColor = surface.Albedo.rgb * (1.0f - surface.Metallic);
-        float3 lightAttenuation = CalculateAttenuation(Lights[i], surface) * Lights[i].Color.rgb * Lights[i].Intesity;
-        float shadowAttenuation = CalculateShadowAttenuation_PCF3x3(Lights[i], surface);
-        float3 surfaceColor = (diffuseColor + specularColor) * surface.NdotL;
-        
-        float3 lightingModel = surfaceColor * lightAttenuation;
-        if (Lights[i].CastShadows != 0)
-        {
-            lightingModel *= shadowAttenuation;
-        }
-        
-        surface.FinalColor += float4(lightingModel, 1.0f);
-    }
+#else
+    float3 ambient = surface.Albedo.rgb * 0.1f;
+#endif
+    surface.FinalColor += float4(ambient, 0.0f);
     
     TargetTexture[DTid.xy] = float4(surface.FinalColor.rgb, 1.0f);
 }

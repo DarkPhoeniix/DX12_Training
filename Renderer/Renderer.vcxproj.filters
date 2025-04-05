@@ -34,7 +34,7 @@
     <FxCompile Include="Shaders\DebugDraw\Cone_vs.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\DeferredShading\DeferredShading.hlsl">
+    <FxCompile Include="Shaders\DeferredShading\DeferredShading_cs.hlsli">
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\AntiAliasing\FXAA_Pass1_cs.hlsl">
@@ -113,6 +113,7 @@
     <FxCompile Include="Shaders\IBL\IBL_EquirectangularToCubemap_cs.hlsl" />
     <FxCompile Include="Shaders\IBL\IBL_PreFilterEnvironmentMap_cs.hlsl" />
     <FxCompile Include="Shaders\IBL\IBL_BRDFGenerateLUT_cs.hlsl" />
+    <FxCompile Include="Shaders\DeferredShading\DeferredShading_IBL_cs.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RendererPCH.cpp" />
@@ -549,6 +550,7 @@
     <None Include="Shaders\IBL\IBL_DiffuseIrradianceConvolution_rootsig.hlsli" />
     <None Include="PipelineDescriptions\IBL_PreFilterEnvMap.tech" />
     <None Include="PipelineDescriptions\IBL_BRDFGenerateLUT.tech" />
+    <None Include="PipelineDescriptions\DeferredShading_UseIBL.tech" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="PipelineDescriptions\AABBRenderPipeline.blend">
