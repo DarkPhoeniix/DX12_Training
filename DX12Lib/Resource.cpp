@@ -301,7 +301,8 @@ namespace dx12
 
 		// TODO: add CBV to resource
 		view.Owner = this;
-
+		view.BufferLocation = this->OffsetGPU();
+		view.SizeInBytes = _resourceDesc.GetSize().x * _resourceDesc.GetSize().y;
 
 		return view;
 	}
@@ -329,18 +330,26 @@ namespace dx12
 			{
 				view.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
 				view.TextureCube.MipLevels = _resourceDesc.GetMipLevels();
+				view.TextureCube.MostDetailedMip = 0;
+				view.TextureCube.ResourceMinLODClamp = 0.0f;
 			}
-			else if ((type & ResourceType::Array) != ResourceType::None)
+			else if (_resourceDesc.GetDepthOrArraySize() > 1)
 			{
 				view.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
 				view.Texture2DArray.ArraySize = _resourceDesc.GetDepthOrArraySize();
-				view.Texture2DArray.FirstArraySlice = 0;
 				view.Texture2DArray.MipLevels = _resourceDesc.GetMipLevels();
+				view.Texture2DArray.FirstArraySlice = 0;
+				view.Texture2DArray.MostDetailedMip = 0;
+				view.Texture2DArray.PlaneSlice = 0;
+				view.Texture2DArray.ResourceMinLODClamp = 0.0f;
 			}
 			else
 			{
 				view.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-				view.Texture2D.MipLevels = 1;
+				view.Texture2D.MipLevels = _resourceDesc.GetMipLevels();
+				view.Texture2D.MostDetailedMip = 0;
+				view.Texture2D.PlaneSlice = 0;
+				view.Texture2D.ResourceMinLODClamp = 0.0f;
 			}
 		}
 
@@ -372,17 +381,19 @@ namespace dx12
 		}
 		else if ((type & ResourceType::Texture) != ResourceType::None)
 		{
-			if (_resourceDesc.GetDepthOrArraySize() == 6)
+			if (_resourceDesc.GetDepthOrArraySize() == 1)
+			{
+				view.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+				view.Texture2D.MipSlice = 0;
+				view.Texture2D.PlaneSlice = 0;
+			}
+			else
 			{
 				view.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
 				view.Texture2DArray.ArraySize = _resourceDesc.GetDepthOrArraySize();
 				view.Texture2DArray.FirstArraySlice = 0;
 				view.Texture2DArray.MipSlice = 0;
-			}
-			else
-			{
-				view.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-				view.Texture2D.MipSlice = 0;
+				view.Texture2DArray.PlaneSlice = 0;
 			}
 		}
 

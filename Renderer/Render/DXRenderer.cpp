@@ -184,7 +184,7 @@ namespace render
                 diffuseIrradianceTextureDesc.SetSize({ 128, 128 });
                 diffuseIrradianceTextureDesc.SetDepthOrArraySize(6);
                 diffuseIrradianceTextureDesc.SetFormat(DXGI_FORMAT_R16G16B16A16_FLOAT);
-                diffuseIrradianceTextureDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::Unordered | dx12::ResourceType::Array);
+                diffuseIrradianceTextureDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::Unordered);
             }
             _diffuseIrradianceMap = std::make_shared<dx12::Texture>();
             _diffuseIrradianceMap->SetName("DiffuseIrradianceMap");
@@ -196,7 +196,7 @@ namespace render
                 preFilteredEnvTextureDesc.SetDepthOrArraySize(6);
                 preFilteredEnvTextureDesc.SetMipLevels(8);
                 preFilteredEnvTextureDesc.SetFormat(DXGI_FORMAT_R16G16B16A16_FLOAT);
-                preFilteredEnvTextureDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::Unordered | dx12::ResourceType::Array);
+                preFilteredEnvTextureDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::Unordered);
             }
             _preFilteredEnvMap = std::make_shared<dx12::Texture>();
             _preFilteredEnvMap->SetName("PreFilteredEnvironmentMap");
