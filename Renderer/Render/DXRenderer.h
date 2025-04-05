@@ -58,8 +58,12 @@ namespace render
         scene::helpers::SceneLoader _sceneLoader;
 
         dx12::PipelineState _IBL_DiffuseIrradianceConvolution;
+        dx12::PipelineState _IBL_PreFilterEnvMap;
+        dx12::PipelineState _IBL_BRDFGenerateLUT;
         dx12::DescriptorHeap _descHeap;
         std::shared_ptr<dx12::Texture> _diffuseIrradianceMap;
+        std::shared_ptr<dx12::Texture> _preFilteredEnvMap;
+        std::shared_ptr<dx12::Texture> _brdfLUT;
 
         bool _isMinimized;
         bool _isCameraMoving;

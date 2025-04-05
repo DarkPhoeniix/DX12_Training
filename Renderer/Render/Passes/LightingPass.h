@@ -15,6 +15,8 @@ namespace render
         rg::ResourceId Depth;
 
         rg::ResourceId DiffuseIrradianceMap;
+        rg::ResourceId PreFilteredMap;
+        rg::ResourceId BRDF_LUT;
 
         std::vector<rg::ResourceId> ShadowMaps;
 

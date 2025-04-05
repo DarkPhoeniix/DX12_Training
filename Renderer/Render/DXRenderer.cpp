@@ -176,22 +176,46 @@ namespace render
             std::shared_ptr<scene::Skybox> skyboxComponent = skybox->GetComponentAs<scene::Skybox>("Skybox");
 
             _IBL_DiffuseIrradianceConvolution.Parse("PipelineDescriptions\\IBL_DiffuseIrradianceConvolution.tech");
+            _IBL_PreFilterEnvMap.Parse("PipelineDescriptions\\IBL_PreFilterEnvMap.tech");
+            _IBL_BRDFGenerateLUT.Parse("PipelineDescriptions\\IBL_BRDFGenerateLUT.tech");
 
-            dx12::ResourceDescription textureDesc;
+            dx12::ResourceDescription diffuseIrradianceTextureDesc;
             {
-                textureDesc.SetSize({ 64, 64 });
-                textureDesc.SetDepthOrArraySize(6);
-                textureDesc.SetFormat(DXGI_FORMAT_R16G16B16A16_FLOAT);
-                textureDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::Unordered | dx12::ResourceType::Array);
+                diffuseIrradianceTextureDesc.SetSize({ 128, 128 });
+                diffuseIrradianceTextureDesc.SetDepthOrArraySize(6);
+                diffuseIrradianceTextureDesc.SetFormat(DXGI_FORMAT_R16G16B16A16_FLOAT);
+                diffuseIrradianceTextureDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::Unordered | dx12::ResourceType::Array);
             }
             _diffuseIrradianceMap = std::make_shared<dx12::Texture>();
             _diffuseIrradianceMap->SetName("DiffuseIrradianceMap");
-            _diffuseIrradianceMap->CreateCommitedResource(textureDesc);
+            _diffuseIrradianceMap->CreateCommitedResource(diffuseIrradianceTextureDesc);
+
+            dx12::ResourceDescription preFilteredEnvTextureDesc;
+            {
+                preFilteredEnvTextureDesc.SetSize({ 512, 512 });
+                preFilteredEnvTextureDesc.SetDepthOrArraySize(6);
+                preFilteredEnvTextureDesc.SetMipLevels(6);
+                preFilteredEnvTextureDesc.SetFormat(DXGI_FORMAT_R16G16B16A16_FLOAT);
+                preFilteredEnvTextureDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::Unordered | dx12::ResourceType::Array);
+            }
+            _preFilteredEnvMap = std::make_shared<dx12::Texture>();
+            _preFilteredEnvMap->SetName("PreFilteredEnvironmentMap");
+            _preFilteredEnvMap->CreateCommitedResource(preFilteredEnvTextureDesc);
+
+            dx12::ResourceDescription brdfLUTDesc;
+            {
+                brdfLUTDesc.SetSize({ 512, 512 });
+                brdfLUTDesc.SetFormat(DXGI_FORMAT_R16G16_FLOAT);
+                brdfLUTDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::Unordered);
+            }
+            _brdfLUT = std::make_shared<dx12::Texture>();
+            _brdfLUT->SetName("BRDF_LUT");
+            _brdfLUT->CreateCommitedResource(brdfLUTDesc);
 
             dx12::DescriptorHeapDescription desc;
             {
                 desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-                desc.SetNumDescriptors(2);
+                desc.SetNumDescriptors(9);
                 desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
             }
             _descHeap.Reset();
@@ -203,14 +227,35 @@ namespace render
 
             dx12::Device::CreateShaderResourceView(skyboxTexture->GetAsSRV(), _descHeap);
             dx12::Device::CreateUnorderedAccessView(_diffuseIrradianceMap->GetAsUAV(), _descHeap);
+            dx12::Device::CreateUnorderedAccessView(_brdfLUT->GetAsUAV(), _descHeap);
+
+            for (int i = 0; i < 6; ++i)
+            {
+                dx12::UnorderedAccessView uav;
+                {
+                    uav.Owner = _preFilteredEnvMap.get();
+                    uav.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+                    uav.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
+
+                    uav.Texture2DArray.ArraySize = 6;
+                    uav.Texture2DArray.MipSlice = i;
+                    uav.Texture2DArray.PlaneSlice = 0;
+                    uav.Texture2DArray.FirstArraySlice = 0;
+                }
+                dx12::Device::CreateUnorderedAccessView(uav, _descHeap);
+            }
 
             textureManager.AddTexture(_diffuseIrradianceMap, dx12::ResourceViewType::SRV);
             textureManager.AddTexture(_diffuseIrradianceMap, dx12::ResourceViewType::UAV);
+            textureManager.AddTexture(_preFilteredEnvMap, dx12::ResourceViewType::SRV);
+            textureManager.AddTexture(_preFilteredEnvMap, dx12::ResourceViewType::UAV);
 
             std::vector<dx12::ResourceBarrier> barriers =
             {
                 { skyboxTexture.get(),          D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-                { _diffuseIrradianceMap.get(),  D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_UNORDERED_ACCESS }
+                { _diffuseIrradianceMap.get(),  D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_UNORDERED_ACCESS },
+                { _preFilteredEnvMap.get(),     D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_UNORDERED_ACCESS },
+                { _brdfLUT.get(),     D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_UNORDERED_ACCESS }
             };
             commandList.TransitionBarriers(barriers);
 
@@ -220,15 +265,48 @@ namespace render
             commandList.SetDescriptorTable(0, _descHeap.GetGPUHandleWithOffset(0));
             commandList.SetDescriptorTable(1, _descHeap.GetGPUHandleWithOffset(1));
 ;
-            int xThreadGroups = (uint32_t)std::ceilf(textureDesc.GetSize().x / 8.0f);
-            int yThreadGroups = (uint32_t)std::ceilf(textureDesc.GetSize().y / 8.0f);
+            int xThreadGroups = (uint32_t)std::ceilf(diffuseIrradianceTextureDesc.GetSize().x / 8.0f);
+            int yThreadGroups = (uint32_t)std::ceilf(diffuseIrradianceTextureDesc.GetSize().y / 8.0f);
 
             commandList.Dispatch(xThreadGroups, yThreadGroups, 6);
+
+
+
+
+            commandList.SetPipelineState(_IBL_BRDFGenerateLUT);
+
+            commandList.SetDescriptorTable(0, _descHeap.GetGPUHandleWithOffset(2));
+
+            xThreadGroups = (uint32_t)std::ceilf(brdfLUTDesc.GetSize().x / 8.0f);
+            yThreadGroups = (uint32_t)std::ceilf(brdfLUTDesc.GetSize().y / 8.0f);
+
+            commandList.Dispatch(xThreadGroups, yThreadGroups);
+
+
+
+
+            commandList.SetPipelineState(_IBL_PreFilterEnvMap);
+
+            for (int i = 0; i < 6; ++i)
+            {
+                //commandList.SetDescriptorHeaps({ _descHeap.GetDXDescriptorHeap().Get() });
+                commandList.SetConstant(0, 0.95f);
+                commandList.SetDescriptorTable(1, _descHeap.GetGPUHandleWithOffset(0));
+                commandList.SetDescriptorTable(2, _descHeap.GetGPUHandleWithOffset(i + 3));
+
+                xThreadGroups = (uint32_t)std::ceilf(preFilteredEnvTextureDesc.GetSize().x / (8.0f * std::pow(2, i)));
+                yThreadGroups = (uint32_t)std::ceilf(preFilteredEnvTextureDesc.GetSize().y / (8.0f * std::pow(2, i)));
+
+                commandList.Dispatch(xThreadGroups, yThreadGroups, 6);
+            }
+
 
             barriers =
             {
                 { skyboxTexture.get(),          D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
-                { _diffuseIrradianceMap.get(),  D3D12_RESOURCE_STATE_UNORDERED_ACCESS,          D3D12_RESOURCE_STATE_COMMON }
+                { _diffuseIrradianceMap.get(),  D3D12_RESOURCE_STATE_UNORDERED_ACCESS,          D3D12_RESOURCE_STATE_COMMON },
+                { _preFilteredEnvMap.get(),     D3D12_RESOURCE_STATE_UNORDERED_ACCESS,          D3D12_RESOURCE_STATE_COMMON },
+                { _brdfLUT.get(),     D3D12_RESOURCE_STATE_UNORDERED_ACCESS,          D3D12_RESOURCE_STATE_COMMON }
             };
             commandList.TransitionBarriers(barriers);
         }
@@ -495,6 +573,8 @@ namespace render
             _renderGraph.Reset();
 
             _renderGraph.ImportResource(_diffuseIrradianceMap);
+            _renderGraph.ImportResource(_brdfLUT);
+            _renderGraph.ImportResource(_preFilteredEnvMap);
 
             _renderGraph.AddPass(std::make_shared<GeometryPass>(_scene, _cameraComponent.get()));
             _renderGraph.AddPass(std::make_shared<ShadowClearPass>(_scene, _cameraComponent.get()));

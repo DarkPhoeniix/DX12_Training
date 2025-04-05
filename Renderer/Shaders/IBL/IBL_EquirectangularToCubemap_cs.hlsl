@@ -9,7 +9,7 @@
         "addressW = TEXTURE_ADDRESS_CLAMP," \
         "filter = FILTER_MIN_MAG_MIP_LINEAR)," \
     
-#include "../CommonContants.hlsli"
+#include "../CommonConstants.hlsli"
 
 #define THREADS_PER_DIMENSION 8
 

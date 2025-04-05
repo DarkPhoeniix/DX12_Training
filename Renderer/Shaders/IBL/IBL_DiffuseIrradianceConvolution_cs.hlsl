@@ -1,6 +1,6 @@
 
 #include "IBL_DiffuseIrradianceConvolution_rootsig.hlsli"
-#include "../CommonContants.hlsli"
+#include "../CommonConstants.hlsli"
 
 #define THREADS_PER_DIMENSION 8
 
@@ -19,12 +19,9 @@ float2 SampleSphericalMap(float3 v)
     return uv;
 }
 
-float3 getSamplingVector(uint3 ThreadID)
+float3 GetSamplingVector(uint3 ThreadID, uint2 textureSize)
 {
-    float outputWidth, outputHeight, outputDepth;
-    DiffuseIrradianceMap.GetDimensions(outputWidth, outputHeight, outputDepth);
-
-    float2 st = ThreadID.xy / float2(outputWidth, outputHeight);
+    float2 st = ThreadID.xy / float2(textureSize.x, textureSize.y);
     float2 uv = 2.0 * float2(st.x, 1.0 - st.y) - float2(1.0, 1.0);
 
 	// Select vector based on cubemap face index.
@@ -53,21 +50,14 @@ float3 getSamplingVector(uint3 ThreadID)
     return normalize(ret);
 }
 
-
-// Convert point from tangent/shading space to world space.
-float3 tangentToWorld(const float3 v, const float3 N, const float3 S, const float3 T)
-{
-    return S * v.x + T * v.y + N * v.z;
-}
-
 [numthreads(THREADS_PER_DIMENSION, THREADS_PER_DIMENSION, 1)]
 [RootSignature(IBL_RootSig)]
 void main(uint3 DTid : SV_DispatchThreadID)
 {
-    uint2 imageSize = float2(64, 64);
-    //DiffuseIrradianceMap.GetDimensions(imageSize.x, imageSize.y);
+    float outputWidth, outputHeight, outputArraySize;
+    DiffuseIrradianceMap.GetDimensions(outputWidth, outputHeight, outputArraySize);
 
-    float3 N = getSamplingVector(DTid);
+    float3 N = GetSamplingVector(DTid, uint2(outputWidth, outputHeight));
     float3 up = abs(N.z) < 0.999 ? float3(0.0f, 0.0f, 1.0f) : float3(1.0f, 0.0f, 0.0f);
     float3 right = normalize(cross(up, N));
     up = cross(N, right);

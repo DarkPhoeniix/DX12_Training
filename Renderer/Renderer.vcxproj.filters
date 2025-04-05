@@ -111,6 +111,8 @@
     </FxCompile>
     <FxCompile Include="Shaders\IBL\IBL_DiffuseIrradianceConvolution_cs.hlsl" />
     <FxCompile Include="Shaders\IBL\IBL_EquirectangularToCubemap_cs.hlsl" />
+    <FxCompile Include="Shaders\IBL\IBL_PreFilterEnvironmentMap_cs.hlsl" />
+    <FxCompile Include="Shaders\IBL\IBL_BRDFGenerateLUT_cs.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RendererPCH.cpp" />
@@ -543,8 +545,10 @@
     <None Include="PipelineDescriptions\ToneMappingPipeline.tech">
       <Filter>PipelineDescriptions</Filter>
     </None>
-    <None Include="Shaders\CommonContants.hlsli" />
+    <None Include="Shaders\CommonConstants.hlsli" />
     <None Include="Shaders\IBL\IBL_DiffuseIrradianceConvolution_rootsig.hlsli" />
+    <None Include="PipelineDescriptions\IBL_PreFilterEnvMap.tech" />
+    <None Include="PipelineDescriptions\IBL_BRDFGenerateLUT.tech" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="PipelineDescriptions\AABBRenderPipeline.blend">

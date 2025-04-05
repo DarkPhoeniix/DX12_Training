@@ -12,12 +12,15 @@ Texture2D<float4> PositionTexture           : register(t1);
 Texture2D<float4> AlbedoMetallicTexture     : register(t2);
 Texture2D<float4> NormalRoughnessTexture    : register(t3);
 Texture2DArray<float4> DiffuseIrradiance    : register(t4);
-Texture2D Textures2D[]                      : register(t5, space0);
-TextureCube TexturesCube[]                  : register(t5, space1);
+Texture2DArray<float4> PreFilteredMap       : register(t5);
+Texture2D<float2> brdfLUT                   : register(t6);
+Texture2D Textures2D[]                      : register(t7, space0);
+TextureCube TexturesCube[]                  : register(t7, space1);
 RWTexture2D<float4> TargetTexture           : register(u0);
 
 SamplerComparisonState ShadowSampler        : register(s0);
 SamplerState PointSampler                   : register(s1);
+SamplerState PointSampler1                   : register(s2);
 
 void SetLightParams(in LightDesc light, inout Surface surface)
 {
@@ -45,6 +48,7 @@ void SetLightParams(in LightDesc light, inout Surface surface)
         
     surface.ViewDirection = float4(eyeDir, 0.0f);
     surface.ToLight = toLight;
+    surface.Reflect = float4(reflect(-eyeDir, surface.Normal.xyz), 0.0f);
     surface.DistanceToL = min(light.Range, distanceToLight);
     surface.NdotV = max(dot(surface.Normal.xyz, eyeDir), 0.0f);
     surface.NdotL = max(dot(surface.Normal.xyz, lightDirection), 0.0f);
@@ -140,13 +144,30 @@ void main(uint3 DTid : SV_DispatchThreadID)
     surface.Metallic = AlbedoMetallicTexture.Load(uint3(DTid.xy, 0)).a;
     surface.Roughness = NormalRoughnessTexture.Load(uint3(DTid.xy, 0)).a;
     
+    
+    
+    float3 eyeDir = normalize(Scene.EyePosition - surface.Position).xyz;
+        
+    surface.ViewDirection = float4(eyeDir, 0.0f);
+    surface.Reflect = float4(reflect(-eyeDir, surface.Normal.xyz), 0.0f);
+    surface.NdotV = max(dot(surface.Normal.xyz, eyeDir), 0.0f);
+    
+    
     float3 F0 = float3(0.04f, 0.04f, 0.04f);
     F0 = lerp(F0, surface.Albedo.rgb, surface.Metallic);
     float3 kS = max(0.0f, FresnelSchlick(surface, F0));
     float3 kD = 1.0 - kS;
     kD *= 1.0 - surface.Metallic;
-    float3 irradiance = DiffuseIrradiance.SampleLevel(PointSampler, SampleCubemapLikeArray(surface.Normal.xyz), 0.0f).rgb;
-    float3 ambient = (irradiance * surface.Albedo.rgb) * kD * 1.0f;
+    
+    float3 irradiance = DiffuseIrradiance.SampleLevel(PointSampler1, SampleCubemapLikeArray(surface.Normal.xyz), 0.0f).rgb;
+    float3 diffuse = irradiance * surface.Albedo.rgb;
+    
+    const float MAX_REFLECTION_LOD = 6.0;
+    float3 prefilteredColor = PreFilteredMap.SampleLevel(PointSampler1, SampleCubemapLikeArray(surface.Reflect.xyz), surface.Roughness * MAX_REFLECTION_LOD);
+    float2 envBRDF = brdfLUT.SampleLevel(PointSampler1, float2(surface.NdotV, surface.Roughness), 0.0f);
+    float3 specular = prefilteredColor * (F0 * envBRDF.x + envBRDF.y);    
+    
+    float3 ambient = kD * diffuse + specular;
     
     surface.FinalColor = float4(ambient, 1.0f);
     for (int i = 0; i < Scene.LightsNum; ++i)

@@ -14,6 +14,7 @@ struct Surface
     
     float4 ViewDirection;
     float4 ToLight;
+    float4 Reflect;
     float DistanceToL;
     float NdotV;
     float NdotL;
