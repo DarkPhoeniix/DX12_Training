@@ -325,17 +325,17 @@ namespace dx12
 		}
 		else if ((type & ResourceType::Texture) != ResourceType::None)
 		{
-			if ((type & ResourceType::Array) != ResourceType::None)
+			if (_resourceDesc.GetDepthOrArraySize() == 6)
+			{
+				view.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+				view.TextureCube.MipLevels = _resourceDesc.GetMipLevels();
+			}
+			else if ((type & ResourceType::Array) != ResourceType::None)
 			{
 				view.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
 				view.Texture2DArray.ArraySize = _resourceDesc.GetDepthOrArraySize();
 				view.Texture2DArray.FirstArraySlice = 0;
 				view.Texture2DArray.MipLevels = _resourceDesc.GetMipLevels();
-			}
-			else if (_resourceDesc.GetDepthOrArraySize() == 6)
-			{
-				view.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
-				view.TextureCube.MipLevels = 1;
 			}
 			else
 			{

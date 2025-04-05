@@ -194,7 +194,7 @@ namespace render
             {
                 preFilteredEnvTextureDesc.SetSize({ 512, 512 });
                 preFilteredEnvTextureDesc.SetDepthOrArraySize(6);
-                preFilteredEnvTextureDesc.SetMipLevels(6);
+                preFilteredEnvTextureDesc.SetMipLevels(8);
                 preFilteredEnvTextureDesc.SetFormat(DXGI_FORMAT_R16G16B16A16_FLOAT);
                 preFilteredEnvTextureDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::Unordered | dx12::ResourceType::Array);
             }
@@ -215,7 +215,7 @@ namespace render
             dx12::DescriptorHeapDescription desc;
             {
                 desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-                desc.SetNumDescriptors(9);
+                desc.SetNumDescriptors(16);
                 desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
             }
             _descHeap.Reset();
@@ -229,7 +229,7 @@ namespace render
             dx12::Device::CreateUnorderedAccessView(_diffuseIrradianceMap->GetAsUAV(), _descHeap);
             dx12::Device::CreateUnorderedAccessView(_brdfLUT->GetAsUAV(), _descHeap);
 
-            for (int i = 0; i < 6; ++i)
+            for (int i = 0; i < preFilteredEnvTextureDesc.GetMipLevels(); ++i)
             {
                 dx12::UnorderedAccessView uav;
                 {
@@ -287,10 +287,9 @@ namespace render
 
             commandList.SetPipelineState(_IBL_PreFilterEnvMap);
 
-            for (int i = 0; i < 6; ++i)
+            for (int i = 0; i < preFilteredEnvTextureDesc.GetMipLevels(); ++i)
             {
-                //commandList.SetDescriptorHeaps({ _descHeap.GetDXDescriptorHeap().Get() });
-                commandList.SetConstant(0, 0.95f);
+                commandList.SetConstant(0, i / float(preFilteredEnvTextureDesc.GetMipLevels() - 1));
                 commandList.SetDescriptorTable(1, _descHeap.GetGPUHandleWithOffset(0));
                 commandList.SetDescriptorTable(2, _descHeap.GetGPUHandleWithOffset(i + 3));
 

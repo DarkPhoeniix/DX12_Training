@@ -34,4 +34,4 @@
         "addressU = TEXTURE_ADDRESS_MIRROR," \
         "addressV = TEXTURE_ADDRESS_MIRROR," \
         "addressW = TEXTURE_ADDRESS_MIRROR," \
-        "filter = FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT)"
+        "filter = FILTER_COMPARISON_MIN_MAG_MIP_LINEAR)"

@@ -123,6 +123,9 @@ void main(uint3 DTid : SV_DispatchThreadID)
         return;
     }
     
-    float2 integratedBRDF = IntegrateBRDF(DTid.x / (x - 1.0f), DTid.y / (y - 1.0f));
+    float NdotV = max(0.001f, DTid.x / (x - 1.0f));
+    float roughness = DTid.y / (y - 1.0f);
+    
+    float2 integratedBRDF = IntegrateBRDF(NdotV, roughness);
     BRDF_LUT[DTid] = integratedBRDF;
 }

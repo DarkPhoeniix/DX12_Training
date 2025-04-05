@@ -11,8 +11,8 @@ StructuredBuffer<LightDesc> Lights          : register(t0);
 Texture2D<float4> PositionTexture           : register(t1);
 Texture2D<float4> AlbedoMetallicTexture     : register(t2);
 Texture2D<float4> NormalRoughnessTexture    : register(t3);
-Texture2DArray<float4> DiffuseIrradiance    : register(t4);
-Texture2DArray<float4> PreFilteredMap       : register(t5);
+TextureCube DiffuseIrradiance    : register(t4);
+TextureCube PreFilteredMap : register(t5);
 Texture2D<float2> brdfLUT                   : register(t6);
 Texture2D Textures2D[]                      : register(t7, space0);
 TextureCube TexturesCube[]                  : register(t7, space1);
@@ -159,11 +159,13 @@ void main(uint3 DTid : SV_DispatchThreadID)
     float3 kD = 1.0 - kS;
     kD *= 1.0 - surface.Metallic;
     
-    float3 irradiance = DiffuseIrradiance.SampleLevel(PointSampler1, SampleCubemapLikeArray(surface.Normal.xyz), 0.0f).rgb;
+    float3 irradiance = DiffuseIrradiance.SampleLevel(PointSampler1, surface.Normal.xyz, 0.0f).rgb;
     float3 diffuse = irradiance * surface.Albedo.rgb;
     
-    const float MAX_REFLECTION_LOD = 6.0;
-    float3 prefilteredColor = PreFilteredMap.SampleLevel(PointSampler1, SampleCubemapLikeArray(surface.Reflect.xyz), surface.Roughness * MAX_REFLECTION_LOD);
+    float w, h, m;
+    PreFilteredMap.GetDimensions(0, w, h, m);
+    
+    float3 prefilteredColor = PreFilteredMap.SampleLevel(PointSampler1, surface.Reflect.xyz, surface.Roughness * m);
     float2 envBRDF = brdfLUT.SampleLevel(PointSampler1, float2(surface.NdotV, surface.Roughness), 0.0f);
     float3 specular = prefilteredColor * (F0 * envBRDF.x + envBRDF.y);    
     

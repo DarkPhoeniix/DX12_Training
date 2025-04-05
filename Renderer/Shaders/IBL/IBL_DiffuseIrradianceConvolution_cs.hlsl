@@ -80,7 +80,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
             
             float2 skyboxTexel = SampleSphericalMap(sampleVec);
             
-            irradiance += max(0.0f, Skybox.SampleLevel(LinearSampler, skyboxTexel, 0).rgb) * cos(theta) * sin(theta); // * dot(sampleDir, N));
+            irradiance += min(float3(12.0f, 12.0f, 12.0f), max(0.0f, Skybox.SampleLevel(LinearSampler, skyboxTexel, 0).rgb)) * cos(theta) * sin(theta);
             sampleCount++;
         }
     }
