@@ -3,6 +3,8 @@
 #include "DXRenderer.h"
 
 #include "CommandList.h"
+#include "Texture.h"
+#include "ResourceBarrier.h"
 
 #include "Events/KeyEvent.h"
 #include "Events/MouseButtonEvent.h"
@@ -17,6 +19,7 @@
 #include "Scene/Entity/Components/Light.h"
 #include "Scene/Entity/Components/Material.h"
 #include "Scene/Entity/Components/Mesh.h"
+#include "Scene/Entity/Components/Skybox.h"
 #include "Scene/Entity/Entity.h"
 #include "Utility/DebugInfo.h"
 
@@ -44,6 +47,8 @@ using namespace core;
 
 namespace
 {
+    constexpr char DEFAULT_SCENE_PATH[] = "Sponza\\Sponza.scene";
+
     void CheckLightsNum(std::shared_ptr<scene::Entity> node, uint32_t& lightsNum)
     {
         if (node->GetComponentAs<scene::Light>("Light"))
@@ -80,7 +85,7 @@ namespace
                     scene::TextureManager& textureManager = scene->GetCache().GetTextureManager();
                     dx12::ResourceTable& textureTable = textureManager.GetTextureTable();
 
-                    modelDesc->AlbedoTextureIndex    = frameResourceTable.CopyDescriptor(textureManager.GetTexture(material->Albedo).get(), dx12::ResourceViewType::SRV, textureTable);
+                    modelDesc->AlbedoTextureIndex = frameResourceTable.CopyDescriptor(textureManager.GetTexture(material->Albedo).get(), dx12::ResourceViewType::SRV, textureTable);
                     modelDesc->NormalMapTextureIndex = frameResourceTable.CopyDescriptor(textureManager.GetTexture(material->NormalMap).get(), dx12::ResourceViewType::SRV, textureTable);
                     modelDesc->MetalnessTextureIndex = frameResourceTable.CopyDescriptor(textureManager.GetTexture(material->Metalness).get(), dx12::ResourceViewType::SRV, textureTable);
                     modelDesc->RoughnessTextureIndex = frameResourceTable.CopyDescriptor(textureManager.GetTexture(material->Roughness).get(), dx12::ResourceViewType::SRV, textureTable);
@@ -145,27 +150,38 @@ namespace render
     {
         render::DrawHelper::Init();
 
-        RECT windowSize;
-        GetClientRect(_windowHandle, &windowSize);
-        uint32_t windowWidth = windowSize.right - windowSize.left;
-        uint32_t windowHeight = windowSize.bottom - windowSize.top;
-        
-        _renderGraph.Reset();
+        uploadTask->SetName("Upload Data");
+        dx12::CommandList& commandList = *uploadTask->GetCommandLists().front();
 
-        // Load scene
         {
-            uploadTask->SetName("Upload Data");
+            // Load scene
+            if (std::filesystem::exists(std::filesystem::path(filepath)))
+            {
+                _sceneLoader.LoadScene(*uploadTask, filepath, _scene);
+            }
+            else
+            {
+                LOG_WARNING(false, std::format("Failed to load scene \'{}\'", filepath));
+                _sceneLoader.LoadScene(*uploadTask, DEFAULT_SCENE_PATH, _scene);
+            }
 
-            _sceneLoader.LoadScene(*uploadTask, filepath, _scene);
-        }
+            // Camera Setup
+            RECT windowSize;
+            GetClientRect(_windowHandle, &windowSize);
+            uint32_t windowWidth = windowSize.right - windowSize.left;
+            uint32_t windowHeight = windowSize.bottom - windowSize.top;
 
-        // Camera Setup
-        {
             std::shared_ptr<scene::Entity> camera = _scene->FilterNodesByComponent("Camera").front();
             _cameraComponent = camera->GetComponentAs<scene::Camera>("Camera");
-
             _cameraComponent->SetViewport(scene::Viewport({ windowWidth, windowHeight }));
+
+            // Generate textures for IBL
+            _diffuseIrradianceMap       = _sceneLoader.GenerateEnvironmentDiffuseIrradianceMap(commandList, _scene);
+            _brdfLUT                    = _sceneLoader.GenerateEnvironmentBRDFLookUpTexture(commandList, _scene);
+            _preFilteredEnvironmentMap  = _sceneLoader.GeneratePreFilteredEnvironmentMap(commandList, _scene);
         }
+
+        commandList.Close();
 
         SetupRenderPipeline();
 
@@ -261,10 +277,6 @@ namespace render
         {
             dir -= _cameraComponent->Right() * _deltaTime;
         }
-        OutputDebugStringA("Right: ");
-        OutputDebugStringA(std::format("{} {} {} {}\n", DirectX::XMVectorGetX(_cameraComponent->Right()), DirectX::XMVectorGetY(_cameraComponent->Right()), DirectX::XMVectorGetZ(_cameraComponent->Right()), DirectX::XMVectorGetW(_cameraComponent->Right())).c_str());
-        OutputDebugStringA("Movement: ");
-        OutputDebugStringA(std::format("{} {} {} {}\n", DirectX::XMVectorGetX(dir), DirectX::XMVectorGetY(dir), DirectX::XMVectorGetZ(dir), DirectX::XMVectorGetW(dir)).c_str());
         _cameraComponent->Update(dir);
 
         switch (e.keyCode)
@@ -339,7 +351,7 @@ namespace render
     {
         WaitAllFrames();
 
-        TaskGPU* uploadTask = _currentFrame->CreateTask(D3D12_COMMAND_LIST_TYPE_COPY, nullptr);
+        TaskGPU* uploadTask = _currentFrame->CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE, nullptr);
         LoadContent(uploadTask, filepath);
 
         dx12::CommandList& commandList = *uploadTask->GetCommandLists().front();
@@ -425,6 +437,10 @@ namespace render
         // Render Graph setup
         {
             _renderGraph.Reset();
+
+            _renderGraph.ImportResource(_diffuseIrradianceMap);
+            _renderGraph.ImportResource(_brdfLUT);
+            _renderGraph.ImportResource(_preFilteredEnvironmentMap);
 
             _renderGraph.AddPass(std::make_shared<GeometryPass>(_scene, _cameraComponent.get()));
             _renderGraph.AddPass(std::make_shared<ShadowClearPass>(_scene, _cameraComponent.get()));

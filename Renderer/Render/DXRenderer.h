@@ -52,10 +52,14 @@ namespace render
 
         rg::RenderGraph _renderGraph;
 
+        scene::helpers::SceneLoader _sceneLoader;
+
         std::shared_ptr<scene::Scene> _scene;
         std::shared_ptr<scene::Camera> _cameraComponent;
 
-        scene::helpers::SceneLoader _sceneLoader;
+        std::shared_ptr<dx12::Texture> _diffuseIrradianceMap;
+        std::shared_ptr<dx12::Texture> _preFilteredEnvironmentMap;
+        std::shared_ptr<dx12::Texture> _brdfLUT;
 
         bool _isMinimized;
         bool _isCameraMoving;

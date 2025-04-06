@@ -1,5 +1,5 @@
 
-#include "../Common.hlsli"
+#include "../CommonResources.hlsli"
 #include "../LightingCommon.hlsli"
 
 struct PSinput
@@ -34,6 +34,7 @@ PSOutput main(PSinput IN)
     float3 normalMap        = Materials[Model.NormalTextureIndex].Sample(PointSampler, uv).rgb;
     float metalness         = Materials[Model.MetalnessTextureIndex].Sample(PointSampler, uv).x;
     float roughness         = Materials[Model.RoughnessTextureIndex].Sample(PointSampler, uv).x;
+    roughness               = max(0.001f, roughness); // Set minimum to 0.001 to avoid some visual artifacts in PBR
     
     // Calculate the TBN matrix and a new normal vector
     float3 normal           = normalize(IN.Normal);
@@ -45,8 +46,8 @@ PSOutput main(PSinput IN)
 
     // Setup output buffer
     PSOutput output;
-    output.AlbedoMetalness = float4(albedo, metalness);
-    output.NormalRougness   = float4(normal, roughness);
+    output.AlbedoMetalness  = float4(albedo, metalness);
+    output.NormalRougness   = float4(finalNormal, roughness);
     
     return output;
 }

@@ -8,19 +8,19 @@ namespace dx12
         None = 0, // Default uninitialized resource type.
 
         // Access types.
-        Dynamic = 1 << 0, // Resource can be dynamically updated.
-        ReadBack = 1 << 1, // Resource is used for reading data back from the GPU.
-        Unordered = 1 << 2, // Resource supports unordered access.
+        Dynamic = 1 << 0,       // Resource can be dynamically updated.
+        ReadBack = 1 << 1,      // Resource is used for reading data back from the GPU.
+        Unordered = 1 << 2,     // Resource supports unordered access.
 
         // Resource types.
-        Buffer = 1 << 3, // Standard buffer resource.
-        Texture = 1 << 4, // Texture resource.
-        RenderTarget = 1 << 5, // Render target texture.
-        DepthStencil = 1 << 6, // Depth/stencil buffer.
+        Buffer = 1 << 3,        // Standard buffer resource.
+        Texture = 1 << 4,       // Texture resource.
+        RenderTarget = 1 << 5,  // Render target texture.
+        DepthStencil = 1 << 6,  // Depth/stencil buffer.
 
         // Additional flags.
-        Aligned = 1 << 7, // Resource is aligned.
-        DenyShader = 1 << 8  // Resource is inaccessible by shaders.
+        Aligned = 1 << 7,       // Resource is aligned.
+        DenyShader = 1 << 8,    // Resource is inaccessible by shaders.
     };
     BINARY_OPERATION_TO_ENUM(ResourceType);
 

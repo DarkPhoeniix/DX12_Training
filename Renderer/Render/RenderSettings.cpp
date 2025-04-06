@@ -2,6 +2,11 @@
 
 #include "RenderSettings.h"
 
+bool& RenderSettings::UseIBL()
+{
+    return Instance()._useIBL;
+}
+
 bool& RenderSettings::RenderDebugVolumes()
 {
     return Instance()._renderDebugVolumes;
@@ -23,9 +28,11 @@ bool& RenderSettings::DebugFXAA()
 }
 
 RenderSettings::RenderSettings()
-    : _renderDebugVolumes(false)
+    : _useIBL(true)
+    , _renderDebugVolumes(false)
     , _renderDebugArmature(false)
     , _useFXAA(true)
+    , _debugFXAA(false)
 {
 }
 

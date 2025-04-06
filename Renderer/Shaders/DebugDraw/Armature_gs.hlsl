@@ -1,5 +1,5 @@
 
-#include "../Common.hlsli"
+#include "../CommonResources.hlsli"
 
 struct Geometryinput
 {

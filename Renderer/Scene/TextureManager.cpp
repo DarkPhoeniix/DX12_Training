@@ -253,6 +253,17 @@ namespace scene
         _intermediateResources.clear();
     }
 
+    void TextureManager::AddTexture(std::shared_ptr<dx12::Texture> texture, dx12::ResourceViewType viewType)
+    {
+        auto it = _textures.find(texture->GetName());
+        if (it == _textures.end())
+        {
+            _textures.insert(std::make_pair(texture->GetName(), texture));
+        }
+
+        _texturesTable.PlaceResourceIfNotExist(texture.get(), viewType);
+    }
+
     std::shared_ptr<dx12::Texture> TextureManager::GetTexture(const std::string& name) const
     {
         auto it = _textures.find(name);

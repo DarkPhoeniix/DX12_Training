@@ -1,10 +1,14 @@
 #pragma once
 
+#include "DescriptorHeap.h"
+#include "PipelineState.h"
+
 class TaskGPU;
 
 namespace dx12
 {
     class CommandList;
+    class Texture;
 }
 
 namespace scene
@@ -30,6 +34,10 @@ namespace scene::helpers
     public:
         void LoadScene(TaskGPU& task, const std::string& filepath, std::shared_ptr<Scene> scene);
 
+        std::shared_ptr<dx12::Texture> GenerateEnvironmentDiffuseIrradianceMap(dx12::CommandList& commandList, std::shared_ptr<Scene> scene);
+        std::shared_ptr<dx12::Texture> GeneratePreFilteredEnvironmentMap(dx12::CommandList& commandList, std::shared_ptr<Scene> scene);
+        std::shared_ptr<dx12::Texture> GenerateEnvironmentBRDFLookUpTexture(dx12::CommandList& commandList, std::shared_ptr<Scene> scene);
+
     private:
         std::shared_ptr<scene::Entity> LoadEntity(dx12::CommandList& commandList, const std::string& filepath, scene::Entity* parent = nullptr);
 
@@ -45,6 +53,11 @@ namespace scene::helpers
         void LoadRawMesh(const std::string& filepath, const std::shared_ptr<Mesh>& meshComponent);
 
         void CleanIntermediates();
+
+        dx12::DescriptorHeap _descHeap;
+        dx12::PipelineState _IBL_DiffuseIrradianceConvolution;
+        dx12::PipelineState _IBL_PreFilterEnvMap;
+        dx12::PipelineState _IBL_BRDFGenerateLUT;
 
         scene::SceneCache* _cache;
         std::vector<dx12::Resource> _intermediates;

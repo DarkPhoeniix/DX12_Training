@@ -14,6 +14,10 @@ namespace render
         rg::ResourceId NormalRoughness;
         rg::ResourceId Depth;
 
+        rg::ResourceId DiffuseIrradianceMap;
+        rg::ResourceId PreFilteredMap;
+        rg::ResourceId BRDF_LUT;
+
         std::vector<rg::ResourceId> ShadowMaps;
 
         rg::ResourceId HDRTarget;

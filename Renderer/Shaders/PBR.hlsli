@@ -1,5 +1,6 @@
 
-#include "Common.hlsli"
+#include "CommonResources.hlsli"
+#include "CommonConstants.hlsli"
 #include "LightingCommon.hlsli"
 
 // Trowbridge-Reitz GGX normal distribution function (D)
@@ -10,7 +11,7 @@ float CalculateSpecular(in Surface surface)
     
     float nominator = a2;
     float denominator = (NdotH2 * (a2 - 1.0f) + 1.0f);
-    denominator = 3.141592f * denominator * denominator;
+    denominator = k_PI * denominator * denominator;
     
     return nominator / denominator;
 }

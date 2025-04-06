@@ -60,6 +60,10 @@ namespace gui
             {
                 bool pendingUpdate = false;
 
+                if (ImGui::Checkbox("Use IBL", &RenderSettings::UseIBL()))
+                {
+                    pendingUpdate = true;
+                }
                 if (ImGui::Checkbox("Use FXAA", &RenderSettings::UseFXAA()))
                 {
                     pendingUpdate = true;

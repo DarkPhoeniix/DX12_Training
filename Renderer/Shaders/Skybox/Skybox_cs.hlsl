@@ -1,6 +1,7 @@
 
 #include "Skybox_rootsig.hlsli"
-#include "../Common.hlsli"
+#include "../CommonResources.hlsli"
+#include "../CommonConstants.hlsli"
 
 #include "../DepthFuncs.hlsli"
 
@@ -8,15 +9,10 @@ Texture2D<float4> DepthTexture      : register(t1);
 Texture2D<float4> SkyboxTexture : register(t2);
 RWTexture2D<float4> TargetTexture   : register(u0);
 
-const static float Pi = 3.1415926535897f;
-const static float Pi_Inv = 1.0f / Pi;
-const static float Pi2_Inv = Pi_Inv * 0.5f;
-
-static const float2 invVals = float2(Pi2_Inv, Pi_Inv);
 float2 SampleSphericalMap(float3 v)
 {
     float2 uv = float2(atan2(v.x, v.z), asin(-v.y));
-    uv *= invVals;
+    uv *= float2(k_1_PI_2, k_1_PI);
     uv += 0.5f;
     return uv;
 }

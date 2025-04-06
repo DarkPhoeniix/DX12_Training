@@ -1,0 +1,7 @@
+{
+	"Type": "IBL_DiffuseIrradianceConvolution_cs",
+
+	"IsGraphicsPipeline": false,
+
+	"CS": "Shaders\\IBL_DiffuseIrradianceConvolution_cs.cso"
+}
