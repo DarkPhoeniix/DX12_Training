@@ -108,8 +108,8 @@ uint GetCubeFaceIndex(float3 toPixel)
     return faceIndex;
 }
 
-#define CONSTANT_SHADOW_BIAS 0.005f
-#define SLOPE_SHADOW_BIAS 0.00001f
+#define CONSTANT_SHADOW_BIAS 0.0002f
+#define SLOPE_SHADOW_BIAS 0.00005f
 
 float CalculatePointLightShadowAttenuation(in TextureCube texture, in SamplerComparisonState cmpSampler, in LightDesc light, in Surface surface)
 {
