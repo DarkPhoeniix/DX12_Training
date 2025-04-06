@@ -1,6 +1,6 @@
 
 #include "Skybox_rootsig.hlsli"
-#include "../Common.hlsli"
+#include "../CommonResources.hlsli"
 #include "../CommonConstants.hlsli"
 
 #include "../DepthFuncs.hlsli"

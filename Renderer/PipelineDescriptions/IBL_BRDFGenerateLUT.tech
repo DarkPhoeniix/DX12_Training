@@ -3,5 +3,5 @@
 
 	"IsGraphicsPipeline": false,
 
-	"CS": "Shaders\\IBL_BRDFGenerateLUT_cs.cso"
+	"CS": "Shaders\\IBL_GenerateBRDFEnvironmentLUT_cs.cso"
 }

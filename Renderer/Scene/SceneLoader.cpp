@@ -128,18 +128,6 @@ namespace
 
 namespace scene::helpers
 {
-    SceneLoader::SceneLoader()
-    {
-        dx12::DescriptorHeapDescription desc;
-        {
-            desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-            desc.SetNumDescriptors(32);
-            desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
-        }
-        _descHeap.Reset();
-        _descHeap.Create(desc);
-    }
-
     void SceneLoader::LoadScene(TaskGPU& task, const std::string& filepath, std::shared_ptr<Scene> scene)
     {
         dx12::CommandList& commandList = *task.GetCommandLists().front();
@@ -167,6 +155,15 @@ namespace scene::helpers
         scene->GetCache().GetTextureManager().UploadTextures(commandList);
 
         task.GetFence()->SetCompletionCallback([this]() { CleanIntermediates(); });
+
+        _descHeap.Reset();
+        dx12::DescriptorHeapDescription desc;
+        {
+            desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+            desc.SetNumDescriptors(32);
+            desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
+        }
+        _descHeap.Create(desc);
     }
 
     std::shared_ptr<dx12::Texture> SceneLoader::GenerateEnvironmentDiffuseIrradianceMap(dx12::CommandList& commandList, std::shared_ptr<Scene> scene)

@@ -32,8 +32,6 @@ namespace scene::helpers
     class SceneLoader
     {
     public:
-        SceneLoader();
-
         void LoadScene(TaskGPU& task, const std::string& filepath, std::shared_ptr<Scene> scene);
 
         std::shared_ptr<dx12::Texture> GenerateEnvironmentDiffuseIrradianceMap(dx12::CommandList& commandList, std::shared_ptr<Scene> scene);

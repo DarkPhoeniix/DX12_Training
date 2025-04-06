@@ -14,7 +14,7 @@
 	"SRV(t2, visibility = SHADER_VISIBILITY_ALL), " \
 	"DescriptorTable(UAV(u0, flags = DESCRIPTORS_VOLATILE), visibility = SHADER_VISIBILITY_ALL)"
 
-#include "../Common.hlsli"
+#include "../CommonResources.hlsli"
 #include "../LightingCommon.hlsli"
 
 #define THREAD_BLOCK_SIZE 16

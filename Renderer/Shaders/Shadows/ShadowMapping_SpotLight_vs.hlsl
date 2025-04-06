@@ -1,7 +1,7 @@
 
 #include "ShadowMapping_rootsig.hlsli"
 
-#include "../Common.hlsli"
+#include "../CommonResources.hlsli"
 #include "../LightingCommon.hlsli"
 
 struct VSinput

@@ -1,7 +1,7 @@
 
 #include "DeferredShading_rootsig.hlsli"
 
-#include "../Common.hlsli"
+#include "../CommonResources.hlsli"
 #include "../LightingCommon.hlsli"
 #include "../DepthFuncs.hlsli"
 #include "../PBR.hlsli"

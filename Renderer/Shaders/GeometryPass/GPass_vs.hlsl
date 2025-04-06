@@ -1,7 +1,7 @@
 
 #include "GPass_rootsig.hlsli"
 
-#include "../Common.hlsli"
+#include "../CommonResources.hlsli"
 
 struct VSinput
 {

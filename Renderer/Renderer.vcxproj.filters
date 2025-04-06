@@ -34,10 +34,7 @@
     <FxCompile Include="Shaders\DebugDraw\Cone_vs.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\DeferredShading\DeferredShading_cs.hlsli">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\AntiAliasing\FXAA_Pass1_cs.hlsl">
+    <FxCompile Include="Shaders\DeferredShading\DeferredShading_cs.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\AntiAliasing\FXAA_Pass2_cs.hlsli">
@@ -112,8 +109,11 @@
     <FxCompile Include="Shaders\IBL\IBL_DiffuseIrradianceConvolution_cs.hlsl" />
     <FxCompile Include="Shaders\IBL\IBL_EquirectangularToCubemap_cs.hlsl" />
     <FxCompile Include="Shaders\IBL\IBL_PreFilterEnvironmentMap_cs.hlsl" />
-    <FxCompile Include="Shaders\IBL\IBL_BRDFGenerateLUT_cs.hlsl" />
+    <FxCompile Include="Shaders\IBL\IBL_GenerateBRDFEnvironmentLUT_cs.hlsl" />
     <FxCompile Include="Shaders\DeferredShading\DeferredShading_IBL_cs.hlsl" />
+    <FxCompile Include="Shaders\AntiAliasing\FXAA_Pass1_cs.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RendererPCH.cpp" />
@@ -447,7 +447,7 @@
     <None Include="Shaders\DebugDraw\Armature_rootsig.hlsli">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="Shaders\Common.hlsli">
+    <None Include="Shaders\CommonResources.hlsli">
       <Filter>Shaders</Filter>
     </None>
     <None Include="Shaders\DebugDraw\Cone_rootsig.hlsli">
@@ -547,10 +547,11 @@
       <Filter>PipelineDescriptions</Filter>
     </None>
     <None Include="Shaders\CommonConstants.hlsli" />
-    <None Include="Shaders\IBL\IBL_DiffuseIrradianceConvolution_rootsig.hlsli" />
     <None Include="PipelineDescriptions\IBL_PreFilterEnvMap.tech" />
     <None Include="PipelineDescriptions\IBL_BRDFGenerateLUT.tech" />
     <None Include="PipelineDescriptions\DeferredShading_UseIBL.tech" />
+    <None Include="Shaders\IBL\IBL_Helpers.hlsli" />
+    <None Include="Shaders\CommonFunctions.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="PipelineDescriptions\AABBRenderPipeline.blend">

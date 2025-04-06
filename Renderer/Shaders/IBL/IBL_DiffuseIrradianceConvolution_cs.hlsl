@@ -1,64 +1,35 @@
 
-#include "IBL_DiffuseIrradianceConvolution_rootsig.hlsli"
+#define IBL_DiffuseIrradianceConvolution_RootSig \
+	"RootFlags(0), " \
+    "DescriptorTable(SRV(t0), visibility = SHADER_VISIBILITY_ALL)," \
+    "DescriptorTable(UAV(u0), visibility = SHADER_VISIBILITY_ALL)," \
+    "StaticSampler(s0," \
+        "addressU = TEXTURE_ADDRESS_CLAMP," \
+        "addressV = TEXTURE_ADDRESS_CLAMP," \
+        "addressW = TEXTURE_ADDRESS_CLAMP," \
+        "filter = FILTER_MIN_MAG_MIP_LINEAR)," \
+
 #include "../CommonConstants.hlsli"
+#include "../CommonFunctions.hlsli"
 
 #define THREADS_PER_DIMENSION 8
 
+Texture2D<float4> Skybox                        : register(t0);
+RWTexture2DArray<float4> DiffuseIrradianceMap   : register(u0);
+
+SamplerState LinearSampler                      : register(s0);
+
 const static float k_SampleDelta = 0.005f;
 
-Texture2D<float4> Skybox : register(t0);
-RWTexture2DArray<float4> DiffuseIrradianceMap : register(u0);
-
-SamplerState LinearSampler : register(s0);
-
-float2 SampleSphericalMap(float3 v)
-{
-    float2 uv = float2(atan2(v.x, v.z), asin(-v.y));
-    uv *= float2(k_1_PI_2, k_1_PI);
-    uv += 0.5f;
-    return uv;
-}
-
-float3 GetSamplingVector(uint3 ThreadID, uint2 textureSize)
-{
-    float2 st = ThreadID.xy / float2(textureSize.x, textureSize.y);
-    float2 uv = 2.0 * float2(st.x, 1.0 - st.y) - float2(1.0, 1.0);
-
-	// Select vector based on cubemap face index.
-    float3 ret;
-    switch (ThreadID.z)
-    {
-        case 0:
-            ret = float3(1.0, uv.y, -uv.x);
-            break;
-        case 1:
-            ret = float3(-1.0, uv.y, uv.x);
-            break;
-        case 2:
-            ret = float3(uv.x, 1.0, -uv.y);
-            break;
-        case 3:
-            ret = float3(uv.x, -1.0, uv.y);
-            break;
-        case 4:
-            ret = float3(uv.x, uv.y, 1.0);
-            break;
-        case 5:
-            ret = float3(-uv.x, uv.y, -1.0);
-            break;
-    }
-    return normalize(ret);
-}
-
 [numthreads(THREADS_PER_DIMENSION, THREADS_PER_DIMENSION, 1)]
-[RootSignature(IBL_RootSig)]
+[RootSignature(IBL_DiffuseIrradianceConvolution_RootSig)]
 void main(uint3 DTid : SV_DispatchThreadID)
 {
     float outputWidth, outputHeight, outputArraySize;
     DiffuseIrradianceMap.GetDimensions(outputWidth, outputHeight, outputArraySize);
 
-    float3 N = GetSamplingVector(DTid, uint2(outputWidth, outputHeight));
-    float3 up = abs(N.z) < 0.999 ? float3(0.0f, 0.0f, 1.0f) : float3(1.0f, 0.0f, 0.0f);
+    float3 N = SampleTextureArrayAsCube(DTid, uint2(outputWidth, outputHeight));
+    float3 up = abs(N.z) < 0.999f ? float3(0.0f, 0.0f, 1.0f) : float3(1.0f, 0.0f, 0.0f);
     float3 right = normalize(cross(up, N));
     up = cross(N, right);
     
@@ -68,19 +39,13 @@ void main(uint3 DTid : SV_DispatchThreadID)
     {
         for (float theta = 0.0f; theta < k_PI_2; theta += k_SampleDelta)
         {
-            // Spherical to World Space in two steps...
-            float3 tempVec = cos(phi) * right + sin(phi) * up;
-            float3 sampleVector = normalize(cos(theta) * N + sin(theta) * tempVec);
-            
-            float3 sampleDir = float3(sin(theta) * cos(phi), sin(theta) * sin(phi), cos(theta));
-        
             float3 tangentSample = float3(sin(theta) * cos(phi), sin(theta) * sin(phi), cos(theta));
             float3 sampleVec = tangentSample.x * right + tangentSample.y * up + tangentSample.z * N;
-
-            
             float2 skyboxTexel = SampleSphericalMap(sampleVec);
             
-            irradiance += min(float3(12.0f, 12.0f, 12.0f), max(0.0f, Skybox.SampleLevel(LinearSampler, skyboxTexel, 0).rgb)) * cos(theta) * sin(theta);
+            // clamp upper value to 12 to avoid convolution visual artifacts
+            float3 value = min(float3(12.0f, 12.0f, 12.0f), max(0.0f, Skybox.SampleLevel(LinearSampler, skyboxTexel, 0).rgb));
+            irradiance +=  value * cos(theta) * sin(theta);
             sampleCount++;
         }
     }

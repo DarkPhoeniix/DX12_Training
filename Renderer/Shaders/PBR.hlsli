@@ -1,12 +1,12 @@
 
-#include "Common.hlsli"
+#include "CommonResources.hlsli"
 #include "CommonConstants.hlsli"
 #include "LightingCommon.hlsli"
 
 // Trowbridge-Reitz GGX normal distribution function (D)
 float CalculateSpecular(in Surface surface)
 {    
-    float a2 = max(0.001f, surface.Roughness * surface.Roughness);
+    float a2 = surface.Roughness * surface.Roughness;
     float NdotH2 = surface.NdotH * surface.NdotH;
     
     float nominator = a2;
