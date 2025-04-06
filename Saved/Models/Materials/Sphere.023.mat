@@ -1,0 +1,6 @@
+{
+    "Albedo": "Material.024_albedo.dds",
+    "Metalness": "Material.024_metalness.dds",
+    "Roughness": "Material.024_roughness.dds",
+    "Normal": "Material.024_nmap.dds"
+}
