@@ -171,13 +171,23 @@ namespace scene::helpers
 
     std::shared_ptr<dx12::Texture> SceneLoader::GenerateEnvironmentDiffuseIrradianceMap(dx12::CommandList& commandList, std::shared_ptr<Scene> scene)
     {
-        std::shared_ptr<scene::Entity> skybox = scene->FindNodeByComponentName("Skybox");
-        std::shared_ptr<scene::Skybox> skyboxComponent = skybox->GetComponentAs<scene::Skybox>("Skybox");
+        // Find skybox node and retrieve texture pointer
+
+        std::shared_ptr<scene::Entity> skyboxNode = scene->FindNodeByComponentName("Skybox");
+        ASSERT(skyboxNode != nullptr, "Failed to get skybox node");
+
+        std::shared_ptr<scene::Skybox> skyboxComponent = skyboxNode->GetComponentAs<scene::Skybox>("Skybox");
+        ASSERT(skyboxComponent != nullptr, "Failed to get skybox component");
 
         scene::TextureManager& textureManager = scene->GetCache().GetTextureManager();
         std::shared_ptr<dx12::Texture> skyboxTexture = textureManager.GetTexture(skyboxComponent->SkydomeTexture);
+        ASSERT(skyboxTexture != nullptr, "Failed to get skybox texture pointer");
+
+        // Parse pipeline for the diffuse irradiance convolution
 
         _IBL_DiffuseIrradianceConvolution.Parse("PipelineDescriptions\\IBL_DiffuseIrradianceConvolution.tech");
+
+        // Create diffuse irradiance map texture
 
         dx12::ResourceDescription diffuseIrradianceTextureDesc;
         {
@@ -190,34 +200,41 @@ namespace scene::helpers
         diffuseIrradianceMap->SetName("DiffuseIrradianceMap");
         diffuseIrradianceMap->CreateCommitedResource(diffuseIrradianceTextureDesc);
 
+        // Create SRV/UAV for the textures
+
         dx12::Device::CreateShaderResourceView(skyboxTexture->GetAsSRV(), _descHeap);
         dx12::Device::CreateUnorderedAccessView(diffuseIrradianceMap->GetAsUAV(), _descHeap);
 
-        textureManager.AddTexture(diffuseIrradianceMap, dx12::ResourceViewType::SRV);
-        textureManager.AddTexture(diffuseIrradianceMap, dx12::ResourceViewType::UAV);
+        // Transition resources
 
         std::vector<dx12::ResourceBarrier> barriers =
         {
-            { skyboxTexture.get(),          D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-            { diffuseIrradianceMap.get(),   D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_UNORDERED_ACCESS }
+            { skyboxTexture.get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
+            { diffuseIrradianceMap.get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS }
         };
         commandList.TransitionBarriers(barriers);
+
+        // Diffuse irradiance convolution pipeline
 
         commandList.SetPipelineState(_IBL_DiffuseIrradianceConvolution);
 
         commandList.SetDescriptorHeaps({ _descHeap.GetDXDescriptorHeap().Get() });
+
         commandList.SetDescriptorTable(0, _descHeap.GetGPUHandleWithOffset(0));
         commandList.SetDescriptorTable(1, _descHeap.GetGPUHandleWithOffset(1));
-        ;
-        int xThreadGroups = (uint32_t)std::ceilf(diffuseIrradianceTextureDesc.GetSize().x / 8.0f);
-        int yThreadGroups = (uint32_t)std::ceilf(diffuseIrradianceTextureDesc.GetSize().y / 8.0f);
+        
+        std::uint32_t xThreadGroups = (uint32_t)std::ceilf(diffuseIrradianceTextureDesc.GetSize().x / 8.0f);
+        std::uint32_t yThreadGroups = (uint32_t)std::ceilf(diffuseIrradianceTextureDesc.GetSize().y / 8.0f);
+        std::uint32_t zThreadGroups = 6; // One per each cube face
 
-        commandList.Dispatch(xThreadGroups, yThreadGroups, 6);
+        commandList.Dispatch(xThreadGroups, yThreadGroups, zThreadGroups);
+
+        // Transition resources
 
         barriers =
         {
-            { skyboxTexture.get(),          D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
-            { diffuseIrradianceMap.get(),   D3D12_RESOURCE_STATE_UNORDERED_ACCESS,          D3D12_RESOURCE_STATE_COMMON }
+            { skyboxTexture.get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
+            { diffuseIrradianceMap.get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON }
         };
         commandList.TransitionBarriers(barriers);
 
@@ -226,13 +243,23 @@ namespace scene::helpers
 
     std::shared_ptr<dx12::Texture> SceneLoader::GeneratePreFilteredEnvironmentMap(dx12::CommandList& commandList, std::shared_ptr<Scene> scene)
     {
-        std::shared_ptr<scene::Entity> skybox = scene->FindNodeByComponentName("Skybox");
-        std::shared_ptr<scene::Skybox> skyboxComponent = skybox->GetComponentAs<scene::Skybox>("Skybox");
+        // Find skybox node and retrieve texture pointer
+
+        std::shared_ptr<scene::Entity> skyboxNode = scene->FindNodeByComponentName("Skybox");
+        ASSERT(skyboxNode != nullptr, "Failed to get skybox node");
+
+        std::shared_ptr<scene::Skybox> skyboxComponent = skyboxNode->GetComponentAs<scene::Skybox>("Skybox");
+        ASSERT(skyboxComponent != nullptr, "Failed to get skybox component");
 
         scene::TextureManager& textureManager = scene->GetCache().GetTextureManager();
         std::shared_ptr<dx12::Texture> skyboxTexture = textureManager.GetTexture(skyboxComponent->SkydomeTexture);
+        ASSERT(skyboxTexture != nullptr, "Failed to get skybox texture pointer");
+
+        // Parse pipeline for the environment map pre-filtering
 
         _IBL_PreFilterEnvMap.Parse("PipelineDescriptions\\IBL_PreFilterEnvMap.tech");
+
+        // Create environment map pre-filtered texture
 
         dx12::ResourceDescription preFilteredEnvTextureDesc;
         {
@@ -246,7 +273,11 @@ namespace scene::helpers
         preFilteredEnvMap->SetName("PreFilteredEnvironmentMap");
         preFilteredEnvMap->CreateCommitedResource(preFilteredEnvTextureDesc);
 
-        for (int i = 0; i < preFilteredEnvTextureDesc.GetMipLevels(); ++i)
+        // Create SRV/UAV for the textures
+
+        std::uint32_t currentResourceOffset = _descHeap.GetCurrentOffset();
+        dx12::Device::CreateShaderResourceView(skyboxTexture->GetAsSRV(), _descHeap);
+        for (std::uint32_t i = 0; i < preFilteredEnvTextureDesc.GetMipLevels(); ++i)
         {
             dx12::UnorderedAccessView uav;
             {
@@ -262,47 +293,41 @@ namespace scene::helpers
             dx12::Device::CreateUnorderedAccessView(uav, _descHeap);
         }
 
-        for (int i = 0; i < preFilteredEnvTextureDesc.GetMipLevels(); ++i)
-        {
-            dx12::UnorderedAccessView uav;
-            {
-                uav.Owner = preFilteredEnvMap.get();
-                uav.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
-                uav.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
-
-                uav.Texture2DArray.ArraySize = 6;
-                uav.Texture2DArray.MipSlice = i;
-                uav.Texture2DArray.PlaneSlice = 0;
-                uav.Texture2DArray.FirstArraySlice = 0;
-            }
-            dx12::Device::CreateUnorderedAccessView(uav, _descHeap);
-        }
+        // Transition resources
 
         std::vector<dx12::ResourceBarrier> barriers =
         {
-            { skyboxTexture.get(),          D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-            { preFilteredEnvMap.get(),     D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_UNORDERED_ACCESS }
+            { skyboxTexture.get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
+            { preFilteredEnvMap.get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS }
         };
         commandList.TransitionBarriers(barriers);
 
+        // Environment pre-filtering pipeline
+
         commandList.SetPipelineState(_IBL_PreFilterEnvMap);
 
-        for (int i = 0; i < preFilteredEnvTextureDesc.GetMipLevels(); ++i)
+        commandList.SetDescriptorHeaps({ _descHeap.GetDXDescriptorHeap().Get() });
+
+        // Generate each mip level
+        for (std::uint32_t i = 0; i < preFilteredEnvTextureDesc.GetMipLevels(); ++i)
         {
             commandList.SetConstant(0, i / float(preFilteredEnvTextureDesc.GetMipLevels() - 1));
-            commandList.SetDescriptorTable(1, _descHeap.GetGPUHandleWithOffset(0));
-            commandList.SetDescriptorTable(2, _descHeap.GetGPUHandleWithOffset(i + 3));
+            commandList.SetDescriptorTable(1, _descHeap.GetGPUHandleWithOffset(currentResourceOffset));
+            commandList.SetDescriptorTable(2, _descHeap.GetGPUHandleWithOffset(currentResourceOffset + i + 1));
 
-            int xThreadGroups = (uint32_t)std::ceilf(preFilteredEnvTextureDesc.GetSize().x / (8.0f * std::pow(2, i)));
-            int yThreadGroups = (uint32_t)std::ceilf(preFilteredEnvTextureDesc.GetSize().y / (8.0f * std::pow(2, i)));
+            std::uint32_t xThreadGroups = (uint32_t)std::ceilf(preFilteredEnvTextureDesc.GetSize().x / (8.0f * std::pow(2, i)));
+            std::uint32_t yThreadGroups = (uint32_t)std::ceilf(preFilteredEnvTextureDesc.GetSize().y / (8.0f * std::pow(2, i)));
+            std::uint32_t zThreadGroups = 6; // One per each cube face
 
-            commandList.Dispatch(xThreadGroups, yThreadGroups, 6);
+            commandList.Dispatch(xThreadGroups, yThreadGroups, zThreadGroups);
         }
+
+        // Transition resources
 
         barriers =
         {
-            { skyboxTexture.get(),          D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
-            { preFilteredEnvMap.get(),     D3D12_RESOURCE_STATE_UNORDERED_ACCESS,          D3D12_RESOURCE_STATE_COMMON }
+            { skyboxTexture.get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
+            { preFilteredEnvMap.get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON }
         };
         commandList.TransitionBarriers(barriers);
 
@@ -311,14 +336,23 @@ namespace scene::helpers
 
     std::shared_ptr<dx12::Texture> SceneLoader::GenerateEnvironmentBRDFLookUpTexture(dx12::CommandList& commandList, std::shared_ptr<Scene> scene)
     {
-        std::shared_ptr<scene::Entity> skybox = scene->FindNodeByComponentName("Skybox");
-        std::shared_ptr<scene::Skybox> skyboxComponent = skybox->GetComponentAs<scene::Skybox>("Skybox");
+        // Find skybox node and retrieve texture pointer
+
+        std::shared_ptr<scene::Entity> skyboxNode = scene->FindNodeByComponentName("Skybox");
+        ASSERT(skyboxNode != nullptr, "Failed to get skybox node");
+
+        std::shared_ptr<scene::Skybox> skyboxComponent = skyboxNode->GetComponentAs<scene::Skybox>("Skybox");
+        ASSERT(skyboxComponent != nullptr, "Failed to get skybox component");
 
         scene::TextureManager& textureManager = scene->GetCache().GetTextureManager();
-
         std::shared_ptr<dx12::Texture> skyboxTexture = textureManager.GetTexture(skyboxComponent->SkydomeTexture);
+        ASSERT(skyboxTexture != nullptr, "Failed to get skybox texture pointer");
+
+        // Parse pipeline for BRDF look-up texture generation
 
         _IBL_BRDFGenerateLUT.Parse("PipelineDescriptions\\IBL_BRDFGenerateLUT.tech");
+
+        // Create BRDF look-up texture
 
         dx12::ResourceDescription brdfLUTDesc;
         {
@@ -330,27 +364,39 @@ namespace scene::helpers
         brdfLUT->SetName("BRDF_LUT");
         brdfLUT->CreateCommitedResource(brdfLUTDesc);
 
+        // Create SRV/UAV for the textures
+
+        std::uint32_t currentResourceOffset = _descHeap.GetCurrentOffset();
         dx12::Device::CreateUnorderedAccessView(brdfLUT->GetAsUAV(), _descHeap);
+
+        // Transition resources
 
         std::vector<dx12::ResourceBarrier> barriers =
         {
-            { skyboxTexture.get(),  D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-            { brdfLUT.get(),        D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_UNORDERED_ACCESS }
+            { skyboxTexture.get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
+            { brdfLUT.get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS }
         };
         commandList.TransitionBarriers(barriers);
+
+        // BRDF LUT generation pipeline
+
         commandList.SetPipelineState(_IBL_BRDFGenerateLUT);
 
-        commandList.SetDescriptorTable(0, _descHeap.GetGPUHandleWithOffset(2));
+        commandList.SetDescriptorHeaps({ _descHeap.GetDXDescriptorHeap().Get() });
 
-        int xThreadGroups = (uint32_t)std::ceilf(brdfLUTDesc.GetSize().x / 8.0f);
-        int yThreadGroups = (uint32_t)std::ceilf(brdfLUTDesc.GetSize().y / 8.0f);
+        commandList.SetDescriptorTable(0, _descHeap.GetGPUHandleWithOffset(currentResourceOffset));
+
+        std::uint32_t xThreadGroups = (uint32_t)std::ceilf(brdfLUTDesc.GetSize().x / 8.0f);
+        std::uint32_t yThreadGroups = (uint32_t)std::ceilf(brdfLUTDesc.GetSize().y / 8.0f);
 
         commandList.Dispatch(xThreadGroups, yThreadGroups);
 
+        // Transition resources
+
         barriers =
         {
-            { skyboxTexture.get(),  D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
-            { brdfLUT.get(),        D3D12_RESOURCE_STATE_UNORDERED_ACCESS,          D3D12_RESOURCE_STATE_COMMON }
+            { skyboxTexture.get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
+            { brdfLUT.get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON }
         };
         commandList.TransitionBarriers(barriers);
 
