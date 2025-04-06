@@ -22,7 +22,8 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstan
         std::shared_ptr<core::Win32Window> mainWindow = Application::CreateWin32Window(1280, 720, L"DX12 Sandbox");
         std::shared_ptr<render::DXRenderer> demo = std::make_shared<render::DXRenderer>(mainWindow->GetWindowHandle());
         {
-            retCode = Application::Instance()->Run(demo);
+            std::wstring temp(lpCmdLine);
+            retCode = Application::Instance()->Run(demo, std::string(temp.cbegin(), temp.cend()));
         }
         Application::Quit();
     }

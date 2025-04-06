@@ -24,7 +24,6 @@ float2 IntegrateBRDF(float NdotV, float roughness, uint sampleCount)
 
     float3 N = float3(0.0f, 0.0f, 1.0f);
     
-    [unroll(sampleCount)]
     for (uint i = 0u; i < sampleCount; ++i)
     {
         // generates a sample floattor that's biased towards the

@@ -39,15 +39,15 @@ VSOutput main(VSinput IN)
         float4(0.0f, 0.0f, 0.0f, 1.0f));
     if (Model.useSkinning == 1)
     {
-        boneTransform        = Bones[IN.BoneIds[0]].Transform * IN.BoneWeights[0];
-        boneTransform       += Bones[IN.BoneIds[1]].Transform * IN.BoneWeights[1];
-        boneTransform       += Bones[IN.BoneIds[2]].Transform * IN.BoneWeights[2];
-        boneTransform       += Bones[IN.BoneIds[3]].Transform * IN.BoneWeights[3];
+        boneTransform       = Bones[IN.BoneIds[0]].Transform * IN.BoneWeights[0];
+        boneTransform      += Bones[IN.BoneIds[1]].Transform * IN.BoneWeights[1];
+        boneTransform      += Bones[IN.BoneIds[2]].Transform * IN.BoneWeights[2];
+        boneTransform      += Bones[IN.BoneIds[3]].Transform * IN.BoneWeights[3];
     }
     
     float4 objectPosition   = mul(float4(IN.Position, 1.0f), boneTransform);
     float3 normal           = normalize(mul(IN.Normal, (float3x3)boneTransform));
-    float3 tangent          = normalize(mul(IN.Tangent, (float3x3) boneTransform));
+    float3 tangent          = normalize(mul(IN.Tangent, (float3x3)boneTransform));
     
     float4 worldPosition    = mul(objectPosition, Model.Transform);
     

@@ -46,8 +46,8 @@ PSOutput main(PSinput IN)
 
     // Setup output buffer
     PSOutput output;
-    output.AlbedoMetalness = float4(albedo, metalness);
-    output.NormalRougness   = float4(normal, roughness);
+    output.AlbedoMetalness  = float4(albedo, metalness);
+    output.NormalRougness   = float4(finalNormal, roughness);
     
     return output;
 }

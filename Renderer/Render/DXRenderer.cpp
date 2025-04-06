@@ -47,6 +47,8 @@ using namespace core;
 
 namespace
 {
+    constexpr char DEFAULT_SCENE_PATH[] = "Sponza\\Sponza.scene";
+
     void CheckLightsNum(std::shared_ptr<scene::Entity> node, uint32_t& lightsNum)
     {
         if (node->GetComponentAs<scene::Light>("Light"))
@@ -153,7 +155,15 @@ namespace render
 
         {
             // Load scene
-            _sceneLoader.LoadScene(*uploadTask, filepath, _scene);
+            if (std::filesystem::exists(std::filesystem::path(filepath)))
+            {
+                _sceneLoader.LoadScene(*uploadTask, filepath, _scene);
+            }
+            else
+            {
+                LOG_WARNING(false, std::format("Failed to load scene \'{}\'", filepath));
+                _sceneLoader.LoadScene(*uploadTask, DEFAULT_SCENE_PATH, _scene);
+            }
 
             // Camera Setup
             RECT windowSize;

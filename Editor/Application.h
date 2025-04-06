@@ -21,7 +21,7 @@ public:
     Application& operator=(const Application& copy) = delete;
 
     static void Init(HINSTANCE hInstance);
-    int Run(std::shared_ptr<render::DXRenderer> pApp);
+    int Run(std::shared_ptr<render::DXRenderer> pApp, std::string cmdLine);
     static void Quit(int exitCode = 0);
 
     static Application* Instance();

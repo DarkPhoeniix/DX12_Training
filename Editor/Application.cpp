@@ -73,7 +73,7 @@ void Application::Init(HINSTANCE hInstance)
     _instance = new Application(hInstance);
 }
 
-int Application::Run(std::shared_ptr<DXRenderer> pApp)
+int Application::Run(std::shared_ptr<DXRenderer> pApp, std::string cmdLine)
 {
     // Initialization
     {
@@ -107,7 +107,7 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp)
     events::InputDevice::Instance().AddInputObserver(pApp.get());
 
     TaskGPU* uploadTask = _currentFrame->CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE, nullptr);
-    if (!pApp->LoadContent(uploadTask, "Materials\\MaterialTest.scene"))
+    if (!pApp->LoadContent(uploadTask, cmdLine))
     {
         return 1;
     }
