@@ -2,5 +2,5 @@
     "Albedo": "sponza_fabric_blue_diff.dds",
     "Metalness": "fabric_d_metalness.dds",
     "Roughness": "fabric_d_roughness.dds",
-    "Normal": "fabric_d_nmap.dds"
+    "Normal": "sponza_fabric_ddn.dds"
 }

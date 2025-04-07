@@ -2,5 +2,5 @@
     "Albedo": "chain_texture.dds",
     "Metalness": "chain_metalness.dds",
     "Roughness": "chain_roughness.dds",
-    "Normal": "chain_nmap.dds"
+    "Normal": "chain_texture_ddn.dds"
 }

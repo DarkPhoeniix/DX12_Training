@@ -2,5 +2,5 @@
     "Albedo": "sponza_details_diff.dds",
     "Metalness": "details_metalness.dds",
     "Roughness": "details_roughness.dds",
-    "Normal": "details_nmap.dds"
+    "Normal": "sponza_details_ddn.dds"
 }
