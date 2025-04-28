@@ -34,7 +34,7 @@ PSOutput main(PSinput IN)
     float3 normalMap        = Materials[Model.NormalTextureIndex].Sample(PointSampler, uv).rgb;
     float metalness         = Materials[Model.MetalnessTextureIndex].Sample(PointSampler, uv).x;
     float roughness         = Materials[Model.RoughnessTextureIndex].Sample(PointSampler, uv).x;
-    roughness               = max(0.001f, roughness); // Set minimum to 0.001 to avoid some visual artifacts in PBR
+    roughness               = max(0.05f, roughness); // Set minimum to 0.05 to avoid some visual artifacts in PBR
     
     // Calculate the TBN matrix and a new normal vector
     float3 normal           = normalize(IN.Normal);

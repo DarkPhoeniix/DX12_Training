@@ -15,5 +15,8 @@ namespace gui
         void Destroy() override;
 
         void Update() override;
+
+    private:
+        bool _openDetailedCPUTime;
     };
 } // namespace gui

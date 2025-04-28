@@ -1,5 +1,5 @@
 
-static const float GAMMA = 1.2f;
+static const float GAMMA = 2.2f;
 static const float4 LUM_FACTOR = float4(0.2126729f, 0.7151522f, 0.0721750f, 0.0f);
 
 static float Luminance(float3 color)

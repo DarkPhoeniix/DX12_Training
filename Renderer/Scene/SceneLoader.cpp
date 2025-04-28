@@ -262,7 +262,7 @@ namespace scene::helpers
         {
             preFilteredEnvTextureDesc.SetSize({ 512, 512 });
             preFilteredEnvTextureDesc.SetDepthOrArraySize(6);
-            preFilteredEnvTextureDesc.SetMipLevels(8);
+            preFilteredEnvTextureDesc.SetMipLevels(6);
             preFilteredEnvTextureDesc.SetFormat(DXGI_FORMAT_R16G16B16A16_FLOAT);
             preFilteredEnvTextureDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::Unordered);
         }
@@ -308,7 +308,8 @@ namespace scene::helpers
         // Generate each mip level
         for (std::uint32_t i = 0; i < preFilteredEnvTextureDesc.GetMipLevels(); ++i)
         {
-            commandList.SetConstant(0, i / float(preFilteredEnvTextureDesc.GetMipLevels() - 1));
+            float roughness = float(i) / float(preFilteredEnvTextureDesc.GetMipLevels() - 1);
+            commandList.SetConstants(0, 4, &roughness);
             commandList.SetDescriptorTable(1, _descHeap.GetGPUHandleWithOffset(currentResourceOffset));
             commandList.SetDescriptorTable(2, _descHeap.GetGPUHandleWithOffset(currentResourceOffset + i + 1));
 

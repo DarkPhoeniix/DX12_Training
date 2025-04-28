@@ -29,9 +29,4 @@
         "addressU = TEXTURE_ADDRESS_CLAMP," \
         "addressV = TEXTURE_ADDRESS_CLAMP," \
         "addressW = TEXTURE_ADDRESS_CLAMP," \
-        "filter = FILTER_COMPARISON_MIN_MAG_MIP_LINEAR)," \
-    "StaticSampler(s2," \
-        "addressU = TEXTURE_ADDRESS_MIRROR," \
-        "addressV = TEXTURE_ADDRESS_MIRROR," \
-        "addressW = TEXTURE_ADDRESS_MIRROR," \
-        "filter = FILTER_COMPARISON_MIN_MAG_MIP_LINEAR)"
+        "filter = FILTER_MIN_MAG_POINT_MIP_LINEAR)"

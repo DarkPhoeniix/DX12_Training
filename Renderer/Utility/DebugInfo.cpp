@@ -2,7 +2,13 @@
 
 #include "DebugInfo.h"
 
-#include "events/UpdateEvent.h"
+#include "Events/UpdateEvent.h"
+#include "Events/RenderEvent.h"
+
+namespace
+{
+    static constexpr double kUpdateInterval = 0.1;
+}
 
 DebugInfo* DebugInfo::_instance = nullptr;
 
@@ -23,21 +29,49 @@ void DebugInfo::Destroy()
     _instance = nullptr;
 }
 
-void DebugInfo::Update(core::events::UpdateEvent& updateEvent)
+void DebugInfo::BeginUpdate(core::events::UpdateEvent& updateEvent)
 {
-    static uint64_t frameCount = 0;
-    static double totalTime = 0.0;
+    Instance()._startUpdateTime = std::chrono::high_resolution_clock::now();
+}
 
-    totalTime += updateEvent.elapsedTime;
-    frameCount++;
+void DebugInfo::EndUpdate()
+{
+    double delta = static_cast<double>((std::chrono::high_resolution_clock::now() - Instance()._startUpdateTime).count()) * 1e-9;
+    Instance()._totalUpdateTime += delta;
+    Instance()._totalUpdateFrames++;
 
-    if (totalTime > 1.0)
+    if (Instance()._totalUpdateTime >= kUpdateInterval)
     {
-        Instance()._fps = (int)(frameCount / totalTime);
-        Instance()._msPerFrame = totalTime / frameCount * 1000;
+        Instance()._updateTime = Instance()._totalUpdateTime / Instance()._totalUpdateFrames * 1000;
+        Instance()._totalUpdateFrames = 0;
+        Instance()._totalUpdateTime = 0.0;
+    }
+}
 
-        frameCount = 0;
-        totalTime = 0.0;
+void DebugInfo::BeginRender(core::events::RenderEvent& renderEvent)
+{
+    Instance()._startRenderTime = std::chrono::high_resolution_clock::now();
+    Instance()._startRenderTime = std::chrono::high_resolution_clock::now();
+}
+
+void DebugInfo::EndRender()
+{
+    Instance()._frameTimer.Tick();
+
+    double delta = static_cast<double>((std::chrono::high_resolution_clock::now() - Instance()._startRenderTime).count()) * 1e-9;
+    Instance()._totalRenderTime += delta;
+    Instance()._totalRenderFrames++;
+
+    if (Instance()._totalRenderTime >= kUpdateInterval)
+    {
+        Instance()._renderTime = Instance()._totalRenderTime / Instance()._totalRenderFrames * 1000;
+        Instance()._totalRenderTime = 0.0;
+
+        Instance()._msPerFrame = Instance()._frameTimer.GetTotalMilliSeconds() / Instance()._totalRenderFrames;
+        Instance()._fps = static_cast<std::uint32_t>(1000.0 / Instance()._msPerFrame);
+        Instance()._frameTimer.Reset();
+
+        Instance()._totalRenderFrames = 0;
     }
 }
 
@@ -67,9 +101,23 @@ double DebugInfo::GetMsPerFrame()
     return Instance()._msPerFrame;
 }
 
+double DebugInfo::GetUpdateCPUTime()
+{
+    return Instance()._updateTime;
+}
+
+double DebugInfo::GetRenderCPUTime()
+{
+    return Instance()._renderTime;
+}
+
 DebugInfo::DebugInfo()
     : _fps(0)
     , _msPerFrame(0)
+    , _totalRenderFrames(0)
+    , _totalRenderTime(0.0)
+    , _totalUpdateFrames(0)
+    , _totalUpdateTime(0.0)
 {
     _statisticsQuery.Create();
 }

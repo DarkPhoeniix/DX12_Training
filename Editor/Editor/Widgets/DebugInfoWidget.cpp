@@ -24,6 +24,7 @@ namespace gui
 
     DebugInfoWidget::DebugInfoWidget(std::shared_ptr<Editor> editor)
         : IWidget(editor)
+        , _openDetailedCPUTime(false)
     {
     }
 
@@ -44,7 +45,14 @@ namespace gui
         if (ImGui::BeginChild("Debug Info", {0,0}, ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY))
         {
             ImGui::Text("FPS: %i", DebugInfo::GetFPS());
-            ImGui::Text("CPU Time: %.03f ms", DebugInfo::GetMsPerFrame());
+            int id = 0;
+            if (ImGui::TreeNode((void*)id, "Frame Time: %.03f ms", DebugInfo::GetMsPerFrame()))
+            {
+                ImGui::Text("Update Time: %.03f ms", DebugInfo::GetUpdateCPUTime());
+                ImGui::Text("Render Time: %.03f ms", DebugInfo::GetRenderCPUTime());
+
+                ImGui::TreePop();
+            }
         
             if (ImGui::CollapsingHeader("Pipeline statistics"))
             {

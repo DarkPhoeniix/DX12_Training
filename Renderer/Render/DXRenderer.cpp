@@ -203,7 +203,7 @@ namespace render
 
     void DXRenderer::OnUpdate(events::UpdateEvent& updateEvent)
     {
-        DebugInfo::Update(updateEvent);
+        DebugInfo::BeginUpdate(updateEvent);
 
         _deltaTime = updateEvent.elapsedTime;
         _scene->GetCache().SetDeltaTime(_deltaTime);
@@ -212,12 +212,16 @@ namespace render
         {
             UpdateEntity(entity);
         }
+
+        DebugInfo::EndUpdate();
     }
 
     void DXRenderer::OnRender(events::RenderEvent& renderEvent)
     {
         _currentFrame->WaitCPU();
         _currentFrame->ResetGPU();
+
+        DebugInfo::BeginRender(renderEvent);
 
         if (_isMinimized)
         {
@@ -256,6 +260,8 @@ namespace render
 
             commandList.Close();
         }
+
+        DebugInfo::EndRender();
     }
 
     void DXRenderer::OnKeyPressed(events::KeyEvent& e)

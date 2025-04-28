@@ -1,7 +1,7 @@
 
 #define IBL_PreFilterEnvironment_RootSig \
 	"RootFlags(0), " \
-    "RootConstants(num32BitConstants = 1, b0, visibility = SHADER_VISIBILITY_ALL), " \
+    "RootConstants(num32BitConstants = 4, b0, visibility = SHADER_VISIBILITY_ALL), " \
     "DescriptorTable(SRV(t0), visibility = SHADER_VISIBILITY_ALL)," \
     "DescriptorTable(UAV(u0), visibility = SHADER_VISIBILITY_ALL)," \
     "StaticSampler(s0," \
@@ -63,7 +63,9 @@ void main(uint3 DTid : SV_DispatchThreadID)
             
             float2 skyboxTexel = SampleSphericalMap(L);
             
-            prefilteredColor += Skybox.SampleLevel(LinearSampler, skyboxTexel, 0.0f).rgb * NdotL;
+            // clamp upper value to 12 to avoid convolution visual artifacts
+            float3 value = min(float3(12.0f, 12.0f, 12.0f), max(0.0f, Skybox.SampleLevel(LinearSampler, skyboxTexel, 0).rgb));
+            prefilteredColor += value * NdotL;
             totalWeight += NdotL;
         }
     }
