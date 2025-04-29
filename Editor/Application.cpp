@@ -209,6 +209,8 @@ void Application::_UpdateCall(std::shared_ptr<DXRenderer> pApp)
 
     events::UpdateEvent updateEvent(_updateClock.GetDeltaSeconds(), _updateClock.GetTotalSeconds(), _currentFrame->Index);
     pApp->OnUpdate(updateEvent);
+
+    UINT wtf = std::uint32_t(5);
 }
 
 void Application::_RenderCall(std::shared_ptr<DXRenderer> pApp)

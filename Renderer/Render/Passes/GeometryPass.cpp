@@ -51,7 +51,7 @@ namespace
             commandList.DrawIndexed(mesh->IndexData.size());
         }
 
-        for (std::shared_ptr<scene::Entity>& child : entity->GetChildrenNodes())
+        for (std::shared_ptr<scene::Entity> child : entity->GetChildrenNodes())
         {
             DrawEntity(child, commandList, cache, resourceTable);
         }

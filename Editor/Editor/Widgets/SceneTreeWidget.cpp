@@ -47,7 +47,7 @@ namespace gui
         ImGui::EndChild();
     }
 
-    void SceneTreeWidget::Update(const std::shared_ptr<scene::Entity>& entity)
+    void SceneTreeWidget::Update(std::shared_ptr<scene::Entity> entity)
     {
         bool hasChildren = entity->GetChildrenNodes().empty();
         bool isSelected = _editor->GetSelectedEntity() == entity;
@@ -62,7 +62,7 @@ namespace gui
                 _editor->SetSelectedEntity(entity);
             }
 
-            for (const auto& child : entity->GetChildrenNodes())
+            for (std::shared_ptr<scene::Entity> child : entity->GetChildrenNodes())
             {
                 Update(child);
             }

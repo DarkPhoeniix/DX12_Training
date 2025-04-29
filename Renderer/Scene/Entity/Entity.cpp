@@ -27,7 +27,7 @@ namespace scene
         return nullptr;
     }
 
-    void Entity::AddComponent(const std::shared_ptr<IComponent>& component)
+    void Entity::AddComponent(std::shared_ptr<IComponent> component)
     {
         _components.push_back(component);
     }

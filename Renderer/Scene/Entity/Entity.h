@@ -16,7 +16,7 @@ namespace scene
         template<typename Type>
         std::shared_ptr<Type> GetComponentAs(const std::string_view& name);
 
-        void AddComponent(const std::shared_ptr<IComponent>& component);
+        void AddComponent(std::shared_ptr<IComponent> component);
         void ClearComponents();
 
         const Transformation& GetGlobalTransform() const;

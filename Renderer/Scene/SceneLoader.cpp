@@ -485,7 +485,7 @@ namespace scene::helpers
         return entity;
     }
 
-    void SceneLoader::LoadComponent(const std::string& filepath, Json::Value& jsonValue, std::shared_ptr<Armature> armature, const std::shared_ptr<Animation>& component)
+    void SceneLoader::LoadComponent(const std::string& filepath, Json::Value& jsonValue, std::shared_ptr<Armature> armature, std::shared_ptr<Animation> component)
     {
         std::string animationFilepth = filepath + '/' + jsonValue["Animation"].asString();
 
@@ -520,7 +520,7 @@ namespace scene::helpers
         component->Duration = animationData["Duration"].asFloat();
     }
 
-    void SceneLoader::LoadComponent(const std::string& filepath, Json::Value& jsonValue, const std::shared_ptr<Armature>& component)
+    void SceneLoader::LoadComponent(const std::string& filepath, Json::Value& jsonValue, std::shared_ptr<Armature> component)
     {
         std::string armatureFilepath = filepath + '/' + jsonValue["Armature"].asString();
 
@@ -537,7 +537,7 @@ namespace scene::helpers
         component->Init(bones);
     }
 
-    void SceneLoader::LoadComponent(const std::string& filepath, Json::Value& jsonValue, const std::shared_ptr<Camera>& component)
+    void SceneLoader::LoadComponent(const std::string& filepath, Json::Value& jsonValue, std::shared_ptr<Camera> component)
     {
         std::string cameraFilepath = filepath + '/' + jsonValue["Camera"].asString();
 
@@ -550,12 +550,12 @@ namespace scene::helpers
         component->Speed = cameraData["Speed"].asFloat();
     }
 
-    void SceneLoader::LoadComponent(const std::string& filepath, Json::Value& jsonValue, const std::shared_ptr<Transformation>& component)
+    void SceneLoader::LoadComponent(const std::string& filepath, Json::Value& jsonValue, std::shared_ptr<Transformation> component)
     {
         component->Transform = ParseMatrix(jsonValue["Transform"]);
     }
 
-    void SceneLoader::LoadComponent(const std::string& filepath, Json::Value& jsonValue, const std::shared_ptr<Material>& component)
+    void SceneLoader::LoadComponent(const std::string& filepath, Json::Value& jsonValue, std::shared_ptr<Material> component)
     {
         std::string materialFilepath = filepath + '/' + jsonValue["Material"].asString();
 
@@ -579,7 +579,7 @@ namespace scene::helpers
         component->Roughness = materialData["Roughness"].asString();
     }
 
-    void SceneLoader::LoadComponent(const std::string& filepath, Json::Value& jsonValue, const std::shared_ptr<Mesh>& component, dx12::CommandList& commandList)
+    void SceneLoader::LoadComponent(const std::string& filepath, Json::Value& jsonValue, std::shared_ptr<Mesh> component, dx12::CommandList& commandList)
     {
         std::string meshFilepth = filepath + '/' + jsonValue["Mesh"].asString();
 
@@ -653,7 +653,7 @@ namespace scene::helpers
         }
     }
 
-    void SceneLoader::LoadComponent(const std::string& filepath, Json::Value& jsonValue, const std::shared_ptr<Light>& component, const std::string& name)
+    void SceneLoader::LoadComponent(const std::string& filepath, Json::Value& jsonValue, std::shared_ptr<Light> component, const std::string& name)
     {
         std::string lightFilepth = filepath + '/' + jsonValue["Light"].asString();
 
@@ -684,7 +684,7 @@ namespace scene::helpers
         component->CastShadows = lightData["CastShadows"].asUInt();
     }
 
-    void SceneLoader::LoadComponent(const std::string& filepath, Json::Value& jsonValue, const std::shared_ptr<Skybox>& component)
+    void SceneLoader::LoadComponent(const std::string& filepath, Json::Value& jsonValue, std::shared_ptr<Skybox> component)
     {
         std::string skyboxFilepath = filepath + '/' + jsonValue["Skybox"].asString();
 
@@ -693,7 +693,7 @@ namespace scene::helpers
         component->SkydomeTexture = jsonValue["Skybox"].asString();
     }
 
-    void SceneLoader::LoadRawMesh(const std::string& filepath, const std::shared_ptr<Mesh>& meshComponent)
+    void SceneLoader::LoadRawMesh(const std::string& filepath, std::shared_ptr<Mesh> meshComponent)
     {
         std::vector<XMFLOAT3> points;
         std::vector<XMUINT4> groupIndexes;

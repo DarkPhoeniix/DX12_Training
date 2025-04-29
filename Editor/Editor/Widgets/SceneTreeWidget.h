@@ -23,6 +23,6 @@ namespace gui
         void Update() override;
 
     private:
-        void Update(const std::shared_ptr<scene::Entity>& entity);
+        void Update(std::shared_ptr<scene::Entity> entity);
     };
 } // namespace gui

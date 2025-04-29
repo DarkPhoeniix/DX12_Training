@@ -190,7 +190,7 @@ namespace dx12
         resource.SetCurrentState(stateAfter);
     }
 
-    void CommandList::AliasingBarrier(const std::shared_ptr<Resource>& beforeResource, const std::shared_ptr<Resource>& afterResource)
+    void CommandList::AliasingBarrier(std::shared_ptr<Resource> beforeResource, std::shared_ptr<Resource> afterResource)
     {
         CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Aliasing(beforeResource->GetDXResource().Get(), afterResource->GetDXResource().Get());
         _commandList->ResourceBarrier(1, &barrier);
