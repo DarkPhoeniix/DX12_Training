@@ -75,7 +75,7 @@ namespace dx12
         // Create a placed resource (resource placed in a specific memory heap).
         ComPtr<ID3D12Resource> CreatePlacedResource(ComPtr<ID3D12Heap> heap, std::uint64_t offset, D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_COMMON);
         // Create a placed resource (resource placed in a specific memory heap) with a custom ResourceDescription.
-        ComPtr<ID3D12Resource> CreatePlacedResource(const ResourceDescription& resourceDesc, ComPtr<ID3D12Heap> heap, std::uint64_t offset, D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_COPY_DEST);
+        ComPtr<ID3D12Resource> CreatePlacedResource(const ResourceDescription& resourceDesc, ComPtr<ID3D12Heap> heap, std::uint64_t offset, D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_COMMON);
 
         // Get the resource as a Render Target View (RTV) for rendering operations.
         [[nodiscard]] RenderTargetView GetAsRTV();

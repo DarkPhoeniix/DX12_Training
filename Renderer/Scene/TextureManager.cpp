@@ -118,6 +118,8 @@ namespace
                            intermediateBuffer.GetDXResource().Get(), 
                            0, 0, static_cast<std::uint32_t>(subresources.size()), 
                            subresources.data());
+
+        commandList.TransitionBarrier(*texture, D3D12_RESOURCE_STATE_COMMON);
     }
 }
 
@@ -231,7 +233,7 @@ namespace scene
 
             std::shared_ptr<dx12::Texture> texture = _textures[textureName];
 
-            _texturesHeap.PlaceResource(*texture);
+            _texturesHeap.PlaceResource(*texture, D3D12_RESOURCE_STATE_COPY_DEST);
             _texturesTable.PlaceResource(texture.get(), dx12::ResourceViewType::SRV);
 
             UploadTextureData(commandList, path, texture, _intermediateResources[textureName]);

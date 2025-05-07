@@ -241,6 +241,7 @@ namespace dx12
 	ComPtr<ID3D12Resource> Resource::CreatePlacedResource(ComPtr<ID3D12Heap> heap, std::uint64_t offset, D3D12_RESOURCE_STATES initialState)
 	{
 		_initialState = initialState;
+		_currentState = _initialState;
 
 		D3D12_RESOURCE_DESC resourceDesc = _resourceDesc.CreateDXResourceDescription();
 		D3D12_CLEAR_VALUE* clearValue = _resourceDesc.GetClearValue().get();
