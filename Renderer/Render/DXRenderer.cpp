@@ -28,6 +28,7 @@
 
 #include "Render/RenderSettings.h"
 #include "Render/Frame/TaskGPU.h"
+#include "Render/Passes/AmbientOcclusion/SSAOComputePass.h"
 #include "Render/Passes/Debug/DebugArmaturePass.h"
 #include "Render/Passes/Debug/DebugBoundingVolumePass.h"
 #include "Render/Passes/AmbientLightingPass.h"
@@ -453,6 +454,7 @@ namespace render
             _renderGraph.AddPass(std::make_shared<ShadowClearPass>(_scene, _cameraComponent.get()));
             _renderGraph.AddPass(std::make_shared<ShadowCullPass>(_scene, _cameraComponent.get()));
             _renderGraph.AddPass(std::make_shared<ShadowDrawPass>(_scene, _cameraComponent.get()));
+            _renderGraph.AddPass(std::make_shared<SSAOComputePass>(_scene, _cameraComponent.get()));
             _renderGraph.AddPass(std::make_shared<AmbientLightingPass>(_scene, _cameraComponent.get()));
             _renderGraph.AddPass(std::make_shared<LightingPass>(_scene, _cameraComponent.get()));
             _renderGraph.AddPass(std::make_shared<SkyboxPass>(_scene, _cameraComponent.get()));

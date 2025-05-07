@@ -115,6 +115,7 @@
     </FxCompile>
     <FxCompile Include="Shaders\DeferredShading\AmbientLighting_cs.hlsl" />
     <FxCompile Include="Shaders\DeferredShading\AmbientLighting_IBL_cs.hlsl" />
+    <FxCompile Include="Shaders\AmbientOcclusion\SSAOCompute_cs.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RendererPCH.cpp" />
@@ -259,6 +260,7 @@
     <ClCompile Include="Scene\SceneLoader.cpp" />
     <ClCompile Include="Scene\TextureManager.cpp" />
     <ClCompile Include="Render\Passes\AmbientLightingPass.cpp" />
+    <ClCompile Include="Render\Passes\AmbientOcclusion\SSAOComputePass.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RendererPCH.h" />
@@ -442,6 +444,7 @@
     <ClInclude Include="Scene\SceneLoader.h" />
     <ClInclude Include="Scene\TextureManager.h" />
     <ClInclude Include="Render\Passes\AmbientLightingPass.h" />
+    <ClInclude Include="Render\Passes\AmbientOcclusion\SSAOComputePass.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\DebugDraw\AABB_rootsig.hlsli">
