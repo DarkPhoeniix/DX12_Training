@@ -1,3 +1,4 @@
+
 #pragma once
 
 #include "RenderGraph/RenderPass.h"
@@ -8,28 +9,30 @@
 
 namespace render
 {
-    struct LightingPassData
+    struct AmbientLightingPassData
     {
         rg::ResourceId AlbedoMetallic;
         rg::ResourceId NormalRoughness;
         rg::ResourceId Depth;
 
-        std::vector<rg::ResourceId> ShadowMaps;
+        rg::ResourceId DiffuseIrradianceMap;
+        rg::ResourceId PreFilteredMap;
+        rg::ResourceId BRDF_LUT;
 
         rg::ResourceId HDRTarget;
     };
 
-    class LightingPass : public rg::RenderPass<LightingPassData>
+    class AmbientLightingPass : public rg::RenderPass<AmbientLightingPassData>
     {
     public:
-        LightingPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
+        AmbientLightingPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
 
         // Inherited via RenderPass
         void Setup(rg::RenderPassBuilder& builder) override;
         void Execute(rg::RenderContext& context, TaskGPU& task) override;
 
     private:
-        dx12::PipelineState _deferredPipeline;
+        dx12::PipelineState _ambientLightingPipeline;
 
         std::shared_ptr<scene::Scene> _scene;
         scene::Camera* _camera;

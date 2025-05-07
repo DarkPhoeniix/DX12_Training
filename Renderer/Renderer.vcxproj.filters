@@ -110,10 +110,11 @@
     <FxCompile Include="Shaders\IBL\IBL_EquirectangularToCubemap_cs.hlsl" />
     <FxCompile Include="Shaders\IBL\IBL_PreFilterEnvironmentMap_cs.hlsl" />
     <FxCompile Include="Shaders\IBL\IBL_GenerateBRDFEnvironmentLUT_cs.hlsl" />
-    <FxCompile Include="Shaders\DeferredShading\DeferredShading_IBL_cs.hlsl" />
     <FxCompile Include="Shaders\AntiAliasing\FXAA_Pass1_cs.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="Shaders\DeferredShading\AmbientLighting_cs.hlsl" />
+    <FxCompile Include="Shaders\DeferredShading\AmbientLighting_IBL_cs.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RendererPCH.cpp" />
@@ -257,6 +258,7 @@
     </ClCompile>
     <ClCompile Include="Scene\SceneLoader.cpp" />
     <ClCompile Include="Scene\TextureManager.cpp" />
+    <ClCompile Include="Render\Passes\AmbientLightingPass.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RendererPCH.h" />
@@ -439,6 +441,7 @@
     </ClInclude>
     <ClInclude Include="Scene\SceneLoader.h" />
     <ClInclude Include="Scene\TextureManager.h" />
+    <ClInclude Include="Render\Passes\AmbientLightingPass.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\DebugDraw\AABB_rootsig.hlsli">
@@ -549,9 +552,10 @@
     <None Include="Shaders\CommonConstants.hlsli" />
     <None Include="PipelineDescriptions\IBL_PreFilterEnvMap.tech" />
     <None Include="PipelineDescriptions\IBL_BRDFGenerateLUT.tech" />
-    <None Include="PipelineDescriptions\DeferredShading_UseIBL.tech" />
     <None Include="Shaders\IBL\IBL_Helpers.hlsli" />
     <None Include="Shaders\CommonFunctions.hlsli" />
+    <None Include="PipelineDescriptions\AmbientLightingIBLPipeline.tech" />
+    <None Include="PipelineDescriptions\AmbientLightingPipeline.tech" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="PipelineDescriptions\AABBRenderPipeline.blend">
