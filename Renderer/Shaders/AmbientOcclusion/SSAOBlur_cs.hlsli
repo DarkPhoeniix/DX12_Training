@@ -23,7 +23,7 @@ RWTexture2D<float> Output   : register(u0);
 SamplerState PointerSampler : register(s0);
 
 static const int Radius = 4;
-static const float DepthThreshold = 0.01f;
+static const float DepthThreshold = 0.2f;
 static const float Sharpness = 50.0f;
 static const float Weights[5] =
 {

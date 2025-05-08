@@ -26,7 +26,7 @@ RWTexture2D<float> AOTexture    : register(u0);
 
 SamplerState PointerSampler     : register(s0);
 
-static const uint KernelSize = 64;
+static const uint KernelSize = 16;
 static const float Radius = 2.5f;
 static const float Bias = 0.025f;
 

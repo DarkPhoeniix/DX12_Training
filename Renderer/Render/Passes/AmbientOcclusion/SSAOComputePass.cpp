@@ -34,8 +34,8 @@ namespace render
                 _noise.CreateCommitedResource(noiseDesc);
                 dx12::ResourceDescription kernelsDesc;
                 {
-                    kernelsDesc.SetSize({ 64 * sizeof(XMVECTOR), 1 });
-                    noiseDesc.SetStride(sizeof(XMVECTOR));
+                    kernelsDesc.SetSize({ 16 * sizeof(XMVECTOR), 1 });
+                    kernelsDesc.SetStride(sizeof(XMVECTOR));
                     kernelsDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
                 }
                 _kernels.CreateCommitedResource(kernelsDesc);
@@ -59,7 +59,7 @@ namespace render
                 _noise.Unmap();
 
                 XMVECTOR* kernelsData = (XMVECTOR*)_kernels.Map();
-                for (size_t i = 0; i < 64; ++i)
+                for (size_t i = 0; i < 16; ++i)
                 {
                     kernelsData[i] = XMVectorSet(
                         dis(gen) * 2.0f - 1.0f,
@@ -69,9 +69,8 @@ namespace render
                     );
 
                     kernelsData[i] = XMVector3Normalize(kernelsData[i]);
-                    //kernelsData[i] *= dis(gen);
 
-                    float scale = float(i) / float(64);
+                    float scale = float(i) / float(16);
                     scale = std::lerp(0.1f, 1.0f, scale * scale);
                     kernelsData[i] *= scale;
                 }
