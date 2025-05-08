@@ -1,0 +1,7 @@
+{
+	"Type": "SSAOApply",
+
+	"IsGraphicsPipeline": false,
+
+	"CS": "Shaders\\SSAOApply_cs.cso"
+}

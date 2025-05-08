@@ -34,8 +34,6 @@ namespace render
         _data.NormalRoughness = builder.ReadResource(NORMAL_ROUGHNESS);
         _data.Depth = builder.ReadResource(DEPTH);
 
-        _data.AOTexture = builder.ReadResource("AO Target");
-
         _data.DiffuseIrradianceMap = builder.ReadResource("DiffuseIrradianceMap");
         _data.PreFilteredMap = builder.ReadResource("PreFilteredEnvironmentMap");
         _data.BRDF_LUT = builder.ReadResource("BRDF_LUT");

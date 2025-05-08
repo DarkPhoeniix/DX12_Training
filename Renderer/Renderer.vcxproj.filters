@@ -116,6 +116,9 @@
     <FxCompile Include="Shaders\DeferredShading\AmbientLighting_cs.hlsl" />
     <FxCompile Include="Shaders\DeferredShading\AmbientLighting_IBL_cs.hlsl" />
     <FxCompile Include="Shaders\AmbientOcclusion\SSAOCompute_cs.hlsl" />
+    <FxCompile Include="Shaders\AmbientOcclusion\SSAOApply_cs.hlsl" />
+    <FxCompile Include="Shaders\AmbientOcclusion\SSAOBlurHorizontal_cs.hlsl" />
+    <FxCompile Include="Shaders\AmbientOcclusion\SSAOBlurVertical_cs.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RendererPCH.cpp" />
@@ -261,6 +264,8 @@
     <ClCompile Include="Scene\TextureManager.cpp" />
     <ClCompile Include="Render\Passes\AmbientLightingPass.cpp" />
     <ClCompile Include="Render\Passes\AmbientOcclusion\SSAOComputePass.cpp" />
+    <ClCompile Include="Render\Passes\AmbientOcclusion\SSAOApplyPass.cpp" />
+    <ClCompile Include="Render\Passes\AmbientOcclusion\SSAOBlurPass.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RendererPCH.h" />
@@ -445,6 +450,8 @@
     <ClInclude Include="Scene\TextureManager.h" />
     <ClInclude Include="Render\Passes\AmbientLightingPass.h" />
     <ClInclude Include="Render\Passes\AmbientOcclusion\SSAOComputePass.h" />
+    <ClInclude Include="Render\Passes\AmbientOcclusion\SSAOApplyPass.h" />
+    <ClInclude Include="Render\Passes\AmbientOcclusion\SSAOBlurPass.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\DebugDraw\AABB_rootsig.hlsli">
@@ -559,6 +566,11 @@
     <None Include="Shaders\CommonFunctions.hlsli" />
     <None Include="PipelineDescriptions\AmbientLightingIBLPipeline.tech" />
     <None Include="PipelineDescriptions\AmbientLightingPipeline.tech" />
+    <None Include="PipelineDescriptions\SSAOBlurHorizontalPipeline.tech" />
+    <None Include="PipelineDescriptions\SSAOBlurVerticalPipeline.tech" />
+    <None Include="PipelineDescriptions\SSAOComputePipeline.tech" />
+    <None Include="PipelineDescriptions\SSAOApplyPipeline.tech" />
+    <None Include="Shaders\AmbientOcclusion\SSAOBlur_cs.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="PipelineDescriptions\AABBRenderPipeline.blend">

@@ -9,30 +9,23 @@
 
 namespace render
 {
-    struct AmbientLightingPassData
+    struct SSAOApplyPassData
     {
-        rg::ResourceId AlbedoMetallic;
-        rg::ResourceId NormalRoughness;
-        rg::ResourceId Depth;
-
-        rg::ResourceId DiffuseIrradianceMap;
-        rg::ResourceId PreFilteredMap;
-        rg::ResourceId BRDF_LUT;
-
+        rg::ResourceId AOTarget;
         rg::ResourceId HDRTarget;
     };
 
-    class AmbientLightingPass : public rg::RenderPass<AmbientLightingPassData>
+    class SSAOApplyPass : public rg::RenderPass<SSAOApplyPassData>
     {
     public:
-        AmbientLightingPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
+        SSAOApplyPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
 
         // Inherited via RenderPass
         void Setup(rg::RenderPassBuilder& builder) override;
         void Execute(rg::RenderContext& context, TaskGPU& task) override;
 
     private:
-        dx12::PipelineState _ambientLightingPipeline;
+        dx12::PipelineState _SSAOPipeline;
 
         std::shared_ptr<scene::Scene> _scene;
         scene::Camera* _camera;

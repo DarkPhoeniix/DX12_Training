@@ -17,6 +17,11 @@ bool& RenderSettings::RenderDebugArmature()
     return Instance()._renderDebugArmature;
 }
 
+bool& RenderSettings::UseSSAO()
+{
+    return Instance()._useSSAO;
+}
+
 bool& RenderSettings::UseFXAA()
 {
     return Instance()._useFXAA;
@@ -31,6 +36,7 @@ RenderSettings::RenderSettings()
     : _useIBL(true)
     , _renderDebugVolumes(false)
     , _renderDebugArmature(false)
+    , _useSSAO(true)
     , _useFXAA(true)
     , _debugFXAA(false)
 {

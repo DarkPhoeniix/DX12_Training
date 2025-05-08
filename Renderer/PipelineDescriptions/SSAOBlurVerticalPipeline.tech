@@ -1,0 +1,7 @@
+{
+	"Type": "SSAOBlurVerticalTechnique",
+
+	"IsGraphicsPipeline": false,
+
+	"CS": "Shaders\\SSAOBlurVertical_cs.cso"
+}
