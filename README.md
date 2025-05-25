@@ -7,20 +7,21 @@ An experimental real-time renderer built with C++ and DirectX 12 for exploring m
 ## ✨ Features
 
 - Deferred rendering pipeline
+- Asynchronous command lists building
+- Render Graph (Frame graph) for pass scheduling
 - Physically-based rendering (PBR)
 - Image-based lighting support (IBL)
-- Asynchronous command lists building
 - GPU-side shadow mapping (spot and point lights)
 - HDR rendering with tone-mapping
 - Scene tree with entity-component system (ECS)
-- Render Graph (Frame graph) for pass scheduling
+- Screen space ambient occlusion (SSAO)
 
 ## 📂 Project Structure
 
 ```bash
 DX12_RenderEngine/
 ├── DX12Lib/            # Abstractions over DirectX 12 API
-├── Editor/             # Runtime cene editor and UI tools
+├── Editor/             # Runtime scene editor and UI tools
 ├── RenderGraph/        # Frame graph implementation for render pass scheduling
 ├── Renderer/           # Core rendering logic and systems
 ├── Saved/              # Test scenes and demo screenshots
@@ -41,7 +42,7 @@ DX12_RenderEngine/
 git clone https://github.com/DarkPhoeniix/DX12_RenderEngine.git
 ```
 - Open DX12_Sandbox.sln
-- Set Editor as startup project
+- Set Editor as the startup project
 - Build x64 Debug/Release configuration
 - Run *Editor.exe*
 - *Optionally*: set a custom scene path as a command line parameter
@@ -55,4 +56,4 @@ git clone https://github.com/DarkPhoeniix/DX12_RenderEngine.git
 - [ ] Full scene serialization/deserialization
 - [ ] Cascaded shadow maps
 - [ ] Bloom, DoF, Bokeh effects
-- [ ] SSAO, SSR
+- [ ] SSR
