@@ -17,6 +17,20 @@ namespace render
 {
     using namespace DirectX;
 
+    namespace
+    {
+        constexpr int kRadius = 4;
+        constexpr float kDepthThreshold = 0.2f;
+        constexpr float kSharpness = 50.0f;
+
+        struct ConstantsDesc
+        {
+            int Radius;
+            float DepthThreshold;
+            float Sharpness;
+        };
+    } // namespace unnamed
+
     SSAOBlurPass::SSAOBlurPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
         : RenderPass<SSAOBlurPassData>("SSAO Blur Pass", rg::RenderPassType::Compute)
         , _scene(scene)
@@ -24,6 +38,31 @@ namespace render
     {
         _SSAOBlurHorizonralPipeline.Parse("PipelineDescriptions\\SSAOBlurHorizontalPipeline.tech");
         _SSAOBlurVerticalPipeline.Parse("PipelineDescriptions\\SSAOBlurVerticalPipeline.tech");
+
+        dx12::ResourceDescription weightsDesc;
+        {
+            weightsDesc.SetSize({ (kRadius * 2 + 1) * sizeof(float), 1});
+            weightsDesc.SetStride(sizeof(float));
+            weightsDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
+        }
+        _weights.CreateCommitedResource(weightsDesc);
+        _weights.SetName("SSAO blur weights");
+
+        float* weightsData = (float*)_weights.Map();
+        const float sigma = 2.0f;
+        float sum = 0.0f;
+        for (int i = -kRadius; i <= kRadius; ++i)
+        {
+            float weight = std::exp(-0.5f * (float(i) / sigma) * (float(i) / sigma));
+
+            weightsData[kRadius + i] = weight;
+            sum += weight;
+        }
+        for (int i = -kRadius; i <= kRadius; ++i)
+        {
+            weightsData[kRadius + i] /= sum;
+        }
+        _weights.Unmap();
     }
 
     void SSAOBlurPass::Setup(rg::RenderPassBuilder& builder)
@@ -69,10 +108,19 @@ namespace render
 
             commandList.SetDescriptorHeaps({ context.GetResourceTable().GetDescriptorHeap(dx12::ResourceViewType::SRV).GetDXDescriptorHeap().Get() });
             CacheGPU::DataHandle sceneDataHandle = context.GetCache().GetResourcePlacement("SceneCB");
+
+            CacheGPU::DataHandle cbHandle = context.GetCache().RequestPlacement("SSAOBlurPassCB", sizeof(ConstantsDesc));
+            ConstantsDesc* cbDesc = (ConstantsDesc*)cbHandle.DataCPU;
+            cbDesc->Radius = kRadius;
+            cbDesc->DepthThreshold = kDepthThreshold;
+            cbDesc->Sharpness = kSharpness;
+
             commandList.SetCBV(0, sceneDataHandle.DataGPU);
-            commandList.SetDescriptorTable(1, depthHandle);
-            commandList.SetDescriptorTable(2, aoTargetSRV);
-            commandList.SetDescriptorTable(3, blurTargetUAV);
+            commandList.SetCBV(1, cbHandle.DataGPU);
+            commandList.SetSRV(2, _weights.OffsetGPU());
+            commandList.SetDescriptorTable(3, depthHandle);
+            commandList.SetDescriptorTable(4, aoTargetSRV);
+            commandList.SetDescriptorTable(5, blurTargetUAV);
 
             XMUINT2 viewportSize = _camera->GetViewport().GetSize();
             int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 16.0f);
@@ -91,9 +139,11 @@ namespace render
 
             commandList.SetDescriptorHeaps({ context.GetResourceTable().GetDescriptorHeap(dx12::ResourceViewType::SRV).GetDXDescriptorHeap().Get() });
             commandList.SetCBV(0, sceneDataHandle.DataGPU);
-            commandList.SetDescriptorTable(1, depthHandle);
-            commandList.SetDescriptorTable(2, blurTargetSRV);
-            commandList.SetDescriptorTable(3, aoTargetUAV);
+            commandList.SetCBV(1, cbHandle.DataGPU);
+            commandList.SetSRV(2, _weights.OffsetGPU());
+            commandList.SetDescriptorTable(3, depthHandle);
+            commandList.SetDescriptorTable(4, blurTargetSRV);
+            commandList.SetDescriptorTable(5, aoTargetUAV);
 
             commandList.Dispatch(xThreadGroups, yThreadGroups);
 

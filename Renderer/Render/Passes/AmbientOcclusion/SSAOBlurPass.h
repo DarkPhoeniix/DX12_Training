@@ -29,6 +29,8 @@ namespace render
         dx12::PipelineState _SSAOBlurHorizonralPipeline;
         dx12::PipelineState _SSAOBlurVerticalPipeline;
 
+        dx12::Resource _weights;
+
         std::shared_ptr<scene::Scene> _scene;
         scene::Camera* _camera;
     };

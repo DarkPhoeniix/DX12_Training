@@ -17,6 +17,20 @@ namespace render
 {
     using namespace DirectX;
 
+    namespace
+    {
+        constexpr std::uint32_t kKernelSize = 16;
+        constexpr float kRadius = 2.5f;
+        constexpr float kBias = 0.025f;
+
+        struct ConstantsDesc
+        {
+            std::uint32_t KernelSize;
+            float Radius;
+            float Bias;
+        };
+    } // namespace unnamed
+
     SSAOComputePass::SSAOComputePass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
         : RenderPass<SSAOComputePassData>("SSAO Pass", rg::RenderPassType::Compute)
         , _scene(scene)
@@ -32,6 +46,7 @@ namespace render
                     noiseDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
                 }
                 _noise.CreateCommitedResource(noiseDesc);
+                _noise.SetName("SSAO noise texture");
                 dx12::ResourceDescription kernelsDesc;
                 {
                     kernelsDesc.SetSize({ 16 * sizeof(XMVECTOR), 1 });
@@ -39,6 +54,7 @@ namespace render
                     kernelsDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
                 }
                 _kernels.CreateCommitedResource(kernelsDesc);
+                _kernels.SetName("SSAO kernels");
 
                 std::random_device rd;
                 std::mt19937 gen(rd());
@@ -122,13 +138,19 @@ namespace render
             commandList.SetDescriptorHeaps({ context.GetResourceTable().GetDescriptorHeap(dx12::ResourceViewType::SRV).GetDXDescriptorHeap().Get() });
 
             CacheGPU::DataHandle sceneDataHandle = context.GetCache().GetResourcePlacement("SceneCB");
-            commandList.SetCBV(0, sceneDataHandle.DataGPU);
+            CacheGPU::DataHandle cbHandle = context.GetCache().RequestPlacement("SSAOComputePassCB", sizeof(ConstantsDesc));
+            ConstantsDesc* cbDesc = (ConstantsDesc*)cbHandle.DataCPU;
+            cbDesc->KernelSize = kKernelSize;
+            cbDesc->Radius = kRadius;
+            cbDesc->Bias = kBias;
 
-            commandList.SetSRV(1, _kernels.OffsetGPU());
-            commandList.SetSRV(2, _noise.OffsetGPU());
-            commandList.SetDescriptorTable(3, depthHandle);
-            commandList.SetDescriptorTable(4, normalSpecularHandle);
-            commandList.SetDescriptorTable(5, aoTargetHandle);
+            commandList.SetCBV(0, sceneDataHandle.DataGPU);
+            commandList.SetCBV(1, cbHandle.DataGPU);
+            commandList.SetSRV(2, _kernels.OffsetGPU());
+            commandList.SetSRV(3, _noise.OffsetGPU());
+            commandList.SetDescriptorTable(4, depthHandle);
+            commandList.SetDescriptorTable(5, normalSpecularHandle);
+            commandList.SetDescriptorTable(6, aoTargetHandle);
 
             XMUINT2 viewportSize = _camera->GetViewport().GetSize();
             int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 16.0f);

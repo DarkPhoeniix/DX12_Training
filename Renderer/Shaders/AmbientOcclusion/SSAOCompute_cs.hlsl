@@ -2,6 +2,7 @@
 #define SSAOCompute_RootSig \
 	"RootFlags(0), " \
     "CBV(b0, visibility = SHADER_VISIBILITY_ALL), " \
+    "CBV(b1, visibility = SHADER_VISIBILITY_ALL), " \
     "SRV(t0, visibility = SHADER_VISIBILITY_ALL), " \
     "SRV(t1, visibility = SHADER_VISIBILITY_ALL), " \
     "DescriptorTable(SRV(t2), visibility = SHADER_VISIBILITY_ALL), " \
@@ -18,6 +19,14 @@
 
 #define NUM_THREADS 16
 
+struct Constants
+{
+    uint KernelSize;
+    float Radius;
+    float Bias;
+};
+
+ConstantBuffer<Constants> CB    : register(b1);
 StructuredBuffer<float4> Kernel : register(t0);
 StructuredBuffer<float4> Noise  : register(t1);
 Texture2D<float> Depth          : register(t2);
@@ -26,10 +35,7 @@ RWTexture2D<float> AOTexture    : register(u0);
 
 SamplerState PointerSampler     : register(s0);
 
-static const uint KernelSize = 16;
-static const float Radius = 2.5f;
-static const float Bias = 0.025f;
-
+// TODO: remove GetViewPosition
 static float3 GetViewPosition(float2 texcoord, float depth)
 {
     float4 clipSpaceLocation;
@@ -41,10 +47,12 @@ static float3 GetViewPosition(float2 texcoord, float depth)
     return homogenousLocation.xyz / homogenousLocation.w;
 }
 
+// TODO: remove LinearDepth
 inline float LinearDepth(in float zBufferSample, in float A, in float B)
 {
     return A / (zBufferSample - B);
 }
+
 [numthreads(NUM_THREADS, NUM_THREADS, 1)]
 [RootSignature(SSAOCompute_RootSig)]
 void main(uint3 DTid : SV_DispatchThreadID)
@@ -78,9 +86,9 @@ void main(uint3 DTid : SV_DispatchThreadID)
     float3x3 TBN = float3x3(tangentVS, bitangentVS, normalVS);
     
     float occlusion = 0.0f;
-    for (uint i = 0; i < KernelSize; ++i)
+    for (uint i = 0; i < CB.KernelSize; ++i)
     {
-        float3 sampleVS = positionVS + mul(Kernel[i].xyz, TBN) * Radius;
+        float3 sampleVS = positionVS + mul(Kernel[i].xyz, TBN) * CB.Radius;
         
         float4 offset = float4(sampleVS, 1.0);
         offset = mul(offset, Scene.Projection);
@@ -89,13 +97,13 @@ void main(uint3 DTid : SV_DispatchThreadID)
         float sampleDepth = Depth.SampleLevel(PointerSampler, offset.xy, 0.0f);
         sampleDepth = LinearDepth(sampleDepth, Scene.Projection[3][2], Scene.Projection[2][2]);
         
-        float rangeCheck = smoothstep(0.0f, 1.0f, Radius / abs(positionVS.z - sampleDepth));
-        if (sampleDepth < sampleVS.z - Bias)
+        float rangeCheck = smoothstep(0.0f, 1.0f, CB.Radius / abs(positionVS.z - sampleDepth));
+        if (sampleDepth < sampleVS.z - CB.Bias)
         {
             occlusion += rangeCheck;
         }
     }
-    occlusion = 1.0f - (occlusion / KernelSize);
+    occlusion = 1.0f - (occlusion / CB.KernelSize);
     
     AOTexture[pixel] = pow(occlusion, 1.5f);
 }

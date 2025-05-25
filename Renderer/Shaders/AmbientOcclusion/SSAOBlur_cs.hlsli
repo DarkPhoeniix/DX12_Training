@@ -2,8 +2,10 @@
 #define SSAOBlur_RootSig \
 	"RootFlags(0), " \
     "CBV(b0, visibility = SHADER_VISIBILITY_ALL), " \
-    "DescriptorTable(SRV(t0), visibility = SHADER_VISIBILITY_ALL), " \
+    "CBV(b1, visibility = SHADER_VISIBILITY_ALL), " \
+    "SRV(t0, visibility = SHADER_VISIBILITY_ALL), " \
     "DescriptorTable(SRV(t1), visibility = SHADER_VISIBILITY_ALL), " \
+    "DescriptorTable(SRV(t2), visibility = SHADER_VISIBILITY_ALL), " \
     "DescriptorTable(UAV(u0), visibility = SHADER_VISIBILITY_ALL), " \
     "StaticSampler(s0," \
         "addressU = TEXTURE_ADDRESS_CLAMP," \
@@ -16,23 +18,20 @@
 
 #define NUM_THREADS 16
 
-Texture2D<float> Depth      : register(t0);
-Texture2D<float> Input      : register(t1);
-RWTexture2D<float> Output   : register(u0);
-
-SamplerState PointerSampler : register(s0);
-
-static const int Radius = 4;
-static const float DepthThreshold = 0.2f;
-static const float Sharpness = 50.0f;
-static const float Weights[5] =
+struct Constants
 {
-    1.0000000f,
-    0.8824969f,
-    0.6065307f,
-    0.3246525f, 
-    0.1353353f
+    int Radius;
+    float DepthThreshold;
+    float Sharpness;
 };
+
+ConstantBuffer<Constants> CB    : register(b1);
+StructuredBuffer<float> Weights : register(t0);
+Texture2D<float> Depth          : register(t1);
+Texture2D<float> Input          : register(t2);
+RWTexture2D<float> Output       : register(u0);
+
+SamplerState PointerSampler     : register(s0);
 
 inline float LinearDepth(in float zBufferSample, in float A, in float B)
 {
@@ -58,8 +57,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
     float sum = 0;
     float weight = 0;
     
-    [unroll]
-    for (int i = -Radius; i <= Radius; ++i)
+    for (int i = -CB.Radius; i <= CB.Radius; ++i)
     {
 #ifdef BLUR_VERTICAL
         int2 s = int2(pixel.x, pixel.y + i);
@@ -75,9 +73,9 @@ void main(uint3 DTid : SV_DispatchThreadID)
         z = LinearDepth(z, Scene.Projection[3][2], Scene.Projection[2][2]);
         float dz = abs(z - centerZ);
         
-        float dWeight = (dz < DepthThreshold) ? 1.0 : exp(-(dz - DepthThreshold) * Sharpness);
+        float dWeight = (dz < CB.DepthThreshold) ? 1.0 : exp(-(dz - CB.DepthThreshold) * CB.Sharpness);
         
-        float w = Weights[abs(i)] * dWeight;
+        float w = Weights[CB.Radius + i] * dWeight;
         sum += Input[s] * w;
         weight += w;
     }
