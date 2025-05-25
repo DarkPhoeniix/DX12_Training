@@ -6,20 +6,16 @@
 #include "../DepthFuncs.hlsli"
 #include "../PBR.hlsli"
 
-StructuredBuffer<LightDesc> Lights          : register(t0);
+StructuredBuffer<LightDesc> Lights : register(t0);
 
-Texture2D<float4> PositionTexture           : register(t1);
-Texture2D<float4> AlbedoMetallicTexture     : register(t2);
-Texture2D<float4> NormalRoughnessTexture    : register(t3);
-TextureCube DiffuseIrradiance               : register(t4);
-TextureCube PreFilteredMap                  : register(t5);
-Texture2D<float2> brdfLUT                   : register(t6);
-Texture2D Textures2D[]                      : register(t7, space0);
-TextureCube TexturesCube[]                  : register(t7, space1);
-RWTexture2D<float4> TargetTexture           : register(u0);
+Texture2D<float4> PositionTexture : register(t1);
+Texture2D<float4> AlbedoMetallicTexture : register(t2);
+Texture2D<float4> NormalRoughnessTexture : register(t3);
+Texture2D Textures2D[] : register(t4, space0);
+TextureCube TexturesCube[] : register(t4, space1);
+RWTexture2D<float4> TargetTexture : register(u0);
 
-SamplerComparisonState ShadowSampler        : register(s0);
-SamplerState PointSampler                   : register(s1);
+SamplerComparisonState ShadowSampler : register(s0);
 
 void SetLightParams(in LightDesc light, inout Surface surface)
 {
@@ -87,6 +83,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
     surface.Normal = float4(NormalRoughnessTexture.Load(uint3(DTid.xy, 0)).xyz, 0.0f);
     surface.Metallic = AlbedoMetallicTexture.Load(uint3(DTid.xy, 0)).a;
     surface.Roughness = NormalRoughnessTexture.Load(uint3(DTid.xy, 0)).a;
+    surface.FinalColor = TargetTexture.Load(uint3(DTid.xy, 0));
     
     // Direct lighting
     {
@@ -97,7 +94,6 @@ void main(uint3 DTid : SV_DispatchThreadID)
         float3 kD = 1.0 - kS;
         kD *= 1.0 - surface.Metallic;
         
-        surface.FinalColor = float4(0.0f, 0.0f, 0.0f, 0.0f);
         for (int i = 0; i < Scene.LightsNum; ++i)
         {
             // Setup surface data for current light source
@@ -105,50 +101,24 @@ void main(uint3 DTid : SV_DispatchThreadID)
             
             // PBR - BRDF
             // (F * G * D) / (4 * NdotL * NdotV)
-        float3 F                = FresnelSchlick(surface, F0);
-            float G                 = GeometrySmith(surface);
-            float D                 = CalculateSpecular(surface);
+            float3 F = FresnelSchlick(surface, F0);
+            float G = GeometrySmith(surface);
+            float D = CalculateSpecular(surface);
             
-            float3 specularColor    = (F * G * D) / max(0.00001f, (4.0f * surface.NdotL * surface.NdotV));
+            float3 specularColor = (F * G * D) / max(0.00001f, (4.0f * surface.NdotL * surface.NdotV));
             
             float3 lightAttenuation = CalculateAttenuation(Lights[i], surface) * Lights[i].Color.rgb * Lights[i].Intesity;
-            float3 diffuseColor     = surface.Albedo.rgb * kD;
-            float3 surfaceColor     = (diffuseColor + specularColor) * surface.NdotL;
+            float3 diffuseColor = surface.Albedo.rgb * kD;
+            float3 surfaceColor = (diffuseColor + specularColor) * surface.NdotL;
             
-            float3 lightingModel    = surfaceColor * lightAttenuation;
+            float3 lightingModel = surfaceColor * lightAttenuation;
             
             float shadowAttenuation = CalculateShadowAttenuation_PCF3x3(Lights[i], surface);
-            lightingModel          *= (Lights[i].CastShadows != 0) ? shadowAttenuation : 1.0f;
+            lightingModel *= (Lights[i].CastShadows != 0) ? shadowAttenuation : 1.0f;
             
-            surface.FinalColor     += float4(lightingModel, 1.0f);
+            surface.FinalColor += float4(lightingModel, 0.0f);
         }
     }
     
-    // Ambient lighting
-    {
-#ifdef USE_IBL
-        float w, h, mipLevels;
-        PreFilteredMap.GetDimensions(0, w, h, mipLevels);
-        
-        float3 F0 = lerp(float3(0.04f, 0.04f, 0.04f), surface.Albedo.rgb, surface.Metallic);
-        float3 F = FresnelSchlickRoughness(surface.NdotV, F0, surface.Roughness);
-        
-        float3 kS = F;
-        float3 kD = (1.0f - kS) * (1.0f - surface.Metallic);
-        
-        float3 irradiance = DiffuseIrradiance.SampleLevel(PointSampler, surface.Normal.xyz, 0.0f).rgb;
-        float3 diffuseIBL = kD * irradiance * surface.Albedo.rgb;
-        
-        float3 prefilteredColor = PreFilteredMap.SampleLevel(PointSampler, surface.Reflect.xyz, surface.Roughness * (mipLevels - 1.0f)).rgb;
-        float2 envBRDF = brdfLUT.SampleLevel(PointSampler, float2(surface.NdotV, surface.Roughness), 0.0f).rg;
-        float3 specularIBL = prefilteredColor * (F * envBRDF.x + envBRDF.y);    
-        
-        float3 ambient = (diffuseIBL + specularIBL) * 0.2f;
-#else
-        float3 ambient = surface.Albedo.rgb * 0.1f;
-#endif
-        surface.FinalColor += float4(ambient, 0.0f);
-    }
-    
-    TargetTexture[DTid.xy] = float4(surface.FinalColor.rgb, 1.0f);
+    TargetTexture[DTid.xy] = surface.FinalColor;
 }

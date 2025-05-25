@@ -72,6 +72,10 @@ namespace gui
                 {
                     pendingUpdate = true;
                 }
+                if (ImGui::Checkbox("Use SSAO", &RenderSettings::UseSSAO()))
+                {
+                    pendingUpdate = true;
+                }
                 if (ImGui::Checkbox("Use FXAA", &RenderSettings::UseFXAA()))
                 {
                     pendingUpdate = true;

@@ -9,6 +9,7 @@ public:
     static bool& UseIBL();
     static bool& RenderDebugVolumes();
     static bool& RenderDebugArmature();
+    static bool& UseSSAO();
     static bool& UseFXAA();
     static bool& DebugFXAA();
 
@@ -21,6 +22,7 @@ private:
     bool _useIBL;
     bool _renderDebugVolumes;
     bool _renderDebugArmature;
+    bool _useSSAO;
     bool _useFXAA;
     bool _debugFXAA;
 };

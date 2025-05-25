@@ -1,7 +1,0 @@
-{
-	"Type": "DeferredShadingTechnique",
-
-	"IsGraphicsPipeline": false,
-
-	"CS": "Shaders\\DeferredShading_IBL_cs.cso"
-}

@@ -1,0 +1,7 @@
+{
+	"Type": "AmbientLightingTechnique",
+
+	"IsGraphicsPipeline": false,
+
+	"CS": "Shaders\\AmbientLighting_cs.cso"
+}

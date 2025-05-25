@@ -3,6 +3,7 @@
 #include "ToneMappingPass.h"
 
 #include "CommandList.h"
+#include "ResourceBarrier.h"
 
 #include "Scene/Entity/Components/Camera.h"
 #include "Render/Passes/PassResources.h"
@@ -73,6 +74,14 @@ namespace render
             D3D12_GPU_DESCRIPTOR_HANDLE hdrTargetHandle = context.GetGPUHandle(hdrTarget->GetAsSRV());
             D3D12_GPU_DESCRIPTOR_HANDLE targetHandle = context.GetGPUHandle(target->GetAsUAV());
 
+            std::vector<dx12::ResourceBarrier> barriers =
+            {
+                { hdrTarget.get(),      D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
+                { avgLuminance.get(),   D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
+                { target.get(),         D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_UNORDERED_ACCESS }
+            };
+            commandList.TransitionBarriers(barriers);
+
             // Setup pipeline state
 
             commandList.SetPipelineState(_toneMappingPipeline);
@@ -94,6 +103,14 @@ namespace render
             std::uint32_t yThreadGroups = (std::uint32_t)std::ceilf(viewportSize.y / float(TONE_MAPPING_THREADS_NUM));
 
             commandList.Dispatch(xThreadGroups, yThreadGroups);
+
+            barriers =
+            {
+                { hdrTarget.get(),      D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
+                { avgLuminance.get(),   D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
+                { target.get(),         D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON }
+            };
+            commandList.TransitionBarriers(barriers);
         }
         PIXEndEvent(commandList.GetDXCommandList().Get());
 

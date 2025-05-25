@@ -116,7 +116,6 @@ namespace rg
             {
                 TaskGPU* dependentTask = _GPUTasks[adjacentPassIndex];
                 dependentTask->AddDependency(currentTask->GetName());
-                break;
             }
         }
     }

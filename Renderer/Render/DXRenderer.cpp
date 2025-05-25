@@ -28,8 +28,12 @@
 
 #include "Render/RenderSettings.h"
 #include "Render/Frame/TaskGPU.h"
+#include "Render/Passes/AmbientOcclusion/SSAOApplyPass.h"
+#include "Render/Passes/AmbientOcclusion/SSAOBlurPass.h"
+#include "Render/Passes/AmbientOcclusion/SSAOComputePass.h"
 #include "Render/Passes/Debug/DebugArmaturePass.h"
 #include "Render/Passes/Debug/DebugBoundingVolumePass.h"
+#include "Render/Passes/AmbientLightingPass.h"
 #include "Render/Passes/FXAAPass.h"
 #include "Render/Passes/GeometryPass.h"
 #include "Render/Passes/LightingPass.h"
@@ -452,6 +456,13 @@ namespace render
             _renderGraph.AddPass(std::make_shared<ShadowClearPass>(_scene, _cameraComponent.get()));
             _renderGraph.AddPass(std::make_shared<ShadowCullPass>(_scene, _cameraComponent.get()));
             _renderGraph.AddPass(std::make_shared<ShadowDrawPass>(_scene, _cameraComponent.get()));
+            _renderGraph.AddPass(std::make_shared<AmbientLightingPass>(_scene, _cameraComponent.get()));
+            if (RenderSettings::UseSSAO())
+            {
+                _renderGraph.AddPass(std::make_shared<SSAOComputePass>(_scene, _cameraComponent.get()));
+                _renderGraph.AddPass(std::make_shared<SSAOBlurPass>(_scene, _cameraComponent.get()));
+                _renderGraph.AddPass(std::make_shared<SSAOApplyPass>(_scene, _cameraComponent.get()));
+            }
             _renderGraph.AddPass(std::make_shared<LightingPass>(_scene, _cameraComponent.get()));
             _renderGraph.AddPass(std::make_shared<SkyboxPass>(_scene, _cameraComponent.get()));
             if (RenderSettings::UseFXAA())

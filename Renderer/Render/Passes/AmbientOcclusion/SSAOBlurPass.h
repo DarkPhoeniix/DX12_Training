@@ -1,3 +1,4 @@
+
 #pragma once
 
 #include "RenderGraph/RenderPass.h"
@@ -8,28 +9,27 @@
 
 namespace render
 {
-    struct LightingPassData
+    struct SSAOBlurPassData
     {
-        rg::ResourceId AlbedoMetallic;
-        rg::ResourceId NormalRoughness;
         rg::ResourceId Depth;
-
-        std::vector<rg::ResourceId> ShadowMaps;
-
-        rg::ResourceId HDRTarget;
+        rg::ResourceId AOTarget;
+        rg::ResourceId TempBlurTarget;
     };
 
-    class LightingPass : public rg::RenderPass<LightingPassData>
+    class SSAOBlurPass : public rg::RenderPass<SSAOBlurPassData>
     {
     public:
-        LightingPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
+        SSAOBlurPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
 
         // Inherited via RenderPass
         void Setup(rg::RenderPassBuilder& builder) override;
         void Execute(rg::RenderContext& context, TaskGPU& task) override;
 
     private:
-        dx12::PipelineState _deferredPipeline;
+        dx12::PipelineState _SSAOBlurHorizonralPipeline;
+        dx12::PipelineState _SSAOBlurVerticalPipeline;
+
+        dx12::Resource _weights;
 
         std::shared_ptr<scene::Scene> _scene;
         scene::Camera* _camera;
