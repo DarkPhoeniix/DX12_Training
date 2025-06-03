@@ -4,11 +4,12 @@
 
 struct PSinput
 {
-    float4 WorldPosition    : POSITION;
+    float4 WorldPosition    : POSITION0;
     float4 Position         : SV_Position;
-    float3 Normal           : NORMAL;
-    float3 Tangent          : TANGENT;
-    float2 Texture          : TEXCOORD;
+    float4 Normal           : NORMAL0;
+    float4 Tangent          : TANGENT0;
+    float4 Bitangent        : BITANGENT0;
+    float2 Texture          : TEXCOORD0;
 };
 
 struct PSOutput
@@ -37,9 +38,9 @@ PSOutput main(PSinput IN)
     roughness               = max(0.05f, roughness); // Set minimum to 0.05 to avoid some visual artifacts in PBR
     
     // Calculate the TBN matrix and a new normal vector
-    float3 normal           = normalize(IN.Normal);
-    float3 tangent          = normalize(IN.Tangent);
-    float3 bitangent        = cross(normal, tangent);
+    float3 normal           = normalize(IN.Normal.xyz);
+    float3 tangent          = normalize(IN.Tangent.xyz);
+    float3 bitangent        = normalize(IN.Bitangent.xyz);
     float3x3 TBN            = float3x3(tangent, bitangent, normal);
     
     float3 finalNormal      = normalize(mul(2.0f * normalMap - 1.0f, TBN));

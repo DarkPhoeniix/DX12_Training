@@ -5,21 +5,22 @@
 
 struct VSinput
 {
-    float3 Position         : POSITION;
-    float3 Normal           : NORMAL;
-    float3 Tangent          : TANGENT;
-    float2 Texture          : TEXCOORD;
+    float4 Position         : POSITION0;
+    float4 Normal           : NORMAL0;
+    float4 Tangent          : TANGENT0;
+    float2 Texture          : TEXCOORD0;
     uint4 BoneIds           : BONE_IDS;
     float4 BoneWeights      : BONE_WEIGHTS;
 };
 
 struct VSOutput
 {
-    float4 WorldPosition    : POSITION;
+    float4 WorldPosition    : POSITION0;
     float4 Position         : SV_Position;
-    float3 Normal           : NORMAL;
-    float3 Tangent          : TANGENT;
-    float2 Texture          : TEXCOORD;
+    float4 Normal           : NORMAL0;
+    float4 Tangent          : TANGENT0;
+    float4 Bitangent        : BITANGENT0;
+    float2 Texture          : TEXCOORD0;
 };
 
 struct BoneDesc
@@ -45,18 +46,19 @@ VSOutput main(VSinput IN)
         boneTransform      += Bones[IN.BoneIds[3]].Transform * IN.BoneWeights[3];
     }
     
-    float4 objectPosition   = mul(float4(IN.Position, 1.0f), boneTransform);
-    float3 normal           = normalize(mul(IN.Normal, (float3x3)boneTransform));
-    float3 tangent          = normalize(mul(IN.Tangent, (float3x3)boneTransform));
+    float4 objectPosition   = mul(IN.Position, boneTransform);
+    float4 normal           = normalize(mul(IN.Normal, boneTransform));
+    float4 tangent          = normalize(mul(IN.Tangent, boneTransform));
     
     float4 worldPosition    = mul(objectPosition, Model.Transform);
     
     VSOutput output;
     output.WorldPosition    = worldPosition;
     output.Position         = mul(worldPosition, Scene.ViewProjection);
-    output.Normal           = normalize(mul(normal, (float3x3) Model.Transform));
+    output.Normal           = normalize(mul(normal, Model.Transform));
+    output.Tangent          = normalize(mul(tangent, Model.Transform));
+    output.Bitangent        = float4(normalize(IN.Tangent.w * cross(normal.xyz, tangent.xyz)), 0.0f);
     output.Texture          = IN.Texture;
-    output.Tangent          = normalize(mul(tangent, (float3x3) Model.Transform));
 
     return output;
 }

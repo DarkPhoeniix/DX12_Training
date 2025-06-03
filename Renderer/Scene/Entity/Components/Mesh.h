@@ -7,9 +7,9 @@ namespace scene
 {
     struct VertexData
     {
-        DirectX::XMFLOAT3 Position;
-        DirectX::XMFLOAT3 Normal;
-        DirectX::XMFLOAT3 Tangent;
+        DirectX::XMFLOAT4 Position;
+        DirectX::XMFLOAT4 Normal;
+        DirectX::XMFLOAT4 Tangent;
         DirectX::XMFLOAT2 UV;
     };
 

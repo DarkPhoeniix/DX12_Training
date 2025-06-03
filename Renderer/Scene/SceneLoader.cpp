@@ -87,9 +87,9 @@ namespace
             return;
         }
 
-        auto UpdateBoneAABB = [](scene::AABBVolume& volume, scene::Bone* bone, XMFLOAT3 position)
+        auto UpdateBoneAABB = [](scene::AABBVolume& volume, scene::Bone* bone, XMFLOAT4 position)
             {
-                DirectX::XMVECTOR positionVec = DirectX::XMLoadFloat3(&position);
+                DirectX::XMVECTOR positionVec = DirectX::XMLoadFloat4(&position);
                 positionVec = DirectX::XMVector4Transform(positionVec, bone->Offset);
 
                 volume.Min = DirectX::XMVectorMin(volume.Min, positionVec);
@@ -587,7 +587,7 @@ namespace scene::helpers
 
         for (const VertexData& vertex : component->VertexData)
         {
-            XMVECTOR position = XMLoadFloat3(&vertex.Position);
+            XMVECTOR position = XMLoadFloat4(&vertex.Position);
 
             component->LocalAABB.Min = XMVectorMin(component->LocalAABB.Min, position);
             component->LocalAABB.Max = XMVectorMax(component->LocalAABB.Max, position);
@@ -625,7 +625,7 @@ namespace scene::helpers
             component->VertexBuffer->SetName(jsonValue["Mesh"].asString() + "_VB");
 
             component->VertexBufferView.BufferLocation = component->VertexBuffer->OffsetGPU(0);
-            component->VertexBufferView.SizeInBytes = static_cast<UINT>(component->VertexData.size() * sizeof(component->VertexData[0]));
+            component->VertexBufferView.SizeInBytes = static_cast<UINT>(component->VertexData.size() * sizeof(VertexData));
             component->VertexBufferView.StrideInBytes = sizeof(VertexData);
         }
 
@@ -695,13 +695,13 @@ namespace scene::helpers
 
     void SceneLoader::LoadRawMesh(const std::string& filepath, std::shared_ptr<Mesh> meshComponent)
     {
-        std::vector<XMFLOAT3> points;
-        std::vector<XMUINT4> groupIndexes;
+        std::vector<XMFLOAT4> points;
+        std::vector<XMUINT4>  groupIndexes;
         std::vector<XMFLOAT4> groupWeights;
-        std::vector<XMFLOAT3> normals;
+        std::vector<XMFLOAT4> normals;
+        std::vector<XMFLOAT4> tangents;
         std::vector<XMFLOAT4> colors;
         std::vector<XMFLOAT2> UVs;
-        std::vector<XMFLOAT3> tangents;
         UINT64 index = 0;
 
         std::string input;
@@ -718,14 +718,16 @@ namespace scene::helpers
             }
             else if (input == "v")
             {
-                XMFLOAT3 v;
+                XMFLOAT4 v;
                 in >> v.x >> v.y >> v.z;
+                v.w = 1.0f;
                 points.push_back(v);
             }
             else if (input == "vn")
             {
-                XMFLOAT3 vn;
+                XMFLOAT4 vn;
                 in >> vn.x >> vn.y >> vn.z;
+                vn.w = 0.0f;
                 normals.push_back(vn);
             }
             else if (input == "vc")
@@ -742,8 +744,8 @@ namespace scene::helpers
             }
             else if (input == "vtan")
             {
-                XMFLOAT3 tangent;
-                in >> tangent.x >> tangent.y >> tangent.z;
+                XMFLOAT4 tangent;
+                in >> tangent.x >> tangent.y >> tangent.z >> tangent.w;
                 tangents.push_back(tangent);
             }
             else if (input == "gi")
