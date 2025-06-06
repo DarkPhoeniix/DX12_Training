@@ -1,5 +1,5 @@
 {
-    "Name": "Icosphere",
+    "Name": "Sphere",
     "Transform": {
         "r0": "3.0 0.0 -0.0 0.0",
         "r1": "0.0 3.0 0.0 0.0",
@@ -7,6 +7,6 @@
         "r3": "15.0 20.0 10.0 1.0"
     },
     "Children": [],
-    "Material": "Icosphere.mat",
-    "Mesh": "Icosphere.mesh"
+    "Material": "Sphere.mat",
+    "Mesh": "Sphere.mesh"
 }

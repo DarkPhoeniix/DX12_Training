@@ -1,7 +1,7 @@
 {
     "Color": "1.0 0.4 1.0 1.0",
-    "Intensity": 2.2,
+    "Intensity": 3.7,
     "Type": "Point",
-    "Range": 30.0,
+    "Range": 35.0,
     "CastShadows": 1
 }

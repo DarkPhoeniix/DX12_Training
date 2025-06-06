@@ -1,0 +1,6 @@
+{
+    "Albedo": "Floor_albedo.png",
+    "Metalness": "Floor_metalness.png",
+    "Roughness": "Floor_roughness.png",
+    "Normal": "Floor_nmap.png"
+}

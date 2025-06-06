@@ -1,0 +1,13 @@
+{
+    "Name": "AnimTest",
+    "Nodes": [
+        "Floor.node",
+        "Sphere.node",
+        "Wyvern.node",
+        "PointLight.001.node",
+        "PointLight.002.node",
+        "SpotLight.node",
+        "Skybox.node",
+        "Camera.node"
+    ]
+}

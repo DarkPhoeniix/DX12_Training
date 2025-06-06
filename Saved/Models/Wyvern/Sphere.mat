@@ -1,0 +1,6 @@
+{
+    "Albedo": "Sphere_albedo.png",
+    "Metalness": "Sphere_metalness.png",
+    "Roughness": "Sphere_roughness.png",
+    "Normal": "Sphere_nmap.png"
+}
