@@ -7,6 +7,6 @@
         "r3": "0.0 0.0 3.0193 1.0"
     },
     "Children": [],
-    "Material": "sponza_298.mat",
-    "Mesh": "sponza_298.mesh"
+    "Mesh": "sponza_298.mesh",
+    "Material": "sponza_298.mat"
 }

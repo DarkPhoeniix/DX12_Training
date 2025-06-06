@@ -7,5 +7,5 @@
         "r3": "-50.5985 50.0 0.0 1.0"
     },
     "Children": [],
-    "Light": "Point.light"
+    "Light": "Point.anim"
 }
