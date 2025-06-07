@@ -19,27 +19,27 @@
 			"Name": "POSITION",
 			"Slot": 0,
 			"Offset": 0,
-			"Format": "float3",
+			"Format": "float4",
 			"SemanticIndex": 0
 		},
 		{
 			"Name": "NORMAL",
 			"Slot": 0,
-			"Offset": 12,
-			"Format": "float3",
+			"Offset": 16,
+			"Format": "float4",
 			"SemanticIndex": 0
 		},
 		{
 			"Name": "TANGENT",
 			"Slot": 0,
-			"Offset": 24,
-			"Format": "float3",
+			"Offset": 32,
+			"Format": "float4",
 			"SemanticIndex": 0
 		},
 		{
 			"Name": "TEXCOORD",
 			"Slot": 0,
-			"Offset": 36,
+			"Offset": 48,
 			"Format": "float2",
 			"SemanticIndex": 0
 		},
