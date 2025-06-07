@@ -79,10 +79,8 @@ namespace
             {
                 modelDesc->Transform = transform.Transform;
 
-                if (mesh)
-                {
-                    modelDesc->HasMesh = 1;
-                }
+                modelDesc->HasMesh = mesh ? 1 : 0;
+                modelDesc->UseSkinning = armature ? 1 : 0;
 
                 if (material)
                 {
@@ -93,11 +91,6 @@ namespace
                     modelDesc->NormalMapTextureIndex = frameResourceTable.CopyDescriptor(textureManager.GetTexture(material->NormalMap).get(), dx12::ResourceViewType::SRV, textureTable);
                     modelDesc->MetalnessTextureIndex = frameResourceTable.CopyDescriptor(textureManager.GetTexture(material->Metalness).get(), dx12::ResourceViewType::SRV, textureTable);
                     modelDesc->RoughnessTextureIndex = frameResourceTable.CopyDescriptor(textureManager.GetTexture(material->Roughness).get(), dx12::ResourceViewType::SRV, textureTable);
-                }
-
-                if (armature)
-                {
-                    modelDesc->UseSkinning = 1;
                 }
             }
 
