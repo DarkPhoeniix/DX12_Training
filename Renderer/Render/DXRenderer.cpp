@@ -365,13 +365,11 @@ namespace render
         LoadContent(uploadTask, filepath);
 
         dx12::CommandList& commandList = *uploadTask->GetCommandLists().front();
-        _currentFrame->Next->SetSyncPoint(uploadTask->GetFence());
+        _currentFrame->SetSyncPoint(uploadTask->GetFence());
 
         std::vector<ID3D12CommandList*> frameCommandLists = { commandList.GetDXCommandList().Get() };
         uploadTask->GetCommandQueue()->ExecuteCommandLists(1, frameCommandLists.data());
         uploadTask->GetCommandQueue()->Signal(uploadTask->GetDXFence(), uploadTask->GetFenceValue());
-
-        WaitAllFrames();
     }
 
     void DXRenderer::UpdateEntity(std::shared_ptr<scene::Entity> entity)
