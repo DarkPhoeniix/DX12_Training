@@ -44,4 +44,5 @@ using namespace Microsoft::WRL;
 #include "Utility/Logger.h"
 
 #include "Resource.h"
+#include "ResourceFactory.h"
 #include "Device.h"

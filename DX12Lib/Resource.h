@@ -2,6 +2,8 @@
 
 #include "ResourceDescription.h"
 
+class ResourceFactory;
+
 namespace dx12
 {
     struct RenderTargetView;
@@ -10,14 +12,15 @@ namespace dx12
     struct ShaderResourceView;
     struct UnorderedAccessView;
 
+    using ResourceID = std::uint64_t;
+    static ResourceID InvalidResourceID = ResourceID(-1);
+
     // Resource class representing a general GPU resource (e.g., texture, buffer).
-    class Resource
+    class Resource : public std::enable_shared_from_this<Resource>
     {
     public:
-        // Default constructor for the Resource class.
-        Resource();
-        // Constructor to initialize Resource with a given ResourceDescription.
-        Resource(ResourceDescription resourceDesc);
+        friend class ResourceFactory;
+
         // Copy constructor.
         Resource(const Resource& other);
         // Move constructor.
@@ -30,12 +33,11 @@ namespace dx12
         // Move assignment operator.
         Resource& operator=(Resource&& other) noexcept;
 
-        // Initializes the Resource from an existing DirectX 12 resource.
-        void InitFromDXResource(ComPtr<ID3D12Resource> resource);
-
         // Getter for the raw DirectX 12 resource.
         [[nodiscard]] ComPtr<ID3D12Resource> GetDXResource() const;
         [[nodiscard]] ComPtr<ID3D12Resource>& GetDXResource();
+
+        ResourceID GetID() const;
 
         // Sets the name for the resource for debugging and identification.
         void SetName(const std::string& name);
@@ -59,8 +61,8 @@ namespace dx12
         D3D12_GPU_VIRTUAL_ADDRESS OffsetGPU(std::uint64_t offset = 0) const;
 
         // Maps the resource to a CPU accessible memory region for reading/writing.
-        void* Map();
-        void* Map(uint32_t begin, uint32_t end); // Maps a specific range of the resource.
+        template<typename Type>
+        Type* Map(std::uint32_t begin = 0, std::uint32_t end = 0); // Maps a specific range of the resource.
         // Unmaps the resource after mapping is complete.
         void Unmap();
 
@@ -69,13 +71,8 @@ namespace dx12
 
         // Create a committed resource.
         ComPtr<ID3D12Resource> CreateCommitedResource(D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_COMMON);
-        // Create a committed resource using a custom ResourceDescription.
-        ComPtr<ID3D12Resource> CreateCommitedResource(const ResourceDescription& resourceDesc, D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_COMMON);
-
         // Create a placed resource (resource placed in a specific memory heap).
         ComPtr<ID3D12Resource> CreatePlacedResource(ComPtr<ID3D12Heap> heap, std::uint64_t offset, D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_COMMON);
-        // Create a placed resource (resource placed in a specific memory heap) with a custom ResourceDescription.
-        ComPtr<ID3D12Resource> CreatePlacedResource(const ResourceDescription& resourceDesc, ComPtr<ID3D12Heap> heap, std::uint64_t offset, D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_COMMON);
 
         // Get the resource as a Render Target View (RTV) for rendering operations.
         [[nodiscard]] RenderTargetView GetAsRTV();
@@ -89,6 +86,16 @@ namespace dx12
         [[nodiscard]] UnorderedAccessView GetAsUAV();
 
     protected:
+        // Default constructor for the Resource class.
+        Resource(const std::string& name);
+        // Constructor to initialize Resource with a given ResourceDescription.
+        Resource(const std::string& name, const ResourceDescription& resourceDesc);
+        // Initializes the Resource from an existing DirectX 12 resource.
+        Resource(const std::string& name, ComPtr<ID3D12Resource> resource);
+
+        // Unique identifier assigned by resource factory during construction.
+        ResourceID _ID;
+
         // The DirectX 12 resource pointer (e.g., ID3D12Resource) representing the actual GPU resource.
         ComPtr<ID3D12Resource> _resource;
 
@@ -111,30 +118,43 @@ namespace dx12
     // Struct for defining a Render Target View (RTV) for a resource.
     struct RenderTargetView : public D3D12_RENDER_TARGET_VIEW_DESC
     {
-        Resource* Owner; // Pointer back to the resource that owns this RTV.
+        std::shared_ptr<Resource> Owner; // Pointer back to the resource that owns this RTV.
     };
 
     // Struct for defining a Depth Stencil View (DSV) for a resource.
     struct DepthStencilView : public D3D12_DEPTH_STENCIL_VIEW_DESC
     {
-        Resource* Owner; // Pointer back to the resource that owns this DSV.
+        std::shared_ptr<Resource> Owner; // Pointer back to the resource that owns this DSV.
     };
 
     // Struct for defining a Constant Buffer View (CBV) for a resource.
     struct ConstantBufferView : public D3D12_CONSTANT_BUFFER_VIEW_DESC
     {
-        Resource* Owner; // Pointer back to the resource that owns this CBV.
+        std::shared_ptr<Resource> Owner; // Pointer back to the resource that owns this CBV.
     };
 
     // Struct for defining a Shader Resource View (SRV) for a resource.
     struct ShaderResourceView : public D3D12_SHADER_RESOURCE_VIEW_DESC
     {
-        Resource* Owner; // Pointer back to the resource that owns this SRV.
+        std::shared_ptr<Resource> Owner; // Pointer back to the resource that owns this SRV.
     };
 
     // Struct for defining an Unordered Access View (UAV) for a resource.
     struct UnorderedAccessView : public D3D12_UNORDERED_ACCESS_VIEW_DESC
     {
-        Resource* Owner; // Pointer back to the resource that owns this UAV.
+        std::shared_ptr<Resource> Owner; // Pointer back to the resource that owns this UAV.
     };
+
+    template<typename Type>
+    Type* Resource::Map(std::uint32_t begin, std::uint32_t end)
+    {
+        void* data = nullptr;
+
+        D3D12_RANGE range;
+        range.Begin = begin;
+        range.End = end;
+        _resource->Map(0, &range, &data);
+
+        return (Type*)data;
+    }
 } // namespace dx12

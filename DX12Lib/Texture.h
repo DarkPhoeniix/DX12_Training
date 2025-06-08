@@ -1,7 +1,5 @@
 #pragma once
 
-#include "DescriptorHeap.h"
-
 namespace dx12
 {
     class CommandList;
@@ -12,8 +10,6 @@ namespace dx12
     class Texture : public Resource
     {
     public:
-        // Default initialization.
-        Texture() = default;
         // Copy constructor.
         Texture(const Texture& other) = default;
         // Move constructor.

@@ -41,7 +41,8 @@ namespace render
             lumDesc.SetStride(sizeof(float));
             lumDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Unordered);
         }
-        _prevLuminance.CreateCommitedResource(lumDesc);
+        _prevLuminance = ResourceFactory::Create("Previous luminance", lumDesc);
+        _prevLuminance->CreateCommitedResource();
     }
 
     void AverageLuminancePass::Setup(rg::RenderPassBuilder& builder)
@@ -71,17 +72,17 @@ namespace render
 
             std::vector<dx12::ResourceBarrier> barriers =
             {
-                { &_prevLuminance,           D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_COPY_DEST },
-                { averageLuminance.get(),   D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_COPY_SOURCE }
+                { _prevLuminance,     D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_COPY_DEST},
+                { averageLuminance,   D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_COPY_SOURCE }
             };
             commandList.TransitionBarriers(barriers);
 
-            commandList.CopyResource(*averageLuminance, _prevLuminance);
+            commandList.CopyResource(*averageLuminance, *_prevLuminance);
             
             barriers =
             {
-                { &_prevLuminance,           D3D12_RESOURCE_STATE_COPY_DEST,     D3D12_RESOURCE_STATE_COMMON },
-                { averageLuminance.get(),   D3D12_RESOURCE_STATE_COPY_SOURCE,   D3D12_RESOURCE_STATE_COMMON }
+                { _prevLuminance,     D3D12_RESOURCE_STATE_COPY_DEST,     D3D12_RESOURCE_STATE_COMMON},
+                { averageLuminance,   D3D12_RESOURCE_STATE_COPY_SOURCE,   D3D12_RESOURCE_STATE_COMMON }
             };
             commandList.TransitionBarriers(barriers);
 
@@ -102,7 +103,7 @@ namespace render
             commandList.SetConstants(0, 1, &MIN_LOG_LUM, 1);
             commandList.SetConstants(0, 1, &LOG_LUM_RANGE, 2);
             commandList.SetConstants(0, 1, &adaptationSpeed, 3);
-            commandList.SetSRV(1, _prevLuminance.OffsetGPU());
+            commandList.SetSRV(1, _prevLuminance->OffsetGPU());
             commandList.SetUAV(2, luminanceHistogram->OffsetGPU());
             commandList.SetUAV(3, averageLuminance->OffsetGPU());
 

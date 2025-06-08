@@ -11,7 +11,7 @@ Frame::Frame()
     : Index(0)
     , Prev(nullptr)
     , Next(nullptr)
-    , _targetTexture{}
+    , _targetTexture(nullptr)
     , _currentTasks{}
     , _allocatorPool(nullptr)
     , _fencePool(nullptr)
@@ -44,9 +44,8 @@ void Frame::Init(const DirectX::XMUINT2& size, uint32_t cacheSize)
         desc.SetFormat(DXGI_FORMAT_UNKNOWN);
         desc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
 
-        std::shared_ptr<dx12::Resource> frameCachedMemory = std::make_shared<dx12::Resource>();
-        frameCachedMemory->CreateCommitedResource(desc);
-        frameCachedMemory->SetName(std::format("Frame cache {}", Index));
+        std::shared_ptr<dx12::Resource> frameCachedMemory = ResourceFactory::Create(std::format("Frame cache {}", Index), desc);
+        frameCachedMemory->CreateCommitedResource();
 
         _cache.SetResource(frameCachedMemory);
     }
@@ -74,16 +73,15 @@ void Frame::Init(const DirectX::XMUINT2& size, uint32_t cacheSize)
             textureDesc.SetClearValue(clearValueTexTarget);
             textureDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::RenderTarget);
         }
+        _targetTexture = ResourceFactory::Create(std::format("Frame cache {}", Index), textureDesc);
+        _targetTexture->CreateCommitedResource();
 
-        _targetTexture.CreateCommitedResource(textureDesc);
-        _targetTexture.SetName(std::string("Frame RTT ") + std::to_string(Index));
-
-        _resourceTable.PlaceResource(&_targetTexture, dx12::ResourceViewType::RTV);
-        _resourceTable.PlaceResource(&_targetTexture, dx12::ResourceViewType::SRV);
-        _resourceTable.PlaceResource(&_targetTexture, dx12::ResourceViewType::UAV);
+        _resourceTable.PlaceResource(_targetTexture, dx12::ResourceViewType::RTV);
+        _resourceTable.PlaceResource(_targetTexture, dx12::ResourceViewType::SRV);
+        _resourceTable.PlaceResource(_targetTexture, dx12::ResourceViewType::UAV);
     }
 
-    _tasks.reserve(128);
+    _tasks.reserve(128); // TODO: remove hardcoded task pool size
 }
 
 TaskGPU* Frame::CreateTask(D3D12_COMMAND_LIST_TYPE type, dx12::PipelineState* rootSignature)
@@ -165,14 +163,14 @@ void Frame::ResetCache()
     _resourceTable.Reset();
     _cache.Clear();
 
-    _resourceTable.PlaceResource(&_targetTexture, dx12::ResourceViewType::RTV);
-    _resourceTable.PlaceResource(&_targetTexture, dx12::ResourceViewType::SRV);
-    _resourceTable.PlaceResource(&_targetTexture, dx12::ResourceViewType::UAV);
+    _resourceTable.PlaceResource(_targetTexture, dx12::ResourceViewType::RTV);
+    _resourceTable.PlaceResource(_targetTexture, dx12::ResourceViewType::SRV);
+    _resourceTable.PlaceResource(_targetTexture, dx12::ResourceViewType::UAV);
 }
 
 void Frame::Resize(const DirectX::XMUINT2& size)
 {
-    _targetTexture.Reset();
+    _targetTexture->Reset();
     _resourceTable.Reset();
     _cache.Clear();
 
@@ -207,7 +205,7 @@ std::vector<TaskGPU> Frame::GetTasks() const
     return _tasks;
 }
 
-dx12::Resource& Frame::GetTargetTexture()
+std::shared_ptr<dx12::Resource> Frame::GetTargetTexture()
 {
     return _targetTexture;
 }

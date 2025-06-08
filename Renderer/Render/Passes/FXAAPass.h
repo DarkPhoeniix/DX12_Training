@@ -35,7 +35,7 @@ namespace render
 
         ComPtr<ID3D12CommandSignature> _cmdSignature;
 
-        dx12::Resource _paramsReset;
+        std::shared_ptr<dx12::Resource> _paramsReset;
 
         std::shared_ptr<scene::Scene> _scene;
         scene::Camera* _camera;

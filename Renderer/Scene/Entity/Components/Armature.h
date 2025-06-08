@@ -46,7 +46,7 @@ namespace scene
         void SetName(const std::string& name);
         const std::string& GetName() const;
 
-        dx12::Resource BoneDebugTransforms;
+        std::shared_ptr<dx12::Resource> BoneDebugTransforms;
 
     private:
         Bone* FindBone(BoneId id);

@@ -44,8 +44,8 @@ namespace render
 
             std::vector<dx12::ResourceBarrier> barriers =
             {
-                { target.get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RENDER_TARGET },
-                { depth.get(),  D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE }
+                { target, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RENDER_TARGET },
+                { depth,  D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE }
             };
             commandList.TransitionBarriers(barriers);
 
@@ -62,12 +62,12 @@ namespace render
                 if (arm)
                 {
                     DirectX::XMMATRIX vp = _camera->ViewProjection();
-                    DirectX::XMVECTOR* data = (DirectX::XMVECTOR*)arm->BoneDebugTransforms.Map();
+                    DirectX::XMVECTOR* data = arm->BoneDebugTransforms->Map<DirectX::XMVECTOR>();
 
                     commandList.SetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
 
                     commandList.SetConstants(0, 16, &vp);
-                    commandList.SetSRV(2, arm->BoneDebugTransforms.OffsetGPU(0));
+                    commandList.SetSRV(2, arm->BoneDebugTransforms->OffsetGPU(0));
 
                     const auto& sortedBones = arm->GetSortedBones();
                     int ind = 0;
@@ -89,8 +89,8 @@ namespace render
 
             barriers =
             {
-                { target.get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON},
-                { depth.get(),  D3D12_RESOURCE_STATE_DEPTH_WRITE,   D3D12_RESOURCE_STATE_COMMON}
+                { target, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON},
+                { depth,  D3D12_RESOURCE_STATE_DEPTH_WRITE,   D3D12_RESOURCE_STATE_COMMON}
             };
             commandList.TransitionBarriers(barriers);
         }

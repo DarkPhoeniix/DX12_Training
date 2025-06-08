@@ -39,7 +39,7 @@ namespace dx12
         ComPtr<ID3D12QueryHeap> _statisticsQueryHeap;
 
         // Resource used to store query results.
-        dx12::Resource _statisticsResource;
+        std::shared_ptr<dx12::Resource> _statisticsResource;
         // Pointer to the resolved statistics data stored in _statisticsResource.
         D3D12_QUERY_DATA_PIPELINE_STATISTICS* _statisticsData;
     };

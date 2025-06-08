@@ -45,10 +45,10 @@ namespace render
             weightsDesc.SetStride(sizeof(float));
             weightsDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
         }
-        _weights.CreateCommitedResource(weightsDesc);
-        _weights.SetName("SSAO blur weights");
+        _weights = ResourceFactory::Create("SSAO blur weights", weightsDesc);
+        _weights->CreateCommitedResource();
 
-        float* weightsData = (float*)_weights.Map();
+        float* weightsData = _weights->Map<float>();
         const float sigma = 2.0f;
         float sum = 0.0f;
         for (int i = -kRadius; i <= kRadius; ++i)
@@ -62,7 +62,7 @@ namespace render
         {
             weightsData[kRadius + i] /= sum;
         }
-        _weights.Unmap();
+        _weights->Unmap();
     }
 
     void SSAOBlurPass::Setup(rg::RenderPassBuilder& builder)
@@ -98,9 +98,9 @@ namespace render
 
             std::vector<dx12::ResourceBarrier> barriers =
             {
-                { depth.get(),      D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-                { aoTarget.get(),   D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-                { blurTarget.get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS }
+                { depth,      D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
+                { aoTarget,   D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
+                { blurTarget, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS }
             };
             commandList.TransitionBarriers(barriers);
 
@@ -117,7 +117,7 @@ namespace render
 
             commandList.SetCBV(0, sceneDataHandle.DataGPU);
             commandList.SetCBV(1, cbHandle.DataGPU);
-            commandList.SetSRV(2, _weights.OffsetGPU());
+            commandList.SetSRV(2, _weights->OffsetGPU());
             commandList.SetDescriptorTable(3, depthHandle);
             commandList.SetDescriptorTable(4, aoTargetSRV);
             commandList.SetDescriptorTable(5, blurTargetUAV);
@@ -130,8 +130,8 @@ namespace render
 
             barriers =
             {
-                { aoTarget.get(),   D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS },
-                { blurTarget.get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE }
+                { aoTarget,   D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS },
+                { blurTarget, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE }
             };
             commandList.TransitionBarriers(barriers);
 
@@ -140,7 +140,7 @@ namespace render
             commandList.SetDescriptorHeaps({ context.GetResourceTable().GetDescriptorHeap(dx12::ResourceViewType::SRV).GetDXDescriptorHeap().Get() });
             commandList.SetCBV(0, sceneDataHandle.DataGPU);
             commandList.SetCBV(1, cbHandle.DataGPU);
-            commandList.SetSRV(2, _weights.OffsetGPU());
+            commandList.SetSRV(2, _weights->OffsetGPU());
             commandList.SetDescriptorTable(3, depthHandle);
             commandList.SetDescriptorTable(4, blurTargetSRV);
             commandList.SetDescriptorTable(5, aoTargetUAV);
@@ -149,9 +149,9 @@ namespace render
 
             barriers =
             {
-                { depth.get(),      D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
-                { aoTarget.get(),   D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON },
-                { blurTarget.get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON }
+                { depth,      D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
+                { aoTarget,   D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON },
+                { blurTarget, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON }
             };
             commandList.TransitionBarriers(barriers);
         }

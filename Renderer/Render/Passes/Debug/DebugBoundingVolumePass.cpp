@@ -43,8 +43,8 @@ namespace render
 
             std::vector<dx12::ResourceBarrier> barriers =
             {
-                { target.get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RENDER_TARGET },
-                { depth.get(),  D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE }
+                { target, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RENDER_TARGET },
+                { depth,  D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE }
             };
             commandList.TransitionBarriers(barriers);
 
@@ -79,8 +79,8 @@ namespace render
 
             barriers =
             {
-                { target.get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON},
-                { depth.get(),  D3D12_RESOURCE_STATE_DEPTH_WRITE,   D3D12_RESOURCE_STATE_COMMON}
+                { target, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON},
+                { depth,  D3D12_RESOURCE_STATE_DEPTH_WRITE,   D3D12_RESOURCE_STATE_COMMON}
             };
             commandList.TransitionBarriers(barriers);
         }

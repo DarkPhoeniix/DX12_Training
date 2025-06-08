@@ -28,8 +28,8 @@ namespace render
     private:
         dx12::PipelineState _SSAOPipeline;
 
-        dx12::Resource _noise;
-        dx12::Resource _kernels;
+        std::shared_ptr<dx12::Resource> _noise;
+        std::shared_ptr<dx12::Resource> _kernels;
 
         std::shared_ptr<scene::Scene> _scene;
         scene::Camera* _camera;

@@ -4,28 +4,45 @@
 
 namespace dx12
 {
-	Resource::Resource()
-		: _resource(nullptr)
+	Resource::Resource(const std::string& name)
+		: _ID(InvalidResourceID)
+		, _resource(nullptr)
 		, _resourceDesc()
 		, _currentState(D3D12_RESOURCE_STATE_COMMON)
 		, _initialState(D3D12_RESOURCE_STATE_COMMON)
 		, _allocationInfo()
 		, _uavCounterOffset(std::uint32_t(-1))
+		, _name(name)
 	{
 	}
 
-	Resource::Resource(ResourceDescription resourceDesc)
-		: _resource(nullptr)
+	Resource::Resource(const std::string& name, const ResourceDescription& resourceDesc)
+		: _ID(InvalidResourceID)
+		, _resource(nullptr)
 		, _resourceDesc(resourceDesc)
 		, _currentState(D3D12_RESOURCE_STATE_COMMON)
 		, _initialState(D3D12_RESOURCE_STATE_COMMON)
 		, _allocationInfo()
 		, _uavCounterOffset(std::uint32_t(-1))
+		, _name(name)
+	{
+	}
+
+	Resource::Resource(const std::string& name, ComPtr<ID3D12Resource> resource)
+		: _ID(InvalidResourceID)
+		, _resource(resource)
+		, _resourceDesc(resource->GetDesc())
+		, _currentState(D3D12_RESOURCE_STATE_COMMON)
+		, _initialState(D3D12_RESOURCE_STATE_COMMON)
+		, _allocationInfo()
+		, _uavCounterOffset(std::uint32_t(-1))
+		, _name(name)
 	{
 	}
 
 	Resource::Resource(const Resource& other)
-		: _resource(other._resource)
+		: _ID(other._ID)
+		, _resource(other._resource)
 		, _resourceDesc(other._resourceDesc)
 		, _currentState(other._currentState)
 		, _initialState(other._initialState)
@@ -35,8 +52,9 @@ namespace dx12
 	}
 
 	Resource::Resource(Resource&& other) noexcept
-		: _resource(std::move(other._resource))
-		, _resourceDesc(other._resourceDesc)
+		: _ID(other._ID)
+		, _resource(std::move(other._resource))
+		, _resourceDesc(std::move(other._resourceDesc))
 		, _currentState(other._currentState)
 		, _initialState(other._initialState)
 		, _allocationInfo(other._allocationInfo)
@@ -69,7 +87,7 @@ namespace dx12
 		if (this != &other)
 		{
 			_resource = std::move(other._resource);
-			_resourceDesc = other._resourceDesc;
+			_resourceDesc = std::move(other._resourceDesc);
 			_currentState = other._currentState;
 			_initialState = other._initialState;
 			_allocationInfo = other._allocationInfo;
@@ -77,14 +95,6 @@ namespace dx12
 		}
 
 		return *this;
-	}
-
-	void Resource::InitFromDXResource(ComPtr<ID3D12Resource> resource)
-	{
-		_resource = resource;
-		_resourceDesc = resource->GetDesc();
-		_initialState = D3D12_RESOURCE_STATE_COMMON;
-		_currentState = D3D12_RESOURCE_STATE_COMMON;
 	}
 
 	ComPtr<ID3D12Resource> Resource::GetDXResource() const
@@ -95,6 +105,11 @@ namespace dx12
 	ComPtr<ID3D12Resource>& Resource::GetDXResource()
 	{
 		return _resource;
+	}
+
+	ResourceID Resource::GetID() const
+	{
+		return _ID;
 	}
 
 	void Resource::SetName(const std::string& name)
@@ -136,30 +151,6 @@ namespace dx12
 	{
 		D3D12_RESOURCE_DESC desc = _resourceDesc.CreateDXResourceDescription();
 		return dx12::Device::GetDXDevice()->GetResourceAllocationInfo(0, 1, &desc);
-	}
-
-	void* Resource::Map()
-	{
-		void* data = nullptr;
-
-		D3D12_RANGE range;
-		range.Begin = 0;
-		range.End = 0;
-		_resource->Map(0, &range, &data);
-
-		return data;
-	}
-
-	void* dx12::Resource::Map(uint32_t begin, uint32_t end)
-	{
-		void* data = nullptr;
-
-		D3D12_RANGE range;
-		range.Begin = begin;
-		range.End = end;
-		_resource->Map(0, &range, &data);
-
-		return data;
 	}
 
 	void Resource::Unmap()
@@ -232,12 +223,6 @@ namespace dx12
 		return _resource;
 	}
 
-	ComPtr<ID3D12Resource> Resource::CreateCommitedResource(const ResourceDescription& resourceDesc, D3D12_RESOURCE_STATES initialState)
-	{
-		_resourceDesc = resourceDesc;
-		return CreateCommitedResource(initialState);
-	}
-
 	ComPtr<ID3D12Resource> Resource::CreatePlacedResource(ComPtr<ID3D12Heap> heap, std::uint64_t offset, D3D12_RESOURCE_STATES initialState)
 	{
 		_initialState = initialState;
@@ -260,19 +245,13 @@ namespace dx12
 		return _resource;
 	}
 
-	ComPtr<ID3D12Resource> Resource::CreatePlacedResource(const ResourceDescription& resourceDesc, ComPtr<ID3D12Heap> heap, std::uint64_t offset, D3D12_RESOURCE_STATES initialState)
-	{
-		_resourceDesc = resourceDesc;
-		return CreatePlacedResource(heap, offset, initialState);
-	}
-
 	RenderTargetView Resource::GetAsRTV()
 	{
 		RenderTargetView view = {};
 
 		view.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
 		view.Texture2D.MipSlice = 0;
-		view.Owner = this;
+		view.Owner = shared_from_this();
 
 		return view;
 	}
@@ -291,7 +270,7 @@ namespace dx12
 			view.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
 		}
 		view.Texture2D.MipSlice = 0;
-		view.Owner = this;
+		view.Owner = shared_from_this();
 
 		return view;
 	}
@@ -301,7 +280,7 @@ namespace dx12
 		ConstantBufferView view = {};
 
 		// TODO: add CBV to resource
-		view.Owner = this;
+		view.Owner = shared_from_this();
 		view.BufferLocation = this->OffsetGPU();
 		view.SizeInBytes = _resourceDesc.GetSize().x * _resourceDesc.GetSize().y;
 
@@ -314,7 +293,7 @@ namespace dx12
 
 		view.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 		view.Format = _resourceDesc.GetFormat();
-		view.Owner = this;
+		view.Owner = shared_from_this();
 
 		ResourceType type = _resourceDesc.GetResourceType();
 		if ((type & ResourceType::Buffer) != ResourceType::None)
@@ -367,7 +346,7 @@ namespace dx12
 		UnorderedAccessView view = {};
 
 		view.Format = _resourceDesc.GetFormat();
-		view.Owner = this;
+		view.Owner = shared_from_this();
 
 		ResourceType type = _resourceDesc.GetResourceType();
 		if ((type & ResourceType::Buffer) != ResourceType::None)

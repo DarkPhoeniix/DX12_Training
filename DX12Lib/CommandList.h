@@ -52,7 +52,7 @@ namespace dx12
         ComPtr<ID3D12GraphicsCommandList>& GetDXCommandList();
 
         // Sets the predication (conditional execution) for the command list using a buffer and offset.
-        void SetPredication(Resource* buffer, std::uint64_t offset, D3D12_PREDICATION_OP operation);
+        void SetPredication(std::shared_ptr<Resource> buffer, std::uint64_t offset, D3D12_PREDICATION_OP operation);
 
         // Begins recording a query for GPU information).
         void BeginQuery(ComPtr<ID3D12QueryHeap> queryHeap, D3D12_QUERY_TYPE type, std::uint32_t index);

@@ -29,8 +29,6 @@ namespace render
 
         ComPtr<ID3D12CommandSignature> _cmdSignature;
 
-        dx12::Resource _counterReset;
-
         std::shared_ptr<scene::Scene> _scene;
         scene::Camera* _camera;
     };

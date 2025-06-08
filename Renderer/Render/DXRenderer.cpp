@@ -87,10 +87,10 @@ namespace
                     scene::TextureManager& textureManager = scene->GetCache().GetTextureManager();
                     dx12::ResourceTable& textureTable = textureManager.GetTextureTable();
 
-                    modelDesc->AlbedoTextureIndex = frameResourceTable.CopyDescriptor(textureManager.GetTexture(material->Albedo).get(), dx12::ResourceViewType::SRV, textureTable);
-                    modelDesc->NormalMapTextureIndex = frameResourceTable.CopyDescriptor(textureManager.GetTexture(material->NormalMap).get(), dx12::ResourceViewType::SRV, textureTable);
-                    modelDesc->MetalnessTextureIndex = frameResourceTable.CopyDescriptor(textureManager.GetTexture(material->Metalness).get(), dx12::ResourceViewType::SRV, textureTable);
-                    modelDesc->RoughnessTextureIndex = frameResourceTable.CopyDescriptor(textureManager.GetTexture(material->Roughness).get(), dx12::ResourceViewType::SRV, textureTable);
+                    modelDesc->AlbedoTextureIndex    = frameResourceTable.CopyDescriptor(textureManager.GetTexture(material->Albedo), dx12::ResourceViewType::SRV, textureTable);
+                    modelDesc->NormalMapTextureIndex = frameResourceTable.CopyDescriptor(textureManager.GetTexture(material->NormalMap), dx12::ResourceViewType::SRV, textureTable);
+                    modelDesc->MetalnessTextureIndex = frameResourceTable.CopyDescriptor(textureManager.GetTexture(material->Metalness), dx12::ResourceViewType::SRV, textureTable);
+                    modelDesc->RoughnessTextureIndex = frameResourceTable.CopyDescriptor(textureManager.GetTexture(material->Roughness), dx12::ResourceViewType::SRV, textureTable);
                 }
             }
 

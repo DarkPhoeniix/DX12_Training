@@ -34,17 +34,17 @@ namespace scene
 
         void Clear();
 
-        void AddTexture(std::shared_ptr<dx12::Texture> texture, dx12::ResourceViewType viewType);
-        std::shared_ptr<dx12::Texture> GetTexture(const std::string& name) const;
+        void AddTexture(std::shared_ptr<dx12::Resource> texture, dx12::ResourceViewType viewType);
+        std::shared_ptr<dx12::Resource> GetTexture(const std::string& name) const;
 
         dx12::ResourceTable& GetTextureTable();
 
     private:
-        std::unordered_map<std::string, std::shared_ptr<dx12::Texture>> _textures;
+        std::unordered_map<std::string, std::shared_ptr<dx12::Resource>> _textures;
         std::set<std::string> _uploadQueue; // use set to remove duplicates
 
         dx12::ResourceTable _texturesTable;
         dx12::Heap _texturesHeap;
-        std::unordered_map<std::string, dx12::Resource> _intermediateResources;
+        std::unordered_map<std::string, std::shared_ptr<dx12::Resource>> _intermediateResources;
     };
 }

@@ -9,7 +9,7 @@ namespace dx12
     class ResourceBarrier
     {
     public:
-        Resource* Resource;
+        std::weak_ptr<Resource> Resource;
         D3D12_RESOURCE_STATES BeforeState;
         D3D12_RESOURCE_STATES AfterState;
 

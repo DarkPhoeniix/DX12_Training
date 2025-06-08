@@ -111,7 +111,7 @@ namespace dx12
         return _commandList;
     }
 
-    void CommandList::SetPredication(Resource* buffer, std::uint64_t offset, D3D12_PREDICATION_OP operation)
+    void CommandList::SetPredication(std::shared_ptr<Resource> buffer, std::uint64_t offset, D3D12_PREDICATION_OP operation)
     {
         if (buffer)
         {
@@ -155,14 +155,17 @@ namespace dx12
 
     void CommandList::TransitionBarrier(ResourceBarrier& barrier)
     {
-        CD3DX12_RESOURCE_BARRIER dxBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
-            barrier.Resource->GetDXResource().Get(),
-            barrier.BeforeState, 
-            barrier.AfterState, 
-            D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
-        barrier.Resource->SetCurrentState(barrier.AfterState);
+        if (std::shared_ptr<Resource> resource = barrier.Resource.lock())
+        {
+            CD3DX12_RESOURCE_BARRIER dxBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
+                resource->GetDXResource().Get(),
+                barrier.BeforeState,
+                barrier.AfterState,
+                D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
+            resource->SetCurrentState(barrier.AfterState);
 
-        _commandList->ResourceBarrier(1, &dxBarrier);
+            _commandList->ResourceBarrier(1, &dxBarrier);
+        }
     }
 
     void CommandList::TransitionBarriers(std::vector<ResourceBarrier>& barriers)
@@ -172,12 +175,15 @@ namespace dx12
 
         for (size_t i = 0; i < numBarriers; ++i)
         {
-            dxBarriers[i] = CD3DX12_RESOURCE_BARRIER::Transition(
-                barriers[i].Resource->GetDXResource().Get(),
-                barriers[i].BeforeState,
-                barriers[i].AfterState,
-                D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
-            barriers[i].Resource->SetCurrentState(barriers[i].AfterState);
+            if (std::shared_ptr<Resource> resource = barriers[i].Resource.lock())
+            {
+                dxBarriers[i] = CD3DX12_RESOURCE_BARRIER::Transition(
+                    resource->GetDXResource().Get(),
+                    barriers[i].BeforeState,
+                    barriers[i].AfterState,
+                    D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
+                resource->SetCurrentState(barriers[i].AfterState);
+            }
         }
 
         _commandList->ResourceBarrier(numBarriers, dxBarriers.data());

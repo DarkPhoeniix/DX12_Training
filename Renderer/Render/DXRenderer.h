@@ -57,9 +57,9 @@ namespace render
         std::shared_ptr<scene::Scene> _scene;
         std::shared_ptr<scene::Camera> _cameraComponent;
 
-        std::shared_ptr<dx12::Texture> _diffuseIrradianceMap;
-        std::shared_ptr<dx12::Texture> _preFilteredEnvironmentMap;
-        std::shared_ptr<dx12::Texture> _brdfLUT;
+        std::shared_ptr<dx12::Resource> _diffuseIrradianceMap;
+        std::shared_ptr<dx12::Resource> _preFilteredEnvironmentMap;
+        std::shared_ptr<dx12::Resource> _brdfLUT;
 
         bool _isMinimized;
         bool _isCameraMoving;

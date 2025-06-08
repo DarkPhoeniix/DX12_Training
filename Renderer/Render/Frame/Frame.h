@@ -47,7 +47,7 @@ public:
     TaskGPU* GetTask(const std::string& name);
     std::vector<TaskGPU> GetTasks() const;
 
-    dx12::Resource& GetTargetTexture();
+    std::shared_ptr<dx12::Resource> GetTargetTexture();
 
     unsigned int Index;
     Frame* Prev;
@@ -65,7 +65,7 @@ private:
     dx12::ResourceTable _resourceTable;
     CacheGPU _cache;
 
-    dx12::Resource _targetTexture;
+    std::shared_ptr<dx12::Resource> _targetTexture;
 
     std::vector<TaskGPU> _tasks;
 };
