@@ -1,6 +1,7 @@
 #pragma once
 
 #include "SwapChain.h"
+#include "IGPUCrashTracker.h"
 
 namespace dx12
 {
@@ -59,6 +60,9 @@ namespace dx12
         // Creates an Unordered Access View (UAV) in the specified descriptor heap.
         static void CreateUnorderedAccessView(const UnorderedAccessView& view, DescriptorHeap& descriptorHeap, dx12::Resource* counterResource = nullptr);
 
+        // Retrieves the current GPU crash tracker instance.
+        static std::shared_ptr<tracking::IGPUCrashTracker> GetCrashTracker();
+
     private:
         Device();
         ~Device();
@@ -84,5 +88,7 @@ namespace dx12
 
         // Singleton instance of the Device class.
         static Device* _instance;
+
+        std::shared_ptr<tracking::IGPUCrashTracker> _crashTracker;
     };
 } // namespace dx12

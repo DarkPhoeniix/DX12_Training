@@ -7,6 +7,7 @@
 TaskGPU::TaskGPU()
     : _commandQueue(nullptr)
     , _fence(nullptr)
+    , _commandListCrashContext(dx12::Device::GetCrashTracker()->CreateCommandListCrashContext())
 {
 }
 
@@ -29,6 +30,7 @@ ComPtr<ID3D12CommandQueue> TaskGPU::GetCommandQueue() const
 void TaskGPU::AddCommandList(dx12::CommandList* commandList)
 {
     _commandLists.push_back(commandList);
+    _commandListCrashContext->Initialize(commandList->GetDXCommandList().Get());
 }
 
 std::vector<dx12::CommandList*> TaskGPU::GetCommandLists() const
@@ -74,4 +76,9 @@ void TaskGPU::SetName(const std::string& name)
 const std::string& TaskGPU::GetName() const
 {
     return _name;
+}
+
+std::shared_ptr<tracking::ICommandListCrashContext> TaskGPU::GetCrashContext()
+{
+    return _commandListCrashContext;
 }

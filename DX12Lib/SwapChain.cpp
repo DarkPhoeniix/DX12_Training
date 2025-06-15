@@ -115,7 +115,16 @@ namespace dx12
     {
         UINT syncInterval = _vSync ? 1 : 0;
         UINT presentFlags = (_tearingSupport && !_vSync) ? DXGI_PRESENT_ALLOW_TEARING : 0;
-        helpers::throwIfFailed(_dxgiSwapChain->Present(syncInterval, presentFlags));
+        HRESULT result = _dxgiSwapChain->Present(syncInterval, presentFlags);
+
+        if (FAILED(result))
+        {
+            // Crash tracker need some time to process the crash dump.
+            Device::GetCrashTracker()->WaitUntilCrashDumpFinished();
+            // Terminate on failure
+            exit(-1);
+        }
+
         _currentBackBufferIndex = _dxgiSwapChain->GetCurrentBackBufferIndex();
 
         return _currentBackBufferIndex;

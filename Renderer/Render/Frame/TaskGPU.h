@@ -1,11 +1,12 @@
 #pragma once
 
 #include "Fence.h"
+#include "ICommandListCrashContext.h"
 
 namespace dx12
 {
     class CommandList;
-} // namespace core
+} // namespace dx12
 
 class TaskGPU
 {
@@ -30,9 +31,12 @@ public:
     void SetName(const std::string& name);
     const std::string& GetName() const;
 
+    std::shared_ptr<tracking::ICommandListCrashContext> GetCrashContext();
+
 private:
     std::vector<dx12::CommandList*> _commandLists;
     ComPtr<ID3D12CommandQueue> _commandQueue;
+    std::shared_ptr<tracking::ICommandListCrashContext> _commandListCrashContext;
 
     dx12::Fence* _fence = nullptr;
     std::vector<std::string> _dependencies;
