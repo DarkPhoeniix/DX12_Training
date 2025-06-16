@@ -28,7 +28,6 @@
 
 #include <map>
 #include <mutex>
-#include <array>
 
 #include "NsightAftermathHelpers.h"
 #include "NsightAftermathShaderDatabase.h"
@@ -39,15 +38,10 @@ namespace tracking
     // Implements GPU crash dump tracking using the Nsight
     // Aftermath API.
     //
-    class GpuCrashTracker : public IGPUCrashTracker
+    class GpuCrashTracker final : public IGPUCrashTracker
     {
     public:
-        // keep four frames worth of marker history
-        const static std::uint32_t c_markerFrameHistory = 4;
-        typedef std::array<std::map<uint64_t, std::string>, c_markerFrameHistory> MarkerMap;
-
-        // TODO: fix marker map later
-        GpuCrashTracker(/*const MarkerMap& markerMap*/);
+        GpuCrashTracker();
         ~GpuCrashTracker();
 
         // Initialize the GPU crash dump tracker.
@@ -57,7 +51,6 @@ namespace tracking
         void WaitUntilCrashDumpFinished() override;
 
     private:
-
         //*********************************************************
         // Callback handlers for GPU crash dumps and related data.
         //
@@ -170,8 +163,5 @@ namespace tracking
 
         // The mock shader database.
         ShaderDatabase m_shaderDatabase;
-
-        // App-managed marker tracking
-        //const MarkerMap& m_markerMap;
     };
 } // namespace tracking

@@ -1,7 +1,11 @@
 #pragma once
 
 #include "SwapChain.h"
-#include "IGPUCrashTracker.h"
+
+namespace tracking
+{
+    class IGPUCrashTracker;
+}
 
 namespace dx12
 {

@@ -5,10 +5,10 @@
 
 namespace tracking
 {
-    class NsightAftermathCommandListContext : public ICommandListCrashContext
+    class NsightAftermathCommandListContext final : public ICommandListCrashContext
     {
     public:
-        NsightAftermathCommandListContext();
+        NsightAftermathCommandListContext(std::shared_ptr<IGPUCrashTracker> crashTracker);
         ~NsightAftermathCommandListContext() = default;
 
         // Inherited via ICommandListCrashContext

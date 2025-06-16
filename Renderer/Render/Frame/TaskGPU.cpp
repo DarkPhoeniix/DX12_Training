@@ -4,6 +4,9 @@
 
 #include "CommandList.h"
 
+#include "IGPUCrashTracker.h"
+#include "ICommandListCrashContext.h"
+
 TaskGPU::TaskGPU()
     : _commandQueue(nullptr)
     , _fence(nullptr)

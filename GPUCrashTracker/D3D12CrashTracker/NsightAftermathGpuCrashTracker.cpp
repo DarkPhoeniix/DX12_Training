@@ -42,7 +42,6 @@ namespace tracking
         , m_mutex()
         , m_shaderDebugInfo()
         , m_shaderDatabase()
-        //, m_markerMap(markerMap)
     {
         // TODO: fix marker map later
     }
@@ -170,11 +169,8 @@ namespace tracking
         // Add some basic description about the crash. This is called after the GPU crash happens, but before
         // the actual GPU crash dump callback. The provided data is included in the crash dump and can be
         // retrieved using GFSDK_Aftermath_GpuCrashDump_GetDescription().
-        addDescription(GFSDK_Aftermath_GpuCrashDumpDescriptionKey_ApplicationName, "D3D12HelloNsightAftermath");
-        addDescription(GFSDK_Aftermath_GpuCrashDumpDescriptionKey_ApplicationVersion, "v1.0");
-        addDescription(GFSDK_Aftermath_GpuCrashDumpDescriptionKey_UserDefined, "This is a GPU crash dump example.");
-        addDescription(GFSDK_Aftermath_GpuCrashDumpDescriptionKey_UserDefined + 1, "Engine State: Rendering.");
-        addDescription(GFSDK_Aftermath_GpuCrashDumpDescriptionKey_UserDefined + 2, "More user-defined information...");
+        addDescription(GFSDK_Aftermath_GpuCrashDumpDescriptionKey_ApplicationName, "DX12_RenderEngine");
+        addDescription(GFSDK_Aftermath_GpuCrashDumpDescriptionKey_ApplicationVersion, "v1.5"); // TODO: make this dynamic
     }
 
     // Handler for app-managed marker resolve callback
@@ -184,19 +180,19 @@ namespace tracking
         // using references for all of the m_markerMap accesses ensures that the pointers refer to the persistent data
         
         // TODO: fix marker map later
-        //for (auto& map : m_markerMap)
-        //{
-        //    auto foundMarker = map.find((uint64_t)pMarkerData);
-        //    if (foundMarker != map.end())
-        //    {
-        //        const std::string& foundMarkerData = foundMarker->second;
-        //        // std::string::data() will return a valid pointer until the string is next modified
-        //        // we don't modify the string after calling data() here, so the pointer should remain valid
-        //        *ppResolvedMarkerData = (void*)foundMarkerData.data();
-        //        *pResolvedMarkerDataSize = (uint32_t)foundMarkerData.length();
-        //        return;
-        //    }
-        //}
+        for (auto& map : m_markerMap)
+        {
+            auto foundMarker = map.find((uint64_t)pMarkerData);
+            if (foundMarker != map.end())
+            {
+                const std::string& foundMarkerData = foundMarker->second;
+                // std::string::data() will return a valid pointer until the string is next modified
+                // we don't modify the string after calling data() here, so the pointer should remain valid
+                *ppResolvedMarkerData = (void*)foundMarkerData.data();
+                *pResolvedMarkerDataSize = (uint32_t)foundMarkerData.length();
+                return;
+            }
+        }
     }
 
     // Helper for writing a GPU crash dump to a file

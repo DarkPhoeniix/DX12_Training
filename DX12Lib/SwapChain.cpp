@@ -2,6 +2,8 @@
 
 #include "SwapChain.h"
 
+#include "IGPUCrashTracker.h"
+
 #include "Window/Win32Window.h"
 
 namespace dx12

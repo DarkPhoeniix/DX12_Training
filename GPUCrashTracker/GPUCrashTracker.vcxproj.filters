@@ -53,5 +53,8 @@
     <ClCompile Include="D3D12CrashTracker\NsightAftermathCommandListContext.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ICommandListCrashContext.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

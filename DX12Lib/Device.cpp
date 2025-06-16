@@ -2,6 +2,8 @@
 
 #include "Device.h"
 
+#include "IGPUCrashTracker.h"
+
 namespace dx12
 {
     namespace
@@ -154,7 +156,7 @@ namespace dx12
     }
 
     Device::Device()
-        : _crashTracker(std::move(tracking::IGPUCrashTracker::Create()))
+        : _crashTracker(tracking::IGPUCrashTracker::Create())
     {
 #if defined(_DEBUG)
         EnableDXDebugLayer();
