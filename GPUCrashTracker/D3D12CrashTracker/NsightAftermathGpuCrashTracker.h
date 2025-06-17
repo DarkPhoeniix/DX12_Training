@@ -38,11 +38,11 @@ namespace tracking
     // Implements GPU crash dump tracking using the Nsight
     // Aftermath API.
     //
-    class GpuCrashTracker final : public IGPUCrashTracker
+    class NsightAftermathGpuCrashTracker final : public IGPUCrashTracker
     {
     public:
-        GpuCrashTracker();
-        ~GpuCrashTracker();
+        NsightAftermathGpuCrashTracker();
+        ~NsightAftermathGpuCrashTracker();
 
         // Initialize the GPU crash dump tracker.
         void Enable() override;
@@ -162,6 +162,6 @@ namespace tracking
         std::map<GFSDK_Aftermath_ShaderDebugInfoIdentifier, std::vector<uint8_t>> m_shaderDebugInfo;
 
         // The mock shader database.
-        ShaderDatabase m_shaderDatabase;
+        NsightAftermathShaderDatabase m_shaderDatabase;
     };
 } // namespace tracking

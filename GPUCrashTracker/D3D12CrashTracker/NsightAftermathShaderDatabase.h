@@ -38,11 +38,11 @@ namespace tracking
     // In a real world scenario this would be part of an offline
     // analysis tool. This is for demonstration purposes only!
     //
-    class ShaderDatabase
+    class NsightAftermathShaderDatabase
     {
     public:
-        ShaderDatabase();
-        ~ShaderDatabase();
+        NsightAftermathShaderDatabase();
+        ~NsightAftermathShaderDatabase();
 
         // Find a shader bytecode binary by shader hash.
         bool FindShaderBinary(const GFSDK_Aftermath_ShaderBinaryHash& shaderHash, std::vector<uint8_t>& shader) const;

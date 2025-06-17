@@ -45,7 +45,7 @@ namespace tracking
     std::shared_ptr<IGPUCrashTracker> IGPUCrashTracker::Create()
     {
 #ifdef USE_NSIGHT_AFTERMATH
-        return std::make_shared<GpuCrashTracker>();
+        return std::make_shared<NsightAftermathGpuCrashTracker>();
 #else
         return std::make_shared<NullCrashTracker>();
 #endif
