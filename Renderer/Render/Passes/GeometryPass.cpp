@@ -122,8 +122,6 @@ namespace render
         dx12::CommandList& commandList = *task.GetCommandLists().front();
         commandList.SetName("Geometry pass command list");
 
-        task.GetCrashContext()->SetMarker("Geometry Pass");
-
         PIXBeginEvent(commandList.GetDXCommandList().Get(), 2, "Geometry Pass");
         {
             std::shared_ptr<dx12::Resource> albedoMetallic = context.GetResource(_data.AlbedoMetallic);

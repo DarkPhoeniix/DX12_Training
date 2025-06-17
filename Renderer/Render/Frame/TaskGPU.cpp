@@ -74,6 +74,9 @@ std::vector<std::string> TaskGPU::GetDependencies() const
 void TaskGPU::SetName(const std::string& name)
 {
     _name = name;
+
+    // TODO: not the best place to set the marker, but this will definetly register all command lists
+    _commandListCrashContext->SetMarker(name);
 }
 
 const std::string& TaskGPU::GetName() const
