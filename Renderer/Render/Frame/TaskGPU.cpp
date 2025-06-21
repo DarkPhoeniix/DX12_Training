@@ -4,9 +4,13 @@
 
 #include "CommandList.h"
 
+#include "IGPUCrashTracker.h"
+#include "ICommandListCrashContext.h"
+
 TaskGPU::TaskGPU()
     : _commandQueue(nullptr)
     , _fence(nullptr)
+    , _commandListCrashContext(dx12::Device::GetCrashTracker()->CreateCommandListCrashContext())
 {
 }
 
@@ -29,6 +33,7 @@ ComPtr<ID3D12CommandQueue> TaskGPU::GetCommandQueue() const
 void TaskGPU::AddCommandList(dx12::CommandList* commandList)
 {
     _commandLists.push_back(commandList);
+    _commandListCrashContext->Initialize(commandList->GetDXCommandList().Get());
 }
 
 std::vector<dx12::CommandList*> TaskGPU::GetCommandLists() const
@@ -69,9 +74,17 @@ std::vector<std::string> TaskGPU::GetDependencies() const
 void TaskGPU::SetName(const std::string& name)
 {
     _name = name;
+
+    // TODO: not the best place to set the marker, but this will definetly register all command lists
+    _commandListCrashContext->SetMarker(name);
 }
 
 const std::string& TaskGPU::GetName() const
 {
     return _name;
+}
+
+std::shared_ptr<tracking::ICommandListCrashContext> TaskGPU::GetCrashContext()
+{
+    return _commandListCrashContext;
 }

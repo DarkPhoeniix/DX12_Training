@@ -2,6 +2,8 @@
 
 #include "Device.h"
 
+#include "IGPUCrashTracker.h"
+
 namespace dx12
 {
     namespace
@@ -148,7 +150,13 @@ namespace dx12
         _instance->_device->CreateUnorderedAccessView(view.Owner->GetDXResource().Get(), counter, &view, heapHandle);
     }
 
+    std::shared_ptr<tracking::IGPUCrashTracker> Device::GetCrashTracker()
+    {
+        return _instance->_crashTracker;
+    }
+
     Device::Device()
+        : _crashTracker(tracking::IGPUCrashTracker::Create())
     {
 #if defined(_DEBUG)
         EnableDXDebugLayer();
@@ -214,8 +222,12 @@ namespace dx12
 
     void Device::CreateDevice()
     {
+        _crashTracker->Enable();
+
         helpers::throwIfFailed(D3D12CreateDevice(_adapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&_device)));
         _device->SetName(L"DX12 Device");
+
+        _crashTracker->Initialize(_device.Get());
 
         // Enable debug messages in debug mode.
 #if defined(_DEBUG)

@@ -6,6 +6,8 @@
 #include "Texture.h"
 #include "ResourceBarrier.h"
 
+#include "IGPUCrashTracker.h"
+
 #include "Events/KeyEvent.h"
 #include "Events/MouseButtonEvent.h"
 #include "Events/MouseMoveEvent.h"
@@ -201,6 +203,11 @@ namespace render
     void DXRenderer::OnUpdate(events::UpdateEvent& updateEvent)
     {
         DebugInfo::BeginUpdate(updateEvent);
+
+        // Clear marker map for current frame before execution
+        std::shared_ptr<tracking::IGPUCrashTracker> crashTracker = dx12::Device::GetCrashTracker();
+        crashTracker->AdvanceFrame();
+        crashTracker->ResetMarkerMapForCurrentFrame();
 
         _deltaTime = updateEvent.elapsedTime;
         _scene->GetCache().SetDeltaTime(_deltaTime);
