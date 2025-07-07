@@ -55,5 +55,5 @@ git clone https://github.com/DarkPhoeniix/DX12_RenderEngine.git
 - [ ] Bindless resources
 - [ ] Full scene serialization/deserialization
 - [ ] Cascaded shadow maps
-- [ ] Bloom, DoF, Bokeh effects
-- [ ] SSR
+- [ ] Bloom, DoF, Bokeh effect, SSR
+- [ ] One sunny day, I believe, there will be a place for CMake
