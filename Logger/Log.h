@@ -1,51 +1,59 @@
 #pragma once
 
-#include <string>
 #include <memory>
-#include <vector>
+#include <string>
+
+#define LOG_DEBUG(message) \
+    logging::Logger::Instance().Log(logging::LogLevel::Debug, message)
+#define LOG_INFO(message) \
+    logging::Logger::Instance().Log(logging::LogLevel::Info, message)
+#define LOG_WARNING(message) \
+    logging::Logger::Instance().Log(logging::LogLevel::Warning, message)
+#define LOG_ERROR(message) \
+    logging::Logger::Instance().Log(logging::LogLevel::Error, message)
+#define LOG_CRITICAL(message) \
+    logging::Logger::Instance().Log(logging::LogLevel::Critical, message)
 
 namespace logging
 {
-    class ILogger;
-    enum class LogLevel;
+    enum class LogLevel
+    {
+        Debug,
+        Info,
+        Warning,
+        Error,
+        Critical
+    };
 
-    class Logger final
+    class Logger
     {
     public:
         Logger(const Logger&) = delete;
-        Logger(Logger&&) = delete;
-        ~Logger() = default;
+        Logger(Logger&&) = default;
 
         Logger& operator=(const Logger&) = delete;
         Logger& operator=(Logger&&) = default;
 
-        static void Init();
+        static void Init(const std::string& logFilePath = "engine.log");
         static void Shutdown();
 
-        static void Log(LogLevel level, const char* message);
+        static Logger& Instance();
 
-        static void Critical(const char* message);
-        static void Critical(const std::string& message);
+        void Log(LogLevel level, const std::string& message);
 
-        static void Error(const char* message);
-        static void Error(const std::string& message);
-
-        static void Warning(const char* message);
-        static void Warning(const std::string& message);
-
-        static void Info(const char* message);
-        static void Info(const std::string& message);
-
-        static void Debug(const char* message);
-        static void Debug(const std::string& message);
+        void Debug(const std::string& msg);
+        void Info(const std::string& msg);
+        void Warning(const std::string& msg);
+        void Error(const std::string& msg);
+        void Critical(const std::string& msg);
 
     private:
         Logger();
+        ~Logger() = default;
 
-        static void InitLoggers();
+        // hide spdlog from public headers
+        struct Impl;
+        std::unique_ptr<Impl> _impl;
+    };
 
-        std::vector<std::unique_ptr<ILogger>> _loggers;
-
-        static std::unique_ptr<Logger> _instance;
-};
 } // namespace logging

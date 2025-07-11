@@ -1,107 +1,108 @@
 
 #include "Log.h"
 
-#include "Loggers/ILogger.h"
+#include <spdlog/spdlog.h>
 #ifdef MSVC_LOG
-#include "Loggers/ConsoleLogger.h"
+#include <spdlog/sinks/msvc_sink.h>
 #endif // MSVC_LOG
 #ifdef FILE_LOG
-#include "Loggers/FileLogger.h"
+#include <spdlog/sinks/basic_file_sink.h>
 #endif // FILE_LOG
 
-namespace logging
-{
-    namespace
-    {
-        static const char* LOG_FILEPATH = "log.txt";
-    }
+namespace logging {
 
-    std::unique_ptr<Logger> Logger::_instance = nullptr;
-
-    Logger::Logger()
+    struct Logger::Impl
     {
-        InitLoggers();
-    }
+        std::shared_ptr<spdlog::logger> SpdLogger;
+    };
 
-    void Logger::InitLoggers()
+    void Logger::Init(const std::string& logFilePath)
     {
+        // Create sinks
+        std::vector<spdlog::sink_ptr> sinks;
 #ifdef MSVC_LOG
-        _instance->_loggers.emplace_back(std::make_unique<ConsoleLogger>());
+        auto msvc = std::make_shared<spdlog::sinks::msvc_sink_mt>();
+        msvc->set_pattern("[%H:%M:%S] [%l] (%t) %v");
+        sinks.push_back(msvc);
 #endif // MSVC_LOG
 
 #ifdef FILE_LOG
-        _instance->_loggers.emplace_back(std::make_unique<FileLogger>(LOG_FILEPATH));
+        auto file = std::make_shared<spdlog::sinks::basic_file_sink_mt>(logFilePath, true);
+        file->set_pattern("[%Y-%m-%d %H:%M:%S] [%l] (%t) %v");
+        sinks.push_back(file);
 #endif // FILE_LOG
-    }
 
-    void Logger::Init()
-    {
-        if (!_instance)
-        {
-            _instance = std::unique_ptr<Logger>(new Logger);
-        }
+        // Construct the logger
+        auto logger = std::make_shared<spdlog::logger>("EngineLogger", std::begin(sinks), std::end(sinks));
+        logger->set_level(spdlog::level::trace);
+        spdlog::set_default_logger(logger);
     }
 
     void Logger::Shutdown()
     {
-        _instance.reset();
+        // Flush and shutdown the logger
+        spdlog::shutdown();
+        // Reset the default logger to nullptr
+        spdlog::set_default_logger(nullptr);
     }
 
-    void Logger::Log(LogLevel level, const char* message)
+    Logger& Logger::Instance()
     {
-        for (const auto& logger : _instance->_loggers)
+        static Logger instance;
+        return instance;
+    }
+
+    void Logger::Debug(const std::string& msg)
+    {
+        Log(LogLevel::Debug, msg);
+    }
+
+    void Logger::Info(const std::string& msg)
+    {
+        Log(LogLevel::Info, msg);
+    }
+
+    void Logger::Warning(const std::string& msg)
+    {
+        Log(LogLevel::Warning, msg);
+    }
+
+    void Logger::Error(const std::string& msg)
+    {
+        Log(LogLevel::Error, msg);
+    }
+
+    void Logger::Critical(const std::string& msg)
+    {
+        Log(LogLevel::Critical, msg);
+    }
+
+    Logger::Logger()
+        : _impl(std::make_unique<Impl>())
+    {
+        _impl->SpdLogger = spdlog::default_logger();
+    }
+
+    void Logger::Log(LogLevel level, const std::string& message)
+    {
+        switch (level)
         {
-            logger->Log(level, message);
+        case LogLevel::Debug:
+            _impl->SpdLogger->debug(message);
+            break;
+        case LogLevel::Info:
+            _impl->SpdLogger->info(message);
+            break;
+        case LogLevel::Warning:
+            _impl->SpdLogger->warn(message);
+            break;
+        case LogLevel::Error:
+            _impl->SpdLogger->error(message);
+            break;
+        case LogLevel::Critical:
+            _impl->SpdLogger->critical(message);
+            break;
         }
     }
 
-    void Logger::Critical(const char* message)
-    {
-        Log(LogLevel::Critical, message);
-    }
-
-    void Logger::Critical(const std::string& message)
-    {
-        Log(LogLevel::Critical, message.c_str());
-    }
-
-    void Logger::Error(const char* message)
-    {
-        Log(LogLevel::Error, message);
-    }
-
-    void Logger::Error(const std::string& message)
-    {
-        Log(LogLevel::Error, message.c_str());
-    }
-
-    void Logger::Warning(const char* message)
-    {
-        Log(LogLevel::Warning, message);
-    }
-
-    void Logger::Warning(const std::string& message)
-    {
-        Log(LogLevel::Warning, message.c_str());
-    }
-
-    void Logger::Info(const char* message)
-    {
-        Log(LogLevel::Info, message);
-    }
-
-    void Logger::Info(const std::string& message)
-    {
-        Log(LogLevel::Info, message.c_str());
-    }
-
-    void Logger::Debug(const char* message)
-    {
-        Log(LogLevel::Debug, message);
-    }
-
-    void Logger::Debug(const std::string& message)
-    {
-        Log(LogLevel::Debug, message.c_str());
-    }
 } // namespace logging
