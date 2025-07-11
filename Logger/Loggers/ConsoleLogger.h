@@ -1,21 +1,29 @@
 #pragma once
 
-#include "../ILogger.h"
+#include "ILogger.h"
 
 #include <spdlog/logger.h>
 
-class ConsoleLogger : public ILogger
+namespace logging
 {
-public:
-    ~ConsoleLogger() override = default;
+    class ConsoleLogger : public ILogger
+    {
+    public:
+        ConsoleLogger();
+        ConsoleLogger(const ConsoleLogger&) = delete;
+        ConsoleLogger(ConsoleLogger&&) = default;
+        ~ConsoleLogger() override = default;
 
-    void LogError(const char* message) override;
-    void LogWarning(const char* message) override;
-    void LogInfo(const char* message) override;
-    void LogDebug(const char* message) override;
-    void LogCritical(const char* message) override;
+        ConsoleLogger& operator=(const ConsoleLogger&) = delete;
+        ConsoleLogger& operator=(ConsoleLogger&&) = default;
 
-protected:
-    std::shared_ptr<spdlog::logger> _logger;
-};
+        void LogCritical(const char* message) override;
+        void LogError(const char* message) override;
+        void LogWarning(const char* message) override;
+        void LogInfo(const char* message) override;
+        void LogDebug(const char* message) override;
 
+    protected:
+        std::unique_ptr<spdlog::logger> _logger;
+    };
+} // namespace logging

@@ -24,7 +24,7 @@
     <ClInclude Include="Loggers\ConsoleLogger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ILogger.h">
+    <ClInclude Include="Loggers\ILogger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -38,7 +38,7 @@
     <ClCompile Include="Loggers\ConsoleLogger.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ILogger.cpp">
+    <ClCompile Include="Loggers\ILogger.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
