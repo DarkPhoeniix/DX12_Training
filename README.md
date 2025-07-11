@@ -22,6 +22,8 @@ An experimental real-time renderer built with C++ and DirectX 12 for exploring m
 DX12_RenderEngine/
 ├── DX12Lib/            # Abstractions over DirectX 12 API
 ├── Editor/             # Runtime scene editor and UI tools
+├── GPUCrashTracker/    # Aftermath SDK wrapper to create crash dumps
+├── Logger/             # small logging lib with spdlog
 ├── RenderGraph/        # Frame graph implementation for render pass scheduling
 ├── Renderer/           # Core rendering logic and systems
 ├── Saved/              # Test scenes and demo screenshots
