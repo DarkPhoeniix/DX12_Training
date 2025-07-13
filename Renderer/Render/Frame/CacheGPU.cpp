@@ -6,6 +6,8 @@ void CacheGPU::SetResource(std::shared_ptr<dx12::Resource> memoryBlock)
 {
     std::unique_lock<std::shared_mutex> lock(_mutex);
 
+    ASSERT(memoryBlock, "Trying to set a null memory block in GPU cache");
+
     _cache = memoryBlock;
     _size = memoryBlock->GetResourceDescription().GetSize().x * memoryBlock->GetResourceDescription().GetSize().y;
     _currentOffset = 0;
@@ -14,6 +16,8 @@ void CacheGPU::SetResource(std::shared_ptr<dx12::Resource> memoryBlock)
 void CacheGPU::Clear()
 {
     std::unique_lock<std::shared_mutex> lock(_mutex);
+
+    ASSERT(_cache, "Trying to clear GPU cache without setting a memory block");
 
     _currentOffset = 0;
     _placedResources.clear();
@@ -24,11 +28,7 @@ CacheGPU::DataHandle CacheGPU::RequestPlacement(const std::string& name, std::ui
     std::unique_lock<std::shared_mutex> lock(_mutex);
 
     std::uint32_t newOffset = Math::AlignUp((_currentOffset + size), 256);
-
-    if (ASSERT(newOffset < _size, "GPU cache is full"))
-    {
-        return {};
-    }
+    ASSERT(newOffset <= _size, "Requested size exceeds GPU cache size");
 
     DataHandle handle;
     handle.DataCPU = (char*)_cache->Map() + _currentOffset;
@@ -58,13 +58,13 @@ CacheGPU::DataHandle CacheGPU::GetResourcePlacement(const std::string& name)
     std::shared_lock<std::shared_mutex> lock(_mutex);
 
     auto it = _placedResources.find(name);
-    if (it != _placedResources.end())
+    if (it == _placedResources.end())
     {
-        return it->second;
+        FAIL("Failed to retrieve cached data for \"{}\", resource not found", name);
+        return {};
     }
 
-    FAIL(std::format("Failed to retrieve cached data for \"{}\"", name));
-    return {};
+    return it->second;
 }
 
 std::shared_ptr<dx12::Resource> CacheGPU::GetCache()

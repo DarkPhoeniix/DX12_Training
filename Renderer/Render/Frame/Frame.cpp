@@ -33,6 +33,7 @@ Frame::~Frame()
 void Frame::Init(const DirectX::XMUINT2& size, uint32_t cacheSize)
 {
     {
+        // TODO: that sucks too
         _resourceTable.Init(1024, true);
     }
 
@@ -83,12 +84,14 @@ void Frame::Init(const DirectX::XMUINT2& size, uint32_t cacheSize)
         _resourceTable.PlaceResource(&_targetTexture, dx12::ResourceViewType::UAV);
     }
 
+    // TODO: refactor this
     _tasks.reserve(128);
 }
 
 TaskGPU* Frame::CreateTask(D3D12_COMMAND_LIST_TYPE type, dx12::PipelineState* rootSignature)
 {
     Executor* executor = _allocatorPool->Obtain(type);
+    ASSERT(executor, "Failed to obtain executor from allocator pool.");
     _currentTasks.push_back(executor);
 
     executor->Reset(rootSignature);
@@ -96,22 +99,26 @@ TaskGPU* Frame::CreateTask(D3D12_COMMAND_LIST_TYPE type, dx12::PipelineState* ro
 
     _tasks.push_back({});
     TaskGPU* task = &_tasks.back();
-    if (type == D3D12_COMMAND_LIST_TYPE_DIRECT)
+    switch (type)
     {
+    case D3D12_COMMAND_LIST_TYPE_DIRECT:
         task->SetCommandQueue(dx12::Device::GetStreamQueue());
-    }
-    else if (type == D3D12_COMMAND_LIST_TYPE_COMPUTE)
-    {
+        break;
+    case D3D12_COMMAND_LIST_TYPE_COMPUTE:
         task->SetCommandQueue(dx12::Device::GetComputeQueue());
-    }
-    else if (type == D3D12_COMMAND_LIST_TYPE_COPY)
-    {
+        break;
+    case D3D12_COMMAND_LIST_TYPE_COPY:
         task->SetCommandQueue(dx12::Device::GetCopyQueue());
+        break;
+    default:
+        FAIL(false, "Unsupported command list type.");
+        return nullptr;
     }
 
     task->AddCommandList(executor->GetCommandList());
 
     dx12::Fence* taskFence = _fencePool->Obtain();
+    ASSERT(taskFence, "Failed to obtain fence from fence pool.");
     task->SetFence(taskFence);
     taskFence->SetFree(false);
     taskFence->SetValue(taskFence->GetValue() + 1);
@@ -136,6 +143,10 @@ void Frame::WaitCPU()
         _syncPoint->Wait();
         _syncPoint->SetFree(true);
         _syncPoint = nullptr;
+    }
+    else
+    {
+        LOG_WARNING("No sync point set for the frame. Skipping CPU wait.");
     }
 }
 
@@ -181,11 +192,13 @@ void Frame::Resize(const DirectX::XMUINT2& size)
 
 void Frame::SetAllocatorPool(AllocatorPool* allocatorPool)
 {
+    ASSERT(allocatorPool, "Allocator pool is nullptr when trying to set it in the frame.");
     _allocatorPool = allocatorPool;
 }
 
 void Frame::SetFencePool(FencePool* fencePool)
 {
+    ASSERT(fencePool, "Fence pool is nullptr when trying to set it in the frame.");
     _fencePool = fencePool;
 }
 
@@ -199,6 +212,7 @@ TaskGPU* Frame::GetTask(const std::string& name)
         }
     }
 
+    LOG_WARNING("Task with name '{}' not found in the frame.", name);
     return nullptr;
 }
 

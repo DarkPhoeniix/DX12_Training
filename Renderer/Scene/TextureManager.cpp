@@ -7,7 +7,7 @@
 
 namespace
 {
-    constexpr std::uint32_t TEXTURE_TABLE_NUM_DESCRIPTORS = 2048;
+    constexpr std::uint32_t TEXTURE_TABLE_NUM_DESCRIPTORS = 2048u;
 
     const std::string DDS_EXTENSION = ".dds";
     const std::string HDR_EXTENSION = ".hdr";
@@ -20,19 +20,23 @@ namespace
         DirectX::TexMetadata metadata;
         if (extension == DDS_EXTENSION)
         {
-            DirectX::GetMetadataFromDDSFile(path.c_str(), DirectX::DDS_FLAGS_NONE, metadata);
+            HRESULT result = DirectX::GetMetadataFromDDSFile(path.c_str(), DirectX::DDS_FLAGS_NONE, metadata);
+            CHECK(result, "Failed to get metadata from DDS file: " + path.string());
         }
         else if (path.extension() == HDR_EXTENSION)
         {
-            DirectX::GetMetadataFromHDRFile(path.c_str(), metadata);
+            HRESULT result = DirectX::GetMetadataFromHDRFile(path.c_str(), metadata);
+            CHECK(result, "Failed to get metadata from HDR file: " + path.string());
         }
         else if (path.extension() == TGA_EXTENSION)
         {
-            DirectX::GetMetadataFromTGAFile(path.c_str(), metadata);
+            HRESULT result = DirectX::GetMetadataFromTGAFile(path.c_str(), metadata);
+            CHECK(result, "Failed to get metadata from TGA file: " + path.string());
         }
         else
         {
-            DirectX::GetMetadataFromWICFile(path.c_str(), DirectX::WIC_FLAGS_NONE, metadata);
+            HRESULT result = DirectX::GetMetadataFromWICFile(path.c_str(), DirectX::WIC_FLAGS_NONE, metadata);
+            CHECK(result, "Failed to get metadata from WIC file: " + path.string());
         }
 
         return metadata;
@@ -81,19 +85,23 @@ namespace
         DirectX::ScratchImage image;
         if (extension == DDS_EXTENSION)
         {
-            DirectX::LoadFromDDSFile(path.c_str(), DirectX::DDS_FLAGS_NONE, nullptr, image);
+            HRESULT result = DirectX::LoadFromDDSFile(path.c_str(), DirectX::DDS_FLAGS_NONE, nullptr, image);
+            CHECK(result, "Failed to load DDS file: " + path.string());
         }
         else if (path.extension() == HDR_EXTENSION)
         {
-            DirectX::LoadFromHDRFile(path.c_str(), nullptr, image);
+            HRESULT result = DirectX::LoadFromHDRFile(path.c_str(), nullptr, image);
+            CHECK(result, "Failed to load HDR file: " + path.string());
         }
         else if (path.extension() == TGA_EXTENSION)
         {
-            DirectX::LoadFromTGAFile(path.c_str(), nullptr, image);
+            HRESULT result = DirectX::LoadFromTGAFile(path.c_str(), nullptr, image);
+            CHECK(result, "Failed to load TGA file: " + path.string());
         }
         else
         {
-            DirectX::LoadFromWICFile(path.c_str(), DirectX::WIC_FLAGS_NONE, nullptr, image);
+            HRESULT result = DirectX::LoadFromWICFile(path.c_str(), DirectX::WIC_FLAGS_NONE, nullptr, image);
+            CHECK(result, "Failed to load WIC file: " + path.string());
         }
 
         return image;

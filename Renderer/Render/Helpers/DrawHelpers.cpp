@@ -26,7 +26,7 @@ namespace render
 
     void DrawHelper::DrawBox(dx12::CommandList& commandList, const scene::Camera& camera, const DirectX::XMVECTOR& min, const DirectX::XMVECTOR& max, const DirectX::XMVECTOR& color)
     {
-        ASSERT(_instance != nullptr, "DrawHelper has not been initialized");
+        ASSERT(_instance, "DrawHelper has not been initialized");
 
         commandList.SetPipelineState(_instance->_boxDebug);
 
@@ -42,7 +42,7 @@ namespace render
 
     void DrawHelper::DrawSphere(dx12::CommandList& commandList, const scene::Camera& camera, float radius, const DirectX::XMVECTOR& position, const DirectX::XMVECTOR& color)
     {
-        ASSERT(_instance != nullptr, "DrawHelper has not been initialized");
+        ASSERT(_instance, "DrawHelper has not been initialized");
 
         commandList.SetPipelineState(_instance->_sphereDebug);
 
@@ -58,7 +58,7 @@ namespace render
 
     void DrawHelper::DrawCone(dx12::CommandList& commandList, const scene::Camera& camera, float angle, float height, const DirectX::XMVECTOR& position, const DirectX::XMVECTOR& direction, const DirectX::XMVECTOR& color)
     {
-        ASSERT(_instance != nullptr, "DrawHelper has not been initialized");
+        ASSERT(_instance, "DrawHelper has not been initialized");
 
         commandList.SetPipelineState(_instance->_coneDebug);
 

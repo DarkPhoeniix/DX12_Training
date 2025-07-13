@@ -74,8 +74,11 @@ namespace dx12
 
         _dxgiSwapChain = CreateSwapChain();
 
-        helpers::throwIfFailed(_dxgiSwapChain->GetDesc(&_swapChainDesc));
-        helpers::throwIfFailed(_dxgiSwapChain->ResizeBuffers(BACK_BUFFER_COUNT, _width, _height, _swapChainDesc.BufferDesc.Format, _swapChainDesc.Flags));
+        HRESULT getDescResult = _dxgiSwapChain->GetDesc(&_swapChainDesc);
+        CHECK(getDescResult, "Failed to get swap chain description.");
+
+        HRESULT resizeResult = _dxgiSwapChain->ResizeBuffers(BACK_BUFFER_COUNT, _width, _height, _swapChainDesc.BufferDesc.Format, _swapChainDesc.Flags);
+        CHECK(resizeResult, "Failed to resize swap chain buffers.");
 
         _currentBackBufferIndex = _dxgiSwapChain->GetCurrentBackBufferIndex();
 
@@ -104,7 +107,9 @@ namespace dx12
         for (int i = 0; i < BACK_BUFFER_COUNT; ++i)
         {
             ComPtr<ID3D12Resource> backBuffer;
-            helpers::throwIfFailed(_dxgiSwapChain->GetBuffer(i, IID_PPV_ARGS(&backBuffer)));
+            HRESULT result = _dxgiSwapChain->GetBuffer(i, IID_PPV_ARGS(&backBuffer));
+            CHECK(result, "Failed to get back buffer from swap chain.");
+
             dx12::Device::GetDXDevice()->CreateRenderTargetView(backBuffer.Get(), nullptr, rtvHandle);
 
             _backBuffers[i].InitFromDXResource(backBuffer);
@@ -121,6 +126,7 @@ namespace dx12
 
         if (FAILED(result))
         {
+            LOG_CRITICAL("Failed to present swap chain. HRESULT: 0x{:X}", result);
             // Crash tracker need some time to process the crash dump.
             Device::GetCrashTracker()->WaitUntilCrashDumpFinished();
             // Terminate on failure
@@ -145,9 +151,11 @@ namespace dx12
             }
 
             DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
-            helpers::throwIfFailed(_dxgiSwapChain->GetDesc(&swapChainDesc));
-            helpers::throwIfFailed(_dxgiSwapChain->ResizeBuffers(BACK_BUFFER_COUNT, _width,
-                _height, swapChainDesc.BufferDesc.Format, swapChainDesc.Flags));
+            HRESULT getDescResult = _dxgiSwapChain->GetDesc(&swapChainDesc);
+            CHECK(getDescResult, "Failed to get swap chain description.");
+
+            HRESULT resizeResult = _dxgiSwapChain->ResizeBuffers(BACK_BUFFER_COUNT, _width, _height, swapChainDesc.BufferDesc.Format, swapChainDesc.Flags);
+            CHECK(resizeResult, "Failed to resize swap chain buffers.");
 
             _currentBackBufferIndex = _dxgiSwapChain->GetCurrentBackBufferIndex();
 
@@ -164,7 +172,8 @@ namespace dx12
         createFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
 #endif
 
-        helpers::throwIfFailed(CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&dxgiFactory4)));
+        HRESULT createDXGIFactoryResult = CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&dxgiFactory4));
+        CHECK(createDXGIFactoryResult, "Failed to create DXGI factory.");
 
         DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
         swapChainDesc.Width = _width;
@@ -183,18 +192,22 @@ namespace dx12
         ID3D12CommandQueue* queue = dx12::Device::GetStreamQueue();
 
         ComPtr<IDXGISwapChain1> swapChain1;
-        helpers::throwIfFailed(dxgiFactory4->CreateSwapChainForHwnd(
+        HRESULT createSwapChainResult = dxgiFactory4->CreateSwapChainForHwnd(
             queue,
             _windowHandle,
             &swapChainDesc,
             nullptr,
             nullptr,
-            &swapChain1));
+            &swapChain1);
+        CHECK(createSwapChainResult, "Failed to create swap chain for window.");
 
         // Disable the Alt+Enter fullscreen toggle feature. Switching to fullscreen
         // will be handled manually.
-        helpers::throwIfFailed(dxgiFactory4->MakeWindowAssociation(_windowHandle, DXGI_MWA_NO_ALT_ENTER));
-        helpers::throwIfFailed(swapChain1.As(&dxgiSwapChain4));
+        HRESULT makeAssociationResult = dxgiFactory4->MakeWindowAssociation(_windowHandle, DXGI_MWA_NO_ALT_ENTER);
+        CHECK(makeAssociationResult, "Failed to make window association for swap chain.");
+
+        HRESULT result = swapChain1.As(&dxgiSwapChain4);
+        CHECK(result, "Failed to cast IDXGISwapChain1 to IDXGISwapChain4.");
 
         _currentBackBufferIndex = dxgiSwapChain4->GetCurrentBackBufferIndex();
 
@@ -214,7 +227,9 @@ namespace dx12
         {
             ComPtr<IDXGIFactory5> factory5;
             if (SUCCEEDED(factory4.As(&factory5)))
+            {
                 factory5->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing, sizeof(allowTearing));
+            }
         }
 
         return allowTearing == TRUE;
@@ -223,7 +238,9 @@ namespace dx12
     ComPtr<IDXGIOutput> SwapChain::GetContainingOutput()
     {
         ComPtr<IDXGIOutput> output;
-        helpers::throwIfFailed(_dxgiSwapChain->GetContainingOutput(&output));
+        HRESULT result = _dxgiSwapChain->GetContainingOutput(&output);
+        CHECK(result, "Failed to get containing output for swap chain.");
+
         return output;
     }
 } // namespace dx12

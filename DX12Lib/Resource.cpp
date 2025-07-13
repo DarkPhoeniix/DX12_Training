@@ -145,7 +145,9 @@ namespace dx12
 		D3D12_RANGE range;
 		range.Begin = 0;
 		range.End = 0;
-		_resource->Map(0, &range, &data);
+
+		HRESULT result = _resource->Map(0, &range, &data);
+		CHECK(result, "Failed to map a resource.");
 
 		return data;
 	}
@@ -157,7 +159,9 @@ namespace dx12
 		D3D12_RANGE range;
 		range.Begin = begin;
 		range.End = end;
-		_resource->Map(0, &range, &data);
+
+		HRESULT result = _resource->Map(0, &range, &data);
+		CHECK(result, "Failed to map a resource.");
 
 		return data;
 	}
@@ -167,17 +171,19 @@ namespace dx12
 		D3D12_RANGE range;
 		range.Begin = 0;
 		range.End = 0;
+
 		_resource->Unmap(0, &range);
 	}
 
 	void Resource::Reset()
 	{
+        ASSERT(_resource, "Trying to reset an nullptr resource.");
 		_resource.Reset();
 	}
 
 	D3D12_GPU_VIRTUAL_ADDRESS Resource::OffsetGPU(std::uint64_t offset) const
 	{
-		ASSERT(_resource, "Trying to get GPU pointer for an nullptr resource");
+		ASSERT(_resource, "Trying to get GPU pointer for an nullptr resource.");
 
 		D3D12_GPU_VIRTUAL_ADDRESS result = _resource->GetGPUVirtualAddress();
 		result += offset;
@@ -218,13 +224,14 @@ namespace dx12
 		// need to RTT and DSV
 		D3D12_RESOURCE_DESC resourceDesc = _resourceDesc.CreateDXResourceDescription();
 		D3D12_CLEAR_VALUE* clearValue = _resourceDesc.GetClearValue().get();
-		dx12::Device::GetDXDevice()->CreateCommittedResource(
+		HRESULT result = dx12::Device::GetDXDevice()->CreateCommittedResource(
 			&heapDesc,
 			D3D12_HEAP_FLAG_NONE,
 			&resourceDesc,
 			_initialState,
 			clearValue,
 			IID_PPV_ARGS(&_resource));
+        CHECK(result, "Failed to create committed resource.");
 
 		std::wstring temp(_name.begin(), _name.end());
 		_resource->SetName(temp.c_str());
@@ -246,13 +253,14 @@ namespace dx12
 		D3D12_RESOURCE_DESC resourceDesc = _resourceDesc.CreateDXResourceDescription();
 		D3D12_CLEAR_VALUE* clearValue = _resourceDesc.GetClearValue().get();
 
-		dx12::Device::GetDXDevice()->CreatePlacedResource(
+		HRESULT result = dx12::Device::GetDXDevice()->CreatePlacedResource(
 			heap.Get(),
 			offset,
 			&resourceDesc,
 			_initialState,
 			clearValue,
 			IID_PPV_ARGS(&_resource));
+        CHECK(result, "Failed to create placed resource.");
 
 		std::wstring temp(_name.begin(), _name.end());
 		_resource->SetName(temp.c_str());

@@ -62,7 +62,8 @@ namespace dx12
             queryHeapDesc.Count = 1;
             queryHeapDesc.Type = D3D12_QUERY_HEAP_TYPE_PIPELINE_STATISTICS;
         }
-        Device::GetDXDevice()->CreateQueryHeap(&queryHeapDesc, IID_PPV_ARGS(&_statisticsQueryHeap));
+        HRESULT result = Device::GetDXDevice()->CreateQueryHeap(&queryHeapDesc, IID_PPV_ARGS(&_statisticsQueryHeap));
+        CHECK(result, "Failed to create query heap for pipeline statistics.");
 
         // Create the resource for stats data
         ResourceDescription statisticsResourceDesc = {};

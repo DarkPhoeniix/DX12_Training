@@ -68,7 +68,9 @@ namespace dx12
     {
         _fenceValue = 0;
 
-        Device::GetDXDevice()->CreateFence(_fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&_fence));
+        HRESULT result = Device::GetDXDevice()->CreateFence(_fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&_fence));
+        CHECK(result, "Failed to create fence.");
+
         _eventOnCompletion = ::CreateEvent(NULL, FALSE, FALSE, NULL);
     }
 
@@ -79,7 +81,8 @@ namespace dx12
             return;
         }
 
-        this->_fence->SetEventOnCompletion(_fenceValue, _eventOnCompletion);
+        HRESULT result = this->_fence->SetEventOnCompletion(_fenceValue, _eventOnCompletion);
+        CHECK(result, "Failed to set event on fence completion.");
         ::WaitForSingleObject(_eventOnCompletion, DWORD_MAX);
 
         if (_cpuCallback)

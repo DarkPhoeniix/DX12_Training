@@ -18,7 +18,8 @@ using namespace Microsoft::WRL;
 #include <vector>
 #include <functional>
 
-#include "Utility/Logger.h"
+#include "Logger.h"
+
 #include "Utility/Helpers.h"
 #include "Resource.h"
 #include "Device.h"

@@ -15,6 +15,8 @@ namespace rg::mt
     {
         std::lock_guard<std::mutex> lock(_queueMutex);
 
+        // ** If empty() is true, the behavior is undefined.
+        ASSERT(!_works.empty(), "Trying to pop from an empty work queue.");
         PassWork& work = _works.front();
         _works.pop();
 
@@ -25,12 +27,16 @@ namespace rg::mt
     {
         std::lock_guard<std::mutex> lock(_queueMutex);
 
+        ASSERT(!_works.empty(), "Trying to pop from an empty work queue.");
+
         return _works.front();
     }
 
     const PassWork& WorkQueue::Top() const
     {
         std::lock_guard<std::mutex> lock(_queueMutex);
+
+        ASSERT(!_works.empty(), "Trying to pop from an empty work queue.");
 
         return _works.front();
     }

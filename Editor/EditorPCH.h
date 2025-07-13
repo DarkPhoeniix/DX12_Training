@@ -34,7 +34,8 @@ using namespace Microsoft::WRL;
 
 #include <json/json.h>
 
-#include "Utility/Logger.h"
+#include "Logger.h"
+
 #include "Utility/Helpers.h"
 #include "Utility/Defines.h"
 #include "Resource.h"

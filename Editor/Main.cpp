@@ -55,6 +55,6 @@ void SetWorkingPath()
     }
     else
     {
-        Logger::Log(LogType::Error, "Failed to retrieve the path of the executable file");
+        LOG_CRITICAL("Failed to retrieve the path of the executable file");
     }
 }

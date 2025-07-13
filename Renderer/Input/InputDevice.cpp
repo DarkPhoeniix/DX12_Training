@@ -14,7 +14,9 @@ namespace core
                 {
                     _prevKeyboardState[i] = _currentKeyboardState[i];
                 }
-                _keyboardDevice->GetDeviceState(sizeof(_currentKeyboardState), _currentKeyboardState);
+
+                HRESULT result = _keyboardDevice->GetDeviceState(sizeof(_currentKeyboardState), _currentKeyboardState);
+                CHECK(result, "Failed to get keyboard device state.");
 
                 bool keyPressed = false;
                 bool keyReleased = false;
@@ -38,6 +40,7 @@ namespace core
             {
                 _prevMouseState = _currentMouseState;
                 HRESULT ok = _mouseDevice->GetDeviceState(sizeof(_currentMouseState), &_currentMouseState);
+                CHECK(ok, "Failed to get mouse device state.");
 
                 bool LMBPressed = _currentMouseState.rgbButtons[0] && (_prevMouseState.rgbButtons[0] != _currentMouseState.rgbButtons[0]);
                 bool LMBReleased = !_currentMouseState.rgbButtons[0] && (_prevMouseState.rgbButtons[0] != _currentMouseState.rgbButtons[0]);
@@ -70,11 +73,13 @@ namespace core
 
         void InputDevice::AddInputObserver(IWindowEventListener* observer)
         {
+            ASSERT(observer, "Trying to add a nullptr observer to input device");
             _inputListeners.push_back(observer);
         }
 
         void InputDevice::RemoveinputObserver(IWindowEventListener* observer)
         {
+            ASSERT(observer, "Trying to remove a nullptr observer from input device");
             std::erase(_inputListeners, observer);
         }
 
@@ -88,7 +93,7 @@ namespace core
         {
             // Create a Directinput device
             HRESULT result = DirectInput8Create(GetModuleHandle(NULL), DIRECTINPUT_VERSION, IID_IDirectInput8, (VOID**)&_directinput, NULL);
-            ASSERT(SUCCEEDED(result), "Failed to create Directinput device");
+            CHECK(result, "Failed to create DirectInput device");
 
             _CreateKeyboardDevice();
             _CreateMouseDevice();
@@ -114,8 +119,7 @@ namespace core
         void InputDevice::_CreateKeyboardDevice()
         {
             HRESULT result = _directinput->CreateDevice(GUID_SysKeyboard, &_keyboardDevice, NULL);
-
-            ASSERT(SUCCEEDED(result), "Failed to create keyboard input device device");
+            CHECK(result, "Failed to create keyboard input device");
 
             _keyboardDevice->SetDataFormat(&c_dfDIKeyboard);
             _keyboardDevice->SetCooperativeLevel(NULL, DISCL_FOREGROUND | DISCL_EXCLUSIVE);
@@ -125,8 +129,7 @@ namespace core
         void InputDevice::_CreateMouseDevice()
         {
             HRESULT result = _directinput->CreateDevice(GUID_SysMouse, &_mouseDevice, NULL);
-
-            ASSERT(SUCCEEDED(result), "Failed to create mouse input device device");
+            CHECK(result, "Failed to create mouse input device");
 
             _mouseDevice->SetDataFormat(&c_dfDIMouse);
             _mouseDevice->SetCooperativeLevel(NULL, DISCL_FOREGROUND | DISCL_EXCLUSIVE);

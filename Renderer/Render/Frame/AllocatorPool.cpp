@@ -33,6 +33,7 @@ Executor* AllocatorPool::Obtain(D3D12_COMMAND_LIST_TYPE type)
         }
     }
 
+    LOG_CRITICAL("No free executors available for command list.");
     return nullptr;
 }
 

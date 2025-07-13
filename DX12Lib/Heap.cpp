@@ -55,9 +55,11 @@ namespace dx12
 
     void Heap::Create()
     {
-        ASSERT(dx12::Device::GetDXDevice(), "Device is nullptr when creating a heap");
+        ASSERT(dx12::Device::GetDXDevice(), "Device is nullptr when creating a heap.");
 
-        dx12::Device::GetDXDevice()->CreateHeap(&_description.GetDXHeapDescription(), IID_PPV_ARGS(&_heap));
+        HRESULT result = dx12::Device::GetDXDevice()->CreateHeap(&_description.GetDXHeapDescription(), IID_PPV_ARGS(&_heap));
+        CHECK(result, "Failed to create heap.");
+
         std::wstring tmp(_name.cbegin(), _name.cend());
         _heap->SetName(tmp.c_str());
     }
@@ -70,7 +72,7 @@ namespace dx12
 
     void Heap::PlaceResource(Resource& resource, D3D12_RESOURCE_STATES state, std::uint64_t offset)
     {
-        ASSERT(dx12::Device::GetDXDevice(), "Device is nullptr when placing resource in a heap");
+        ASSERT(dx12::Device::GetDXDevice(), "Device is nullptr when placing resource in a heap.");
 
         bool isDefaultHeapOffset = (offset == (std::uint64_t)-1);
         if (isDefaultHeapOffset)
@@ -78,7 +80,7 @@ namespace dx12
             offset = _resourceOffset;
         }
         std::uint64_t size = resource.GetAllocationInfo().SizeInBytes;
-        ASSERT((offset + size) <= _description.GetSize(), "Heap is full");
+        ASSERT((offset + size) <= _description.GetSize(), "Heap is full.");
 
         resource.CreatePlacedResource(_heap, offset, state);
 

@@ -20,6 +20,8 @@
 #include "Scene/Volumes/AABBVolume.h"
 #include "Scene/Volumes/OBBVolume.h"
 
+#include <fstream>
+
 using namespace DirectX;
 
 namespace
@@ -72,6 +74,8 @@ namespace
 
         float nominator = XMVectorGetX(XMVector3Length(XMVector3Cross(v1, v2)));
         float denominator = XMVectorGetX(XMVector3Length(v2));
+
+        ASSERT(denominator > 0.00001f, "How does it even happened?");
 
         return nominator / denominator;
     }
@@ -164,6 +168,8 @@ namespace scene::helpers
             desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
         }
         _descHeap.Create(desc);
+
+        LOG_INFO("Loading scene: {}", filepath);
     }
 
     std::shared_ptr<dx12::Texture> SceneLoader::GenerateEnvironmentDiffuseIrradianceMap(dx12::CommandList& commandList, std::shared_ptr<Scene> scene)
@@ -171,14 +177,14 @@ namespace scene::helpers
         // Find skybox node and retrieve texture pointer
 
         std::shared_ptr<scene::Entity> skyboxNode = scene->FindNodeByComponentName("Skybox");
-        ASSERT(skyboxNode != nullptr, "Failed to get skybox node");
+        ASSERT(skyboxNode, "Failed to get skybox node");
 
         std::shared_ptr<scene::Skybox> skyboxComponent = skyboxNode->GetComponentAs<scene::Skybox>("Skybox");
-        ASSERT(skyboxComponent != nullptr, "Failed to get skybox component");
+        ASSERT(skyboxComponent, "Failed to get skybox component");
 
         scene::TextureManager& textureManager = scene->GetCache().GetTextureManager();
         std::shared_ptr<dx12::Texture> skyboxTexture = textureManager.GetTexture(skyboxComponent->SkydomeTexture);
-        ASSERT(skyboxTexture != nullptr, "Failed to get skybox texture pointer");
+        ASSERT(skyboxTexture, "Failed to get skybox texture pointer");
 
         // Parse pipeline for the diffuse irradiance convolution
 
@@ -243,14 +249,14 @@ namespace scene::helpers
         // Find skybox node and retrieve texture pointer
 
         std::shared_ptr<scene::Entity> skyboxNode = scene->FindNodeByComponentName("Skybox");
-        ASSERT(skyboxNode != nullptr, "Failed to get skybox node");
+        ASSERT(skyboxNode, "Failed to get skybox node");
 
         std::shared_ptr<scene::Skybox> skyboxComponent = skyboxNode->GetComponentAs<scene::Skybox>("Skybox");
-        ASSERT(skyboxComponent != nullptr, "Failed to get skybox component");
+        ASSERT(skyboxComponent, "Failed to get skybox component");
 
         scene::TextureManager& textureManager = scene->GetCache().GetTextureManager();
         std::shared_ptr<dx12::Texture> skyboxTexture = textureManager.GetTexture(skyboxComponent->SkydomeTexture);
-        ASSERT(skyboxTexture != nullptr, "Failed to get skybox texture pointer");
+        ASSERT(skyboxTexture, "Failed to get skybox texture pointer");
 
         // Parse pipeline for the environment map pre-filtering
 
@@ -337,14 +343,14 @@ namespace scene::helpers
         // Find skybox node and retrieve texture pointer
 
         std::shared_ptr<scene::Entity> skyboxNode = scene->FindNodeByComponentName("Skybox");
-        ASSERT(skyboxNode != nullptr, "Failed to get skybox node");
+        ASSERT(skyboxNode, "Failed to get skybox node");
 
         std::shared_ptr<scene::Skybox> skyboxComponent = skyboxNode->GetComponentAs<scene::Skybox>("Skybox");
-        ASSERT(skyboxComponent != nullptr, "Failed to get skybox component");
+        ASSERT(skyboxComponent, "Failed to get skybox component");
 
         scene::TextureManager& textureManager = scene->GetCache().GetTextureManager();
         std::shared_ptr<dx12::Texture> skyboxTexture = textureManager.GetTexture(skyboxComponent->SkydomeTexture);
-        ASSERT(skyboxTexture != nullptr, "Failed to get skybox texture pointer");
+        ASSERT(skyboxTexture, "Failed to get skybox texture pointer");
 
         // Parse pipeline for BRDF look-up texture generation
 
@@ -403,12 +409,9 @@ namespace scene::helpers
 
     std::shared_ptr<Entity> SceneLoader::LoadEntity(dx12::CommandList& commandList, const std::string& filepath, Entity* parent)
     {
-        LOG_INFO("Parsing node " + filepath);
+        LOG_INFO("Parsing node: {}", filepath);
 
-        if (ASSERT(std::filesystem::exists(std::filesystem::path(filepath)), std::format("Failed to parse a node from {}", filepath)))
-        {
-            return nullptr;
-        }
+        ASSERT(std::filesystem::exists(std::filesystem::path(filepath)), "Failed to parse a node from " + filepath);
 
         std::shared_ptr<Entity> entity = std::make_shared<Entity>(parent);
 

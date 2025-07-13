@@ -11,7 +11,8 @@ namespace dx12
         void EnableDXDebugLayer()
         {
             ComPtr<ID3D12Debug> debugInterface;
-            helpers::throwIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&debugInterface)));
+            HRESULT result = D3D12GetDebugInterface(IID_PPV_ARGS(&debugInterface));
+            CHECK(result, "Failed to get D3D12 debug interface.");
             debugInterface->EnableDebugLayer();
 
             ComPtr<ID3D12DeviceRemovedExtendedDataSettings> pDredSettings;
@@ -21,7 +22,7 @@ namespace dx12
             pDredSettings->SetAutoBreadcrumbsEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
             pDredSettings->SetPageFaultEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
 
-            Logger::Log(LogType::Info, "Enabled DX Debug Layer");
+            LOG_INFO("DirectX 12 debug layer enabled.");
         }
     } // namespace
 
@@ -56,11 +57,12 @@ namespace dx12
     {
         if (_instance)
         {
-            Logger::Log(LogType::Warning, "Device has already been initialized");
+            LOG_WARNING("Trying to reinitialize DX12 device, skipping.");
         }
         else
         {
             _instance = new Device();
+            LOG_INFO("DX12 device initialized.");
         }
     }
 
@@ -72,10 +74,13 @@ namespace dx12
         }
 
         _instance = nullptr;
+
+        LOG_INFO("DX12 device destroyed.");
     }
 
     void Device::BindSwapChain(SwapChain* swapChain)
     {
+        ASSERT(swapChain, "SwapChain is nullptr when trying to bind it to the device.");
         _instance->_swapChain = swapChain;
     }
 
@@ -185,15 +190,19 @@ namespace dx12
         createFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
 #endif
 
-        helpers::throwIfFailed(CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&dxgiFactory)));
+        HRESULT createDXGIFactoryResult = CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&dxgiFactory));
+        CHECK(createDXGIFactoryResult, "Failed to create DXGI factory.");
 
         ComPtr<IDXGIAdapter1> dxgiAdapter1;
         ComPtr<IDXGIAdapter4> dxgiAdapter4;
 
         if (useWarp)
         {
-            helpers::throwIfFailed(dxgiFactory->EnumWarpAdapter(IID_PPV_ARGS(&dxgiAdapter1)));
-            helpers::throwIfFailed(dxgiAdapter1.As(&dxgiAdapter4));
+            HRESULT enumWardAdapterResult = dxgiFactory->EnumWarpAdapter(IID_PPV_ARGS(&dxgiAdapter1));
+            CHECK(enumWardAdapterResult, "Failed to enumerate WARP adapter.");
+
+            HRESULT result = dxgiAdapter1.As(&dxgiAdapter4);
+            CHECK(result, "Failed to cast WARP adapter to IDXGIAdapter4.");
         }
         else
         {
@@ -212,19 +221,23 @@ namespace dx12
                     dxgiAdapterDesc1.DedicatedVideoMemory > maxDedicatedVideoMemory)
                 {
                     maxDedicatedVideoMemory = dxgiAdapterDesc1.DedicatedVideoMemory;
-                    helpers::throwIfFailed(dxgiAdapter1.As(&dxgiAdapter4));
+                    HRESULT result = dxgiAdapter1.As(&dxgiAdapter4);
+                    CHECK(result, "Failed to cast adapter to IDXGIAdapter4.");
                 }
             }
         }
 
         _adapter = dxgiAdapter4;
+
+        LOG_INFO("DX12 Adapter created.");
     }
 
     void Device::CreateDevice()
     {
         _crashTracker->Enable();
 
-        helpers::throwIfFailed(D3D12CreateDevice(_adapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&_device)));
+        HRESULT createDeviceResult = D3D12CreateDevice(_adapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&_device));
+        CHECK(createDeviceResult, "Failed to create D3D12 device.");
         _device->SetName(L"DX12 Device");
 
         _crashTracker->Initialize(_device.Get());
@@ -262,7 +275,8 @@ namespace dx12
             NewFilter.DenyList.NumIDs = _countof(DenyIds);
             NewFilter.DenyList.pIDList = DenyIds;
 
-            helpers::throwIfFailed(infoQueue->PushStorageFilter(&NewFilter));
+            HRESULT result = infoQueue->PushStorageFilter(&NewFilter);
+            CHECK(result, "Failed to set D3D12 info queue filter.");
         }
 #endif
     }
@@ -285,5 +299,7 @@ namespace dx12
         desc.Type = D3D12_COMMAND_LIST_TYPE_COPY;
         _device->CreateCommandQueue(&desc, IID_PPV_ARGS(&_queueCopy));
         _queueCopy->SetName(L"Copy Queue");
+
+        LOG_INFO("DX12 Command Queues created.");
     }
 } // namespace dx12

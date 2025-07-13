@@ -22,6 +22,7 @@ TaskGPU::~TaskGPU()
 
 void TaskGPU::SetCommandQueue(ComPtr<ID3D12CommandQueue> commandQueue)
 {
+    ASSERT(commandQueue, "Trying to set a nullptr command queue to the task.");
     _commandQueue = commandQueue;
 }
 
@@ -32,6 +33,8 @@ ComPtr<ID3D12CommandQueue> TaskGPU::GetCommandQueue() const
 
 void TaskGPU::AddCommandList(dx12::CommandList* commandList)
 {
+    ASSERT(commandList, "Trying to add a nullptr command list to the task.");
+
     _commandLists.push_back(commandList);
     _commandListCrashContext->Initialize(commandList->GetDXCommandList().Get());
 }
@@ -43,11 +46,13 @@ std::vector<dx12::CommandList*> TaskGPU::GetCommandLists() const
 
 void TaskGPU::SetFence(dx12::Fence* fence)
 {
+    ASSERT(fence, "Trying to set a nullptr fence to the task.");
     _fence = fence;
 }
 
 dx12::Fence* TaskGPU::GetFence() const
 {
+    ASSERT(_fence, "Trying to get a nullptr fence from the task.");
     return _fence;
 }
 

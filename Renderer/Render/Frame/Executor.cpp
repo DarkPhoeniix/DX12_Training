@@ -16,10 +16,12 @@ Executor::~Executor()
 
 void Executor::Allocate(D3D12_COMMAND_LIST_TYPE type)
 {
-    dx12::Device::GetDXDevice()->CreateCommandAllocator(type, IID_PPV_ARGS(&_allocator));
+    HRESULT createAllocatorResult = dx12::Device::GetDXDevice()->CreateCommandAllocator(type, IID_PPV_ARGS(&_allocator));
+    CHECK(createAllocatorResult, "Failed to create command allocator.");
 
     ComPtr<ID3D12GraphicsCommandList> commandList;
-    dx12::Device::GetDXDevice()->CreateCommandList(0, type, _allocator.Get(), nullptr, IID_PPV_ARGS(&commandList));
+    HRESULT createCmdListResult = dx12::Device::GetDXDevice()->CreateCommandList(0, type, _allocator.Get(), nullptr, IID_PPV_ARGS(&commandList));
+    CHECK(createCmdListResult, "Failed to create command list.");
 
     _commandList.SetDXCommandList(commandList);
     _commandList.Close();
@@ -34,7 +36,9 @@ void Executor::Reset(dx12::PipelineState* rootSignature)
 
     ID3D12PipelineState* pipelineState = rootSignature ? rootSignature->GetPipelineState().Get() : nullptr;
 
-    _allocator->Reset();
+    HRESULT result = _allocator->Reset();
+    CHECK(result, "Failed to reset command allocator.");
+
     _commandList.Reset(_allocator.Get(), pipelineState);
 }
 

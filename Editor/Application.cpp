@@ -68,6 +68,8 @@ Application::~Application()
 
 void Application::Init(HINSTANCE hInstance)
 {
+    logging::Logger::Init("engine.log");
+
     dx12::Device::Init();
     DebugInfo::Init();
     _instance = new Application(hInstance);
@@ -157,6 +159,8 @@ void Application::Quit(int exitCode)
     dx12::Device::Destroy();
 
     PostQuitMessage(exitCode);
+
+    logging::Logger::Shutdown();
 
     if (_instance)
     {

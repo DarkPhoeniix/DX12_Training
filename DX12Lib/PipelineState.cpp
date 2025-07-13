@@ -13,7 +13,7 @@ namespace dx12
     {
         Json::Value ParseJson(const std::string& filepath)
         {
-            ASSERT(std::filesystem::exists(filepath), "Failed to load " + filepath);
+            ASSERT(std::filesystem::exists(filepath), "Failed to load {}" + filepath);
 
             std::ifstream file(filepath, std::ios_base::binary);
             file.open(filepath, std::ios_base::binary);
@@ -44,7 +44,8 @@ namespace dx12
             {
                 return it->second;
             }
-            Logger::Log(LogType::Warning, "Failed to parse " + str + " from the tech description");
+
+            LOG_WARNING("Failed to parse {} from the tech description", str);
             return FORMAT.begin()->second;
         }
 
@@ -119,7 +120,8 @@ namespace dx12
             {
                 return it->second;
             }
-            Logger::Log(LogType::Warning, "Failed to parse " + str + " from the blend description");
+
+            LOG_WARNING("Failed to parse {} from the blend description", str);
             return DEPTH.begin()->second;
         }
 
@@ -130,7 +132,8 @@ namespace dx12
             {
                 return it->second;
             }
-            Logger::Log(LogType::Warning, "Failed to parse " + str + " from the blend description");
+
+            LOG_WARNING("Failed to parse {} from the blend description", str);
             return BLEND_OP.begin()->second;
         }
 
@@ -141,7 +144,8 @@ namespace dx12
             {
                 return it->second;
             }
-            Logger::Log(LogType::Warning, "Failed to parse " + str + " from the blend description");
+
+            LOG_WARNING("Failed to parse {} from the blend description", str);
             return COLOR_WRITE.begin()->second;
         }
 
@@ -152,7 +156,8 @@ namespace dx12
             {
                 return it->second;
             }
-            Logger::Log(LogType::Warning, "Failed to parse " + str + " from the blend description");
+
+            LOG_WARNING("Failed to parse {} from the blend description", str);
             return LOGIC_OP.begin()->second;
         }
 
@@ -178,7 +183,8 @@ namespace dx12
             {
                 return it->second;
             }
-            Logger::Log(LogType::Warning, "Failed to parse " + str + " from the raster description");
+
+            LOG_WARNING("Failed to parse {} from the raster description", str);
             return FILL_MODE.begin()->second;
         }
 
@@ -189,7 +195,8 @@ namespace dx12
             {
                 return it->second;
             }
-            Logger::Log(LogType::Warning, "Failed to parse " + str + " from the raster description");
+
+            LOG_WARNING("Failed to parse {} from the raster description", str);
             return CULL_MODE.begin()->second;
         }
 
@@ -220,7 +227,8 @@ namespace dx12
             {
                 return it->second;
             }
-            Logger::Log(LogType::Warning, "Failed to parse " + str + " from the depth stencil description");
+
+            LOG_WARNING("Failed to parse {} from the depth stencil description", str);
             return COMPARISON_FUNC.begin()->second;
         }
 
@@ -231,7 +239,8 @@ namespace dx12
             {
                 return it->second;
             }
-            Logger::Log(LogType::Warning, "Failed to parse " + str + " from the depth stencil description");
+
+            LOG_WARNING("Failed to parse {} from the depth stencil description", str);
             return DEPTH_WRITE_MASK.begin()->second;
         }
 
@@ -249,7 +258,8 @@ namespace dx12
             {
                 return it->second;
             }
-            Logger::Log(LogType::Warning, "Failed to parse " + str + " from the topology type description");
+
+            LOG_WARNING("Failed to parse {} from the topology type description", str);
             return TOPOLOGY_TYPE.begin()->second;
         }
 
@@ -269,7 +279,8 @@ namespace dx12
             {
                 return it->second;
             }
-            Logger::Log(LogType::Warning, "Failed to parse " + str + " from the format description");
+
+            LOG_WARNING("Failed to parse {} from the texture format description", str);
             return TEX_FORMAT.begin()->second;
         }
     } // namespace unnamed
@@ -343,6 +354,7 @@ namespace dx12
     void PipelineState::Parse(const std::string& filepath)
     {
         Json::Value jsonRoot = ParseJson(filepath);
+        ASSERT(!jsonRoot.isNull() || jsonRoot.empty(), "Failed to parse JSON from file: " + filepath);
 
         _isGraphicsPipeline = jsonRoot["IsGraphicsPipeline"].asBool();
 
@@ -365,7 +377,8 @@ namespace dx12
         if (!fileRoot["VS"].isNull())
         {
             std::string vertexShaderFilepath = fileRoot["VS"].asCString();
-            helpers::throwIfFailed(D3DReadFileToBlob(std::wstring(vertexShaderFilepath.begin(), vertexShaderFilepath.end()).c_str(), &vertexShaderBlob));
+            HRESULT result = D3DReadFileToBlob(std::wstring(vertexShaderFilepath.begin(), vertexShaderFilepath.end()).c_str(), &vertexShaderBlob);
+            CHECK(result, "Failed to load vertex shader from file: " + vertexShaderFilepath);
         }
 
         // Load the geometry shader
@@ -373,7 +386,8 @@ namespace dx12
         if (!fileRoot["GS"].isNull())
         {
             std::string geometryShaderFilepath = fileRoot["GS"].asCString();
-            helpers::throwIfFailed(D3DReadFileToBlob(std::wstring(geometryShaderFilepath.begin(), geometryShaderFilepath.end()).c_str(), &geometryShaderBlob));
+            HRESULT result = D3DReadFileToBlob(std::wstring(geometryShaderFilepath.begin(), geometryShaderFilepath.end()).c_str(), &geometryShaderBlob);
+            CHECK(result, "Failed to load geometry shader from file: " + geometryShaderFilepath);
         }
 
         // Load the pixel shader
@@ -381,7 +395,8 @@ namespace dx12
         if (!fileRoot["PS"].isNull())
         {
             std::string pixelShaderFilepath = fileRoot["PS"].asCString();
-            helpers::throwIfFailed(D3DReadFileToBlob(std::wstring(pixelShaderFilepath.begin(), pixelShaderFilepath.end()).c_str(), &pixelShaderBlob));
+            HRESULT result = D3DReadFileToBlob(std::wstring(pixelShaderFilepath.begin(), pixelShaderFilepath.end()).c_str(), &pixelShaderBlob);
+            CHECK(result, "Failed to load pixel shader from file: " + pixelShaderFilepath);
         }
 
         // Create the vertex input layout
@@ -404,52 +419,64 @@ namespace dx12
             }
         }
 
-        helpers::throwIfFailed(device->CreateRootSignature(0, vertexShaderBlob->GetBufferPointer(),
-            vertexShaderBlob->GetBufferSize(), IID_PPV_ARGS(&_rootSignature)));
+        // Create the root signature
+        {
+            HRESULT result = device->CreateRootSignature(0, vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize(), IID_PPV_ARGS(&_rootSignature));
+            CHECK(result, "Failed to create root signature from vertex shader blob.");
+        }
 
+        // Set the name of the root signature
         {
             std::string type = fileRoot["Type"].asCString();
             std::wstring name(type.begin(), type.end());
             _rootSignature->SetName(name.c_str());
         }
 
+        // Create the graphics pipeline state description
         const std::string blendPipelineDescFilepath = fileRoot["Blend"].asCString();
         const std::string rasterPipelineDescFilepath = fileRoot["Raster"].asCString();
         const std::string depthPipelineDescFilepath = fileRoot["Depth"].asCString();
 
         D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineStateDescription = {};
 
-        pipelineStateDescription.BlendState = ParseBlendDescription(blendPipelineDescFilepath);
-        pipelineStateDescription.RasterizerState = ParseRasterizerDescription(rasterPipelineDescFilepath);
-        pipelineStateDescription.DepthStencilState = ParseDepthStencilDescription(depthPipelineDescFilepath);
+        // Set the pipeline state description properties
+        {
+            pipelineStateDescription.BlendState = ParseBlendDescription(blendPipelineDescFilepath);
+            pipelineStateDescription.RasterizerState = ParseRasterizerDescription(rasterPipelineDescFilepath);
+            pipelineStateDescription.DepthStencilState = ParseDepthStencilDescription(depthPipelineDescFilepath);
+            pipelineStateDescription.pRootSignature = _rootSignature.Get();
+            pipelineStateDescription.InputLayout = { inputLayout, layoutElementsNum };
+            pipelineStateDescription.PrimitiveTopologyType = ParseTopologyType(fileRoot["TopologyType"].asCString());
+            if (vertexShaderBlob)
+            {
+                pipelineStateDescription.VS = CD3DX12_SHADER_BYTECODE(vertexShaderBlob.Get());
+            }
+            if (geometryShaderBlob)
+            {
+                pipelineStateDescription.GS = CD3DX12_SHADER_BYTECODE(geometryShaderBlob.Get());
+            }
+            if (pixelShaderBlob)
+            {
+                pipelineStateDescription.PS = CD3DX12_SHADER_BYTECODE(pixelShaderBlob.Get());
+            }
+            pipelineStateDescription.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+            Json::Value renderTargets = fileRoot["RenderTargets"];
+            pipelineStateDescription.NumRenderTargets = renderTargets.size();
+            for (unsigned int i = 0; i < renderTargets.size(); ++i)
+            {
+                pipelineStateDescription.RTVFormats[i] = ParseTexFormat(renderTargets[i].asCString());
+            }
+            pipelineStateDescription.SampleDesc.Count = 1; // must be the same sample description as the swapChain and depth/stencil buffer
+            pipelineStateDescription.SampleMask = 0xffffffff; // sample mask has to do with multi-sampling. 0xffffffff means point sampling is done
+        }
 
-        pipelineStateDescription.pRootSignature = _rootSignature.Get();
-        pipelineStateDescription.InputLayout = { inputLayout, layoutElementsNum };
-        pipelineStateDescription.PrimitiveTopologyType = ParseTopologyType(fileRoot["TopologyType"].asCString());
-        if (vertexShaderBlob)
+        // Create the graphics pipeline state object
         {
-            pipelineStateDescription.VS = CD3DX12_SHADER_BYTECODE(vertexShaderBlob.Get());
+            HRESULT result = device->CreateGraphicsPipelineState(&pipelineStateDescription, IID_PPV_ARGS(&_pipelineState));
+            CHECK(result, "Failed to create graphics pipeline state from the description.");
         }
-        if (geometryShaderBlob)
-        {
-            pipelineStateDescription.GS = CD3DX12_SHADER_BYTECODE(geometryShaderBlob.Get());
-        }
-        if (pixelShaderBlob)
-        {
-            pipelineStateDescription.PS = CD3DX12_SHADER_BYTECODE(pixelShaderBlob.Get());
-        }
-        pipelineStateDescription.DSVFormat = DXGI_FORMAT_D32_FLOAT;
-        Json::Value renderTargets = fileRoot["RenderTargets"];
-        pipelineStateDescription.NumRenderTargets = renderTargets.size();
-        for (unsigned int i = 0; i < renderTargets.size(); ++i)
-        {
-            pipelineStateDescription.RTVFormats[i] = ParseTexFormat(renderTargets[i].asCString());
-        }
-        pipelineStateDescription.SampleDesc.Count = 1; // must be the same sample description as the swapChain and depth/stencil buffer
-        pipelineStateDescription.SampleMask = 0xffffffff; // sample mask has to do with multi-sampling. 0xffffffff means point sampling is done
 
-        helpers::throwIfFailed(device->CreateGraphicsPipelineState(&pipelineStateDescription, IID_PPV_ARGS(&_pipelineState)));
-
+        // Set the name of the pipeline state object
         {
             std::string type = fileRoot["Type"].asCString();
             std::wstring name(type.begin(), type.end());
@@ -468,18 +495,24 @@ namespace dx12
         if (!fileRoot["CS"].isNull())
         {
             std::string computeShaderFilepath = fileRoot["CS"].asCString();
-            helpers::throwIfFailed(D3DReadFileToBlob(std::wstring(computeShaderFilepath.begin(), computeShaderFilepath.end()).c_str(), &computeShaderBlob));
+            HRESULT result = D3DReadFileToBlob(std::wstring(computeShaderFilepath.begin(), computeShaderFilepath.end()).c_str(), &computeShaderBlob);
+            CHECK(result, "Failed to load compute shader from file: " + computeShaderFilepath);
         }
 
-        helpers::throwIfFailed(device->CreateRootSignature(0, computeShaderBlob->GetBufferPointer(),
-            computeShaderBlob->GetBufferSize(), IID_PPV_ARGS(&_rootSignature)));
+        // Create the root signature
+        {
+            HRESULT result = device->CreateRootSignature(0, computeShaderBlob->GetBufferPointer(), computeShaderBlob->GetBufferSize(), IID_PPV_ARGS(&_rootSignature));
+            CHECK(result, "Failed to create root signature from compute shader blob.");
+        }
 
+        // Set the name of the root signature
         {
             std::string type = fileRoot["Type"].asCString();
             std::wstring name(type.begin(), type.end());
             _rootSignature->SetName(name.c_str());
         }
 
+        // Create the compute pipeline state description
         D3D12_COMPUTE_PIPELINE_STATE_DESC pipelineStateDescription = {};
         pipelineStateDescription.pRootSignature = _rootSignature.Get();
         if (computeShaderBlob)
@@ -487,8 +520,13 @@ namespace dx12
             pipelineStateDescription.CS = CD3DX12_SHADER_BYTECODE(computeShaderBlob.Get());
         }
 
-        helpers::throwIfFailed(device->CreateComputePipelineState(&pipelineStateDescription, IID_PPV_ARGS(&_pipelineState)));
+        // Create the compute pipeline state object
+        {
+            HRESULT result = device->CreateComputePipelineState(&pipelineStateDescription, IID_PPV_ARGS(&_pipelineState));
+            CHECK(result, "Failed to create compute pipeline state from the description.");
+        }
 
+        // Set the name of the pipeline state object
         {
             std::string type = fileRoot["Type"].asCString();
             std::wstring name(type.begin(), type.end());
@@ -499,10 +537,11 @@ namespace dx12
     D3D12_BLEND_DESC PipelineState::ParseBlendDescription(const std::string& filepath)
     {
         Json::Value root = ParseJson(filepath);
-        int renderTargetsSize = root["RenderTargets"].size();
+        ASSERT(!root.isNull() || root.empty(), "Failed to parse JSON from file: " + filepath);
 
         D3D12_BLEND_DESC description = {};
 
+        int renderTargetsSize = root["RenderTargets"].size();
         for (int i = 0; i < renderTargetsSize; ++i)
         {
             Json::Value target = root["RenderTargets"][i];
@@ -527,6 +566,7 @@ namespace dx12
     D3D12_RASTERIZER_DESC PipelineState::ParseRasterizerDescription(const std::string& filepath)
     {
         Json::Value root = ParseJson(filepath);
+        ASSERT(!root.isNull() || root.empty(), "Failed to parse JSON from file: " + filepath);
 
         D3D12_RASTERIZER_DESC description = {};
         description.FillMode = ParseFillMode(root["FillMode"].asCString());
@@ -539,6 +579,7 @@ namespace dx12
     D3D12_DEPTH_STENCIL_DESC PipelineState::ParseDepthStencilDescription(const std::string& filepath)
     {
         Json::Value root = ParseJson(filepath);
+        ASSERT(!root.isNull() || root.empty(), "Failed to parse JSON from file: " + filepath);
 
         D3D12_DEPTH_STENCIL_DESC description = {};
         description.DepthEnable = root["DepthEnable"].asBool();

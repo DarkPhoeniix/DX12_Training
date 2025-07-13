@@ -54,6 +54,7 @@ namespace core
 
     void Win32Window::AddEventListener(events::IWindowEventListener* listener)
     {
+        ASSERT(listener, "Trying to add a null event listener to the window.");
         _eventListeners.push_back(listener);
     }
 
@@ -65,10 +66,15 @@ namespace core
         {
             _eventListeners.erase(it);
         }
+        else
+        {
+            LOG_WARNING("Trying to remove a non-existing event listener from the window.");
+        }
     }
 
     void Win32Window::SetSwapChain(dx12::SwapChain* swapChain)
     {
+        FAIL(swapChain, "Trying to set a null swap chain to the window.");
         _swapChain = swapChain;
     }
 
@@ -195,7 +201,8 @@ namespace core
                 // Get the settings of the display on which the app's window is currently displayed
                 ComPtr<IDXGIOutput> pOutput = _swapChain->GetContainingOutput();
                 DXGI_OUTPUT_DESC Desc;
-                helpers::throwIfFailed(pOutput->GetDesc(&Desc));
+                HRESULT result = pOutput->GetDesc(&Desc);
+                CHECK(result, "Failed to get swap chain description.");
                 fullscreenWindowRect = Desc.DesktopCoordinates;
             }
             else

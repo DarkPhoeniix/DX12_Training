@@ -31,7 +31,8 @@ using namespace Microsoft::WRL;
 #include <DirectXTex.h>
 #include <DirectXMath.h>
 
-#include "Utility/Logger.h"
+#include "Logger.h"
+
 #include "Utility/Helpers.h"
 #include "Resource.h"
 #include "Device.h"

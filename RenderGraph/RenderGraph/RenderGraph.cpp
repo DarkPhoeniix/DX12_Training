@@ -62,6 +62,8 @@ namespace rg
 
         BuildAdjacencyLists();
         TopologicalSort();
+
+        LOG_INFO("Render graph compiled successfully with {} passes.", _passes.size());
     }
 
     void RenderGraph::Execute()
@@ -84,9 +86,6 @@ namespace rg
                 break;
             case RenderPassType::Copy:
                 task = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_COPY);
-                break;
-            default:
-                FAIL("Undefined render pass type");
                 break;
             }
 
@@ -122,6 +121,7 @@ namespace rg
 
     void RenderGraph::AddPass(std::shared_ptr<IRenderPass> pass)
     {
+        ASSERT(pass, "Trying to add a null render pass to the render graph.");
         _passes.push_back(pass);
 
         RenderPassBuilder builder(*this, pass.get());
@@ -130,6 +130,7 @@ namespace rg
 
     void RenderGraph::ImportResource(std::shared_ptr<dx12::Resource> resource)
     {
+        ASSERT(resource, "Trying to import a null resource into the render graph.");
         ResourceId id = _context._mapNameToId.size();
 
         _context._mapNameToId[resource->GetName()] = id;
@@ -140,7 +141,14 @@ namespace rg
     {
         ResourceId id = _context._mapNameToId[name];
 
-        return _context._resources[id];
+        auto resourceIt = _context._resources.find(id);
+        if (resourceIt == _context._resources.end())
+        {
+            LOG_ERROR("Resource with name '{}' does not exist in the render graph context.", name);
+            return nullptr;
+        }
+
+        return resourceIt->second;
     }
 
     void RenderGraph::BuildAdjacencyLists()

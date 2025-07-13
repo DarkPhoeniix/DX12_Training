@@ -8,7 +8,7 @@
 
 namespace
 {
-    constexpr std::uint32_t DESCRIPTOR_TABLE_SIZE = 4096;
+    constexpr std::uint32_t DESCRIPTOR_TABLE_SIZE = 4096u;
 }
 
 namespace rg
@@ -60,6 +60,7 @@ namespace rg
         auto resourceIt = _resources.find(id);
         if (resourceIt == _resources.end())
         {
+            LOG_WARNING("Resource with id {} not found in render context.", id);
             return nullptr;
         }
 
@@ -158,6 +159,8 @@ namespace rg
 
     ResourceId RenderContext::CreateResource(std::string name, dx12::ResourceDescription desc)
     {
+        ASSERT(_mapNameToId.find(name) == _mapNameToId.end(), "Resource already exists in render graph context.");
+
         std::shared_ptr<dx12::Resource> resource = std::make_shared<dx12::Resource>();
         resource->SetName(name);
         resource->CreateCommitedResource(desc);
@@ -190,8 +193,9 @@ namespace rg
     ResourceId RenderContext::ReadResource(std::string name)
     {
         auto IdIt = _mapNameToId.find(name);
-        if (ASSERT(IdIt != _mapNameToId.end(), "Texture is not exist in render graph context"))
+        if (IdIt == _mapNameToId.end())
         {
+            LOG_CRITICAL("Texture is not exist in render graph context: {}", name);
             return ResourceId(-1);
         }
 
@@ -201,8 +205,9 @@ namespace rg
     ResourceId RenderContext::WriteResource(std::string name)
     {
         auto IdIt = _mapNameToId.find(name);
-        if (ASSERT(IdIt != _mapNameToId.end(), "Texture is not exist in render graph context"))
+        if (IdIt == _mapNameToId.end())
         {
+            LOG_CRITICAL("Texture is not exist in render graph context: {}", name);
             return ResourceId(-1);
         }
 

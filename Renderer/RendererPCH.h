@@ -39,9 +39,10 @@ using namespace Microsoft::WRL;
 #include <vector>
 #include <map>
 
+#include "Logger.h"
+
 #include "Utility/Defines.h"
 #include "Utility/Helpers.h"
-#include "Utility/Logger.h"
 
 #include "Resource.h"
 #include "Device.h"

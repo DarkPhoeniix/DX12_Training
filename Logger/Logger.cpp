@@ -1,5 +1,5 @@
 
-#include "Log.h"
+#include "Logger.h"
 
 #include <spdlog/spdlog.h>
 #ifdef MSVC_LOG
@@ -28,14 +28,14 @@ namespace logging {
 
 #ifdef FILE_LOG
         auto file = std::make_shared<spdlog::sinks::basic_file_sink_mt>(logFilePath, true);
-        file->set_pattern("[%Y-%m-%d %H:%M:%S] [%l] (%t) %v");
+        file->set_pattern("[%H:%M:%S] [%l] (%t) %v");
         sinks.push_back(file);
 #endif // FILE_LOG
 
         // Construct the logger
-        auto logger = std::make_shared<spdlog::logger>("EngineLogger", std::begin(sinks), std::end(sinks));
-        logger->set_level(spdlog::level::trace);
-        spdlog::set_default_logger(logger);
+        Instance()._impl->SpdLogger = std::make_shared<spdlog::logger>("EngineLogger", std::begin(sinks), std::end(sinks));
+        Instance()._impl->SpdLogger->set_level(spdlog::level::trace);
+        spdlog::set_default_logger(Instance()._impl->SpdLogger);
     }
 
     void Logger::Shutdown()
@@ -52,29 +52,51 @@ namespace logging {
         return instance;
     }
 
+    void Logger::Log(Level level, const std::string& message)
+    {
+        switch (level)
+        {
+        case Level::Debug:
+            _impl->SpdLogger->debug(message);
+            break;
+        case Level::Info:
+            _impl->SpdLogger->info(message);
+            break;
+        case Level::Warning:
+            _impl->SpdLogger->warn(message);
+            break;
+        case Level::Error:
+            _impl->SpdLogger->error(message);
+            break;
+        case Level::Critical:
+            _impl->SpdLogger->critical(message);
+            break;
+        }
+    }
+
     void Logger::Debug(const std::string& msg)
     {
-        Log(LogLevel::Debug, msg);
+        Log(Level::Debug, msg);
     }
 
     void Logger::Info(const std::string& msg)
     {
-        Log(LogLevel::Info, msg);
+        Log(Level::Info, msg);
     }
 
     void Logger::Warning(const std::string& msg)
     {
-        Log(LogLevel::Warning, msg);
+        Log(Level::Warning, msg);
     }
 
     void Logger::Error(const std::string& msg)
     {
-        Log(LogLevel::Error, msg);
+        Log(Level::Error, msg);
     }
 
     void Logger::Critical(const std::string& msg)
     {
-        Log(LogLevel::Critical, msg);
+        Log(Level::Critical, msg);
     }
 
     Logger::Logger()
@@ -82,27 +104,4 @@ namespace logging {
     {
         _impl->SpdLogger = spdlog::default_logger();
     }
-
-    void Logger::Log(LogLevel level, const std::string& message)
-    {
-        switch (level)
-        {
-        case LogLevel::Debug:
-            _impl->SpdLogger->debug(message);
-            break;
-        case LogLevel::Info:
-            _impl->SpdLogger->info(message);
-            break;
-        case LogLevel::Warning:
-            _impl->SpdLogger->warn(message);
-            break;
-        case LogLevel::Error:
-            _impl->SpdLogger->error(message);
-            break;
-        case LogLevel::Critical:
-            _impl->SpdLogger->critical(message);
-            break;
-        }
-    }
-
 } // namespace logging

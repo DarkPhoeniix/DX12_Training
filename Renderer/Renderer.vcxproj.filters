@@ -248,9 +248,6 @@
     <ClCompile Include="Utility\DebugInfo.cpp">
       <Filter>Helpers</Filter>
     </ClCompile>
-    <ClCompile Include="Utility\Logger.cpp">
-      <Filter>Helpers</Filter>
-    </ClCompile>
     <ClCompile Include="Utility\PoissonDiskDistribution.cpp">
       <Filter>Helpers</Filter>
     </ClCompile>
@@ -429,9 +426,6 @@
       <Filter>Helpers</Filter>
     </ClInclude>
     <ClInclude Include="Utility\DebugInfo.h">
-      <Filter>Helpers</Filter>
-    </ClInclude>
-    <ClInclude Include="Utility\Logger.h">
       <Filter>Helpers</Filter>
     </ClInclude>
     <ClInclude Include="Utility\PoissonDiskDistribution.h">

@@ -32,7 +32,10 @@ namespace
     std::array<XMMATRIX, 6> GetLightViewProj(std::shared_ptr<scene::Entity> node)
     {
         std::shared_ptr<scene::Transformation> transform = node->GetComponentAs<scene::Transformation>("Transformation");
+        ASSERT(transform, "Node does not have Transformation component");
+
         std::shared_ptr<scene::Light> light = node->GetComponentAs<scene::Light>("Light");
+        ASSERT(light, "Node does not have Light component");
 
         std::array<XMMATRIX, 6> result = 
         {
@@ -179,10 +182,7 @@ namespace helpers
         GPUSceneDesc* sceneDesc = (GPUSceneDesc*)sceneDataHandle.DataCPU;
         {
             auto cameraEntity = scene.FindNodeByComponentName("Camera");
-            if (ASSERT(cameraEntity.get(), "No camera on the scene"))
-            {
-                return;
-            }
+            FAIL(cameraEntity.get(), "No camera on the scene");
 
             std::shared_ptr<scene::Camera> camera = cameraEntity->GetComponentAs<scene::Camera>("Camera");
 

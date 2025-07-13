@@ -18,6 +18,10 @@ void DebugInfo::Init()
     {
         _instance = new DebugInfo;
     }
+    else
+    {
+        ASSERT(false, "DebugInfo instance already created");
+    }
 }
 
 void DebugInfo::Destroy()

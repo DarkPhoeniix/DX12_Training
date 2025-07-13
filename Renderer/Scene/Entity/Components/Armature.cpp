@@ -39,18 +39,13 @@ namespace scene
             _bonesSorted.push_back(&bone);
             bone.PendingUpdate = true;
         }
-        std::sort(_bonesSorted.begin(), _bonesSorted.end(),
-            [](Bone* lhs, Bone* rhs) { return lhs->ID < rhs->ID; });
+        std::sort(_bonesSorted.begin(), _bonesSorted.end(), [](Bone* lhs, Bone* rhs) { return lhs->ID < rhs->ID; });
 
         for (Bone& bone : _bones)
         {
             if (bone.ParentId == -1)
             {
-                if (ASSERT(!_root, "Armature must only 1 root bone"))
-                {
-                    return;
-                }
-
+                ASSERT(!_root, "Armature must only 1 root bone");
                 _root = &bone;
             }
             else
@@ -77,10 +72,7 @@ namespace scene
     void Armature::SetBoneLocalTransform(BoneId id, const DirectX::XMMATRIX& transform)
     {
         auto boneIt = std::find_if(_bones.begin(), _bones.end(), [id](const Bone& bone) { return bone.ID == id; });
-        if (ASSERT(boneIt != _bones.end(), std::format("Bone with ID {} not found in armature {}", id, _name)))
-        {
-            return;
-        }
+        ASSERT(boneIt != _bones.end(), std::format("Bone with ID {} not found in armature {}", id, _name));
 
         boneIt->LocalTransform = transform;
         boneIt->PendingUpdate = true;
@@ -117,6 +109,7 @@ namespace scene
             }
         }
 
+        LOG_ERROR("Bone with name '{}' not found in armature '{}'", name, _name);
         return nullptr;
     }
 

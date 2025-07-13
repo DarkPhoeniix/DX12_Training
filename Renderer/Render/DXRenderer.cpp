@@ -160,7 +160,7 @@ namespace render
             }
             else
             {
-                LOG_WARNING(false, std::format("Failed to load scene \'{}\'", filepath));
+                LOG_WARNING("Failed to load scene \'{}\'. Falling back to the \'{}\' scene", filepath, DEFAULT_SCENE_PATH);
                 _sceneLoader.LoadScene(*uploadTask, DEFAULT_SCENE_PATH, _scene);
             }
 
@@ -325,11 +325,13 @@ namespace render
     {
         if (e.width == 0 && e.height == 0)
         {
+            LOG_INFO("Window minimized.");
             _isMinimized = true;
             return; // Do not resize buffers on window minimize (otherwise it'll crash...)
         }
         else
         {
+            LOG_INFO("Window resized to {}x{}.", e.width, e.height);
             _isMinimized = false;
         }
 
@@ -355,6 +357,8 @@ namespace render
     {
         WaitAllFrames();
         SetupRenderPipeline();
+
+        LOG_INFO("Render pipeline changed. Rebuilding render graph...");
     }
 
     void DXRenderer::OnLoadScene(const std::string& filepath)

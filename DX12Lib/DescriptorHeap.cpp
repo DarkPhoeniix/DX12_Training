@@ -69,7 +69,8 @@ namespace dx12
     {
         ASSERT(dx12::Device::GetDXDevice(), "Device is nullptr when trying to create descriptor heap");
 
-        dx12::Device::GetDXDevice()->CreateDescriptorHeap(&_description.GetDXDescription(), IID_PPV_ARGS(&_descriptorHeap));
+        HRESULT result = dx12::Device::GetDXDevice()->CreateDescriptorHeap(&_description.GetDXDescription(), IID_PPV_ARGS(&_descriptorHeap));
+        CHECK(result, "Failed to create descriptor heap.");
 
         std::wstring tmp(_name.begin(), _name.end());
         _descriptorHeap->SetName(tmp.c_str());
@@ -91,6 +92,8 @@ namespace dx12
 
     std::uint32_t DescriptorHeap::CopyResourceDescriptor(D3D12_CPU_DESCRIPTOR_HANDLE descriptor)
     {
+        ASSERT((_currentOffset + 1) < _description.GetNumDescriptors(), "Descriptor heap is full, cannot copy descriptor");
+
         D3D12_CPU_DESCRIPTOR_HANDLE handle = _descriptorHeap->GetCPUDescriptorHandleForHeapStart();
         handle.ptr += _heapIncrementSize * _currentOffset;
 
@@ -111,6 +114,8 @@ namespace dx12
 
     D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetCPUHandleWithOffset(std::uint32_t offset)
     {
+        ASSERT(offset < _description.GetNumDescriptors(), "Offset is out of bounds for descriptor heap");
+
         D3D12_CPU_DESCRIPTOR_HANDLE handle = _descriptorHeap->GetCPUDescriptorHandleForHeapStart();
         handle.ptr += (offset * _heapIncrementSize);
         return handle;
@@ -118,6 +123,8 @@ namespace dx12
 
     D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetGPUHandleWithOffset(std::uint32_t offset)
     {
+        ASSERT(offset < _description.GetNumDescriptors(), "Offset is out of bounds for descriptor heap");
+
         D3D12_GPU_DESCRIPTOR_HANDLE handle = _descriptorHeap->GetGPUDescriptorHandleForHeapStart();
         handle.ptr += (offset * _heapIncrementSize);
         return handle;
@@ -125,6 +132,8 @@ namespace dx12
 
     std::uint32_t DescriptorHeap::Offset()
     {
+        ASSERT((_currentOffset + 1) < _description.GetNumDescriptors(), "Descriptor heap is full, cannot get offset");
+
         std::uint32_t offset = _currentOffset;
         ++_currentOffset;
         return offset;
