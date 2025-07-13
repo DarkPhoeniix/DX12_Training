@@ -35,12 +35,7 @@
     </ClInclude>
     <ClInclude Include="EditorPCH.h" />
     <ClInclude Include="Application.h" />
-    <ClInclude Include="Resources\resource1.h">
-      <Filter>Resources</Filter>
-    </ClInclude>
-    <ClInclude Include="Resources\Resources.h">
-      <Filter>Resources</Filter>
-    </ClInclude>
+    <ClInclude Include="Resources\resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Editor\Widgets\DebugInfoWidget.cpp">
@@ -66,8 +61,10 @@
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Resources\Resource.rc">
-      <Filter>Resources</Filter>
-    </ResourceCompile>
+    <Image Include="Resources\Logo.ico" />
+    <Image Include="C:\Users\Maryna\Desktop\Logo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resources\Resource.rc" />
   </ItemGroup>
 </Project>

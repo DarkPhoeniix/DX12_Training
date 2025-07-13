@@ -12,7 +12,7 @@
 #include "Utility/DebugInfo.h"
 #include "Window/Win32Window.h"
 
-#include "Resources/Resources.h"
+#include "Resources/resource.h"
 
 using namespace core;
 using namespace render;

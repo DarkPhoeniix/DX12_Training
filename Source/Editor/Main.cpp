@@ -19,7 +19,7 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstan
 
     {
         Application::Init(hInstance);
-        std::shared_ptr<core::Win32Window> mainWindow = Application::CreateWin32Window(1280, 720, L"DX12 Sandbox");
+        std::shared_ptr<core::Win32Window> mainWindow = Application::CreateWin32Window(1280, 720, L"Equinox Engine");
         std::shared_ptr<render::DXRenderer> demo = std::make_shared<render::DXRenderer>(mainWindow->GetWindowHandle());
         {
             std::wstring temp(lpCmdLine);

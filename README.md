@@ -1,8 +1,8 @@
-# DX12 Render Engine
+![Banner](Saved/Screenshots/Banner.png)
+
+# Equinox Engine
 
 An experimental real-time renderer built with C++ and DirectX 12 for exploring modern graphics features and techniques.
-
-![Demo](Saved/Screenshots/Demo.png)
 
 ## ✨ Features
 
@@ -27,7 +27,7 @@ Source/
 ├── RenderGraph/        # Frame graph implementation for render pass scheduling
 ├── Renderer/           # Core rendering logic and systems
 Saved/                  # Test scenes and demo screenshots
-DX12_Sandbox.sln        # Visual Studio solution file for building the project
+EquinoxEngine.sln       # Visual Studio solution file for building the project
 ```
 
 ## ⚙️ Build Instructions
@@ -44,10 +44,10 @@ DX12_Sandbox.sln        # Visual Studio solution file for building the project
 git clone https://github.com/DarkPhoeniix/DX12_RenderEngine.git
 ```
 - Run ```DownloadAftermathSDK.bat```
-- Open DX12_Sandbox.sln
+- Open EquinoxEngine.sln
 - Set Editor as the startup project
 - Build x64 Debug/Release configuration
-- Run *Editor.exe*
+- Run *Equinox Engine.exe*
 - *Optionally*: set a custom scene path as a command line parameter
 
 ## 🧪 Future Enhancements
