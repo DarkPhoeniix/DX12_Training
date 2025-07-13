@@ -19,15 +19,15 @@ An experimental real-time renderer built with C++ and DirectX 12 for exploring m
 ## 📂 Project Structure
 
 ```bash
-DX12_RenderEngine/
+Source/
 ├── DX12Lib/            # Abstractions over DirectX 12 API
 ├── Editor/             # Runtime scene editor and UI tools
 ├── GPUCrashTracker/    # Aftermath SDK wrapper to create crash dumps
-├── Logger/             # small logging lib with spdlog
+├── Logger/             # Small logging lib with spdlog
 ├── RenderGraph/        # Frame graph implementation for render pass scheduling
 ├── Renderer/           # Core rendering logic and systems
-├── Saved/              # Test scenes and demo screenshots
-└── DX12_Sandbox.sln    # Visual Studio solution file for building the project
+Saved/                  # Test scenes and demo screenshots
+DX12_Sandbox.sln        # Visual Studio solution file for building the project
 ```
 
 ## ⚙️ Build Instructions
@@ -43,6 +43,7 @@ DX12_RenderEngine/
 ```
 git clone https://github.com/DarkPhoeniix/DX12_RenderEngine.git
 ```
+- Run ```DownloadAftermathSDK.bat```
 - Open DX12_Sandbox.sln
 - Set Editor as the startup project
 - Build x64 Debug/Release configuration
