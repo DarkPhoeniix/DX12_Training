@@ -1,25 +1,8 @@
 ﻿
-**/bin/x64
-**/bin
-**/Release
-**/Debug
-**/obj/x64
-**/src/packages
-**/src/bin
-**/src/obj
-**/delete_pdb
 **/.vs
-
-**/Build
-
 *.vcxproj.user
-*.opendb
 
-!Renderer/Render/Passes/Debug
-/ThirdParty/jsoncpp/source
-/DX12Lib/x64
 /Bin
 /Intermediate
-
-/vcpkg_installed
 /ThirdParty
+/vcpkg_installed
