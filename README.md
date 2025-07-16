@@ -1,8 +1,8 @@
-# DX12 Render Engine
+![Banner](Saved/Screenshots/Banner.png)
+
+# Equinox Engine
 
 An experimental real-time renderer built with C++ and DirectX 12 for exploring modern graphics features and techniques.
-
-![Demo](Saved/Screenshots/Demo.png)
 
 ## ✨ Features
 
@@ -19,13 +19,15 @@ An experimental real-time renderer built with C++ and DirectX 12 for exploring m
 ## 📂 Project Structure
 
 ```bash
-DX12_RenderEngine/
+Source/
 ├── DX12Lib/            # Abstractions over DirectX 12 API
 ├── Editor/             # Runtime scene editor and UI tools
+├── GPUCrashTracker/    # Aftermath SDK wrapper to create crash dumps
+├── Logger/             # Small logging lib with spdlog
 ├── RenderGraph/        # Frame graph implementation for render pass scheduling
 ├── Renderer/           # Core rendering logic and systems
-├── Saved/              # Test scenes and demo screenshots
-└── DX12_Sandbox.sln    # Visual Studio solution file for building the project
+Saved/                  # Test scenes and demo screenshots
+EquinoxEngine.sln       # Visual Studio solution file for building the project
 ```
 
 ## ⚙️ Build Instructions
@@ -41,10 +43,11 @@ DX12_RenderEngine/
 ```
 git clone https://github.com/DarkPhoeniix/DX12_RenderEngine.git
 ```
-- Open DX12_Sandbox.sln
+- Run ```DownloadAftermathSDK.bat```
+- Open EquinoxEngine.sln
 - Set Editor as the startup project
 - Build x64 Debug/Release configuration
-- Run *Editor.exe*
+- Run *Equinox Engine.exe*
 - *Optionally*: set a custom scene path as a command line parameter
 
 ## 🧪 Future Enhancements
@@ -55,5 +58,5 @@ git clone https://github.com/DarkPhoeniix/DX12_RenderEngine.git
 - [ ] Bindless resources
 - [ ] Full scene serialization/deserialization
 - [ ] Cascaded shadow maps
-- [ ] Bloom, DoF, Bokeh effects
-- [ ] SSR
+- [ ] Bloom, DoF, Bokeh effect, SSR
+- [ ] One sunny day, I believe, there will be a place for CMake

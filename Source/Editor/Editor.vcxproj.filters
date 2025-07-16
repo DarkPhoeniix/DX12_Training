@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Editor">
+      <UniqueIdentifier>{464a07a9-d856-4a3a-aa37-ae7459f1aa3e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{c9e9ed6c-1398-4773-921e-04ffba51bf8f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Editor\Widgets">
+      <UniqueIdentifier>{c3af7902-a268-4f2b-b9f5-eaffc510ed52}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Editor\Render">
+      <UniqueIdentifier>{92b64790-38c2-4f37-9131-961ae70dd14e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Editor\Widgets\DebugInfoWidget.h">
+      <Filter>Editor\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="Editor\Widgets\EntityComponentsWidget.h">
+      <Filter>Editor\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="Editor\Widgets\SceneTreeWidget.h">
+      <Filter>Editor\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="Editor\Widgets\IWidget.h">
+      <Filter>Editor\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="Editor\Render\GUIPass.h">
+      <Filter>Editor\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Editor\Editor.h">
+      <Filter>Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorPCH.h" />
+    <ClInclude Include="Application.h" />
+    <ClInclude Include="Resources\resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Editor\Widgets\DebugInfoWidget.cpp">
+      <Filter>Editor\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="Editor\Widgets\EntityComponentsWidget.cpp">
+      <Filter>Editor\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="Editor\Widgets\SceneTreeWidget.cpp">
+      <Filter>Editor\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="Editor\Widgets\IWidget.cpp">
+      <Filter>Editor\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="Editor\Render\GUIPass.cpp">
+      <Filter>Editor\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Editor\Editor.cpp">
+      <Filter>Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="Application.cpp" />
+    <ClCompile Include="EditorPCH.cpp" />
+    <ClCompile Include="Main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Resources\Logo.ico" />
+    <Image Include="C:\Users\Maryna\Desktop\Logo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resources\Resource.rc" />
+  </ItemGroup>
+</Project>
