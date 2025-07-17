@@ -25,7 +25,7 @@ Source/
 ├── GPUCrashTracker/    # Aftermath SDK wrapper to create crash dumps
 ├── Logger/             # Small logging lib with spdlog
 ├── RenderGraph/        # Frame graph implementation for render pass scheduling
-├── Renderer/           # Core rendering logic and systems
+└── Renderer/           # Core rendering logic and systems
 Saved/                  # Test scenes and demo screenshots
 EquinoxEngine.sln       # Visual Studio solution file for building the project
 ```
@@ -41,7 +41,7 @@ EquinoxEngine.sln       # Visual Studio solution file for building the project
 ### Building
 
 ```
-git clone https://github.com/DarkPhoeniix/DX12_RenderEngine.git
+git clone https://github.com/DarkPhoeniix/EquinoxEngine.git
 ```
 - Run ```DownloadAftermathSDK.bat```
 - Open EquinoxEngine.sln
