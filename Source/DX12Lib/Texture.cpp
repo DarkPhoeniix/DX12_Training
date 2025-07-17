@@ -3,7 +3,3 @@
 #include "Texture.h"
 
 using namespace DirectX;
-
-namespace dx12
-{
-} // namespace dx12

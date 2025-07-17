@@ -34,9 +34,9 @@ namespace render
         _data.NormalRoughness = builder.ReadResource(NORMAL_ROUGHNESS);
         _data.Depth = builder.ReadResource(DEPTH);
 
-        _data.DiffuseIrradianceMap = builder.ReadResource("DiffuseIrradianceMap");
-        _data.PreFilteredMap = builder.ReadResource("PreFilteredEnvironmentMap");
-        _data.BRDF_LUT = builder.ReadResource("BRDF_LUT");
+        _data.DiffuseIrradianceMap = builder.ReadResource("Diffuse irradiance map");
+        _data.PreFilteredMap = builder.ReadResource("Prefiltered environment map");
+        _data.BRDF_LUT = builder.ReadResource("BRDF LUT");
 
         dx12::ResourceDescription targetDesc;
         {
@@ -72,13 +72,13 @@ namespace render
 
             std::vector<dx12::ResourceBarrier> barriers =
             {
-                { hdrTarget.get(),              D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_UNORDERED_ACCESS },
-                { albedoMetallic.get(),         D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-                { normalRoughness.get(),        D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-                { depth.get(),                  D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-                { diffuseIrradianceMap.get(),   D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-                { preFilteredEnv.get(),         D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-                { brdfLUT.get(),                D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE }
+                { hdrTarget,              D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_UNORDERED_ACCESS },
+                { albedoMetallic,         D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
+                { normalRoughness,        D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
+                { depth,                  D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
+                { diffuseIrradianceMap,   D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
+                { preFilteredEnv,         D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
+                { brdfLUT,                D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE }
             };
             commandList.TransitionBarriers(barriers);
 
@@ -105,13 +105,13 @@ namespace render
 
             barriers =
             {
-                { hdrTarget.get(),              D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON },
-                { albedoMetallic.get(),         D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
-                { normalRoughness.get(),        D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
-                { depth.get(),                  D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
-                { diffuseIrradianceMap.get(),   D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
-                { preFilteredEnv.get(),         D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
-                { brdfLUT.get(),                D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON }
+                { hdrTarget,              D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON },
+                { albedoMetallic,         D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
+                { normalRoughness,        D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
+                { depth,                  D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
+                { diffuseIrradianceMap,   D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
+                { preFilteredEnv,         D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
+                { brdfLUT,                D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON }
             };
             commandList.TransitionBarriers(barriers);
         }

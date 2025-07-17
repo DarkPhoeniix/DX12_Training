@@ -34,9 +34,9 @@ namespace scene::helpers
     public:
         void LoadScene(TaskGPU& task, const std::string& filepath, std::shared_ptr<Scene> scene);
 
-        std::shared_ptr<dx12::Texture> GenerateEnvironmentDiffuseIrradianceMap(dx12::CommandList& commandList, std::shared_ptr<Scene> scene);
-        std::shared_ptr<dx12::Texture> GeneratePreFilteredEnvironmentMap(dx12::CommandList& commandList, std::shared_ptr<Scene> scene);
-        std::shared_ptr<dx12::Texture> GenerateEnvironmentBRDFLookUpTexture(dx12::CommandList& commandList, std::shared_ptr<Scene> scene);
+        std::shared_ptr<dx12::Resource> GenerateEnvironmentDiffuseIrradianceMap(dx12::CommandList& commandList, std::shared_ptr<Scene> scene);
+        std::shared_ptr<dx12::Resource> GeneratePreFilteredEnvironmentMap(dx12::CommandList& commandList, std::shared_ptr<Scene> scene);
+        std::shared_ptr<dx12::Resource> GenerateEnvironmentBRDFLookUpTexture(dx12::CommandList& commandList, std::shared_ptr<Scene> scene);
 
     private:
         std::shared_ptr<scene::Entity> LoadEntity(dx12::CommandList& commandList, const std::string& filepath, scene::Entity* parent = nullptr);
@@ -60,6 +60,6 @@ namespace scene::helpers
         dx12::PipelineState _IBL_BRDFGenerateLUT;
 
         scene::SceneCache* _cache;
-        std::vector<dx12::Resource> _intermediates;
+        std::vector<std::shared_ptr<dx12::Resource>> _intermediates;
     };
 }

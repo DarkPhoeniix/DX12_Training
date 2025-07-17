@@ -37,9 +37,9 @@ namespace dx12
         DXGI_SWAP_CHAIN_DESC GetDescription() const;
 
         // Returns a pointer to the swap chain buffer at the specified index.
-        Resource* GetBuffer(std::uint32_t index);
+        std::shared_ptr<Resource> GetBuffer(std::uint32_t index);
         // Returns a pointer to the current back buffer.
-        Resource* GetBackBuffer();
+        std::shared_ptr<Resource> GetBackBuffer();
 
         // Updates render target views for all back buffers.
         void UpdateRenderTargetViews();
@@ -69,7 +69,7 @@ namespace dx12
         std::uint32_t _RTVDescriptorSize;
 
         // Array of back buffers managed by the swap chain.
-        Resource _backBuffers[BACK_BUFFER_COUNT];
+        std::shared_ptr<Resource> _backBuffers[BACK_BUFFER_COUNT];
         // Index of the current back buffer being rendered to.
         std::uint32_t _currentBackBufferIndex;
 

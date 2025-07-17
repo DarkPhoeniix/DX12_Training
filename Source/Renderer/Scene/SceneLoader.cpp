@@ -172,7 +172,7 @@ namespace scene::helpers
         LOG_INFO("Loading scene: {}", filepath);
     }
 
-    std::shared_ptr<dx12::Texture> SceneLoader::GenerateEnvironmentDiffuseIrradianceMap(dx12::CommandList& commandList, std::shared_ptr<Scene> scene)
+    std::shared_ptr<dx12::Resource> SceneLoader::GenerateEnvironmentDiffuseIrradianceMap(dx12::CommandList& commandList, std::shared_ptr<Scene> scene)
     {
         // Find skybox node and retrieve texture pointer
 
@@ -183,7 +183,7 @@ namespace scene::helpers
         ASSERT(skyboxComponent, "Failed to get skybox component");
 
         scene::TextureManager& textureManager = scene->GetCache().GetTextureManager();
-        std::shared_ptr<dx12::Texture> skyboxTexture = textureManager.GetTexture(skyboxComponent->SkydomeTexture);
+        std::shared_ptr<dx12::Resource> skyboxTexture = textureManager.GetTexture(skyboxComponent->SkydomeTexture);
         ASSERT(skyboxTexture, "Failed to get skybox texture pointer");
 
         // Parse pipeline for the diffuse irradiance convolution
@@ -199,9 +199,8 @@ namespace scene::helpers
             diffuseIrradianceTextureDesc.SetFormat(DXGI_FORMAT_R16G16B16A16_FLOAT);
             diffuseIrradianceTextureDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::Unordered);
         }
-        std::shared_ptr<dx12::Texture> diffuseIrradianceMap = std::make_shared<dx12::Texture>();
-        diffuseIrradianceMap->SetName("DiffuseIrradianceMap");
-        diffuseIrradianceMap->CreateCommitedResource(diffuseIrradianceTextureDesc);
+        std::shared_ptr<dx12::Resource> diffuseIrradianceMap = ResourceFactory::Create("Diffuse irradiance map", diffuseIrradianceTextureDesc);
+        diffuseIrradianceMap->CreateCommitedResource();
 
         // Create SRV/UAV for the textures
 
@@ -212,8 +211,8 @@ namespace scene::helpers
 
         std::vector<dx12::ResourceBarrier> barriers =
         {
-            { skyboxTexture.get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-            { diffuseIrradianceMap.get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS }
+            { skyboxTexture,        D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
+            { diffuseIrradianceMap, D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_UNORDERED_ACCESS }
         };
         commandList.TransitionBarriers(barriers);
 
@@ -236,15 +235,15 @@ namespace scene::helpers
 
         barriers =
         {
-            { skyboxTexture.get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
-            { diffuseIrradianceMap.get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON }
+            { skyboxTexture,        D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
+            { diffuseIrradianceMap, D3D12_RESOURCE_STATE_UNORDERED_ACCESS,          D3D12_RESOURCE_STATE_COMMON }
         };
         commandList.TransitionBarriers(barriers);
 
         return diffuseIrradianceMap;
     }
 
-    std::shared_ptr<dx12::Texture> SceneLoader::GeneratePreFilteredEnvironmentMap(dx12::CommandList& commandList, std::shared_ptr<Scene> scene)
+    std::shared_ptr<dx12::Resource> SceneLoader::GeneratePreFilteredEnvironmentMap(dx12::CommandList& commandList, std::shared_ptr<Scene> scene)
     {
         // Find skybox node and retrieve texture pointer
 
@@ -255,7 +254,7 @@ namespace scene::helpers
         ASSERT(skyboxComponent, "Failed to get skybox component");
 
         scene::TextureManager& textureManager = scene->GetCache().GetTextureManager();
-        std::shared_ptr<dx12::Texture> skyboxTexture = textureManager.GetTexture(skyboxComponent->SkydomeTexture);
+        std::shared_ptr<dx12::Resource> skyboxTexture = textureManager.GetTexture(skyboxComponent->SkydomeTexture);
         ASSERT(skyboxTexture, "Failed to get skybox texture pointer");
 
         // Parse pipeline for the environment map pre-filtering
@@ -272,9 +271,8 @@ namespace scene::helpers
             preFilteredEnvTextureDesc.SetFormat(DXGI_FORMAT_R16G16B16A16_FLOAT);
             preFilteredEnvTextureDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::Unordered);
         }
-        std::shared_ptr<dx12::Texture> preFilteredEnvMap = std::make_shared<dx12::Texture>();
-        preFilteredEnvMap->SetName("PreFilteredEnvironmentMap");
-        preFilteredEnvMap->CreateCommitedResource(preFilteredEnvTextureDesc);
+        std::shared_ptr<dx12::Resource> preFilteredEnvMap = ResourceFactory::Create("Prefiltered environment map", preFilteredEnvTextureDesc);
+        preFilteredEnvMap->CreateCommitedResource();
 
         // Create SRV/UAV for the textures
 
@@ -284,7 +282,7 @@ namespace scene::helpers
         {
             dx12::UnorderedAccessView uav;
             {
-                uav.Owner = preFilteredEnvMap.get();
+                uav.Owner = preFilteredEnvMap;
                 uav.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
                 uav.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
 
@@ -300,8 +298,8 @@ namespace scene::helpers
 
         std::vector<dx12::ResourceBarrier> barriers =
         {
-            { skyboxTexture.get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-            { preFilteredEnvMap.get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS }
+            { skyboxTexture,        D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
+            { preFilteredEnvMap,    D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_UNORDERED_ACCESS }
         };
         commandList.TransitionBarriers(barriers);
 
@@ -330,15 +328,15 @@ namespace scene::helpers
 
         barriers =
         {
-            { skyboxTexture.get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
-            { preFilteredEnvMap.get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON }
+            { skyboxTexture,        D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
+            { preFilteredEnvMap,    D3D12_RESOURCE_STATE_UNORDERED_ACCESS,          D3D12_RESOURCE_STATE_COMMON }
         };
         commandList.TransitionBarriers(barriers);
 
         return preFilteredEnvMap;
     }
 
-    std::shared_ptr<dx12::Texture> SceneLoader::GenerateEnvironmentBRDFLookUpTexture(dx12::CommandList& commandList, std::shared_ptr<Scene> scene)
+    std::shared_ptr<dx12::Resource> SceneLoader::GenerateEnvironmentBRDFLookUpTexture(dx12::CommandList& commandList, std::shared_ptr<Scene> scene)
     {
         // Find skybox node and retrieve texture pointer
 
@@ -349,7 +347,7 @@ namespace scene::helpers
         ASSERT(skyboxComponent, "Failed to get skybox component");
 
         scene::TextureManager& textureManager = scene->GetCache().GetTextureManager();
-        std::shared_ptr<dx12::Texture> skyboxTexture = textureManager.GetTexture(skyboxComponent->SkydomeTexture);
+        std::shared_ptr<dx12::Resource> skyboxTexture = textureManager.GetTexture(skyboxComponent->SkydomeTexture);
         ASSERT(skyboxTexture, "Failed to get skybox texture pointer");
 
         // Parse pipeline for BRDF look-up texture generation
@@ -364,9 +362,8 @@ namespace scene::helpers
             brdfLUTDesc.SetFormat(DXGI_FORMAT_R16G16_FLOAT);
             brdfLUTDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::Unordered);
         }
-        std::shared_ptr<dx12::Texture> brdfLUT = std::make_shared<dx12::Texture>();
-        brdfLUT->SetName("BRDF_LUT");
-        brdfLUT->CreateCommitedResource(brdfLUTDesc);
+        std::shared_ptr<dx12::Resource> brdfLUT = ResourceFactory::Create("BRDF LUT", brdfLUTDesc);
+        brdfLUT->CreateCommitedResource();
 
         // Create SRV/UAV for the textures
 
@@ -377,8 +374,8 @@ namespace scene::helpers
 
         std::vector<dx12::ResourceBarrier> barriers =
         {
-            { skyboxTexture.get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-            { brdfLUT.get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS }
+            { skyboxTexture,    D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
+            { brdfLUT,          D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_UNORDERED_ACCESS }
         };
         commandList.TransitionBarriers(barriers);
 
@@ -399,8 +396,8 @@ namespace scene::helpers
 
         barriers =
         {
-            { skyboxTexture.get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
-            { brdfLUT.get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON }
+            { skyboxTexture,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
+            { brdfLUT,          D3D12_RESOURCE_STATE_UNORDERED_ACCESS,          D3D12_RESOURCE_STATE_COMMON }
         };
         commandList.TransitionBarriers(barriers);
 
@@ -596,7 +593,7 @@ namespace scene::helpers
             component->LocalAABB.Max = XMVectorMax(component->LocalAABB.Max, position);
         }
 
-        auto UploadData = [&](dx12::CommandList& commandList, dx12::Resource& destination, std::uint32_t numElements, std::uint32_t elementSize, const void* data)
+        auto UploadData = [&](dx12::CommandList& commandList, std::uint32_t numElements, std::uint32_t elementSize, const void* data)
             {
                 std::uint32_t bufferSize = numElements * elementSize;
 
@@ -605,11 +602,14 @@ namespace scene::helpers
                     desc.SetSize({ bufferSize, 1 });
                     desc.SetResourceType(dx12::ResourceType::Buffer);
                 }
-                destination.CreateCommitedResource(desc);
+                std::shared_ptr<dx12::Resource> destination = ResourceFactory::Create("", desc);
+                destination->CreateCommitedResource();
 
                 desc.AddResourceType(dx12::ResourceType::Dynamic);
-                _intermediates.emplace_back(desc);
-                _intermediates.back().CreateCommitedResource();
+
+                std::shared_ptr<dx12::Resource> intermediate = ResourceFactory::Create("Intermediate", desc);
+                intermediate->CreateCommitedResource();
+                _intermediates.push_back(intermediate);
 
                 D3D12_SUBRESOURCE_DATA subresourceData = {};
                 subresourceData.pData = data;
@@ -617,14 +617,15 @@ namespace scene::helpers
                 subresourceData.SlicePitch = subresourceData.RowPitch;
 
                 UpdateSubresources(commandList.GetDXCommandList().Get(),
-                    destination.GetDXResource().Get(), _intermediates.back().GetDXResource().Get(),
+                    destination->GetDXResource().Get(), _intermediates.back()->GetDXResource().Get(),
                     0, 0, 1, &subresourceData);
+
+                return destination;
             };
 
         // Upload Vertex buffer
         {
-            component->VertexBuffer = std::make_shared<dx12::Resource>();
-            UploadData(commandList, *component->VertexBuffer, component->VertexData.size(), sizeof(VertexData), component->VertexData.data());
+            component->VertexBuffer = UploadData(commandList, component->VertexData.size(), sizeof(VertexData), component->VertexData.data());
             component->VertexBuffer->SetName(jsonValue["Mesh"].asString() + "_VB");
 
             component->VertexBufferView.BufferLocation = component->VertexBuffer->OffsetGPU(0);
@@ -635,8 +636,7 @@ namespace scene::helpers
         // Upload Skinning Vertex buffer
         if (!component->SkinningVertexData.empty())
         {
-            component->SkinningVertexBuffer = std::make_shared<dx12::Resource>();
-            UploadData(commandList, *component->SkinningVertexBuffer, component->SkinningVertexData.size(), sizeof(SkinningVertexData), component->SkinningVertexData.data());
+            component->SkinningVertexBuffer = UploadData(commandList, component->SkinningVertexData.size(), sizeof(SkinningVertexData), component->SkinningVertexData.data());
             component->SkinningVertexBuffer->SetName(jsonValue["Mesh"].asString() + "_SVB");
 
             component->SkinningVertexBufferView.BufferLocation = component->SkinningVertexBuffer->OffsetGPU(0);
@@ -646,8 +646,7 @@ namespace scene::helpers
 
         // Upload Index buffer
         {
-            component->IndexBuffer = std::make_shared<dx12::Resource>();
-            UploadData(commandList, *component->IndexBuffer, component->IndexData.size(), sizeof(UINT), component->IndexData.data());
+            component->IndexBuffer = UploadData(commandList, component->IndexData.size(), sizeof(UINT), component->IndexData.data());
             component->IndexBuffer->SetName(jsonValue["Mesh"].asString() + "_IB");
 
             component->IndexBufferView.BufferLocation = component->IndexBuffer->OffsetGPU(0);

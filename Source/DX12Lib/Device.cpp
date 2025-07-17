@@ -114,7 +114,7 @@ namespace dx12
         _instance->_swapChain->OnResize(size);
     }
 
-    dx12::Resource* Device::GetBackBuffer()
+    std::shared_ptr<dx12::Resource> Device::GetBackBuffer()
     {
         return _instance->_swapChain->GetBackBuffer();
     }
@@ -148,7 +148,7 @@ namespace dx12
         _instance->_device->CreateShaderResourceView(view.Owner->GetDXResource().Get(), &view, heapHandle);
     }
 
-    void Device::CreateUnorderedAccessView(const UnorderedAccessView& view, DescriptorHeap& descriptorHeap, dx12::Resource* counterResource)
+    void Device::CreateUnorderedAccessView(const UnorderedAccessView& view, DescriptorHeap& descriptorHeap, std::shared_ptr<Resource> counterResource)
     {
         ID3D12Resource* counter = counterResource ? counterResource->GetDXResource().Get() : nullptr;
         D3D12_CPU_DESCRIPTOR_HANDLE heapHandle = descriptorHeap.GetCPUHandleWithOffset(descriptorHeap.Offset());

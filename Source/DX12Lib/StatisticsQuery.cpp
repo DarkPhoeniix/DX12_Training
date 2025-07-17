@@ -6,7 +6,7 @@ namespace dx12
 {
     StatisticsQuery::StatisticsQuery()
         : _statisticsQueryHeap(nullptr)
-        , _statisticsResource()
+        , _statisticsResource(nullptr)
         , _statisticsData(nullptr)
     {
     }
@@ -72,9 +72,9 @@ namespace dx12
             statisticsResourceDesc.SetSize({ sizeof(D3D12_QUERY_DATA_PIPELINE_STATISTICS), 1 });
             statisticsResourceDesc.SetFormat(DXGI_FORMAT_UNKNOWN);
             statisticsResourceDesc.SetResourceType(ResourceType::Buffer | ResourceType::ReadBack);
-            _statisticsResource.SetResourceDescription(statisticsResourceDesc);
         }
-        _statisticsResource.CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_DEST);
+        _statisticsResource = ResourceFactory::Create("Statistcs query buffer", statisticsResourceDesc);
+        _statisticsResource->CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_DEST);
     }
 
     void StatisticsQuery::BeginQuery(CommandList& commandList)
@@ -89,12 +89,12 @@ namespace dx12
 
     void StatisticsQuery::ResolveQueryData(CommandList& commandList)
     {
-        commandList.ResolveQueryData(_statisticsQueryHeap, D3D12_QUERY_TYPE_PIPELINE_STATISTICS, 0, _statisticsResource, 0);
+        commandList.ResolveQueryData(_statisticsQueryHeap, D3D12_QUERY_TYPE_PIPELINE_STATISTICS, 0, *_statisticsResource, 0);
     }
 
     const D3D12_QUERY_DATA_PIPELINE_STATISTICS& StatisticsQuery::GetStatistics()
     {
-        _statisticsData = (D3D12_QUERY_DATA_PIPELINE_STATISTICS*)_statisticsResource.Map();
+        _statisticsData = _statisticsResource->Map<D3D12_QUERY_DATA_PIPELINE_STATISTICS>();
         return *_statisticsData;
     }
 } // namespace dx12

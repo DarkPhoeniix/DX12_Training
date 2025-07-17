@@ -32,9 +32,8 @@ namespace rg
             desc.SetFormat(DXGI_FORMAT_UNKNOWN);
             desc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
 
-            std::shared_ptr<dx12::Resource> memoryBlock = std::make_shared<dx12::Resource>();
-            memoryBlock->CreateCommitedResource(desc);
-            memoryBlock->SetName(std::format("Frame cache {}", i));
+            std::shared_ptr<dx12::Resource> memoryBlock = ResourceFactory::Create(std::format("Frame cache {}", i), desc);
+            memoryBlock->CreateCommitedResource();
 
             cache.SetResource(memoryBlock);
         }
@@ -159,11 +158,10 @@ namespace rg
 
     ResourceId RenderContext::CreateResource(std::string name, dx12::ResourceDescription desc)
     {
-        ASSERT(_mapNameToId.find(name) == _mapNameToId.end(), "Resource already exists in render graph context.");
+        ASSERT(!name.empty(), "Resource name cannot be empty.");
 
-        std::shared_ptr<dx12::Resource> resource = std::make_shared<dx12::Resource>();
-        resource->SetName(name);
-        resource->CreateCommitedResource(desc);
+        std::shared_ptr<dx12::Resource> resource = ResourceFactory::Create(name, desc);
+        resource->CreateCommitedResource();
 
         ResourceId id = _mapNameToId.size();
         _mapNameToId[name] = id;
@@ -174,17 +172,17 @@ namespace rg
             D3D12_RESOURCE_FLAGS flags = desc.GetFlags();
             if (flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)
             {
-                table.PlaceResource(resource.get(), dx12::ResourceViewType::RTV);
+                table.PlaceResource(resource, dx12::ResourceViewType::RTV);
             }
             if (flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
             {
-                table.PlaceResource(resource.get(), dx12::ResourceViewType::DSV);
+                table.PlaceResource(resource, dx12::ResourceViewType::DSV);
             }
             if (flags & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS)
             {
-                table.PlaceResource(resource.get(), dx12::ResourceViewType::UAV);
+                table.PlaceResource(resource, dx12::ResourceViewType::UAV);
             }
-            table.PlaceResource(resource.get(), dx12::ResourceViewType::SRV);
+            table.PlaceResource(resource, dx12::ResourceViewType::SRV);
         }
 
         return id;

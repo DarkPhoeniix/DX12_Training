@@ -26,7 +26,7 @@ namespace render
     private:
         dx12::PipelineState _averageLuminancePipeline;
 
-        dx12::Resource _prevLuminance;
+        std::shared_ptr<dx12::Resource> _prevLuminance;
 
         std::shared_ptr<scene::Scene> _scene;
         scene::Camera* _camera;

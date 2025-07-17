@@ -31,7 +31,7 @@ CacheGPU::DataHandle CacheGPU::RequestPlacement(const std::string& name, std::ui
     ASSERT(newOffset <= _size, "Requested size exceeds GPU cache size");
 
     DataHandle handle;
-    handle.DataCPU = (char*)_cache->Map() + _currentOffset;
+    handle.DataCPU = _cache->Map<char>() + _currentOffset;
     handle.DataGPU = _cache->OffsetGPU(_currentOffset);
     handle.Offset = _currentOffset;
 

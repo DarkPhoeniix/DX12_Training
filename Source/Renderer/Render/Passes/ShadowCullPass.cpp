@@ -62,9 +62,9 @@ namespace render
             counterResetBuffer.SetLayout(D3D12_TEXTURE_LAYOUT_ROW_MAJOR);
             counterResetBuffer.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
 
-            _counterReset.CreateCommitedResource(counterResetBuffer, D3D12_RESOURCE_STATE_COPY_SOURCE);
-            _counterReset.SetName("Counter reset buffer");
-            UINT* val = (UINT*)_counterReset.Map();
+            _counterReset = ResourceFactory::Create("Shadows counter reset buffer", counterResetBuffer);
+            _counterReset->CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_SOURCE);
+            UINT* val = _counterReset->Map<UINT>();
             val[0] = 0;
         }
     }
@@ -204,18 +204,18 @@ namespace render
             // Transition resources
             std::vector<dx12::ResourceBarrier> barriers =
             {
-                { commandBuffer.get(), D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT,    D3D12_RESOURCE_STATE_COPY_DEST }
+                { commandBuffer, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT,    D3D12_RESOURCE_STATE_COPY_DEST }
             };
             commandList.TransitionBarriers(barriers);
 
             // Reset commands counter
             std::uint32_t counterBufferOffset = commandBuffer->GetResourceDescription().GetSize().x - sizeof(UINT);
-            commandList.CopyBufferRegion(_counterReset, *commandBuffer, sizeof(UINT), 0, counterBufferOffset);
+            commandList.CopyBufferRegion(*_counterReset, *commandBuffer, sizeof(UINT), 0, counterBufferOffset);
 
             // Transition resources
             barriers =
             {
-                { commandBuffer.get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_UNORDERED_ACCESS }
+                { commandBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_UNORDERED_ACCESS }
             };
             commandList.TransitionBarriers(barriers);
 

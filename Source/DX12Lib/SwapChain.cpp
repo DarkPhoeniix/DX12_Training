@@ -90,14 +90,14 @@ namespace dx12
         return _swapChainDesc;
     }
 
-    Resource* SwapChain::GetBuffer(std::uint32_t index)
+    std::shared_ptr<Resource> SwapChain::GetBuffer(std::uint32_t index)
     {
-        return &_backBuffers[index];
+        return _backBuffers[index];
     }
 
-    Resource* SwapChain::GetBackBuffer()
+    std::shared_ptr<Resource> SwapChain::GetBackBuffer()
     {
-        return &_backBuffers[_currentBackBufferIndex];
+        return _backBuffers[_currentBackBufferIndex];
     }
 
     void SwapChain::UpdateRenderTargetViews()
@@ -112,7 +112,7 @@ namespace dx12
 
             dx12::Device::GetDXDevice()->CreateRenderTargetView(backBuffer.Get(), nullptr, rtvHandle);
 
-            _backBuffers[i].InitFromDXResource(backBuffer);
+            _backBuffers[i] = ResourceFactory::Create("Backbuffer " + std::to_string(i), backBuffer);
 
             rtvHandle.Offset(_RTVDescriptorSize);
         }
@@ -147,7 +147,7 @@ namespace dx12
 
             for (int i = 0; i < BACK_BUFFER_COUNT; ++i)
             {
-                _backBuffers[i].GetDXResource().Reset();
+                _backBuffers[i]->GetDXResource().Reset();
             }
 
             DXGI_SWAP_CHAIN_DESC swapChainDesc = {};

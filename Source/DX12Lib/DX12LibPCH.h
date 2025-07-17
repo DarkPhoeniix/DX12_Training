@@ -35,6 +35,7 @@ using namespace Microsoft::WRL;
 
 #include "Utility/Helpers.h"
 #include "Resource.h"
+#include "ResourceFactory.h"
 #include "Device.h"
 
 #include <memory>

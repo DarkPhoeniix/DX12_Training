@@ -112,7 +112,7 @@ namespace render
             // Transition resources
             std::vector<dx12::ResourceBarrier> barriers =
             {
-                { shadowMap.get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,    D3D12_RESOURCE_STATE_DEPTH_WRITE }
+                { shadowMap, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,    D3D12_RESOURCE_STATE_DEPTH_WRITE }
             };
             commandList.TransitionBarriers(barriers);
 

@@ -45,22 +45,23 @@ namespace render
                     noiseDesc.SetStride(sizeof(XMVECTOR));
                     noiseDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
                 }
-                _noise.CreateCommitedResource(noiseDesc);
-                _noise.SetName("SSAO noise texture");
+                _noise = ResourceFactory::Create("SSAO noise texture", noiseDesc);
+                _noise->CreateCommitedResource();
+
                 dx12::ResourceDescription kernelsDesc;
                 {
                     kernelsDesc.SetSize({ 16 * sizeof(XMVECTOR), 1 });
                     kernelsDesc.SetStride(sizeof(XMVECTOR));
                     kernelsDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
                 }
-                _kernels.CreateCommitedResource(kernelsDesc);
-                _kernels.SetName("SSAO kernels");
+                _kernels = ResourceFactory::Create("SSAO kernels", kernelsDesc);
+                _kernels->CreateCommitedResource();
 
                 std::random_device rd;
                 std::mt19937 gen(rd());
                 std::uniform_real_distribution<> dis(0.0, 1.0);
 
-                XMVECTOR* noiseData = (XMVECTOR*)_noise.Map();
+                XMVECTOR* noiseData = _noise->Map<XMVECTOR>();
                 for (size_t i = 0; i < 64; ++i)
                 {
                     noiseData[i] = XMVectorSet(
@@ -72,9 +73,9 @@ namespace render
 
                     noiseData[i] = XMVector3Normalize(noiseData[i]);
                 }
-                _noise.Unmap();
+                _noise->Unmap();
 
-                XMVECTOR* kernelsData = (XMVECTOR*)_kernels.Map();
+                XMVECTOR* kernelsData = _kernels->Map<XMVECTOR>();
                 for (size_t i = 0; i < 16; ++i)
                 {
                     kernelsData[i] = XMVectorSet(
@@ -90,7 +91,7 @@ namespace render
                     scale = std::lerp(0.1f, 1.0f, scale * scale);
                     kernelsData[i] *= scale;
                 }
-                _kernels.Unmap();
+                _kernels->Unmap();
             }
     }
 
@@ -125,9 +126,9 @@ namespace render
 
             std::vector<dx12::ResourceBarrier> barriers =
             {
-                { normalRoughness.get(),    D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-                { depth.get(),              D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-                { aoTarget.get(),           D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS }
+                { normalRoughness,    D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
+                { depth,              D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
+                { aoTarget,           D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS }
             };
             commandList.TransitionBarriers(barriers);
 
@@ -144,8 +145,8 @@ namespace render
 
             commandList.SetCBV(0, sceneDataHandle.DataGPU);
             commandList.SetCBV(1, cbHandle.DataGPU);
-            commandList.SetSRV(2, _kernels.OffsetGPU());
-            commandList.SetSRV(3, _noise.OffsetGPU());
+            commandList.SetSRV(2, _kernels->OffsetGPU());
+            commandList.SetSRV(3, _noise->OffsetGPU());
             commandList.SetDescriptorTable(4, depthHandle);
             commandList.SetDescriptorTable(5, normalSpecularHandle);
             commandList.SetDescriptorTable(6, aoTargetHandle);
@@ -158,9 +159,9 @@ namespace render
 
             barriers =
             {
-                { normalRoughness.get(),    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
-                { depth.get(),              D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
-                { aoTarget.get(),           D3D12_RESOURCE_STATE_UNORDERED_ACCESS,          D3D12_RESOURCE_STATE_COMMON }
+                { normalRoughness,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
+                { depth,              D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
+                { aoTarget,           D3D12_RESOURCE_STATE_UNORDERED_ACCESS,          D3D12_RESOURCE_STATE_COMMON }
             };
             commandList.TransitionBarriers(barriers);
         }

@@ -107,7 +107,7 @@ namespace
         return image;
     }
 
-    void UploadTextureData(dx12::CommandList& commandList, const std::filesystem::path& path, std::shared_ptr<dx12::Texture> texture, dx12::Resource& intermediateBuffer)
+    void UploadTextureData(dx12::CommandList& commandList, const std::filesystem::path& path, std::shared_ptr<dx12::Resource> texture, std::shared_ptr<dx12::Resource> intermediateBuffer)
     {
         DirectX::ScratchImage image = LoadTextureImage(path);
 
@@ -123,7 +123,7 @@ namespace
 
         UpdateSubresources(commandList.GetDXCommandList().Get(), 
                            texture->GetDXResource().Get(), 
-                           intermediateBuffer.GetDXResource().Get(), 
+                           intermediateBuffer->GetDXResource().Get(), 
                            0, 0, static_cast<std::uint32_t>(subresources.size()), 
                            subresources.data());
 
@@ -204,9 +204,7 @@ namespace scene
 
             const std::string textureName = path.filename().string();
 
-            _textures[textureName] = std::make_shared<dx12::Texture>();
-            _textures[textureName]->SetResourceDescription(description);
-            _textures[textureName]->SetName(textureName);
+            _textures[textureName] = ResourceFactory::Create(textureName, description);
 
             D3D12_RESOURCE_ALLOCATION_INFO allocInfo = dx12::Device::GetDXDevice()->GetResourceAllocationInfo(0, 1, &desc);
 
@@ -218,9 +216,9 @@ namespace scene
                 intermediateDesc.SetLayout(D3D12_TEXTURE_LAYOUT_ROW_MAJOR);
                 intermediateDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
             }
-            _intermediateResources.emplace(std::make_pair(textureName, intermediateDesc));
-            _intermediateResources[textureName].CreateCommitedResource();
-            _intermediateResources[textureName].SetName("Texture intermediate buffer");
+            std::shared_ptr<dx12::Resource> intermediate = ResourceFactory::Create(textureName, intermediateDesc);
+            intermediate->CreateCommitedResource();
+            _intermediateResources.emplace(textureName, intermediate);
 
             totalRequiredHeapSize += requiredSize;
             maxTextureSize = (maxTextureSize < requiredSize) ? requiredSize : maxTextureSize;
@@ -239,10 +237,10 @@ namespace scene
             std::filesystem::path path(filepath);
             const std::string textureName = path.filename().string();
 
-            std::shared_ptr<dx12::Texture> texture = _textures[textureName];
+            std::shared_ptr<dx12::Resource> texture = _textures[textureName];
 
             _texturesHeap.PlaceResource(*texture, D3D12_RESOURCE_STATE_COPY_DEST);
-            _texturesTable.PlaceResource(texture.get(), dx12::ResourceViewType::SRV);
+            _texturesTable.PlaceResource(texture, dx12::ResourceViewType::SRV);
 
             UploadTextureData(commandList, path, texture, _intermediateResources[textureName]);
         }
@@ -263,7 +261,7 @@ namespace scene
         _intermediateResources.clear();
     }
 
-    void TextureManager::AddTexture(std::shared_ptr<dx12::Texture> texture, dx12::ResourceViewType viewType)
+    void TextureManager::AddTexture(std::shared_ptr<dx12::Resource> texture, dx12::ResourceViewType viewType)
     {
         auto it = _textures.find(texture->GetName());
         if (it == _textures.end())
@@ -271,10 +269,10 @@ namespace scene
             _textures.insert(std::make_pair(texture->GetName(), texture));
         }
 
-        _texturesTable.PlaceResourceIfNotExist(texture.get(), viewType);
+        _texturesTable.PlaceResourceIfNotExist(texture, viewType);
     }
 
-    std::shared_ptr<dx12::Texture> TextureManager::GetTexture(const std::string& name) const
+    std::shared_ptr<dx12::Resource> TextureManager::GetTexture(const std::string& name) const
     {
         auto it = _textures.find(name);
         if (it == _textures.end())

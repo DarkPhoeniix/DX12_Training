@@ -165,7 +165,7 @@ namespace render
                 // Transition resources
                 std::vector<dx12::ResourceBarrier> barriers =
                 {
-                    { commandBuffer.get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT }
+                    { commandBuffer, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT }
                 };
                 commandList.TransitionBarriers(barriers);
 
@@ -180,7 +180,7 @@ namespace render
 
                 barriers =
                 {
-                    { shadowMap.get(), D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE }
+                    { shadowMap, D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE }
                 };
                 commandList.TransitionBarriers(barriers);
 
@@ -229,7 +229,7 @@ namespace render
                 // Transition resources
                 std::vector<dx12::ResourceBarrier> barriers =
                 {
-                    { commandBuffer.get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT }
+                    { commandBuffer, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT }
                 };
                 commandList.TransitionBarriers(barriers);
 
@@ -244,7 +244,7 @@ namespace render
 
                 barriers =
                 {
-                    { shadowMap.get(), D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_COMMON }
+                    { shadowMap, D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_COMMON }
                 };
                 commandList.TransitionBarriers(barriers);
 

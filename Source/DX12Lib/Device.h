@@ -48,7 +48,7 @@ namespace dx12
         // Handles resizing events by updating necessary resources.
         static void OnResize(const DirectX::XMUINT2& size);
         // Gets the current back buffer resource from the swap chain.
-        static Resource* GetBackBuffer();
+        static std::shared_ptr<dx12::Resource> GetBackBuffer();
 
         // Presents the rendered frame to the screen.
         static void Present();
@@ -62,7 +62,7 @@ namespace dx12
         // Creates a Shader Resource View (SRV) in the specified descriptor heap.
         static void CreateShaderResourceView(const ShaderResourceView& view, DescriptorHeap& descriptorHeap);
         // Creates an Unordered Access View (UAV) in the specified descriptor heap.
-        static void CreateUnorderedAccessView(const UnorderedAccessView& view, DescriptorHeap& descriptorHeap, dx12::Resource* counterResource = nullptr);
+        static void CreateUnorderedAccessView(const UnorderedAccessView& view, DescriptorHeap& descriptorHeap, std::shared_ptr<Resource> counterResource = nullptr);
 
         // Retrieves the current GPU crash tracker instance.
         static std::shared_ptr<tracking::IGPUCrashTracker> GetCrashTracker();
@@ -91,7 +91,7 @@ namespace dx12
         SwapChain* _swapChain;
 
         // Singleton instance of the Device class.
-        static Device* _instance;
+        static Device* _instance;      // TODO: std::unique_ptr
 
         std::shared_ptr<tracking::IGPUCrashTracker> _crashTracker;
     };
