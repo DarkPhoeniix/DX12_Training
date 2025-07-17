@@ -166,6 +166,7 @@ namespace dx12
 
         for (size_t i = 0; i < numBarriers; ++i)
         {
+            ASSERT(!barriers[i].Resource.expired(), "Resource in barrier is null.");
             if (std::shared_ptr<Resource> resource = barriers[i].Resource.lock())
             {
                 dxBarriers[i] = CD3DX12_RESOURCE_BARRIER::Transition(

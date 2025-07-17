@@ -206,7 +206,7 @@ namespace dx12
 
     bool ResourceTable::PlaceResourceIfNotExist(std::shared_ptr<Resource> resource, ResourceViewType viewType)
     {
-        ASSERT(resource != nullptr, "Trying to add a nullptr resource to resource table");
+        ASSERT(resource, "Trying to add a nullptr resource to resource table");
 
         ResourceTable::ResourceMap& resources = _GetResourceMap(viewType);
         
@@ -228,10 +228,7 @@ namespace dx12
 
         ResourceKey key = { resource->GetName().c_str(), viewType };
         auto it = GetResource(key);
-        if (it == resources.end())
-        {
-            LOG_ERROR("Failed to get resource handle");
-        }
+        FAIL(it != resources.end(), "Failed to get resource handle");
 
         return descriptorHeap.GetCPUHandleWithOffset(it->second.HeapIndex);
     }
@@ -243,10 +240,7 @@ namespace dx12
 
         ResourceKey key = { resource->GetName().c_str(), viewType };
         auto it = GetResource(key);
-        if (it == resources.end())
-        {
-            LOG_ERROR("Failed to get resource handle");
-        }
+        FAIL(it != resources.end(), "Failed to get resource handle");
 
         return descriptorHeap.GetGPUHandleWithOffset(it->second.HeapIndex);
     }
@@ -258,10 +252,7 @@ namespace dx12
 
         ResourceKey key = { resourceName.c_str(), viewType };
         auto it = GetResource(key);
-        if (it == resources.end())
-        {
-            LOG_ERROR("Failed to get resource handle");
-        }
+        FAIL(it != resources.end(), "Failed to get resource handle");
 
         return descriptorHeap.GetCPUHandleWithOffset(it->second.HeapIndex);
     }
@@ -273,10 +264,7 @@ namespace dx12
 
         ResourceKey key = { resourceName.c_str(), viewType };
         auto it = GetResource(key);
-        if (it == resources.end())
-        {
-            LOG_ERROR("Failed to get resource handle");
-        }
+        FAIL(it != resources.end(), "Failed to get resource handle");
 
         return descriptorHeap.GetGPUHandleWithOffset(it->second.HeapIndex);
     }
@@ -287,11 +275,7 @@ namespace dx12
 
         ResourceKey key = { resource->GetName().c_str(), viewType};
         auto it = GetResource(key);
-        if (it == resources.end())
-        {
-            LOG_ERROR("Failed to get resource handle");
-            return std::uint32_t(-1);
-        }
+        FAIL(it != resources.end(), "Failed to get resource handle");
 
         return it->second.HeapIndex;
     }
@@ -302,11 +286,7 @@ namespace dx12
 
         ResourceKey key = { resourceName.c_str(), viewType };
         auto it = GetResource(key);
-        if (it == resources.end())
-        {
-            LOG_ERROR("Failed to get resource handle");
-            return std::uint32_t(-1);
-        }
+        FAIL(it != resources.end(), "Failed to get resource handle");
 
         return it->second.HeapIndex;
     }
@@ -317,10 +297,7 @@ namespace dx12
 
         ResourceKey key = { resourceName.c_str(), viewType };
         auto it = GetResource(key);
-        if (it == resources.end())
-        {
-            LOG_ERROR("Failed to get resource handle");
-        }
+        FAIL(it != resources.end(), "Failed to get resource handle");
 
         return it->second.PlacedResource;
     }

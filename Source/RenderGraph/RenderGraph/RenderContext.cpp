@@ -158,6 +158,8 @@ namespace rg
 
     ResourceId RenderContext::CreateResource(std::string name, dx12::ResourceDescription desc)
     {
+        ASSERT(!name.empty(), "Resource name cannot be empty.");
+
         std::shared_ptr<dx12::Resource> resource = ResourceFactory::Create(name, desc);
         resource->CreateCommitedResource();
 
