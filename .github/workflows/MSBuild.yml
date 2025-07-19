@@ -42,8 +42,8 @@ jobs:
     - name: Bootstrap vcpkg
       run: .\vcpkg\bootstrap-vcpkg.bat
 
-    - name: Install dependencies via manifest
-      run: .\vcpkg\vcpkg install --manifest
+    - name: Integrate vcpkg into MSBuild
+      run: .\vcpkg\vcpkg.exe integrate project
 
     - name: Build
       working-directory: ${{env.GITHUB_WORKSPACE}}
