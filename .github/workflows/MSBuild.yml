@@ -9,7 +9,7 @@ on:
 
 env:
   # Path to the solution file relative to the root of the project.
-  SOLUTION_FILE_PATH: EquinoxEngine.sln
+  SOLUTION_FILE_PATH: .
 
   # Configuration type to build.
   BUILD_CONFIGURATION: Release
@@ -36,4 +36,4 @@ jobs:
 
     - name: Build
       working-directory: ${{env.GITHUB_WORKSPACE}}
-      run: msbuild /m /t:Clean,Rebuild /p:Configuration=${{env.BUILD_CONFIGURATION}} /p:Platform=${{env.BUILD_PLATFORM}} /verbosity:normal ${{env.SOLUTION_FILE_PATH}}
+      run: msbuild /m /t:Clean,Rebuild /p:Configuration=${{env.BUILD_CONFIGURATION}};Platform=${{env.BUILD_PLATFORM}} /verbosity:verbose ${{env.SOLUTION_FILE_PATH}}
