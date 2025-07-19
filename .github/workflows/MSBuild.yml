@@ -53,4 +53,4 @@ jobs:
 
     - name: Build
       working-directory: ${{ env.GITHUB_WORKSPACE }}
-      run: msbuild ${{ env.SOLUTION_FILE_PATH }} /m /t:Clean,Rebuild /p:Configuration=${{ inputs.logLevel }} /p:Platform=${{ env.BUILD_PLATFORM }} /p:VcpkgEnableManifest=true /verbosity:normal
+      run: msbuild ${{ env.SOLUTION_FILE_PATH }} /m /t:Clean,Rebuild /p:Configuration=${{ inputs.configuration }} /p:Platform=${{ env.BUILD_PLATFORM }} /p:VcpkgEnableManifest=true /verbosity:normal
