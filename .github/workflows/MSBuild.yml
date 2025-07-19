@@ -36,4 +36,4 @@ jobs:
 
     - name: Build
       working-directory: ${{env.GITHUB_WORKSPACE}}
-      run: msbuild /m /t:Clean,Rebuild /p:Configuration=${{env.BUILD_CONFIGURATION}} /p:Platform=${{env.BUILD_PLATFORM}} /verbosity:verbose ${{env.SOLUTION_FILE_PATH}}
+      run: msbuild /m /t:Clean,Rebuild /p:Configuration=${{env.BUILD_CONFIGURATION}} /p:Platform=${{env.BUILD_PLATFORM}} /verbosity:detailed ${{env.SOLUTION_FILE_PATH}}
