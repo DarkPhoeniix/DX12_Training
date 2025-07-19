@@ -1,5 +1,13 @@
 ![Banner](Saved/Screenshots/Banner.png)
 
+<div align="center">
+  <a href="https://github.com/DarkPhoeniix/EquinoxEngine/releases"><img alt=platforms src="https://img.shields.io/badge/platforms-Windows-red?style=flat"/></a>
+  <a href="https://github.com/DarkPhoeniix/EquinoxEngine/releases"><img alt=releases src="https://img.shields.io/github/v/release/DarkPhoeniix/EquinoxEngine?color=yellow"/></a>
+  <a><img alt=checks src="https://img.shields.io/github/check-runs/DarkPhoeniix/EquinoxEngine/develop"/></a>
+  <a href="https://github.com/DarkPhoeniix/EquinoxEngine/blob/develop/LICENSE"><img alt=lisence src="https://img.shields.io/github/license/DarkPhoeniix/EquinoxEngine?color=blue"/></a>
+  <a><img alt=size src="https://img.shields.io/github/repo-size/DarkPhoeniix/EquinoxEngine?color=purple"/></a>
+</div>
+
 # Equinox Engine
 
 An experimental real-time renderer built with C++ and DirectX 12 for exploring modern graphics features and techniques.
