@@ -43,6 +43,7 @@ jobs:
         manifest-dir: ${{ github.workspace }} # Set to directory containing vcpkg.json
         triplet: x64-windows
         token: ${{ github.token }}
+        fetch-depth: 0
 
     - name: Build
       working-directory: ${{env.GITHUB_WORKSPACE}}
