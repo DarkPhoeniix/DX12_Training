@@ -6,14 +6,20 @@ on:
     branches: [ "develop" ]
   pull_request:
     branches: [ "develop" ]
-  workflow_dispatch
+  workflow_dispatch:
+    inputs:
+      configuration:
+        description: 'Build configuration'
+        required: true
+        default: 'Release'
+        type: choice
+        options:
+          - Release
+          - Debug
 
 env:
   # Path to the solution file relative to the root of the project.
   SOLUTION_FILE_PATH: .
-
-  # Configuration type to build.
-  BUILD_CONFIGURATION: Release
 
   # Platform to build.
   BUILD_PLATFORM: x64
@@ -46,5 +52,5 @@ jobs:
         vcpkg integrate install
 
     - name: Build
-      working-directory: ${{env.GITHUB_WORKSPACE}}
-      run: msbuild ${{env.SOLUTION_FILE_PATH}} /m /t:Clean,Rebuild /p:Configuration=${{env.BUILD_CONFIGURATION}} /p:Platform=${{env.BUILD_PLATFORM}} /p:VcpkgEnableManifest=true /verbosity:normal
+      working-directory: ${{ env.GITHUB_WORKSPACE }}
+      run: msbuild ${{ env.SOLUTION_FILE_PATH }} /m /t:Clean,Rebuild /p:Configuration=${{ inputs.logLevel }} /p:Platform=${{ env.BUILD_PLATFORM }} /p:VcpkgEnableManifest=true /verbosity:normal
