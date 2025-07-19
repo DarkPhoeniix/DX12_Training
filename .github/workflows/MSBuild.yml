@@ -36,6 +36,15 @@ jobs:
     - name: Get Aftermath SDK
       run: ./DownloadAftermathSDK.bat
 
+    - name: Clone vcpkg
+      run: git clone https://github.com/microsoft/vcpkg.git vcpkg
+
+    - name: Bootstrap vcpkg
+      run: .\vcpkg\bootstrap-vcpkg.bat
+
+    - name: Install dependencies via manifest
+      run: .\vcpkg\vcpkg install --manifest
+
     - name: Build
       working-directory: ${{env.GITHUB_WORKSPACE}}
       run: msbuild ${{env.SOLUTION_FILE_PATH}} /m /t:Clean,Rebuild /p:Configuration=${{env.BUILD_CONFIGURATION}} /p:Platform=${{env.BUILD_PLATFORM}} /verbosity:normal
