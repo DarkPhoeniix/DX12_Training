@@ -1,0 +1,53 @@
+
+name: MSBuild
+
+on:
+  push:
+    branches: [ "develop" ]
+  pull_request:
+    branches: [ "develop" ]
+
+env:
+  # Path to the solution file relative to the root of the project.
+  SOLUTION_FILE_PATH: .
+
+  # Configuration type to build.
+  BUILD_CONFIGURATION: Release
+
+  # Platform to build.
+  BUILD_PLATFORM: x64
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        lfs: true
+
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v1.0.2
+
+    - name: Get Aftermath SDK
+      run: ./DownloadAftermathSDK.bat
+
+    - name: vcpkg build
+      id: vcpkg
+      uses: johnwason/vcpkg-action@v7
+      with:
+        manifest-dir: ${{ github.workspace }} # Set to directory containing vcpkg.json
+        triplet: x64-windows
+        token: ${{ github.token }}
+        fetch-depth: 0
+
+    - name: vcpkg integrate
+      run: vcpkg integrate install
+
+    - name: Build
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      run: msbuild ${{env.SOLUTION_FILE_PATH}} /m /t:Clean,Rebuild /p:Configuration=${{env.BUILD_CONFIGURATION}} /p:Platform=${{env.BUILD_PLATFORM}} /p:VcpkgEnableManifest=true /verbosity:normal
