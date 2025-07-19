@@ -27,6 +27,8 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
+      with:
+        lfs: true
 
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1.0.2
