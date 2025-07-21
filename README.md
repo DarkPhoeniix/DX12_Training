@@ -19,7 +19,7 @@ An experimental real-time renderer built with C++ and DirectX 12 for exploring m
 - Render Graph (Frame graph) for pass scheduling
 - Physically-based rendering (PBR)
 - Image-based lighting support (IBL)
-- GPU-side shadow mapping (spot and point lights)
+- Shadow mapping (spot/point lights) with GPU-driven shadow caster culling
 - HDR rendering with tone-mapping
 - Scene tree with entity-component system (ECS)
 - Screen space ambient occlusion (SSAO)
