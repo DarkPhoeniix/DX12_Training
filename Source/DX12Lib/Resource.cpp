@@ -107,7 +107,7 @@ namespace dx12
 		return _resource;
 	}
 
-	ResourceID Resource::GetID() const
+	const ResourceID& Resource::GetID() const
 	{
 		return _ID;
 	}

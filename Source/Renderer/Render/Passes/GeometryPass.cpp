@@ -83,6 +83,7 @@ namespace render
             depthDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::DepthStencil);
         }
         _data.Depth = builder.CreateResource(DEPTH, depthDesc);
+        builder.CreateResourceNew(DEPTH, depthDesc);
 
         dx12::ResourceDescription albedoMetallicDesc;
         {
@@ -99,6 +100,7 @@ namespace render
             albedoMetallicDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::RenderTarget);
         }
         _data.AlbedoMetallic = builder.CreateResource(ALBEDO_METALLIC, albedoMetallicDesc);
+        builder.CreateResourceNew(ALBEDO_METALLIC, albedoMetallicDesc);
 
         dx12::ResourceDescription normalRoughnessDesc;
         {
@@ -115,6 +117,7 @@ namespace render
             normalRoughnessDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::RenderTarget);
         }
         _data.NormalRoughness = builder.CreateResource(NORMAL_ROUGHNESS, normalRoughnessDesc);
+        builder.CreateResourceNew(NORMAL_ROUGHNESS, normalRoughnessDesc);
     }
 
     void GeometryPass::Execute(rg::RenderContext& context, TaskGPU& task)

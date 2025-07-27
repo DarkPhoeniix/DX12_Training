@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Heap.h"
-#include "ResourceTable.h"
+#include "../DX12Lib/ResourceTable.h"
 
 #include <set>
 

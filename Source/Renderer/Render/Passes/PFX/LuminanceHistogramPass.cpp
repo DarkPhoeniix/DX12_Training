@@ -24,8 +24,13 @@ namespace render
         constexpr float LOG_LUM_RANGE = (MAX_LOG_LUM - MIN_LOG_LUM);
         constexpr float RCP_LOG_LUM_RANGE = 1.0f / LOG_LUM_RANGE;
 
-        constexpr float MIDDLE_GREY = 0.775f;
-        constexpr float WHITE = 2.5f;
+        struct PassCB
+        {
+            float MinLogLuminance;
+            float OneOverLogLuminanceRange;
+            std::uint32_t HDRTextureIndex;
+            std::uint32_t LuminanceHistogramBufferIndex;
+        };
     } // namespace unnamed
 
     LuminanceHistogramPass::LuminanceHistogramPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
@@ -38,7 +43,8 @@ namespace render
 
     void LuminanceHistogramPass::Setup(rg::RenderPassBuilder& builder)
     {
-        _data.HDRTarget = builder.ReadResource(HDR_TARGET);
+        _data.HDRTarget = builder.ReadResourceNew(HDR_TARGET);
+        builder.ReadResource(HDR_TARGET);
 
         dx12::ResourceDescription lumDesc;
         {
@@ -46,7 +52,8 @@ namespace render
             lumDesc.SetStride(sizeof(std::uint32_t));
             lumDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Unordered);
         }
-        _data.LuminanceHistogram = builder.CreateResource(LUM_HISTOGRAM, lumDesc);
+        _data.LuminanceHistogram = builder.CreateResourceNew(LUM_HISTOGRAM, lumDesc);
+        builder.CreateResource(LUM_HISTOGRAM, lumDesc);
     }
 
     void LuminanceHistogramPass::Execute(rg::RenderContext& context, TaskGPU& task)
@@ -58,10 +65,11 @@ namespace render
         {
             // Copy and setup needed resources
 
-            std::shared_ptr<dx12::Resource> hdrTarget = context.GetResource(_data.HDRTarget);
-            std::shared_ptr<dx12::Resource> luminanceHistogram = context.GetResource(_data.LuminanceHistogram);
+            std::shared_ptr<dx12::Resource> hdrTarget = context.GetResourceNew(_data.HDRTarget);
+            std::shared_ptr<dx12::Resource> luminanceHistogram = context.GetResourceNew(_data.LuminanceHistogram);
 
-            D3D12_GPU_DESCRIPTOR_HANDLE targetHandle = context.GetGPUHandle(hdrTarget->GetAsSRV());
+            DescriptorHandle harTargetHandle = context.GetStaticResourceHandle(hdrTarget->GetAsSRV());
+            DescriptorHandle luminanceHistogramHandle = context.GetStaticResourceHandle(luminanceHistogram->GetAsUAV());
 
             // Setup pipeline state
 
@@ -76,22 +84,27 @@ namespace render
             };
             commandList.TransitionBarriers(barriers);
 
-            commandList.SetDescriptorHeaps({ context.GetResourceTable().GetDescriptorHeap(dx12::ResourceViewType::SRV).GetDXDescriptorHeap().Get() });
+            context.BindBindlessTable(commandList);
 
-            DirectX::XMUINT2 viewportSize = _camera->GetViewport().GetSize();
-            commandList.SetConstants(0, 1, &viewportSize.x);
-            commandList.SetConstants(0, 1, &viewportSize.y, 1);
-            commandList.SetConstants(0, 1, &MIN_LOG_LUM, 2);
-            commandList.SetConstants(0, 1, &RCP_LOG_LUM_RANGE, 3);
-            commandList.SetDescriptorTable(1, targetHandle);
-            commandList.SetUAV(2, luminanceHistogram->OffsetGPU());
+            CacheGPU::DataHandle sceneDataHandle = context.GetCache().GetResourcePlacement("SceneCB");
+
+            PassCB constants =
+            {
+                .MinLogLuminance = MIN_LOG_LUM,
+                .OneOverLogLuminanceRange = RCP_LOG_LUM_RANGE,
+                .HDRTextureIndex = static_cast<uint32_t>(harTargetHandle.Index),
+                .LuminanceHistogramBufferIndex = static_cast<uint32_t>(luminanceHistogramHandle.Index)
+            };
+            commandList.SetCBV(0, sceneDataHandle.DataGPU);
+            commandList.SetConstants(1, 4, &constants);
 
             // Execute
 
+            DirectX::XMUINT2 viewportSize = _camera->GetViewport().GetSize();
             std::uint32_t xThreadGroups = (std::uint32_t)std::ceilf(viewportSize.x / float(LUM_HISTOGRAM_THREADS_NUM));
             std::uint32_t yThreadGroups = (std::uint32_t)std::ceilf(viewportSize.y / float(LUM_HISTOGRAM_THREADS_NUM));
             commandList.Dispatch(xThreadGroups, yThreadGroups);
-
+            
             barriers =
             {
                 { hdrTarget,            D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },

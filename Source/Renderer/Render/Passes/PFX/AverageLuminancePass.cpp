@@ -24,8 +24,17 @@ namespace render
         constexpr float LOG_LUM_RANGE = (MAX_LOG_LUM - MIN_LOG_LUM);
         constexpr float RCP_LOG_LUM_RANGE = 1.0f / LOG_LUM_RANGE;
 
-        constexpr float MIDDLE_GREY = 0.775f;
-        constexpr float WHITE = 2.5f;
+        struct PassCB
+        {
+            std::uint32_t PixelCount;
+            float MinLogLuminance;
+            float LogLuminanceRange;
+            float Adaptation;
+
+            std::uint32_t PrevLuminanceIndex;
+            std::uint32_t LuminanceHistogramIndex;
+            std::uint32_t OutputLuminanceIndex;
+        };
     } // namespace unnamed
 
     AverageLuminancePass::AverageLuminancePass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
@@ -47,7 +56,8 @@ namespace render
 
     void AverageLuminancePass::Setup(rg::RenderPassBuilder& builder)
     {
-        _data.LuminanceHistogram = builder.ReadResource(LUM_HISTOGRAM);
+        _data.LuminanceHistogram = builder.ReadResourceNew(LUM_HISTOGRAM);
+        builder.ReadResource(LUM_HISTOGRAM);
 
         dx12::ResourceDescription lumDesc;
         {
@@ -55,7 +65,10 @@ namespace render
             lumDesc.SetStride(sizeof(float));
             lumDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Unordered);
         }
-        _data.AverageLuminance = builder.CreateResource(AVERAGE_LUM, lumDesc);
+        _data.PrevAverageLuminance = builder.CreateResourceNew("PrevAverageLum", lumDesc);
+        builder.CreateResource("PrevAverageLum", lumDesc);
+        _data.AverageLuminance = builder.CreateResourceNew(AVERAGE_LUM, lumDesc);
+        builder.CreateResource(AVERAGE_LUM, lumDesc);
     }
 
     void AverageLuminancePass::Execute(rg::RenderContext& context, TaskGPU& task)
@@ -67,24 +80,13 @@ namespace render
         {
             // Copy and setup needed resources
 
-            std::shared_ptr<dx12::Resource> luminanceHistogram = context.GetResource(_data.LuminanceHistogram);
-            std::shared_ptr<dx12::Resource> averageLuminance = context.GetResource(_data.AverageLuminance);
+            std::shared_ptr<dx12::Resource> luminanceHistogram = context.GetResourceNew(_data.LuminanceHistogram);
+            std::shared_ptr<dx12::Resource> prevAverageLuminance = context.GetResourceNew(_data.PrevAverageLuminance);
+            std::shared_ptr<dx12::Resource> averageLuminance = context.GetResourceNew(_data.AverageLuminance);
 
-            std::vector<dx12::ResourceBarrier> barriers =
-            {
-                { _prevLuminance,     D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_COPY_DEST},
-                { averageLuminance,   D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_COPY_SOURCE }
-            };
-            commandList.TransitionBarriers(barriers);
-
-            commandList.CopyResource(*averageLuminance, *_prevLuminance);
-            
-            barriers =
-            {
-                { _prevLuminance,     D3D12_RESOURCE_STATE_COPY_DEST,     D3D12_RESOURCE_STATE_COMMON},
-                { averageLuminance,   D3D12_RESOURCE_STATE_COPY_SOURCE,   D3D12_RESOURCE_STATE_COMMON }
-            };
-            commandList.TransitionBarriers(barriers);
+            DescriptorHandle luminanceHistogramHandle = context.GetStaticResourceHandle(luminanceHistogram->GetAsUAV());
+            DescriptorHandle prevAverageLuminanceHandle = context.GetStaticResourceHandle(prevAverageLuminance->GetAsSRV());
+            DescriptorHandle averageLuminanceHandle = context.GetStaticResourceHandle(averageLuminance->GetAsUAV());
 
             // Setup pipeline state
 
@@ -92,26 +94,49 @@ namespace render
 
             // Setup root signature components
 
-            commandList.SetDescriptorHeaps({ context.GetResourceTable().GetDescriptorHeap(dx12::ResourceViewType::SRV).GetDXDescriptorHeap().Get() });
+            context.BindBindlessTable(commandList);
 
             DirectX::XMUINT2 viewportSize = _camera->GetViewport().GetSize();
             std::uint32_t size = viewportSize.x * viewportSize.y;
 
             float adaptationSpeed = std::min((_scene->GetCache().GetDeltaTime() * 2.5f), 1.0f);
 
-            commandList.SetConstants(0, 1, &size);
-            commandList.SetConstants(0, 1, &MIN_LOG_LUM, 1);
-            commandList.SetConstants(0, 1, &LOG_LUM_RANGE, 2);
-            commandList.SetConstants(0, 1, &adaptationSpeed, 3);
-            commandList.SetSRV(1, _prevLuminance->OffsetGPU());
-            commandList.SetUAV(2, luminanceHistogram->OffsetGPU());
-            commandList.SetUAV(3, averageLuminance->OffsetGPU());
+            PassCB passConstants =
+            {
+                .PixelCount = size,
+                .MinLogLuminance = MIN_LOG_LUM,
+                .LogLuminanceRange = LOG_LUM_RANGE,
+                .Adaptation = adaptationSpeed,
+
+                .PrevLuminanceIndex = static_cast<std::uint32_t>(prevAverageLuminanceHandle.Index),
+                .LuminanceHistogramIndex = static_cast<std::uint32_t>(luminanceHistogramHandle.Index),
+                .OutputLuminanceIndex = static_cast<std::uint32_t>(averageLuminanceHandle.Index)
+            };
+            commandList.SetCBV(0, context.GetCache().GetResourcePlacement("SceneCB").DataGPU);
+            commandList.SetConstants(1, 7, &passConstants);
 
             // Execute
 
             std::uint32_t xThreadGroups = (std::uint32_t)std::ceilf(viewportSize.x / float(LUM_HISTOGRAM_THREADS_NUM));
             std::uint32_t yThreadGroups = (std::uint32_t)std::ceilf(viewportSize.y / float(LUM_HISTOGRAM_THREADS_NUM));
             commandList.Dispatch();
+
+            std::vector<dx12::ResourceBarrier> barriers =
+            {
+                { prevAverageLuminance, D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_COPY_DEST},
+                { averageLuminance,     D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_COPY_SOURCE }
+            };
+            commandList.TransitionBarriers(barriers);
+
+            commandList.CopyResource(*averageLuminance, *_prevLuminance);
+
+            barriers =
+            {
+                { prevAverageLuminance, D3D12_RESOURCE_STATE_COPY_DEST,     D3D12_RESOURCE_STATE_COMMON},
+                { averageLuminance,     D3D12_RESOURCE_STATE_COPY_SOURCE,   D3D12_RESOURCE_STATE_COMMON }
+            };
+            commandList.TransitionBarriers(barriers);
+
         }
         PIXEndEvent(commandList.GetDXCommandList().Get());
 

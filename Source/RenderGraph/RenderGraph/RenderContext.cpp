@@ -13,8 +13,9 @@ namespace
 
 namespace rg
 {
-    RenderContext::RenderContext()
+    RenderContext::RenderContext(ResourceTable& resourceTable)
         : _currentFrameIndex(0)
+        , _resourceTableNew(resourceTable)
     {
         for (dx12::ResourceTable& table : _resourceTable)
         {
@@ -54,10 +55,27 @@ namespace rg
         return _cache[_currentFrameIndex];
     }
 
+    void RenderContext::BindBindlessTable(dx12::CommandList& commandList) const
+    {
+        commandList.SetDescriptorHeaps({ _resourceTableNew.GetShaderResourcesDescriptorHeap().GetDXDescriptorHeap().Get() });
+    }
+
     std::shared_ptr<dx12::Resource> RenderContext::GetResource(ResourceId id)
     {
         auto resourceIt = _resources.find(id);
         if (resourceIt == _resources.end())
+        {
+            LOG_WARNING("Resource with id {} not found in render context.", id);
+            return nullptr;
+        }
+
+        return resourceIt->second;
+    }
+
+    std::shared_ptr<dx12::Resource> RenderContext::GetResourceNew(ResourceId id)
+    {
+        auto resourceIt = _resourcesNew.find(id);
+        if (resourceIt == _resourcesNew.end())
         {
             LOG_WARNING("Resource with id {} not found in render context.", id);
             return nullptr;
@@ -156,7 +174,32 @@ namespace rg
         return table.GetResourceGPUHandle(cbv.Owner, dx12::ResourceViewType::CBV);
     }
 
-    ResourceId RenderContext::CreateResource(std::string name, dx12::ResourceDescription desc)
+    const DescriptorHandle& RenderContext::GetStaticResourceHandle(dx12::RenderTargetView rtv) const
+    {
+        return _resourceTableNew.GetResourceHandle(rtv);
+    }
+
+    const DescriptorHandle& RenderContext::GetStaticResourceHandle(dx12::DepthStencilView dsv) const
+    {
+        return _resourceTableNew.GetResourceHandle(dsv);
+    }
+
+    const DescriptorHandle& RenderContext::GetStaticResourceHandle(dx12::ShaderResourceView srv) const
+    {
+        return _resourceTableNew.GetResourceHandle(srv);
+    }
+
+    const DescriptorHandle& RenderContext::GetStaticResourceHandle(dx12::UnorderedAccessView uav) const
+    {
+        return _resourceTableNew.GetResourceHandle(uav);
+    }
+
+    const DescriptorHandle& RenderContext::GetStaticResourceHandle(dx12::ConstantBufferView cbv) const
+    {
+        return _resourceTableNew.GetResourceHandle(cbv);
+    }
+
+    ResourceId RenderContext::CreateResource(const std::string& name, dx12::ResourceDescription desc)
     {
         ASSERT(!name.empty(), "Resource name cannot be empty.");
 
@@ -188,7 +231,7 @@ namespace rg
         return id;
     }
 
-    ResourceId RenderContext::ReadResource(std::string name)
+    ResourceId RenderContext::ReadResource(const std::string& name)
     {
         auto IdIt = _mapNameToId.find(name);
         if (IdIt == _mapNameToId.end())
@@ -200,10 +243,62 @@ namespace rg
         return IdIt->second;
     }
 
-    ResourceId RenderContext::WriteResource(std::string name)
+    ResourceId RenderContext::WriteResource(const std::string& name)
     {
         auto IdIt = _mapNameToId.find(name);
         if (IdIt == _mapNameToId.end())
+        {
+            LOG_CRITICAL("Texture is not exist in render graph context: {}", name);
+            return ResourceId(-1);
+        }
+
+        return IdIt->second;
+    }
+
+    ResourceId RenderContext::CreateResourceNew(const std::string& name, dx12::ResourceDescription desc)
+    {
+        ASSERT(!name.empty(), "Resource name cannot be empty.");
+
+        std::shared_ptr<dx12::Resource> resource = ResourceFactory::Create(name, desc);
+        resource->CreateCommitedResource();
+
+        _resourcesNew[resource->GetID()] = resource;
+        {
+            if (desc.GetFlags() & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)
+            {
+                _resourceTableNew.AddStaticResourceView(resource->GetAsRTV());
+            }
+            if (desc.GetFlags() & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
+            {
+                _resourceTableNew.AddStaticResourceView(resource->GetAsDSV());
+            }
+            if (desc.GetFlags() & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS)
+            {
+                _resourceTableNew.AddStaticResourceView(resource->GetAsUAV());
+            }
+            _resourceTableNew.AddStaticResourceView(resource->GetAsSRV());
+        }
+        _mapNameToIdNew[name] = resource->GetID();
+
+        return resource->GetID();
+    }
+
+    ResourceId RenderContext::ReadResourceNew(const std::string& name)
+    {
+        auto IdIt = _mapNameToIdNew.find(name);
+        if (IdIt == _mapNameToIdNew.end())
+        {
+            LOG_CRITICAL("Texture is not exist in render graph context: {}", name);
+            return ResourceId(-1);
+        }
+
+        return IdIt->second;
+    }
+
+    ResourceId RenderContext::WriteResourceNew(const std::string& name)
+    {
+        auto IdIt = _mapNameToIdNew.find(name);
+        if (IdIt == _mapNameToIdNew.end())
         {
             LOG_CRITICAL("Texture is not exist in render graph context: {}", name);
             return ResourceId(-1);

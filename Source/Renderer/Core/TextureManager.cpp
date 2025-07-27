@@ -150,7 +150,7 @@ namespace scene
     TextureManager::TextureManager(TextureManager&& other) noexcept
         : _textures(std::move(other._textures))
         , _uploadQueue(std::move(other._uploadQueue))
-        , _texturesTable(std::move(other._texturesTable))
+        , _texturesTable(other._texturesTable)
         , _texturesHeap(std::move(other._texturesHeap))
         , _intermediateResources(std::move(other._intermediateResources))
     {
@@ -202,9 +202,10 @@ namespace scene
             dx12::ResourceDescription description = GetTextureDescription(metadata);
             D3D12_RESOURCE_DESC desc = description.CreateDXResourceDescription();
 
-            const std::string textureName = path.filename().string();
+            std::string textureName = path.filename().string();
 
             _textures[textureName] = ResourceFactory::Create(textureName, description);
+            _textures[textureName]->CreateCommitedResource();
 
             D3D12_RESOURCE_ALLOCATION_INFO allocInfo = dx12::Device::GetDXDevice()->GetResourceAllocationInfo(0, 1, &desc);
 
@@ -216,9 +217,8 @@ namespace scene
                 intermediateDesc.SetLayout(D3D12_TEXTURE_LAYOUT_ROW_MAJOR);
                 intermediateDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
             }
-            std::shared_ptr<dx12::Resource> intermediate = ResourceFactory::Create(textureName, intermediateDesc);
-            intermediate->CreateCommitedResource();
-            _intermediateResources.emplace(textureName, intermediate);
+            _intermediateResources[textureName] = ResourceFactory::Create("Texture intermediate buffer", intermediateDesc);
+            _intermediateResources[textureName]->CreateCommitedResource();
 
             totalRequiredHeapSize += requiredSize;
             maxTextureSize = (maxTextureSize < requiredSize) ? requiredSize : maxTextureSize;

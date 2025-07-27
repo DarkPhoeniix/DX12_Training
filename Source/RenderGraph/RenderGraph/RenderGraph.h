@@ -1,8 +1,10 @@
 #pragma once
 
+#include "Core/ResourceTable.h"
 #include "RenderPass.h"
 #include "RenderContext.h"
 
+// TODO: isolate RG_MULTITHREADED to this lib
 #ifdef RG_MULTITHREADED
 #include "Helpers/PassWorkerManager.h"
 #endif
@@ -19,7 +21,7 @@ namespace rg
     class RenderGraph
     {
     public:
-        RenderGraph();
+        RenderGraph(ResourceTable& resourceTable);
         RenderGraph(const RenderGraph&) = delete;
         RenderGraph(RenderGraph&&) = default;
         ~RenderGraph() = default;

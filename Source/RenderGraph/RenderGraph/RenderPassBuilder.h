@@ -18,9 +18,13 @@ namespace rg
         RenderPassBuilder& operator=(const RenderPassBuilder&) = default;
         RenderPassBuilder& operator=(RenderPassBuilder&&) = default;
 
-        ResourceId CreateResource(std::string name, dx12::ResourceDescription desc);
-        ResourceId ReadResource(std::string name);
-        ResourceId WriteResource(std::string name);
+        ResourceId CreateResource(const std::string& name, dx12::ResourceDescription desc);
+        ResourceId ReadResource(const std::string& name);
+        ResourceId WriteResource(const std::string& name);
+
+        ResourceId CreateResourceNew(const std::string& name, dx12::ResourceDescription desc);
+        ResourceId ReadResourceNew(const std::string& name);
+        ResourceId WriteResourceNew(const std::string& name);
 
     private:
         IRenderPass* _renderPass;

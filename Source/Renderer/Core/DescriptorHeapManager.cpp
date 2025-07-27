@@ -15,7 +15,7 @@ DescriptorHeapManager::DescriptorHeapManager(std::uint64_t maxRTVDescriptors, st
 
     for (size_t i = 0; i < dx12::BACK_BUFFER_COUNT; ++i)
     {
-        _dynamicAllocator[i] = DescriptorAllocator(heapOffset, maxDynamicDescriptors);
+        _dynamicAllocator.emplace_back(heapOffset, maxDynamicDescriptors);
         heapOffset += maxDynamicDescriptors;
     }
 
@@ -39,27 +39,47 @@ DescriptorHeapManager::DescriptorHeapManager(std::uint64_t maxRTVDescriptors, st
     _shaderResourcesDescriptorHeap.SetName("Shader Resources Descriptor Heap");
 }
 
-dx12::DescriptorHandle DescriptorHeapManager::AllocateStatic()
+DescriptorHandle DescriptorHeapManager::AllocateStatic(DescriptorHeapType type)
 {
-    std::uint64_t index = _staticAllocator.Allocate();
-    FAIL(index != std::uint64_t(-1), "Failed to allocate static descriptor");
-
-    dx12::DescriptorHandle handle =
+    HeapIndex index = InvalidHeapIndex;
+    DescriptorHandle handle =
     {
-        .Index = index,
-        .CpuHandle = _shaderResourcesDescriptorHeap.GetCPUHandleWithOffset(index),
-        .GpuHandle = _shaderResourcesDescriptorHeap.GetGPUHandleWithOffset(index)
+        .Index = InvalidHeapIndex
     };
+
+    switch (type)
+    {
+    case DescriptorHeapType::RTV:
+        handle.Index = _RTVAllocator.Allocate();
+        handle.CpuHandle = _RTVDescriptorHeap.GetCPUHandleWithOffset(handle.Index);
+        //handle.GpuHandle = _RTVDescriptorHeap.GetGPUHandleWithOffset(handle.Index);
+        break;
+    case DescriptorHeapType::DSV:
+        handle.Index = _DSVAllocator.Allocate();
+        handle.CpuHandle = _DSVDescriptorHeap.GetCPUHandleWithOffset(handle.Index);
+        //handle.GpuHandle = _DSVDescriptorHeap.GetGPUHandleWithOffset(handle.Index);
+        break;
+    case DescriptorHeapType::Static:
+        handle.Index = _staticAllocator.Allocate();
+        handle.CpuHandle = _shaderResourcesDescriptorHeap.GetCPUHandleWithOffset(handle.Index);
+        handle.GpuHandle = _shaderResourcesDescriptorHeap.GetGPUHandleWithOffset(handle.Index);
+        break;
+    case DescriptorHeapType::Dynamic:
+        handle.Index = _dynamicAllocator[_frameIndex].Allocate();
+        handle.CpuHandle = _shaderResourcesDescriptorHeap.GetCPUHandleWithOffset(handle.Index);
+        handle.GpuHandle = _shaderResourcesDescriptorHeap.GetGPUHandleWithOffset(handle.Index);
+        break;
+    }
 
     return handle;
 }
 
-dx12::DescriptorHandle DescriptorHeapManager::AllocateTransient()
+DescriptorHandle DescriptorHeapManager::AllocateTransient(DescriptorHeapType type)
 {
     std::uint64_t index = _dynamicAllocator[_frameIndex].Allocate();
     FAIL(index != std::uint64_t(-1), "Failed to allocate transient descriptor");
 
-    dx12::DescriptorHandle handle =
+    DescriptorHandle handle =
     {
         .Index = index,
         .CpuHandle = _shaderResourcesDescriptorHeap.GetCPUHandleWithOffset(index),
@@ -74,6 +94,21 @@ void DescriptorHeapManager::ResetTransient()
     _dynamicAllocator[_frameIndex].Reset();
 }
 
+void DescriptorHeapManager::Reset()
+{
+    _RTVDescriptorHeap.Reset();
+    _DSVDescriptorHeap.Reset();
+    _shaderResourcesDescriptorHeap.Reset();
+
+    _RTVAllocator.Reset();
+    _DSVAllocator.Reset();
+    _staticAllocator.Reset();
+    for (auto& allocator : _dynamicAllocator)
+    {
+        allocator.Reset();
+    }
+}
+
 void DescriptorHeapManager::Bind(dx12::CommandList& commandList)
 {
     commandList.SetDescriptorHeaps({ _shaderResourcesDescriptorHeap.GetDXDescriptorHeap().Get() });
@@ -84,6 +119,11 @@ void DescriptorHeapManager::AdvanceFrameIndex()
     _frameIndex = (_frameIndex + 1) % dx12::BACK_BUFFER_COUNT;
 }
 
+const dx12::DescriptorHeap& DescriptorHeapManager::GetShaderResourcesDescriptorHeap() const
+{
+    return _shaderResourcesDescriptorHeap;
+}
+
 DescriptorHeapManager::DescriptorAllocator::DescriptorAllocator(std::uint64_t offset, std::uint64_t maxDescriptors)
     : Offset(offset)
     , MaxDescriptors(maxDescriptors)
@@ -91,9 +131,9 @@ DescriptorHeapManager::DescriptorAllocator::DescriptorAllocator(std::uint64_t of
 {
 }
 
-std::uint64_t DescriptorHeapManager::DescriptorAllocator::Allocate()
+HeapIndex DescriptorHeapManager::DescriptorAllocator::Allocate()
 {
-    dx12::DescriptorHandle handle;
+    DescriptorHandle handle;
 
     for (uint32_t i = 0; i < MaxDescriptors; ++i)
     {
@@ -101,12 +141,12 @@ std::uint64_t DescriptorHeapManager::DescriptorAllocator::Allocate()
         {
             UsedDescriptors[i] = true;
 
-            return (Offset + i);
+            return HeapIndex(Offset++);
         }
     }
 
     LOG_CRITICAL("No free descriptors available in the heap.");
-    return std::uint64_t(-1);
+    return HeapIndex(-1);
 }
 
 void DescriptorHeapManager::DescriptorAllocator::Reset()

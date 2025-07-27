@@ -14,8 +14,9 @@ namespace
 
 namespace rg
 {
-    RenderGraph::RenderGraph()
+    RenderGraph::RenderGraph(ResourceTable& resourceTable)
         : _frame(nullptr)
+        , _context(resourceTable)
 #ifdef RG_MULTITHREADED
         , _workerManager(RENDER_THREADS_NUM)
 #endif

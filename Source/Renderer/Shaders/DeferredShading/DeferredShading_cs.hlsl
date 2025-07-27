@@ -113,7 +113,8 @@ void main(uint3 DTid : SV_DispatchThreadID)
             
             float3 lightingModel = surfaceColor * lightAttenuation;
             
-            float shadowAttenuation = CalculateShadowAttenuation_PCF3x3(Lights[i], surface);
+            //float shadowAttenuation = CalculateShadowAttenuation_PCF3x3(Lights[i], surface);
+            float shadowAttenuation = 1.0f;
             lightingModel *= (Lights[i].CastShadows != 0) ? shadowAttenuation : 1.0f;
             
             surface.FinalColor += float4(lightingModel, 0.0f);

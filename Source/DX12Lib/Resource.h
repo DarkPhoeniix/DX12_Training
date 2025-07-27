@@ -37,7 +37,7 @@ namespace dx12
         [[nodiscard]] ComPtr<ID3D12Resource> GetDXResource() const;
         [[nodiscard]] ComPtr<ID3D12Resource>& GetDXResource();
 
-        ResourceID GetID() const;
+        const ResourceID& GetID() const;
 
         // Sets the name for the resource for debugging and identification.
         void SetName(const std::string& name);
@@ -144,6 +144,14 @@ namespace dx12
     {
         std::shared_ptr<Resource> Owner; // Pointer back to the resource that owns this UAV.
     };
+
+    template<typename T>
+    concept ResourceViewConcept =
+        std::same_as<T, dx12::RenderTargetView> ||
+        std::same_as<T, dx12::DepthStencilView> ||
+        std::same_as<T, dx12::ConstantBufferView> ||
+        std::same_as<T, dx12::ShaderResourceView> ||
+        std::same_as<T, dx12::UnorderedAccessView>;
 
     template<typename Type>
     Type* Resource::Map(std::uint32_t begin, std::uint32_t end)

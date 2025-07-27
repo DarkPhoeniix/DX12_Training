@@ -64,6 +64,17 @@ namespace dx12
         // Creates an Unordered Access View (UAV) in the specified descriptor heap.
         static void CreateUnorderedAccessView(const UnorderedAccessView& view, DescriptorHeap& descriptorHeap, std::shared_ptr<Resource> counterResource = nullptr);
 
+        // Creates a Render Target View (RTV) in the specified descriptor heap.
+        static void CreateRenderTargetView(const RenderTargetView& view, D3D12_CPU_DESCRIPTOR_HANDLE descriptor);
+        // Creates a Depth Stencil View (DSV) in the specified descriptor heap.
+        static void CreateDepthStencilView(const DepthStencilView& view, D3D12_CPU_DESCRIPTOR_HANDLE descriptor);
+        // Creates a Constant Buffer View (CBV) in the specified descriptor heap.
+        static void CreateConstantBufferView(const ConstantBufferView& view, D3D12_CPU_DESCRIPTOR_HANDLE descriptor);
+        // Creates a Shader Resource View (SRV) in the specified descriptor heap.
+        static void CreateShaderResourceView(const ShaderResourceView& view, D3D12_CPU_DESCRIPTOR_HANDLE descriptor);
+        // Creates an Unordered Access View (UAV) in the specified descriptor heap.
+        static void CreateUnorderedAccessView(const UnorderedAccessView& view, D3D12_CPU_DESCRIPTOR_HANDLE descriptor, std::shared_ptr<Resource> counterResource = nullptr);
+
         // Retrieves the current GPU crash tracker instance.
         static std::shared_ptr<tracking::IGPUCrashTracker> GetCrashTracker();
 

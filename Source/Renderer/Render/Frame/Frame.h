@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ResourceTable.h"
+#include "../DX12Lib/ResourceTable.h"
 #include "Heap.h"
 
 #include "Render/Frame/AllocatorPool.h"

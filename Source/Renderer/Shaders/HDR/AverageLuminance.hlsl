@@ -1,37 +1,32 @@
 
-#define AverageLuminance_RootSig \
-    "RootFlags " \
-	"( " \
-		"DENY_VERTEX_SHADER_ROOT_ACCESS | " \
-		"DENY_HULL_SHADER_ROOT_ACCESS | " \
-		"DENY_DOMAIN_SHADER_ROOT_ACCESS | " \
-		"DENY_GEOMETRY_SHADER_ROOT_ACCESS | " \
-		"DENY_PIXEL_SHADER_ROOT_ACCESS " \
-	"), " \
-    "RootConstants(num32BitConstants = 4, b0, visibility = SHADER_VISIBILITY_ALL), " \
-    "SRV(t0, visibility = SHADER_VISIBILITY_ALL)," \
-    "UAV(u0, visibility = SHADER_VISIBILITY_ALL)," \
-    "UAV(u1, visibility = SHADER_VISIBILITY_ALL)"
+#include "../UnifiedRootSignature.hlsli"
 
 #define NUM_HISTOGRAM_BINS 256
 
-cbuffer LuminanceHistogramParametersCB          : register(b0)
+struct PassCB
 {
-    uint  PixelCount                            : packoffset(c0.x);
-    float MinLogLuminance                       : packoffset(c0.y);
-    float LogLuminanceRange                     : packoffset(c0.z);    
-    float Adaptation                            : packoffset(c0.w);
+    uint PixelCount;
+    float MinLogLuminance;
+    float LogLuminanceRange;
+    float Adaptation;
+    
+    uint PrevLuminanceIndex;
+    uint LuminanceHistogramIndex;
+    uint OutputLuminanceIndex;
 };
-StructuredBuffer<float>     PrevAverageLum      : register(t0);
-RWStructuredBuffer<uint>    LuminanceHistogram  : register(u0);
-RWStructuredBuffer<float>   LuminanceOutput     : register(u1);
+
+ConstantBuffer<PassCB> PassConstants : register(b1);
 
 groupshared float HistogramShared[NUM_HISTOGRAM_BINS];
 
-[RootSignature(AverageLuminance_RootSig)]
+[RootSignature(URootSignature)]
 [numthreads(NUM_HISTOGRAM_BINS, 1, 1)]
 void main(uint3 localThreadIndex : SV_GroupThreadID)
 {
+    StructuredBuffer<float> PrevAverageLum      = ResourceDescriptorHeap[PassConstants.PrevLuminanceIndex];
+    RWStructuredBuffer<uint> LuminanceHistogram = ResourceDescriptorHeap[PassConstants.LuminanceHistogramIndex];
+    RWStructuredBuffer<float> LuminanceOutput   = ResourceDescriptorHeap[PassConstants.OutputLuminanceIndex];
+    
     uint threadIndex = localThreadIndex.x;
     float countForThisBin = (float) LuminanceHistogram.Load(threadIndex);
     HistogramShared[threadIndex] = countForThisBin * (float) threadIndex;
@@ -53,9 +48,9 @@ void main(uint3 localThreadIndex : SV_GroupThreadID)
     
     if (threadIndex == 0)
     {
-        float weightedLogAverage = (HistogramShared[0] / max((float) PixelCount - countForThisBin, 1.0)) - 1.0;
-        float weightedAverageLuminance = exp2(((weightedLogAverage / (NUM_HISTOGRAM_BINS - 2)) * LogLuminanceRange) + MinLogLuminance);
-        float adaptedLuminance = PrevAverageLum[0] + (weightedAverageLuminance - PrevAverageLum[0]) * Adaptation;
+        float weightedLogAverage = (HistogramShared[0] / max((float) PassConstants.PixelCount - countForThisBin, 1.0)) - 1.0;
+        float weightedAverageLuminance = exp2(((weightedLogAverage / (NUM_HISTOGRAM_BINS - 2)) * PassConstants.LogLuminanceRange) + PassConstants.MinLogLuminance);
+        float adaptedLuminance = PrevAverageLum[0] + (weightedAverageLuminance - PrevAverageLum[0]) * PassConstants.Adaptation;
         LuminanceOutput[0] = adaptedLuminance;
     }
 }

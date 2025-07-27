@@ -152,7 +152,8 @@ namespace
                 lightDesc.CastShadows = light->CastShadows;
                 if (light->CastShadows)
                 {
-                    lightDesc.ShadowMapIndex = frameTable.GetResourceIndex(std::format("{}_ShadowMap", node->GetName()), dx12::ResourceViewType::SRV);
+                    // TODO: shadows !!
+                    //lightDesc.ShadowMapIndex = frameTable.GetResourceIndex(std::format("{}_ShadowMap", node->GetName()), dx12::ResourceViewType::SRV);
                 }
             }
 

@@ -24,25 +24,29 @@ namespace render
     void LightingPass::Setup(rg::RenderPassBuilder& builder)
     {
         _data.AlbedoMetallic = builder.ReadResource(ALBEDO_METALLIC);
+        builder.ReadResourceNew(ALBEDO_METALLIC);
         _data.NormalRoughness = builder.ReadResource(NORMAL_ROUGHNESS);
+        builder.ReadResourceNew(NORMAL_ROUGHNESS);
         _data.Depth = builder.ReadResource(DEPTH);
+        builder.ReadResourceNew(DEPTH);
 
-        std::vector<std::shared_ptr<scene::Entity>> lightEntities = _scene->FilterNodesByComponent("Light");
-        size_t lightsNum = lightEntities.size();
-
-        _data.ShadowMaps.resize(lightsNum, rg::ResourceId(-1));
-        for (size_t lightIndex = 0; lightIndex < lightsNum; ++lightIndex)
-        {
-            std::shared_ptr<scene::Entity> entity = lightEntities[lightIndex];
-            std::shared_ptr<scene::Light> light = entity->GetComponentAs<scene::Light>("Light");
-
-            if (light->CastShadows)
-            {
-                _data.ShadowMaps[lightIndex] = builder.ReadResource(std::format("{}_ShadowMap", entity->GetName()));
-            }
-        }
+        //std::vector<std::shared_ptr<scene::Entity>> lightEntities = _scene->FilterNodesByComponent("Light");
+        //size_t lightsNum = lightEntities.size();
+        //
+        //_data.ShadowMaps.resize(lightsNum, rg::ResourceId(-1));
+        //for (size_t lightIndex = 0; lightIndex < lightsNum; ++lightIndex)
+        //{
+        //    std::shared_ptr<scene::Entity> entity = lightEntities[lightIndex];
+        //    std::shared_ptr<scene::Light> light = entity->GetComponentAs<scene::Light>("Light");
+        //
+        //    if (light->CastShadows)
+        //    {
+        //        _data.ShadowMaps[lightIndex] = builder.ReadResource(std::format("{}_ShadowMap", entity->GetName()));
+        //    }
+        //}
 
         _data.HDRTarget = builder.WriteResource(HDR_TARGET);
+        builder.WriteResourceNew(HDR_TARGET);
     }
 
     void LightingPass::Execute(rg::RenderContext& context, TaskGPU& task)

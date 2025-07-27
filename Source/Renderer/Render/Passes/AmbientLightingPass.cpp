@@ -31,12 +31,18 @@ namespace render
     void AmbientLightingPass::Setup(rg::RenderPassBuilder& builder)
     {
         _data.AlbedoMetallic = builder.ReadResource(ALBEDO_METALLIC);
+        builder.ReadResourceNew(ALBEDO_METALLIC);
         _data.NormalRoughness = builder.ReadResource(NORMAL_ROUGHNESS);
+        builder.ReadResourceNew(NORMAL_ROUGHNESS);
         _data.Depth = builder.ReadResource(DEPTH);
+        builder.ReadResourceNew(DEPTH);
 
         _data.DiffuseIrradianceMap = builder.ReadResource("Diffuse irradiance map");
+        builder.ReadResourceNew("Diffuse irradiance map");
         _data.PreFilteredMap = builder.ReadResource("Prefiltered environment map");
+        builder.ReadResourceNew("Prefiltered environment map");
         _data.BRDF_LUT = builder.ReadResource("BRDF LUT");
+        builder.ReadResourceNew("BRDF LUT");
 
         dx12::ResourceDescription targetDesc;
         {
@@ -45,6 +51,7 @@ namespace render
             targetDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::Unordered);
         }
         _data.HDRTarget = builder.CreateResource(HDR_TARGET, targetDesc);
+        builder.CreateResourceNew(HDR_TARGET, targetDesc);
     }
 
     void AmbientLightingPass::Execute(rg::RenderContext& context, TaskGPU& task)

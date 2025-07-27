@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Heap.h"
-#include "TextureManager.h"
+#include "Core/TextureManager.h"
 
 namespace dx12
 {

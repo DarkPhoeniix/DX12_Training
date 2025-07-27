@@ -1,5 +1,8 @@
 #pragma once
 
+#include "Core/DescriptorHeapManager.h"
+#include "Core/ResourceTable.h"
+
 #include "Render/Frame/Frame.h"
 #include "Scene/Entity/Components/Camera.h"
 #include "Scene/Scene.h"
@@ -49,6 +52,9 @@ namespace render
         HWND _windowHandle;
 
         Frame* _currentFrame;
+
+        DescriptorHeapManager _descriptorHeapManager;
+        ResourceTable _resourceTableNew;
 
         rg::RenderGraph _renderGraph;
 

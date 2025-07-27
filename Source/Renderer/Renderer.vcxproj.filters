@@ -221,9 +221,6 @@
     <ClCompile Include="Window\Win32Window.cpp">
       <Filter>Window</Filter>
     </ClCompile>
-    <ClCompile Include="Render\DXRenderer.cpp">
-      <Filter>Render</Filter>
-    </ClCompile>
     <ClCompile Include="Render\RenderSettings.cpp">
       <Filter>Render</Filter>
     </ClCompile>
@@ -258,11 +255,14 @@
       <Filter>Render\Frame</Filter>
     </ClCompile>
     <ClCompile Include="Scene\SceneLoader.cpp" />
-    <ClCompile Include="Scene\TextureManager.cpp" />
     <ClCompile Include="Render\Passes\AmbientLightingPass.cpp" />
     <ClCompile Include="Render\Passes\AmbientOcclusion\SSAOComputePass.cpp" />
     <ClCompile Include="Render\Passes\AmbientOcclusion\SSAOApplyPass.cpp" />
     <ClCompile Include="Render\Passes\AmbientOcclusion\SSAOBlurPass.cpp" />
+    <ClCompile Include="Core\DescriptorHeapManager.cpp" />
+    <ClCompile Include="Core\TextureManager.cpp" />
+    <ClCompile Include="Core\DXRenderer.cpp" />
+    <ClCompile Include="Core\ResourceTable.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RendererPCH.h" />
@@ -374,9 +374,6 @@
     <ClInclude Include="Window\Win32Window.h">
       <Filter>Window</Filter>
     </ClInclude>
-    <ClInclude Include="Render\DXRenderer.h">
-      <Filter>Render</Filter>
-    </ClInclude>
     <ClInclude Include="Render\RenderSettings.h">
       <Filter>Render</Filter>
     </ClInclude>
@@ -441,11 +438,14 @@
       <Filter>Events</Filter>
     </ClInclude>
     <ClInclude Include="Scene\SceneLoader.h" />
-    <ClInclude Include="Scene\TextureManager.h" />
     <ClInclude Include="Render\Passes\AmbientLightingPass.h" />
     <ClInclude Include="Render\Passes\AmbientOcclusion\SSAOComputePass.h" />
     <ClInclude Include="Render\Passes\AmbientOcclusion\SSAOApplyPass.h" />
     <ClInclude Include="Render\Passes\AmbientOcclusion\SSAOBlurPass.h" />
+    <ClInclude Include="Core\DescriptorHeapManager.h" />
+    <ClInclude Include="Core\TextureManager.h" />
+    <ClInclude Include="Core\DXRenderer.h" />
+    <ClInclude Include="Core\ResourceTable.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\DebugDraw\AABB_rootsig.hlsli">
@@ -565,6 +565,8 @@
     <None Include="PipelineDescriptions\SSAOComputePipeline.tech" />
     <None Include="PipelineDescriptions\SSAOApplyPipeline.tech" />
     <None Include="Shaders\AmbientOcclusion\SSAOBlur_cs.hlsli" />
+    <None Include="Core\ResourceTable.inl" />
+    <None Include="Shaders\UnifiedRootSignature.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="PipelineDescriptions\AABBRenderPipeline.blend">

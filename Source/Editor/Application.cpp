@@ -8,7 +8,7 @@
 #include "Events/UpdateEvent.h"
 #include "Input/InputDevice.h"
 
-#include "Render/DXRenderer.h"
+#include "Core/DXRenderer.h"
 #include "Utility/DebugInfo.h"
 #include "Window/Win32Window.h"
 
