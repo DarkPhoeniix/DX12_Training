@@ -132,14 +132,18 @@ namespace
 
 namespace scene::helpers
 {
+    SceneLoader::SceneLoader(ResourceTable& resourceTable, TextureManager& textureManager)
+        : _resourceTable(resourceTable)
+		, _textureManager(textureManager)
+    {
+    }
+
     void SceneLoader::LoadScene(TaskGPU& task, const std::string& filepath, std::shared_ptr<Scene> scene)
     {
         dx12::CommandList& commandList = *task.GetCommandLists().front();
         commandList.SetName("Scene upload command list");
 
         scene->Clear();
-
-        _cache = &scene->GetCache();
 
         std::ifstream in(filepath, std::ifstream::in | std::ifstream::binary);
 
@@ -156,23 +160,14 @@ namespace scene::helpers
             scene->AddRootNode(LoadEntity(commandList, nodePath));
         }
 
-        scene->GetCache().GetTextureManager().UploadTextures(commandList);
+        _textureManager.UploadTextures(commandList);
 
         task.GetFence()->SetCompletionCallback([this]() { CleanIntermediates(); });
-
-        _descHeap.Reset();
-        dx12::DescriptorHeapDescription desc;
-        {
-            desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-            desc.SetNumDescriptors(32);
-            desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
-        }
-        _descHeap.Create(desc);
 
         LOG_INFO("Loading scene: {}", filepath);
     }
 
-    std::shared_ptr<dx12::Resource> SceneLoader::GenerateEnvironmentDiffuseIrradianceMap(dx12::CommandList& commandList, std::shared_ptr<Scene> scene)
+    std::shared_ptr<dx12::Resource> SceneLoader::GenerateEnvironmentDiffuseIrradianceMap(dx12::CommandList& commandList, std::shared_ptr<Scene> scene, std::shared_ptr<dx12::Resource> frameBuffer)
     {
         // Find skybox node and retrieve texture pointer
 
@@ -182,8 +177,7 @@ namespace scene::helpers
         std::shared_ptr<scene::Skybox> skyboxComponent = skyboxNode->GetComponentAs<scene::Skybox>("Skybox");
         ASSERT(skyboxComponent, "Failed to get skybox component");
 
-        scene::TextureManager& textureManager = scene->GetCache().GetTextureManager();
-        std::shared_ptr<dx12::Resource> skyboxTexture = textureManager.GetTexture(skyboxComponent->SkydomeTexture);
+        std::shared_ptr<dx12::Resource> skyboxTexture = _textureManager.GetTexture(skyboxComponent->SkydomeTextureHandle);
         ASSERT(skyboxTexture, "Failed to get skybox texture pointer");
 
         // Parse pipeline for the diffuse irradiance convolution
@@ -204,8 +198,8 @@ namespace scene::helpers
 
         // Create SRV/UAV for the textures
 
-        dx12::Device::CreateShaderResourceView(skyboxTexture->GetAsSRV(), _descHeap);
-        dx12::Device::CreateUnorderedAccessView(diffuseIrradianceMap->GetAsUAV(), _descHeap);
+		DescriptorHandle skyboxTextureHandle = _resourceTable.GetStaticResourceHandle(skyboxTexture->GetAsSRV());
+        DescriptorHandle diffuseIrradianceMapHandle = _resourceTable.AddStaticResourceView(diffuseIrradianceMap->GetAsUAV());
 
         // Transition resources
 
@@ -218,13 +212,17 @@ namespace scene::helpers
 
         // Diffuse irradiance convolution pipeline
 
+		commandList.SetDescriptorHeaps({ _resourceTable.GetShaderResourcesDescriptorHeap().GetDXDescriptorHeap().Get()});
         commandList.SetPipelineState(_IBL_DiffuseIrradianceConvolution);
 
-        commandList.SetDescriptorHeaps({ _descHeap.GetDXDescriptorHeap().Get() });
+		commandList.SetCBV(0, frameBuffer->OffsetGPU());
+        struct PassConstants
+        {
+            std::uint32_t SkyboxTextureIndex;
+            std::uint32_t DiffuseIrradianceMapIndex;
+        } passCB { .SkyboxTextureIndex = skyboxTextureHandle.Index, .DiffuseIrradianceMapIndex = diffuseIrradianceMapHandle.Index };
+		commandList.SetConstants(1, 2, &passCB);
 
-        commandList.SetDescriptorTable(0, _descHeap.GetGPUHandleWithOffset(0));
-        commandList.SetDescriptorTable(1, _descHeap.GetGPUHandleWithOffset(1));
-        
         std::uint32_t xThreadGroups = (uint32_t)std::ceilf(diffuseIrradianceTextureDesc.GetSize().x / 8.0f);
         std::uint32_t yThreadGroups = (uint32_t)std::ceilf(diffuseIrradianceTextureDesc.GetSize().y / 8.0f);
         std::uint32_t zThreadGroups = 6; // One per each cube face
@@ -243,7 +241,7 @@ namespace scene::helpers
         return diffuseIrradianceMap;
     }
 
-    std::shared_ptr<dx12::Resource> SceneLoader::GeneratePreFilteredEnvironmentMap(dx12::CommandList& commandList, std::shared_ptr<Scene> scene)
+    std::shared_ptr<dx12::Resource> SceneLoader::GeneratePreFilteredEnvironmentMap(dx12::CommandList& commandList, std::shared_ptr<Scene> scene, std::shared_ptr<dx12::Resource> frameBuffer)
     {
         // Find skybox node and retrieve texture pointer
 
@@ -253,8 +251,7 @@ namespace scene::helpers
         std::shared_ptr<scene::Skybox> skyboxComponent = skyboxNode->GetComponentAs<scene::Skybox>("Skybox");
         ASSERT(skyboxComponent, "Failed to get skybox component");
 
-        scene::TextureManager& textureManager = scene->GetCache().GetTextureManager();
-        std::shared_ptr<dx12::Resource> skyboxTexture = textureManager.GetTexture(skyboxComponent->SkydomeTexture);
+        std::shared_ptr<dx12::Resource> skyboxTexture = _textureManager.GetTexture(skyboxComponent->SkydomeTextureHandle);
         ASSERT(skyboxTexture, "Failed to get skybox texture pointer");
 
         // Parse pipeline for the environment map pre-filtering
@@ -276,22 +273,10 @@ namespace scene::helpers
 
         // Create SRV/UAV for the textures
 
-        std::uint32_t currentResourceOffset = _descHeap.GetCurrentOffset();
-        dx12::Device::CreateShaderResourceView(skyboxTexture->GetAsSRV(), _descHeap);
+        DescriptorHandle skyboxTextureHandle = _resourceTable.GetStaticResourceHandle(skyboxTexture->GetAsSRV());
+
         for (std::uint32_t i = 0; i < preFilteredEnvTextureDesc.GetMipLevels(); ++i)
         {
-            dx12::UnorderedAccessView uav;
-            {
-                uav.Owner = preFilteredEnvMap;
-                uav.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
-                uav.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
-
-                uav.Texture2DArray.ArraySize = 6;
-                uav.Texture2DArray.MipSlice = i;
-                uav.Texture2DArray.PlaneSlice = 0;
-                uav.Texture2DArray.FirstArraySlice = 0;
-            }
-            dx12::Device::CreateUnorderedAccessView(uav, _descHeap);
         }
 
         // Transition resources
@@ -305,17 +290,35 @@ namespace scene::helpers
 
         // Environment pre-filtering pipeline
 
+        commandList.SetDescriptorHeaps({ _resourceTable.GetShaderResourcesDescriptorHeap().GetDXDescriptorHeap().Get() });
         commandList.SetPipelineState(_IBL_PreFilterEnvMap);
-
-        commandList.SetDescriptorHeaps({ _descHeap.GetDXDescriptorHeap().Get() });
 
         // Generate each mip level
         for (std::uint32_t i = 0; i < preFilteredEnvTextureDesc.GetMipLevels(); ++i)
         {
+            dx12::UnorderedAccessView uav;
+            {
+                uav.Owner = preFilteredEnvMap;
+                uav.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+                uav.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
+
+                uav.Texture2DArray.ArraySize = 6;
+                uav.Texture2DArray.MipSlice = i;
+                uav.Texture2DArray.PlaneSlice = 0;
+                uav.Texture2DArray.FirstArraySlice = 0;
+            }
+            DescriptorHandle preFilteredEnvironmentMapHandle = _resourceTable.AddStaticResourceView(uav);
+
             float roughness = float(i) / float(preFilteredEnvTextureDesc.GetMipLevels() - 1);
-            commandList.SetConstants(0, 4, &roughness);
-            commandList.SetDescriptorTable(1, _descHeap.GetGPUHandleWithOffset(currentResourceOffset));
-            commandList.SetDescriptorTable(2, _descHeap.GetGPUHandleWithOffset(currentResourceOffset + i + 1));
+
+            commandList.SetCBV(0, frameBuffer->OffsetGPU());
+            struct PassConstants
+            {
+                float Roughness;
+                std::uint32_t SkyboxTextureIndex;
+                std::uint32_t PreFilteredEnvironmentMap;
+            } passCB{ .Roughness = roughness, .SkyboxTextureIndex = skyboxTextureHandle.Index, .PreFilteredEnvironmentMap = preFilteredEnvironmentMapHandle.Index };
+            commandList.SetConstants(1, 3, &passCB);
 
             std::uint32_t xThreadGroups = (uint32_t)std::ceilf(preFilteredEnvTextureDesc.GetSize().x / (8.0f * std::pow(2, i)));
             std::uint32_t yThreadGroups = (uint32_t)std::ceilf(preFilteredEnvTextureDesc.GetSize().y / (8.0f * std::pow(2, i)));
@@ -336,7 +339,7 @@ namespace scene::helpers
         return preFilteredEnvMap;
     }
 
-    std::shared_ptr<dx12::Resource> SceneLoader::GenerateEnvironmentBRDFLookUpTexture(dx12::CommandList& commandList, std::shared_ptr<Scene> scene)
+    std::shared_ptr<dx12::Resource> SceneLoader::GenerateEnvironmentBRDFLookUpTexture(dx12::CommandList& commandList, std::shared_ptr<Scene> scene, std::shared_ptr<dx12::Resource> frameBuffer)
     {
         // Find skybox node and retrieve texture pointer
 
@@ -346,8 +349,7 @@ namespace scene::helpers
         std::shared_ptr<scene::Skybox> skyboxComponent = skyboxNode->GetComponentAs<scene::Skybox>("Skybox");
         ASSERT(skyboxComponent, "Failed to get skybox component");
 
-        scene::TextureManager& textureManager = scene->GetCache().GetTextureManager();
-        std::shared_ptr<dx12::Resource> skyboxTexture = textureManager.GetTexture(skyboxComponent->SkydomeTexture);
+        std::shared_ptr<dx12::Resource> skyboxTexture = _textureManager.GetTexture(skyboxComponent->SkydomeTextureHandle);
         ASSERT(skyboxTexture, "Failed to get skybox texture pointer");
 
         // Parse pipeline for BRDF look-up texture generation
@@ -367,8 +369,8 @@ namespace scene::helpers
 
         // Create SRV/UAV for the textures
 
-        std::uint32_t currentResourceOffset = _descHeap.GetCurrentOffset();
-        dx12::Device::CreateUnorderedAccessView(brdfLUT->GetAsUAV(), _descHeap);
+        //std::uint32_t currentResourceOffset = _descHeap.GetCurrentOffset();
+		DescriptorHandle brdfLUTTextureHandle = _resourceTable.AddStaticResourceView(brdfLUT->GetAsUAV());
 
         // Transition resources
 
@@ -381,11 +383,15 @@ namespace scene::helpers
 
         // BRDF LUT generation pipeline
 
+        commandList.SetDescriptorHeaps({ _resourceTable.GetShaderResourcesDescriptorHeap().GetDXDescriptorHeap().Get() });
         commandList.SetPipelineState(_IBL_BRDFGenerateLUT);
 
-        commandList.SetDescriptorHeaps({ _descHeap.GetDXDescriptorHeap().Get() });
-
-        commandList.SetDescriptorTable(0, _descHeap.GetGPUHandleWithOffset(currentResourceOffset));
+        commandList.SetCBV(0, frameBuffer->OffsetGPU());
+        struct PassConstants
+        {
+            std::uint32_t brdfLUTTextureIndex;
+        } passCB{ .brdfLUTTextureIndex = brdfLUTTextureHandle.Index };
+        commandList.SetConstants(1, 3, &passCB);
 
         std::uint32_t xThreadGroups = (uint32_t)std::ceilf(brdfLUTDesc.GetSize().x / 8.0f);
         std::uint32_t yThreadGroups = (uint32_t)std::ceilf(brdfLUTDesc.GetSize().y / 8.0f);
@@ -563,20 +569,20 @@ namespace scene::helpers
         Json::Value materialData;
         file >> materialData;
 
-        std::string albedoFilepath = filepath + '/' + materialData["Albedo"].asString();
-        std::string normalFilepath = filepath + '/' + materialData["Normal"].asString();
-        std::string metalnessFilepath = filepath + '/' + materialData["Metalness"].asString();
-        std::string roughnessFilepath = filepath + '/' + materialData["Roughness"].asString();
+        std::string albedoFilepath          = filepath + '/' + materialData["Albedo"].asString();
+        std::string normalFilepath          = filepath + '/' + materialData["Normal"].asString();
+        std::string metalnessFilepath       = filepath + '/' + materialData["Metalness"].asString();
+        std::string roughnessFilepath       = filepath + '/' + materialData["Roughness"].asString();
 
-        _cache->GetTextureManager().EnqueueTexture(albedoFilepath);
-        _cache->GetTextureManager().EnqueueTexture(normalFilepath);
-        _cache->GetTextureManager().EnqueueTexture(metalnessFilepath);
-        _cache->GetTextureManager().EnqueueTexture(roughnessFilepath);
+        component->AlbedoTextureHandle      = _textureManager.EnqueueTexture(albedoFilepath);
+		component->NormalMapTextureHandle   = _textureManager.EnqueueTexture(normalFilepath);
+		component->MetalnessTextureHandle   = _textureManager.EnqueueTexture(metalnessFilepath);
+		component->RoughnessTextureHandle   = _textureManager.EnqueueTexture(roughnessFilepath);
 
-        component->Albedo    = materialData["Albedo"].asString();
-        component->NormalMap = materialData["Normal"].asString();
-        component->Metalness = materialData["Metalness"].asString();
-        component->Roughness = materialData["Roughness"].asString();
+		std::shared_ptr<dx12::Resource> albedoTexture = _textureManager.GetTexture(component->AlbedoTextureHandle);
+		std::shared_ptr<dx12::Resource> normalTexture = _textureManager.GetTexture(component->NormalMapTextureHandle);
+		std::shared_ptr<dx12::Resource> metalnessTexture = _textureManager.GetTexture(component->MetalnessTextureHandle);
+		std::shared_ptr<dx12::Resource> roughnessTexture = _textureManager.GetTexture(component->RoughnessTextureHandle);
     }
 
     void SceneLoader::LoadComponent(const std::string& filepath, Json::Value& jsonValue, std::shared_ptr<Mesh> component, dx12::CommandList& commandList)
@@ -690,9 +696,7 @@ namespace scene::helpers
     {
         std::string skyboxFilepath = filepath + '/' + jsonValue["Skybox"].asString();
 
-        _cache->GetTextureManager().EnqueueTexture(skyboxFilepath);
-
-        component->SkydomeTexture = jsonValue["Skybox"].asString();
+		component->SkydomeTextureHandle = _textureManager.EnqueueTexture(skyboxFilepath);
     }
 
     void SceneLoader::LoadRawMesh(const std::string& filepath, std::shared_ptr<Mesh> meshComponent)
@@ -804,6 +808,6 @@ namespace scene::helpers
     void SceneLoader::CleanIntermediates()
     {
         _intermediates.clear();
-        _cache->GetTextureManager().CleanIntermediates();
+        _textureManager.ClearIntermediates();
     }
 }

@@ -17,6 +17,7 @@ struct SceneDesc
     float2              NearFar;
     
     uint                LightsNum;
+    uint                LightsBufferIndex;
 };
 
 struct ModelDesc
@@ -28,11 +29,12 @@ struct ModelDesc
     uint                MetalnessTextureIndex;
     uint                RoughnessTextureIndex;
     
-    uint                hasMesh;
-    uint                useSkinning;
+    uint                HasMesh;
+    uint                BonesBufferIndex;
+    uint                pad[2];
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ConstantBuffer<SceneDesc> Scene : register(b0);
-ConstantBuffer<ModelDesc> Model : register(b1);
+//ConstantBuffer<SceneDesc> Scene : register(b0);
+//ConstantBuffer<ModelDesc> Model : register(b1);

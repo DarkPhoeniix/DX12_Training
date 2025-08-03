@@ -237,10 +237,10 @@ namespace gui
     {
         if (ImGui::CollapsingHeader(material->ComponentName.c_str()))
         {
-            ImGui::Text("Albedo: %s", material->Albedo.c_str());
-            ImGui::Text("Metalness: %s", material->Metalness.c_str());
-            ImGui::Text("Roughness: %s", material->Roughness.c_str());
-            ImGui::Text("Normal map: %s", material->NormalMap.c_str());
+            //ImGui::Text("Albedo: %s", material->Albedo.c_str());
+            //ImGui::Text("Metalness: %s", material->Metalness.c_str());
+            //ImGui::Text("Roughness: %s", material->Roughness.c_str());
+            //ImGui::Text("Normal map: %s", material->NormalMap.c_str());
         }
     }
 
@@ -256,7 +256,7 @@ namespace gui
     {
         if (ImGui::CollapsingHeader(skybox->ComponentName.c_str()))
         {
-            ImGui::Text("Texture: %s", skybox->SkydomeTexture.c_str());
+            //ImGui::Text("Texture: %s", skybox->SkydomeTexture.c_str());
         }
     }
 

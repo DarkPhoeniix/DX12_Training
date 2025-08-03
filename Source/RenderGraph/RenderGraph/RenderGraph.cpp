@@ -14,9 +14,9 @@ namespace
 
 namespace rg
 {
-    RenderGraph::RenderGraph(ResourceTable& resourceTable)
+    RenderGraph::RenderGraph(ResourceTable& resourceTable, TextureManager& textureManager)
         : _frame(nullptr)
-        , _context(resourceTable)
+        , _context(resourceTable, textureManager)
 #ifdef RG_MULTITHREADED
         , _workerManager(RENDER_THREADS_NUM)
 #endif
@@ -28,7 +28,7 @@ namespace rg
         return _context.GetCache();
     }
 
-    dx12::ResourceTable& RenderGraph::GetResourceTable()
+    ResourceTable& RenderGraph::GetResourceTable()
     {
         return _context.GetResourceTable();
     }
@@ -132,18 +132,18 @@ namespace rg
     void RenderGraph::ImportResource(std::shared_ptr<dx12::Resource> resource)
     {
         ASSERT(resource, "Trying to import a null resource into the render graph.");
-        ResourceId id = _context._mapNameToId.size();
+        ResourceId id = _context._mapNameToIdNew.size();
 
-        _context._mapNameToId[resource->GetName()] = id;
-        _context._resources[id] = resource;
+        _context._mapNameToIdNew[resource->GetName()] = id;
+        _context._resourcesNew[id] = resource;
     }
 
     std::shared_ptr<dx12::Resource> RenderGraph::ExportResource(const std::string& name)
     {
-        ResourceId id = _context._mapNameToId[name];
+        ResourceId id = _context._mapNameToIdNew[name];
 
-        auto resourceIt = _context._resources.find(id);
-        if (resourceIt == _context._resources.end())
+        auto resourceIt = _context._resourcesNew.find(id);
+        if (resourceIt == _context._resourcesNew.end())
         {
             LOG_ERROR("Resource with name '{}' does not exist in the render graph context.", name);
             return nullptr;

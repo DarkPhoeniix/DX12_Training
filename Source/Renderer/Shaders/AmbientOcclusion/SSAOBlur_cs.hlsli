@@ -25,6 +25,7 @@ struct Constants
     float Sharpness;
 };
 
+ConstantBuffer<SceneDesc> Scene : register(b0);
 ConstantBuffer<Constants> CB    : register(b1);
 StructuredBuffer<float> Weights : register(t0);
 Texture2D<float> Depth          : register(t1);

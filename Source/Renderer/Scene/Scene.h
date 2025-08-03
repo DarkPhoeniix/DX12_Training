@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Scene/SceneCache.h"
 #include "Scene/Entity/Entity.h"
 
 namespace dx12
@@ -35,8 +34,6 @@ namespace scene
 
         void Clear();
 
-        SceneCache& GetCache();
-
         void SetName(const std::string& name);
         const std::string GetName() const;
 
@@ -44,7 +41,5 @@ namespace scene
         std::string _name;
 
         std::vector<std::shared_ptr<Entity>> _rootNodes;
-
-        SceneCache _cache;
     };
 } // namespace scene

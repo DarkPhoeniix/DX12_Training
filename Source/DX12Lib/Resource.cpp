@@ -36,8 +36,8 @@ namespace dx12
 		, _initialState(D3D12_RESOURCE_STATE_COMMON)
 		, _allocationInfo()
 		, _uavCounterOffset(std::uint32_t(-1))
-		, _name(name)
 	{
+		SetName(name);
 	}
 
 	Resource::Resource(const Resource& other)

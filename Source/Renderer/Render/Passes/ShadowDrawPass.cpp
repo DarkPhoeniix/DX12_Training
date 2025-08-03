@@ -136,6 +136,7 @@ namespace render
 
         PIXBeginEvent(commandList.GetDXCommandList().Get(), 1, "Shadow Pass (spot lights) | Draw");
         {
+            context.BindBindlessTable(commandList);
             commandList.SetPipelineState(_spotLightShadowsPipeline);
 
             CacheGPU::DataHandle sceneDataHandle = context.GetCache().GetResourcePlacement("SceneCB");

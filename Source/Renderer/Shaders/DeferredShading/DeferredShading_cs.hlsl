@@ -1,21 +1,20 @@
 
-#include "DeferredShading_rootsig.hlsli"
+#include "../UnifiedRootSignature.hlsli"
 
 #include "../CommonResources.hlsli"
 #include "../LightingCommon.hlsli"
 #include "../DepthFuncs.hlsli"
 #include "../PBR.hlsli"
 
-StructuredBuffer<LightDesc> Lights : register(t0);
+struct PassConstants
+{
+    uint AlbedoMetallicTextureIndex;
+    uint NormalRoughnessTextureIndex;
+    uint DepthTextureIndex;
+    uint TargetTextureIndex;
+};
 
-Texture2D<float4> PositionTexture : register(t1);
-Texture2D<float4> AlbedoMetallicTexture : register(t2);
-Texture2D<float4> NormalRoughnessTexture : register(t3);
-Texture2D Textures2D[] : register(t4, space0);
-TextureCube TexturesCube[] : register(t4, space1);
-RWTexture2D<float4> TargetTexture : register(u0);
-
-SamplerComparisonState ShadowSampler : register(s0);
+ConstantBuffer<PassConstants> PassCB : register(b1);
 
 void SetLightParams(in LightDesc light, inout Surface surface)
 {
@@ -38,7 +37,7 @@ void SetLightParams(in LightDesc light, inout Surface surface)
         lightDirection = normalize(toLight).xyz;
         distanceToLight = sqrt(dot(normalize(toLight), normalize(toLight)));
     }
-    float3 eyeDir = normalize(Scene.EyePosition - surface.Position).xyz;
+    float3 eyeDir = normalize(FrameCB.EyePosition - surface.Position).xyz;
     float3 halfway = normalize(eyeDir + lightDirection);
         
     surface.ViewDirection = float4(eyeDir, 0.0f);
@@ -55,30 +54,39 @@ float CalculateShadowAttenuation_PCF3x3(in LightDesc light, in Surface surface)
     uint shadowMapTextureIndex = light.ShadowMapIndex;
     if (light.Type == 1)
     {
-        return CalculatePointLightShadowAttenuation(TexturesCube[shadowMapTextureIndex], ShadowSampler, light, surface);
+        TextureCube shadowMap = ResourceDescriptorHeap[shadowMapTextureIndex];
+        return CalculatePointLightShadowAttenuation(shadowMap, ShadowClampSampler, light, surface);
     }
     else if (light.Type == 2)
     {
-        return CalculateSpotLightShadowAttenuation(Textures2D[shadowMapTextureIndex], ShadowSampler, light, surface);
+        Texture2D shadowMap = ResourceDescriptorHeap[shadowMapTextureIndex];
+        return CalculateSpotLightShadowAttenuation(shadowMap, ShadowClampSampler, light, surface);
     }
     
     return 1.0f;
 }
 
-[RootSignature(DeferredShading_RootSig)]
+[RootSignature(URootSignature)]
 [numthreads(8, 8, 1)]
 void main(uint3 DTid : SV_DispatchThreadID)
 {
-    if (DTid.x > Scene.WindowSize.x || DTid.y > Scene.WindowSize.y)
+    if (DTid.x > FrameCB.WindowSize.x || DTid.y > FrameCB.WindowSize.y)
     {
         return;
     }
     
+    Texture2D AlbedoMetallicTexture             = ResourceDescriptorHeap[PassCB.AlbedoMetallicTextureIndex];
+    Texture2D NormalRoughnessTexture            = ResourceDescriptorHeap[PassCB.NormalRoughnessTextureIndex];
+    Texture2D DepthTexture                      = ResourceDescriptorHeap[PassCB.DepthTextureIndex];
+    RWTexture2D<float4> TargetTexture           = ResourceDescriptorHeap[PassCB.TargetTextureIndex];
+    
+    StructuredBuffer<LightDesc> LightsBuffer    = ResourceDescriptorHeap[FrameCB.LightsBufferIndex];
+    
     // Setup surface
     Surface surface;
-    float depth = PositionTexture.Load(uint3(DTid.xy, 0)).r;
-    surface.Position = ReconstructPosW(depth, DTid.xy, Scene.WindowSize, Scene.InvProjection, Scene.InvView);
-    surface.NDCPosition = mul(surface.Position, Scene.ViewProjection);
+    float depth = DepthTexture.Load(uint3(DTid.xy, 0)).r;
+    surface.Position = ReconstructPosW(depth, DTid.xy, FrameCB.WindowSize, FrameCB.InvProjection, FrameCB.InvView);
+    surface.NDCPosition = mul(surface.Position, FrameCB.ViewProjection);
     surface.Albedo = float4(AlbedoMetallicTexture.Load(uint3(DTid.xy, 0)).rgb, 1.0f);
     surface.Normal = float4(NormalRoughnessTexture.Load(uint3(DTid.xy, 0)).xyz, 0.0f);
     surface.Metallic = AlbedoMetallicTexture.Load(uint3(DTid.xy, 0)).a;
@@ -94,10 +102,12 @@ void main(uint3 DTid : SV_DispatchThreadID)
         float3 kD = 1.0 - kS;
         kD *= 1.0 - surface.Metallic;
         
-        for (int i = 0; i < Scene.LightsNum; ++i)
+        for (int i = 0; i < FrameCB.LightsNum; ++i)
         {
+            LightDesc light = LightsBuffer[i];
+            
             // Setup surface data for current light source
-            SetLightParams(Lights[i], surface);
+            SetLightParams(light, surface);
             
             // PBR - BRDF
             // (F * G * D) / (4 * NdotL * NdotV)
@@ -107,7 +117,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
             
             float3 specularColor = (F * G * D) / max(0.00001f, (4.0f * surface.NdotL * surface.NdotV));
             
-            float3 lightAttenuation = CalculateAttenuation(Lights[i], surface) * Lights[i].Color.rgb * Lights[i].Intesity;
+            float3 lightAttenuation = CalculateAttenuation(light, surface) * light.Color.rgb * light.Intesity;
             float3 diffuseColor = surface.Albedo.rgb * kD;
             float3 surfaceColor = (diffuseColor + specularColor) * surface.NdotL;
             
@@ -115,7 +125,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
             
             //float shadowAttenuation = CalculateShadowAttenuation_PCF3x3(Lights[i], surface);
             float shadowAttenuation = 1.0f;
-            lightingModel *= (Lights[i].CastShadows != 0) ? shadowAttenuation : 1.0f;
+            lightingModel *= (LightsBuffer[i].CastShadows != 0) ? shadowAttenuation : 1.0f;
             
             surface.FinalColor += float4(lightingModel, 0.0f);
         }

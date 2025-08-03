@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/ResourceTable.h"
+#include "Core/TextureManager.h"
 #include "RenderPass.h"
 #include "RenderContext.h"
 
@@ -21,7 +22,7 @@ namespace rg
     class RenderGraph
     {
     public:
-        RenderGraph(ResourceTable& resourceTable);
+        RenderGraph(ResourceTable& resourceTable, TextureManager& textureManager);
         RenderGraph(const RenderGraph&) = delete;
         RenderGraph(RenderGraph&&) = default;
         ~RenderGraph() = default;
@@ -30,7 +31,7 @@ namespace rg
         RenderGraph& operator=(RenderGraph&&) = default;
 
         CacheGPU& GetCache();
-        dx12::ResourceTable& GetResourceTable();
+        ResourceTable& GetResourceTable();
 
         void SetFrame(Frame& frame);
 

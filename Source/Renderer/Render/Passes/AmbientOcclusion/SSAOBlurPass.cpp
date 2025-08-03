@@ -106,7 +106,8 @@ namespace render
 
             commandList.SetPipelineState(_SSAOBlurHorizonralPipeline);
 
-            commandList.SetDescriptorHeaps({ context.GetResourceTable().GetDescriptorHeap(dx12::ResourceViewType::SRV).GetDXDescriptorHeap().Get() });
+            context.BindBindlessTable(commandList);
+
             CacheGPU::DataHandle sceneDataHandle = context.GetCache().GetResourcePlacement("SceneCB");
 
             CacheGPU::DataHandle cbHandle = context.GetCache().RequestPlacement("SSAOBlurPassCB", sizeof(ConstantsDesc));
@@ -137,7 +138,8 @@ namespace render
 
             commandList.SetPipelineState(_SSAOBlurVerticalPipeline);
 
-            commandList.SetDescriptorHeaps({ context.GetResourceTable().GetDescriptorHeap(dx12::ResourceViewType::SRV).GetDXDescriptorHeap().Get() });
+            context.BindBindlessTable(commandList);
+
             commandList.SetCBV(0, sceneDataHandle.DataGPU);
             commandList.SetCBV(1, cbHandle.DataGPU);
             commandList.SetSRV(2, _weights->OffsetGPU());

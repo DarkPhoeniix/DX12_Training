@@ -1,19 +1,19 @@
 #pragma once
 
-#include "Heap.h"
 #include "Scene/Entity/Components/IComponent.h"
-#include "Texture.h"
+#include "Core/TextureManager.h"
 
 namespace scene
 {
     class Skybox : public IComponent
     {
     public:
-        Skybox();
+        Skybox()
+            : IComponent("Skybox")
+			, SkydomeTextureHandle(InvalidTextureHandle)
+        {
+		}
 
-        std::string SkydomeTexture;
-
-        dx12::DescriptorHeap DescHeap;
-        dx12::Heap TexHeap;
+        TextureHandle SkydomeTextureHandle;
     };
 } // namespace scene

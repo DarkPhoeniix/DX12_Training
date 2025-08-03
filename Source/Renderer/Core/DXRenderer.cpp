@@ -68,53 +68,79 @@ namespace
         }
     }
 
-    void SetupEntity(std::shared_ptr<scene::Scene> scene, std::shared_ptr<scene::Entity> entity, CacheGPU& frameCache, dx12::ResourceTable& frameResourceTable)
+    std::array<XMMATRIX, 6> GetLightViewProj(std::shared_ptr<scene::Entity> node)
     {
-        if (std::shared_ptr<scene::Mesh> mesh = entity->GetComponentAs<scene::Mesh>("Mesh"))
+        std::shared_ptr<scene::Transformation> transform = node->GetComponentAs<scene::Transformation>("Transformation");
+        ASSERT(transform, "Node does not have Transformation component");
+
+        std::shared_ptr<scene::Light> light = node->GetComponentAs<scene::Light>("Light");
+        ASSERT(light, "Node does not have Light component");
+
+        std::array<XMMATRIX, 6> result =
         {
-            scene::Transformation transform = entity->GetGlobalTransform();
-            std::shared_ptr<scene::Armature> armature = entity->GetComponentAs<scene::Armature>("Armature");
-            std::shared_ptr<scene::Material> material = entity->GetComponentAs<scene::Material>("Material");
+            XMMatrixIdentity(),
+            XMMatrixIdentity(),
+            XMMatrixIdentity(),
+            XMMatrixIdentity(),
+            XMMatrixIdentity(),
+            XMMatrixIdentity()
+        };
 
-            CacheGPU::DataHandle modelDescHandle = frameCache.RequestPlacement(entity->GetName(), sizeof(GPUModelDesc));
-            GPUModelDesc* modelDesc = (GPUModelDesc*)modelDescHandle.DataCPU;
-            {
-                modelDesc->Transform = transform.Transform;
+        if (light->Type == scene::LightType::Spot)
+        {
+            XMMATRIX view;
 
-                modelDesc->HasMesh = mesh ? 1 : 0;
-                modelDesc->UseSkinning = armature ? 1 : 0;
+            XMVECTOR lightDir = XMVector3Normalize(light->Direction);
+            XMVECTOR lightPos = transform->Transform.r[3];
+            XMVECTOR lightTar = lightPos + lightDir * light->Range;
 
-                if (material)
-                {
-                    scene::TextureManager& textureManager = scene->GetCache().GetTextureManager();
-                    dx12::ResourceTable& textureTable = textureManager.GetTextureTable();
+            view = XMMatrixLookAtLH(lightPos, lightTar, XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
+            XMMATRIX proj = XMMatrixPerspectiveFovLH(XMConvertToRadians(light->OuterAngle), 1.0f, 1.0f, light->Range);
 
-                    modelDesc->AlbedoTextureIndex = frameResourceTable.CopyDescriptor(textureManager.GetTexture(material->Albedo), dx12::ResourceViewType::SRV, textureTable);
-                    modelDesc->NormalMapTextureIndex = frameResourceTable.CopyDescriptor(textureManager.GetTexture(material->NormalMap), dx12::ResourceViewType::SRV, textureTable);
-                    modelDesc->MetalnessTextureIndex = frameResourceTable.CopyDescriptor(textureManager.GetTexture(material->Metalness), dx12::ResourceViewType::SRV, textureTable);
-                    modelDesc->RoughnessTextureIndex = frameResourceTable.CopyDescriptor(textureManager.GetTexture(material->Roughness), dx12::ResourceViewType::SRV, textureTable);
-                }
-            }
+            result[0] = view * proj;
+        }
+        else if (light->Type == scene::LightType::Point)
+        {
+            XMVECTOR lightPos = transform->Transform.r[3];
+            XMVECTOR lightTar = lightPos + XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
+            XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+            XMMATRIX view = XMMatrixLookAtLH(lightPos, lightTar, up);
+            XMMATRIX proj = XMMatrixPerspectiveFovLH(XMConvertToRadians(90.0f), 1.0f, 0.5f, light->Range);
 
-            // Update and setup animantion
-            if (armature)
-            {
-                const std::vector<scene::Bone*>& bones = armature->GetSortedBones();
+            result[0] = view * proj;
 
-                CacheGPU::DataHandle bonesDescHandle = frameCache.RequestPlacement(entity->GetName() + "_bones", sizeof(DirectX::XMMATRIX) * bones.size());
-                DirectX::XMMATRIX* data = (DirectX::XMMATRIX*)bonesDescHandle.DataCPU;
+            lightTar = lightPos + XMVectorSet(-1.0f, 0.0f, 0.0f, 0.0f);
+            up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+            view = XMMatrixLookAtLH(lightPos, lightTar, up);
 
-                for (int i = 0; i < bones.size(); ++i)
-                {
-                    data[i] = bones[i]->Offset * bones[i]->GlobalTransform;
-                }
-            }
+            result[1] = view * proj;
+
+            lightTar = lightPos + XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+            up = XMVectorSet(0.0f, 0.0f, -1.0f, 0.0f);
+            view = XMMatrixLookAtLH(lightPos, lightTar, up);
+
+            result[2] = view * proj;
+
+            lightTar = lightPos + XMVectorSet(0.0f, -1.0f, 0.0f, 0.0f);
+            up = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
+            view = XMMatrixLookAtLH(lightPos, lightTar, up);
+
+            result[3] = view * proj;
+
+            lightTar = lightPos + XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
+            up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+            view = XMMatrixLookAtLH(lightPos, lightTar, up);
+
+            result[4] = view * proj;
+
+            lightTar = lightPos + XMVectorSet(0.0f, 0.0f, -1.0f, 0.0f);
+            up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+            view = XMMatrixLookAtLH(lightPos, lightTar, up);
+
+            result[5] = view * proj;
         }
 
-        for (std::shared_ptr<scene::Entity>& child : entity->GetChildrenNodes())
-        {
-            SetupEntity(scene, child, frameCache, frameResourceTable);
-        }
+        return result;
     }
 }
 
@@ -127,10 +153,12 @@ namespace render
         , _isMinimized(false)
         , _isCameraMoving(false)
         , _deltaTime(0.0f)
-        , _descriptorHeapManager(4096, 1024, 1024, 1024)
+        , _descriptorHeapManager(1024, 1024, 4096, 1024)
         , _resourceTableNew(_descriptorHeapManager)
-        , _renderGraph(_resourceTableNew)
+        , _renderGraph(_resourceTableNew, _textureManagerNew)
         , _scene(std::make_shared<scene::Scene>())
+		, _textureManagerNew(_resourceTableNew)
+		, _sceneLoader(_resourceTableNew, _textureManagerNew)
     {
     }
 
@@ -177,10 +205,20 @@ namespace render
             _cameraComponent = camera->GetComponentAs<scene::Camera>("Camera");
             _cameraComponent->SetViewport(scene::Viewport({ windowWidth, windowHeight }));
 
+            dx12::ResourceDescription frameBufferDesc;
+            {
+                frameBufferDesc.SetSize({ static_cast<std::uint32_t>(sizeof(GPUFrameDesc)), 1 });
+				frameBufferDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
+            }
+			_frameBuffer = ResourceFactory::Create("Frame Buffer", frameBufferDesc);
+            _frameBuffer->CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_DEST);
+
+            UpdateSceneBuffers();
+
             // Generate textures for IBL
-            _diffuseIrradianceMap       = _sceneLoader.GenerateEnvironmentDiffuseIrradianceMap(commandList, _scene);
-            _brdfLUT                    = _sceneLoader.GenerateEnvironmentBRDFLookUpTexture(commandList, _scene);
-            _preFilteredEnvironmentMap  = _sceneLoader.GeneratePreFilteredEnvironmentMap(commandList, _scene);
+            _diffuseIrradianceMap = _sceneLoader.GenerateEnvironmentDiffuseIrradianceMap(commandList, _scene, _frameBuffer);
+            _brdfLUT = _sceneLoader.GenerateEnvironmentBRDFLookUpTexture(commandList, _scene, _frameBuffer);
+            _preFilteredEnvironmentMap = _sceneLoader.GeneratePreFilteredEnvironmentMap(commandList, _scene, _frameBuffer);
         }
 
         commandList.Close();
@@ -207,18 +245,22 @@ namespace render
     {
         DebugInfo::BeginUpdate(updateEvent);
 
+        _descriptorHeapManager.AdvanceFrameIndex();
+        _resourceTableNew.ResetTransientResources();
+
         // Clear marker map for current frame before execution
         std::shared_ptr<tracking::IGPUCrashTracker> crashTracker = dx12::Device::GetCrashTracker();
         crashTracker->AdvanceFrame();
         crashTracker->ResetMarkerMapForCurrentFrame();
 
         _deltaTime = updateEvent.elapsedTime;
-        _scene->GetCache().SetDeltaTime(_deltaTime);
 
         for (const auto& entity : _scene->GetRootNodes())
         {
             UpdateEntity(entity);
         }
+
+        UpdateSceneBuffers();
 
         DebugInfo::EndUpdate();
     }
@@ -236,7 +278,6 @@ namespace render
         }
 
         _renderGraph.SetFrame(*_currentFrame);
-        UploadSceneCache(_renderGraph.GetCache(), _renderGraph.GetResourceTable());
 
         _renderGraph.Execute();
 
@@ -251,16 +292,16 @@ namespace render
             dx12::CommandList& commandList = *task->GetCommandLists().front();
             commandList.SetName("present");
 
-            PIXBeginEvent(commandList.GetDXCommandList().Get(), 6, "Present");
+            PIXBeginEvent(commandList.GetDXCommandList().Get(), 6, "Copy to backbuffer");
             {
-                dx12::Resource& swapChainTexture = *dx12::Device::GetBackBuffer();
+                std::shared_ptr<dx12::Resource> swapChainTexture = dx12::Device::GetBackBuffer();
 
-                commandList.TransitionBarrier(swapChainTexture, D3D12_RESOURCE_STATE_COPY_DEST);
+                commandList.TransitionBarrier(*swapChainTexture, D3D12_RESOURCE_STATE_COPY_DEST);
                 commandList.TransitionBarrier(*target, D3D12_RESOURCE_STATE_COPY_SOURCE);
 
-                commandList.CopyResource(*target, swapChainTexture);
+                commandList.CopyResource(*target, *swapChainTexture);
 
-                commandList.TransitionBarrier(swapChainTexture, D3D12_RESOURCE_STATE_PRESENT);
+                commandList.TransitionBarrier(*swapChainTexture, D3D12_RESOURCE_STATE_PRESENT);
                 commandList.TransitionBarrier(*target, D3D12_RESOURCE_STATE_COMMON);
             }
             PIXEndEvent(commandList.GetDXCommandList().Get());
@@ -379,6 +420,147 @@ namespace render
         uploadTask->GetCommandQueue()->Signal(uploadTask->GetDXFence(), uploadTask->GetFenceValue());
     }
 
+    void DXRenderer::UpdateSceneBuffers()
+    {
+        std::shared_ptr<dx12::Resource> modelBuffer = _sceneBuffers[static_cast<size_t>(SceneBufferType::Model)];
+        std::shared_ptr<dx12::Resource> lightBuffer = _sceneBuffers[static_cast<size_t>(SceneBufferType::Light)];
+
+        std::vector<std::shared_ptr<scene::Entity>> lightEntities = _scene->FilterNodesByComponent("Light");
+        std::vector<std::shared_ptr<scene::Entity>> meshEntities = _scene->FilterNodesByComponent("Mesh");
+        std::vector<std::shared_ptr<scene::Entity>> animatedEntities = _scene->FilterNodesByComponent("Armature");
+
+        {
+            if (!modelBuffer || (meshEntities.size() > (modelBuffer->GetResourceDescription().GetSize().x / sizeof(GPUModelDesc))))
+            {
+                dx12::ResourceDescription modelBufferDesc;
+                modelBufferDesc.SetSize({ static_cast<uint32_t>(meshEntities.size() * sizeof(GPUModelDesc)), 1 });
+				modelBufferDesc.SetStride(sizeof(GPUModelDesc));
+                modelBufferDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
+                modelBuffer = _sceneBuffers[static_cast<size_t>(SceneBufferType::Model)] = ResourceFactory::Create("Scene models buffer", modelBufferDesc);
+                modelBuffer->CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_DEST);
+            }
+
+            if (!lightBuffer || (lightEntities.size() > (lightBuffer->GetResourceDescription().GetSize().x / sizeof(GPULightDesc))))
+            {
+                dx12::ResourceDescription lightBufferDesc;
+                lightBufferDesc.SetSize({ static_cast<uint32_t>(lightEntities.size() * sizeof(GPULightDesc)), 1 });
+				lightBufferDesc.SetStride(sizeof(GPULightDesc));
+                lightBufferDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
+                lightBuffer = _sceneBuffers[static_cast<size_t>(SceneBufferType::Light)] = ResourceFactory::Create("Scene lights buffer", lightBufferDesc);
+                lightBuffer->CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_DEST);
+            }
+        }
+
+        GPULightDesc* lights = lightBuffer->Map<GPULightDesc>();
+
+        for (size_t lightIndex = 0; lightIndex < lightEntities.size(); ++lightIndex)
+        {
+            std::shared_ptr<scene::Entity> lightEntity = lightEntities[lightIndex];
+            std::shared_ptr<scene::Light> lightComponent = lightEntity->GetComponentAs<scene::Light>("Light");
+            std::shared_ptr<scene::Transformation> transformComponent = lightEntity->GetComponentAs<scene::Transformation>("Transformation");
+            lights[lightIndex] =
+            {
+                .Direction = lightComponent->Direction,
+                .Position = transformComponent->Transform.r[3],
+                .Color = lightComponent->Color,
+
+                .Intensity = lightComponent->Intensity,
+                .Range = lightComponent->Range,
+                .OuterAngle = lightComponent->OuterAngle,
+                .InnerAngle = lightComponent->InnerAngle,
+
+                .Type = static_cast<std::uint32_t>(lightComponent->Type),
+                .CastShadows = lightComponent->CastShadows ? 1u : 0u,
+                .ViewProj = GetLightViewProj(lightEntity),
+
+                .ShadowMapIndex = static_cast<std::uint32_t>(-1)    // TODO: shadow map index
+            };
+        }
+
+        GPUModelDesc* models = modelBuffer->Map<GPUModelDesc>();
+
+        for (size_t index = 0; index < meshEntities.size(); ++index)
+        {
+            std::shared_ptr<scene::Entity> entity = meshEntities[index];
+			std::shared_ptr<scene::Material> materialComponent = entity->GetComponentAs<scene::Material>("Material");
+            std::shared_ptr<scene::Transformation> transformComponent = entity->GetComponentAs<scene::Transformation>("Transformation");
+            std::shared_ptr<scene::Animation> animationComponent = entity->GetComponentAs<scene::Animation>("Animation");
+            std::shared_ptr<scene::Armature> armatureComponent = entity->GetComponentAs<scene::Armature>("Armature");
+
+			std::uint32_t bonesBufferIndex = -1;
+
+            if (armatureComponent && animationComponent)
+            {
+                const auto& transforms = animationComponent->GetBonesTransforms(_deltaTime);
+                armatureComponent->ApplyAnimation(transforms);
+                armatureComponent->UpdateGlobalTransformations();
+
+                const std::vector<scene::Bone*>& bones = armatureComponent->GetSortedBones();
+
+				dx12::ResourceDescription bonesBufferDesc;
+                bonesBufferDesc.SetSize({ static_cast<std::uint32_t>(sizeof(DirectX::XMMATRIX) * bones.size()), 1 });
+				bonesBufferDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
+                std::shared_ptr<dx12::Resource> bonesBuffer = ResourceFactory::Create(entity->GetName() + "_bones_buffer", bonesBufferDesc);
+				bonesBuffer->CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_DEST);
+
+                DirectX::XMMATRIX* data = bonesBuffer->Map<DirectX::XMMATRIX>();
+
+                for (int i = 0; i < bones.size(); ++i)
+                {
+                    data[i] = bones[i]->Offset * bones[i]->GlobalTransform;
+                }
+
+                DescriptorHandle bonesBufferHandle = _resourceTableNew.AddTransientResourceView(bonesBuffer->GetAsSRV());
+                bonesBufferIndex = bonesBufferHandle.Index;
+            }
+
+			// TOOD: this is a temporary solution, need to be fixed
+            models[index] =
+            {
+                .Transform = transformComponent->Transform,
+                .AlbedoTextureIndex = _resourceTableNew.GetStaticResourceHandle(_textureManagerNew.GetTexture(materialComponent->AlbedoTextureHandle)->GetAsSRV()).Index,
+                .NormalMapTextureIndex = _resourceTableNew.GetStaticResourceHandle(_textureManagerNew.GetTexture(materialComponent->NormalMapTextureHandle)->GetAsSRV()).Index,
+                .MetalnessTextureIndex = _resourceTableNew.GetStaticResourceHandle(_textureManagerNew.GetTexture(materialComponent->MetalnessTextureHandle)->GetAsSRV()).Index,
+                .RoughnessTextureIndex = _resourceTableNew.GetStaticResourceHandle(_textureManagerNew.GetTexture(materialComponent->RoughnessTextureHandle)->GetAsSRV()).Index,
+
+                .HasMesh = 1,
+				.BonesBufferIndex = std::uint32_t(-1)
+			};
+        }
+
+        DescriptorHandle modelBufferHandle = _resourceTableNew.AddTransientResourceView(modelBuffer->GetAsSRV());
+        DescriptorHandle lightBufferHandle =  _resourceTableNew.AddTransientResourceView(lightBuffer->GetAsSRV());
+
+        {
+            GPUFrameDesc* frameBufferData = _frameBuffer->Map<GPUFrameDesc>();
+
+			DirectX::XMUINT2 windowSize = _cameraComponent->GetViewport().GetSize();
+
+            frameBufferData[0] =
+            {
+                .View = _cameraComponent->View(),
+                .Projection = _cameraComponent->Projection(),
+                .ViewProjection = _cameraComponent->ViewProjection(),
+
+                .InvView = XMMatrixInverse(nullptr, _cameraComponent->View()),
+                .InvProjection = XMMatrixInverse(nullptr, _cameraComponent->Projection()),
+
+                .EyePosition = _cameraComponent->Position(),
+                .EyeDirection = _cameraComponent->Look(),
+
+                .WindowSize = { windowSize.x, windowSize.y },
+                .ReciprocalWindowSize = { 1.0f / windowSize.x, 1.0f / windowSize.y },
+                .NearFar = { _cameraComponent->NearZ, _cameraComponent->FarZ },
+
+				.InstancesBufferIndex = modelBufferHandle.Index,
+				.LightsBufferIndex = lightBufferHandle.Index,
+				.LightsNum = static_cast<std::uint32_t>(lightEntities.size()),
+
+                .DeltaTime = _deltaTime
+            };
+        }
+    }
+
     void DXRenderer::UpdateEntity(std::shared_ptr<scene::Entity> entity)
     {
         entity->UpdateGlobalTransform();
@@ -453,6 +635,8 @@ namespace render
         {
             _renderGraph.Reset();
 
+            _renderGraph.ImportResource(_frameBuffer);
+
             _renderGraph.ImportResource(_diffuseIrradianceMap);
             _renderGraph.ImportResource(_brdfLUT);
             _renderGraph.ImportResource(_preFilteredEnvironmentMap);
@@ -497,9 +681,5 @@ namespace render
         helpers::SetupSceneDataGPU(*_scene, &cache);
         helpers::SetupLightDataGPU(*_scene, &cache, table);
 
-        for (std::shared_ptr<scene::Entity> entity : _scene->GetRootNodes())
-        {
-            SetupEntity(_scene, entity, cache, table);
-        }
     }
 } // namespace render

@@ -43,8 +43,9 @@ namespace render
 
     void LuminanceHistogramPass::Setup(rg::RenderPassBuilder& builder)
     {
+        _data.FrameBuffer = builder.ReadResourceNew("Frame Buffer");
+
         _data.HDRTarget = builder.ReadResourceNew(HDR_TARGET);
-        builder.ReadResource(HDR_TARGET);
 
         dx12::ResourceDescription lumDesc;
         {
@@ -53,7 +54,6 @@ namespace render
             lumDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Unordered);
         }
         _data.LuminanceHistogram = builder.CreateResourceNew(LUM_HISTOGRAM, lumDesc);
-        builder.CreateResource(LUM_HISTOGRAM, lumDesc);
     }
 
     void LuminanceHistogramPass::Execute(rg::RenderContext& context, TaskGPU& task)
@@ -65,6 +65,7 @@ namespace render
         {
             // Copy and setup needed resources
 
+            std::shared_ptr<dx12::Resource> frameBuffer = context.GetResourceNew(_data.FrameBuffer);
             std::shared_ptr<dx12::Resource> hdrTarget = context.GetResourceNew(_data.HDRTarget);
             std::shared_ptr<dx12::Resource> luminanceHistogram = context.GetResourceNew(_data.LuminanceHistogram);
 
@@ -72,6 +73,8 @@ namespace render
             DescriptorHandle luminanceHistogramHandle = context.GetStaticResourceHandle(luminanceHistogram->GetAsUAV());
 
             // Setup pipeline state
+
+            context.BindBindlessTable(commandList);
 
             commandList.SetPipelineState(_luminanceHistogramPipeline);
 
@@ -84,10 +87,6 @@ namespace render
             };
             commandList.TransitionBarriers(barriers);
 
-            context.BindBindlessTable(commandList);
-
-            CacheGPU::DataHandle sceneDataHandle = context.GetCache().GetResourcePlacement("SceneCB");
-
             PassCB constants =
             {
                 .MinLogLuminance = MIN_LOG_LUM,
@@ -95,7 +94,7 @@ namespace render
                 .HDRTextureIndex = static_cast<uint32_t>(harTargetHandle.Index),
                 .LuminanceHistogramBufferIndex = static_cast<uint32_t>(luminanceHistogramHandle.Index)
             };
-            commandList.SetCBV(0, sceneDataHandle.DataGPU);
+            commandList.SetCBV(0, frameBuffer->OffsetGPU());
             commandList.SetConstants(1, 4, &constants);
 
             // Execute

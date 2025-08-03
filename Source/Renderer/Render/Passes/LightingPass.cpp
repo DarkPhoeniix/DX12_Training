@@ -11,6 +11,17 @@
 #include "RenderGraph/RenderContext.h"
 #include "RenderGraph/RenderPassBuilder.h"
 
+namespace
+{
+    struct PassConstants
+    {
+        std::uint32_t AlbedoMetallicTextureIndex;
+        std::uint32_t NormalRoughnessTextureIndex;
+        std::uint32_t DepthTextureIndex;
+        std::uint32_t TargetTextureIndex;
+	};
+}
+
 namespace render
 {
     LightingPass::LightingPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
@@ -23,12 +34,11 @@ namespace render
 
     void LightingPass::Setup(rg::RenderPassBuilder& builder)
     {
-        _data.AlbedoMetallic = builder.ReadResource(ALBEDO_METALLIC);
-        builder.ReadResourceNew(ALBEDO_METALLIC);
-        _data.NormalRoughness = builder.ReadResource(NORMAL_ROUGHNESS);
-        builder.ReadResourceNew(NORMAL_ROUGHNESS);
-        _data.Depth = builder.ReadResource(DEPTH);
-        builder.ReadResourceNew(DEPTH);
+        _data.FrameBuffer = builder.ReadResourceNew("Frame Buffer");
+
+        _data.AlbedoMetallic = builder.ReadResourceNew(ALBEDO_METALLIC);
+        _data.NormalRoughness = builder.ReadResourceNew(NORMAL_ROUGHNESS);
+        _data.Depth = builder.ReadResourceNew(DEPTH);
 
         //std::vector<std::shared_ptr<scene::Entity>> lightEntities = _scene->FilterNodesByComponent("Light");
         //size_t lightsNum = lightEntities.size();
@@ -45,8 +55,10 @@ namespace render
         //    }
         //}
 
-        _data.HDRTarget = builder.WriteResource(HDR_TARGET);
-        builder.WriteResourceNew(HDR_TARGET);
+        //_data.HDRTarget = builder.WriteResource(HDR_TARGET);
+        //builder.WriteResourceNew(HDR_TARGET);
+
+        _data.HDRTarget = builder.WriteResourceNew(HDR_TARGET);
     }
 
     void LightingPass::Execute(rg::RenderContext& context, TaskGPU& task)
@@ -56,15 +68,16 @@ namespace render
 
         PIXBeginEvent(commandList.GetDXCommandList().Get(), 4, "Deferred Shading");
         {
-            std::shared_ptr<dx12::Resource> hdrTarget = context.GetResource(_data.HDRTarget);
-            std::shared_ptr<dx12::Resource> albedoMetallic = context.GetResource(_data.AlbedoMetallic);
-            std::shared_ptr<dx12::Resource> normalRoughness = context.GetResource(_data.NormalRoughness);
-            std::shared_ptr<dx12::Resource> depth = context.GetResource(_data.Depth);
+            std::shared_ptr<dx12::Resource> frameBuffer     = context.GetResourceNew(_data.FrameBuffer);
+            std::shared_ptr<dx12::Resource> hdrTarget       = context.GetResourceNew(_data.HDRTarget);
+            std::shared_ptr<dx12::Resource> albedoMetallic  = context.GetResourceNew(_data.AlbedoMetallic);
+            std::shared_ptr<dx12::Resource> normalRoughness = context.GetResourceNew(_data.NormalRoughness);
+            std::shared_ptr<dx12::Resource> depth           = context.GetResourceNew(_data.Depth);
 
-            D3D12_GPU_DESCRIPTOR_HANDLE hdrTargetHandle = context.GetGPUHandle(hdrTarget->GetAsUAV());
-            D3D12_GPU_DESCRIPTOR_HANDLE albedoMetallicHandle = context.GetGPUHandle(albedoMetallic->GetAsSRV());
-            D3D12_GPU_DESCRIPTOR_HANDLE normalSpecularHandle = context.GetGPUHandle(normalRoughness->GetAsSRV());
-            D3D12_GPU_DESCRIPTOR_HANDLE depthHandle = context.GetGPUHandle(depth->GetAsSRV());
+            DescriptorHandle hdrTargetHandle                = context.GetStaticResourceHandle(hdrTarget->GetAsUAV());
+            DescriptorHandle albedoMetallicHandle           = context.GetStaticResourceHandle(albedoMetallic->GetAsSRV());
+            DescriptorHandle normalSpecularHandle           = context.GetStaticResourceHandle(normalRoughness->GetAsSRV());
+            DescriptorHandle depthHandle                    = context.GetStaticResourceHandle(depth->GetAsSRV());
 
             std::vector<dx12::ResourceBarrier> barriers =
             {
@@ -75,22 +88,19 @@ namespace render
             };
             commandList.TransitionBarriers(barriers);
 
+            context.BindBindlessTable(commandList);
             commandList.SetPipelineState(_deferredPipeline);
 
-            CacheGPU::DataHandle sceneDataHandle = context.GetCache().GetResourcePlacement("SceneCB");
-            commandList.SetCBV(0, sceneDataHandle.DataGPU);
+            PassConstants passCB =
+            {
+                .AlbedoMetallicTextureIndex = albedoMetallicHandle.Index,
+                .NormalRoughnessTextureIndex = normalSpecularHandle.Index,
+                .DepthTextureIndex = depthHandle.Index,
+                .TargetTextureIndex = hdrTargetHandle.Index
+            };
 
-            CacheGPU::DataHandle lightsData = context.GetCache().GetResourcePlacement("LightsCB");
-            commandList.SetSRV(2, lightsData.DataGPU);
-
-            commandList.SetDescriptorHeaps({ context.GetResourceTable().GetDescriptorHeap(dx12::ResourceViewType::SRV).GetDXDescriptorHeap().Get() });
-
-            commandList.SetDescriptorTable(3, depthHandle);
-            commandList.SetDescriptorTable(4, albedoMetallicHandle);
-            commandList.SetDescriptorTable(5, normalSpecularHandle);
-            commandList.SetDescriptorTable(6, context.GetResourceTable().GetDescriptorHeap(dx12::ResourceViewType::SRV).GetHeapStartGPUHandle());
-            commandList.SetDescriptorTable(7, context.GetResourceTable().GetDescriptorHeap(dx12::ResourceViewType::SRV).GetHeapStartGPUHandle());
-            commandList.SetDescriptorTable(8, hdrTargetHandle);
+            commandList.SetCBV(0, frameBuffer->OffsetGPU());
+			commandList.SetConstants(1, sizeof(PassConstants), &passCB);
 
             DirectX::XMUINT2 viewportSize = _camera->GetViewport().GetSize();
             int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 8.0f);

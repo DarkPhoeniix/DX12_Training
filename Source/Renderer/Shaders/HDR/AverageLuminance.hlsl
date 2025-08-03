@@ -8,7 +8,6 @@ struct PassCB
     uint PixelCount;
     float MinLogLuminance;
     float LogLuminanceRange;
-    float Adaptation;
     
     uint PrevLuminanceIndex;
     uint LuminanceHistogramIndex;
@@ -50,7 +49,7 @@ void main(uint3 localThreadIndex : SV_GroupThreadID)
     {
         float weightedLogAverage = (HistogramShared[0] / max((float) PassConstants.PixelCount - countForThisBin, 1.0)) - 1.0;
         float weightedAverageLuminance = exp2(((weightedLogAverage / (NUM_HISTOGRAM_BINS - 2)) * PassConstants.LogLuminanceRange) + PassConstants.MinLogLuminance);
-        float adaptedLuminance = PrevAverageLum[0] + (weightedAverageLuminance - PrevAverageLum[0]) * PassConstants.Adaptation;
-        LuminanceOutput[0] = adaptedLuminance;
+        //float adaptedLuminance = PrevAverageLum[0] + (weightedAverageLuminance - PrevAverageLum[0]) * PassConstants.Adaptation;
+        LuminanceOutput[0] = weightedAverageLuminance;
     }
 }

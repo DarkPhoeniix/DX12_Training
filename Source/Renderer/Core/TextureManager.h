@@ -1,50 +1,50 @@
 #pragma once
 
 #include "Heap.h"
-#include "../DX12Lib/ResourceTable.h"
+#include "Core/ResourceTable.h"
 
 #include <set>
 
 namespace dx12
 {
-    class CommandList;
-    class Texture;
+	class CommandList;
+	class Texture;
 }
 
 namespace DirectX
 {
-    class ScratchImage;
+	class ScratchImage;
 }
 
-namespace scene
+using TextureHandle = std::uint32_t;
+constexpr TextureHandle InvalidTextureHandle = TextureHandle(-1);
+
+class TextureManager
 {
-    class TextureManager
-    {
-    public:
-        TextureManager();
-        TextureManager(const TextureManager& other);
-        TextureManager(TextureManager&& other) noexcept;
+public:
+	TextureManager(ResourceTable& resourceTable);
+	TextureManager(const TextureManager& other) = delete;
+	TextureManager(TextureManager&& other) noexcept = default;
 
-        TextureManager& operator=(const TextureManager& other);
-        TextureManager& operator=(TextureManager&& other) noexcept;
+	TextureManager& operator=(const TextureManager& other) = delete;
+	TextureManager& operator=(TextureManager&& other) noexcept = default;
 
-        void EnqueueTexture(const std::string& filepath);
-        void UploadTextures(dx12::CommandList& commandList);
-        void CleanIntermediates();
+	[[nodiscard]] TextureHandle EnqueueTexture(const std::string& filepath);
+	void UploadTextures(dx12::CommandList& commandList);
 
-        void Clear();
+	void ClearIntermediates();
+	void Clear();
 
-        void AddTexture(std::shared_ptr<dx12::Resource> texture, dx12::ResourceViewType viewType);
-        std::shared_ptr<dx12::Resource> GetTexture(const std::string& name) const;
+	[[nodiscard]] TextureHandle AddTexture(std::shared_ptr<dx12::Resource> texture, dx12::ResourceViewType viewType);
+	[[nodiscard]] std::shared_ptr<dx12::Resource> GetTexture(TextureHandle handle) const;
 
-        dx12::ResourceTable& GetTextureTable();
+private:
+	std::unordered_map<TextureHandle, std::shared_ptr<dx12::Resource>> _handleToTexture;
+	TextureHandle _nextTextureHandle;
 
-    private:
-        std::unordered_map<std::string, std::shared_ptr<dx12::Resource>> _textures;
-        std::set<std::string> _uploadQueue; // use set to remove duplicates
+	std::unordered_map<std::string, TextureHandle> _uploadQueue; // use set to remove duplicates
 
-        dx12::ResourceTable _texturesTable;
-        dx12::Heap _texturesHeap;
-        std::unordered_map<std::string, std::shared_ptr<dx12::Resource>> _intermediateResources;
-    };
-}
+	ResourceTable& _resourceTable;
+	dx12::Heap _texturesHeap;
+	std::unordered_map<TextureHandle, std::shared_ptr<dx12::Resource>> _intermediateResources;
+};

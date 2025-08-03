@@ -11,6 +11,8 @@ namespace render
 {
     struct AmbientLightingPassData
     {
+        rg::ResourceId FrameBuffer;
+
         rg::ResourceId AlbedoMetallic;
         rg::ResourceId NormalRoughness;
         rg::ResourceId Depth;

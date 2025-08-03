@@ -29,6 +29,8 @@ struct ShadowData
     uint LightIndex;
 };
 
+ConstantBuffer<SceneDesc> Scene : register(b0);
+ConstantBuffer<ModelDesc> Model : register(b1);
 ConstantBuffer<ShadowData>  Shadow  : register(b3);
 StructuredBuffer<BoneDesc>  Bones   : register(t0);
 StructuredBuffer<LightDesc> Lights  : register(t1);
@@ -41,7 +43,7 @@ VSOutput main(VSinput IN)
         float4(0.0f, 1.0f, 0.0f, 0.0f),
         float4(0.0f, 0.0f, 1.0f, 0.0f),
         float4(0.0f, 0.0f, 0.0f, 1.0f));
-    if (Model.useSkinning == 1)
+    if (Model.BonesBufferIndex != -1)
     {
         boneTransform = Bones[IN.BoneIds[0]].Transform * IN.BoneWeights[0];
         boneTransform += Bones[IN.BoneIds[1]].Transform * IN.BoneWeights[1];

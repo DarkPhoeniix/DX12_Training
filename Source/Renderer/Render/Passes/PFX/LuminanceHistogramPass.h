@@ -10,6 +10,8 @@ namespace render
 {
     struct LuminanceHistogramPassData
     {
+        rg::ResourceId FrameBuffer;
+
         rg::ResourceId HDRTarget;
         rg::ResourceId LuminanceHistogram;
     };

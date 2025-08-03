@@ -53,7 +53,7 @@ namespace render
 
             commandList.SetPipelineState(_SSAOPipeline);
 
-            commandList.SetDescriptorHeaps({ context.GetResourceTable().GetDescriptorHeap(dx12::ResourceViewType::SRV).GetDXDescriptorHeap().Get() });
+            context.BindBindlessTable(commandList);
 
             commandList.SetDescriptorTable(0, aoTargetHandle);
             commandList.SetDescriptorTable(1, hdrTargetHandle);

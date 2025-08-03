@@ -10,6 +10,8 @@ namespace render
 {
     struct AverageLuminancePassData
     {
+		rg::ResourceId FrameBuffer;
+
         rg::ResourceId LuminanceHistogram;
         rg::ResourceId PrevAverageLuminance;
         rg::ResourceId AverageLuminance;

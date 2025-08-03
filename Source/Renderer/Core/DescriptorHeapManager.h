@@ -2,7 +2,7 @@
 
 #include "CommandList.h"
 
-using HeapIndex = std::uint64_t;
+using HeapIndex = std::uint32_t;
 constexpr HeapIndex InvalidHeapIndex = HeapIndex(-1);
 
 // A handle into the bindless descriptor heap, containing both CPU and GPU views.
@@ -24,7 +24,7 @@ enum class DescriptorHeapType
 class DescriptorHeapManager 
 {
 public:
-    DescriptorHeapManager(std::uint64_t maxRTVDescriptors, std::uint64_t maxDSVDescriptors, std::uint64_t maxStaticDescriptors, std::uint64_t maxDynamicDescriptors);
+    DescriptorHeapManager(std::uint32_t maxRTVDescriptors, std::uint32_t maxDSVDescriptors, std::uint32_t maxStaticDescriptors, std::uint32_t maxDynamicDescriptors);
     ~DescriptorHeapManager() = default;
 
     [[nodiscard]] DescriptorHandle AllocateStatic(DescriptorHeapType type);
@@ -43,13 +43,14 @@ private:
     struct DescriptorAllocator
     {
         DescriptorAllocator() = default;
-        DescriptorAllocator(std::uint64_t offset, std::uint64_t maxDescriptors);
+        DescriptorAllocator(std::uint32_t start, std::uint32_t maxDescriptors);
 
         HeapIndex Allocate();
         void Reset();
 
-        std::uint64_t Offset;
-        std::uint64_t MaxDescriptors;
+        std::uint32_t Start;
+        std::uint32_t Offset;
+        std::uint32_t MaxDescriptors;
         std::vector<bool> UsedDescriptors;
     };
 

@@ -24,8 +24,20 @@ namespace render
         constexpr float LOG_LUM_RANGE = (MAX_LOG_LUM - MIN_LOG_LUM);
         constexpr float RCP_LOG_LUM_RANGE = 1.0f / LOG_LUM_RANGE;
 
-        constexpr float MIDDLE_GREY = 0.18f;
         constexpr float WHITE = 3.5f;
+        constexpr float MIDDLE_GREY = 0.18f;
+        constexpr float GAMMA = 2.2f;
+
+        struct PassCB
+        {
+            float MiddleGrey;
+            float White;
+            float Gamma;
+
+            std::uint32_t HDRTextureIndex;
+            std::uint32_t AverageLuminanceBufferIndex;
+            std::uint32_t TargetTextureIndex;
+        };
     } // namespace unnamed
 
     ToneMappingPass::ToneMappingPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
@@ -38,10 +50,10 @@ namespace render
 
     void ToneMappingPass::Setup(rg::RenderPassBuilder& builder)
     {
-        _data.HDRTarget = builder.ReadResource(HDR_TARGET);
-        builder.ReadResourceNew(HDR_TARGET);
-        _data.AverageLuminance = builder.ReadResource(AVERAGE_LUM);
-        builder.ReadResourceNew(AVERAGE_LUM);
+        _data.FrameBuffer = builder.ReadResourceNew("Frame Buffer");
+
+        _data.HDRTarget = builder.ReadResourceNew(HDR_TARGET);
+        _data.AverageLuminance = builder.ReadResourceNew(AVERAGE_LUM);
 
         dx12::ResourceDescription targetDesc;
         {
@@ -57,8 +69,7 @@ namespace render
             targetDesc.SetClearValue(clearValue);
             targetDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::RenderTarget | dx12::ResourceType::Unordered);
         }
-        _data.Target = builder.CreateResource(TARGET, targetDesc);
-        builder.CreateResourceNew(TARGET, targetDesc);
+        _data.Target = builder.CreateResourceNew(TARGET, targetDesc);
     }
 
     void ToneMappingPass::Execute(rg::RenderContext& context, TaskGPU& task)
@@ -70,12 +81,14 @@ namespace render
         {
             // Copy and setup needed resources
 
-            std::shared_ptr<dx12::Resource> hdrTarget = context.GetResource(_data.HDRTarget);
-            std::shared_ptr<dx12::Resource> avgLuminance = context.GetResource(_data.AverageLuminance);
-            std::shared_ptr<dx12::Resource> target = context.GetResource(_data.Target);
+            std::shared_ptr<dx12::Resource> frameBuffer     = context.GetResourceNew(_data.FrameBuffer);
+            std::shared_ptr<dx12::Resource> hdrTarget       = context.GetResourceNew(_data.HDRTarget);
+            std::shared_ptr<dx12::Resource> avgLuminance    = context.GetResourceNew(_data.AverageLuminance);
+            std::shared_ptr<dx12::Resource> target          = context.GetResourceNew(_data.Target);
 
-            D3D12_GPU_DESCRIPTOR_HANDLE hdrTargetHandle = context.GetGPUHandle(hdrTarget->GetAsSRV());
-            D3D12_GPU_DESCRIPTOR_HANDLE targetHandle = context.GetGPUHandle(target->GetAsUAV());
+            DescriptorHandle hdrTargetHandle                = context.GetStaticResourceHandle(hdrTarget->GetAsSRV());
+            DescriptorHandle avgLuminanceHandle             = context.GetStaticResourceHandle(avgLuminance->GetAsSRV());
+            DescriptorHandle targetHandle                   = context.GetStaticResourceHandle(target->GetAsUAV());
 
             std::vector<dx12::ResourceBarrier> barriers =
             {
@@ -87,17 +100,24 @@ namespace render
 
             // Setup pipeline state
 
+            context.BindBindlessTable(commandList);
+
             commandList.SetPipelineState(_toneMappingPipeline);
 
             // Setup root signature components
 
-            commandList.SetDescriptorHeaps({ context.GetResourceTable().GetDescriptorHeap(dx12::ResourceViewType::SRV).GetDXDescriptorHeap().Get() });
+            PassCB constants =
+            {
+                .MiddleGrey = MIDDLE_GREY,
+                .White = WHITE,
+                .Gamma = GAMMA,
 
-            commandList.SetConstants(0, 1, &MIDDLE_GREY);
-            commandList.SetConstants(0, 1, &WHITE, 1);
-            commandList.SetSRV(1, avgLuminance->OffsetGPU());
-            commandList.SetDescriptorTable(2, hdrTargetHandle);
-            commandList.SetDescriptorTable(3, targetHandle);
+                .HDRTextureIndex = hdrTargetHandle.Index,
+                .AverageLuminanceBufferIndex = avgLuminanceHandle.Index,
+                .TargetTextureIndex = targetHandle.Index
+            };
+            commandList.SetCBV(0, frameBuffer->OffsetGPU());
+            commandList.SetConstants(1, 6, &constants);
 
             // Execute
 
@@ -109,9 +129,9 @@ namespace render
 
             barriers =
             {
-                { hdrTarget,      D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
-                { avgLuminance,   D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
-                { target,         D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON }
+                { hdrTarget,      D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,   D3D12_RESOURCE_STATE_COMMON },
+                { avgLuminance,   D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,   D3D12_RESOURCE_STATE_COMMON },
+                { target,         D3D12_RESOURCE_STATE_UNORDERED_ACCESS,            D3D12_RESOURCE_STATE_COMMON }
             };
             commandList.TransitionBarriers(barriers);
         }

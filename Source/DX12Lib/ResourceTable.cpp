@@ -1,3 +1,4 @@
+#include "ResourceTable.h"
 #include "DX12LibPCH.h"
 
 #include "ResourceTable.h"

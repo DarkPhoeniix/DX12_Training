@@ -1,30 +1,27 @@
 
-#define IBL_DiffuseIrradianceConvolution_RootSig \
-	"RootFlags(0), " \
-    "DescriptorTable(SRV(t0), visibility = SHADER_VISIBILITY_ALL)," \
-    "DescriptorTable(UAV(u0), visibility = SHADER_VISIBILITY_ALL)," \
-    "StaticSampler(s0," \
-        "addressU = TEXTURE_ADDRESS_CLAMP," \
-        "addressV = TEXTURE_ADDRESS_CLAMP," \
-        "addressW = TEXTURE_ADDRESS_CLAMP," \
-        "filter = FILTER_MIN_MAG_MIP_LINEAR)," \
-
+#include "../UnifiedRootSignature.hlsli"
 #include "../CommonConstants.hlsli"
 #include "../CommonFunctions.hlsli"
 
 #define THREADS_PER_DIMENSION 8
 
-Texture2D<float4> Skybox                        : register(t0);
-RWTexture2DArray<float4> DiffuseIrradianceMap   : register(u0);
+struct PassConstants
+{
+    uint SkyboxTextureIndex;
+    uint DiffuseIrradianceMapIndex;
+};
 
-SamplerState LinearSampler                      : register(s0);
+ConstantBuffer<PassConstants> PassCB : register(b1);
 
 const static float k_SampleDelta = 0.005f;
 
 [numthreads(THREADS_PER_DIMENSION, THREADS_PER_DIMENSION, 1)]
-[RootSignature(IBL_DiffuseIrradianceConvolution_RootSig)]
+[RootSignature(URootSignature)]
 void main(uint3 DTid : SV_DispatchThreadID)
 {
+    Texture2D<float4> Skybox = ResourceDescriptorHeap[PassCB.SkyboxTextureIndex];
+    RWTexture2DArray<float4> DiffuseIrradianceMap = ResourceDescriptorHeap[PassCB.DiffuseIrradianceMapIndex];
+    
     float outputWidth, outputHeight, outputArraySize;
     DiffuseIrradianceMap.GetDimensions(outputWidth, outputHeight, outputArraySize);
 
@@ -44,7 +41,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
             float2 skyboxTexel = SampleSphericalMap(sampleVec);
             
             // clamp upper value to 12 to avoid convolution visual artifacts
-            float3 value = min(float3(12.0f, 12.0f, 12.0f), max(0.0f, Skybox.SampleLevel(LinearSampler, skyboxTexel, 0).rgb));
+            float3 value = min(float3(12.0f, 12.0f, 12.0f), max(0.0f, Skybox.SampleLevel(LinearClampSampler, skyboxTexel, 0).rgb));
             irradiance +=  value * cos(theta) * sin(theta);
             sampleCount++;
         }

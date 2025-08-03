@@ -106,8 +106,9 @@ namespace render
         PIXBeginEvent(commandList.GetDXCommandList().Get(), 1, "Shadow Pass | Culling");
 
         // Setup pipeline
+        context.BindBindlessTable(commandList);
         commandList.SetPipelineState(_cullShadowsPipeline);
-        commandList.SetDescriptorHeaps({ context.GetResourceTable().GetDescriptorHeap(dx12::ResourceViewType::SRV).GetDXDescriptorHeap().Get() });
+
 
         CacheGPU::DataHandle sceneDataHandle = context.GetCache().GetResourcePlacement("SceneCB");
         commandList.SetCBV(0, sceneDataHandle.DataGPU);

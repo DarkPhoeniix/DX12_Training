@@ -62,11 +62,11 @@
         "filter = FILTER_COMPARISON_MIN_MAG_MIP_LINEAR," \
         "comparisonFunc = COMPARISON_LESS)"
 
-struct FrameCB
+struct FrameConstants
 {
-    row_major matrix ViewProjection;
     row_major matrix View;
     row_major matrix Projection;
+    row_major matrix ViewProjection;
     
     row_major matrix InvView;
     row_major matrix InvProjection;
@@ -78,10 +78,14 @@ struct FrameCB
     float2 ReciprocalWindowSize;
     float2 NearFar;
     
+    uint InstancesBufferIndex;
+    uint LightsBufferIndex;
     uint LightsNum;
+    
+    float DeltaTime;
 };
 
-ConstantBuffer<FrameCB> FrameConstants : register(b0);
+ConstantBuffer<FrameConstants> FrameCB      : register(b0);
 
 SamplerState PointClampSampler              : register(s0);
 SamplerState PointWrapSampler               : register(s1);

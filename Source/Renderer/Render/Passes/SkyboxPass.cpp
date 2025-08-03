@@ -13,6 +13,16 @@
 #include "RenderGraph/RenderContext.h"
 #include "RenderGraph/RenderPassBuilder.h"
 
+namespace
+{
+    struct PassConstants
+    {
+        std::uint32_t DepthTextureIndex;
+        std::uint32_t SkyboxTextureIndex;
+        std::uint32_t TargetTextureIndex;
+    };
+}
+
 namespace render
 {
     SkyboxPass::SkyboxPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
@@ -25,8 +35,10 @@ namespace render
 
     void SkyboxPass::Setup(rg::RenderPassBuilder& builder)
     {
-        _data.Depth = builder.ReadResource(DEPTH);
-        _data.HDRTarget = builder.WriteResource(HDR_TARGET);
+		_data.FrameBuffer = builder.ReadResourceNew("Frame Buffer");
+
+        _data.Depth = builder.ReadResourceNew(DEPTH);
+        _data.HDRTarget = builder.WriteResourceNew(HDR_TARGET);
     }
 
     void SkyboxPass::Execute(rg::RenderContext& context, TaskGPU& task)
@@ -39,14 +51,14 @@ namespace render
             std::shared_ptr<scene::Entity> entity = _scene->FindNodeByComponentName("Skybox");
             std::shared_ptr<scene::Skybox> skyboxComponent = entity->GetComponentAs<scene::Skybox>("Skybox");
 
-            scene::TextureManager& textureManager = _scene->GetCache().GetTextureManager();
-            std::shared_ptr<dx12::Resource> skybox = textureManager.GetTexture(skyboxComponent->SkydomeTexture);
-            std::shared_ptr<dx12::Resource> target = context.GetResource(_data.HDRTarget);
-            std::shared_ptr<dx12::Resource> depth = context.GetResource(_data.Depth);
+			std::shared_ptr<dx12::Resource> frameBuffer = context.GetResourceNew(_data.FrameBuffer);
+            std::shared_ptr<dx12::Resource> skybox = context.GetTextureManager().GetTexture(skyboxComponent->SkydomeTextureHandle);
+            std::shared_ptr<dx12::Resource> target = context.GetResourceNew(_data.HDRTarget);
+            std::shared_ptr<dx12::Resource> depth = context.GetResourceNew(_data.Depth);
 
-            D3D12_GPU_DESCRIPTOR_HANDLE targetHandle = context.GetGPUHandle(target->GetAsUAV());
-            D3D12_GPU_DESCRIPTOR_HANDLE depthHandle = context.GetGPUHandle(depth->GetAsSRV());
-            D3D12_GPU_DESCRIPTOR_HANDLE skyboxHandle = context.GetGPUHandle(skybox->GetAsSRV());
+            DescriptorHandle targetHandle = context.GetStaticResourceHandle(target->GetAsUAV());
+            DescriptorHandle depthHandle = context.GetStaticResourceHandle(depth->GetAsSRV());
+            DescriptorHandle skyboxHandle = context.GetStaticResourceHandle(skybox->GetAsSRV());
 
             std::vector<dx12::ResourceBarrier> barriers =
             {
@@ -56,17 +68,17 @@ namespace render
             };
             commandList.TransitionBarriers(barriers);
 
+            context.BindBindlessTable(commandList);
             commandList.SetPipelineState(_skyboxPipeline);
 
-            CacheGPU::DataHandle sceneDataHandle = context.GetCache().GetResourcePlacement("SceneCB");
-            commandList.SetCBV(0, sceneDataHandle.DataGPU);
-
-            // Setup textures
-            commandList.SetDescriptorHeaps({ context.GetResourceTable().GetDescriptorHeap(dx12::ResourceViewType::SRV).GetDXDescriptorHeap().Get() });
-
-            commandList.SetDescriptorTable(3, depthHandle);
-            commandList.SetDescriptorTable(4, skyboxHandle);
-            commandList.SetDescriptorTable(5, targetHandle);
+            commandList.SetCBV(0, frameBuffer->OffsetGPU());
+            PassConstants passCB =
+            {
+                .DepthTextureIndex = depthHandle.Index,
+				.SkyboxTextureIndex = skyboxHandle.Index,
+				.TargetTextureIndex = targetHandle.Index
+            };
+			commandList.SetConstants(1, 3, &passCB);
 
             DirectX::XMUINT2 viewportSize = _camera->GetViewport().GetSize();
             int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 8.0f);

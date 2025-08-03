@@ -171,7 +171,7 @@ namespace render
             };
             commandList.TransitionBarriers(barriers);
 
-            commandList.SetDescriptorHeaps({ context.GetResourceTable().GetDescriptorHeap(dx12::ResourceViewType::SRV).GetDXDescriptorHeap().Get() });
+            context.BindBindlessTable(commandList);
 
             for (int x = 0; x < 2; ++x)
             {

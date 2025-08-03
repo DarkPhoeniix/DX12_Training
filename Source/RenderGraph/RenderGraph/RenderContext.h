@@ -2,6 +2,7 @@
 
 #include "Core/ResourceTable.h"
 #include "ResourceTable.h"
+#include "Core/TextureManager.h"
 #include "Render/Frame/CacheGPU.h"
 
 namespace rg
@@ -14,11 +15,12 @@ namespace rg
     class RenderContext
     {
     public:
-        RenderContext(ResourceTable& resourceTable);
+        RenderContext(ResourceTable& resourceTable, TextureManager& textureManager);
 
         std::uint32_t GetFrameIndex() const;
 
-        dx12::ResourceTable& GetResourceTable();
+        ResourceTable& GetResourceTable();
+		TextureManager& GetTextureManager();
         CacheGPU& GetCache();
 
         void BindBindlessTable(dx12::CommandList& commandList) const;
@@ -73,5 +75,6 @@ namespace rg
         CacheGPU _cache[dx12::BACK_BUFFER_COUNT];
 
         ResourceTable& _resourceTableNew;
+		TextureManager& _textureManager;
     };
 } // namespace rg

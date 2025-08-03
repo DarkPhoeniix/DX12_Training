@@ -7,7 +7,17 @@ class ResourceTable
 {
 public:
     ResourceTable(DescriptorHeapManager& descriptorHeapManager);
+	ResourceTable(const ResourceTable&) = delete;
+	ResourceTable(ResourceTable&&) noexcept = default;
     ~ResourceTable() = default;
+
+	ResourceTable& operator=(const ResourceTable&) = delete;
+	ResourceTable& operator=(ResourceTable&&) noexcept = default;
+
+    void Reset();
+    void ResetTransientResources();
+
+    const dx12::DescriptorHeap& GetShaderResourcesDescriptorHeap() const;
 
     template<typename T> requires (dx12::ResourceViewConcept<T>)
         DescriptorHandle AddStaticResourceView(const T& view);
@@ -15,18 +25,24 @@ public:
         DescriptorHandle AddTransientResourceView(const T& view);
 
     template<typename T> requires (dx12::ResourceViewConcept<T>)
-        constexpr DescriptorHandle GetResourceHandle(const T& desc) const;
-
-    const dx12::DescriptorHeap& GetShaderResourcesDescriptorHeap() const;
+        constexpr DescriptorHandle GetStaticResourceHandle(const T& desc);
+    template<typename T> requires (dx12::ResourceViewConcept<T>)
+        constexpr DescriptorHandle GetTransientResourceHandle(const T& desc);
 
 private:
     DescriptorHeapManager& _descriptorHeapManager;
 
-    std::unordered_map<dx12::ResourceID, DescriptorHandle> _RTVs;
-    std::unordered_map<dx12::ResourceID, DescriptorHandle> _DSVs;
-    std::unordered_map<dx12::ResourceID, DescriptorHandle> _CBVs;
-    std::unordered_map<dx12::ResourceID, DescriptorHandle> _SRVs;
-    std::unordered_map<dx12::ResourceID, DescriptorHandle> _UAVs;
+    std::unordered_map<dx12::ResourceID, DescriptorHandle> _staticRTVs;
+    std::unordered_map<dx12::ResourceID, DescriptorHandle> _staticDSVs;
+    std::unordered_map<dx12::ResourceID, DescriptorHandle> _staticCBVs;
+    std::unordered_map<dx12::ResourceID, DescriptorHandle> _staticSRVs;
+    std::unordered_map<dx12::ResourceID, DescriptorHandle> _staticUAVs;
+
+    std::unordered_map<dx12::ResourceID, DescriptorHandle> _transientRTVs;
+    std::unordered_map<dx12::ResourceID, DescriptorHandle> _transientDSVs;
+    std::unordered_map<dx12::ResourceID, DescriptorHandle> _transientCBVs;
+    std::unordered_map<dx12::ResourceID, DescriptorHandle> _transientSRVs;
+    std::unordered_map<dx12::ResourceID, DescriptorHandle> _transientUAVs;
 };
 
 #include "ResourceTable.inl"

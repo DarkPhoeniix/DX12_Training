@@ -70,3 +70,27 @@ const dx12::DescriptorHeap& ResourceTable::GetShaderResourcesDescriptorHeap() co
 {
     return _descriptorHeapManager.GetShaderResourcesDescriptorHeap();
 }
+
+void ResourceTable::Reset()
+{
+    _descriptorHeapManager.Reset();
+
+    _staticRTVs.clear();
+    _staticDSVs.clear();
+    _staticCBVs.clear();
+    _staticSRVs.clear();
+    _staticUAVs.clear();
+
+    ResetTransientResources();
+}
+
+void ResourceTable::ResetTransientResources()
+{
+    _descriptorHeapManager.ResetTransient();
+
+    _transientRTVs.clear();
+    _transientDSVs.clear();
+    _transientCBVs.clear();
+    _transientSRVs.clear();
+    _transientUAVs.clear();
+}

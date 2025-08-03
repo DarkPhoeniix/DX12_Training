@@ -26,6 +26,7 @@ struct Constants
     float Bias;
 };
 
+ConstantBuffer<SceneDesc> Scene : register(b0);
 ConstantBuffer<Constants> CB    : register(b1);
 StructuredBuffer<float4> Kernel : register(t0);
 StructuredBuffer<float4> Noise  : register(t1);

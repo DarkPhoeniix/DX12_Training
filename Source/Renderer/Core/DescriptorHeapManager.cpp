@@ -2,7 +2,7 @@
 
 #include "DescriptorHeapManager.h"
 
-DescriptorHeapManager::DescriptorHeapManager(std::uint64_t maxRTVDescriptors, std::uint64_t maxDSVDescriptors, std::uint64_t maxStaticDescriptors, std::uint64_t maxDynamicDescriptors)
+DescriptorHeapManager::DescriptorHeapManager(std::uint32_t maxRTVDescriptors, std::uint32_t maxDSVDescriptors, std::uint32_t maxStaticDescriptors, std::uint32_t maxDynamicDescriptors)
     : _frameIndex(0)
 {
     _RTVAllocator = DescriptorAllocator(0, maxRTVDescriptors);
@@ -76,8 +76,8 @@ DescriptorHandle DescriptorHeapManager::AllocateStatic(DescriptorHeapType type)
 
 DescriptorHandle DescriptorHeapManager::AllocateTransient(DescriptorHeapType type)
 {
-    std::uint64_t index = _dynamicAllocator[_frameIndex].Allocate();
-    FAIL(index != std::uint64_t(-1), "Failed to allocate transient descriptor");
+    std::uint32_t index = _dynamicAllocator[_frameIndex].Allocate();
+    FAIL(index != std::uint32_t(-1), "Failed to allocate transient descriptor");
 
     DescriptorHandle handle =
     {
@@ -124,8 +124,9 @@ const dx12::DescriptorHeap& DescriptorHeapManager::GetShaderResourcesDescriptorH
     return _shaderResourcesDescriptorHeap;
 }
 
-DescriptorHeapManager::DescriptorAllocator::DescriptorAllocator(std::uint64_t offset, std::uint64_t maxDescriptors)
-    : Offset(offset)
+DescriptorHeapManager::DescriptorAllocator::DescriptorAllocator(std::uint32_t start, std::uint32_t maxDescriptors)
+    : Start(start)
+    , Offset(start)
     , MaxDescriptors(maxDescriptors)
     , UsedDescriptors(maxDescriptors, false)
 {
@@ -151,5 +152,6 @@ HeapIndex DescriptorHeapManager::DescriptorAllocator::Allocate()
 
 void DescriptorHeapManager::DescriptorAllocator::Reset()
 {
+    Offset = Start;
     UsedDescriptors.assign(MaxDescriptors, false);
 }

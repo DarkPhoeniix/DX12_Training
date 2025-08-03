@@ -7,6 +7,7 @@
 #include "Scene/Entity/Components/Camera.h"
 #include "Scene/Scene.h"
 #include "Scene/SceneLoader.h"
+#include "Core/TextureManager.h"
 #include "Window/IWindowEventListener.h"
 
 #include "RenderGraph/RenderGraph.h"
@@ -42,6 +43,8 @@ namespace render
         void OnLoadScene(const std::string& filepath) override;
 
     private:
+        void UpdateSceneBuffers();
+
         void UpdateEntity(std::shared_ptr<scene::Entity> entity);
         void UpdateBoundingVolumes(std::shared_ptr<scene::Entity> entity);
 
@@ -52,6 +55,10 @@ namespace render
         HWND _windowHandle;
 
         Frame* _currentFrame;
+
+        std::shared_ptr<dx12::Resource> _frameBuffer;
+
+		TextureManager _textureManagerNew;
 
         DescriptorHeapManager _descriptorHeapManager;
         ResourceTable _resourceTableNew;
@@ -72,5 +79,13 @@ namespace render
         float _deltaTime;
 
         bool _contentLoaded;
+
+        enum class SceneBufferType
+        {
+            Model,
+            Light,
+            Count
+        };
+        std::array<std::shared_ptr<dx12::Resource>, static_cast<size_t>(SceneBufferType::Count)> _sceneBuffers;
     };
 } // namespace render

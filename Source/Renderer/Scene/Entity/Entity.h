@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Scene/SceneCache.h"
 #include "Scene/Entity/Components/IComponent.h"
 #include "Scene/Entity/Components/Transformation.h"
 

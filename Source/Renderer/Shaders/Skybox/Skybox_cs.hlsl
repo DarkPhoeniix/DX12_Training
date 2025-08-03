@@ -1,13 +1,18 @@
 
-#include "Skybox_rootsig.hlsli"
+#include "../UnifiedRootSignature.hlsli"
 #include "../CommonResources.hlsli"
 #include "../CommonConstants.hlsli"
 
 #include "../DepthFuncs.hlsli"
 
-Texture2D<float4> DepthTexture      : register(t1);
-Texture2D<float4> SkyboxTexture : register(t2);
-RWTexture2D<float4> TargetTexture   : register(u0);
+struct PassConstants
+{
+    uint DepthTextureIndex;
+    uint SkyboxTextureIndex;
+    uint TargetTextureIndex;
+};
+
+ConstantBuffer<PassConstants> PassCB : register(b1);
 
 float2 SampleSphericalMap(float3 v)
 {
@@ -19,15 +24,19 @@ float2 SampleSphericalMap(float3 v)
 
 SamplerState LinearSampler : register(s0);
 
-[RootSignature(Skybox_RootSig)]
+[RootSignature(URootSignature)]
 [numthreads(8, 8, 1)]
 void main(uint3 DTid : SV_DispatchThreadID)
 {
-    if (DTid.x > Scene.WindowSize.x || DTid.y > Scene.WindowSize.y)
+    if (DTid.x > FrameCB.WindowSize.x || DTid.y > FrameCB.WindowSize.y)
     {
         return;
     }
     
+    Texture2D<float4> DepthTexture      = ResourceDescriptorHeap[PassCB.DepthTextureIndex];
+    Texture2D<float4> SkyboxTexture     = ResourceDescriptorHeap[PassCB.SkyboxTextureIndex];
+    RWTexture2D<float4> TargetTexture   = ResourceDescriptorHeap[PassCB.TargetTextureIndex];
+
     float depth = DepthTexture.Load(uint3(DTid.xy, 0)).r;
     
     if (depth != 1.0f)
@@ -35,8 +44,8 @@ void main(uint3 DTid : SV_DispatchThreadID)
         return;
     }
     
-    float4 pos = ReconstructPosW(depth, DTid.xy, Scene.WindowSize, Scene.InvProjection, Scene.InvView);
-    float4 dir = normalize(pos - Scene.EyePosition);
+    float4 pos = ReconstructPosW(depth, DTid.xy, FrameCB.WindowSize, FrameCB.InvProjection, FrameCB.InvView);
+    float4 dir = normalize(pos - FrameCB.EyePosition);
     uint x, y, z;
     SkyboxTexture.GetDimensions(0, x, y, z);
     float2 skyboxTexel = SampleSphericalMap(dir.xyz);

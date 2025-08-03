@@ -13,9 +13,10 @@ namespace
 
 namespace rg
 {
-    RenderContext::RenderContext(ResourceTable& resourceTable)
+    RenderContext::RenderContext(ResourceTable& resourceTable, TextureManager& textureManager)
         : _currentFrameIndex(0)
         , _resourceTableNew(resourceTable)
+		, _textureManager(textureManager)
     {
         for (dx12::ResourceTable& table : _resourceTable)
         {
@@ -45,9 +46,14 @@ namespace rg
         return _currentFrameIndex;
     }
 
-    dx12::ResourceTable& RenderContext::GetResourceTable()
+    ResourceTable& RenderContext::GetResourceTable()
     {
-        return _resourceTable[_currentFrameIndex];
+        return _resourceTableNew;
+    }
+
+    TextureManager& RenderContext::GetTextureManager()
+    {
+		return _textureManager;
     }
 
     CacheGPU& RenderContext::GetCache()
@@ -176,27 +182,27 @@ namespace rg
 
     const DescriptorHandle& RenderContext::GetStaticResourceHandle(dx12::RenderTargetView rtv) const
     {
-        return _resourceTableNew.GetResourceHandle(rtv);
+        return _resourceTableNew.GetStaticResourceHandle(rtv);
     }
 
     const DescriptorHandle& RenderContext::GetStaticResourceHandle(dx12::DepthStencilView dsv) const
     {
-        return _resourceTableNew.GetResourceHandle(dsv);
+        return _resourceTableNew.GetStaticResourceHandle(dsv);
     }
 
     const DescriptorHandle& RenderContext::GetStaticResourceHandle(dx12::ShaderResourceView srv) const
     {
-        return _resourceTableNew.GetResourceHandle(srv);
+        return _resourceTableNew.GetStaticResourceHandle(srv);
     }
 
     const DescriptorHandle& RenderContext::GetStaticResourceHandle(dx12::UnorderedAccessView uav) const
     {
-        return _resourceTableNew.GetResourceHandle(uav);
+        return _resourceTableNew.GetStaticResourceHandle(uav);
     }
 
     const DescriptorHandle& RenderContext::GetStaticResourceHandle(dx12::ConstantBufferView cbv) const
     {
-        return _resourceTableNew.GetResourceHandle(cbv);
+        return _resourceTableNew.GetStaticResourceHandle(cbv);
     }
 
     ResourceId RenderContext::CreateResource(const std::string& name, dx12::ResourceDescription desc)

@@ -8,7 +8,7 @@ DescriptorHandle ResourceTable::AddStaticResourceView(const T& view)
     {
         DescriptorHandle handle = _descriptorHeapManager.AllocateStatic(DescriptorHeapType::RTV);
         dx12::Device::CreateRenderTargetView(view, handle.CpuHandle);
-        _RTVs[view.Owner->GetID()] = handle;
+        _staticRTVs[view.Owner->GetID()] = handle;
 
         return handle;
     }
@@ -16,7 +16,7 @@ DescriptorHandle ResourceTable::AddStaticResourceView(const T& view)
     {
         DescriptorHandle handle = _descriptorHeapManager.AllocateStatic(DescriptorHeapType::DSV);
         dx12::Device::CreateDepthStencilView(view, handle.CpuHandle);
-        _DSVs[view.Owner->GetID()] = handle;
+        _staticDSVs[view.Owner->GetID()] = handle;
 
         return handle;
     }
@@ -24,7 +24,7 @@ DescriptorHandle ResourceTable::AddStaticResourceView(const T& view)
     {
         DescriptorHandle handle = _descriptorHeapManager.AllocateStatic(DescriptorHeapType::Static);
         dx12::Device::CreateConstantBufferView(view, handle.CpuHandle);
-        _CBVs[view.Owner->GetID()] = handle;
+        _staticCBVs[view.Owner->GetID()] = handle;
 
         return handle;
     }
@@ -32,7 +32,7 @@ DescriptorHandle ResourceTable::AddStaticResourceView(const T& view)
     {
         DescriptorHandle handle = _descriptorHeapManager.AllocateStatic(DescriptorHeapType::Static);
         dx12::Device::CreateShaderResourceView(view, handle.CpuHandle);
-        _SRVs[view.Owner->GetID()] = handle;
+        _staticSRVs[view.Owner->GetID()] = handle;
 
         return handle;
     }
@@ -40,91 +40,167 @@ DescriptorHandle ResourceTable::AddStaticResourceView(const T& view)
     {
         DescriptorHandle handle = _descriptorHeapManager.AllocateStatic(DescriptorHeapType::Static);
         dx12::Device::CreateUnorderedAccessView(view, handle.CpuHandle);
-        _UAVs[view.Owner->GetID()] = handle;
+        _staticUAVs[view.Owner->GetID()] = handle;
 
         return handle;
+    }
+    else
+    {
+        LOG_CRITICAL("Unsupported resource view type.");
+        return {};
     }
 }
 
 template<typename T> requires (dx12::ResourceViewConcept<T>)
 DescriptorHandle ResourceTable::AddTransientResourceView(const T& view)
 {
-    DescriptorHandle handle = _descriptorHeapManager.AllocateTransient();
-    dx12::Device::CreateRenderTargetView(view, handle);
-    // TODO: ResourceTable::AddTransientResourceView
-
     if constexpr (std::same_as<T, dx12::RenderTargetView>)
     {
-        _RTVs[view.Owner->GetID()] = handle;
+        DescriptorHandle handle = _descriptorHeapManager.AllocateTransient(DescriptorHeapType::RTV);
+        dx12::Device::CreateRenderTargetView(view, handle.CpuHandle);
+        _transientRTVs[view.Owner->GetID()] = handle;
+
+        return handle;
     }
     else if constexpr (std::same_as<T, dx12::DepthStencilView>)
     {
-        _DSVs[view.Owner->GetID()] = handle;
+        DescriptorHandle handle = _descriptorHeapManager.AllocateTransient(DescriptorHeapType::DSV);
+        dx12::Device::CreateDepthStencilView(view, handle.CpuHandle);
+        _transientDSVs[view.Owner->GetID()] = handle;
+
+        return handle;
     }
     else if constexpr (std::same_as<T, dx12::ConstantBufferView>)
     {
-        _CBVs[view.Owner->GetID()] = handle;
+        DescriptorHandle handle = _descriptorHeapManager.AllocateTransient(DescriptorHeapType::Static);
+        dx12::Device::CreateConstantBufferView(view, handle.CpuHandle);
+        _transientCBVs[view.Owner->GetID()] = handle;
+
+        return handle;
     }
     else if constexpr (std::same_as<T, dx12::ShaderResourceView>)
     {
-        _SRVs[view.Owner->GetID()] = handle;
+        DescriptorHandle handle = _descriptorHeapManager.AllocateTransient(DescriptorHeapType::Static);
+        dx12::Device::CreateShaderResourceView(view, handle.CpuHandle);
+        _transientSRVs[view.Owner->GetID()] = handle;
+
+        return handle;
     }
     else if constexpr (std::same_as<T, dx12::UnorderedAccessView>)
     {
-        _UAVs[view.Owner->GetID()] = handle;
-    }
+        DescriptorHandle handle = _descriptorHeapManager.AllocateTransient(DescriptorHeapType::Static);
+        dx12::Device::CreateUnorderedAccessView(view, handle.CpuHandle);
+        _transientUAVs[view.Owner->GetID()] = handle;
 
-    return handle;
+        return handle;
+    }
+    else
+    {
+        LOG_CRITICAL("Unsupported resource view type.");
+        return {};
+    }
 }
 
 template<typename T> requires (dx12::ResourceViewConcept<T>)
-constexpr DescriptorHandle ResourceTable::GetResourceHandle(const T& desc) const
+constexpr DescriptorHandle ResourceTable::GetStaticResourceHandle(const T& desc)
 {
     if constexpr (std::same_as<T, dx12::RenderTargetView>)
     {
-        auto it = _RTVs.find(desc.Owner->GetID());
-        if (it != _RTVs.end())
+        auto it = _staticRTVs.find(desc.Owner->GetID());
+        if (it != _staticRTVs.end())
         {
             return it->second;
         }
-        LOG_ERROR("Render Target View not found in Resource Table.");
+        LOG_WARNING("Render Target View not found in Resource Table.");
     }
     else if constexpr (std::same_as<T, dx12::DepthStencilView>)
     {
-        auto it = _DSVs.find(desc.Owner->GetID());
-        if (it != _DSVs.end())
+        auto it = _staticDSVs.find(desc.Owner->GetID());
+        if (it != _staticDSVs.end())
         {
             return it->second;
         }
-        LOG_ERROR("Depth Stencil View not found in Resource Table.");
+        LOG_WARNING("Depth Stencil View not found in Resource Table.");
     }
     else if constexpr (std::same_as<T, dx12::ConstantBufferView>)
     {
-        auto it = _CBVs.find(desc.Owner->GetID());
-        if (it != _CBVs.end())
+        auto it = _staticCBVs.find(desc.Owner->GetID());
+        if (it != _staticCBVs.end())
         {
             return it->second;
         }
-        LOG_ERROR("Constant Buffer View not found in Resource Table.");
+        LOG_WARNING("Constant Buffer View not found in Resource Table.");
     }
     else if constexpr (std::same_as<T, dx12::ShaderResourceView>)
     {
-        auto it = _SRVs.find(desc.Owner->GetID());
-        if (it != _SRVs.end())
+        auto it = _staticSRVs.find(desc.Owner->GetID());
+        if (it != _staticSRVs.end())
         {
             return it->second;
         }
-        LOG_ERROR("Shader Resource View not found in Resource Table.");
+        LOG_WARNING("Shader Resource View not found in Resource Table.");
     }
     else if constexpr (std::same_as<T, dx12::UnorderedAccessView>)
     {
-        auto it = _UAVs.find(desc.Owner->GetID());
-        if (it != _UAVs.end())
+        auto it = _staticUAVs.find(desc.Owner->GetID());
+        if (it != _staticUAVs.end())
         {
             return it->second;
         }
-        LOG_ERROR("Unordered Access View not found in Resource Table.");
+        LOG_WARNING("Unordered Access View not found in Resource Table.");
     }
 
-    return DescriptorHandle();
+    return AddStaticResourceView(desc);
+}
+
+template<typename T> requires (dx12::ResourceViewConcept<T>)
+constexpr DescriptorHandle ResourceTable::GetTransientResourceHandle(const T& desc)
+{
+    if constexpr (std::same_as<T, dx12::RenderTargetView>)
+    {
+        auto it = _transientRTVs.find(desc.Owner->GetID());
+        if (it != _transientRTVs.end())
+        {
+            return it->second;
+        }
+        LOG_WARNING("Render Target View not found in Resource Table.");
+    }
+    else if constexpr (std::same_as<T, dx12::DepthStencilView>)
+    {
+        auto it = _transientDSVs.find(desc.Owner->GetID());
+        if (it != _transientDSVs.end())
+        {
+            return it->second;
+        }
+        LOG_WARNING("Depth Stencil View not found in Resource Table.");
+    }
+    else if constexpr (std::same_as<T, dx12::ConstantBufferView>)
+    {
+        auto it = _transientCBVs.find(desc.Owner->GetID());
+        if (it != _transientCBVs.end())
+        {
+            return it->second;
+        }
+        LOG_WARNING("Constant Buffer View not found in Resource Table.");
+    }
+    else if constexpr (std::same_as<T, dx12::ShaderResourceView>)
+    {
+        auto it = _transientSRVs.find(desc.Owner->GetID());
+        if (it != _transientSRVs.end())
+        {
+            return it->second;
+        }
+        LOG_WARNING("Shader Resource View not found in Resource Table.");
+    }
+    else if constexpr (std::same_as<T, dx12::UnorderedAccessView>)
+    {
+        auto it = _transientUAVs.find(desc.Owner->GetID());
+        if (it != _transientUAVs.end())
+        {
+            return it->second;
+        }
+        LOG_WARNING("Unordered Access View not found in Resource Table.");
+    }
+
+    return AddTransientResourceView(desc);
 }

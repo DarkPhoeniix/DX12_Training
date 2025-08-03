@@ -215,9 +215,6 @@
     <ClCompile Include="Scene\Scene.cpp">
       <Filter>Scene</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\SceneCache.cpp">
-      <Filter>Scene</Filter>
-    </ClCompile>
     <ClCompile Include="Window\Win32Window.cpp">
       <Filter>Window</Filter>
     </ClCompile>
@@ -363,9 +360,6 @@
       <Filter>Scene\Entity</Filter>
     </ClInclude>
     <ClInclude Include="Scene\Scene.h">
-      <Filter>Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="Scene\SceneCache.h">
       <Filter>Scene</Filter>
     </ClInclude>
     <ClInclude Include="Window\IWindowEventListener.h">

@@ -10,6 +10,8 @@ namespace render
 {
     struct SkyboxPassData
     {
+		rg::ResourceId FrameBuffer;
+
         rg::ResourceId Depth;
         rg::ResourceId HDRTarget;
     };
