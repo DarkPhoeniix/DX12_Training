@@ -55,9 +55,6 @@ namespace render
         //    }
         //}
 
-        //_data.HDRTarget = builder.WriteResource(HDR_TARGET);
-        //builder.WriteResourceNew(HDR_TARGET);
-
         _data.HDRTarget = builder.WriteResourceNew(HDR_TARGET);
     }
 

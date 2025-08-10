@@ -261,12 +261,14 @@ namespace rg
         return IdIt->second;
     }
 
-    ResourceId RenderContext::CreateResourceNew(const std::string& name, dx12::ResourceDescription desc)
+    ResourceId RenderContext::CreateResourceNew(const std::string& name, dx12::ResourceDescription desc, void* data /*= nullptr*/, size_t dataSize /*= 0*/)
     {
         ASSERT(!name.empty(), "Resource name cannot be empty.");
 
         std::shared_ptr<dx12::Resource> resource = ResourceFactory::Create(name, desc);
         resource->CreateCommitedResource();
+
+        FillResource(resource, data, dataSize);
 
         _resourcesNew[resource->GetID()] = resource;
         {
@@ -311,5 +313,18 @@ namespace rg
         }
 
         return IdIt->second;
+    }
+
+    void RenderContext::FillResource(std::shared_ptr<dx12::Resource> resource, void* data, size_t dataSize)
+    {
+        if (!data)
+        {
+            return;
+        }
+
+		void* mappedData = resource->Map<void>();
+		memcpy(mappedData, data, dataSize);
+
+        resource->Unmap();
     }
 } // namespace rg

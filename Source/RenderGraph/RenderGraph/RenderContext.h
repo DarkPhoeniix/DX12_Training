@@ -60,9 +60,11 @@ namespace rg
         ResourceId ReadResource(const std::string& name);
         ResourceId WriteResource(const std::string& name);
 
-        ResourceId CreateResourceNew(const std::string& name, dx12::ResourceDescription desc);
+        ResourceId CreateResourceNew(const std::string& name, dx12::ResourceDescription desc, void* data = nullptr, size_t dataSize = 0);
         ResourceId ReadResourceNew(const std::string& name);
         ResourceId WriteResourceNew(const std::string& name);
+
+        void FillResource(std::shared_ptr<dx12::Resource> resource, void* data, size_t dataSize = 0);
 
         std::unordered_map<std::string, ResourceId> _mapNameToId;
         std::unordered_map<ResourceId, std::shared_ptr<dx12::Resource>> _resources;

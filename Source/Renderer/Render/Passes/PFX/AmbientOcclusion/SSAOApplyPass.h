@@ -9,17 +9,18 @@
 
 namespace render
 {
-    struct SSAOComputePassData
+    struct SSAOApplyPassData
     {
-        rg::ResourceId NormalRoughness;
-        rg::ResourceId Depth;
+        rg::ResourceId FrameBuffer;
+
         rg::ResourceId AOTarget;
+        rg::ResourceId HDRTarget;
     };
 
-    class SSAOComputePass : public rg::RenderPass<SSAOComputePassData>
+    class SSAOApplyPass : public rg::RenderPass<SSAOApplyPassData>
     {
     public:
-        SSAOComputePass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
+        SSAOApplyPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
 
         // Inherited via RenderPass
         void Setup(rg::RenderPassBuilder& builder) override;
@@ -27,9 +28,6 @@ namespace render
 
     private:
         dx12::PipelineState _SSAOPipeline;
-
-        std::shared_ptr<dx12::Resource> _noise;
-        std::shared_ptr<dx12::Resource> _kernels;
 
         std::shared_ptr<scene::Scene> _scene;
         scene::Camera* _camera;

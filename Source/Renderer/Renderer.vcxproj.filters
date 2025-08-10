@@ -122,7 +122,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RendererPCH.cpp" />
-    <ClCompile Include="Render\Passes\PFX\AverageLuminancePass.cpp">
+    <ClCompile Include="Render\Passes\PFX\ToneMapping\AverageLuminancePass.cpp">
       <Filter>Render\Passes</Filter>
     </ClCompile>
     <ClCompile Include="Render\Passes\Debug\DebugBoundingVolumePass.cpp">
@@ -134,10 +134,10 @@
     <ClCompile Include="Render\Passes\GeometryPass.cpp">
       <Filter>Render\Passes</Filter>
     </ClCompile>
-    <ClCompile Include="Render\Passes\FXAAPass.cpp">
+    <ClCompile Include="Render\Passes\PFX\AntiAliasing\FXAAPass.cpp">
       <Filter>Render\Passes</Filter>
     </ClCompile>
-    <ClCompile Include="Render\Passes\PFX\LuminanceHistogramPass.cpp">
+    <ClCompile Include="Render\Passes\PFX\ToneMapping\LuminanceHistogramPass.cpp">
       <Filter>Render\Passes</Filter>
     </ClCompile>
     <ClCompile Include="Render\Passes\LightingPass.cpp">
@@ -146,19 +146,19 @@
     <ClCompile Include="Render\Passes\PassResources.cpp">
       <Filter>Render\Passes</Filter>
     </ClCompile>
-    <ClCompile Include="Render\Passes\ShadowCullPass.cpp">
+    <ClCompile Include="Render\Passes\Shadows\ShadowCullPass.cpp">
       <Filter>Render\Passes</Filter>
     </ClCompile>
-    <ClCompile Include="Render\Passes\ShadowClearPass.cpp">
+    <ClCompile Include="Render\Passes\Shadows\ShadowClearPass.cpp">
       <Filter>Render\Passes</Filter>
     </ClCompile>
-    <ClCompile Include="Render\Passes\ShadowDrawPass.cpp">
+    <ClCompile Include="Render\Passes\Shadows\ShadowDrawPass.cpp">
       <Filter>Render\Passes</Filter>
     </ClCompile>
     <ClCompile Include="Render\Passes\SkyboxPass.cpp">
       <Filter>Render\Passes</Filter>
     </ClCompile>
-    <ClCompile Include="Render\Passes\PFX\ToneMappingPass.cpp">
+    <ClCompile Include="Render\Passes\PFX\ToneMapping\ToneMappingPass.cpp">
       <Filter>Render\Passes</Filter>
     </ClCompile>
     <ClCompile Include="Render\Frame\AllocatorPool.cpp">
@@ -253,9 +253,9 @@
     </ClCompile>
     <ClCompile Include="Scene\SceneLoader.cpp" />
     <ClCompile Include="Render\Passes\AmbientLightingPass.cpp" />
-    <ClCompile Include="Render\Passes\AmbientOcclusion\SSAOComputePass.cpp" />
-    <ClCompile Include="Render\Passes\AmbientOcclusion\SSAOApplyPass.cpp" />
-    <ClCompile Include="Render\Passes\AmbientOcclusion\SSAOBlurPass.cpp" />
+    <ClCompile Include="Render\Passes\PFX\AmbientOcclusion\SSAOComputePass.cpp" />
+    <ClCompile Include="Render\Passes\PFX\AmbientOcclusion\SSAOApplyPass.cpp" />
+    <ClCompile Include="Render\Passes\PFX\AmbientOcclusion\SSAOBlurPass.cpp" />
     <ClCompile Include="Core\DescriptorHeapManager.cpp" />
     <ClCompile Include="Core\TextureManager.cpp" />
     <ClCompile Include="Core\DXRenderer.cpp" />
@@ -263,7 +263,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RendererPCH.h" />
-    <ClInclude Include="Render\Passes\PFX\AverageLuminancePass.h">
+    <ClInclude Include="Render\Passes\PFX\ToneMapping\AverageLuminancePass.h">
       <Filter>Render\Passes</Filter>
     </ClInclude>
     <ClInclude Include="Render\Passes\Debug\DebugBoundingVolumePass.h">
@@ -275,10 +275,10 @@
     <ClInclude Include="Render\Passes\GeometryPass.h">
       <Filter>Render\Passes</Filter>
     </ClInclude>
-    <ClInclude Include="Render\Passes\FXAAPass.h">
+    <ClInclude Include="Render\Passes\PFX\AntiAliasing\FXAAPass.h">
       <Filter>Render\Passes</Filter>
     </ClInclude>
-    <ClInclude Include="Render\Passes\PFX\LuminanceHistogramPass.h">
+    <ClInclude Include="Render\Passes\PFX\ToneMapping\LuminanceHistogramPass.h">
       <Filter>Render\Passes</Filter>
     </ClInclude>
     <ClInclude Include="Render\Passes\LightingPass.h">
@@ -287,19 +287,19 @@
     <ClInclude Include="Render\Passes\PassResources.h">
       <Filter>Render\Passes</Filter>
     </ClInclude>
-    <ClInclude Include="Render\Passes\ShadowCullPass.h">
+    <ClInclude Include="Render\Passes\Shadows\ShadowCullPass.h">
       <Filter>Render\Passes</Filter>
     </ClInclude>
-    <ClInclude Include="Render\Passes\ShadowClearPass.h">
+    <ClInclude Include="Render\Passes\Shadows\ShadowClearPass.h">
       <Filter>Render\Passes</Filter>
     </ClInclude>
-    <ClInclude Include="Render\Passes\ShadowDrawPass.h">
+    <ClInclude Include="Render\Passes\Shadows\ShadowDrawPass.h">
       <Filter>Render\Passes</Filter>
     </ClInclude>
     <ClInclude Include="Render\Passes\SkyboxPass.h">
       <Filter>Render\Passes</Filter>
     </ClInclude>
-    <ClInclude Include="Render\Passes\PFX\ToneMappingPass.h">
+    <ClInclude Include="Render\Passes\PFX\ToneMapping\ToneMappingPass.h">
       <Filter>Render\Passes</Filter>
     </ClInclude>
     <ClInclude Include="Render\Frame\AllocatorPool.h">
@@ -433,9 +433,9 @@
     </ClInclude>
     <ClInclude Include="Scene\SceneLoader.h" />
     <ClInclude Include="Render\Passes\AmbientLightingPass.h" />
-    <ClInclude Include="Render\Passes\AmbientOcclusion\SSAOComputePass.h" />
-    <ClInclude Include="Render\Passes\AmbientOcclusion\SSAOApplyPass.h" />
-    <ClInclude Include="Render\Passes\AmbientOcclusion\SSAOBlurPass.h" />
+    <ClInclude Include="Render\Passes\PFX\AmbientOcclusion\SSAOComputePass.h" />
+    <ClInclude Include="Render\Passes\PFX\AmbientOcclusion\SSAOApplyPass.h" />
+    <ClInclude Include="Render\Passes\PFX\AmbientOcclusion\SSAOBlurPass.h" />
     <ClInclude Include="Core\DescriptorHeapManager.h" />
     <ClInclude Include="Core\TextureManager.h" />
     <ClInclude Include="Core\DXRenderer.h" />
@@ -458,9 +458,6 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="Shaders\DepthFuncs.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\AntiAliasing\FXAA_rootsig.hlsli">
       <Filter>Shaders</Filter>
     </None>
     <None Include="Shaders\GeometryPass\GPass_rootsig.hlsli">

@@ -144,6 +144,10 @@ namespace render
                         {
                             commandList.SetVertexBuffer(1, mesh->SkinningVertexBufferView);
                         }
+                        else
+                        {
+                            commandList.SetVertexBuffer(1, mesh->VertexBufferView);
+                        }
                         commandList.SetIndexBuffer(mesh->IndexBufferView);
 
                         commandList.DrawIndexed(mesh->IndexData.size());

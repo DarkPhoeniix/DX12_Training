@@ -9,27 +9,31 @@
 
 namespace render
 {
-    struct SSAOBlurPassData
+    struct SSAOComputePassData
     {
+        rg::ResourceId FrameBuffer;
+        rg::ResourceId Noise;
+		rg::ResourceId Kernels;
+
+        rg::ResourceId NormalRoughness;
         rg::ResourceId Depth;
         rg::ResourceId AOTarget;
-        rg::ResourceId TempBlurTarget;
     };
 
-    class SSAOBlurPass : public rg::RenderPass<SSAOBlurPassData>
+    class SSAOComputePass : public rg::RenderPass<SSAOComputePassData>
     {
     public:
-        SSAOBlurPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
+        SSAOComputePass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
 
         // Inherited via RenderPass
         void Setup(rg::RenderPassBuilder& builder) override;
         void Execute(rg::RenderContext& context, TaskGPU& task) override;
 
     private:
-        dx12::PipelineState _SSAOBlurHorizonralPipeline;
-        dx12::PipelineState _SSAOBlurVerticalPipeline;
+        dx12::PipelineState _SSAOPipeline;
 
-        std::shared_ptr<dx12::Resource> _weights;
+        std::shared_ptr<dx12::Resource> _noise;
+        std::shared_ptr<dx12::Resource> _kernels;
 
         std::shared_ptr<scene::Scene> _scene;
         scene::Camera* _camera;

@@ -137,15 +137,12 @@ TextureManager::TextureManager(ResourceTable& resourceTable)
 
 TextureHandle TextureManager::EnqueueTexture(const std::string& filepath)
 {
-	TextureHandle handle = _nextTextureHandle;
+	TextureHandle handle = InvalidTextureHandle;
 
 	std::filesystem::path path(filepath);
 
 	auto it = _uploadQueue.try_emplace(filepath, _nextTextureHandle);
-	if (it.second)
-	{
-		++_nextTextureHandle;
-	}
+	handle = it.second ? _nextTextureHandle++ : it.first->second;
 
 	DirectX::TexMetadata metadata = GetTextureMetadata(path);
 	dx12::ResourceDescription description = GetTextureDescription(metadata);

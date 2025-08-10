@@ -13,6 +13,15 @@
 
 #include <random>
 
+namespace
+{
+    struct PassConstants
+    {
+        std::uint32_t AOTargetIndex;
+        std::uint32_t HDRTargetIndex;
+    };
+}
+
 namespace render
 {
     using namespace DirectX;
@@ -27,8 +36,10 @@ namespace render
 
     void SSAOApplyPass::Setup(rg::RenderPassBuilder& builder)
     {
-        _data.AOTarget = builder.ReadResource("AO Target");
-        _data.HDRTarget = builder.WriteResource(HDR_TARGET);
+        _data.FrameBuffer = builder.ReadResourceNew("Frame Buffer");
+
+        _data.AOTarget = builder.ReadResourceNew("AO Target");
+        _data.HDRTarget = builder.WriteResourceNew(HDR_TARGET);
     }
 
     void SSAOApplyPass::Execute(rg::RenderContext& context, TaskGPU& task)
@@ -38,11 +49,12 @@ namespace render
 
         PIXBeginEvent(commandList.GetDXCommandList().Get(), 3, "SSAO Apply");
         {
-            std::shared_ptr<dx12::Resource> aoTarget = context.GetResource(_data.AOTarget);
-            std::shared_ptr<dx12::Resource> hdtTarget = context.GetResource(_data.HDRTarget);
+            std::shared_ptr<dx12::Resource> frameBuffer = context.GetResourceNew(_data.FrameBuffer);
+            std::shared_ptr<dx12::Resource> aoTarget = context.GetResourceNew(_data.AOTarget);
+            std::shared_ptr<dx12::Resource> hdtTarget = context.GetResourceNew(_data.HDRTarget);
 
-            D3D12_GPU_DESCRIPTOR_HANDLE aoTargetHandle = context.GetGPUHandle(aoTarget->GetAsSRV());
-            D3D12_GPU_DESCRIPTOR_HANDLE hdrTargetHandle = context.GetGPUHandle(hdtTarget->GetAsUAV());
+            DescriptorHandle aoTargetHandle = context.GetStaticResourceHandle(aoTarget->GetAsSRV());
+            DescriptorHandle hdrTargetHandle = context.GetStaticResourceHandle(hdtTarget->GetAsUAV());
 
             std::vector<dx12::ResourceBarrier> barriers =
             {
@@ -51,12 +63,16 @@ namespace render
             };
             commandList.TransitionBarriers(barriers);
 
+            context.BindBindlessTable(commandList);
             commandList.SetPipelineState(_SSAOPipeline);
 
-            context.BindBindlessTable(commandList);
-
-            commandList.SetDescriptorTable(0, aoTargetHandle);
-            commandList.SetDescriptorTable(1, hdrTargetHandle);
+			PassConstants passCB = 
+            {
+                .AOTargetIndex = aoTargetHandle.Index,
+				.HDRTargetIndex = hdrTargetHandle.Index
+			};
+            commandList.SetCBV(0, frameBuffer->OffsetGPU());
+			commandList.SetConstants(1, 2, &passCB);
 
             XMUINT2 viewportSize = _camera->GetViewport().GetSize();
             int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 16.0f);

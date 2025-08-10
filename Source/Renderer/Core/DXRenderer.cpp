@@ -30,21 +30,21 @@
 
 #include "Render/RenderSettings.h"
 #include "Render/Frame/TaskGPU.h"
-#include "Render/Passes/AmbientOcclusion/SSAOApplyPass.h"
-#include "Render/Passes/AmbientOcclusion/SSAOBlurPass.h"
-#include "Render/Passes/AmbientOcclusion/SSAOComputePass.h"
+#include "Render/Passes/PFX/AmbientOcclusion/SSAOApplyPass.h"
+#include "Render/Passes/PFX/AmbientOcclusion/SSAOBlurPass.h"
+#include "Render/Passes/PFX/AmbientOcclusion/SSAOComputePass.h"
 #include "Render/Passes/Debug/DebugArmaturePass.h"
 #include "Render/Passes/Debug/DebugBoundingVolumePass.h"
 #include "Render/Passes/AmbientLightingPass.h"
-#include "Render/Passes/FXAAPass.h"
+#include "Render/Passes/PFX/AntiAliasing/FXAAPass.h"
 #include "Render/Passes/GeometryPass.h"
 #include "Render/Passes/LightingPass.h"
-#include "Render/Passes/PFX/AverageLuminancePass.h"
-#include "Render/Passes/PFX/LuminanceHistogramPass.h"
-#include "Render/Passes/PFX/ToneMappingPass.h"
-#include "Render/Passes/ShadowClearPass.h"
-#include "Render/Passes/ShadowCullPass.h"
-#include "Render/Passes/ShadowDrawPass.h"
+#include "Render/Passes/PFX/ToneMapping/AverageLuminancePass.h"
+#include "Render/Passes/PFX/ToneMapping/LuminanceHistogramPass.h"
+#include "Render/Passes/PFX/ToneMapping/ToneMappingPass.h"
+#include "Render/Passes/Shadows/ShadowClearPass.h"
+#include "Render/Passes/Shadows/ShadowCullPass.h"
+#include "Render/Passes/Shadows/ShadowDrawPass.h"
 #include "Render/Passes/SkyboxPass.h"
 #include "Render/Helpers/DrawHelpers.h"
 
@@ -514,14 +514,44 @@ namespace render
                 bonesBufferIndex = bonesBufferHandle.Index;
             }
 
+            std::uint32_t albedoTextureIndex = -1;
+            std::uint32_t normalMapIndex = -1;
+            std::uint32_t metalnessTextureIndex = -1;
+            std::uint32_t roughnessTextureIndex = -1;
+
+            if (materialComponent)
+            {
+                std::shared_ptr<dx12::Resource> albedoTexture = _textureManagerNew.GetTexture(materialComponent->AlbedoTextureHandle);
+                std::shared_ptr<dx12::Resource> normalMapTexture = _textureManagerNew.GetTexture(materialComponent->NormalMapTextureHandle);
+                std::shared_ptr<dx12::Resource> metalnessTexture = _textureManagerNew.GetTexture(materialComponent->MetalnessTextureHandle);
+                std::shared_ptr<dx12::Resource> roughnessTexture = _textureManagerNew.GetTexture(materialComponent->RoughnessTextureHandle);
+
+                if (albedoTexture)
+                {
+                    albedoTextureIndex = _resourceTableNew.GetStaticResourceHandle(albedoTexture->GetAsSRV()).Index;
+                }
+                if (normalMapTexture)
+                {
+                    normalMapIndex = _resourceTableNew.GetStaticResourceHandle(normalMapTexture->GetAsSRV()).Index;
+                }
+                if (metalnessTexture)
+                {
+                    metalnessTextureIndex = _resourceTableNew.GetStaticResourceHandle(metalnessTexture->GetAsSRV()).Index;
+                }
+                if (roughnessTexture)
+                {
+                    roughnessTextureIndex = _resourceTableNew.GetStaticResourceHandle(roughnessTexture->GetAsSRV()).Index;
+                }
+            }
+
 			// TOOD: this is a temporary solution, need to be fixed
             models[index] =
             {
                 .Transform = transformComponent->Transform,
-                .AlbedoTextureIndex = _resourceTableNew.GetStaticResourceHandle(_textureManagerNew.GetTexture(materialComponent->AlbedoTextureHandle)->GetAsSRV()).Index,
-                .NormalMapTextureIndex = _resourceTableNew.GetStaticResourceHandle(_textureManagerNew.GetTexture(materialComponent->NormalMapTextureHandle)->GetAsSRV()).Index,
-                .MetalnessTextureIndex = _resourceTableNew.GetStaticResourceHandle(_textureManagerNew.GetTexture(materialComponent->MetalnessTextureHandle)->GetAsSRV()).Index,
-                .RoughnessTextureIndex = _resourceTableNew.GetStaticResourceHandle(_textureManagerNew.GetTexture(materialComponent->RoughnessTextureHandle)->GetAsSRV()).Index,
+                .AlbedoTextureIndex = albedoTextureIndex,
+                .NormalMapTextureIndex = normalMapIndex,
+                .MetalnessTextureIndex = metalnessTextureIndex,
+                .RoughnessTextureIndex = roughnessTextureIndex,
 
                 .HasMesh = 1,
 				.BonesBufferIndex = std::uint32_t(-1)
@@ -646,18 +676,18 @@ namespace render
             //_renderGraph.AddPass(std::make_shared<ShadowCullPass>(_scene, _cameraComponent.get()));
             //_renderGraph.AddPass(std::make_shared<ShadowDrawPass>(_scene, _cameraComponent.get()));
             _renderGraph.AddPass(std::make_shared<AmbientLightingPass>(_scene, _cameraComponent.get()));
-            //if (RenderSettings::UseSSAO())
-            //{
-            //    _renderGraph.AddPass(std::make_shared<SSAOComputePass>(_scene, _cameraComponent.get()));
-            //    _renderGraph.AddPass(std::make_shared<SSAOBlurPass>(_scene, _cameraComponent.get()));
-            //    _renderGraph.AddPass(std::make_shared<SSAOApplyPass>(_scene, _cameraComponent.get()));
-            //}
+            if (RenderSettings::UseSSAO())
+            {
+                _renderGraph.AddPass(std::make_shared<SSAOComputePass>(_scene, _cameraComponent.get()));
+                _renderGraph.AddPass(std::make_shared<SSAOBlurPass>(_scene, _cameraComponent.get()));
+                _renderGraph.AddPass(std::make_shared<SSAOApplyPass>(_scene, _cameraComponent.get()));
+            }
             _renderGraph.AddPass(std::make_shared<LightingPass>(_scene, _cameraComponent.get()));
             _renderGraph.AddPass(std::make_shared<SkyboxPass>(_scene, _cameraComponent.get()));
-            //if (RenderSettings::UseFXAA())
-            //{
-            //    _renderGraph.AddPass(std::make_shared<FXAAPass>(_scene, _cameraComponent.get()));
-            //}
+            if (RenderSettings::UseFXAA())
+            {
+                _renderGraph.AddPass(std::make_shared<FXAAPass>(_scene, _cameraComponent.get()));
+            }
             _renderGraph.AddPass(std::make_shared<LuminanceHistogramPass>(_scene, _cameraComponent.get()));
             _renderGraph.AddPass(std::make_shared<AverageLuminancePass>(_scene, _cameraComponent.get()));
             _renderGraph.AddPass(std::make_shared<ToneMappingPass>(_scene, _cameraComponent.get()));
