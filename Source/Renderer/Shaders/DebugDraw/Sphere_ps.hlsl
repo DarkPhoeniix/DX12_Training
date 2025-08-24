@@ -1,12 +1,16 @@
 
-struct Color
+#include "../UnifiedRootSignature.hlsli"
+
+struct PassConstants
 {
-    float4 C;
+    float3 Position;
+    float Radius;
+    float4 Color;
 };
 
-ConstantBuffer<Color> Col : register(b2);
+ConstantBuffer<PassConstants> PassCB : register(b1);
 
 float4 main() : SV_TARGET
 {
-    return Col.C;
+    return PassCB.Color;
 }

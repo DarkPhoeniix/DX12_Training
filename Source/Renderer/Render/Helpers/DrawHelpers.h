@@ -2,10 +2,7 @@
 
 #include "CommandList.h"
 
-namespace scene
-{
-    class Camera;
-} // namespace scene
+class Frame;
 
 namespace render
 {
@@ -21,19 +18,19 @@ namespace render
         static void Destroy();
 
         static void DrawBox(dx12::CommandList& commandList,
-            const scene::Camera& camera,
+            const Frame& frame,
             const DirectX::XMVECTOR& min,
             const DirectX::XMVECTOR& max,
             const DirectX::XMVECTOR& color = DirectX::XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f));
 
         static void DrawSphere(dx12::CommandList& commandList,
-            const scene::Camera& camera,
+            const Frame& frame,
             float radius = 1.0f,
             const DirectX::XMVECTOR& position = DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f),
             const DirectX::XMVECTOR& color = DirectX::XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f));
 
         static void DrawCone(dx12::CommandList& commandList,
-            const scene::Camera& camera,
+            const Frame& frame,
             float radius = 1.0f,
             float height = 1.0f,
             const DirectX::XMVECTOR& position = DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f),

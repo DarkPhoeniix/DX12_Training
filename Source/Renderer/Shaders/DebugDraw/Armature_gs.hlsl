@@ -1,4 +1,5 @@
 
+#include "../UnifiedRootSignature.hlsli"
 #include "../CommonResources.hlsli"
 
 struct Geometryinput
@@ -17,32 +18,40 @@ struct ViewData
     row_major matrix ViewProj;
 };
 
-struct ArmatureData
+struct BoneDesc
 {
-    float4 start;
-    float4 end;
+    row_major matrix Transform;
 };
 
-ConstantBuffer<ViewData> Instance : register(b0);
-ConstantBuffer<ArmatureData> Armature : register(b1);
+struct PassConstants
+{
+    float4 Start;
+    float4 End;
+    float InstanceIndex;
+};
 
-StructuredBuffer<float4> BonePositions : register(t0);
+ConstantBuffer<PassConstants> PassCB : register(b1);
 
 [maxvertexcount(170)]
 void main(point Geometryinput input[1], inout LineStream<Pixelinput> lineStream)
 {
+    StructuredBuffer<ModelDesc> Instances = ResourceDescriptorHeap[FrameCB.InstancesBufferIndex];
+    ModelDesc Model = Instances[PassCB.InstanceIndex];
+    
+    StructuredBuffer<BoneDesc> Bones = ResourceDescriptorHeap[Model.BonesBufferIndex];
+    
 	// for each pair of line, adding to stream
     Pixelinput psinput;
         
-    float4 pos = Armature.start;
+    float4 pos = PassCB.Start;
         
-    psinput.Position = mul(pos, Instance.ViewProj);
+    psinput.Position = mul(pos, FrameCB.ViewProjection);
     psinput.Color = float2(1.0f, 0.0f);
     lineStream.Append(psinput);
         
-    pos = Armature.end;
+    pos = PassCB.End;
         
-    psinput.Position = mul(pos, Instance.ViewProj);
+    psinput.Position = mul(pos, FrameCB.ViewProjection);
     psinput.Color = float2(0.0f, 1.0f);
     lineStream.Append(psinput);
 }

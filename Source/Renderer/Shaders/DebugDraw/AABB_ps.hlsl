@@ -1,17 +1,21 @@
 
-struct Pixelinput
+#include "../UnifiedRootSignature.hlsli"
+
+struct PixelInput
 {
     float4 position : SV_POSITION;
 };
 
-struct ColorData
+struct PassConstants
 {
+    float3 BoxMin;
+    float3 BoxMax;
     float4 Color;
 };
 
-ConstantBuffer<ColorData> Color : register(b2);
+ConstantBuffer<PassConstants> PassCB : register(b1);
 
-float4 main(Pixelinput input) : SV_Target
+float4 main(PixelInput input) : SV_Target
 {
-    return Color.Color;
+    return PassCB.Color;
 }

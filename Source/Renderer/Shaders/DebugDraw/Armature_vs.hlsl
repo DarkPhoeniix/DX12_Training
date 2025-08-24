@@ -1,5 +1,5 @@
 
-#include "Armature_rootsig.hlsli"
+#include "../UnifiedRootSignature.hlsli"
 
 struct Vertexinput
 {
@@ -11,7 +11,7 @@ struct Geometryinput
     uint primitive : INDEX;
 };
 
-[RootSignature(Armature_RootSig)]
+[RootSignature(URootSignature)]
 Geometryinput main(Vertexinput input)
 {
     Geometryinput output;

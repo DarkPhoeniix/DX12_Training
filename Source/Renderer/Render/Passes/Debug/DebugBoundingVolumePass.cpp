@@ -47,6 +47,8 @@ namespace render
             };
             commandList.TransitionBarriers(barriers);
 
+            context.BindBindlessTable(commandList);
+
             commandList.SetViewport(_camera->GetViewport());
             commandList.SetRenderTarget(&rtv.CpuHandle, &dsv.CpuHandle);
 
@@ -59,10 +61,10 @@ namespace render
                 switch (light->Type)
                 {
                 case scene::LightType::Point:
-                    DrawHelper::DrawSphere(commandList, *_camera, light->Range, t->Transform.r[3], light->Color);
+                    DrawHelper::DrawSphere(commandList, *context.GetFrame(), light->Range, t->Transform.r[3], light->Color);
                     break;
                 case scene::LightType::Spot:
-                    DrawHelper::DrawCone(commandList, *_camera, light->OuterAngle, light->Range, t->Transform.r[3], light->Direction, light->Color);
+                    DrawHelper::DrawCone(commandList, *context.GetFrame(), light->OuterAngle, light->Range, t->Transform.r[3], light->Direction, light->Color);
                     break;
                 }
             }
@@ -73,7 +75,7 @@ namespace render
                 std::shared_ptr<scene::Mesh> mesh = entity->GetComponentAs<scene::Mesh>("Mesh");
                 scene::AABBVolume aabb = mesh->GlobalAABB;
 
-                DrawHelper::DrawBox(commandList, *_camera, aabb.Min, aabb.Max, DirectX::XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f));
+                DrawHelper::DrawBox(commandList, *context.GetFrame(), aabb.Min, aabb.Max, DirectX::XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f));
             }
 
             barriers =

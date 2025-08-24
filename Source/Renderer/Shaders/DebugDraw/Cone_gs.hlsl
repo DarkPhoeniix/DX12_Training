@@ -1,5 +1,6 @@
 
-#define PI 3.14159265359
+#include "../UnifiedRootSignature.hlsli"
+#include "../CommonConstants.hlsli"
 
 struct Geometryinput
 {
@@ -11,21 +12,16 @@ struct Pixelinput
     float4 Position : SV_Position;
 };
 
-struct Camera
-{
-    row_major matrix ViewProj;
-};
-
-struct Cone
+struct PassConstants
 {
     float3 Position;
     float Radius;
     float3 Direction;
     float Height;
+    float4 Color;
 };
 
-ConstantBuffer<Camera> Instance : register(b0);
-ConstantBuffer<Cone> ConeData : register(b1);
+ConstantBuffer<PassConstants> PassCB : register(b1);
 
 float3 SphericalToCartesian(float radius, float polar, float azimuth)
 {
@@ -42,7 +38,7 @@ static const int NUM_SEGMENTS = 15;
 void main(point Geometryinput input[1], inout LineStream<Pixelinput> lineStream)
 {
     float3 up = float3(0, 1, 0); // Original cone up direction
-    float3 newY = normalize(ConeData.Direction);
+    float3 newY = normalize(PassCB.Direction);
     float3 newX = normalize(cross(up, newY));
     float3 newZ = cross(newX, newY);
 
@@ -51,26 +47,26 @@ void main(point Geometryinput input[1], inout LineStream<Pixelinput> lineStream)
     for (int i = 0; i < NUM_SEGMENTS; ++i)
     {
         float3 positionLocal = mul(float3(0.0f, 0.0f, 0.0f), rotationMatrix);
-        positionLocal += ConeData.Position;
-        float4 position = mul(float4(positionLocal, 1.0f), Instance.ViewProj);
+        positionLocal += PassCB.Position;
+        float4 position = mul(float4(positionLocal, 1.0f), FrameCB.ViewProjection);
         lineStream.Append((Pixelinput) position);
         
         
-        float angle = 2.0f * PI * i / NUM_SEGMENTS;
-        positionLocal = float3(ConeData.Radius * sin(angle), ConeData.Height, ConeData.Radius * cos(angle));
+        float angle = 2.0f * k_PI * i / NUM_SEGMENTS;
+        positionLocal = float3(PassCB.Radius * sin(angle), PassCB.Height, PassCB.Radius * cos(angle));
         positionLocal = mul(positionLocal, rotationMatrix);
-        positionLocal += ConeData.Position;
-        position = mul(float4(positionLocal, 1.0f), Instance.ViewProj);
+        positionLocal += PassCB.Position;
+        position = mul(float4(positionLocal, 1.0f), FrameCB.ViewProjection);
         
         lineStream.Append((Pixelinput) position);
         lineStream.RestartStrip();
         lineStream.Append((Pixelinput) position);
         
-        angle = 2.0f * PI * (i - 1) / NUM_SEGMENTS;
-        positionLocal = float3(ConeData.Radius * sin(angle), ConeData.Height, ConeData.Radius * cos(angle));
+        angle = 2.0f * k_PI * (i - 1) / NUM_SEGMENTS;
+        positionLocal = float3(PassCB.Radius * sin(angle), PassCB.Height, PassCB.Radius * cos(angle));
         positionLocal = mul(positionLocal, rotationMatrix);
-        positionLocal += ConeData.Position;
-        position = mul(float4(positionLocal, 1.0f), Instance.ViewProj);
+        positionLocal += PassCB.Position;
+        position = mul(float4(positionLocal, 1.0f), FrameCB.ViewProjection);
         
         lineStream.Append((Pixelinput) position);
         lineStream.RestartStrip();
