@@ -35,7 +35,7 @@ public:
 	void ClearIntermediates();
 	void Clear();
 
-	[[nodiscard]] TextureHandle AddTexture(std::shared_ptr<dx12::Resource> texture, dx12::ResourceViewType viewType);
+	[[nodiscard]] TextureHandle AddTexture(std::shared_ptr<dx12::Resource> texture);
 	[[nodiscard]] std::shared_ptr<dx12::Resource> GetTexture(TextureHandle handle) const;
 
 private:

@@ -38,9 +38,9 @@ namespace scene::helpers
 
         void LoadScene(TaskGPU& task, const std::string& filepath, std::shared_ptr<Scene> scene);
 
-        std::shared_ptr<dx12::Resource> GenerateEnvironmentDiffuseIrradianceMap(dx12::CommandList& commandList, std::shared_ptr<Scene> scene, std::shared_ptr<dx12::Resource> frameBuffer);
-        std::shared_ptr<dx12::Resource> GeneratePreFilteredEnvironmentMap(dx12::CommandList& commandList, std::shared_ptr<Scene> scene, std::shared_ptr<dx12::Resource> frameBuffer);
-        std::shared_ptr<dx12::Resource> GenerateEnvironmentBRDFLookUpTexture(dx12::CommandList& commandList, std::shared_ptr<Scene> scene, std::shared_ptr<dx12::Resource> frameBuffer);
+        std::shared_ptr<dx12::Resource> GenerateEnvironmentDiffuseIrradianceMap(dx12::CommandList& commandList, std::shared_ptr<Scene> scene);
+        std::shared_ptr<dx12::Resource> GeneratePreFilteredEnvironmentMap(dx12::CommandList& commandList, std::shared_ptr<Scene> scene);
+        std::shared_ptr<dx12::Resource> GenerateEnvironmentBRDFLookUpTexture(dx12::CommandList& commandList, std::shared_ptr<Scene> scene);
 
     private:
         std::shared_ptr<scene::Entity> LoadEntity(dx12::CommandList& commandList, const std::string& filepath, scene::Entity* parent = nullptr);

@@ -11,6 +11,12 @@ namespace render
 {
     struct ShadowCullPassData
     {
+        rg::ResourceId ShadowMaps;
+
+        rg::ResourceId FrameBuffer;
+        rg::ResourceId CounterResetBuffer;
+        rg::ResourceId AABBBuffer;
+        std::vector<rg::ResourceId> CandidateInstancesBuffer;
         std::vector<rg::ResourceId> LightCommandBuffers[dx12::BACK_BUFFER_COUNT];
     };
 
@@ -28,8 +34,6 @@ namespace render
         dx12::PipelineState _lightShadowsPipeline;
 
         ComPtr<ID3D12CommandSignature> _cmdSignature;
-
-        std::shared_ptr<dx12::Resource> _counterReset;
 
         std::shared_ptr<scene::Scene> _scene;
         scene::Camera* _camera;

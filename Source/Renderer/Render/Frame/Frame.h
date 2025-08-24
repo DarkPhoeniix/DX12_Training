@@ -53,6 +53,8 @@ public:
     Frame* Prev;
     Frame* Next;
 
+    std::shared_ptr<dx12::Resource> _frameBuffer = nullptr;
+
 private:
     std::vector<Executor*> _currentTasks;
 

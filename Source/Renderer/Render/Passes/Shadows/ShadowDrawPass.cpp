@@ -15,9 +15,10 @@
 namespace
 {
     constexpr std::uint32_t CULLING_PASS_THREADS_NUM = 16;
+    constexpr std::uint32_t MAX_INSTANCES_NUM = 1u << 20;
 
     // Data structure to match the command signature used for ExecuteIndirect.
-    struct IndirectCommand
+    struct alignas(16) IndirectCommand
     {
         D3D12_GPU_VIRTUAL_ADDRESS VertexBufferAddress;
         UINT VertexBufferSize;
@@ -25,13 +26,12 @@ namespace
         D3D12_GPU_VIRTUAL_ADDRESS SkinBufferAddress;
         UINT SkinBufferSize;
         UINT SkinBufferStride;
-        D3D12_GPU_VIRTUAL_ADDRESS IndexBufferAddress;
-        UINT IndexBufferSize;
-        UINT IndexBufferFormat;
-        D3D12_GPU_VIRTUAL_ADDRESS SceneBufferAddress;
-        D3D12_GPU_VIRTUAL_ADDRESS ModelBufferAddress;
-        D3D12_GPU_VIRTUAL_ADDRESS BonesBufferAddress;
-        D3D12_GPU_VIRTUAL_ADDRESS LightsBufferAddress;
+        //D3D12_GPU_VIRTUAL_ADDRESS IndexBufferAddress;
+        //UINT IndexBufferSize;
+        //UINT IndexBufferFormat;
+
+        D3D12_GPU_VIRTUAL_ADDRESS FrameBufferAddress;
+        UINT InstanceIndex;
         UINT LightIndex;
 
         D3D12_DRAW_ARGUMENTS DrawArguments;
@@ -55,33 +55,24 @@ namespace render
 
         {
             // https://microsoft.github.io/DirectX-Specs/d3d/IndirectDrawing.html#root-constants--vertex-buffers
-            D3D12_INDIRECT_ARGUMENT_DESC argsDesc[9];
+            D3D12_INDIRECT_ARGUMENT_DESC argsDesc[5];
             argsDesc[0].Type = D3D12_INDIRECT_ARGUMENT_TYPE_VERTEX_BUFFER_VIEW;
             argsDesc[0].VertexBuffer.Slot = 0;
 
             argsDesc[1].Type = D3D12_INDIRECT_ARGUMENT_TYPE_VERTEX_BUFFER_VIEW;
             argsDesc[1].VertexBuffer.Slot = 1;
 
-            argsDesc[2].Type = D3D12_INDIRECT_ARGUMENT_TYPE_INDEX_BUFFER_VIEW;
+            //argsDesc[2].Type = D3D12_INDIRECT_ARGUMENT_TYPE_INDEX_BUFFER_VIEW;
 
-            argsDesc[3].Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT_BUFFER_VIEW;
-            argsDesc[3].ConstantBufferView.RootParameterIndex = 0;
+            argsDesc[2].Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT_BUFFER_VIEW;
+            argsDesc[2].ConstantBufferView.RootParameterIndex = 0;
 
-            argsDesc[4].Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT_BUFFER_VIEW;
-            argsDesc[4].ConstantBufferView.RootParameterIndex = 1;
+            argsDesc[3].Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT;
+            argsDesc[3].Constant.RootParameterIndex = 1;
+            argsDesc[3].Constant.Num32BitValuesToSet = 2;
+            argsDesc[3].Constant.DestOffsetIn32BitValues = 0;
 
-            argsDesc[5].Type = D3D12_INDIRECT_ARGUMENT_TYPE_SHADER_RESOURCE_VIEW;
-            argsDesc[5].ShaderResourceView.RootParameterIndex = 2;
-
-            argsDesc[6].Type = D3D12_INDIRECT_ARGUMENT_TYPE_SHADER_RESOURCE_VIEW;
-            argsDesc[6].ShaderResourceView.RootParameterIndex = 3;
-
-            argsDesc[7].Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT;
-            argsDesc[7].Constant.RootParameterIndex = 4;
-            argsDesc[7].Constant.Num32BitValuesToSet = 1;
-            argsDesc[7].Constant.DestOffsetIn32BitValues = 0;
-
-            argsDesc[8].Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED;
+            argsDesc[4].Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW;
 
             D3D12_COMMAND_SIGNATURE_DESC commandSignatureDesc = {};
             commandSignatureDesc.pArgumentDescs = argsDesc;
@@ -94,27 +85,19 @@ namespace render
 
     void ShadowDrawPass::Setup(rg::RenderPassBuilder& builder)
     {
+        _data.FrameBuffer = builder.ReadResourceNew("Frame Buffer");
+
+        _data.ShadowMaps = builder.ReadResourceNew("Shadow Maps");
+
         std::vector<std::shared_ptr<scene::Entity>> lightEntities = _scene->FilterNodesByComponent("Light");
         size_t lightsNum = lightEntities.size();
 
-        for (size_t frameIndex = 0; frameIndex < dx12::BACK_BUFFER_COUNT; ++frameIndex)
+        for (size_t frame = 0; frame < dx12::BACK_BUFFER_COUNT; ++frame)
         {
-            _data.LightCommandBuffers[frameIndex].resize(lightsNum);
+            _data.LightCommandBuffers[frame].resize(lightsNum);
             for (size_t i = 0; i < lightsNum; ++i)
             {
-                _data.LightCommandBuffers[frameIndex][i] = builder.ReadResource(std::format("ShadowCullBuffer {} (frame {})", i, frameIndex));
-            }
-        }
-
-        _data.ShadowMaps.resize(lightsNum, rg::ResourceId(-1));
-        for (size_t lightIndex = 0; lightIndex < lightsNum; ++lightIndex)
-        {
-            std::shared_ptr<scene::Entity> entity = lightEntities[lightIndex];
-            std::shared_ptr<scene::Light> light = entity->GetComponentAs<scene::Light>("Light");
-
-            if (light->CastShadows)
-            {
-                _data.ShadowMaps[lightIndex] = builder.WriteResource(std::format("{}_ShadowMap", entity->GetName()));
+                _data.LightCommandBuffers[frame][i] = builder.ReadResourceNew(std::format("ShadowCullBuffer {} (frame {})", i, frame));
             }
         }
     }
@@ -130,6 +113,8 @@ namespace render
         dx12::CommandList& commandList = *task.GetCommandLists().front();
         commandList.SetName("Shadow pass command list - draw");
 
+        std::shared_ptr<dx12::Resource> frameBuffer = context.GetFrame()->_frameBuffer;
+
         std::vector<std::shared_ptr<scene::Entity>> lightEntities = _scene->FilterNodesByComponent("Light");
         std::vector<std::shared_ptr<scene::Entity>> meshes = _scene->FilterNodesByComponent("Mesh");
         size_t objectsNum = meshes.size();
@@ -139,12 +124,6 @@ namespace render
             context.BindBindlessTable(commandList);
             commandList.SetPipelineState(_spotLightShadowsPipeline);
 
-            CacheGPU::DataHandle sceneDataHandle = context.GetCache().GetResourcePlacement("SceneCB");
-            commandList.SetCBV(0, sceneDataHandle.DataGPU);
-
-            CacheGPU::DataHandle lightsData = context.GetCache().GetResourcePlacement("LightsCB");
-            commandList.SetSRV(2, lightsData.DataGPU);
-
             for (uint32_t lightIndex = 0; lightIndex < lightEntities.size(); ++lightIndex)
             {
                 std::shared_ptr<scene::Light> light = lightEntities[lightIndex]->GetComponentAs<scene::Light>("Light");
@@ -153,15 +132,15 @@ namespace render
                     continue;
                 }
 
-                if (_data.ShadowMaps[lightIndex] == rg::ResourceId(-1))
+                if (!light->CastShadows)
                 {
                     continue;
                 }
 
                 PIXBeginEvent(commandList.GetDXCommandList().Get(), 1, lightEntities[lightIndex]->GetName().c_str());
 
-                std::shared_ptr<dx12::Resource> shadowMap = context.GetResource(_data.ShadowMaps[lightIndex]);
-                std::shared_ptr<dx12::Resource> commandBuffer = context.GetResource(_data.LightCommandBuffers[context.GetFrameIndex()][lightIndex]);
+                std::shared_ptr<dx12::Resource> shadowMap = context.GetTextureManager().GetTexture(light->ShadowMapHandle);
+                std::shared_ptr<dx12::Resource> commandBuffer = context.GetResourceNew(_data.LightCommandBuffers[context.GetFrameIndex()][lightIndex]);
 
                 // Transition resources
                 std::vector<dx12::ResourceBarrier> barriers =
@@ -170,9 +149,9 @@ namespace render
                 };
                 commandList.TransitionBarriers(barriers);
 
-                D3D12_CPU_DESCRIPTOR_HANDLE depthHandle = context.GetCPUHandle(shadowMap->GetAsDSV());
+                DescriptorHandle depthHandle = context.GetStaticResourceHandle(shadowMap->GetAsDSV());
                 commandList.SetViewport(scene::Viewport(shadowMap->GetResourceDescription().GetSize()));
-                commandList.SetRenderTargets({ }, &depthHandle);
+                commandList.SetRenderTargets({ }, &depthHandle.CpuHandle);
 
                 commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -203,12 +182,6 @@ namespace render
         {
             commandList.SetPipelineState(_pointLightShadowsPipeline);
 
-            CacheGPU::DataHandle sceneDataHandle = context.GetCache().GetResourcePlacement("SceneCB");
-            commandList.SetCBV(0, sceneDataHandle.DataGPU);
-
-            CacheGPU::DataHandle lightsData = context.GetCache().GetResourcePlacement("LightsCB");
-            commandList.SetSRV(2, lightsData.DataGPU);
-
             for (uint32_t lightIndex = 0; lightIndex < lightEntities.size(); ++lightIndex)
             {
                 std::shared_ptr<scene::Light> light = lightEntities[lightIndex]->GetComponentAs<scene::Light>("Light");
@@ -217,26 +190,27 @@ namespace render
                     continue;
                 }
 
-                if (_data.ShadowMaps[lightIndex] == rg::ResourceId(-1))
+                if (!light->CastShadows)
                 {
                     continue;
                 }
 
                 PIXBeginEvent(commandList.GetDXCommandList().Get(), 1, lightEntities[lightIndex]->GetName().c_str());
 
-                std::shared_ptr<dx12::Resource> shadowMap = context.GetResource(_data.ShadowMaps[lightIndex]);
-                std::shared_ptr<dx12::Resource> commandBuffer = context.GetResource(_data.LightCommandBuffers[context.GetFrameIndex()][lightIndex]);
+                std::shared_ptr<dx12::Resource> shadowMap = context.GetTextureManager().GetTexture(light->ShadowMapHandle);
+                std::shared_ptr<dx12::Resource> commandBuffer = context.GetResourceNew(_data.LightCommandBuffers[context.GetFrameIndex()][lightIndex]);
 
                 // Transition resources
                 std::vector<dx12::ResourceBarrier> barriers =
                 {
+                    { shadowMap, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE },
                     { commandBuffer, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT }
                 };
                 commandList.TransitionBarriers(barriers);
 
-                D3D12_CPU_DESCRIPTOR_HANDLE depthHandle = context.GetCPUHandle(shadowMap->GetAsDSV());
+                DescriptorHandle depthHandle = context.GetStaticResourceHandle(shadowMap->GetAsDSV());
                 commandList.SetViewport(scene::Viewport(shadowMap->GetResourceDescription().GetSize()));
-                commandList.SetRenderTargets({ }, &depthHandle);
+                commandList.SetRenderTargets({ }, &depthHandle.CpuHandle);
 
                 commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 

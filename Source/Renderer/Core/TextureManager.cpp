@@ -220,7 +220,7 @@ void TextureManager::Clear()
 	_intermediateResources.clear();
 }
 
-TextureHandle TextureManager::AddTexture(std::shared_ptr<dx12::Resource> texture, dx12::ResourceViewType viewType)
+TextureHandle TextureManager::AddTexture(std::shared_ptr<dx12::Resource> texture)
 {
 	TextureHandle handle = _nextTextureHandle++;
 

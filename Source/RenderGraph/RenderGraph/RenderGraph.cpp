@@ -23,11 +23,6 @@ namespace rg
     {
     }
 
-    CacheGPU& RenderGraph::GetCache()
-    {
-        return _context.GetCache();
-    }
-
     ResourceTable& RenderGraph::GetResourceTable()
     {
         return _context.GetResourceTable();
@@ -36,7 +31,7 @@ namespace rg
     void RenderGraph::SetFrame(Frame& frame)
     {
         _frame = &frame;
-        _context._currentFrameIndex = frame.Index;
+        _context._frame = &frame;
     }
 
     void RenderGraph::Reset()
@@ -132,10 +127,18 @@ namespace rg
     void RenderGraph::ImportResource(std::shared_ptr<dx12::Resource> resource)
     {
         ASSERT(resource, "Trying to import a null resource into the render graph.");
-        ResourceId id = _context._mapNameToIdNew.size();
 
-        _context._mapNameToIdNew[resource->GetName()] = id;
-        _context._resourcesNew[id] = resource;
+        auto it = _context._mapNameToIdNew.find(resource->GetName());
+        if (it != _context._mapNameToIdNew.end())
+        {
+            _context._resourcesNew[it->second] = resource;
+        }
+        else
+        {
+            ResourceId id = _context._mapNameToIdNew.size();
+            _context._mapNameToIdNew[resource->GetName()] = id;
+            _context._resourcesNew[id] = resource;
+        }
     }
 
     std::shared_ptr<dx12::Resource> RenderGraph::ExportResource(const std::string& name)

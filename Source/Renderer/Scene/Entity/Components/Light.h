@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Scene/Entity/Components/IComponent.h"
+#include "Core/TextureManager.h"
 
 namespace scene
 {
@@ -31,5 +32,6 @@ namespace scene
         float InnerAngle;
 
         bool CastShadows;
+		TextureHandle ShadowMapHandle = InvalidTextureHandle;
     };
 }

@@ -44,6 +44,7 @@ namespace render
 
     private:
         void UpdateSceneBuffers();
+        void CreateShadowMaps();
 
         void UpdateEntity(std::shared_ptr<scene::Entity> entity);
         void UpdateBoundingVolumes(std::shared_ptr<scene::Entity> entity);
@@ -55,8 +56,6 @@ namespace render
         HWND _windowHandle;
 
         Frame* _currentFrame;
-
-        std::shared_ptr<dx12::Resource> _frameBuffer;
 
 		TextureManager _textureManagerNew;
 

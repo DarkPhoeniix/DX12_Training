@@ -40,20 +40,7 @@ namespace render
         _data.NormalRoughness = builder.ReadResourceNew(NORMAL_ROUGHNESS);
         _data.Depth = builder.ReadResourceNew(DEPTH);
 
-        //std::vector<std::shared_ptr<scene::Entity>> lightEntities = _scene->FilterNodesByComponent("Light");
-        //size_t lightsNum = lightEntities.size();
-        //
-        //_data.ShadowMaps.resize(lightsNum, rg::ResourceId(-1));
-        //for (size_t lightIndex = 0; lightIndex < lightsNum; ++lightIndex)
-        //{
-        //    std::shared_ptr<scene::Entity> entity = lightEntities[lightIndex];
-        //    std::shared_ptr<scene::Light> light = entity->GetComponentAs<scene::Light>("Light");
-        //
-        //    if (light->CastShadows)
-        //    {
-        //        _data.ShadowMaps[lightIndex] = builder.ReadResource(std::format("{}_ShadowMap", entity->GetName()));
-        //    }
-        //}
+        _data.ShadowMaps = builder.ReadResourceNew("Shadow Maps");
 
         _data.HDRTarget = builder.WriteResourceNew(HDR_TARGET);
     }
@@ -96,7 +83,7 @@ namespace render
                 .TargetTextureIndex = hdrTargetHandle.Index
             };
 
-            commandList.SetCBV(0, frameBuffer->OffsetGPU());
+            commandList.SetCBV(0, context.GetFrame()->_frameBuffer->OffsetGPU());
 			commandList.SetConstants(1, sizeof(PassConstants), &passCB);
 
             DirectX::XMUINT2 viewportSize = _camera->GetViewport().GetSize();

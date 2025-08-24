@@ -9,6 +9,7 @@
 #include "Scene/Entity/Components/Light.h"
 #include "Scene/Entity/Components/Mesh.h"
 #include "Scene/Entity/Components/Transformation.h"
+#include "Scene/Volumes/AABBVolume.h"
 
 #include "Render/Helpers/RenderHelpers.h"
 
@@ -18,9 +19,10 @@
 namespace
 {
     constexpr std::uint32_t CULLING_PASS_THREADS_NUM = 16;
+    constexpr std::uint32_t MAX_INSTANCES_NUM = 1u << 20;
 
     // Data structure to match the command signature used for ExecuteIndirect.
-    struct IndirectCommand
+    struct alignas(16) IndirectCommand
     {
         D3D12_GPU_VIRTUAL_ADDRESS VertexBufferAddress;
         UINT VertexBufferSize;
@@ -28,16 +30,25 @@ namespace
         D3D12_GPU_VIRTUAL_ADDRESS SkinBufferAddress;
         UINT SkinBufferSize;
         UINT SkinBufferStride;
-        D3D12_GPU_VIRTUAL_ADDRESS IndexBufferAddress;
-        UINT IndexBufferSize;
-        UINT IndexBufferFormat;
-        D3D12_GPU_VIRTUAL_ADDRESS SceneBufferAddress;
-        D3D12_GPU_VIRTUAL_ADDRESS ModelBufferAddress;
-        D3D12_GPU_VIRTUAL_ADDRESS BonesBufferAddress;
-        D3D12_GPU_VIRTUAL_ADDRESS LightsBufferAddress;
+		//D3D12_GPU_VIRTUAL_ADDRESS IndexBufferAddress;
+		//UINT IndexBufferSize;
+  //      UINT IndexBufferFormat;
+
+        D3D12_GPU_VIRTUAL_ADDRESS FrameBufferAddress;
+        UINT InstanceIndex;
         UINT LightIndex;
 
         D3D12_DRAW_ARGUMENTS DrawArguments;
+    };
+
+    struct PassConstants
+    {
+        std::uint32_t LightIndex;
+        std::uint32_t CommandsCount;
+
+        std::uint32_t AABBBufferIndex;
+        std::uint32_t InputCommandsBufferIndex;
+        std::uint32_t OutputCommandsBufferIndex;
     };
 
     std::uint32_t AlignToUAVCounterOffset(std::uint32_t size)
@@ -55,49 +66,80 @@ namespace render
     {
         _cullShadowsPipeline.Parse("PipelineDescriptions\\LightCulling_PointLight.tech");
         _lightShadowsPipeline.Parse("PipelineDescriptions\\Shadow_SpotLight.tech");
-
-        {
-            dx12::ResourceDescription counterResetBuffer;
-            counterResetBuffer.SetSize({ sizeof(UINT), 1 });
-            counterResetBuffer.SetLayout(D3D12_TEXTURE_LAYOUT_ROW_MAJOR);
-            counterResetBuffer.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
-
-            _counterReset = ResourceFactory::Create("Shadows counter reset buffer", counterResetBuffer);
-            _counterReset->CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_SOURCE);
-            UINT* val = _counterReset->Map<UINT>();
-            val[0] = 0;
-        }
     }
 
     void ShadowCullPass::Setup(rg::RenderPassBuilder& builder)
     {
+        _data.FrameBuffer = builder.ReadResourceNew("Frame Buffer");
+
+        _data.ShadowMaps = builder.ReadResourceNew("Shadow Maps");
+
+        dx12::ResourceDescription counterResetBuffer;
+        counterResetBuffer.SetSize({ sizeof(UINT), 1 });
+        counterResetBuffer.SetStride(sizeof(UINT));
+        counterResetBuffer.SetLayout(D3D12_TEXTURE_LAYOUT_ROW_MAJOR);
+        counterResetBuffer.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
+
+        std::uint32_t value = 0;
+		_data.CounterResetBuffer = builder.CreateResourceNew("Shadow Counter Reset Buffer", counterResetBuffer, &value, sizeof(std::uint32_t));
+
         std::vector<std::shared_ptr<scene::Entity>> lightEntities = _scene->FilterNodesByComponent("Light");
         std::vector<std::shared_ptr<scene::Entity>> meshes = _scene->FilterNodesByComponent("Mesh");
         size_t lightsNum = lightEntities.size();
         size_t meshesNum = meshes.size();
 
+        dx12::ResourceDescription aabbBufferDescription;
+        {
+            aabbBufferDescription.SetSize({ (AlignToUAVCounterOffset(MAX_INSTANCES_NUM * sizeof(scene::AABBVolume))), 1 });
+            aabbBufferDescription.SetStride(sizeof(scene::AABBVolume));
+            aabbBufferDescription.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
+        }
+        _data.AABBBuffer = builder.CreateResourceNew("AABB buffer", aabbBufferDescription);
+
+        std::uint32_t commandSize = static_cast<std::uint32_t>(sizeof(IndirectCommand));
+        std::uint32_t alignedBufferSize = AlignToUAVCounterOffset(MAX_INSTANCES_NUM * commandSize);
+        std::uint32_t counterSize = static_cast<std::uint32_t>(sizeof(UINT));
+
+        dx12::ResourceDescription candidateBufferDescription;
+        {
+            candidateBufferDescription.SetSize({ alignedBufferSize, 1 });
+            candidateBufferDescription.SetStride(commandSize);
+            candidateBufferDescription.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
+        }
+        _data.CandidateInstancesBuffer.resize(lightsNum);
+        for (size_t i = 0; i < lightsNum; ++i)
+        {
+            _data.CandidateInstancesBuffer[i] = builder.CreateResourceNew(std::format("Shadow Candidate Instances Buffer {}", i), candidateBufferDescription);
+        }
+
         dx12::ResourceDescription commandsBufferDescription;
         {
-            commandsBufferDescription.SetSize({ (AlignToUAVCounterOffset(meshesNum * sizeof(IndirectCommand)) + (uint32_t)sizeof(UINT)), 1 });
-            commandsBufferDescription.SetStride(sizeof(IndirectCommand));
-            commandsBufferDescription.SetUAVCounterOffset(AlignToUAVCounterOffset(meshesNum * sizeof(IndirectCommand)));
+            commandsBufferDescription.SetSize({ alignedBufferSize + counterSize, 1 });
+            commandsBufferDescription.SetStride(commandSize);
+            commandsBufferDescription.SetUAVCounterOffset(alignedBufferSize);
             commandsBufferDescription.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Unordered);
         }
 
-        for (size_t frameIndex = 0; frameIndex < dx12::BACK_BUFFER_COUNT; ++frameIndex)
+        for (size_t frame = 0; frame < dx12::BACK_BUFFER_COUNT; ++frame)
         {
-            _data.LightCommandBuffers[frameIndex].resize(lightsNum);
+            _data.LightCommandBuffers[frame].resize(lightsNum);
             for (size_t i = 0; i < lightsNum; ++i)
             {
-                _data.LightCommandBuffers[frameIndex][i] = builder.CreateResource(std::format("ShadowCullBuffer {} (frame {})", i, frameIndex), commandsBufferDescription);
+                _data.LightCommandBuffers[frame][i] = builder.CreateResourceNew(std::format("ShadowCullBuffer {} (frame {})", i, frame), commandsBufferDescription);
             }
-        }
+		}
     }
 
     void ShadowCullPass::Execute(rg::RenderContext& context, TaskGPU& task)
     {
         dx12::CommandList& commandList = *task.GetCommandLists().front();
         commandList.SetName("Shadow pass command list - culling");
+
+        std::shared_ptr<dx12::Resource> frameBuffer = context.GetFrame()->_frameBuffer;
+        std::shared_ptr<dx12::Resource> aabbBuffer = context.GetResourceNew(_data.AABBBuffer);
+        std::shared_ptr<dx12::Resource> counterResetBuffer = context.GetResourceNew(_data.CounterResetBuffer);
+
+        DescriptorHandle aabbBufferHandle = context.GetStaticResourceHandle(aabbBuffer->GetAsSRV());
 
         std::vector<std::shared_ptr<scene::Entity>> lightEntities = _scene->FilterNodesByComponent("Light");
         std::vector<std::shared_ptr<scene::Entity>> meshes = _scene->FilterNodesByComponent("Mesh");
@@ -109,26 +151,19 @@ namespace render
         context.BindBindlessTable(commandList);
         commandList.SetPipelineState(_cullShadowsPipeline);
 
-
-        CacheGPU::DataHandle sceneDataHandle = context.GetCache().GetResourcePlacement("SceneCB");
-        commandList.SetCBV(0, sceneDataHandle.DataGPU);
-
-        CacheGPU::DataHandle lightsData = context.GetCache().GetResourcePlacement("LightsCB");
-        commandList.SetSRV(2, lightsData.DataGPU);
-
-        CacheGPU::DataHandle sceneAddress = context.GetCache().GetResourcePlacement("SceneCB");
-        CacheGPU::DataHandle lightsAddress = context.GetCache().GetResourcePlacement("LightsCB");
-
         for (uint32_t lightIndex = 0; lightIndex < lightEntities.size(); ++lightIndex)
         {
             PIXBeginEvent(commandList.GetDXCommandList().Get(), 1, lightEntities[lightIndex]->GetName().c_str());
 
             std::shared_ptr<scene::Light> light = lightEntities[lightIndex]->GetComponentAs<scene::Light>("Light");
 
-            std::shared_ptr<dx12::Resource> commandBuffer = context.GetResource(_data.LightCommandBuffers[context.GetFrameIndex()][lightIndex]);
+            std::shared_ptr<dx12::Resource> candidateInstancesBuffer = context.GetResourceNew(_data.CandidateInstancesBuffer[lightIndex]);
+            std::shared_ptr<dx12::Resource> outputCommandBuffer = context.GetResourceNew(_data.LightCommandBuffers[context.GetFrameIndex()][lightIndex]);
 
-            CacheGPU::DataHandle inputCommands = context.GetCache().RequestPlacement(std::format("InputCmd_{}", lightEntities[lightIndex]->GetName()), objectsNum * sizeof(IndirectCommand));
-            IndirectCommand* commandsList = (IndirectCommand*)inputCommands.DataCPU;
+            DescriptorHandle inputCommandsHandle = context.GetStaticResourceHandle(candidateInstancesBuffer->GetAsSRV());
+			DescriptorHandle outputCommandBufferHandle = context.GetStaticResourceHandle(outputCommandBuffer->GetAsUAV());
+
+            IndirectCommand* commandsList = candidateInstancesBuffer->Map<IndirectCommand>();
 
             // Record all draw command to the commandBuffer
 
@@ -141,14 +176,7 @@ namespace render
                     continue;
                 }
 
-                CacheGPU::DataHandle modelAddress = context.GetCache().GetResourcePlacement(meshes[j]->GetName());
-                CacheGPU::DataHandle bonesAddress = modelAddress;
-                if (std::shared_ptr<scene::Armature> armature = meshes[j]->GetComponentAs<scene::Armature>("Armature"))
-                {
-                    bonesAddress = context.GetCache().GetResourcePlacement(meshes[j]->GetName() + "_bones");
-                }
-
-                IndirectCommand command;
+                IndirectCommand& command = commandsList[j];
 
                 command.VertexBufferAddress = mesh->VertexBufferView.BufferLocation;
                 command.VertexBufferSize = mesh->VertexBufferView.SizeInBytes;
@@ -159,42 +187,34 @@ namespace render
                     command.SkinBufferAddress = mesh->SkinningVertexBufferView.BufferLocation;
                     command.SkinBufferSize = mesh->SkinningVertexBufferView.SizeInBytes;
                     command.SkinBufferStride = mesh->SkinningVertexBufferView.StrideInBytes;
-
-                    command.BonesBufferAddress = bonesAddress.DataGPU;
                 }
-                else
+				else // put any dummy data to the skinning buffer to avoid GPU errors
                 {
                     command.SkinBufferAddress = mesh->VertexBufferView.BufferLocation;
                     command.SkinBufferSize = mesh->VertexBufferView.SizeInBytes;
                     command.SkinBufferStride = mesh->VertexBufferView.StrideInBytes;
-
-                    command.BonesBufferAddress = modelAddress.DataGPU;
                 }
 
-                command.IndexBufferAddress = mesh->IndexBufferView.BufferLocation;
-                command.IndexBufferSize = mesh->IndexBufferView.SizeInBytes;
-                command.IndexBufferFormat = mesh->IndexBufferView.Format;
+				//command.IndexBufferAddress = mesh->IndexBufferView.BufferLocation;
+    //            command.IndexBufferSize = mesh->IndexBufferView.SizeInBytes;
+				//command.IndexBufferFormat = mesh->IndexBufferView.Format;
 
-                command.SceneBufferAddress = sceneAddress.DataGPU;
-                command.LightsBufferAddress = lightsAddress.DataGPU;
-                command.ModelBufferAddress = modelAddress.DataGPU;
-                command.LightIndex = lightIndex;
+				command.FrameBufferAddress = frameBuffer->OffsetGPU();
+				command.InstanceIndex = static_cast<std::uint32_t>(j);
+				command.LightIndex = static_cast<std::uint32_t>(lightIndex);
 
                 command.DrawArguments.VertexCountPerInstance = mesh->VertexData.size();
                 command.DrawArguments.InstanceCount = 1;
                 command.DrawArguments.StartVertexLocation = 0;
                 command.DrawArguments.StartInstanceLocation = 0;
-
-                commandsList[j] = command;
             }
 
             // Write all models bounding boxes to the buffer
-            CacheGPU::DataHandle AABBs = context.GetCache().RequestPlacement("AABBs", objectsNum * sizeof(DirectX::XMVECTOR) * 2);
             for (size_t j = 0, count = 0; j < objectsNum; ++j)
             {
                 if (std::shared_ptr<scene::Mesh> mesh = _scene->GetRootNodes()[j]->GetComponentAs<scene::Mesh>("Mesh"))
                 {
-                    DirectX::XMVECTOR* data = (DirectX::XMVECTOR*)AABBs.DataCPU;
+                    DirectX::XMVECTOR* data = aabbBuffer->Map<DirectX::XMVECTOR>();
                     scene::AABBVolume aabb = mesh->GlobalAABB;
 
                     data[count++] = aabb.Min;
@@ -205,28 +225,33 @@ namespace render
             // Transition resources
             std::vector<dx12::ResourceBarrier> barriers =
             {
-                { commandBuffer, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT,    D3D12_RESOURCE_STATE_COPY_DEST }
+                { outputCommandBuffer, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT,    D3D12_RESOURCE_STATE_COPY_DEST }
             };
             commandList.TransitionBarriers(barriers);
 
             // Reset commands counter
-            std::uint32_t counterBufferOffset = commandBuffer->GetResourceDescription().GetSize().x - sizeof(UINT);
-            commandList.CopyBufferRegion(*_counterReset, *commandBuffer, sizeof(UINT), 0, counterBufferOffset);
+            std::uint32_t counterBufferOffset = outputCommandBuffer->GetResourceDescription().GetSize().x - sizeof(UINT);
+            commandList.CopyBufferRegion(*counterResetBuffer, *outputCommandBuffer, sizeof(UINT), 0, counterBufferOffset);
 
             // Transition resources
             barriers =
             {
-                { commandBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_UNORDERED_ACCESS }
+                { outputCommandBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_UNORDERED_ACCESS }
             };
             commandList.TransitionBarriers(barriers);
 
-            D3D12_GPU_DESCRIPTOR_HANDLE cbHandle = context.GetGPUHandle(commandBuffer->GetAsUAV());
+            PassConstants passConstants =
+            {
+				.LightIndex = lightIndex,
+                .CommandsCount = static_cast<std::uint32_t>(objectsNum),
+                .AABBBufferIndex = aabbBufferHandle.Index,
+                .InputCommandsBufferIndex = inputCommandsHandle.Index,
+                .OutputCommandsBufferIndex = outputCommandBufferHandle.Index
+            };
 
             // Setup root signature
-            commandList.SetConstant(3, objectsNum);
-            commandList.SetSRV(4, AABBs.DataGPU);
-            commandList.SetSRV(5, inputCommands.DataGPU);
-            commandList.SetDescriptorTable(6, cbHandle);
+			commandList.SetCBV(0, context.GetFrame()->_frameBuffer->OffsetGPU());
+            commandList.SetConstants(1, 5, &passConstants);
 
             // Dispatch culling compute shader
             std::uint32_t xThreadGroups = (std::uint32_t)std::ceilf(objectsNum / (float)CULLING_PASS_THREADS_NUM);

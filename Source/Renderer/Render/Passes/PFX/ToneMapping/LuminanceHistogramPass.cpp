@@ -94,7 +94,7 @@ namespace render
                 .HDRTextureIndex = static_cast<uint32_t>(harTargetHandle.Index),
                 .LuminanceHistogramBufferIndex = static_cast<uint32_t>(luminanceHistogramHandle.Index)
             };
-            commandList.SetCBV(0, frameBuffer->OffsetGPU());
+            commandList.SetCBV(0, context.GetFrame()->_frameBuffer->OffsetGPU());
             commandList.SetConstants(1, 4, &constants);
 
             // Execute

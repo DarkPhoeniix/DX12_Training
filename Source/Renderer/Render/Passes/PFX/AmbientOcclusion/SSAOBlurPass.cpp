@@ -123,7 +123,7 @@ namespace render
                 .InputTextureIndex = aoTargetSRV.Index,
                 .OutputTextureIndex = blurTargetUAV.Index
 			};
-			commandList.SetCBV(0, frameBuffer->OffsetGPU());
+			commandList.SetCBV(0, context.GetFrame()->_frameBuffer->OffsetGPU());
 			commandList.SetConstants(1, 7, &passCB);
 
             XMUINT2 viewportSize = _camera->GetViewport().GetSize();
@@ -142,7 +142,7 @@ namespace render
             context.BindBindlessTable(commandList);
             commandList.SetPipelineState(_SSAOBlurVerticalPipeline);
 
-            commandList.SetCBV(0, frameBuffer->OffsetGPU());
+            commandList.SetCBV(0, context.GetFrame()->_frameBuffer->OffsetGPU());
             commandList.SetConstants(1, 7, &passCB);
 
             commandList.Dispatch(xThreadGroups, yThreadGroups);

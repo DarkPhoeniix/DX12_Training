@@ -167,7 +167,7 @@ namespace scene::helpers
         LOG_INFO("Loading scene: {}", filepath);
     }
 
-    std::shared_ptr<dx12::Resource> SceneLoader::GenerateEnvironmentDiffuseIrradianceMap(dx12::CommandList& commandList, std::shared_ptr<Scene> scene, std::shared_ptr<dx12::Resource> frameBuffer)
+    std::shared_ptr<dx12::Resource> SceneLoader::GenerateEnvironmentDiffuseIrradianceMap(dx12::CommandList& commandList, std::shared_ptr<Scene> scene)
     {
         // Find skybox node and retrieve texture pointer
 
@@ -215,7 +215,6 @@ namespace scene::helpers
 		commandList.SetDescriptorHeaps({ _resourceTable.GetShaderResourcesDescriptorHeap().GetDXDescriptorHeap().Get()});
         commandList.SetPipelineState(_IBL_DiffuseIrradianceConvolution);
 
-		commandList.SetCBV(0, frameBuffer->OffsetGPU());
         struct PassConstants
         {
             std::uint32_t SkyboxTextureIndex;
@@ -241,7 +240,7 @@ namespace scene::helpers
         return diffuseIrradianceMap;
     }
 
-    std::shared_ptr<dx12::Resource> SceneLoader::GeneratePreFilteredEnvironmentMap(dx12::CommandList& commandList, std::shared_ptr<Scene> scene, std::shared_ptr<dx12::Resource> frameBuffer)
+    std::shared_ptr<dx12::Resource> SceneLoader::GeneratePreFilteredEnvironmentMap(dx12::CommandList& commandList, std::shared_ptr<Scene> scene)
     {
         // Find skybox node and retrieve texture pointer
 
@@ -311,7 +310,6 @@ namespace scene::helpers
 
             float roughness = float(i) / float(preFilteredEnvTextureDesc.GetMipLevels() - 1);
 
-            commandList.SetCBV(0, frameBuffer->OffsetGPU());
             struct PassConstants
             {
                 float Roughness;
@@ -339,7 +337,7 @@ namespace scene::helpers
         return preFilteredEnvMap;
     }
 
-    std::shared_ptr<dx12::Resource> SceneLoader::GenerateEnvironmentBRDFLookUpTexture(dx12::CommandList& commandList, std::shared_ptr<Scene> scene, std::shared_ptr<dx12::Resource> frameBuffer)
+    std::shared_ptr<dx12::Resource> SceneLoader::GenerateEnvironmentBRDFLookUpTexture(dx12::CommandList& commandList, std::shared_ptr<Scene> scene)
     {
         // Find skybox node and retrieve texture pointer
 
@@ -386,7 +384,6 @@ namespace scene::helpers
         commandList.SetDescriptorHeaps({ _resourceTable.GetShaderResourcesDescriptorHeap().GetDXDescriptorHeap().Get() });
         commandList.SetPipelineState(_IBL_BRDFGenerateLUT);
 
-        commandList.SetCBV(0, frameBuffer->OffsetGPU());
         struct PassConstants
         {
             std::uint32_t brdfLUTTextureIndex;

@@ -68,7 +68,7 @@ namespace
         }
     }
 
-    std::array<XMMATRIX, 6> GetLightViewProj(std::shared_ptr<scene::Entity> node)
+    std::array<XMMATRIX, 6> GetLightViews(std::shared_ptr<scene::Entity> node)
     {
         std::shared_ptr<scene::Transformation> transform = node->GetComponentAs<scene::Transformation>("Transformation");
         ASSERT(transform, "Node does not have Transformation component");
@@ -95,9 +95,8 @@ namespace
             XMVECTOR lightTar = lightPos + lightDir * light->Range;
 
             view = XMMatrixLookAtLH(lightPos, lightTar, XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
-            XMMATRIX proj = XMMatrixPerspectiveFovLH(XMConvertToRadians(light->OuterAngle), 1.0f, 1.0f, light->Range);
 
-            result[0] = view * proj;
+            result[0] = view;
         }
         else if (light->Type == scene::LightType::Point)
         {
@@ -105,39 +104,38 @@ namespace
             XMVECTOR lightTar = lightPos + XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
             XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
             XMMATRIX view = XMMatrixLookAtLH(lightPos, lightTar, up);
-            XMMATRIX proj = XMMatrixPerspectiveFovLH(XMConvertToRadians(90.0f), 1.0f, 0.5f, light->Range);
 
-            result[0] = view * proj;
+            result[0] = view;
 
             lightTar = lightPos + XMVectorSet(-1.0f, 0.0f, 0.0f, 0.0f);
             up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
             view = XMMatrixLookAtLH(lightPos, lightTar, up);
 
-            result[1] = view * proj;
+            result[1] = view;
 
             lightTar = lightPos + XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
             up = XMVectorSet(0.0f, 0.0f, -1.0f, 0.0f);
             view = XMMatrixLookAtLH(lightPos, lightTar, up);
 
-            result[2] = view * proj;
+            result[2] = view;
 
             lightTar = lightPos + XMVectorSet(0.0f, -1.0f, 0.0f, 0.0f);
             up = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
             view = XMMatrixLookAtLH(lightPos, lightTar, up);
 
-            result[3] = view * proj;
+            result[3] = view;
 
             lightTar = lightPos + XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
             up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
             view = XMMatrixLookAtLH(lightPos, lightTar, up);
 
-            result[4] = view * proj;
+            result[4] = view;
 
             lightTar = lightPos + XMVectorSet(0.0f, 0.0f, -1.0f, 0.0f);
             up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
             view = XMMatrixLookAtLH(lightPos, lightTar, up);
 
-            result[5] = view * proj;
+            result[5] = view;
         }
 
         return result;
@@ -210,19 +208,24 @@ namespace render
                 frameBufferDesc.SetSize({ static_cast<std::uint32_t>(sizeof(GPUFrameDesc)), 1 });
 				frameBufferDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
             }
-			_frameBuffer = ResourceFactory::Create("Frame Buffer", frameBufferDesc);
-            _frameBuffer->CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_DEST);
+            for (size_t i = 0; i < dx12::BACK_BUFFER_COUNT; ++i)
+            {
+				std::shared_ptr<dx12::Resource> frameBuffer = ResourceFactory::Create(std::format("frame_buffer_{}", i), frameBufferDesc);
+                _currentFrame->_frameBuffer = frameBuffer;
+                _currentFrame->_frameBuffer->CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_DEST);
 
-            UpdateSceneBuffers();
+                _currentFrame = _currentFrame->Next;
+            }
 
             // Generate textures for IBL
-            _diffuseIrradianceMap = _sceneLoader.GenerateEnvironmentDiffuseIrradianceMap(commandList, _scene, _frameBuffer);
-            _brdfLUT = _sceneLoader.GenerateEnvironmentBRDFLookUpTexture(commandList, _scene, _frameBuffer);
-            _preFilteredEnvironmentMap = _sceneLoader.GeneratePreFilteredEnvironmentMap(commandList, _scene, _frameBuffer);
+            _diffuseIrradianceMap = _sceneLoader.GenerateEnvironmentDiffuseIrradianceMap(commandList, _scene);
+            _brdfLUT = _sceneLoader.GenerateEnvironmentBRDFLookUpTexture(commandList, _scene);
+            _preFilteredEnvironmentMap = _sceneLoader.GeneratePreFilteredEnvironmentMap(commandList, _scene);
         }
 
         commandList.Close();
 
+        CreateShadowMaps();
         SetupRenderPipeline();
 
         _contentLoaded = true;
@@ -245,6 +248,8 @@ namespace render
     {
         DebugInfo::BeginUpdate(updateEvent);
 
+        _deltaTime = updateEvent.elapsedTime;
+
         _descriptorHeapManager.AdvanceFrameIndex();
         _resourceTableNew.ResetTransientResources();
 
@@ -253,14 +258,10 @@ namespace render
         crashTracker->AdvanceFrame();
         crashTracker->ResetMarkerMapForCurrentFrame();
 
-        _deltaTime = updateEvent.elapsedTime;
-
         for (const auto& entity : _scene->GetRootNodes())
         {
             UpdateEntity(entity);
         }
-
-        UpdateSceneBuffers();
 
         DebugInfo::EndUpdate();
     }
@@ -269,6 +270,8 @@ namespace render
     {
         _currentFrame->WaitCPU();
         _currentFrame->ResetGPU();
+
+        UpdateSceneBuffers();
 
         DebugInfo::BeginRender(renderEvent);
 
@@ -394,12 +397,14 @@ namespace render
         _cameraComponent->GetViewport().SetSize(windowSize);
         _cameraComponent->Update();
 
+        CreateShadowMaps();
         SetupRenderPipeline();
     }
 
     void DXRenderer::OnPipelineChanged()
     {
         WaitAllFrames();
+        CreateShadowMaps();
         SetupRenderPipeline();
 
         LOG_INFO("Render pipeline changed. Rebuilding render graph...");
@@ -458,6 +463,27 @@ namespace render
             std::shared_ptr<scene::Entity> lightEntity = lightEntities[lightIndex];
             std::shared_ptr<scene::Light> lightComponent = lightEntity->GetComponentAs<scene::Light>("Light");
             std::shared_ptr<scene::Transformation> transformComponent = lightEntity->GetComponentAs<scene::Transformation>("Transformation");
+
+			std::shared_ptr<dx12::Resource> shadowMap = _textureManagerNew.GetTexture(lightComponent->ShadowMapHandle);
+			DescriptorHandle shadowMapHandle = _resourceTableNew.GetStaticResourceHandle(shadowMap->GetAsSRV());
+
+			auto views = GetLightViews(lightEntity);
+            XMMATRIX proj = XMMatrixIdentity();
+            switch (lightComponent->Type)
+            {
+            case scene::LightType::Spot:
+                proj = XMMatrixPerspectiveFovLH(XMConvertToRadians(lightComponent->OuterAngle), 1.0f, 1.0f, lightComponent->Range);
+                break;
+            case scene::LightType::Point:
+                proj = XMMatrixPerspectiveFovLH(XMConvertToRadians(90.0f), 1.0f, 0.5f, lightComponent->Range);
+                break;
+            }
+
+            for (auto& view : views)
+            {
+                view *= proj;
+			}
+
             lights[lightIndex] =
             {
                 .Direction = lightComponent->Direction,
@@ -471,9 +497,11 @@ namespace render
 
                 .Type = static_cast<std::uint32_t>(lightComponent->Type),
                 .CastShadows = lightComponent->CastShadows ? 1u : 0u,
-                .ViewProj = GetLightViewProj(lightEntity),
 
-                .ShadowMapIndex = static_cast<std::uint32_t>(-1)    // TODO: shadow map index
+                .PerspectiveValues = { proj.r[2].m128_f32[2], proj.r[3].m128_f32[2] },
+                .ViewProj = views,
+
+                .ShadowMapIndex = shadowMapHandle.Index
             };
         }
 
@@ -562,7 +590,7 @@ namespace render
         DescriptorHandle lightBufferHandle =  _resourceTableNew.AddTransientResourceView(lightBuffer->GetAsSRV());
 
         {
-            GPUFrameDesc* frameBufferData = _frameBuffer->Map<GPUFrameDesc>();
+            GPUFrameDesc* frameBufferData = _currentFrame->_frameBuffer->Map<GPUFrameDesc>();
 
 			DirectX::XMUINT2 windowSize = _cameraComponent->GetViewport().GetSize();
 
@@ -589,6 +617,49 @@ namespace render
                 .DeltaTime = _deltaTime
             };
         }
+    }
+
+    void DXRenderer::CreateShadowMaps()
+    {
+        std::vector<std::shared_ptr<scene::Entity>> lightEntities = _scene->FilterNodesByComponent("Light");
+
+        auto viewportSize = _cameraComponent->GetViewport().GetSize();
+
+        for (const auto& lightEntity : lightEntities)
+        {
+            std::shared_ptr<scene::Light> lightComponent = lightEntity->GetComponentAs<scene::Light>("Light");
+            if (lightComponent && lightComponent->CastShadows)
+            {
+                dx12::ResourceDescription shadowMapDesc;
+                {
+                    std::uint32_t size = std::max(viewportSize.x, viewportSize.y) / 2.0f;
+
+                    D3D12_CLEAR_VALUE clearValue;
+                    clearValue.Format = DXGI_FORMAT_D32_FLOAT;
+                    clearValue.DepthStencil.Depth = 1;
+                    clearValue.DepthStencil.Stencil = 0;
+
+                    shadowMapDesc.SetSize({ size, size });
+                    shadowMapDesc.SetFormat(DXGI_FORMAT_D32_FLOAT);
+                    shadowMapDesc.SetClearValue(clearValue);
+                    switch (lightComponent->Type)
+                    {
+                    case scene::LightType::Spot:
+                        shadowMapDesc.SetDepthOrArraySize(1);
+                        break;
+                    case scene::LightType::Point:
+                        shadowMapDesc.SetDepthOrArraySize(6);
+                        break;
+                    }
+                    shadowMapDesc.SetResourceType(dx12::ResourceType::DepthStencil | dx12::ResourceType::Texture);
+				}
+
+                std::shared_ptr<dx12::Resource> shadowMap = ResourceFactory::Create(lightEntity->GetName() + "_shadow_map", shadowMapDesc);
+				shadowMap->CreateCommitedResource();
+
+                lightComponent->ShadowMapHandle = _textureManagerNew.AddTexture(shadowMap);
+            }
+		}
     }
 
     void DXRenderer::UpdateEntity(std::shared_ptr<scene::Entity> entity)
@@ -661,20 +732,18 @@ namespace render
 
     void DXRenderer::SetupRenderPipeline()
     {
-        // Render Graph setup
+        // Render Graph setup5
         {
             _renderGraph.Reset();
-
-            _renderGraph.ImportResource(_frameBuffer);
 
             _renderGraph.ImportResource(_diffuseIrradianceMap);
             _renderGraph.ImportResource(_brdfLUT);
             _renderGraph.ImportResource(_preFilteredEnvironmentMap);
 
             _renderGraph.AddPass(std::make_shared<GeometryPass>(_scene, _cameraComponent.get()));
-            //_renderGraph.AddPass(std::make_shared<ShadowClearPass>(_scene, _cameraComponent.get()));
-            //_renderGraph.AddPass(std::make_shared<ShadowCullPass>(_scene, _cameraComponent.get()));
-            //_renderGraph.AddPass(std::make_shared<ShadowDrawPass>(_scene, _cameraComponent.get()));
+            _renderGraph.AddPass(std::make_shared<ShadowClearPass>(_scene, _cameraComponent.get()));
+            _renderGraph.AddPass(std::make_shared<ShadowCullPass>(_scene, _cameraComponent.get()));
+            _renderGraph.AddPass(std::make_shared<ShadowDrawPass>(_scene, _cameraComponent.get()));
             _renderGraph.AddPass(std::make_shared<AmbientLightingPass>(_scene, _cameraComponent.get()));
             if (RenderSettings::UseSSAO())
             {

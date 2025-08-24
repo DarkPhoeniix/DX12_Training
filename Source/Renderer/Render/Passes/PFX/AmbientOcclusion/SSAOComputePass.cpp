@@ -150,7 +150,7 @@ namespace render
                 .NormalMapTextureIndex = normalSpecularHandle.Index,
                 .AmbientOcclusionTextureIndex = aoTargetHandle.Index
 			};
-			commandList.SetCBV(0, frameBuffer->OffsetGPU());
+			commandList.SetCBV(0, context.GetFrame()->_frameBuffer->OffsetGPU());
 			commandList.SetConstants(1, 8, &passCB);
 
             XMUINT2 viewportSize = _camera->GetViewport().GetSize();

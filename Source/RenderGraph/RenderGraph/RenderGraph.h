@@ -30,7 +30,6 @@ namespace rg
         RenderGraph& operator=(const RenderGraph&) = delete;
         RenderGraph& operator=(RenderGraph&&) = default;
 
-        CacheGPU& GetCache();
         ResourceTable& GetResourceTable();
 
         void SetFrame(Frame& frame);

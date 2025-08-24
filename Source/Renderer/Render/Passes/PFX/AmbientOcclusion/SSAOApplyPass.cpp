@@ -71,7 +71,7 @@ namespace render
                 .AOTargetIndex = aoTargetHandle.Index,
 				.HDRTargetIndex = hdrTargetHandle.Index
 			};
-            commandList.SetCBV(0, frameBuffer->OffsetGPU());
+            commandList.SetCBV(0, context.GetFrame()->_frameBuffer->OffsetGPU());
 			commandList.SetConstants(1, 2, &passCB);
 
             XMUINT2 viewportSize = _camera->GetViewport().GetSize();

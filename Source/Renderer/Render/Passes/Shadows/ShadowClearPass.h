@@ -11,7 +11,7 @@ namespace render
 {
     struct ShadowClearPassData
     {
-        std::vector<rg::ResourceId> ShadowMaps;
+		rg::ResourceId ShadowMaps;
     };
 
     class ShadowClearPass : public rg::RenderPass<ShadowClearPassData>

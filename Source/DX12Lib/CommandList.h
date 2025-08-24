@@ -62,7 +62,7 @@ namespace dx12
         void EndQuery(ComPtr<ID3D12QueryHeap> queryHeap, D3D12_QUERY_TYPE type, std::uint32_t index);
 
         // Sets a resource transition barrier (to change resource states between pipeline stages).
-        void TransitionBarrier(ResourceBarrier& barrier);
+        void TransitionBarrier(const ResourceBarrier& barrier);
         void TransitionBarriers(std::vector<ResourceBarrier>& barrier);
         // Sets a resource transition barrier (to change resource states between pipeline stages).
         // Before state is a current resource state

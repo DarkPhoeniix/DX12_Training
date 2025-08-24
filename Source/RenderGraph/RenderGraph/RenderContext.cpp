@@ -14,7 +14,7 @@ namespace
 namespace rg
 {
     RenderContext::RenderContext(ResourceTable& resourceTable, TextureManager& textureManager)
-        : _currentFrameIndex(0)
+        : _frame(nullptr)
         , _resourceTableNew(resourceTable)
 		, _textureManager(textureManager)
     {
@@ -41,9 +41,14 @@ namespace rg
         }
     }
 
+    const Frame* RenderContext::GetFrame() const
+    {
+        return _frame;
+    }
+
     std::uint32_t RenderContext::GetFrameIndex() const
     {
-        return _currentFrameIndex;
+        return _frame->Index;
     }
 
     ResourceTable& RenderContext::GetResourceTable()
@@ -54,11 +59,6 @@ namespace rg
     TextureManager& RenderContext::GetTextureManager()
     {
 		return _textureManager;
-    }
-
-    CacheGPU& RenderContext::GetCache()
-    {
-        return _cache[_currentFrameIndex];
     }
 
     void RenderContext::BindBindlessTable(dx12::CommandList& commandList) const
@@ -92,7 +92,7 @@ namespace rg
 
     D3D12_CPU_DESCRIPTOR_HANDLE RenderContext::GetCPUHandle(dx12::RenderTargetView rtv)
     {
-        dx12::ResourceTable& table = _resourceTable[_currentFrameIndex];
+        dx12::ResourceTable& table = _resourceTable[_frame->Index];
 
         table.PlaceResourceIfNotExist(rtv.Owner, dx12::ResourceViewType::RTV);
 
@@ -101,7 +101,7 @@ namespace rg
 
     D3D12_CPU_DESCRIPTOR_HANDLE RenderContext::GetCPUHandle(dx12::DepthStencilView dsv)
     {
-        dx12::ResourceTable& table = _resourceTable[_currentFrameIndex];
+        dx12::ResourceTable& table = _resourceTable[_frame->Index];
 
         table.PlaceResourceIfNotExist(dsv.Owner, dx12::ResourceViewType::DSV);
 
@@ -110,7 +110,7 @@ namespace rg
 
     D3D12_CPU_DESCRIPTOR_HANDLE RenderContext::GetCPUHandle(dx12::ShaderResourceView srv)
     {
-        dx12::ResourceTable& table = _resourceTable[_currentFrameIndex];
+        dx12::ResourceTable& table = _resourceTable[_frame->Index];
 
         table.PlaceResourceIfNotExist(srv.Owner, dx12::ResourceViewType::SRV);
 
@@ -119,7 +119,7 @@ namespace rg
 
     D3D12_CPU_DESCRIPTOR_HANDLE RenderContext::GetCPUHandle(dx12::UnorderedAccessView uav)
     {
-        dx12::ResourceTable& table = _resourceTable[_currentFrameIndex];
+        dx12::ResourceTable& table = _resourceTable[_frame->Index];
 
         table.PlaceResourceIfNotExist(uav.Owner, dx12::ResourceViewType::UAV);
 
@@ -128,7 +128,7 @@ namespace rg
 
     D3D12_CPU_DESCRIPTOR_HANDLE RenderContext::GetCPUHandle(dx12::ConstantBufferView cbv)
     {
-        dx12::ResourceTable& table = _resourceTable[_currentFrameIndex];
+        dx12::ResourceTable& table = _resourceTable[_frame->Index];
 
         table.PlaceResourceIfNotExist(cbv.Owner, dx12::ResourceViewType::CBV);
 
@@ -137,7 +137,7 @@ namespace rg
 
     D3D12_GPU_DESCRIPTOR_HANDLE RenderContext::GetGPUHandle(dx12::RenderTargetView rtv)
     {
-        dx12::ResourceTable& table = _resourceTable[_currentFrameIndex];
+        dx12::ResourceTable& table = _resourceTable[_frame->Index];
 
         table.PlaceResourceIfNotExist(rtv.Owner, dx12::ResourceViewType::RTV);
 
@@ -146,7 +146,7 @@ namespace rg
 
     D3D12_GPU_DESCRIPTOR_HANDLE RenderContext::GetGPUHandle(dx12::DepthStencilView dsv)
     {
-        dx12::ResourceTable& table = _resourceTable[_currentFrameIndex];
+        dx12::ResourceTable& table = _resourceTable[_frame->Index];
 
         table.PlaceResourceIfNotExist(dsv.Owner, dx12::ResourceViewType::DSV);
 
@@ -155,7 +155,7 @@ namespace rg
 
     D3D12_GPU_DESCRIPTOR_HANDLE RenderContext::GetGPUHandle(dx12::ShaderResourceView srv)
     {
-        dx12::ResourceTable& table = _resourceTable[_currentFrameIndex];
+        dx12::ResourceTable& table = _resourceTable[_frame->Index];
 
         table.PlaceResourceIfNotExist(srv.Owner, dx12::ResourceViewType::SRV);
 
@@ -164,7 +164,7 @@ namespace rg
 
     D3D12_GPU_DESCRIPTOR_HANDLE RenderContext::GetGPUHandle(dx12::UnorderedAccessView uav)
     {
-        dx12::ResourceTable& table = _resourceTable[_currentFrameIndex];
+        dx12::ResourceTable& table = _resourceTable[_frame->Index];
 
         table.PlaceResourceIfNotExist(uav.Owner, dx12::ResourceViewType::UAV);
 
@@ -173,7 +173,7 @@ namespace rg
 
     D3D12_GPU_DESCRIPTOR_HANDLE RenderContext::GetGPUHandle(dx12::ConstantBufferView cbv)
     {
-        dx12::ResourceTable& table = _resourceTable[_currentFrameIndex];
+        dx12::ResourceTable& table = _resourceTable[_frame->Index];
 
         table.PlaceResourceIfNotExist(cbv.Owner, dx12::ResourceViewType::CBV);
 
@@ -259,6 +259,15 @@ namespace rg
         }
 
         return IdIt->second;
+    }
+
+    ResourceId RenderContext::CreateResourceVirtual(const std::string& name)
+    {
+        ASSERT(!name.empty(), "Resource name cannot be empty.");
+
+        std::shared_ptr<dx12::Resource> resource = ResourceFactory::Create(name);
+        _mapNameToIdNew[name] = resource->GetID();
+        return resource->GetID();
     }
 
     ResourceId RenderContext::CreateResourceNew(const std::string& name, dx12::ResourceDescription desc, void* data /*= nullptr*/, size_t dataSize /*= 0*/)

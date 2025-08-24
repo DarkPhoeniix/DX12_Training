@@ -71,7 +71,7 @@ namespace render
             context.BindBindlessTable(commandList);
             commandList.SetPipelineState(_skyboxPipeline);
 
-            commandList.SetCBV(0, frameBuffer->OffsetGPU());
+            commandList.SetCBV(0, context.GetFrame()->_frameBuffer->OffsetGPU());
             PassConstants passCB =
             {
                 .DepthTextureIndex = depthHandle.Index,

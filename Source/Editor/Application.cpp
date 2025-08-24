@@ -102,6 +102,8 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp, std::string cmdLine)
 
             frame.Init({ (uint32_t)_win32Window->GetWidth(), (uint32_t)_win32Window->GetHeight() });
         }
+
+        pApp->SetFrame(*_currentFrame);
     }
 
     _win32Window->AddEventListener(pApp.get());

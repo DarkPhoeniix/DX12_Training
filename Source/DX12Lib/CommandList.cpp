@@ -139,7 +139,7 @@ namespace dx12
         _commandList->EndQuery(queryHeap.Get(), type, index);
     }
 
-    void CommandList::TransitionBarrier(ResourceBarrier& barrier)
+    void CommandList::TransitionBarrier(const ResourceBarrier& barrier)
     {
         FAIL(!barrier.Resource.expired(), "Resource is null.");
         ASSERT(barrier.BeforeState != barrier.AfterState, "BeforeState and AfterState are the same.");
@@ -151,9 +151,10 @@ namespace dx12
                 barrier.BeforeState,
                 barrier.AfterState,
                 D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
-            resource->SetCurrentState(barrier.AfterState);
 
             _commandList->ResourceBarrier(1, &dxBarrier);
+
+            resource->SetCurrentState(barrier.AfterState);
         }
     }
 

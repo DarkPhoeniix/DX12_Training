@@ -4,6 +4,7 @@
 #include "ResourceTable.h"
 #include "Core/TextureManager.h"
 #include "Render/Frame/CacheGPU.h"
+#include "Render/Frame/Frame.h"
 
 namespace rg
 {
@@ -17,11 +18,11 @@ namespace rg
     public:
         RenderContext(ResourceTable& resourceTable, TextureManager& textureManager);
 
+        const Frame* GetFrame() const;
         std::uint32_t GetFrameIndex() const;
 
         ResourceTable& GetResourceTable();
 		TextureManager& GetTextureManager();
-        CacheGPU& GetCache();
 
         void BindBindlessTable(dx12::CommandList& commandList) const;
 
@@ -60,6 +61,7 @@ namespace rg
         ResourceId ReadResource(const std::string& name);
         ResourceId WriteResource(const std::string& name);
 
+        ResourceId CreateResourceVirtual(const std::string& name);
         ResourceId CreateResourceNew(const std::string& name, dx12::ResourceDescription desc, void* data = nullptr, size_t dataSize = 0);
         ResourceId ReadResourceNew(const std::string& name);
         ResourceId WriteResourceNew(const std::string& name);
@@ -72,7 +74,7 @@ namespace rg
         std::unordered_map<std::string, ResourceId> _mapNameToIdNew;
         std::unordered_map<ResourceId, std::shared_ptr<dx12::Resource>> _resourcesNew;
 
-        std::uint32_t _currentFrameIndex;
+        Frame* _frame;
         dx12::ResourceTable _resourceTable[dx12::BACK_BUFFER_COUNT];
         CacheGPU _cache[dx12::BACK_BUFFER_COUNT];
 
