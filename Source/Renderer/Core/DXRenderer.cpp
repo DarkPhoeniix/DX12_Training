@@ -3,8 +3,6 @@
 #include "DXRenderer.h"
 
 #include "CommandList.h"
-#include "Texture.h"
-#include "../DX12Lib/ResourceTable.h"
 
 #include "IGPUCrashTracker.h"
 
@@ -26,7 +24,6 @@
 #include "Utility/DebugInfo.h"
 
 #include "Render/Helpers/GPUStructs.h"
-#include "Render/Helpers/RenderHelpers.h"
 
 #include "Render/RenderSettings.h"
 #include "Render/Frame/TaskGPU.h"
@@ -771,14 +768,5 @@ namespace render
 
             _renderGraph.Compile();
         }
-    }
-
-    void DXRenderer::UploadSceneCache(CacheGPU& cache, dx12::ResourceTable& table)
-    {
-        cache.Clear();
-
-        helpers::SetupSceneDataGPU(*_scene, &cache);
-        helpers::SetupLightDataGPU(*_scene, &cache, table);
-
     }
 } // namespace render

@@ -32,25 +32,6 @@ Frame::~Frame()
 
 void Frame::Init(const DirectX::XMUINT2& size, uint32_t cacheSize)
 {
-    {
-        // TODO: that sucks too
-        _resourceTable.Init(1024, true);
-    }
-
-    // Initialize cache heap
-    {
-        dx12::ResourceDescription desc = {};
-        desc.SetSize({ _16MB, 1 });
-        desc.SetStride(256);
-        desc.SetFormat(DXGI_FORMAT_UNKNOWN);
-        desc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
-
-        std::shared_ptr<dx12::Resource> frameCachedMemory = ResourceFactory::Create(std::format("Frame cache {}", Index), desc);
-        frameCachedMemory->CreateCommitedResource();
-
-        _cache.SetResource(frameCachedMemory);
-    }
-
     // Create resource for the target texture
     {
         D3D12_CLEAR_VALUE clearValueTexTarget;
@@ -76,10 +57,6 @@ void Frame::Init(const DirectX::XMUINT2& size, uint32_t cacheSize)
         }
         _targetTexture = ResourceFactory::Create(std::format("Frame cache {}", Index), textureDesc);
         _targetTexture->CreateCommitedResource();
-
-        _resourceTable.PlaceResource(_targetTexture, dx12::ResourceViewType::RTV);
-        _resourceTable.PlaceResource(_targetTexture, dx12::ResourceViewType::SRV);
-        _resourceTable.PlaceResource(_targetTexture, dx12::ResourceViewType::UAV);
     }
 
     // TODO: refactor this
@@ -124,16 +101,6 @@ TaskGPU* Frame::CreateTask(D3D12_COMMAND_LIST_TYPE type, dx12::PipelineState* ro
     return task;
 }
 
-void Frame::BindDescriptorHeaps(dx12::CommandList& commandList)
-{
-    commandList.SetDescriptorHeaps({ _resourceTable.GetDescriptorHeap(dx12::ResourceViewType::SRV).GetDXDescriptorHeap().Get()});
-}
-
-dx12::ResourceTable& Frame::GetResourceTable()
-{
-    return _resourceTable;
-}
-
 void Frame::WaitCPU()
 {
     if (_syncPoint)
@@ -164,26 +131,9 @@ void Frame::ResetGPU()
     _currentTasks.clear();
 }
 
-CacheGPU& Frame::GetCache()
-{
-    return _cache;
-}
-
-void Frame::ResetCache()
-{
-    _resourceTable.Reset();
-    _cache.Clear();
-
-    _resourceTable.PlaceResource(_targetTexture, dx12::ResourceViewType::RTV);
-    _resourceTable.PlaceResource(_targetTexture, dx12::ResourceViewType::SRV);
-    _resourceTable.PlaceResource(_targetTexture, dx12::ResourceViewType::UAV);
-}
-
 void Frame::Resize(const DirectX::XMUINT2& size)
 {
     _targetTexture->Reset();
-    _resourceTable.Reset();
-    _cache.Clear();
 
     Init(size);
 }

@@ -24,8 +24,8 @@ namespace render
 
     void DebugArmaturePass::Setup(rg::RenderPassBuilder& builder)
     {
-        _data.Target = builder.WriteResource("render_target");
-        _data.Depth = builder.ReadResource("depth_target");
+        _data.Target = builder.WriteResourceNew("render_target");
+        _data.Depth = builder.ReadResourceNew("depth_target");
     }
 
     void DebugArmaturePass::Execute(rg::RenderContext& context, TaskGPU& task)
@@ -35,11 +35,11 @@ namespace render
 
         PIXBeginEvent(commandList.GetDXCommandList().Get(), 0, "Debug Armature");
         {
-            std::shared_ptr<dx12::Resource> target = context.GetResource(_data.Target);
-            std::shared_ptr<dx12::Resource> depth = context.GetResource(_data.Depth);
+            std::shared_ptr<dx12::Resource> target = context.GetResourceNew(_data.Target);
+            std::shared_ptr<dx12::Resource> depth = context.GetResourceNew(_data.Depth);
 
-            D3D12_CPU_DESCRIPTOR_HANDLE rtv = context.GetCPUHandle(target->GetAsRTV());
-            D3D12_CPU_DESCRIPTOR_HANDLE dsv = context.GetCPUHandle(depth->GetAsDSV());
+            DescriptorHandle rtv = context.GetStaticResourceHandle(target->GetAsRTV());
+            DescriptorHandle dsv = context.GetStaticResourceHandle(depth->GetAsDSV());
 
             std::vector<dx12::ResourceBarrier> barriers =
             {
@@ -51,7 +51,7 @@ namespace render
             commandList.SetPipelineState(_debugArmaturePipeline);
 
             commandList.SetViewport(_camera->GetViewport());
-            commandList.SetRenderTarget(&rtv, &dsv);
+            commandList.SetRenderTarget(&rtv.CpuHandle, &dsv.CpuHandle);
 
             for (auto& node : _scene->GetRootNodes())
             {

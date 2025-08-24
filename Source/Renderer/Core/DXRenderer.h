@@ -51,7 +51,6 @@ namespace render
 
         void WaitAllFrames();
         void SetupRenderPipeline();
-        void UploadSceneCache(CacheGPU& cache, dx12::ResourceTable& table);
 
         HWND _windowHandle;
 

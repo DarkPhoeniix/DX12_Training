@@ -11,7 +11,7 @@ namespace render
 {
     struct ShadowCullPassData
     {
-        rg::ResourceId ShadowMaps;  // TODO: remove
+        rg::ResourceId ShadowMaps;
 
         rg::ResourceId CounterResetBuffer;
         rg::ResourceId AABBBuffer;

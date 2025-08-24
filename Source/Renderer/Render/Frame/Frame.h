@@ -1,13 +1,11 @@
 #pragma once
 
-#include "../DX12Lib/ResourceTable.h"
 #include "Heap.h"
 
 #include "Render/Frame/AllocatorPool.h"
 #include "Render/Frame/Executor.h"
 #include "Render/Frame/TaskGPU.h"
 #include "Render/Frame/FencePool.h"
-#include "Render/Frame/CacheGPU.h"
 
 // TODO: refactor the Frame class
 
@@ -26,15 +24,8 @@ public:
 
     TaskGPU* CreateTask(D3D12_COMMAND_LIST_TYPE type, dx12::PipelineState* rootSignature = nullptr);
 
-    void BindDescriptorHeaps(dx12::CommandList& commandList);
-
     void WaitCPU();
     void ResetGPU();
-
-    dx12::ResourceTable& GetResourceTable();
-
-    CacheGPU& GetCache();
-    void ResetCache();
 
     void Resize(const DirectX::XMUINT2& size);
 
@@ -63,9 +54,6 @@ private:
     dx12::Fence* _syncPoint;
 
     dx12::Heap _resourcesHeap;
-
-    dx12::ResourceTable _resourceTable;
-    CacheGPU _cache;
 
     std::shared_ptr<dx12::Resource> _targetTexture;
 

@@ -227,9 +227,6 @@
     <ClCompile Include="Render\Helpers\GPUStructs.cpp">
       <Filter>Render\Helpers</Filter>
     </ClCompile>
-    <ClCompile Include="Render\Helpers\RenderHelpers.cpp">
-      <Filter>Render\Helpers</Filter>
-    </ClCompile>
     <ClCompile Include="Utility\HighResolutionClock.cpp">
       <Filter>Helpers</Filter>
     </ClCompile>
@@ -396,9 +393,6 @@
       <Filter>Render\Helpers</Filter>
     </ClInclude>
     <ClInclude Include="Render\Helpers\DrawHelpers.h">
-      <Filter>Render\Helpers</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\Helpers\RenderHelpers.h">
       <Filter>Render\Helpers</Filter>
     </ClInclude>
     <ClInclude Include="Utility\HighResolutionClock.h">

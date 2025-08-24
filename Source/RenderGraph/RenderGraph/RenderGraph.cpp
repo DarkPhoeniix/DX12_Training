@@ -36,20 +36,11 @@ namespace rg
 
     void RenderGraph::Reset()
     {
-        _context._mapNameToId.clear();
-        _context._resources.clear();
+        _context._mapNameToIdNew.clear();
+        _context._resourcesNew.clear();
 
         _passes.clear();
         _sortedPasses.clear();
-
-        for (CacheGPU& cache : _context._cache)
-        {
-            cache.Clear();
-        }
-        for (dx12::ResourceTable& table : _context._resourceTable)
-        {
-            table.Reset();
-        }
     }
 
     void RenderGraph::Compile()
@@ -135,7 +126,7 @@ namespace rg
         }
         else
         {
-            ResourceId id = _context._mapNameToIdNew.size();
+            const ResourceId& id = resource->GetID();
             _context._mapNameToIdNew[resource->GetName()] = id;
             _context._resourcesNew[id] = resource;
         }

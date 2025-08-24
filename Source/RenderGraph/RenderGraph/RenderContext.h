@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Core/ResourceTable.h"
-#include "ResourceTable.h"
 #include "Core/TextureManager.h"
 #include "Render/Frame/CacheGPU.h"
 #include "Render/Frame/Frame.h"
@@ -26,20 +25,7 @@ namespace rg
 
         void BindBindlessTable(dx12::CommandList& commandList) const;
 
-        std::shared_ptr<dx12::Resource> GetResource(ResourceId id);
         std::shared_ptr<dx12::Resource> GetResourceNew(ResourceId id);
-
-        D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle(dx12::RenderTargetView rtv);
-        D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle(dx12::DepthStencilView dsv);
-        D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle(dx12::ShaderResourceView srv);
-        D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle(dx12::UnorderedAccessView uav);
-        D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle(dx12::ConstantBufferView cbv);
-
-        D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle(dx12::RenderTargetView rtv);
-        D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle(dx12::DepthStencilView dsv);
-        D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle(dx12::ShaderResourceView srv);
-        D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle(dx12::UnorderedAccessView uav);
-        D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle(dx12::ConstantBufferView cbv);
 
         const DescriptorHandle& GetStaticResourceHandle(dx12::RenderTargetView rtv) const;
         const DescriptorHandle& GetStaticResourceHandle(dx12::DepthStencilView dsv) const;
@@ -57,10 +43,6 @@ namespace rg
         friend class RenderGraph;
         friend class RenderPassBuilder;
 
-        ResourceId CreateResource(const std::string& name, dx12::ResourceDescription desc);
-        ResourceId ReadResource(const std::string& name);
-        ResourceId WriteResource(const std::string& name);
-
         ResourceId CreateResourceVirtual(const std::string& name);
         ResourceId CreateResourceNew(const std::string& name, dx12::ResourceDescription desc, void* data = nullptr, size_t dataSize = 0);
         ResourceId ReadResourceNew(const std::string& name);
@@ -68,15 +50,10 @@ namespace rg
 
         void FillResource(std::shared_ptr<dx12::Resource> resource, void* data, size_t dataSize = 0);
 
-        std::unordered_map<std::string, ResourceId> _mapNameToId;
-        std::unordered_map<ResourceId, std::shared_ptr<dx12::Resource>> _resources;
-
         std::unordered_map<std::string, ResourceId> _mapNameToIdNew;
         std::unordered_map<ResourceId, std::shared_ptr<dx12::Resource>> _resourcesNew;
 
         Frame* _frame;
-        dx12::ResourceTable _resourceTable[dx12::BACK_BUFFER_COUNT];
-        CacheGPU _cache[dx12::BACK_BUFFER_COUNT];
 
         ResourceTable& _resourceTableNew;
 		TextureManager& _textureManager;

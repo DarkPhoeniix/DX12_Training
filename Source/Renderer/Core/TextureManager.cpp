@@ -3,7 +3,6 @@
 #include "TextureManager.h"
 
 #include "CommandList.h"
-#include "Texture.h"
 
 namespace
 {

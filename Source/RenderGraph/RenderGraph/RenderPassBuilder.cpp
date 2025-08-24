@@ -8,36 +8,6 @@ namespace rg
         : _renderGraph(renderGraph), _renderPass(renderPass)
     {   }
 
-    ResourceId RenderPassBuilder::CreateResource(const std::string& name, dx12::ResourceDescription desc)
-    {
-        ResourceId resourceId = _renderGraph._context.CreateResource(name, desc);
-
-        _renderPass->_creates.push_back(resourceId);
-        _renderPass->_reads.push_back(resourceId);
-        _renderPass->_writes.push_back(resourceId);
-
-        return resourceId;
-    }
-
-    ResourceId RenderPassBuilder::ReadResource(const std::string& name)
-    {
-        ResourceId resourceId = _renderGraph._context.ReadResource(name);
-
-        _renderPass->_reads.push_back(resourceId);
-
-        return resourceId;
-    }
-
-    ResourceId RenderPassBuilder::WriteResource(const std::string& name)
-    {
-        ResourceId resourceId = _renderGraph._context.ReadResource(name);
-
-        _renderPass->_reads.push_back(resourceId);
-        _renderPass->_writes.push_back(resourceId);
-
-        return resourceId;
-    }
-
     ResourceId RenderPassBuilder::CreateResourceVirtual(const std::string& name)
     {
         ResourceId resourceId = _renderGraph._context.CreateResourceVirtual(name);
