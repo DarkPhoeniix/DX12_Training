@@ -5,13 +5,8 @@
 #include "CommandList.h"
 #include "ResourceBarrier.h"
 
-#include "Render/RenderSettings.h"
-#include "Render/Passes/PassResources.h"
-
 #include "RenderGraph/RenderContext.h"
 #include "RenderGraph/RenderPassBuilder.h"
-
-#include <random>
 
 namespace render
 {
@@ -47,7 +42,6 @@ namespace render
 
     void SSAOBlurPass::Setup(rg::RenderPassBuilder& builder)
     {
-        _data.FrameBuffer = builder.ReadResourceNew("Frame Buffer");
         dx12::ResourceDescription weightsBufferDesc;
         {
             weightsBufferDesc.SetSize({ (kRadius * 2 + 1) * sizeof(float), 1 });
@@ -68,10 +62,10 @@ namespace render
         {
             weightsData[kRadius + i] /= sum;
         }
-		_data.WeightsBuffer = builder.CreateResourceNew("SSAO Blur Weights", weightsBufferDesc, weightsData.data(), sizeof(float) * weightsData.size());
+		_data.WeightsBuffer = builder.CreateResourceNew("ssao_blur_weights", weightsBufferDesc, weightsData.data(), sizeof(float) * weightsData.size());
 
-        _data.Depth = builder.ReadResourceNew(DEPTH);
-        _data.AOTarget = builder.ReadResourceNew("AO Target");
+        _data.Depth = builder.ReadResourceNew("depth_target");
+        _data.AOTarget = builder.ReadResourceNew("ao_target");
 
         dx12::ResourceDescription aoBlurDesc;
         {
@@ -79,7 +73,7 @@ namespace render
             aoBlurDesc.SetFormat(DXGI_FORMAT_R32_FLOAT);
             aoBlurDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::Unordered);
         }
-        _data.TempBlurTarget = builder.CreateResourceNew("AO Blur", aoBlurDesc);
+        _data.TempBlurTarget = builder.CreateResourceNew("ao_blur_target", aoBlurDesc);
     }
 
     void SSAOBlurPass::Execute(rg::RenderContext& context, TaskGPU& task)
@@ -89,7 +83,6 @@ namespace render
 
         PIXBeginEvent(commandList.GetDXCommandList().Get(), 3, "SSAO Blur");
         {
-            std::shared_ptr<dx12::Resource> frameBuffer = context.GetResourceNew(_data.FrameBuffer);
 			std::shared_ptr<dx12::Resource> weights = context.GetResourceNew(_data.WeightsBuffer);
             std::shared_ptr<dx12::Resource> depth = context.GetResourceNew(_data.Depth);
             std::shared_ptr<dx12::Resource> aoTarget = context.GetResourceNew(_data.AOTarget);

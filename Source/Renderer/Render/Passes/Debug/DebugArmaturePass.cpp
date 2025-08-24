@@ -4,7 +4,6 @@
 
 #include "CommandList.h"
 
-#include "Render/Passes/PassResources.h"
 #include "Scene/Entity/Components/Armature.h"
 #include "Scene/Entity/Components/Transformation.h"
 
@@ -25,8 +24,8 @@ namespace render
 
     void DebugArmaturePass::Setup(rg::RenderPassBuilder& builder)
     {
-        _data.Target = builder.WriteResource(TARGET);
-        _data.Depth = builder.ReadResource(DEPTH);
+        _data.Target = builder.WriteResource("render_target");
+        _data.Depth = builder.ReadResource("depth_target");
     }
 
     void DebugArmaturePass::Execute(rg::RenderContext& context, TaskGPU& task)

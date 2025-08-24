@@ -6,7 +6,6 @@
 #include "ResourceBarrier.h"
 
 #include "Scene/Entity/Components/Camera.h"
-#include "Render/Passes/PassResources.h"
 
 #include "RenderGraph/RenderPassBuilder.h"
 #include "RenderGraph/RenderContext.h"
@@ -50,10 +49,8 @@ namespace render
 
     void ToneMappingPass::Setup(rg::RenderPassBuilder& builder)
     {
-        _data.FrameBuffer = builder.ReadResourceNew("Frame Buffer");
-
-        _data.HDRTarget = builder.ReadResourceNew(HDR_TARGET);
-        _data.AverageLuminance = builder.ReadResourceNew(AVERAGE_LUM);
+        _data.HDRTarget = builder.ReadResourceNew("hdr_target");
+        _data.AverageLuminance = builder.ReadResourceNew("average_luminance");
 
         dx12::ResourceDescription targetDesc;
         {
@@ -69,7 +66,7 @@ namespace render
             targetDesc.SetClearValue(clearValue);
             targetDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::RenderTarget | dx12::ResourceType::Unordered);
         }
-        _data.Target = builder.CreateResourceNew(TARGET, targetDesc);
+        _data.Target = builder.CreateResourceNew("render_target", targetDesc);
     }
 
     void ToneMappingPass::Execute(rg::RenderContext& context, TaskGPU& task)
@@ -81,7 +78,6 @@ namespace render
         {
             // Copy and setup needed resources
 
-            std::shared_ptr<dx12::Resource> frameBuffer     = context.GetResourceNew(_data.FrameBuffer);
             std::shared_ptr<dx12::Resource> hdrTarget       = context.GetResourceNew(_data.HDRTarget);
             std::shared_ptr<dx12::Resource> avgLuminance    = context.GetResourceNew(_data.AverageLuminance);
             std::shared_ptr<dx12::Resource> target          = context.GetResourceNew(_data.Target);

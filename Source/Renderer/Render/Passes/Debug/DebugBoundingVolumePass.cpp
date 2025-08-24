@@ -3,7 +3,6 @@
 #include "DebugBoundingVolumePass.h"
 
 #include "Render/Helpers/DrawHelpers.h"
-#include "Render/Passes/PassResources.h"
 #include "Scene/Entity/Components/Light.h"
 #include "Scene/Entity/Components/Mesh.h"
 #include "Scene/Entity/Components/Transformation.h"
@@ -24,8 +23,8 @@ namespace render
 
     void DebugBoundingVolumePass::Setup(rg::RenderPassBuilder& builder)
     {
-        _data.Target = builder.WriteResource(TARGET);
-        _data.Depth = builder.ReadResource(DEPTH);
+        _data.Target = builder.WriteResource("render_target");
+        _data.Depth = builder.ReadResource("depth_target");
     }
 
     void DebugBoundingVolumePass::Execute(rg::RenderContext& context, TaskGPU& task)

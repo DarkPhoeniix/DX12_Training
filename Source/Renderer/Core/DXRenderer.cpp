@@ -284,7 +284,7 @@ namespace render
 
         _renderGraph.Execute();
 
-        std::shared_ptr<dx12::Resource> target = _renderGraph.ExportResource("Target");
+        std::shared_ptr<dx12::Resource> target = _renderGraph.ExportResource("render_target");
 
         // Present
         {

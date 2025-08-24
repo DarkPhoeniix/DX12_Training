@@ -5,7 +5,6 @@
 #include "CommandList.h"
 #include "ResourceBarrier.h"
 
-#include "Render/Helpers/RenderHelpers.h"
 #include "Scene/Entity/Components/Camera.h"
 #include "Scene/Entity/Components/Light.h"
 
@@ -85,9 +84,7 @@ namespace render
 
     void ShadowDrawPass::Setup(rg::RenderPassBuilder& builder)
     {
-        _data.FrameBuffer = builder.ReadResourceNew("Frame Buffer");
-
-        _data.ShadowMaps = builder.ReadResourceNew("Shadow Maps");
+        _data.ShadowMaps = builder.ReadResourceNew("shadow_maps");
 
         std::vector<std::shared_ptr<scene::Entity>> lightEntities = _scene->FilterNodesByComponent("Light");
         size_t lightsNum = lightEntities.size();
@@ -97,7 +94,7 @@ namespace render
             _data.LightCommandBuffers[frame].resize(lightsNum);
             for (size_t i = 0; i < lightsNum; ++i)
             {
-                _data.LightCommandBuffers[frame][i] = builder.ReadResourceNew(std::format("ShadowCullBuffer {} (frame {})", i, frame));
+                _data.LightCommandBuffers[frame][i] = builder.ReadResourceNew(std::format("shadow_culled_instances_buffer_{} (frame {})", i, frame));
             }
         }
     }

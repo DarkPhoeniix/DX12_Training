@@ -143,9 +143,6 @@
     <ClCompile Include="Render\Passes\LightingPass.cpp">
       <Filter>Render\Passes</Filter>
     </ClCompile>
-    <ClCompile Include="Render\Passes\PassResources.cpp">
-      <Filter>Render\Passes</Filter>
-    </ClCompile>
     <ClCompile Include="Render\Passes\Shadows\ShadowCullPass.cpp">
       <Filter>Render\Passes</Filter>
     </ClCompile>
@@ -282,9 +279,6 @@
       <Filter>Render\Passes</Filter>
     </ClInclude>
     <ClInclude Include="Render\Passes\LightingPass.h">
-      <Filter>Render\Passes</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\Passes\PassResources.h">
       <Filter>Render\Passes</Filter>
     </ClInclude>
     <ClInclude Include="Render\Passes\Shadows\ShadowCullPass.h">

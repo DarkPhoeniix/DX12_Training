@@ -5,7 +5,6 @@
 #include "CommandList.h"
 #include "ResourceBarrier.h"
 
-#include "Render/Passes/PassResources.h"
 #include "Scene/Entity/Components/Light.h"
 
 #include "RenderGraph/RenderContext.h"
@@ -34,15 +33,13 @@ namespace render
 
     void LightingPass::Setup(rg::RenderPassBuilder& builder)
     {
-        _data.FrameBuffer = builder.ReadResourceNew("Frame Buffer");
+        _data.AlbedoMetallic = builder.ReadResourceNew("albedo_metallic_target");
+        _data.NormalRoughness = builder.ReadResourceNew("normal_roughness_target");
+        _data.Depth = builder.ReadResourceNew("depth_target");
 
-        _data.AlbedoMetallic = builder.ReadResourceNew(ALBEDO_METALLIC);
-        _data.NormalRoughness = builder.ReadResourceNew(NORMAL_ROUGHNESS);
-        _data.Depth = builder.ReadResourceNew(DEPTH);
+        _data.ShadowMaps = builder.ReadResourceNew("shadow_maps");
 
-        _data.ShadowMaps = builder.ReadResourceNew("Shadow Maps");
-
-        _data.HDRTarget = builder.WriteResourceNew(HDR_TARGET);
+        _data.HDRTarget = builder.WriteResourceNew("hdr_target");
     }
 
     void LightingPass::Execute(rg::RenderContext& context, TaskGPU& task)
@@ -52,7 +49,6 @@ namespace render
 
         PIXBeginEvent(commandList.GetDXCommandList().Get(), 4, "Deferred Shading");
         {
-            std::shared_ptr<dx12::Resource> frameBuffer     = context.GetResourceNew(_data.FrameBuffer);
             std::shared_ptr<dx12::Resource> hdrTarget       = context.GetResourceNew(_data.HDRTarget);
             std::shared_ptr<dx12::Resource> albedoMetallic  = context.GetResourceNew(_data.AlbedoMetallic);
             std::shared_ptr<dx12::Resource> normalRoughness = context.GetResourceNew(_data.NormalRoughness);

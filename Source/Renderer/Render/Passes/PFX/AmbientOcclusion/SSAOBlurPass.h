@@ -11,7 +11,6 @@ namespace render
 {
     struct SSAOBlurPassData
     {
-        rg::ResourceId FrameBuffer;
         rg::ResourceId WeightsBuffer;
 
         rg::ResourceId Depth;

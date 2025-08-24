@@ -193,7 +193,7 @@ namespace scene::helpers
             diffuseIrradianceTextureDesc.SetFormat(DXGI_FORMAT_R16G16B16A16_FLOAT);
             diffuseIrradianceTextureDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::Unordered);
         }
-        std::shared_ptr<dx12::Resource> diffuseIrradianceMap = ResourceFactory::Create("Diffuse irradiance map", diffuseIrradianceTextureDesc);
+        std::shared_ptr<dx12::Resource> diffuseIrradianceMap = ResourceFactory::Create("diffuse_irradiance_map", diffuseIrradianceTextureDesc);
         diffuseIrradianceMap->CreateCommitedResource();
 
         // Create SRV/UAV for the textures
@@ -267,7 +267,7 @@ namespace scene::helpers
             preFilteredEnvTextureDesc.SetFormat(DXGI_FORMAT_R16G16B16A16_FLOAT);
             preFilteredEnvTextureDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::Unordered);
         }
-        std::shared_ptr<dx12::Resource> preFilteredEnvMap = ResourceFactory::Create("Prefiltered environment map", preFilteredEnvTextureDesc);
+        std::shared_ptr<dx12::Resource> preFilteredEnvMap = ResourceFactory::Create("prefiltered_environment_map", preFilteredEnvTextureDesc);
         preFilteredEnvMap->CreateCommitedResource();
 
         // Create SRV/UAV for the textures
@@ -362,7 +362,7 @@ namespace scene::helpers
             brdfLUTDesc.SetFormat(DXGI_FORMAT_R16G16_FLOAT);
             brdfLUTDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::Unordered);
         }
-        std::shared_ptr<dx12::Resource> brdfLUT = ResourceFactory::Create("BRDF LUT", brdfLUTDesc);
+        std::shared_ptr<dx12::Resource> brdfLUT = ResourceFactory::Create("brdf_lut", brdfLUTDesc);
         brdfLUT->CreateCommitedResource();
 
         // Create SRV/UAV for the textures

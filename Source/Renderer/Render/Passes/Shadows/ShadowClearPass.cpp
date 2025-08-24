@@ -53,7 +53,7 @@ namespace render
 
     void ShadowClearPass::Setup(rg::RenderPassBuilder& builder)
     {
-		_data.ShadowMaps = builder.CreateResourceVirtual("Shadow Maps");
+		_data.ShadowMaps = builder.CreateResourceVirtual("shadow_maps");
     }
 
     void ShadowClearPass::Execute(rg::RenderContext& context, TaskGPU& task)

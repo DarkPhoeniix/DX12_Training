@@ -5,9 +5,6 @@
 #include "CommandList.h"
 #include "ResourceBarrier.h"
 
-#include "Render/RenderSettings.h"
-#include "Render/Passes/PassResources.h"
-
 #include "RenderGraph/RenderContext.h"
 #include "RenderGraph/RenderPassBuilder.h"
 
@@ -48,8 +45,6 @@ namespace render
 
     void SSAOComputePass::Setup(rg::RenderPassBuilder& builder)
     {
-        _data.FrameBuffer = builder.ReadResourceNew("Frame Buffer");
-
         dx12::ResourceDescription noiseDesc;
         {
             noiseDesc.SetSize({ 64 * sizeof(XMVECTOR), 1 });
@@ -96,8 +91,8 @@ namespace render
 		}
 		_data.Kernels = builder.CreateResourceNew("SSAO kernels", kernelsDesc, kernelsData.data(), sizeof(XMVECTOR) * kernelsData.size());
 
-        _data.NormalRoughness = builder.ReadResourceNew(NORMAL_ROUGHNESS);
-        _data.Depth = builder.ReadResourceNew(DEPTH);
+        _data.NormalRoughness = builder.ReadResourceNew("normal_roughness_target");
+        _data.Depth = builder.ReadResourceNew("depth_target");
 
         dx12::ResourceDescription aoDesc;
         {
@@ -105,7 +100,7 @@ namespace render
             aoDesc.SetFormat(DXGI_FORMAT_R32_FLOAT);
             aoDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::Unordered);
         }
-        _data.AOTarget = builder.CreateResourceNew("AO Target", aoDesc);
+        _data.AOTarget = builder.CreateResourceNew("ao_target", aoDesc);
     }
 
     void SSAOComputePass::Execute(rg::RenderContext& context, TaskGPU& task)
@@ -115,7 +110,6 @@ namespace render
 
         PIXBeginEvent(commandList.GetDXCommandList().Get(), 3, "SSAO");
         {
-            std::shared_ptr<dx12::Resource> frameBuffer = context.GetResourceNew(_data.FrameBuffer);
 			std::shared_ptr<dx12::Resource> noise = context.GetResourceNew(_data.Noise);
 			std::shared_ptr<dx12::Resource> kernels = context.GetResourceNew(_data.Kernels);
             std::shared_ptr<dx12::Resource> normalRoughness = context.GetResourceNew(_data.NormalRoughness);

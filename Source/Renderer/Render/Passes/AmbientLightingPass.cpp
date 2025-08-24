@@ -6,7 +6,6 @@
 #include "ResourceBarrier.h"
 
 #include "Render/RenderSettings.h"
-#include "Render/Passes/PassResources.h"
 
 #include "RenderGraph/RenderContext.h"
 #include "RenderGraph/RenderPassBuilder.h"
@@ -44,15 +43,13 @@ namespace render
 
     void AmbientLightingPass::Setup(rg::RenderPassBuilder& builder)
     {
-        _data.FrameBuffer = builder.ReadResourceNew("Frame Buffer");
+        _data.AlbedoMetallic = builder.ReadResourceNew("albedo_metallic_target");
+        _data.NormalRoughness = builder.ReadResourceNew("normal_roughness_target");
+        _data.Depth = builder.ReadResourceNew("depth_target");
 
-        _data.AlbedoMetallic = builder.ReadResourceNew(ALBEDO_METALLIC);
-        _data.NormalRoughness = builder.ReadResourceNew(NORMAL_ROUGHNESS);
-        _data.Depth = builder.ReadResourceNew(DEPTH);
-
-        _data.DiffuseIrradianceMap = builder.ReadResourceNew("Diffuse irradiance map");
-        _data.PreFilteredMap = builder.ReadResourceNew("Prefiltered environment map");
-        _data.BRDF_LUT = builder.ReadResourceNew("BRDF LUT");
+        _data.DiffuseIrradianceMap = builder.ReadResourceNew("diffuse_irradiance_map");
+        _data.PreFilteredMap = builder.ReadResourceNew("prefiltered_environment_map");
+        _data.BRDF_LUT = builder.ReadResourceNew("brdf_lut");
 
         dx12::ResourceDescription targetDesc;
         {
@@ -60,7 +57,7 @@ namespace render
             targetDesc.SetFormat(DXGI_FORMAT_R16G16B16A16_FLOAT);
             targetDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::Unordered);
         }
-        _data.HDRTarget = builder.CreateResourceNew(HDR_TARGET, targetDesc);
+        _data.HDRTarget = builder.CreateResourceNew("hdr_target", targetDesc);
     }
 
     void AmbientLightingPass::Execute(rg::RenderContext& context, TaskGPU& task)
@@ -70,7 +67,6 @@ namespace render
 
         PIXBeginEvent(commandList.GetDXCommandList().Get(), 3, "Ambient Lighting");
         {
-            std::shared_ptr<dx12::Resource> frameBuffer             = context.GetResourceNew(_data.FrameBuffer);
             std::shared_ptr<dx12::Resource> hdrTarget               = context.GetResourceNew(_data.HDRTarget);
             std::shared_ptr<dx12::Resource> albedoMetallic          = context.GetResourceNew(_data.AlbedoMetallic);
             std::shared_ptr<dx12::Resource> normalRoughness         = context.GetResourceNew(_data.NormalRoughness);

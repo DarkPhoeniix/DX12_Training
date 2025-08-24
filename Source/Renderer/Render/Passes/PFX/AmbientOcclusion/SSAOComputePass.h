@@ -11,7 +11,6 @@ namespace render
 {
     struct SSAOComputePassData
     {
-        rg::ResourceId FrameBuffer;
         rg::ResourceId Noise;
 		rg::ResourceId Kernels;
 

@@ -6,7 +6,6 @@
 #include "ResourceBarrier.h"
 
 #include "Scene/Entity/Components/Camera.h"
-#include "Render/Passes/PassResources.h"
 
 #include "RenderGraph/RenderPassBuilder.h"
 #include "RenderGraph/RenderContext.h"
@@ -21,8 +20,8 @@ namespace render
 
     void GUIPass::Setup(rg::RenderPassBuilder& builder)
     {
-        _data.Target = builder.WriteResourceNew(TARGET);
-        _data.Depth = builder.ReadResourceNew(DEPTH);
+        _data.Target = builder.WriteResourceNew("render_target");
+        _data.Depth = builder.ReadResourceNew("depth_target");
     }
 
     void GUIPass::Execute(rg::RenderContext& context, TaskGPU& task)

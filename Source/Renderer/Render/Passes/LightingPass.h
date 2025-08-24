@@ -10,8 +10,6 @@ namespace render
 {
     struct LightingPassData
     {
-        rg::ResourceId FrameBuffer;
-
         rg::ResourceId AlbedoMetallic;
         rg::ResourceId NormalRoughness;
         rg::ResourceId Depth;

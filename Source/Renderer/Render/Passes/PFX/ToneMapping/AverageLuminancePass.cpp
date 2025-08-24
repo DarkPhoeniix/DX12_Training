@@ -6,7 +6,6 @@
 #include "ResourceBarrier.h"
 
 #include "Scene/Entity/Components/Camera.h"
-#include "Render/Passes/PassResources.h"
 
 #include "RenderGraph/RenderPassBuilder.h"
 #include "RenderGraph/RenderContext.h"
@@ -42,22 +41,11 @@ namespace render
         , _camera(camera)
     {
         _averageLuminancePipeline.Parse("PipelineDescriptions\\AverageLuminancePipeline.tech");
-
-        dx12::ResourceDescription lumDesc;
-        {
-            lumDesc.SetSize({ sizeof(float), 1 });
-            lumDesc.SetStride(sizeof(float));
-            lumDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Unordered);
-        }
-        _prevLuminance = ResourceFactory::Create("Previous luminance", lumDesc);
-        _prevLuminance->CreateCommitedResource();
     }
 
     void AverageLuminancePass::Setup(rg::RenderPassBuilder& builder)
     {
-        _data.FrameBuffer = builder.ReadResourceNew("Frame Buffer");
-
-        _data.LuminanceHistogram = builder.ReadResourceNew(LUM_HISTOGRAM);
+        _data.LuminanceHistogram = builder.ReadResourceNew("luminance_histogram");
 
         dx12::ResourceDescription lumDesc;
         {
@@ -65,8 +53,8 @@ namespace render
             lumDesc.SetStride(sizeof(float));
             lumDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Unordered);
         }
-        _data.PrevAverageLuminance = builder.CreateResourceNew("PrevAverageLum", lumDesc);
-        _data.AverageLuminance = builder.CreateResourceNew(AVERAGE_LUM, lumDesc);
+        _data.PrevAverageLuminance = builder.CreateResourceNew("prev_average_luminance", lumDesc);
+        _data.AverageLuminance = builder.CreateResourceNew("average_luminance", lumDesc);
     }
 
     void AverageLuminancePass::Execute(rg::RenderContext& context, TaskGPU& task)
@@ -78,7 +66,6 @@ namespace render
         {
             // Copy and setup needed resources
 
-            std::shared_ptr<dx12::Resource> frameBuffer             = context.GetResourceNew(_data.FrameBuffer);
             std::shared_ptr<dx12::Resource> luminanceHistogram      = context.GetResourceNew(_data.LuminanceHistogram);
             std::shared_ptr<dx12::Resource> prevAverageLuminance    = context.GetResourceNew(_data.PrevAverageLuminance);
             std::shared_ptr<dx12::Resource> averageLuminance        = context.GetResourceNew(_data.AverageLuminance);

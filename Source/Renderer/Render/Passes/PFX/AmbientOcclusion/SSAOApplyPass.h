@@ -11,8 +11,6 @@ namespace render
 {
     struct SSAOApplyPassData
     {
-        rg::ResourceId FrameBuffer;
-
         rg::ResourceId AOTarget;
         rg::ResourceId HDRTarget;
     };

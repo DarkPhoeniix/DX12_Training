@@ -10,8 +10,6 @@ namespace render
 {
     struct GeometryPassData
     {
-        rg::ResourceId FrameBuffer;
-
         rg::ResourceId Depth;
         rg::ResourceId AlbedoMetallic;
         rg::ResourceId NormalRoughness;

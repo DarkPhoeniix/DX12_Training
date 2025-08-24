@@ -5,13 +5,8 @@
 #include "CommandList.h"
 #include "ResourceBarrier.h"
 
-#include "Render/RenderSettings.h"
-#include "Render/Passes/PassResources.h"
-
 #include "RenderGraph/RenderContext.h"
 #include "RenderGraph/RenderPassBuilder.h"
-
-#include <random>
 
 namespace
 {
@@ -36,10 +31,8 @@ namespace render
 
     void SSAOApplyPass::Setup(rg::RenderPassBuilder& builder)
     {
-        _data.FrameBuffer = builder.ReadResourceNew("Frame Buffer");
-
-        _data.AOTarget = builder.ReadResourceNew("AO Target");
-        _data.HDRTarget = builder.WriteResourceNew(HDR_TARGET);
+        _data.AOTarget = builder.ReadResourceNew("ao_target");
+        _data.HDRTarget = builder.WriteResourceNew("hdr_target");
     }
 
     void SSAOApplyPass::Execute(rg::RenderContext& context, TaskGPU& task)
@@ -49,7 +42,6 @@ namespace render
 
         PIXBeginEvent(commandList.GetDXCommandList().Get(), 3, "SSAO Apply");
         {
-            std::shared_ptr<dx12::Resource> frameBuffer = context.GetResourceNew(_data.FrameBuffer);
             std::shared_ptr<dx12::Resource> aoTarget = context.GetResourceNew(_data.AOTarget);
             std::shared_ptr<dx12::Resource> hdtTarget = context.GetResourceNew(_data.HDRTarget);
 

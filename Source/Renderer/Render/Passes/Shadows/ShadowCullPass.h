@@ -11,9 +11,8 @@ namespace render
 {
     struct ShadowCullPassData
     {
-        rg::ResourceId ShadowMaps;
+        rg::ResourceId ShadowMaps;  // TODO: remove
 
-        rg::ResourceId FrameBuffer;
         rg::ResourceId CounterResetBuffer;
         rg::ResourceId AABBBuffer;
         std::vector<rg::ResourceId> CandidateInstancesBuffer;

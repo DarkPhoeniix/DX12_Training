@@ -10,8 +10,6 @@ namespace render
 {
     struct FXAAPassData
     {
-        rg::ResourceId FrameBuffer;
-
         rg::ResourceId Target;
         rg::ResourceId WorkCounters;
         rg::ResourceId WorkQueue;

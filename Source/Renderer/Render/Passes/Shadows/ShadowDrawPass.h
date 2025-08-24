@@ -11,7 +11,6 @@ namespace render
 {
     struct ShadowDrawPassData
     {
-        rg::ResourceId FrameBuffer;
 		rg::ResourceId ShadowMaps;
         std::vector<rg::ResourceId> LightCommandBuffers[dx12::BACK_BUFFER_COUNT];
     };

@@ -5,8 +5,6 @@
 #include "CommandList.h"
 
 #include "Scene/Entity/Components/Camera.h"
-#include "Render/Helpers/RenderHelpers.h"
-#include "Render/Passes/PassResources.h"
 #include "Render/RenderSettings.h"
 
 #include "RenderGraph/RenderPassBuilder.h"
@@ -116,9 +114,7 @@ namespace render
 
     void FXAAPass::Setup(rg::RenderPassBuilder& builder)
     {
-        _data.FrameBuffer = builder.ReadResourceNew("Frame Buffer");
-
-        _data.Target = builder.WriteResourceNew(HDR_TARGET);
+        _data.Target = builder.WriteResourceNew("hdr_target");
 
         dx12::ResourceDescription workCountersDesc;
         {
@@ -126,7 +122,7 @@ namespace render
             workCountersDesc.SetStride(sizeof(std::uint32_t));
             workCountersDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Unordered);
         }
-        _data.WorkCounters = builder.CreateResourceNew("FXAAWorkCounters", workCountersDesc);
+        _data.WorkCounters = builder.CreateResourceNew("fxaa_work_counter", workCountersDesc);
 
         dx12::ResourceDescription workQueueDesc;
         {
@@ -136,8 +132,8 @@ namespace render
             workQueueDesc.SetStride(sizeof(std::uint32_t));
             workQueueDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Unordered);
         }
-        _data.WorkQueue = builder.CreateResourceNew("FXAAWorkQueue", workQueueDesc);
-        _data.ColorQueue = builder.CreateResourceNew("FXAAColorQueue", workQueueDesc);
+        _data.WorkQueue = builder.CreateResourceNew("fxaa_work_queue", workQueueDesc);
+        _data.ColorQueue = builder.CreateResourceNew("fxaa_color_queue", workQueueDesc);
 
         dx12::ResourceDescription lumaBufferDesc;
         {
@@ -153,7 +149,7 @@ namespace render
             lumaBufferDesc.SetFormat(DXGI_FORMAT_R8_UNORM);
             lumaBufferDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::Unordered);
         }
-        _data.LumaBuffer = builder.CreateResourceNew("LumaTexture", lumaBufferDesc);
+        _data.LumaBuffer = builder.CreateResourceNew("luma_texture", lumaBufferDesc);
 
         dx12::ResourceDescription indirectArgsDesc;
         {
@@ -162,7 +158,7 @@ namespace render
             indirectArgsDesc.SetStride(sizeof(D3D12_DISPATCH_ARGUMENTS));
             indirectArgsDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Unordered);
         }
-        _data.IndirectParams = builder.CreateResourceNew("FXAAIndirectArgs", indirectArgsDesc);
+        _data.IndirectParams = builder.CreateResourceNew("fxaa_indirect_args", indirectArgsDesc);
     }
 
     void FXAAPass::Execute(rg::RenderContext& context, TaskGPU& task)
@@ -172,7 +168,6 @@ namespace render
 
         PIXBeginEvent(commandList.GetDXCommandList().Get(), 6, "FXAA Pass");
         {
-            std::shared_ptr<dx12::Resource> frameBuffer     = context.GetResourceNew(_data.FrameBuffer);
             std::shared_ptr<dx12::Resource> workCounters    = context.GetResourceNew(_data.WorkCounters);
             std::shared_ptr<dx12::Resource> workQueue       = context.GetResourceNew(_data.WorkQueue);
             std::shared_ptr<dx12::Resource> colorQueue      = context.GetResourceNew(_data.ColorQueue);

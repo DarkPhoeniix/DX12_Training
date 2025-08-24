@@ -5,15 +5,9 @@
 #include "CommandList.h"
 #include "ResourceBarrier.h"
 
-#include "Scene/Entity/Components/Animation.h"
-#include "Scene/Entity/Components/Armature.h"
 #include "Scene/Entity/Components/Material.h"
 #include "Scene/Entity/Components/Mesh.h"
-#include "Scene/Entity/Components/Transformation.h"
 
-#include "Render/Helpers/GPUStructs.h"
-#include "Render/Helpers/RenderHelpers.h"
-#include "Render/Passes/PassResources.h"
 #include "Utility/DebugInfo.h"
 
 #include "RenderGraph/RenderContext.h"
@@ -39,8 +33,6 @@ namespace render
 
     void GeometryPass::Setup(rg::RenderPassBuilder& builder)
     {
-        _data.FrameBuffer = builder.ReadResourceNew("Frame Buffer");
-
         dx12::ResourceDescription depthDesc;
         {
             D3D12_CLEAR_VALUE clearValue;
@@ -53,7 +45,7 @@ namespace render
             depthDesc.SetClearValue(clearValue);
             depthDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::DepthStencil);
         }
-        _data.Depth = builder.CreateResourceNew(DEPTH, depthDesc);
+        _data.Depth = builder.CreateResourceNew("depth_target", depthDesc);
 
         dx12::ResourceDescription albedoMetallicDesc;
         {
@@ -69,7 +61,7 @@ namespace render
             albedoMetallicDesc.SetClearValue(clearValue);
             albedoMetallicDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::RenderTarget);
         }
-        _data.AlbedoMetallic = builder.CreateResourceNew(ALBEDO_METALLIC, albedoMetallicDesc);
+        _data.AlbedoMetallic = builder.CreateResourceNew("albedo_metallic_target", albedoMetallicDesc);
 
         dx12::ResourceDescription normalRoughnessDesc;
         {
@@ -85,7 +77,7 @@ namespace render
             normalRoughnessDesc.SetClearValue(clearValue);
             normalRoughnessDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::RenderTarget);
         }
-        _data.NormalRoughness = builder.CreateResourceNew(NORMAL_ROUGHNESS, normalRoughnessDesc);
+        _data.NormalRoughness = builder.CreateResourceNew("normal_roughness_target", normalRoughnessDesc);
     }
 
     void GeometryPass::Execute(rg::RenderContext& context, TaskGPU& task)
@@ -95,7 +87,6 @@ namespace render
 
         PIXBeginEvent(commandList.GetDXCommandList().Get(), 2, "Geometry Pass");
         {
-            std::shared_ptr<dx12::Resource> frameBuffer         = context.GetResourceNew(_data.FrameBuffer);
             std::shared_ptr<dx12::Resource> albedoMetallic      = context.GetResourceNew(_data.AlbedoMetallic);
             std::shared_ptr<dx12::Resource> normalRoughness     = context.GetResourceNew(_data.NormalRoughness);
             std::shared_ptr<dx12::Resource> depth               = context.GetResourceNew(_data.Depth);

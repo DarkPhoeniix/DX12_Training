@@ -5,8 +5,6 @@
 #include "CommandList.h"
 #include "ResourceBarrier.h"
 
-#include "Render/Helpers/RenderHelpers.h"
-#include "Render/Passes/PassResources.h"
 #include "Scene/Entity/Components/Camera.h"
 #include "Scene/Entity/Components/Skybox.h"
 
@@ -35,10 +33,8 @@ namespace render
 
     void SkyboxPass::Setup(rg::RenderPassBuilder& builder)
     {
-		_data.FrameBuffer = builder.ReadResourceNew("Frame Buffer");
-
-        _data.Depth = builder.ReadResourceNew(DEPTH);
-        _data.HDRTarget = builder.WriteResourceNew(HDR_TARGET);
+        _data.Depth = builder.ReadResourceNew("depth_target");
+        _data.HDRTarget = builder.WriteResourceNew("hdr_target");
     }
 
     void SkyboxPass::Execute(rg::RenderContext& context, TaskGPU& task)
@@ -51,7 +47,6 @@ namespace render
             std::shared_ptr<scene::Entity> entity = _scene->FindNodeByComponentName("Skybox");
             std::shared_ptr<scene::Skybox> skyboxComponent = entity->GetComponentAs<scene::Skybox>("Skybox");
 
-			std::shared_ptr<dx12::Resource> frameBuffer = context.GetResourceNew(_data.FrameBuffer);
             std::shared_ptr<dx12::Resource> skybox = context.GetTextureManager().GetTexture(skyboxComponent->SkydomeTextureHandle);
             std::shared_ptr<dx12::Resource> target = context.GetResourceNew(_data.HDRTarget);
             std::shared_ptr<dx12::Resource> depth = context.GetResourceNew(_data.Depth);

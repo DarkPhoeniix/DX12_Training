@@ -10,8 +10,6 @@ namespace render
 {
     struct ToneMappingPassData
     {
-        rg::ResourceId FrameBuffer;
-
         rg::ResourceId HDRTarget;
         rg::ResourceId AverageLuminance;
 

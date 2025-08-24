@@ -5,13 +5,9 @@
 #include "CommandList.h"
 #include "ResourceBarrier.h"
 
-#include "Scene/Entity/Components/Armature.h"
 #include "Scene/Entity/Components/Light.h"
 #include "Scene/Entity/Components/Mesh.h"
-#include "Scene/Entity/Components/Transformation.h"
 #include "Scene/Volumes/AABBVolume.h"
-
-#include "Render/Helpers/RenderHelpers.h"
 
 #include "RenderGraph/RenderContext.h"
 #include "RenderGraph/RenderPassBuilder.h"
@@ -70,9 +66,7 @@ namespace render
 
     void ShadowCullPass::Setup(rg::RenderPassBuilder& builder)
     {
-        _data.FrameBuffer = builder.ReadResourceNew("Frame Buffer");
-
-        _data.ShadowMaps = builder.ReadResourceNew("Shadow Maps");
+        _data.ShadowMaps = builder.ReadResourceNew("shadow_maps");
 
         dx12::ResourceDescription counterResetBuffer;
         counterResetBuffer.SetSize({ sizeof(UINT), 1 });
@@ -81,7 +75,7 @@ namespace render
         counterResetBuffer.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
 
         std::uint32_t value = 0;
-		_data.CounterResetBuffer = builder.CreateResourceNew("Shadow Counter Reset Buffer", counterResetBuffer, &value, sizeof(std::uint32_t));
+		_data.CounterResetBuffer = builder.CreateResourceNew("shadow_counter_reset_buffer", counterResetBuffer, &value, sizeof(std::uint32_t));
 
         std::vector<std::shared_ptr<scene::Entity>> lightEntities = _scene->FilterNodesByComponent("Light");
         std::vector<std::shared_ptr<scene::Entity>> meshes = _scene->FilterNodesByComponent("Mesh");
@@ -94,7 +88,7 @@ namespace render
             aabbBufferDescription.SetStride(sizeof(scene::AABBVolume));
             aabbBufferDescription.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
         }
-        _data.AABBBuffer = builder.CreateResourceNew("AABB buffer", aabbBufferDescription);
+        _data.AABBBuffer = builder.CreateResourceNew("aabb_buffer", aabbBufferDescription);
 
         std::uint32_t commandSize = static_cast<std::uint32_t>(sizeof(IndirectCommand));
         std::uint32_t alignedBufferSize = AlignToUAVCounterOffset(MAX_INSTANCES_NUM * commandSize);
@@ -109,7 +103,7 @@ namespace render
         _data.CandidateInstancesBuffer.resize(lightsNum);
         for (size_t i = 0; i < lightsNum; ++i)
         {
-            _data.CandidateInstancesBuffer[i] = builder.CreateResourceNew(std::format("Shadow Candidate Instances Buffer {}", i), candidateBufferDescription);
+            _data.CandidateInstancesBuffer[i] = builder.CreateResourceNew(std::format("shadow_candidate_instances_buffer_{}", i), candidateBufferDescription);
         }
 
         dx12::ResourceDescription commandsBufferDescription;
@@ -119,13 +113,13 @@ namespace render
             commandsBufferDescription.SetUAVCounterOffset(alignedBufferSize);
             commandsBufferDescription.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Unordered);
         }
-
+        // TODO: optimize to use addresses not the full copy
         for (size_t frame = 0; frame < dx12::BACK_BUFFER_COUNT; ++frame)
         {
             _data.LightCommandBuffers[frame].resize(lightsNum);
             for (size_t i = 0; i < lightsNum; ++i)
             {
-                _data.LightCommandBuffers[frame][i] = builder.CreateResourceNew(std::format("ShadowCullBuffer {} (frame {})", i, frame), commandsBufferDescription);
+                _data.LightCommandBuffers[frame][i] = builder.CreateResourceNew(std::format("shadow_culled_instances_buffer_{} (frame {})", i, frame), commandsBufferDescription);
             }
 		}
     }

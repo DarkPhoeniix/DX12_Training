@@ -6,7 +6,6 @@
 #include "ResourceBarrier.h"
 
 #include "Scene/Entity/Components/Camera.h"
-#include "Render/Passes/PassResources.h"
 
 #include "RenderGraph/RenderPassBuilder.h"
 #include "RenderGraph/RenderContext.h"
@@ -43,9 +42,7 @@ namespace render
 
     void LuminanceHistogramPass::Setup(rg::RenderPassBuilder& builder)
     {
-        _data.FrameBuffer = builder.ReadResourceNew("Frame Buffer");
-
-        _data.HDRTarget = builder.ReadResourceNew(HDR_TARGET);
+        _data.HDRTarget = builder.ReadResourceNew("hdr_target");
 
         dx12::ResourceDescription lumDesc;
         {
@@ -53,7 +50,7 @@ namespace render
             lumDesc.SetStride(sizeof(std::uint32_t));
             lumDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Unordered);
         }
-        _data.LuminanceHistogram = builder.CreateResourceNew(LUM_HISTOGRAM, lumDesc);
+        _data.LuminanceHistogram = builder.CreateResourceNew("luminance_histogram", lumDesc);
     }
 
     void LuminanceHistogramPass::Execute(rg::RenderContext& context, TaskGPU& task)
@@ -65,7 +62,6 @@ namespace render
         {
             // Copy and setup needed resources
 
-            std::shared_ptr<dx12::Resource> frameBuffer = context.GetResourceNew(_data.FrameBuffer);
             std::shared_ptr<dx12::Resource> hdrTarget = context.GetResourceNew(_data.HDRTarget);
             std::shared_ptr<dx12::Resource> luminanceHistogram = context.GetResourceNew(_data.LuminanceHistogram);
 

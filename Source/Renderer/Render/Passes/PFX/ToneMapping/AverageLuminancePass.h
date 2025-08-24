@@ -10,8 +10,6 @@ namespace render
 {
     struct AverageLuminancePassData
     {
-		rg::ResourceId FrameBuffer;
-
         rg::ResourceId LuminanceHistogram;
         rg::ResourceId PrevAverageLuminance;
         rg::ResourceId AverageLuminance;
@@ -28,8 +26,6 @@ namespace render
 
     private:
         dx12::PipelineState _averageLuminancePipeline;
-
-        std::shared_ptr<dx12::Resource> _prevLuminance;
 
         std::shared_ptr<scene::Scene> _scene;
         scene::Camera* _camera;
