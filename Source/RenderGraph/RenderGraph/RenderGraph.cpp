@@ -14,9 +14,9 @@ namespace
 
 namespace rg
 {
-    RenderGraph::RenderGraph(ResourceTable& resourceTable, TextureManager& textureManager)
+    RenderGraph::RenderGraph()
         : _frame(nullptr)
-        , _context(resourceTable, textureManager)
+        , _context()
 #ifdef RG_MULTITHREADED
         , _workerManager(RENDER_THREADS_NUM)
 #endif
@@ -32,6 +32,11 @@ namespace rg
     {
         _frame = &frame;
         _context._frame = &frame;
+    }
+
+    void RenderGraph::Init(ResourceTable& resourceTable, TextureManager& textureManager)
+    {
+		_context.Init(resourceTable, textureManager);
     }
 
     void RenderGraph::Reset()

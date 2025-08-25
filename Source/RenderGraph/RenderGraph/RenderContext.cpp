@@ -6,11 +6,17 @@
 
 namespace rg
 {
-    RenderContext::RenderContext(ResourceTable& resourceTable, TextureManager& textureManager)
+    RenderContext::RenderContext()
         : _frame(nullptr)
-        , _resourceTable(resourceTable)
-		, _textureManager(textureManager)
+        , _resourceTable(nullptr)
+		, _textureManager(nullptr)
     {
+    }
+
+    void RenderContext::Init(ResourceTable& resourceTable, TextureManager& textureManager)
+    {
+		_resourceTable = &resourceTable;
+		_textureManager = &textureManager;
     }
 
     const Frame* RenderContext::GetFrame() const
@@ -25,20 +31,20 @@ namespace rg
 
     ResourceTable& RenderContext::GetResourceTable()
     {
-        return _resourceTable;
+        return *_resourceTable;
     }
 
     TextureManager& RenderContext::GetTextureManager()
     {
-		return _textureManager;
+		return *_textureManager;
     }
 
     void RenderContext::BindBindlessTable(dx12::CommandList& commandList) const
     {
-        commandList.SetDescriptorHeaps({ _resourceTable.GetShaderResourcesDescriptorHeap().GetDXDescriptorHeap().Get() });
+        commandList.SetDescriptorHeaps({ _resourceTable->GetShaderResourcesDescriptorHeap().GetDXDescriptorHeap().Get() });
     }
 
-    std::shared_ptr<dx12::Resource> RenderContext::GetResourceNew(ResourceId id)
+    std::shared_ptr<dx12::Resource> RenderContext::GetResource(ResourceId id)
     {
         auto resourceIt = _mapIdToResource.find(id);
         if (resourceIt == _mapIdToResource.end())
@@ -52,52 +58,52 @@ namespace rg
 
     const DescriptorHandle& RenderContext::GetStaticResourceHandle(const dx12::RenderTargetView& rtv) const
     {
-        return _resourceTable.GetStaticResourceHandle(rtv);
+        return _resourceTable->GetStaticResourceHandle(rtv);
     }
 
     const DescriptorHandle& RenderContext::GetStaticResourceHandle(const dx12::DepthStencilView& dsv) const
     {
-        return _resourceTable.GetStaticResourceHandle(dsv);
+        return _resourceTable->GetStaticResourceHandle(dsv);
     }
 
     const DescriptorHandle& RenderContext::GetStaticResourceHandle(const dx12::ShaderResourceView& srv) const
     {
-        return _resourceTable.GetStaticResourceHandle(srv);
+        return _resourceTable->GetStaticResourceHandle(srv);
     }
 
     const DescriptorHandle& RenderContext::GetStaticResourceHandle(const dx12::UnorderedAccessView& uav) const
     {
-        return _resourceTable.GetStaticResourceHandle(uav);
+        return _resourceTable->GetStaticResourceHandle(uav);
     }
 
     const DescriptorHandle& RenderContext::GetStaticResourceHandle(const dx12::ConstantBufferView& cbv) const
     {
-        return _resourceTable.GetStaticResourceHandle(cbv);
+        return _resourceTable->GetStaticResourceHandle(cbv);
     }
 
     const DescriptorHandle& RenderContext::GetTransientResourceHandle(const dx12::RenderTargetView& rtv) const
     {
-        return _resourceTable.GetTransientResourceHandle(rtv);
+        return _resourceTable->GetTransientResourceHandle(rtv);
     }
 
     const DescriptorHandle& RenderContext::GetTransientResourceHandle(const dx12::DepthStencilView& dsv) const
     {
-        return _resourceTable.GetTransientResourceHandle(dsv);
+        return _resourceTable->GetTransientResourceHandle(dsv);
     }
 
     const DescriptorHandle& RenderContext::GetTransientResourceHandle(const dx12::ShaderResourceView& srv) const
     {
-        return _resourceTable.GetTransientResourceHandle(srv);
+        return _resourceTable->GetTransientResourceHandle(srv);
     }
 
     const DescriptorHandle& RenderContext::GetTransientResourceHandle(const dx12::UnorderedAccessView& uav) const
     {
-        return _resourceTable.GetTransientResourceHandle(uav);
+        return _resourceTable->GetTransientResourceHandle(uav);
     }
 
     const DescriptorHandle& RenderContext::GetTransientResourceHandle(const dx12::ConstantBufferView& cbv) const
     {
-        return _resourceTable.GetTransientResourceHandle(cbv);
+        return _resourceTable->GetTransientResourceHandle(cbv);
     }
 
     ResourceId RenderContext::CreateResourceVirtual(const std::string& name)
@@ -122,17 +128,17 @@ namespace rg
         {
             if (desc.GetFlags() & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)
             {
-                _resourceTable.AddStaticResourceView(resource->GetAsRTV());
+                _resourceTable->AddStaticResourceView(resource->GetAsRTV());
             }
             if (desc.GetFlags() & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
             {
-                _resourceTable.AddStaticResourceView(resource->GetAsDSV());
+                _resourceTable->AddStaticResourceView(resource->GetAsDSV());
             }
             if (desc.GetFlags() & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS)
             {
-                _resourceTable.AddStaticResourceView(resource->GetAsUAV());
+                _resourceTable->AddStaticResourceView(resource->GetAsUAV());
             }
-            _resourceTable.AddStaticResourceView(resource->GetAsSRV());
+            _resourceTable->AddStaticResourceView(resource->GetAsSRV());
         }
         _mapNameToId[name] = resource->GetID();
 

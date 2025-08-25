@@ -66,9 +66,9 @@ namespace render
         {
             // Copy and setup needed resources
 
-            std::shared_ptr<dx12::Resource> luminanceHistogram      = context.GetResourceNew(_data.LuminanceHistogram);
-            std::shared_ptr<dx12::Resource> prevAverageLuminance    = context.GetResourceNew(_data.PrevAverageLuminance);
-            std::shared_ptr<dx12::Resource> averageLuminance        = context.GetResourceNew(_data.AverageLuminance);
+            std::shared_ptr<dx12::Resource> luminanceHistogram      = context.GetResource(_data.LuminanceHistogram);
+            std::shared_ptr<dx12::Resource> prevAverageLuminance    = context.GetResource(_data.PrevAverageLuminance);
+            std::shared_ptr<dx12::Resource> averageLuminance        = context.GetResource(_data.AverageLuminance);
 
             DescriptorHandle prevAverageLuminanceHandle             = context.GetStaticResourceHandle(prevAverageLuminance->GetAsSRV());
             DescriptorHandle luminanceHistogramHandle               = context.GetStaticResourceHandle(luminanceHistogram->GetAsUAV());

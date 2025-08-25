@@ -48,8 +48,8 @@ namespace render
             std::shared_ptr<scene::Skybox> skyboxComponent = entity->GetComponentAs<scene::Skybox>("Skybox");
 
             std::shared_ptr<dx12::Resource> skybox = context.GetTextureManager().GetTexture(skyboxComponent->SkydomeTextureHandle);
-            std::shared_ptr<dx12::Resource> target = context.GetResourceNew(_data.HDRTarget);
-            std::shared_ptr<dx12::Resource> depth = context.GetResourceNew(_data.Depth);
+            std::shared_ptr<dx12::Resource> target = context.GetResource(_data.HDRTarget);
+            std::shared_ptr<dx12::Resource> depth = context.GetResource(_data.Depth);
 
             DescriptorHandle targetHandle = context.GetStaticResourceHandle(target->GetAsUAV());
             DescriptorHandle depthHandle = context.GetStaticResourceHandle(depth->GetAsSRV());

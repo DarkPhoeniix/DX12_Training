@@ -128,10 +128,33 @@ namespace
 	}
 }
 
+std::unique_ptr<TextureManager> TextureManager::_instance = nullptr;
+
 TextureManager::TextureManager(ResourceTable& resourceTable)
 	: _resourceTable(resourceTable)
 	, _nextTextureHandle(0)
 {
+}
+
+void TextureManager::Create(ResourceTable& resourceTable)
+{
+	if (!_instance)
+	{
+		_instance = std::unique_ptr<TextureManager>(new TextureManager(resourceTable));
+	}
+	else
+	{
+		ERROR("TextureManager already created!");
+	}
+}
+
+TextureManager& TextureManager::Get()
+{
+	ASSERT(_instance, "TextureManager not created yet!");
+	if (_instance)
+	{
+		return *_instance;
+	}
 }
 
 TextureHandle TextureManager::EnqueueTexture(const std::string& filepath)

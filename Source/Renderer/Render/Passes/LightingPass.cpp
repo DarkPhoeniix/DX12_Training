@@ -49,10 +49,10 @@ namespace render
 
         PIXBeginEvent(commandList.GetDXCommandList().Get(), 4, "Deferred Shading");
         {
-            std::shared_ptr<dx12::Resource> hdrTarget       = context.GetResourceNew(_data.HDRTarget);
-            std::shared_ptr<dx12::Resource> albedoMetallic  = context.GetResourceNew(_data.AlbedoMetallic);
-            std::shared_ptr<dx12::Resource> normalRoughness = context.GetResourceNew(_data.NormalRoughness);
-            std::shared_ptr<dx12::Resource> depth           = context.GetResourceNew(_data.Depth);
+            std::shared_ptr<dx12::Resource> hdrTarget       = context.GetResource(_data.HDRTarget);
+            std::shared_ptr<dx12::Resource> albedoMetallic  = context.GetResource(_data.AlbedoMetallic);
+            std::shared_ptr<dx12::Resource> normalRoughness = context.GetResource(_data.NormalRoughness);
+            std::shared_ptr<dx12::Resource> depth           = context.GetResource(_data.Depth);
 
             DescriptorHandle hdrTargetHandle                = context.GetStaticResourceHandle(hdrTarget->GetAsUAV());
             DescriptorHandle albedoMetallicHandle           = context.GetStaticResourceHandle(albedoMetallic->GetAsSRV());

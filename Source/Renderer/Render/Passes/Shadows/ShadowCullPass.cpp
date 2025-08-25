@@ -130,8 +130,8 @@ namespace render
         commandList.SetName("Shadow pass command list - culling");
 
         std::shared_ptr<dx12::Resource> frameBuffer = context.GetFrame()->_frameBuffer;
-        std::shared_ptr<dx12::Resource> aabbBuffer = context.GetResourceNew(_data.AABBBuffer);
-        std::shared_ptr<dx12::Resource> counterResetBuffer = context.GetResourceNew(_data.CounterResetBuffer);
+        std::shared_ptr<dx12::Resource> aabbBuffer = context.GetResource(_data.AABBBuffer);
+        std::shared_ptr<dx12::Resource> counterResetBuffer = context.GetResource(_data.CounterResetBuffer);
 
         DescriptorHandle aabbBufferHandle = context.GetStaticResourceHandle(aabbBuffer->GetAsSRV());
 
@@ -151,8 +151,8 @@ namespace render
 
             std::shared_ptr<scene::Light> light = lightEntities[lightIndex]->GetComponentAs<scene::Light>("Light");
 
-            std::shared_ptr<dx12::Resource> candidateInstancesBuffer = context.GetResourceNew(_data.CandidateInstancesBuffer[lightIndex]);
-            std::shared_ptr<dx12::Resource> outputCommandBuffer = context.GetResourceNew(_data.LightCommandBuffers[context.GetFrameIndex()][lightIndex]);
+            std::shared_ptr<dx12::Resource> candidateInstancesBuffer = context.GetResource(_data.CandidateInstancesBuffer[lightIndex]);
+            std::shared_ptr<dx12::Resource> outputCommandBuffer = context.GetResource(_data.LightCommandBuffers[context.GetFrameIndex()][lightIndex]);
 
             DescriptorHandle inputCommandsHandle = context.GetStaticResourceHandle(candidateInstancesBuffer->GetAsSRV());
 			DescriptorHandle outputCommandBufferHandle = context.GetStaticResourceHandle(outputCommandBuffer->GetAsUAV());

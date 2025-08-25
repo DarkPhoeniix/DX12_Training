@@ -58,7 +58,6 @@ namespace render
 
         DescriptorHeapManager _descriptorHeapManager;
         ResourceTable _resourceTable;
-        TextureManager _textureManager;
 
         rg::RenderGraph _renderGraph;
 

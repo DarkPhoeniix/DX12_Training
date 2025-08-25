@@ -22,7 +22,7 @@ namespace rg
     class RenderGraph
     {
     public:
-        RenderGraph(ResourceTable& resourceTable, TextureManager& textureManager);
+        RenderGraph();
         RenderGraph(const RenderGraph&) = delete;
         RenderGraph(RenderGraph&&) = default;
         ~RenderGraph() = default;
@@ -33,6 +33,8 @@ namespace rg
         ResourceTable& GetResourceTable();
 
         void SetFrame(Frame& frame);
+
+        void Init(ResourceTable& resourceTable, TextureManager& textureManager);
 
         void Reset();
         void Compile();

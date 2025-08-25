@@ -42,8 +42,8 @@ namespace render
 
         PIXBeginEvent(commandList.GetDXCommandList().Get(), 3, "SSAO Apply");
         {
-            std::shared_ptr<dx12::Resource> aoTarget = context.GetResourceNew(_data.AOTarget);
-            std::shared_ptr<dx12::Resource> hdtTarget = context.GetResourceNew(_data.HDRTarget);
+            std::shared_ptr<dx12::Resource> aoTarget = context.GetResource(_data.AOTarget);
+            std::shared_ptr<dx12::Resource> hdtTarget = context.GetResource(_data.HDRTarget);
 
             DescriptorHandle aoTargetHandle = context.GetStaticResourceHandle(aoTarget->GetAsSRV());
             DescriptorHandle hdrTargetHandle = context.GetStaticResourceHandle(hdtTarget->GetAsUAV());

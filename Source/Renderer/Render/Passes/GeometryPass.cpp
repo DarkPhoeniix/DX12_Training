@@ -87,9 +87,9 @@ namespace render
 
         PIXBeginEvent(commandList.GetDXCommandList().Get(), 2, "Geometry Pass");
         {
-            std::shared_ptr<dx12::Resource> albedoMetallic      = context.GetResourceNew(_data.AlbedoMetallic);
-            std::shared_ptr<dx12::Resource> normalRoughness     = context.GetResourceNew(_data.NormalRoughness);
-            std::shared_ptr<dx12::Resource> depth               = context.GetResourceNew(_data.Depth);
+            std::shared_ptr<dx12::Resource> albedoMetallic      = context.GetResource(_data.AlbedoMetallic);
+            std::shared_ptr<dx12::Resource> normalRoughness     = context.GetResource(_data.NormalRoughness);
+            std::shared_ptr<dx12::Resource> depth               = context.GetResource(_data.Depth);
 
             DescriptorHandle albedoMetallicHandle    = context.GetStaticResourceHandle(albedoMetallic->GetAsRTV());
             DescriptorHandle normalSpecularHandle    = context.GetStaticResourceHandle(normalRoughness->GetAsRTV());

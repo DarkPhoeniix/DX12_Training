@@ -137,7 +137,7 @@ namespace render
                 PIXBeginEvent(commandList.GetDXCommandList().Get(), 1, lightEntities[lightIndex]->GetName().c_str());
 
                 std::shared_ptr<dx12::Resource> shadowMap = context.GetTextureManager().GetTexture(light->ShadowMapHandle);
-                std::shared_ptr<dx12::Resource> commandBuffer = context.GetResourceNew(_data.LightCommandBuffers[context.GetFrameIndex()][lightIndex]);
+                std::shared_ptr<dx12::Resource> commandBuffer = context.GetResource(_data.LightCommandBuffers[context.GetFrameIndex()][lightIndex]);
 
                 // Transition resources
                 std::vector<dx12::ResourceBarrier> barriers =
@@ -195,7 +195,7 @@ namespace render
                 PIXBeginEvent(commandList.GetDXCommandList().Get(), 1, lightEntities[lightIndex]->GetName().c_str());
 
                 std::shared_ptr<dx12::Resource> shadowMap = context.GetTextureManager().GetTexture(light->ShadowMapHandle);
-                std::shared_ptr<dx12::Resource> commandBuffer = context.GetResourceNew(_data.LightCommandBuffers[context.GetFrameIndex()][lightIndex]);
+                std::shared_ptr<dx12::Resource> commandBuffer = context.GetResource(_data.LightCommandBuffers[context.GetFrameIndex()][lightIndex]);
 
                 // Transition resources
                 std::vector<dx12::ResourceBarrier> barriers =

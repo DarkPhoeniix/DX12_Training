@@ -237,10 +237,15 @@ namespace gui
     {
         if (ImGui::CollapsingHeader(material->ComponentName.c_str()))
         {
-            //ImGui::Text("Albedo: %s", material->Albedo.c_str());
-            //ImGui::Text("Metalness: %s", material->Metalness.c_str());
-            //ImGui::Text("Roughness: %s", material->Roughness.c_str());
-            //ImGui::Text("Normal map: %s", material->NormalMap.c_str());
+			std::shared_ptr<dx12::Resource> albedoTexture = TextureManager::Get().GetTexture(material->AlbedoTextureHandle);
+			std::shared_ptr<dx12::Resource> normalMapTexture = TextureManager::Get().GetTexture(material->NormalMapTextureHandle);
+			std::shared_ptr<dx12::Resource> metalnessTexture = TextureManager::Get().GetTexture(material->MetalnessTextureHandle);
+			std::shared_ptr<dx12::Resource> roughnessTexture = TextureManager::Get().GetTexture(material->RoughnessTextureHandle);
+
+            ImGui::Text("Albedo: %s", albedoTexture->GetName());
+            ImGui::Text("Normal map: %s", normalMapTexture->GetName());
+            ImGui::Text("Metalness: %s", metalnessTexture->GetName());
+            ImGui::Text("Roughness: %s", roughnessTexture->GetName());
         }
     }
 

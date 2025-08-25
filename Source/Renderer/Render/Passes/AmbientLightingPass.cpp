@@ -67,13 +67,13 @@ namespace render
 
         PIXBeginEvent(commandList.GetDXCommandList().Get(), 3, "Ambient Lighting");
         {
-            std::shared_ptr<dx12::Resource> hdrTarget               = context.GetResourceNew(_data.HDRTarget);
-            std::shared_ptr<dx12::Resource> albedoMetallic          = context.GetResourceNew(_data.AlbedoMetallic);
-            std::shared_ptr<dx12::Resource> normalRoughness         = context.GetResourceNew(_data.NormalRoughness);
-            std::shared_ptr<dx12::Resource> depth                   = context.GetResourceNew(_data.Depth);
-            std::shared_ptr<dx12::Resource> diffuseIrradianceMap    = context.GetResourceNew(_data.DiffuseIrradianceMap);
-            std::shared_ptr<dx12::Resource> preFilteredEnv          = context.GetResourceNew(_data.PreFilteredMap);
-            std::shared_ptr<dx12::Resource> brdfLUT                 = context.GetResourceNew(_data.BRDF_LUT);
+            std::shared_ptr<dx12::Resource> hdrTarget               = context.GetResource(_data.HDRTarget);
+            std::shared_ptr<dx12::Resource> albedoMetallic          = context.GetResource(_data.AlbedoMetallic);
+            std::shared_ptr<dx12::Resource> normalRoughness         = context.GetResource(_data.NormalRoughness);
+            std::shared_ptr<dx12::Resource> depth                   = context.GetResource(_data.Depth);
+            std::shared_ptr<dx12::Resource> diffuseIrradianceMap    = context.GetResource(_data.DiffuseIrradianceMap);
+            std::shared_ptr<dx12::Resource> preFilteredEnv          = context.GetResource(_data.PreFilteredMap);
+            std::shared_ptr<dx12::Resource> brdfLUT                 = context.GetResource(_data.BRDF_LUT);
 
             DescriptorHandle hdrTargetHandle                        = context.GetStaticResourceHandle(hdrTarget->GetAsUAV());
             DescriptorHandle albedoMetallicHandle                   = context.GetStaticResourceHandle(albedoMetallic->GetAsSRV());

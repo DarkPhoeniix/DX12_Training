@@ -15,7 +15,9 @@ namespace rg
     class RenderContext
     {
     public:
-        RenderContext(ResourceTable& resourceTable, TextureManager& textureManager);
+        RenderContext();
+
+        void Init(ResourceTable& resourceTable, TextureManager& textureManager);
 
         const Frame* GetFrame() const;
         std::uint32_t GetFrameIndex() const;
@@ -25,7 +27,7 @@ namespace rg
 
         void BindBindlessTable(dx12::CommandList& commandList) const;
 
-        std::shared_ptr<dx12::Resource> GetResourceNew(ResourceId id);
+        std::shared_ptr<dx12::Resource> GetResource(ResourceId id);
 
         const DescriptorHandle& GetStaticResourceHandle(const dx12::RenderTargetView& rtv) const;
         const DescriptorHandle& GetStaticResourceHandle(const dx12::DepthStencilView& dsv) const;
@@ -55,7 +57,7 @@ namespace rg
 
         Frame* _frame;
 
-        ResourceTable& _resourceTable;
-		TextureManager& _textureManager;
+        ResourceTable* _resourceTable;
+		TextureManager* _textureManager;
     };
 } // namespace rg

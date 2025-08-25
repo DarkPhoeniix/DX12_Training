@@ -78,9 +78,9 @@ namespace render
         {
             // Copy and setup needed resources
 
-            std::shared_ptr<dx12::Resource> hdrTarget       = context.GetResourceNew(_data.HDRTarget);
-            std::shared_ptr<dx12::Resource> avgLuminance    = context.GetResourceNew(_data.AverageLuminance);
-            std::shared_ptr<dx12::Resource> target          = context.GetResourceNew(_data.Target);
+            std::shared_ptr<dx12::Resource> hdrTarget       = context.GetResource(_data.HDRTarget);
+            std::shared_ptr<dx12::Resource> avgLuminance    = context.GetResource(_data.AverageLuminance);
+            std::shared_ptr<dx12::Resource> target          = context.GetResource(_data.Target);
 
             DescriptorHandle hdrTargetHandle                = context.GetStaticResourceHandle(hdrTarget->GetAsSRV());
             DescriptorHandle avgLuminanceHandle             = context.GetStaticResourceHandle(avgLuminance->GetAsSRV());

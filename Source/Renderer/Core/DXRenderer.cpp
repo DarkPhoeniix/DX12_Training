@@ -150,11 +150,12 @@ namespace render
         , _deltaTime(0.0f)
         , _descriptorHeapManager(1024, 1024, 4096, 1024)
         , _resourceTable(_descriptorHeapManager)
-        , _renderGraph(_resourceTable, _textureManager)
         , _scene(std::make_shared<scene::Scene>())
-		, _textureManager(_resourceTable)
-		, _sceneLoader(_resourceTable, _textureManager)
     {
+		TextureManager::Create(_resourceTable);
+
+		_renderGraph.Init(_resourceTable, TextureManager::Get());
+		_sceneLoader.Init(_resourceTable, TextureManager::Get());
     }
 
     DXRenderer::~DXRenderer()
@@ -461,7 +462,7 @@ namespace render
             std::shared_ptr<scene::Light> lightComponent = lightEntity->GetComponentAs<scene::Light>("Light");
             std::shared_ptr<scene::Transformation> transformComponent = lightEntity->GetComponentAs<scene::Transformation>("Transformation");
 
-			std::shared_ptr<dx12::Resource> shadowMap = _textureManager.GetTexture(lightComponent->ShadowMapHandle);
+			std::shared_ptr<dx12::Resource> shadowMap = TextureManager::Get().GetTexture(lightComponent->ShadowMapHandle);
 			DescriptorHandle shadowMapHandle = _resourceTable.GetStaticResourceHandle(shadowMap->GetAsSRV());
 
 			auto views = GetLightViews(lightEntity);
@@ -546,10 +547,10 @@ namespace render
 
             if (materialComponent)
             {
-                std::shared_ptr<dx12::Resource> albedoTexture = _textureManager.GetTexture(materialComponent->AlbedoTextureHandle);
-                std::shared_ptr<dx12::Resource> normalMapTexture = _textureManager.GetTexture(materialComponent->NormalMapTextureHandle);
-                std::shared_ptr<dx12::Resource> metalnessTexture = _textureManager.GetTexture(materialComponent->MetalnessTextureHandle);
-                std::shared_ptr<dx12::Resource> roughnessTexture = _textureManager.GetTexture(materialComponent->RoughnessTextureHandle);
+                std::shared_ptr<dx12::Resource> albedoTexture = TextureManager::Get().GetTexture(materialComponent->AlbedoTextureHandle);
+                std::shared_ptr<dx12::Resource> normalMapTexture = TextureManager::Get().GetTexture(materialComponent->NormalMapTextureHandle);
+                std::shared_ptr<dx12::Resource> metalnessTexture = TextureManager::Get().GetTexture(materialComponent->MetalnessTextureHandle);
+                std::shared_ptr<dx12::Resource> roughnessTexture = TextureManager::Get().GetTexture(materialComponent->RoughnessTextureHandle);
 
                 if (albedoTexture)
                 {
@@ -654,7 +655,7 @@ namespace render
                 std::shared_ptr<dx12::Resource> shadowMap = ResourceFactory::Create(lightEntity->GetName() + "_shadow_map", shadowMapDesc);
 				shadowMap->CreateCommitedResource();
 
-                lightComponent->ShadowMapHandle = _textureManager.AddTexture(shadowMap);
+                lightComponent->ShadowMapHandle = TextureManager::Get().AddTexture(shadowMap);
             }
 		}
     }

@@ -168,12 +168,12 @@ namespace render
 
         PIXBeginEvent(commandList.GetDXCommandList().Get(), 6, "FXAA Pass");
         {
-            std::shared_ptr<dx12::Resource> workCounters    = context.GetResourceNew(_data.WorkCounters);
-            std::shared_ptr<dx12::Resource> workQueue       = context.GetResourceNew(_data.WorkQueue);
-            std::shared_ptr<dx12::Resource> colorQueue      = context.GetResourceNew(_data.ColorQueue);
-            std::shared_ptr<dx12::Resource> luma            = context.GetResourceNew(_data.LumaBuffer);
-            std::shared_ptr<dx12::Resource> indirectArgs    = context.GetResourceNew(_data.IndirectParams);
-            std::shared_ptr<dx12::Resource> target          = context.GetResourceNew(_data.Target);
+            std::shared_ptr<dx12::Resource> workCounters    = context.GetResource(_data.WorkCounters);
+            std::shared_ptr<dx12::Resource> workQueue       = context.GetResource(_data.WorkQueue);
+            std::shared_ptr<dx12::Resource> colorQueue      = context.GetResource(_data.ColorQueue);
+            std::shared_ptr<dx12::Resource> luma            = context.GetResource(_data.LumaBuffer);
+            std::shared_ptr<dx12::Resource> indirectArgs    = context.GetResource(_data.IndirectParams);
+            std::shared_ptr<dx12::Resource> target          = context.GetResource(_data.Target);
 
             DescriptorHandle lumaHandleSRV      = context.GetStaticResourceHandle(luma->GetAsSRV());
             DescriptorHandle lumaHandleUAV      = context.GetStaticResourceHandle(luma->GetAsUAV());

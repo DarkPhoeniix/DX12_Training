@@ -34,7 +34,9 @@ namespace scene::helpers
     class SceneLoader
     {
     public:
-        SceneLoader(ResourceTable& resourceTable, TextureManager& textureManager);
+        SceneLoader();
+
+        void Init(ResourceTable& resourceTable, TextureManager& textureManager);
 
         void LoadScene(TaskGPU& task, const std::string& filepath, std::shared_ptr<Scene> scene);
 
@@ -62,8 +64,8 @@ namespace scene::helpers
         dx12::PipelineState _IBL_PreFilterEnvMap;
         dx12::PipelineState _IBL_BRDFGenerateLUT;
 
-        ResourceTable& _resourceTable;
-        TextureManager& _textureManager;
+        ResourceTable* _resourceTable;
+        TextureManager* _textureManager;
         std::vector<std::shared_ptr<dx12::Resource>> _intermediates;
     };
 }

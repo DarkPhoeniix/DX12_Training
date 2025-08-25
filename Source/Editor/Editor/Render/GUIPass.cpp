@@ -31,8 +31,8 @@ namespace render
 
         PIXBeginEvent(commandList.GetDXCommandList().Get(), 5, "GUI");
         {
-            std::shared_ptr<dx12::Resource> target = context.GetResourceNew(_data.Target);
-            std::shared_ptr<dx12::Resource> depth = context.GetResourceNew(_data.Depth);
+            std::shared_ptr<dx12::Resource> target = context.GetResource(_data.Target);
+            std::shared_ptr<dx12::Resource> depth = context.GetResource(_data.Depth);
 
             DescriptorHandle rtv = context.GetStaticResourceHandle(target->GetAsRTV());
             DescriptorHandle dsv = context.GetStaticResourceHandle(depth->GetAsDSV());

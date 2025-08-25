@@ -22,12 +22,14 @@ constexpr TextureHandle InvalidTextureHandle = TextureHandle(-1);
 class TextureManager
 {
 public:
-	TextureManager(ResourceTable& resourceTable);
-	TextureManager(const TextureManager& other) = delete;
 	TextureManager(TextureManager&& other) noexcept = default;
+	TextureManager(const TextureManager& other) = delete;
 
 	TextureManager& operator=(const TextureManager& other) = delete;
 	TextureManager& operator=(TextureManager&& other) noexcept = default;
+
+	static void Create(ResourceTable& resourceTable);
+	static TextureManager& Get();
 
 	[[nodiscard]] TextureHandle EnqueueTexture(const std::string& filepath);
 	void UploadTextures(dx12::CommandList& commandList);
@@ -39,6 +41,8 @@ public:
 	[[nodiscard]] std::shared_ptr<dx12::Resource> GetTexture(TextureHandle handle) const;
 
 private:
+	TextureManager(ResourceTable& resourceTable);
+
 	std::unordered_map<TextureHandle, std::shared_ptr<dx12::Resource>> _handleToTexture;
 	TextureHandle _nextTextureHandle;
 
@@ -47,4 +51,6 @@ private:
 	ResourceTable& _resourceTable;
 	dx12::Heap _texturesHeap;
 	std::unordered_map<TextureHandle, std::shared_ptr<dx12::Resource>> _intermediateResources;
+
+	static std::unique_ptr<TextureManager> _instance;
 };

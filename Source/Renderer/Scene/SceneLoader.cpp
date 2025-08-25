@@ -132,10 +132,16 @@ namespace
 
 namespace scene::helpers
 {
-    SceneLoader::SceneLoader(ResourceTable& resourceTable, TextureManager& textureManager)
-        : _resourceTable(resourceTable)
-		, _textureManager(textureManager)
+    SceneLoader::SceneLoader()
+        : _resourceTable(nullptr)
+		, _textureManager(nullptr)
     {
+    }
+
+    void SceneLoader::Init(ResourceTable& resourceTable, TextureManager& textureManager)
+    {
+        _resourceTable = &resourceTable;
+		_textureManager = &textureManager;
     }
 
     void SceneLoader::LoadScene(TaskGPU& task, const std::string& filepath, std::shared_ptr<Scene> scene)
@@ -160,7 +166,7 @@ namespace scene::helpers
             scene->AddRootNode(LoadEntity(commandList, nodePath));
         }
 
-        _textureManager.UploadTextures(commandList);
+        _textureManager->UploadTextures(commandList);
 
         task.GetFence()->SetCompletionCallback([this]() { CleanIntermediates(); });
 
@@ -177,7 +183,7 @@ namespace scene::helpers
         std::shared_ptr<scene::Skybox> skyboxComponent = skyboxNode->GetComponentAs<scene::Skybox>("Skybox");
         ASSERT(skyboxComponent, "Failed to get skybox component");
 
-        std::shared_ptr<dx12::Resource> skyboxTexture = _textureManager.GetTexture(skyboxComponent->SkydomeTextureHandle);
+        std::shared_ptr<dx12::Resource> skyboxTexture = _textureManager->GetTexture(skyboxComponent->SkydomeTextureHandle);
         ASSERT(skyboxTexture, "Failed to get skybox texture pointer");
 
         // Parse pipeline for the diffuse irradiance convolution
@@ -198,8 +204,8 @@ namespace scene::helpers
 
         // Create SRV/UAV for the textures
 
-		DescriptorHandle skyboxTextureHandle = _resourceTable.GetStaticResourceHandle(skyboxTexture->GetAsSRV());
-        DescriptorHandle diffuseIrradianceMapHandle = _resourceTable.AddStaticResourceView(diffuseIrradianceMap->GetAsUAV());
+		DescriptorHandle skyboxTextureHandle = _resourceTable->GetStaticResourceHandle(skyboxTexture->GetAsSRV());
+        DescriptorHandle diffuseIrradianceMapHandle = _resourceTable->AddStaticResourceView(diffuseIrradianceMap->GetAsUAV());
 
         // Transition resources
 
@@ -212,7 +218,7 @@ namespace scene::helpers
 
         // Diffuse irradiance convolution pipeline
 
-		commandList.SetDescriptorHeaps({ _resourceTable.GetShaderResourcesDescriptorHeap().GetDXDescriptorHeap().Get()});
+		commandList.SetDescriptorHeaps({ _resourceTable->GetShaderResourcesDescriptorHeap().GetDXDescriptorHeap().Get()});
         commandList.SetPipelineState(_IBL_DiffuseIrradianceConvolution);
 
         struct PassConstants
@@ -250,7 +256,7 @@ namespace scene::helpers
         std::shared_ptr<scene::Skybox> skyboxComponent = skyboxNode->GetComponentAs<scene::Skybox>("Skybox");
         ASSERT(skyboxComponent, "Failed to get skybox component");
 
-        std::shared_ptr<dx12::Resource> skyboxTexture = _textureManager.GetTexture(skyboxComponent->SkydomeTextureHandle);
+        std::shared_ptr<dx12::Resource> skyboxTexture = _textureManager->GetTexture(skyboxComponent->SkydomeTextureHandle);
         ASSERT(skyboxTexture, "Failed to get skybox texture pointer");
 
         // Parse pipeline for the environment map pre-filtering
@@ -272,7 +278,7 @@ namespace scene::helpers
 
         // Create SRV/UAV for the textures
 
-        DescriptorHandle skyboxTextureHandle = _resourceTable.GetStaticResourceHandle(skyboxTexture->GetAsSRV());
+        DescriptorHandle skyboxTextureHandle = _resourceTable->GetStaticResourceHandle(skyboxTexture->GetAsSRV());
 
         for (std::uint32_t i = 0; i < preFilteredEnvTextureDesc.GetMipLevels(); ++i)
         {
@@ -289,7 +295,7 @@ namespace scene::helpers
 
         // Environment pre-filtering pipeline
 
-        commandList.SetDescriptorHeaps({ _resourceTable.GetShaderResourcesDescriptorHeap().GetDXDescriptorHeap().Get() });
+        commandList.SetDescriptorHeaps({ _resourceTable->GetShaderResourcesDescriptorHeap().GetDXDescriptorHeap().Get() });
         commandList.SetPipelineState(_IBL_PreFilterEnvMap);
 
         // Generate each mip level
@@ -306,7 +312,7 @@ namespace scene::helpers
                 uav.Texture2DArray.PlaneSlice = 0;
                 uav.Texture2DArray.FirstArraySlice = 0;
             }
-            DescriptorHandle preFilteredEnvironmentMapHandle = _resourceTable.AddStaticResourceView(uav);
+            DescriptorHandle preFilteredEnvironmentMapHandle = _resourceTable->AddStaticResourceView(uav);
 
             float roughness = float(i) / float(preFilteredEnvTextureDesc.GetMipLevels() - 1);
 
@@ -347,7 +353,7 @@ namespace scene::helpers
         std::shared_ptr<scene::Skybox> skyboxComponent = skyboxNode->GetComponentAs<scene::Skybox>("Skybox");
         ASSERT(skyboxComponent, "Failed to get skybox component");
 
-        std::shared_ptr<dx12::Resource> skyboxTexture = _textureManager.GetTexture(skyboxComponent->SkydomeTextureHandle);
+        std::shared_ptr<dx12::Resource> skyboxTexture = _textureManager->GetTexture(skyboxComponent->SkydomeTextureHandle);
         ASSERT(skyboxTexture, "Failed to get skybox texture pointer");
 
         // Parse pipeline for BRDF look-up texture generation
@@ -368,7 +374,7 @@ namespace scene::helpers
         // Create SRV/UAV for the textures
 
         //std::uint32_t currentResourceOffset = _descHeap.GetCurrentOffset();
-		DescriptorHandle brdfLUTTextureHandle = _resourceTable.AddStaticResourceView(brdfLUT->GetAsUAV());
+		DescriptorHandle brdfLUTTextureHandle = _resourceTable->AddStaticResourceView(brdfLUT->GetAsUAV());
 
         // Transition resources
 
@@ -381,7 +387,7 @@ namespace scene::helpers
 
         // BRDF LUT generation pipeline
 
-        commandList.SetDescriptorHeaps({ _resourceTable.GetShaderResourcesDescriptorHeap().GetDXDescriptorHeap().Get() });
+        commandList.SetDescriptorHeaps({ _resourceTable->GetShaderResourcesDescriptorHeap().GetDXDescriptorHeap().Get() });
         commandList.SetPipelineState(_IBL_BRDFGenerateLUT);
 
         struct PassConstants
@@ -571,15 +577,15 @@ namespace scene::helpers
         std::string metalnessFilepath       = filepath + '/' + materialData["Metalness"].asString();
         std::string roughnessFilepath       = filepath + '/' + materialData["Roughness"].asString();
 
-        component->AlbedoTextureHandle      = _textureManager.EnqueueTexture(albedoFilepath);
-		component->NormalMapTextureHandle   = _textureManager.EnqueueTexture(normalFilepath);
-		component->MetalnessTextureHandle   = _textureManager.EnqueueTexture(metalnessFilepath);
-		component->RoughnessTextureHandle   = _textureManager.EnqueueTexture(roughnessFilepath);
+        component->AlbedoTextureHandle      = _textureManager->EnqueueTexture(albedoFilepath);
+		component->NormalMapTextureHandle   = _textureManager->EnqueueTexture(normalFilepath);
+		component->MetalnessTextureHandle   = _textureManager->EnqueueTexture(metalnessFilepath);
+		component->RoughnessTextureHandle   = _textureManager->EnqueueTexture(roughnessFilepath);
 
-		std::shared_ptr<dx12::Resource> albedoTexture = _textureManager.GetTexture(component->AlbedoTextureHandle);
-		std::shared_ptr<dx12::Resource> normalTexture = _textureManager.GetTexture(component->NormalMapTextureHandle);
-		std::shared_ptr<dx12::Resource> metalnessTexture = _textureManager.GetTexture(component->MetalnessTextureHandle);
-		std::shared_ptr<dx12::Resource> roughnessTexture = _textureManager.GetTexture(component->RoughnessTextureHandle);
+		std::shared_ptr<dx12::Resource> albedoTexture = _textureManager->GetTexture(component->AlbedoTextureHandle);
+		std::shared_ptr<dx12::Resource> normalTexture = _textureManager->GetTexture(component->NormalMapTextureHandle);
+		std::shared_ptr<dx12::Resource> metalnessTexture = _textureManager->GetTexture(component->MetalnessTextureHandle);
+		std::shared_ptr<dx12::Resource> roughnessTexture = _textureManager->GetTexture(component->RoughnessTextureHandle);
     }
 
     void SceneLoader::LoadComponent(const std::string& filepath, Json::Value& jsonValue, std::shared_ptr<Mesh> component, dx12::CommandList& commandList)
@@ -693,7 +699,7 @@ namespace scene::helpers
     {
         std::string skyboxFilepath = filepath + '/' + jsonValue["Skybox"].asString();
 
-		component->SkydomeTextureHandle = _textureManager.EnqueueTexture(skyboxFilepath);
+		component->SkydomeTextureHandle = _textureManager->EnqueueTexture(skyboxFilepath);
     }
 
     void SceneLoader::LoadRawMesh(const std::string& filepath, std::shared_ptr<Mesh> meshComponent)
@@ -805,6 +811,6 @@ namespace scene::helpers
     void SceneLoader::CleanIntermediates()
     {
         _intermediates.clear();
-        _textureManager.ClearIntermediates();
+        _textureManager->ClearIntermediates();
     }
 }

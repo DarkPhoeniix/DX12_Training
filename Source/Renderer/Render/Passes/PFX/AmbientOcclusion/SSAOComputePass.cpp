@@ -110,11 +110,11 @@ namespace render
 
         PIXBeginEvent(commandList.GetDXCommandList().Get(), 3, "SSAO");
         {
-			std::shared_ptr<dx12::Resource> noise = context.GetResourceNew(_data.Noise);
-			std::shared_ptr<dx12::Resource> kernels = context.GetResourceNew(_data.Kernels);
-            std::shared_ptr<dx12::Resource> normalRoughness = context.GetResourceNew(_data.NormalRoughness);
-            std::shared_ptr<dx12::Resource> depth = context.GetResourceNew(_data.Depth);
-            std::shared_ptr<dx12::Resource> aoTarget = context.GetResourceNew(_data.AOTarget);
+			std::shared_ptr<dx12::Resource> noise = context.GetResource(_data.Noise);
+			std::shared_ptr<dx12::Resource> kernels = context.GetResource(_data.Kernels);
+            std::shared_ptr<dx12::Resource> normalRoughness = context.GetResource(_data.NormalRoughness);
+            std::shared_ptr<dx12::Resource> depth = context.GetResource(_data.Depth);
+            std::shared_ptr<dx12::Resource> aoTarget = context.GetResource(_data.AOTarget);
 
 			DescriptorHandle noiseHandle = context.GetStaticResourceHandle(noise->GetAsSRV());
 			DescriptorHandle kernelsHandle = context.GetStaticResourceHandle(kernels->GetAsSRV());

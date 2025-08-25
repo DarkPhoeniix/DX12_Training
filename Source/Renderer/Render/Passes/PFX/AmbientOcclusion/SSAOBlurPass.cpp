@@ -83,10 +83,10 @@ namespace render
 
         PIXBeginEvent(commandList.GetDXCommandList().Get(), 3, "SSAO Blur");
         {
-			std::shared_ptr<dx12::Resource> weights = context.GetResourceNew(_data.WeightsBuffer);
-            std::shared_ptr<dx12::Resource> depth = context.GetResourceNew(_data.Depth);
-            std::shared_ptr<dx12::Resource> aoTarget = context.GetResourceNew(_data.AOTarget);
-            std::shared_ptr<dx12::Resource> blurTarget = context.GetResourceNew(_data.TempBlurTarget);
+			std::shared_ptr<dx12::Resource> weights = context.GetResource(_data.WeightsBuffer);
+            std::shared_ptr<dx12::Resource> depth = context.GetResource(_data.Depth);
+            std::shared_ptr<dx12::Resource> aoTarget = context.GetResource(_data.AOTarget);
+            std::shared_ptr<dx12::Resource> blurTarget = context.GetResource(_data.TempBlurTarget);
 
 			DescriptorHandle weightsBufferSRV = context.GetStaticResourceHandle(weights->GetAsSRV());
             DescriptorHandle depthHandle = context.GetStaticResourceHandle(depth->GetAsSRV());
