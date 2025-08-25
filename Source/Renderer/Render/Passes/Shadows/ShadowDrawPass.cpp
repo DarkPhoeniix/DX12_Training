@@ -84,7 +84,7 @@ namespace render
 
     void ShadowDrawPass::Setup(rg::RenderPassBuilder& builder)
     {
-        _data.ShadowMaps = builder.ReadResourceNew("shadow_maps");
+        _data.ShadowMaps = builder.ReadResource("shadow_maps");
 
         std::vector<std::shared_ptr<scene::Entity>> lightEntities = _scene->FilterNodesByComponent("Light");
         size_t lightsNum = lightEntities.size();
@@ -94,7 +94,7 @@ namespace render
             _data.LightCommandBuffers[frame].resize(lightsNum);
             for (size_t i = 0; i < lightsNum; ++i)
             {
-                _data.LightCommandBuffers[frame][i] = builder.ReadResourceNew(std::format("shadow_culled_instances_buffer_{} (frame {})", i, frame));
+                _data.LightCommandBuffers[frame][i] = builder.ReadResource(std::format("shadow_culled_instances_buffer_{} (frame {})", i, frame));
             }
         }
     }

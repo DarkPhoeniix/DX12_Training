@@ -45,7 +45,7 @@ namespace render
 
     void AverageLuminancePass::Setup(rg::RenderPassBuilder& builder)
     {
-        _data.LuminanceHistogram = builder.ReadResourceNew("luminance_histogram");
+        _data.LuminanceHistogram = builder.ReadResource("luminance_histogram");
 
         dx12::ResourceDescription lumDesc;
         {
@@ -53,8 +53,8 @@ namespace render
             lumDesc.SetStride(sizeof(float));
             lumDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Unordered);
         }
-        _data.PrevAverageLuminance = builder.CreateResourceNew("prev_average_luminance", lumDesc);
-        _data.AverageLuminance = builder.CreateResourceNew("average_luminance", lumDesc);
+        _data.PrevAverageLuminance = builder.CreateResource("prev_average_luminance", lumDesc);
+        _data.AverageLuminance = builder.CreateResource("average_luminance", lumDesc);
     }
 
     void AverageLuminancePass::Execute(rg::RenderContext& context, TaskGPU& task)

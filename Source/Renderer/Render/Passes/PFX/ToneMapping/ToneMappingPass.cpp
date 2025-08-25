@@ -49,8 +49,8 @@ namespace render
 
     void ToneMappingPass::Setup(rg::RenderPassBuilder& builder)
     {
-        _data.HDRTarget = builder.ReadResourceNew("hdr_target");
-        _data.AverageLuminance = builder.ReadResourceNew("average_luminance");
+        _data.HDRTarget = builder.ReadResource("hdr_target");
+        _data.AverageLuminance = builder.ReadResource("average_luminance");
 
         dx12::ResourceDescription targetDesc;
         {
@@ -66,7 +66,7 @@ namespace render
             targetDesc.SetClearValue(clearValue);
             targetDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::RenderTarget | dx12::ResourceType::Unordered);
         }
-        _data.Target = builder.CreateResourceNew("render_target", targetDesc);
+        _data.Target = builder.CreateResource("render_target", targetDesc);
     }
 
     void ToneMappingPass::Execute(rg::RenderContext& context, TaskGPU& task)

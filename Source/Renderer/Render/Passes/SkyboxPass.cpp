@@ -33,8 +33,8 @@ namespace render
 
     void SkyboxPass::Setup(rg::RenderPassBuilder& builder)
     {
-        _data.Depth = builder.ReadResourceNew("depth_target");
-        _data.HDRTarget = builder.WriteResourceNew("hdr_target");
+        _data.Depth = builder.ReadResource("depth_target");
+        _data.HDRTarget = builder.WriteResource("hdr_target");
     }
 
     void SkyboxPass::Execute(rg::RenderContext& context, TaskGPU& task)

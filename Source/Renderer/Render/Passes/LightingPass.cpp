@@ -33,13 +33,13 @@ namespace render
 
     void LightingPass::Setup(rg::RenderPassBuilder& builder)
     {
-        _data.AlbedoMetallic = builder.ReadResourceNew("albedo_metallic_target");
-        _data.NormalRoughness = builder.ReadResourceNew("normal_roughness_target");
-        _data.Depth = builder.ReadResourceNew("depth_target");
+        _data.AlbedoMetallic = builder.ReadResource("albedo_metallic_target");
+        _data.NormalRoughness = builder.ReadResource("normal_roughness_target");
+        _data.Depth = builder.ReadResource("depth_target");
 
-        _data.ShadowMaps = builder.ReadResourceNew("shadow_maps");
+        _data.ShadowMaps = builder.ReadResource("shadow_maps");
 
-        _data.HDRTarget = builder.WriteResourceNew("hdr_target");
+        _data.HDRTarget = builder.WriteResource("hdr_target");
     }
 
     void LightingPass::Execute(rg::RenderContext& context, TaskGPU& task)

@@ -31,8 +31,8 @@ namespace render
 
     void SSAOApplyPass::Setup(rg::RenderPassBuilder& builder)
     {
-        _data.AOTarget = builder.ReadResourceNew("ao_target");
-        _data.HDRTarget = builder.WriteResourceNew("hdr_target");
+        _data.AOTarget = builder.ReadResource("ao_target");
+        _data.HDRTarget = builder.WriteResource("hdr_target");
     }
 
     void SSAOApplyPass::Execute(rg::RenderContext& context, TaskGPU& task)

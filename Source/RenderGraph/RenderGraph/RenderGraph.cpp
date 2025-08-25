@@ -36,8 +36,8 @@ namespace rg
 
     void RenderGraph::Reset()
     {
-        _context._mapNameToIdNew.clear();
-        _context._resourcesNew.clear();
+        _context._mapNameToId.clear();
+        _context._mapIdToResource.clear();
 
         _passes.clear();
         _sortedPasses.clear();
@@ -119,25 +119,25 @@ namespace rg
     {
         ASSERT(resource, "Trying to import a null resource into the render graph.");
 
-        auto it = _context._mapNameToIdNew.find(resource->GetName());
-        if (it != _context._mapNameToIdNew.end())
+        auto it = _context._mapNameToId.find(resource->GetName());
+        if (it != _context._mapNameToId.end())
         {
-            _context._resourcesNew[it->second] = resource;
+            _context._mapIdToResource[it->second] = resource;
         }
         else
         {
             const ResourceId& id = resource->GetID();
-            _context._mapNameToIdNew[resource->GetName()] = id;
-            _context._resourcesNew[id] = resource;
+            _context._mapNameToId[resource->GetName()] = id;
+            _context._mapIdToResource[id] = resource;
         }
     }
 
     std::shared_ptr<dx12::Resource> RenderGraph::ExportResource(const std::string& name)
     {
-        ResourceId id = _context._mapNameToIdNew[name];
+        ResourceId id = _context._mapNameToId[name];
 
-        auto resourceIt = _context._resourcesNew.find(id);
-        if (resourceIt == _context._resourcesNew.end())
+        auto resourceIt = _context._mapIdToResource.find(id);
+        if (resourceIt == _context._mapIdToResource.end())
         {
             LOG_ERROR("Resource with name '{}' does not exist in the render graph context.", name);
             return nullptr;

@@ -23,8 +23,8 @@ namespace render
 
     void DebugBoundingVolumePass::Setup(rg::RenderPassBuilder& builder)
     {
-        _data.Target = builder.WriteResourceNew("render_target");
-        _data.Depth = builder.ReadResourceNew("depth_target");
+        _data.Target = builder.WriteResource("render_target");
+        _data.Depth = builder.ReadResource("depth_target");
     }
 
     void DebugBoundingVolumePass::Execute(rg::RenderContext& context, TaskGPU& task)

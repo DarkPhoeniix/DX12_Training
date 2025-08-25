@@ -67,7 +67,7 @@ namespace render
 
             noiseData[i] = XMVector3Normalize(noiseData[i]);
         }
-		_data.Noise = builder.CreateResourceNew("SSAO noise texture", noiseDesc, noiseData.data(), sizeof(XMVECTOR) * noiseData.size());
+		_data.Noise = builder.CreateResource("SSAO noise texture", noiseDesc, noiseData.data(), sizeof(XMVECTOR) * noiseData.size());
 
         dx12::ResourceDescription kernelsDesc;
         {
@@ -89,10 +89,10 @@ namespace render
             scale = std::lerp(0.1f, 1.0f, scale * scale);
             kernelsData[i] *= scale;
 		}
-		_data.Kernels = builder.CreateResourceNew("SSAO kernels", kernelsDesc, kernelsData.data(), sizeof(XMVECTOR) * kernelsData.size());
+		_data.Kernels = builder.CreateResource("SSAO kernels", kernelsDesc, kernelsData.data(), sizeof(XMVECTOR) * kernelsData.size());
 
-        _data.NormalRoughness = builder.ReadResourceNew("normal_roughness_target");
-        _data.Depth = builder.ReadResourceNew("depth_target");
+        _data.NormalRoughness = builder.ReadResource("normal_roughness_target");
+        _data.Depth = builder.ReadResource("depth_target");
 
         dx12::ResourceDescription aoDesc;
         {
@@ -100,7 +100,7 @@ namespace render
             aoDesc.SetFormat(DXGI_FORMAT_R32_FLOAT);
             aoDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::Unordered);
         }
-        _data.AOTarget = builder.CreateResourceNew("ao_target", aoDesc);
+        _data.AOTarget = builder.CreateResource("ao_target", aoDesc);
     }
 
     void SSAOComputePass::Execute(rg::RenderContext& context, TaskGPU& task)

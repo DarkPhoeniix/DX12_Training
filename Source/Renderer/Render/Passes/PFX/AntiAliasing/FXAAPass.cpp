@@ -114,7 +114,7 @@ namespace render
 
     void FXAAPass::Setup(rg::RenderPassBuilder& builder)
     {
-        _data.Target = builder.WriteResourceNew("hdr_target");
+        _data.Target = builder.WriteResource("hdr_target");
 
         dx12::ResourceDescription workCountersDesc;
         {
@@ -122,7 +122,7 @@ namespace render
             workCountersDesc.SetStride(sizeof(std::uint32_t));
             workCountersDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Unordered);
         }
-        _data.WorkCounters = builder.CreateResourceNew("fxaa_work_counter", workCountersDesc);
+        _data.WorkCounters = builder.CreateResource("fxaa_work_counter", workCountersDesc);
 
         dx12::ResourceDescription workQueueDesc;
         {
@@ -132,8 +132,8 @@ namespace render
             workQueueDesc.SetStride(sizeof(std::uint32_t));
             workQueueDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Unordered);
         }
-        _data.WorkQueue = builder.CreateResourceNew("fxaa_work_queue", workQueueDesc);
-        _data.ColorQueue = builder.CreateResourceNew("fxaa_color_queue", workQueueDesc);
+        _data.WorkQueue = builder.CreateResource("fxaa_work_queue", workQueueDesc);
+        _data.ColorQueue = builder.CreateResource("fxaa_color_queue", workQueueDesc);
 
         dx12::ResourceDescription lumaBufferDesc;
         {
@@ -149,7 +149,7 @@ namespace render
             lumaBufferDesc.SetFormat(DXGI_FORMAT_R8_UNORM);
             lumaBufferDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::Unordered);
         }
-        _data.LumaBuffer = builder.CreateResourceNew("luma_texture", lumaBufferDesc);
+        _data.LumaBuffer = builder.CreateResource("luma_texture", lumaBufferDesc);
 
         dx12::ResourceDescription indirectArgsDesc;
         {
@@ -158,7 +158,7 @@ namespace render
             indirectArgsDesc.SetStride(sizeof(D3D12_DISPATCH_ARGUMENTS));
             indirectArgsDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Unordered);
         }
-        _data.IndirectParams = builder.CreateResourceNew("fxaa_indirect_args", indirectArgsDesc);
+        _data.IndirectParams = builder.CreateResource("fxaa_indirect_args", indirectArgsDesc);
     }
 
     void FXAAPass::Execute(rg::RenderContext& context, TaskGPU& task)

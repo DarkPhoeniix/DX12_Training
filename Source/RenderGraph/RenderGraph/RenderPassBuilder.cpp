@@ -19,9 +19,9 @@ namespace rg
 		return resourceId;
     }
 
-    ResourceId RenderPassBuilder::CreateResourceNew(const std::string& name, dx12::ResourceDescription desc, void* data /*= nullptr*/, size_t dataSize /*= 0*/)
+    ResourceId RenderPassBuilder::CreateResource(const std::string& name, dx12::ResourceDescription desc, void* data /*= nullptr*/, size_t dataSize /*= 0*/)
     {
-        ResourceId resourceId = _renderGraph._context.CreateResourceNew(name, desc, data, dataSize);
+        ResourceId resourceId = _renderGraph._context.CreateResource(name, desc, data, dataSize);
 
         _renderPass->_creates.push_back(resourceId);
         _renderPass->_reads.push_back(resourceId);
@@ -30,18 +30,18 @@ namespace rg
         return resourceId;
     }
 
-    ResourceId RenderPassBuilder::ReadResourceNew(const std::string& name)
+    ResourceId RenderPassBuilder::ReadResource(const std::string& name)
     {
-        ResourceId resourceId = _renderGraph._context.ReadResourceNew(name);
+        ResourceId resourceId = _renderGraph._context.ReadResource(name);
 
         _renderPass->_reads.push_back(resourceId);
 
         return resourceId;
     }
 
-    ResourceId RenderPassBuilder::WriteResourceNew(const std::string& name)
+    ResourceId RenderPassBuilder::WriteResource(const std::string& name)
     {
-        ResourceId resourceId = _renderGraph._context.WriteResourceNew(name);
+        ResourceId resourceId = _renderGraph._context.WriteResource(name);
 
         _renderPass->_reads.push_back(resourceId);
         _renderPass->_writes.push_back(resourceId);

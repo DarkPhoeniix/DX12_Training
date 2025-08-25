@@ -56,10 +56,9 @@ namespace render
 
         Frame* _currentFrame;
 
-		TextureManager _textureManagerNew;
-
         DescriptorHeapManager _descriptorHeapManager;
-        ResourceTable _resourceTableNew;
+        ResourceTable _resourceTable;
+        TextureManager _textureManager;
 
         rg::RenderGraph _renderGraph;
 

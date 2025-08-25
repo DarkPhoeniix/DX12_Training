@@ -149,11 +149,11 @@ namespace render
         , _isCameraMoving(false)
         , _deltaTime(0.0f)
         , _descriptorHeapManager(1024, 1024, 4096, 1024)
-        , _resourceTableNew(_descriptorHeapManager)
-        , _renderGraph(_resourceTableNew, _textureManagerNew)
+        , _resourceTable(_descriptorHeapManager)
+        , _renderGraph(_resourceTable, _textureManager)
         , _scene(std::make_shared<scene::Scene>())
-		, _textureManagerNew(_resourceTableNew)
-		, _sceneLoader(_resourceTableNew, _textureManagerNew)
+		, _textureManager(_resourceTable)
+		, _sceneLoader(_resourceTable, _textureManager)
     {
     }
 
@@ -248,7 +248,7 @@ namespace render
         _deltaTime = updateEvent.elapsedTime;
 
         _descriptorHeapManager.AdvanceFrameIndex();
-        _resourceTableNew.ResetTransientResources();
+        _resourceTable.ResetTransientResources();
 
         // Clear marker map for current frame before execution
         std::shared_ptr<tracking::IGPUCrashTracker> crashTracker = dx12::Device::GetCrashTracker();
@@ -461,8 +461,8 @@ namespace render
             std::shared_ptr<scene::Light> lightComponent = lightEntity->GetComponentAs<scene::Light>("Light");
             std::shared_ptr<scene::Transformation> transformComponent = lightEntity->GetComponentAs<scene::Transformation>("Transformation");
 
-			std::shared_ptr<dx12::Resource> shadowMap = _textureManagerNew.GetTexture(lightComponent->ShadowMapHandle);
-			DescriptorHandle shadowMapHandle = _resourceTableNew.GetStaticResourceHandle(shadowMap->GetAsSRV());
+			std::shared_ptr<dx12::Resource> shadowMap = _textureManager.GetTexture(lightComponent->ShadowMapHandle);
+			DescriptorHandle shadowMapHandle = _resourceTable.GetStaticResourceHandle(shadowMap->GetAsSRV());
 
 			auto views = GetLightViews(lightEntity);
             XMMATRIX proj = XMMatrixIdentity();
@@ -535,7 +535,7 @@ namespace render
                     data[i] = bones[i]->Offset * bones[i]->GlobalTransform;
                 }
 
-                DescriptorHandle bonesBufferHandle = _resourceTableNew.AddTransientResourceView(bonesBuffer->GetAsSRV());
+                DescriptorHandle bonesBufferHandle = _resourceTable.AddTransientResourceView(bonesBuffer->GetAsSRV());
                 bonesBufferIndex = bonesBufferHandle.Index;
             }
 
@@ -546,26 +546,26 @@ namespace render
 
             if (materialComponent)
             {
-                std::shared_ptr<dx12::Resource> albedoTexture = _textureManagerNew.GetTexture(materialComponent->AlbedoTextureHandle);
-                std::shared_ptr<dx12::Resource> normalMapTexture = _textureManagerNew.GetTexture(materialComponent->NormalMapTextureHandle);
-                std::shared_ptr<dx12::Resource> metalnessTexture = _textureManagerNew.GetTexture(materialComponent->MetalnessTextureHandle);
-                std::shared_ptr<dx12::Resource> roughnessTexture = _textureManagerNew.GetTexture(materialComponent->RoughnessTextureHandle);
+                std::shared_ptr<dx12::Resource> albedoTexture = _textureManager.GetTexture(materialComponent->AlbedoTextureHandle);
+                std::shared_ptr<dx12::Resource> normalMapTexture = _textureManager.GetTexture(materialComponent->NormalMapTextureHandle);
+                std::shared_ptr<dx12::Resource> metalnessTexture = _textureManager.GetTexture(materialComponent->MetalnessTextureHandle);
+                std::shared_ptr<dx12::Resource> roughnessTexture = _textureManager.GetTexture(materialComponent->RoughnessTextureHandle);
 
                 if (albedoTexture)
                 {
-                    albedoTextureIndex = _resourceTableNew.GetStaticResourceHandle(albedoTexture->GetAsSRV()).Index;
+                    albedoTextureIndex = _resourceTable.GetStaticResourceHandle(albedoTexture->GetAsSRV()).Index;
                 }
                 if (normalMapTexture)
                 {
-                    normalMapIndex = _resourceTableNew.GetStaticResourceHandle(normalMapTexture->GetAsSRV()).Index;
+                    normalMapIndex = _resourceTable.GetStaticResourceHandle(normalMapTexture->GetAsSRV()).Index;
                 }
                 if (metalnessTexture)
                 {
-                    metalnessTextureIndex = _resourceTableNew.GetStaticResourceHandle(metalnessTexture->GetAsSRV()).Index;
+                    metalnessTextureIndex = _resourceTable.GetStaticResourceHandle(metalnessTexture->GetAsSRV()).Index;
                 }
                 if (roughnessTexture)
                 {
-                    roughnessTextureIndex = _resourceTableNew.GetStaticResourceHandle(roughnessTexture->GetAsSRV()).Index;
+                    roughnessTextureIndex = _resourceTable.GetStaticResourceHandle(roughnessTexture->GetAsSRV()).Index;
                 }
             }
 
@@ -583,8 +583,8 @@ namespace render
 			};
         }
 
-        DescriptorHandle modelBufferHandle = _resourceTableNew.AddTransientResourceView(modelBuffer->GetAsSRV());
-        DescriptorHandle lightBufferHandle =  _resourceTableNew.AddTransientResourceView(lightBuffer->GetAsSRV());
+        DescriptorHandle modelBufferHandle = _resourceTable.AddTransientResourceView(modelBuffer->GetAsSRV());
+        DescriptorHandle lightBufferHandle =  _resourceTable.AddTransientResourceView(lightBuffer->GetAsSRV());
 
         {
             GPUFrameDesc* frameBufferData = _currentFrame->_frameBuffer->Map<GPUFrameDesc>();
@@ -654,7 +654,7 @@ namespace render
                 std::shared_ptr<dx12::Resource> shadowMap = ResourceFactory::Create(lightEntity->GetName() + "_shadow_map", shadowMapDesc);
 				shadowMap->CreateCommitedResource();
 
-                lightComponent->ShadowMapHandle = _textureManagerNew.AddTexture(shadowMap);
+                lightComponent->ShadowMapHandle = _textureManager.AddTexture(shadowMap);
             }
 		}
     }

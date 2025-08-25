@@ -24,8 +24,8 @@ namespace render
 
     void DebugArmaturePass::Setup(rg::RenderPassBuilder& builder)
     {
-        _data.Target = builder.WriteResourceNew("render_target");
-        _data.Depth = builder.ReadResourceNew("depth_target");
+        _data.Target = builder.WriteResource("render_target");
+        _data.Depth = builder.ReadResource("depth_target");
     }
 
     void DebugArmaturePass::Execute(rg::RenderContext& context, TaskGPU& task)

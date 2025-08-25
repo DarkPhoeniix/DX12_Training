@@ -19,9 +19,9 @@ namespace rg
         RenderPassBuilder& operator=(RenderPassBuilder&&) = default;
 
         ResourceId CreateResourceVirtual(const std::string& name);
-        ResourceId CreateResourceNew(const std::string& name, dx12::ResourceDescription desc, void* data = nullptr, size_t dataSize = 0);
-        ResourceId ReadResourceNew(const std::string& name);
-        ResourceId WriteResourceNew(const std::string& name);
+        ResourceId CreateResource(const std::string& name, dx12::ResourceDescription desc, void* data = nullptr, size_t dataSize = 0);
+        ResourceId ReadResource(const std::string& name);
+        ResourceId WriteResource(const std::string& name);
 
     private:
         IRenderPass* _renderPass;

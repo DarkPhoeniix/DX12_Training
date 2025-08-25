@@ -42,7 +42,7 @@ namespace render
 
     void LuminanceHistogramPass::Setup(rg::RenderPassBuilder& builder)
     {
-        _data.HDRTarget = builder.ReadResourceNew("hdr_target");
+        _data.HDRTarget = builder.ReadResource("hdr_target");
 
         dx12::ResourceDescription lumDesc;
         {
@@ -50,7 +50,7 @@ namespace render
             lumDesc.SetStride(sizeof(std::uint32_t));
             lumDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Unordered);
         }
-        _data.LuminanceHistogram = builder.CreateResourceNew("luminance_histogram", lumDesc);
+        _data.LuminanceHistogram = builder.CreateResource("luminance_histogram", lumDesc);
     }
 
     void LuminanceHistogramPass::Execute(rg::RenderContext& context, TaskGPU& task)

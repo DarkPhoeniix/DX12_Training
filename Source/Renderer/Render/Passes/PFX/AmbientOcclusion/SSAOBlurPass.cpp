@@ -62,10 +62,10 @@ namespace render
         {
             weightsData[kRadius + i] /= sum;
         }
-		_data.WeightsBuffer = builder.CreateResourceNew("ssao_blur_weights", weightsBufferDesc, weightsData.data(), sizeof(float) * weightsData.size());
+		_data.WeightsBuffer = builder.CreateResource("ssao_blur_weights", weightsBufferDesc, weightsData.data(), sizeof(float) * weightsData.size());
 
-        _data.Depth = builder.ReadResourceNew("depth_target");
-        _data.AOTarget = builder.ReadResourceNew("ao_target");
+        _data.Depth = builder.ReadResource("depth_target");
+        _data.AOTarget = builder.ReadResource("ao_target");
 
         dx12::ResourceDescription aoBlurDesc;
         {
@@ -73,7 +73,7 @@ namespace render
             aoBlurDesc.SetFormat(DXGI_FORMAT_R32_FLOAT);
             aoBlurDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::Unordered);
         }
-        _data.TempBlurTarget = builder.CreateResourceNew("ao_blur_target", aoBlurDesc);
+        _data.TempBlurTarget = builder.CreateResource("ao_blur_target", aoBlurDesc);
     }
 
     void SSAOBlurPass::Execute(rg::RenderContext& context, TaskGPU& task)
