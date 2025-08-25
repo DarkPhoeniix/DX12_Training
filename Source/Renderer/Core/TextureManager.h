@@ -8,12 +8,6 @@
 namespace dx12
 {
 	class CommandList;
-	class Texture;
-}
-
-namespace DirectX
-{
-	class ScratchImage;
 }
 
 using TextureHandle = std::uint32_t;

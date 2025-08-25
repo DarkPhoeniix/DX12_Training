@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include "RenderGraph/RenderPass.h"
@@ -9,27 +8,27 @@
 
 namespace render
 {
-    struct ShadowClearPassData
-    {
+	struct ShadowClearPassData
+	{
 		rg::ResourceId ShadowMaps;
-    };
+	};
 
-    class ShadowClearPass : public rg::RenderPass<ShadowClearPassData>
-    {
-    public:
-        ShadowClearPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
+	class ShadowClearPass : public rg::RenderPass<ShadowClearPassData>
+	{
+	public:
+		ShadowClearPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
 
-        // Inherited via RenderPass
-        void Setup(rg::RenderPassBuilder& builder) override;
-        void Execute(rg::RenderContext& context, TaskGPU& task) override;
+		// Inherited via RenderPass
+		void Setup(rg::RenderPassBuilder& builder) override;
+		void Execute(rg::RenderContext& context, TaskGPU& task) override;
 
-    private:
-        dx12::PipelineState _spotLightShadowsPipeline;
-        dx12::PipelineState _pointLightShadowsPipeline;
+	private:
+		dx12::PipelineState _spotLightShadowsPipeline;
+		dx12::PipelineState _pointLightShadowsPipeline;
 
-        ComPtr<ID3D12CommandSignature> _cmdSignature;
+		ComPtr<ID3D12CommandSignature> _cmdSignature;
 
-        std::shared_ptr<scene::Scene> _scene;
-        scene::Camera* _camera;
-    };
+		std::shared_ptr<scene::Scene> _scene;
+		scene::Camera* _camera;
+	};
 } // namespace render

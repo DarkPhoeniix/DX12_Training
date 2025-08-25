@@ -9,31 +9,31 @@
 
 namespace render
 {
-    struct ShadowDrawPassData
-    {
+	struct ShadowDrawPassData
+	{
 		rg::ResourceId ShadowMaps;
-        std::vector<rg::ResourceId> LightCommandBuffers[dx12::BACK_BUFFER_COUNT];
-    };
+		std::vector<rg::ResourceId> LightCommandBuffers[dx12::BACK_BUFFER_COUNT];
+	};
 
-    class ShadowDrawPass : public rg::RenderPass<ShadowDrawPassData>
-    {
-    public:
-        ShadowDrawPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
+	class ShadowDrawPass : public rg::RenderPass<ShadowDrawPassData>
+	{
+	public:
+		ShadowDrawPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
 
-        // Inherited via RenderPass
-        void Setup(rg::RenderPassBuilder& builder) override;
-        void Execute(rg::RenderContext& context, TaskGPU& task) override;
+		// Inherited via RenderPass
+		void Setup(rg::RenderPassBuilder& builder) override;
+		void Execute(rg::RenderContext& context, TaskGPU& task) override;
 
-    private:
-        void DrawSpotLightShadows(rg::RenderContext& context, TaskGPU& task);
-        void DrawPointLightShadows(rg::RenderContext& context, TaskGPU& task);
+	private:
+		void DrawSpotLightShadows(rg::RenderContext& context, TaskGPU& task);
+		void DrawPointLightShadows(rg::RenderContext& context, TaskGPU& task);
 
-        dx12::PipelineState _spotLightShadowsPipeline;
-        dx12::PipelineState _pointLightShadowsPipeline;
+		dx12::PipelineState _spotLightShadowsPipeline;
+		dx12::PipelineState _pointLightShadowsPipeline;
 
-        ComPtr<ID3D12CommandSignature> _cmdSignature;
+		ComPtr<ID3D12CommandSignature> _cmdSignature;
 
-        std::shared_ptr<scene::Scene> _scene;
-        scene::Camera* _camera;
-    };
+		std::shared_ptr<scene::Scene> _scene;
+		scene::Camera* _camera;
+	};
 } // namespace render

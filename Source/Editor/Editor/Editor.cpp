@@ -267,7 +267,6 @@ namespace gui
 
     void Editor::Render(dx12::CommandList& commandList)
     {
-        ImGui::ShowDemoWindow();
         ImGui::Render();
         commandList.SetDescriptorHeaps({ _srvDescriptorHeap->GetDXDescriptorHeap().Get() });
         ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList.GetDXCommandList().Get());

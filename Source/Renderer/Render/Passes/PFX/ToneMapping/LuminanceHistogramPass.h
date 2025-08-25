@@ -8,25 +8,25 @@
 
 namespace render
 {
-    struct LuminanceHistogramPassData
-    {
-        rg::ResourceId HDRTarget;
-        rg::ResourceId LuminanceHistogram;
-    };
+	struct LuminanceHistogramPassData
+	{
+		rg::ResourceId HDRTarget;
+		rg::ResourceId LuminanceHistogram;
+	};
 
-    class LuminanceHistogramPass : public rg::RenderPass<LuminanceHistogramPassData>
-    {
-    public:
-        LuminanceHistogramPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
+	class LuminanceHistogramPass : public rg::RenderPass<LuminanceHistogramPassData>
+	{
+	public:
+		LuminanceHistogramPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
 
-        // Inherited via RenderPass
-        void Setup(rg::RenderPassBuilder& builder) override;
-        void Execute(rg::RenderContext& context, TaskGPU& task) override;
+		// Inherited via RenderPass
+		void Setup(rg::RenderPassBuilder& builder) override;
+		void Execute(rg::RenderContext& context, TaskGPU& task) override;
 
-    private:
-        dx12::PipelineState _luminanceHistogramPipeline;
+	private:
+		dx12::PipelineState _luminanceHistogramPipeline;
 
-        std::shared_ptr<scene::Scene> _scene;
-        scene::Camera* _camera;
-    };
+		std::shared_ptr<scene::Scene> _scene;
+		scene::Camera* _camera;
+	};
 } // namespace render

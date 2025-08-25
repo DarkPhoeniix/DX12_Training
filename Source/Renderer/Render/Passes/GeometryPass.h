@@ -8,26 +8,26 @@
 
 namespace render
 {
-    struct GeometryPassData
-    {
-        rg::ResourceId Depth;
-        rg::ResourceId AlbedoMetallic;
-        rg::ResourceId NormalRoughness;
-    };
+	struct GeometryPassData
+	{
+		rg::ResourceId Depth;
+		rg::ResourceId AlbedoMetallic;
+		rg::ResourceId NormalRoughness;
+	};
 
-    class GeometryPass : public rg::RenderPass<GeometryPassData>
-    {
-    public:
-        GeometryPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
+	class GeometryPass : public rg::RenderPass<GeometryPassData>
+	{
+	public:
+		GeometryPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
 
-        // Inherited via RenderPass
-        void Setup(rg::RenderPassBuilder& builder) override;
-        void Execute(rg::RenderContext& context, TaskGPU& task) override;
+		// Inherited via RenderPass
+		void Setup(rg::RenderPassBuilder& builder) override;
+		void Execute(rg::RenderContext& context, TaskGPU& task) override;
 
-    private:
-        dx12::PipelineState _geometryPipeline;
+	private:
+		dx12::PipelineState _geometryPipeline;
 
-        std::shared_ptr<scene::Scene> _scene;
-        scene::Camera* _camera;
-    };
+		std::shared_ptr<scene::Scene> _scene;
+		scene::Camera* _camera;
+	};
 } // namespace render

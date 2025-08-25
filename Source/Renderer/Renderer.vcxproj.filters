@@ -206,7 +206,7 @@
     <ClCompile Include="Window\Win32Window.cpp">
       <Filter>Window</Filter>
     </ClCompile>
-    <ClCompile Include="Render\RenderSettings.cpp">
+    <ClCompile Include="Core\RenderSettings.cpp">
       <Filter>Render</Filter>
     </ClCompile>
     <ClCompile Include="Input\InputDevice.cpp">
@@ -350,7 +350,7 @@
     <ClInclude Include="Window\Win32Window.h">
       <Filter>Window</Filter>
     </ClInclude>
-    <ClInclude Include="Render\RenderSettings.h">
+    <ClInclude Include="Core\RenderSettings.h">
       <Filter>Render</Filter>
     </ClInclude>
     <ClInclude Include="Events\KeyEvent.h">

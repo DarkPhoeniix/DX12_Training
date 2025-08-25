@@ -25,7 +25,7 @@
 
 #include "Render/Helpers/GPUStructs.h"
 
-#include "Render/RenderSettings.h"
+#include "Core/RenderSettings.h"
 #include "Render/Frame/TaskGPU.h"
 #include "Render/Passes/PFX/AmbientOcclusion/SSAOApplyPass.h"
 #include "Render/Passes/PFX/AmbientOcclusion/SSAOBlurPass.h"

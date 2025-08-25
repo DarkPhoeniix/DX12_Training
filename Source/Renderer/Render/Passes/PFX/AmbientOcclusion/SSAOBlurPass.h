@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include "RenderGraph/RenderPass.h"
@@ -9,29 +8,29 @@
 
 namespace render
 {
-    struct SSAOBlurPassData
-    {
-        rg::ResourceId WeightsBuffer;
+	struct SSAOBlurPassData
+	{
+		rg::ResourceId WeightsBuffer;
 
-        rg::ResourceId Depth;
-        rg::ResourceId AOTarget;
-        rg::ResourceId TempBlurTarget;
-    };
+		rg::ResourceId Depth;
+		rg::ResourceId AOTarget;
+		rg::ResourceId TempBlurTarget;
+	};
 
-    class SSAOBlurPass : public rg::RenderPass<SSAOBlurPassData>
-    {
-    public:
-        SSAOBlurPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
+	class SSAOBlurPass : public rg::RenderPass<SSAOBlurPassData>
+	{
+	public:
+		SSAOBlurPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
 
-        // Inherited via RenderPass
-        void Setup(rg::RenderPassBuilder& builder) override;
-        void Execute(rg::RenderContext& context, TaskGPU& task) override;
+		// Inherited via RenderPass
+		void Setup(rg::RenderPassBuilder& builder) override;
+		void Execute(rg::RenderContext& context, TaskGPU& task) override;
 
-    private:
-        dx12::PipelineState _SSAOBlurHorizonralPipeline;
-        dx12::PipelineState _SSAOBlurVerticalPipeline;
+	private:
+		dx12::PipelineState _SSAOBlurHorizonralPipeline;
+		dx12::PipelineState _SSAOBlurVerticalPipeline;
 
-        std::shared_ptr<scene::Scene> _scene;
-        scene::Camera* _camera;
-    };
+		std::shared_ptr<scene::Scene> _scene;
+		scene::Camera* _camera;
+	};
 } // namespace render

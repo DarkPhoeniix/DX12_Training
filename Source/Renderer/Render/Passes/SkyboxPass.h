@@ -8,25 +8,25 @@
 
 namespace render
 {
-    struct SkyboxPassData
-    {
-        rg::ResourceId Depth;
-        rg::ResourceId HDRTarget;
-    };
+	struct SkyboxPassData
+	{
+		rg::ResourceId Depth;
+		rg::ResourceId HDRTarget;
+	};
 
-    class SkyboxPass : public rg::RenderPass<SkyboxPassData>
-    {
-    public:
-        SkyboxPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
+	class SkyboxPass : public rg::RenderPass<SkyboxPassData>
+	{
+	public:
+		SkyboxPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
 
-        // Inherited via RenderPass
-        void Setup(rg::RenderPassBuilder& builder) override;
-        void Execute(rg::RenderContext& context, TaskGPU& task) override;
+		// Inherited via RenderPass
+		void Setup(rg::RenderPassBuilder& builder) override;
+		void Execute(rg::RenderContext& context, TaskGPU& task) override;
 
-    private:
-        dx12::PipelineState _skyboxPipeline;
+	private:
+		dx12::PipelineState _skyboxPipeline;
 
-        std::shared_ptr<scene::Scene> _scene;
-        scene::Camera* _camera;
-    };
+		std::shared_ptr<scene::Scene> _scene;
+		scene::Camera* _camera;
+	};
 } // namespace render

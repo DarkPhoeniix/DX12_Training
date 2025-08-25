@@ -126,7 +126,7 @@ namespace
 
 		commandList.TransitionBarrier(*texture, D3D12_RESOURCE_STATE_COMMON);
 	}
-}
+} // namespace unnamed
 
 std::unique_ptr<TextureManager> TextureManager::_instance = nullptr;
 

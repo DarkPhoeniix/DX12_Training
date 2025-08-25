@@ -8,36 +8,36 @@
 
 namespace render
 {
-    struct FXAAPassData
-    {
-        rg::ResourceId Target;
-        rg::ResourceId WorkCounters;
-        rg::ResourceId WorkQueue;
-        rg::ResourceId ColorQueue;
-        rg::ResourceId LumaBuffer;
-        rg::ResourceId IndirectParams;
-    };
+	struct FXAAPassData
+	{
+		rg::ResourceId Target;
+		rg::ResourceId WorkCounters;
+		rg::ResourceId WorkQueue;
+		rg::ResourceId ColorQueue;
+		rg::ResourceId LumaBuffer;
+		rg::ResourceId IndirectParams;
+	};
 
-    class FXAAPass : public rg::RenderPass<FXAAPassData>
-    {
-    public:
-        FXAAPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
+	class FXAAPass : public rg::RenderPass<FXAAPassData>
+	{
+	public:
+		FXAAPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
 
-        // Inherited via RenderPass
-        void Setup(rg::RenderPassBuilder& builder) override;
-        void Execute(rg::RenderContext& context, TaskGPU& task) override;
+		// Inherited via RenderPass
+		void Setup(rg::RenderPassBuilder& builder) override;
+		void Execute(rg::RenderContext& context, TaskGPU& task) override;
 
-    private:
-        dx12::PipelineState _FXAA_Pass1_Pipeline;
-        dx12::PipelineState _FXAA_ResolveWork_Pipeline;
-        dx12::PipelineState _FXAA_Pass2H_Pipeline;
-        dx12::PipelineState _FXAA_Pass2V_Pipeline;
+	private:
+		dx12::PipelineState _FXAA_Pass1_Pipeline;
+		dx12::PipelineState _FXAA_ResolveWork_Pipeline;
+		dx12::PipelineState _FXAA_Pass2H_Pipeline;
+		dx12::PipelineState _FXAA_Pass2V_Pipeline;
 
-        ComPtr<ID3D12CommandSignature> _cmdSignature;
+		ComPtr<ID3D12CommandSignature> _cmdSignature;
 
-        std::shared_ptr<dx12::Resource> _paramsReset;
+		std::shared_ptr<dx12::Resource> _paramsReset;
 
-        std::shared_ptr<scene::Scene> _scene;
-        scene::Camera* _camera;
-    };
+		std::shared_ptr<scene::Scene> _scene;
+		scene::Camera* _camera;
+	};
 } // namespace render

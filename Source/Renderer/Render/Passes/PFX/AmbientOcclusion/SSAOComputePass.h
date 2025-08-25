@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include "RenderGraph/RenderPass.h"
@@ -9,32 +8,32 @@
 
 namespace render
 {
-    struct SSAOComputePassData
-    {
-        rg::ResourceId Noise;
+	struct SSAOComputePassData
+	{
+		rg::ResourceId Noise;
 		rg::ResourceId Kernels;
 
-        rg::ResourceId NormalRoughness;
-        rg::ResourceId Depth;
-        rg::ResourceId AOTarget;
-    };
+		rg::ResourceId NormalRoughness;
+		rg::ResourceId Depth;
+		rg::ResourceId AOTarget;
+	};
 
-    class SSAOComputePass : public rg::RenderPass<SSAOComputePassData>
-    {
-    public:
-        SSAOComputePass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
+	class SSAOComputePass : public rg::RenderPass<SSAOComputePassData>
+	{
+	public:
+		SSAOComputePass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
 
-        // Inherited via RenderPass
-        void Setup(rg::RenderPassBuilder& builder) override;
-        void Execute(rg::RenderContext& context, TaskGPU& task) override;
+		// Inherited via RenderPass
+		void Setup(rg::RenderPassBuilder& builder) override;
+		void Execute(rg::RenderContext& context, TaskGPU& task) override;
 
-    private:
-        dx12::PipelineState _SSAOPipeline;
+	private:
+		dx12::PipelineState _SSAOPipeline;
 
-        std::shared_ptr<dx12::Resource> _noise;
-        std::shared_ptr<dx12::Resource> _kernels;
+		std::shared_ptr<dx12::Resource> _noise;
+		std::shared_ptr<dx12::Resource> _kernels;
 
-        std::shared_ptr<scene::Scene> _scene;
-        scene::Camera* _camera;
-    };
+		std::shared_ptr<scene::Scene> _scene;
+		scene::Camera* _camera;
+	};
 } // namespace render
