@@ -1,21 +1,23 @@
 
-#define SSAOApply_RootSig \
-	"RootFlags(0), " \
-    "DescriptorTable(SRV(t0), visibility = SHADER_VISIBILITY_ALL), " \
-    "DescriptorTable(UAV(u0), visibility = SHADER_VISIBILITY_ALL)"
-
-#include "../CommonResources.hlsli"
-#include "../DepthFuncs.hlsli"
+#include "../UnifiedRootSignature.hlsli"
 
 #define NUM_THREADS 16
 
-Texture2D<float> AOTexture      : register(t0);
-RWTexture2D<float4> Target      : register(u0);
+struct RootConstants
+{
+    uint AmbientOcculusionTextureIndex;
+    uint TargetTextureIndex;
+};
+
+ConstantBuffer<RootConstants> RootCB : register(b1);
 
 [numthreads(NUM_THREADS, NUM_THREADS, 1)]
-[RootSignature(SSAOApply_RootSig)]
+[RootSignature(URootSignature)]
 void main(uint3 DTid : SV_DispatchThreadID)
 {
+    Texture2D<float> AOTexture = ResourceDescriptorHeap[RootCB.AmbientOcculusionTextureIndex];
+    RWTexture2D<float4> Target = ResourceDescriptorHeap[RootCB.TargetTextureIndex];
+    
     uint2 pixel = DTid.xy;
     
     uint ScreenWidth, ScreenHeight;

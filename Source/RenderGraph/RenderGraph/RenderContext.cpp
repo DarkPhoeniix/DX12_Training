@@ -2,62 +2,52 @@
 
 #include "RenderContext.h"
 
-#include "ResourceTable.h"
-
 #include <format>
-
-namespace
-{
-    constexpr std::uint32_t DESCRIPTOR_TABLE_SIZE = 4096u;
-}
 
 namespace rg
 {
     RenderContext::RenderContext()
-        : _currentFrameIndex(0)
+        : _frame(nullptr)
+        , _resourceTable(nullptr)
+		, _textureManager(nullptr)
     {
-        for (dx12::ResourceTable& table : _resourceTable)
-        {
-            table.Init(DESCRIPTOR_TABLE_SIZE, true);
-        }
+    }
 
-        // Initialize cache heap
-        for (size_t i = 0 ; i < dx12::BACK_BUFFER_COUNT; ++i)
-        {
-            CacheGPU& cache = _cache[i];
+    void RenderContext::Init(ResourceTable& resourceTable, TextureManager& textureManager)
+    {
+		_resourceTable = &resourceTable;
+		_textureManager = &textureManager;
+    }
 
-            dx12::ResourceDescription desc = {};
-            desc.SetSize({ _16MB, 1 });
-            desc.SetStride(256);
-            desc.SetFormat(DXGI_FORMAT_UNKNOWN);
-            desc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
-
-            std::shared_ptr<dx12::Resource> memoryBlock = ResourceFactory::Create(std::format("Frame cache {}", i), desc);
-            memoryBlock->CreateCommitedResource();
-
-            cache.SetResource(memoryBlock);
-        }
+    const Frame* RenderContext::GetFrame() const
+    {
+        return _frame;
     }
 
     std::uint32_t RenderContext::GetFrameIndex() const
     {
-        return _currentFrameIndex;
+        return _frame->Index;
     }
 
-    dx12::ResourceTable& RenderContext::GetResourceTable()
+    ResourceTable& RenderContext::GetResourceTable()
     {
-        return _resourceTable[_currentFrameIndex];
+        return *_resourceTable;
     }
 
-    CacheGPU& RenderContext::GetCache()
+    TextureManager& RenderContext::GetTextureManager()
     {
-        return _cache[_currentFrameIndex];
+		return *_textureManager;
+    }
+
+    void RenderContext::BindBindlessTable(dx12::CommandList& commandList) const
+    {
+        commandList.SetDescriptorHeaps({ _resourceTable->GetShaderResourcesDescriptorHeap().GetDXDescriptorHeap().Get() });
     }
 
     std::shared_ptr<dx12::Resource> RenderContext::GetResource(ResourceId id)
     {
-        auto resourceIt = _resources.find(id);
-        if (resourceIt == _resources.end())
+        auto resourceIt = _mapIdToResource.find(id);
+        if (resourceIt == _mapIdToResource.end())
         {
             LOG_WARNING("Resource with id {} not found in render context.", id);
             return nullptr;
@@ -66,129 +56,96 @@ namespace rg
         return resourceIt->second;
     }
 
-    D3D12_CPU_DESCRIPTOR_HANDLE RenderContext::GetCPUHandle(dx12::RenderTargetView rtv)
+    DescriptorHandle RenderContext::GetStaticResourceHandle(const dx12::RenderTargetView& rtv) const
     {
-        dx12::ResourceTable& table = _resourceTable[_currentFrameIndex];
-
-        table.PlaceResourceIfNotExist(rtv.Owner, dx12::ResourceViewType::RTV);
-
-        return table.GetResourceCPUHandle(rtv.Owner, dx12::ResourceViewType::RTV);
+        return _resourceTable->GetStaticResourceHandle(rtv);
     }
 
-    D3D12_CPU_DESCRIPTOR_HANDLE RenderContext::GetCPUHandle(dx12::DepthStencilView dsv)
+    DescriptorHandle RenderContext::GetStaticResourceHandle(const dx12::DepthStencilView& dsv) const
     {
-        dx12::ResourceTable& table = _resourceTable[_currentFrameIndex];
-
-        table.PlaceResourceIfNotExist(dsv.Owner, dx12::ResourceViewType::DSV);
-
-        return table.GetResourceCPUHandle(dsv.Owner, dx12::ResourceViewType::DSV);
+        return _resourceTable->GetStaticResourceHandle(dsv);
     }
 
-    D3D12_CPU_DESCRIPTOR_HANDLE RenderContext::GetCPUHandle(dx12::ShaderResourceView srv)
+    DescriptorHandle RenderContext::GetStaticResourceHandle(const dx12::ShaderResourceView& srv) const
     {
-        dx12::ResourceTable& table = _resourceTable[_currentFrameIndex];
-
-        table.PlaceResourceIfNotExist(srv.Owner, dx12::ResourceViewType::SRV);
-
-        return table.GetResourceCPUHandle(srv.Owner, dx12::ResourceViewType::SRV);
+        return _resourceTable->GetStaticResourceHandle(srv);
     }
 
-    D3D12_CPU_DESCRIPTOR_HANDLE RenderContext::GetCPUHandle(dx12::UnorderedAccessView uav)
+    DescriptorHandle RenderContext::GetStaticResourceHandle(const dx12::UnorderedAccessView& uav) const
     {
-        dx12::ResourceTable& table = _resourceTable[_currentFrameIndex];
-
-        table.PlaceResourceIfNotExist(uav.Owner, dx12::ResourceViewType::UAV);
-
-        return table.GetResourceCPUHandle(uav.Owner, dx12::ResourceViewType::UAV);
+        return _resourceTable->GetStaticResourceHandle(uav);
     }
 
-    D3D12_CPU_DESCRIPTOR_HANDLE RenderContext::GetCPUHandle(dx12::ConstantBufferView cbv)
+    DescriptorHandle RenderContext::GetStaticResourceHandle(const dx12::ConstantBufferView& cbv) const
     {
-        dx12::ResourceTable& table = _resourceTable[_currentFrameIndex];
-
-        table.PlaceResourceIfNotExist(cbv.Owner, dx12::ResourceViewType::CBV);
-
-        return table.GetResourceCPUHandle(cbv.Owner, dx12::ResourceViewType::CBV);
+        return _resourceTable->GetStaticResourceHandle(cbv);
     }
 
-    D3D12_GPU_DESCRIPTOR_HANDLE RenderContext::GetGPUHandle(dx12::RenderTargetView rtv)
+    DescriptorHandle RenderContext::GetTransientResourceHandle(const dx12::RenderTargetView& rtv) const
     {
-        dx12::ResourceTable& table = _resourceTable[_currentFrameIndex];
-
-        table.PlaceResourceIfNotExist(rtv.Owner, dx12::ResourceViewType::RTV);
-
-        return table.GetResourceGPUHandle(rtv.Owner, dx12::ResourceViewType::RTV);
+        return _resourceTable->GetTransientResourceHandle(rtv);
     }
 
-    D3D12_GPU_DESCRIPTOR_HANDLE RenderContext::GetGPUHandle(dx12::DepthStencilView dsv)
+    DescriptorHandle RenderContext::GetTransientResourceHandle(const dx12::DepthStencilView& dsv) const
     {
-        dx12::ResourceTable& table = _resourceTable[_currentFrameIndex];
-
-        table.PlaceResourceIfNotExist(dsv.Owner, dx12::ResourceViewType::DSV);
-
-        return table.GetResourceGPUHandle(dsv.Owner, dx12::ResourceViewType::DSV);
+        return _resourceTable->GetTransientResourceHandle(dsv);
     }
 
-    D3D12_GPU_DESCRIPTOR_HANDLE RenderContext::GetGPUHandle(dx12::ShaderResourceView srv)
+    DescriptorHandle RenderContext::GetTransientResourceHandle(const dx12::ShaderResourceView& srv) const
     {
-        dx12::ResourceTable& table = _resourceTable[_currentFrameIndex];
-
-        table.PlaceResourceIfNotExist(srv.Owner, dx12::ResourceViewType::SRV);
-
-        return table.GetResourceGPUHandle(srv.Owner, dx12::ResourceViewType::SRV);
+        return _resourceTable->GetTransientResourceHandle(srv);
     }
 
-    D3D12_GPU_DESCRIPTOR_HANDLE RenderContext::GetGPUHandle(dx12::UnorderedAccessView uav)
+    DescriptorHandle RenderContext::GetTransientResourceHandle(const dx12::UnorderedAccessView& uav) const
     {
-        dx12::ResourceTable& table = _resourceTable[_currentFrameIndex];
-
-        table.PlaceResourceIfNotExist(uav.Owner, dx12::ResourceViewType::UAV);
-
-        return table.GetResourceGPUHandle(uav.Owner, dx12::ResourceViewType::UAV);
+        return _resourceTable->GetTransientResourceHandle(uav);
     }
 
-    D3D12_GPU_DESCRIPTOR_HANDLE RenderContext::GetGPUHandle(dx12::ConstantBufferView cbv)
+    DescriptorHandle RenderContext::GetTransientResourceHandle(const dx12::ConstantBufferView& cbv) const
     {
-        dx12::ResourceTable& table = _resourceTable[_currentFrameIndex];
-
-        table.PlaceResourceIfNotExist(cbv.Owner, dx12::ResourceViewType::CBV);
-
-        return table.GetResourceGPUHandle(cbv.Owner, dx12::ResourceViewType::CBV);
+        return _resourceTable->GetTransientResourceHandle(cbv);
     }
 
-    ResourceId RenderContext::CreateResource(std::string name, dx12::ResourceDescription desc)
+    ResourceId RenderContext::CreateResourceVirtual(const std::string& name)
+    {
+        ASSERT(!name.empty(), "Resource name cannot be empty.");
+
+        std::shared_ptr<dx12::Resource> resource = ResourceFactory::Create(name);
+        _mapNameToId[name] = resource->GetID();
+        return resource->GetID();
+    }
+
+    ResourceId RenderContext::CreateResource(const std::string& name, dx12::ResourceDescription desc, void* data /*= nullptr*/, size_t dataSize /*= 0*/)
     {
         ASSERT(!name.empty(), "Resource name cannot be empty.");
 
         std::shared_ptr<dx12::Resource> resource = ResourceFactory::Create(name, desc);
         resource->CreateCommitedResource();
 
-        ResourceId id = _mapNameToId.size();
-        _mapNameToId[name] = id;
-        _resources[id] = resource;
+        FillResource(resource, data, dataSize);
 
-        for (dx12::ResourceTable& table : _resourceTable)
+        _mapIdToResource[resource->GetID()] = resource;
         {
-            D3D12_RESOURCE_FLAGS flags = desc.GetFlags();
-            if (flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)
+            if (desc.GetFlags() & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)
             {
-                table.PlaceResource(resource, dx12::ResourceViewType::RTV);
+                _resourceTable->AddStaticResourceView(resource->GetAsRTV());
             }
-            if (flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
+            if (desc.GetFlags() & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
             {
-                table.PlaceResource(resource, dx12::ResourceViewType::DSV);
+                _resourceTable->AddStaticResourceView(resource->GetAsDSV());
             }
-            if (flags & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS)
+            if (desc.GetFlags() & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS)
             {
-                table.PlaceResource(resource, dx12::ResourceViewType::UAV);
+                _resourceTable->AddStaticResourceView(resource->GetAsUAV());
             }
-            table.PlaceResource(resource, dx12::ResourceViewType::SRV);
+            _resourceTable->AddStaticResourceView(resource->GetAsSRV());
         }
+        _mapNameToId[name] = resource->GetID();
 
-        return id;
+        return resource->GetID();
     }
 
-    ResourceId RenderContext::ReadResource(std::string name)
+    ResourceId RenderContext::ReadResource(const std::string& name)
     {
         auto IdIt = _mapNameToId.find(name);
         if (IdIt == _mapNameToId.end())
@@ -200,7 +157,7 @@ namespace rg
         return IdIt->second;
     }
 
-    ResourceId RenderContext::WriteResource(std::string name)
+    ResourceId RenderContext::WriteResource(const std::string& name)
     {
         auto IdIt = _mapNameToId.find(name);
         if (IdIt == _mapNameToId.end())
@@ -210,5 +167,18 @@ namespace rg
         }
 
         return IdIt->second;
+    }
+
+    void RenderContext::FillResource(std::shared_ptr<dx12::Resource> resource, void* data, size_t dataSize)
+    {
+        if (!data)
+        {
+            return;
+        }
+
+		void* mappedData = resource->Map<void>();
+		memcpy(mappedData, data, dataSize);
+
+        resource->Unmap();
     }
 } // namespace rg

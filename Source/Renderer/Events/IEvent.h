@@ -8,7 +8,8 @@ namespace core
         {
         public:
             virtual ~IEvent()
-            {   }
+            {
+            }
         };
     } // namespace events
 } // namespace core

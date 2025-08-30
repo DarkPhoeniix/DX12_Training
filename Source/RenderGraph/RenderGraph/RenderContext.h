@@ -1,7 +1,9 @@
 #pragma once
 
-#include "ResourceTable.h"
+#include "Core/ResourceTable.h"
+#include "Core/TextureManager.h"
 #include "Render/Frame/CacheGPU.h"
+#include "Render/Frame/Frame.h"
 
 namespace rg
 {
@@ -15,38 +17,47 @@ namespace rg
     public:
         RenderContext();
 
+        void Init(ResourceTable& resourceTable, TextureManager& textureManager);
+
+        const Frame* GetFrame() const;
         std::uint32_t GetFrameIndex() const;
 
-        dx12::ResourceTable& GetResourceTable();
-        CacheGPU& GetCache();
+        ResourceTable& GetResourceTable();
+		TextureManager& GetTextureManager();
+
+        void BindBindlessTable(dx12::CommandList& commandList) const;
 
         std::shared_ptr<dx12::Resource> GetResource(ResourceId id);
 
-        D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle(dx12::RenderTargetView rtv);
-        D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle(dx12::DepthStencilView dsv);
-        D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle(dx12::ShaderResourceView srv);
-        D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle(dx12::UnorderedAccessView uav);
-        D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle(dx12::ConstantBufferView cbv);
+        DescriptorHandle GetStaticResourceHandle(const dx12::RenderTargetView& rtv) const;
+        DescriptorHandle GetStaticResourceHandle(const dx12::DepthStencilView& dsv) const;
+        DescriptorHandle GetStaticResourceHandle(const dx12::ShaderResourceView& srv) const;
+        DescriptorHandle GetStaticResourceHandle(const dx12::UnorderedAccessView& uav) const;
+        DescriptorHandle GetStaticResourceHandle(const dx12::ConstantBufferView& cbv) const;
 
-        D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle(dx12::RenderTargetView rtv);
-        D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle(dx12::DepthStencilView dsv);
-        D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle(dx12::ShaderResourceView srv);
-        D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle(dx12::UnorderedAccessView uav);
-        D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle(dx12::ConstantBufferView cbv);
+        DescriptorHandle GetTransientResourceHandle(const dx12::RenderTargetView& rtv) const;
+        DescriptorHandle GetTransientResourceHandle(const dx12::DepthStencilView& dsv) const;
+        DescriptorHandle GetTransientResourceHandle(const dx12::ShaderResourceView& srv) const;
+        DescriptorHandle GetTransientResourceHandle(const dx12::UnorderedAccessView& uav) const;
+        DescriptorHandle GetTransientResourceHandle(const dx12::ConstantBufferView& cbv) const;
 
     private:
         friend class RenderGraph;
         friend class RenderPassBuilder;
 
-        ResourceId CreateResource(std::string name, dx12::ResourceDescription desc);
-        ResourceId ReadResource(std::string name);
-        ResourceId WriteResource(std::string name);
+        ResourceId CreateResourceVirtual(const std::string& name);
+        ResourceId CreateResource(const std::string& name, dx12::ResourceDescription desc, void* data = nullptr, size_t dataSize = 0);
+        ResourceId ReadResource(const std::string& name);
+        ResourceId WriteResource(const std::string& name);
+
+        void FillResource(std::shared_ptr<dx12::Resource> resource, void* data, size_t dataSize = 0);
 
         std::unordered_map<std::string, ResourceId> _mapNameToId;
-        std::unordered_map<ResourceId, std::shared_ptr<dx12::Resource>> _resources;
+        std::unordered_map<ResourceId, std::shared_ptr<dx12::Resource>> _mapIdToResource;
 
-        std::uint32_t _currentFrameIndex;
-        dx12::ResourceTable _resourceTable[dx12::BACK_BUFFER_COUNT];
-        CacheGPU _cache[dx12::BACK_BUFFER_COUNT];
+        Frame* _frame;
+
+        ResourceTable* _resourceTable;
+		TextureManager* _textureManager;
     };
 } // namespace rg

@@ -8,30 +8,30 @@
 
 namespace render
 {
-    struct LightingPassData
-    {
-        rg::ResourceId AlbedoMetallic;
-        rg::ResourceId NormalRoughness;
-        rg::ResourceId Depth;
+	struct LightingPassData
+	{
+		rg::ResourceId AlbedoMetallic;
+		rg::ResourceId NormalRoughness;
+		rg::ResourceId Depth;
 
-        std::vector<rg::ResourceId> ShadowMaps;
+		rg::ResourceId ShadowMaps;
 
-        rg::ResourceId HDRTarget;
-    };
+		rg::ResourceId HDRTarget;
+	};
 
-    class LightingPass : public rg::RenderPass<LightingPassData>
-    {
-    public:
-        LightingPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
+	class LightingPass : public rg::RenderPass<LightingPassData>
+	{
+	public:
+		LightingPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
 
-        // Inherited via RenderPass
-        void Setup(rg::RenderPassBuilder& builder) override;
-        void Execute(rg::RenderContext& context, TaskGPU& task) override;
+		// Inherited via RenderPass
+		void Setup(rg::RenderPassBuilder& builder) override;
+		void Execute(rg::RenderContext& context, TaskGPU& task) override;
 
-    private:
-        dx12::PipelineState _deferredPipeline;
+	private:
+		dx12::PipelineState _deferredPipeline;
 
-        std::shared_ptr<scene::Scene> _scene;
-        scene::Camera* _camera;
-    };
+		std::shared_ptr<scene::Scene> _scene;
+		scene::Camera* _camera;
+	};
 } // namespace render

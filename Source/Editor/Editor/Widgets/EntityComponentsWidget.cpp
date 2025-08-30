@@ -237,10 +237,15 @@ namespace gui
     {
         if (ImGui::CollapsingHeader(material->ComponentName.c_str()))
         {
-            ImGui::Text("Albedo: %s", material->Albedo.c_str());
-            ImGui::Text("Metalness: %s", material->Metalness.c_str());
-            ImGui::Text("Roughness: %s", material->Roughness.c_str());
-            ImGui::Text("Normal map: %s", material->NormalMap.c_str());
+			std::shared_ptr<dx12::Resource> albedoTexture = TextureManager::Get().GetTexture(material->AlbedoTextureHandle);
+			std::shared_ptr<dx12::Resource> normalMapTexture = TextureManager::Get().GetTexture(material->NormalMapTextureHandle);
+			std::shared_ptr<dx12::Resource> metalnessTexture = TextureManager::Get().GetTexture(material->MetalnessTextureHandle);
+			std::shared_ptr<dx12::Resource> roughnessTexture = TextureManager::Get().GetTexture(material->RoughnessTextureHandle);
+
+            ImGui::Text("Albedo: %s (ID: %i)", albedoTexture->GetName().c_str(), albedoTexture->GetID());
+            ImGui::Text("Normal map: %s (ID: %i)", normalMapTexture->GetName().c_str(), normalMapTexture->GetID());
+            ImGui::Text("Metalness: %s (ID: %i)", metalnessTexture->GetName().c_str(), metalnessTexture->GetID());
+            ImGui::Text("Roughness: %s (ID: %i)", roughnessTexture->GetName().c_str(), roughnessTexture->GetID());
         }
     }
 
@@ -256,7 +261,8 @@ namespace gui
     {
         if (ImGui::CollapsingHeader(skybox->ComponentName.c_str()))
         {
-            ImGui::Text("Texture: %s", skybox->SkydomeTexture.c_str());
+            std::shared_ptr<dx12::Resource> skyboxTexture = TextureManager::Get().GetTexture(skybox->SkydomeTextureHandle);
+            ImGui::Text("Texture: %s (ID: %i)", skyboxTexture->GetName().c_str(), skyboxTexture->GetID());
         }
     }
 

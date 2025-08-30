@@ -1,19 +1,5 @@
 
-#define LightCulling_PointLight_RootSig \
-	"RootFlags " \
-	"( " \
-		"ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | " \
-		"DENY_HULL_SHADER_ROOT_ACCESS | " \
-		"DENY_DOMAIN_SHADER_ROOT_ACCESS " \
-	"), " \
-    "CBV(b0, visibility = SHADER_VISIBILITY_ALL), " \
-    "CBV(b1, visibility = SHADER_VISIBILITY_ALL), " \
-	"SRV(t0, visibility = SHADER_VISIBILITY_ALL), " \
-    "RootConstants(num32BitConstants = 1, b2, visibility = SHADER_VISIBILITY_ALL), " \
-	"SRV(t1, visibility = SHADER_VISIBILITY_ALL), " \
-	"SRV(t2, visibility = SHADER_VISIBILITY_ALL), " \
-	"DescriptorTable(UAV(u0, flags = DESCRIPTORS_VOLATILE), visibility = SHADER_VISIBILITY_ALL)"
-
+#include "../UnifiedRootSignature.hlsli"
 #include "../CommonResources.hlsli"
 #include "../LightingCommon.hlsli"
 
@@ -23,25 +9,22 @@ struct IndirectCommand
 {
     uint2 VertexBufferAddress;
     uint  VertexBufferSize;
-    uint  VertexBufferStride;
+    uint  VertexBufferStride;   // 16
     
     uint2 SkinBufferAddress;
     uint  SkinBufferSize;
-    uint  SkinBufferStride;
+    uint  SkinBufferStride;     // 32
     
     uint2 IndexBufferAddress;
-    uint  IndexBufferSize;
-    uint  IndexBufferStride;
+    uint IndexBufferSize;
+    uint IndexBufferStride;     // 48
     
-    uint2 SceneBufferAddress;
-    uint2 ModelBufferAddress;
-    uint2 BonesBufferAddress;
-    uint2 LightBufferAddress;
-    uint  LightIndex;
+    uint2 FrameBufferAddress;
+    uint  InstanceIndex;
+    uint  LightIndex;           // 64
     
-    uint4 DrawArguments;
-    
-    uint pad;
+    uint DrawArguments[5];      // 84
+    uint pad[3];                // 96
 };
 
 struct MinMax
@@ -50,27 +33,35 @@ struct MinMax
     float4 Max;
 };
 
-cbuffer Contants                                        : register(b2)
+struct PassConstants
 {
+    uint LightIndex;
     uint CommandsCount;
-}
-StructuredBuffer<LightDesc> Lights						: register(t0);
-StructuredBuffer<MinMax> AABB							: register(t1);
-StructuredBuffer<IndirectCommand> InputCommands			: register(t2);
-AppendStructuredBuffer<IndirectCommand> OutputCommands	: register(u0);
+    
+    uint AABBBufferIndex;
+    uint InputCommandsBufferIndex;
+    uint OutputCommandsBufferIndex;
+};
 
-[RootSignature(LightCulling_PointLight_RootSig)]
+ConstantBuffer<PassConstants> PassCB : register(b1);
+
+[RootSignature(URootSignature)]
 [numthreads(THREAD_BLOCK_SIZE, 1, 1)]
 void main(uint3 groupId : SV_GroupID, uint groupIndex : SV_GroupIndex)
 {
+    StructuredBuffer<LightDesc> Lights                      = ResourceDescriptorHeap[FrameCB.LightsBufferIndex];
+    StructuredBuffer<MinMax> AABB                           = ResourceDescriptorHeap[PassCB.AABBBufferIndex];
+    StructuredBuffer<IndirectCommand> InputCommands         = ResourceDescriptorHeap[PassCB.InputCommandsBufferIndex];
+    AppendStructuredBuffer<IndirectCommand> OutputCommands  = ResourceDescriptorHeap[PassCB.OutputCommandsBufferIndex];
+    
     // Each thread of the CS operates on one of the indirect commands.
     uint index = (groupId.x * THREAD_BLOCK_SIZE) + groupIndex;
     
     // Don't attempt to access commands that don't exist if more threads are allocated
     // than commands.
-    if (index < CommandsCount)
+    if (index < PassCB.CommandsCount)
     {
-        LightDesc light = Lights[InputCommands[index].LightIndex];
+        LightDesc light = Lights[PassCB.LightIndex];
         float dmin = 0;
         
         if (light.Position.x < AABB[index].Min.x) dmin += pow(light.Position.x - AABB[index].Min.x, 2); else
@@ -82,7 +73,8 @@ void main(uint3 groupId : SV_GroupID, uint groupIndex : SV_GroupIndex)
         
         if (dmin <= (light.Range * light.Range))
         {
-            OutputCommands.Append(InputCommands[index]);
+            IndirectCommand command = InputCommands[index];
+            OutputCommands.Append(command);
         }
     }
 }

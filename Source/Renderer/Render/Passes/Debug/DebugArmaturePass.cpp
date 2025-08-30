@@ -4,7 +4,6 @@
 
 #include "CommandList.h"
 
-#include "Render/Passes/PassResources.h"
 #include "Scene/Entity/Components/Armature.h"
 #include "Scene/Entity/Components/Transformation.h"
 
@@ -13,89 +12,95 @@
 
 #include "ResourceBarrier.h"
 
+namespace
+{
+	struct PassConstants
+	{
+		DirectX::XMVECTOR BoneStart;
+		DirectX::XMVECTOR BoneEnd;
+	};
+} // namespace unnamed
+
 namespace render
 {
-    DebugArmaturePass::DebugArmaturePass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-        : RenderPass<DebugArmaturePassData>("Debug Armature Pass", rg::RenderPassType::Graphics)
-        , _scene(scene)
-        , _camera(camera)
-    {
-        _debugArmaturePipeline.Parse("PipelineDescriptions\\ArmatureDEbugPipeline.tech");
-    }
+	DebugArmaturePass::DebugArmaturePass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
+		: RenderPass<DebugArmaturePassData>("Debug Armature Pass", rg::RenderPassType::Graphics)
+		, _scene(scene)
+		, _camera(camera)
+	{
+		_debugArmaturePipeline.Parse("PipelineDescriptions\\ArmatureDebugPipeline.tech");
+	}
 
-    void DebugArmaturePass::Setup(rg::RenderPassBuilder& builder)
-    {
-        _data.Target = builder.WriteResource(TARGET);
-        _data.Depth = builder.ReadResource(DEPTH);
-    }
+	void DebugArmaturePass::Setup(rg::RenderPassBuilder& builder)
+	{
+		_data.Target = builder.WriteResource("render_target");
+		_data.Depth = builder.ReadResource("depth_target");
+	}
 
-    void DebugArmaturePass::Execute(rg::RenderContext& context, TaskGPU& task)
-    {
-        dx12::CommandList& commandList = *task.GetCommandLists().front();
-        commandList.SetName("Render Debug Armature command list");
+	void DebugArmaturePass::Execute(rg::RenderContext& context, TaskGPU& task)
+	{
+		dx12::CommandList& commandList = *task.GetCommandLists().front();
+		commandList.SetName("Render Debug Armature command list");
 
-        PIXBeginEvent(commandList.GetDXCommandList().Get(), 0, "Debug Armature");
-        {
-            std::shared_ptr<dx12::Resource> target = context.GetResource(_data.Target);
-            std::shared_ptr<dx12::Resource> depth = context.GetResource(_data.Depth);
+		PIXBeginEvent(commandList.GetDXCommandList().Get(), 0, "Debug Armature");
+		{
+			std::shared_ptr<dx12::Resource> target = context.GetResource(_data.Target);
+			std::shared_ptr<dx12::Resource> depth = context.GetResource(_data.Depth);
 
-            D3D12_CPU_DESCRIPTOR_HANDLE rtv = context.GetCPUHandle(target->GetAsRTV());
-            D3D12_CPU_DESCRIPTOR_HANDLE dsv = context.GetCPUHandle(depth->GetAsDSV());
+			DescriptorHandle rtv = context.GetStaticResourceHandle(target->GetAsRTV());
+			DescriptorHandle dsv = context.GetStaticResourceHandle(depth->GetAsDSV());
 
-            std::vector<dx12::ResourceBarrier> barriers =
-            {
-                { target, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RENDER_TARGET },
-                { depth,  D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE }
-            };
-            commandList.TransitionBarriers(barriers);
+			std::vector<dx12::ResourceBarrier> barriers =
+			{
+				{ target, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RENDER_TARGET },
+				{ depth, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE }
+			};
+			commandList.TransitionBarriers(barriers);
 
-            commandList.SetPipelineState(_debugArmaturePipeline);
+			commandList.SetPipelineState(_debugArmaturePipeline);
 
-            commandList.SetViewport(_camera->GetViewport());
-            commandList.SetRenderTarget(&rtv, &dsv);
+			commandList.SetViewport(_camera->GetViewport());
+			commandList.SetRenderTarget(&rtv.CpuHandle, &dsv.CpuHandle);
 
-            for (auto& node : _scene->GetRootNodes())
-            {
-                std::shared_ptr<scene::Armature> arm = node->GetComponentAs<scene::Armature>("Armature");
-                std::shared_ptr<scene::Transformation> transform = node->GetComponentAs<scene::Transformation>("Transformation");
+			commandList.SetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
 
-                if (arm)
-                {
-                    DirectX::XMMATRIX vp = _camera->ViewProjection();
-                    DirectX::XMVECTOR* data = arm->BoneDebugTransforms->Map<DirectX::XMVECTOR>();
+			commandList.SetCBV(0, context.GetFrame()->GetBuffer()->OffsetGPU());
 
-                    commandList.SetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
+			auto meshes = _scene->FilterNodesByComponent("Mesh");
+			for (size_t i = 0; i < meshes.size(); ++i)
+			{
+				std::shared_ptr<scene::Armature> armature = meshes[i]->GetComponentAs<scene::Armature>("Armature");
+				std::shared_ptr<scene::Transformation> transform = meshes[i]->GetComponentAs<scene::Transformation>("Transformation");
 
-                    commandList.SetConstants(0, 16, &vp);
-                    commandList.SetSRV(2, arm->BoneDebugTransforms->OffsetGPU(0));
+				if (armature)
+				{
+					const auto& sortedBones = armature->GetSortedBones();
+					for (const auto& bone : sortedBones)
+					{
+						for (const auto& child : bone->Children)
+						{
+							PassConstants passCB
+							{
+								.BoneStart = DirectX::XMVector4Transform(bone->GlobalTransform.r[3], transform->Transform),
+								.BoneEnd = DirectX::XMVector4Transform(child->GlobalTransform.r[3], transform->Transform)
+							};
+							commandList.SetConstants(1, 8, &passCB);
 
-                    const auto& sortedBones = arm->GetSortedBones();
-                    int ind = 0;
-                    for (const auto& bone : sortedBones)
-                    {
-                        for (const auto& child : bone->Children)
-                        {
-                            data[0] = DirectX::XMVector4Transform(bone->GlobalTransform.r[3], transform->Transform);
-                            data[1] = DirectX::XMVector4Transform(child->GlobalTransform.r[3], transform->Transform);
+							commandList.Draw(1);
+						}
+					}
+				}
+			}
 
-                            commandList.SetConstants(1, 4, &data[0]);
-                            commandList.SetConstants(1, 4, &data[1], 4);
+			barriers =
+			{
+				{ target, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON},
+				{ depth, D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_COMMON}
+			};
+			commandList.TransitionBarriers(barriers);
+		}
+		PIXEndEvent(commandList.GetDXCommandList().Get());
 
-                            commandList.Draw(1);
-                        }
-                    }
-                }
-            }
-
-            barriers =
-            {
-                { target, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON},
-                { depth,  D3D12_RESOURCE_STATE_DEPTH_WRITE,   D3D12_RESOURCE_STATE_COMMON}
-            };
-            commandList.TransitionBarriers(barriers);
-        }
-        PIXEndEvent(commandList.GetDXCommandList().Get());
-
-        commandList.Close();
-    }
+		commandList.Close();
+	}
 } // namespace render

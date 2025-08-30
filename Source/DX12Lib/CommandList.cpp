@@ -10,15 +10,15 @@ namespace
 {
     dx12::CommandListType GetCmdListType(D3D12_COMMAND_LIST_TYPE commandListType)
     {
-        if (commandListType == D3D12_COMMAND_LIST_TYPE_DIRECT) 
+        if (commandListType == D3D12_COMMAND_LIST_TYPE_DIRECT)
         {
             return dx12::CommandListType::Graphics;
         }
-        else if (commandListType == D3D12_COMMAND_LIST_TYPE_COMPUTE) 
+        else if (commandListType == D3D12_COMMAND_LIST_TYPE_COMPUTE)
         {
             return dx12::CommandListType::Compute;
         }
-        else if (commandListType == D3D12_COMMAND_LIST_TYPE_COPY) 
+        else if (commandListType == D3D12_COMMAND_LIST_TYPE_COPY)
         {
             return dx12::CommandListType::Copy;
         }
@@ -139,7 +139,7 @@ namespace dx12
         _commandList->EndQuery(queryHeap.Get(), type, index);
     }
 
-    void CommandList::TransitionBarrier(ResourceBarrier& barrier)
+    void CommandList::TransitionBarrier(const ResourceBarrier& barrier)
     {
         FAIL(!barrier.Resource.expired(), "Resource is null.");
         ASSERT(barrier.BeforeState != barrier.AfterState, "BeforeState and AfterState are the same.");
@@ -151,13 +151,14 @@ namespace dx12
                 barrier.BeforeState,
                 barrier.AfterState,
                 D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
-            resource->SetCurrentState(barrier.AfterState);
 
             _commandList->ResourceBarrier(1, &dxBarrier);
+
+            resource->SetCurrentState(barrier.AfterState);
         }
     }
 
-    void CommandList::TransitionBarriers(std::vector<ResourceBarrier>& barriers)
+    void CommandList::TransitionBarriers(const std::vector<ResourceBarrier>& barriers)
     {
         ASSERT(!barriers.empty(), "Barriers vector is empty.");
 
@@ -271,7 +272,7 @@ namespace dx12
     {
         FAIL((_type == CommandListType::Graphics) || (_type == CommandListType::Compute), "Command list type is not Graphics or Compute.")
 
-        _commandList->SetPipelineState(rootSignature.GetPipelineState().Get());
+            _commandList->SetPipelineState(rootSignature.GetPipelineState().Get());
 
         if (_type == CommandListType::Graphics)
         {
@@ -324,10 +325,10 @@ namespace dx12
         _commandList->Dispatch(xThreadGroupsCount, yThreadGroupsCount, zThreadGroupsCount);
     }
 
-    void CommandList::ExecuteIndirect(ComPtr<ID3D12CommandSignature> cmdSignature, std::uint32_t maxCommandCount, Resource& argumentBuffer, std::shared_ptr<Resource> countBuffer, std::uint32_t argumentBufferOffset, std::uint32_t countBufferOffset)
+    void CommandList::ExecuteIndirect(const CommandSignature& commandSignature, std::uint32_t maxCommandCount, Resource& argumentBuffer, std::shared_ptr<Resource> countBuffer, std::uint32_t argumentBufferOffset, std::uint32_t countBufferOffset)
     {
         ID3D12Resource* counter = countBuffer ? countBuffer->GetDXResource().Get() : nullptr;
-        _commandList->ExecuteIndirect(cmdSignature.Get(), maxCommandCount, argumentBuffer.GetDXResource().Get(), argumentBufferOffset, counter, countBufferOffset);
+        _commandList->ExecuteIndirect(commandSignature.GetDXCommandSignature().Get(), maxCommandCount, argumentBuffer.GetDXResource().Get(), argumentBufferOffset, counter, countBufferOffset);
     }
 
     void CommandList::SetDescriptorHeaps(const std::vector<ID3D12DescriptorHeap*> descriptorHeaps)

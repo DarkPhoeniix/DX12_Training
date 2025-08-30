@@ -28,6 +28,7 @@ namespace scene
     Armature::Armature()
         : IComponent("Armature")
         , _root(nullptr)
+        , _boneBufferHandle(InvalidGeometryHandle)
     {
     }
 
@@ -121,6 +122,16 @@ namespace scene
     const std::string& Armature::GetName() const
     {
         return _name;
+    }
+
+    GeometryHandle Armature::GetBoneBufferHandle() const
+    {
+        return _boneBufferHandle;
+    }
+
+    void Armature::SetBoneBufferHandle(GeometryHandle handle)
+    {
+        _boneBufferHandle = handle;
     }
 
     Bone* Armature::FindBone(BoneId id)

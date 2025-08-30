@@ -8,7 +8,7 @@
 #include "Events/UpdateEvent.h"
 #include "Input/InputDevice.h"
 
-#include "Render/DXRenderer.h"
+#include "Core/DXRenderer.h"
 #include "Utility/DebugInfo.h"
 #include "Window/Win32Window.h"
 
@@ -102,6 +102,8 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp, std::string cmdLine)
 
             frame.Init({ (uint32_t)_win32Window->GetWidth(), (uint32_t)_win32Window->GetHeight() });
         }
+
+        pApp->SetFrame(*_currentFrame);
     }
 
     _win32Window->AddEventListener(pApp.get());
@@ -213,8 +215,6 @@ void Application::_UpdateCall(std::shared_ptr<DXRenderer> pApp)
 
     events::UpdateEvent updateEvent(_updateClock.GetDeltaSeconds(), _updateClock.GetTotalSeconds(), _currentFrame->Index);
     pApp->OnUpdate(updateEvent);
-
-    UINT wtf = std::uint32_t(5); // TODO: remove
 }
 
 void Application::_RenderCall(std::shared_ptr<DXRenderer> pApp)

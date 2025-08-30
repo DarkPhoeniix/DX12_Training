@@ -8,7 +8,8 @@ namespace dx12
         : _heap(nullptr)
         , _description()
         , _resourceOffset(0)
-    {   }
+    {
+    }
 
     Heap::Heap(const Heap& other)
         : _heap(other._heap)

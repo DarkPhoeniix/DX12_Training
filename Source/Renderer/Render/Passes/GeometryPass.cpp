@@ -5,15 +5,9 @@
 #include "CommandList.h"
 #include "ResourceBarrier.h"
 
-#include "Scene/Entity/Components/Animation.h"
-#include "Scene/Entity/Components/Armature.h"
 #include "Scene/Entity/Components/Material.h"
 #include "Scene/Entity/Components/Mesh.h"
-#include "Scene/Entity/Components/Transformation.h"
 
-#include "Render/Helpers/GPUStructs.h"
-#include "Render/Helpers/RenderHelpers.h"
-#include "Render/Passes/PassResources.h"
 #include "Utility/DebugInfo.h"
 
 #include "RenderGraph/RenderContext.h"
@@ -21,158 +15,156 @@
 
 namespace
 {
-    void DrawEntity(std::shared_ptr<scene::Entity> entity, dx12::CommandList& commandList, CacheGPU* cache, dx12::ResourceTable* resourceTable)
-    {
-        if (std::shared_ptr<scene::Mesh> mesh = entity->GetComponentAs<scene::Mesh>("Mesh"))
-        {
-            std::shared_ptr<scene::Animation> animation = entity->GetComponentAs<scene::Animation>("Animation");
-            std::shared_ptr<scene::Armature> armature = entity->GetComponentAs<scene::Armature>("Armature");
-            scene::Transformation transform = entity->GetGlobalTransform();
-            std::shared_ptr<scene::Material> material = entity->GetComponentAs<scene::Material>("Material");
-
-            CacheGPU::DataHandle modelDescHandle = cache->GetResourcePlacement(entity->GetName());
-            commandList.SetCBV(1, modelDescHandle.DataGPU);
-
-            // Update and setup animantion
-            if (armature && animation)
-            {
-                CacheGPU::DataHandle bonesDescHandle = cache->GetResourcePlacement(entity->GetName() + "_bones");
-                commandList.SetSRV(3, bonesDescHandle.DataGPU);
-            }
-
-            commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-            commandList.SetVertexBuffer(0, mesh->VertexBufferView);
-            if (!mesh->SkinningVertexData.empty())
-            {
-                commandList.SetVertexBuffer(1, mesh->SkinningVertexBufferView);
-            }
-            commandList.SetIndexBuffer(mesh->IndexBufferView);
-
-            commandList.DrawIndexed(mesh->IndexData.size());
-        }
-
-        for (std::shared_ptr<scene::Entity> child : entity->GetChildrenNodes())
-        {
-            DrawEntity(child, commandList, cache, resourceTable);
-        }
-    }
+	struct PassConstants
+	{
+		std::uint32_t InstanceIndex;
+	};
 } // namespace unnamed
 
 namespace render
 {
-    GeometryPass::GeometryPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-        : RenderPass<GeometryPassData>("Geometry Pass", rg::RenderPassType::Graphics)
-        , _scene(scene)
-        , _camera(camera)
-    {
-        _geometryPipeline.Parse("PipelineDescriptions\\GPassPipeline.tech");
-    }
+	GeometryPass::GeometryPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
+		: RenderPass<GeometryPassData>("Geometry Pass", rg::RenderPassType::Graphics)
+		, _scene(scene)
+		, _camera(camera)
+	{
+		_geometryPipeline.Parse("PipelineDescriptions\\GPassPipeline.tech");
+	}
 
-    void GeometryPass::Setup(rg::RenderPassBuilder& builder)
-    {
-        dx12::ResourceDescription depthDesc;
-        {
-            D3D12_CLEAR_VALUE clearValue;
-            clearValue.Format = DXGI_FORMAT_D32_FLOAT;
-            clearValue.DepthStencil.Depth = 1;
-            clearValue.DepthStencil.Stencil = 0;
+	void GeometryPass::Setup(rg::RenderPassBuilder& builder)
+	{
+		dx12::ResourceDescription depthDesc;
+		{
+			D3D12_CLEAR_VALUE clearValue;
+			clearValue.Format = DXGI_FORMAT_D32_FLOAT;
+			clearValue.DepthStencil.Depth = 1;
+			clearValue.DepthStencil.Stencil = 0;
 
-            depthDesc.SetSize(_camera->GetViewport().GetSize());
-            depthDesc.SetFormat(DXGI_FORMAT_D32_FLOAT);
-            depthDesc.SetClearValue(clearValue);
-            depthDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::DepthStencil);
-        }
-        _data.Depth = builder.CreateResource(DEPTH, depthDesc);
+			depthDesc.SetSize(_camera->GetViewport().GetSize());
+			depthDesc.SetFormat(DXGI_FORMAT_D32_FLOAT);
+			depthDesc.SetClearValue(clearValue);
+			depthDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::DepthStencil);
+		}
+		_data.Depth = builder.CreateResource("depth_target", depthDesc);
 
-        dx12::ResourceDescription albedoMetallicDesc;
-        {
-            D3D12_CLEAR_VALUE clearValue;
-            clearValue.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-            clearValue.Color[0] = 0.0f;
-            clearValue.Color[1] = 0.0f;
-            clearValue.Color[2] = 0.0f;
-            clearValue.Color[3] = 0.0f;
+		dx12::ResourceDescription albedoMetallicDesc;
+		{
+			D3D12_CLEAR_VALUE clearValue;
+			clearValue.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+			clearValue.Color[0] = 0.0f;
+			clearValue.Color[1] = 0.0f;
+			clearValue.Color[2] = 0.0f;
+			clearValue.Color[3] = 1.0f;
 
-            albedoMetallicDesc.SetSize(_camera->GetViewport().GetSize());
-            albedoMetallicDesc.SetFormat(DXGI_FORMAT_R8G8B8A8_UNORM);
-            albedoMetallicDesc.SetClearValue(clearValue);
-            albedoMetallicDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::RenderTarget);
-        }
-        _data.AlbedoMetallic = builder.CreateResource(ALBEDO_METALLIC, albedoMetallicDesc);
+			albedoMetallicDesc.SetSize(_camera->GetViewport().GetSize());
+			albedoMetallicDesc.SetFormat(DXGI_FORMAT_R8G8B8A8_UNORM);
+			albedoMetallicDesc.SetClearValue(clearValue);
+			albedoMetallicDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::RenderTarget);
+		}
+		_data.AlbedoMetallic = builder.CreateResource("albedo_metallic_target", albedoMetallicDesc);
 
-        dx12::ResourceDescription normalRoughnessDesc;
-        {
-            D3D12_CLEAR_VALUE clearValue;
-            clearValue.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-            clearValue.Color[0] = 0.0f;
-            clearValue.Color[1] = 0.0f;
-            clearValue.Color[2] = 0.0f;
-            clearValue.Color[3] = 0.0f;
+		dx12::ResourceDescription normalRoughnessDesc;
+		{
+			D3D12_CLEAR_VALUE clearValue;
+			clearValue.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+			clearValue.Color[0] = 0.0f;
+			clearValue.Color[1] = 0.0f;
+			clearValue.Color[2] = 0.0f;
+			clearValue.Color[3] = 0.0f;
 
-            normalRoughnessDesc.SetSize(_camera->GetViewport().GetSize());
-            normalRoughnessDesc.SetFormat(DXGI_FORMAT_R32G32B32A32_FLOAT);
-            normalRoughnessDesc.SetClearValue(clearValue);
-            normalRoughnessDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::RenderTarget);
-        }
-        _data.NormalRoughness = builder.CreateResource(NORMAL_ROUGHNESS, normalRoughnessDesc);
-    }
+			normalRoughnessDesc.SetSize(_camera->GetViewport().GetSize());
+			normalRoughnessDesc.SetFormat(DXGI_FORMAT_R32G32B32A32_FLOAT);
+			normalRoughnessDesc.SetClearValue(clearValue);
+			normalRoughnessDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::RenderTarget);
+		}
+		_data.NormalRoughness = builder.CreateResource("normal_roughness_target", normalRoughnessDesc);
+	}
 
-    void GeometryPass::Execute(rg::RenderContext& context, TaskGPU& task)
-    {
-        dx12::CommandList& commandList = *task.GetCommandLists().front();
-        commandList.SetName("Geometry pass command list");
+	void GeometryPass::Execute(rg::RenderContext& context, TaskGPU& task)
+	{
+		dx12::CommandList& commandList = *task.GetCommandLists().front();
+		commandList.SetName("Geometry pass command list");
 
-        PIXBeginEvent(commandList.GetDXCommandList().Get(), 2, "Geometry Pass");
-        {
-            std::shared_ptr<dx12::Resource> albedoMetallic = context.GetResource(_data.AlbedoMetallic);
-            std::shared_ptr<dx12::Resource> normalRoughness = context.GetResource(_data.NormalRoughness);
-            std::shared_ptr<dx12::Resource> depth = context.GetResource(_data.Depth);
+		PIXBeginEvent(commandList.GetDXCommandList().Get(), 2, "Geometry Pass");
+		{
+			std::shared_ptr<dx12::Resource> albedoMetallic = context.GetResource(_data.AlbedoMetallic);
+			std::shared_ptr<dx12::Resource> normalRoughness = context.GetResource(_data.NormalRoughness);
+			std::shared_ptr<dx12::Resource> depth = context.GetResource(_data.Depth);
 
-            D3D12_CPU_DESCRIPTOR_HANDLE albedoMetallicHandle = context.GetCPUHandle(albedoMetallic->GetAsRTV());
-            D3D12_CPU_DESCRIPTOR_HANDLE normalSpecularHandle = context.GetCPUHandle(normalRoughness->GetAsRTV());
-            D3D12_CPU_DESCRIPTOR_HANDLE depthHandle = context.GetCPUHandle(depth->GetAsDSV());
+			DescriptorHandle albedoMetallicHandle = context.GetStaticResourceHandle(albedoMetallic->GetAsRTV());
+			DescriptorHandle normalSpecularHandle = context.GetStaticResourceHandle(normalRoughness->GetAsRTV());
+			DescriptorHandle depthHandle = context.GetStaticResourceHandle(depth->GetAsDSV());
 
-            std::vector<dx12::ResourceBarrier> barriers =
-            {
-                { albedoMetallic,     D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_RENDER_TARGET },
-                { normalRoughness,    D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_RENDER_TARGET },
-                { depth,              D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_DEPTH_WRITE },
-            };
-            commandList.TransitionBarriers(barriers);
+			std::vector<dx12::ResourceBarrier> barriers =
+			{
+				{ albedoMetallic,     D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_RENDER_TARGET },
+				{ normalRoughness,    D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_RENDER_TARGET },
+				{ depth,              D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_DEPTH_WRITE },
+			};
+			commandList.TransitionBarriers(barriers);
 
-            commandList.ClearDSV(depthHandle, D3D12_CLEAR_FLAG_DEPTH);
+			commandList.ClearDSV(depthHandle.CpuHandle, D3D12_CLEAR_FLAG_DEPTH);
 
-            commandList.SetPipelineState(_geometryPipeline);
+			context.BindBindlessTable(commandList);
 
-            commandList.SetViewport(_camera->GetViewport());
-            commandList.SetRenderTargets({ albedoMetallicHandle, normalSpecularHandle }, &depthHandle);
+			commandList.SetPipelineState(_geometryPipeline);
 
-            DebugInfo::StartStatCollecting(commandList);
+			commandList.SetViewport(_camera->GetViewport());
+			commandList.SetRenderTargets({ albedoMetallicHandle.CpuHandle, normalSpecularHandle.CpuHandle }, &depthHandle.CpuHandle);
 
-            CacheGPU::DataHandle sceneDataHandle = context.GetCache().GetResourcePlacement("SceneCB");
-            commandList.SetCBV(0, sceneDataHandle.DataGPU);
+			DebugInfo::StartStatCollecting(commandList);
 
-            // Setup textures
-            commandList.SetDescriptorHeaps({ context.GetResourceTable().GetDescriptorHeap(dx12::ResourceViewType::SRV).GetDXDescriptorHeap().Get() });
-            commandList.SetDescriptorTable(4, context.GetResourceTable().GetDescriptorHeap(dx12::ResourceViewType::SRV).GetHeapStartGPUHandle());
+			commandList.SetCBV(0, context.GetFrame()->GetBuffer()->OffsetGPU());
 
-            for (std::shared_ptr<scene::Entity>& node : _scene->GetRootNodes())
-            {
-                DrawEntity(node, commandList, &context.GetCache(), &context.GetResourceTable());
-            }
+			const std::vector<std::shared_ptr<scene::Entity>>& entities = _scene->FilterNodesByComponent("Mesh");
 
-            DebugInfo::EndStatCollecting(commandList);
+			auto DrawMeshEntity = [&](dx12::CommandList& commandList, std::uint32_t instanceIndex)
+				{
+					if (std::shared_ptr<scene::Mesh> mesh = entities[instanceIndex]->GetComponentAs<scene::Mesh>("Mesh"))
+					{
+						PassConstants passConstants =
+						{
+							.InstanceIndex = instanceIndex
+						};
 
-            barriers =
-            {
-                { albedoMetallic,    D3D12_RESOURCE_STATE_RENDER_TARGET,  D3D12_RESOURCE_STATE_COMMON },
-                { normalRoughness,   D3D12_RESOURCE_STATE_RENDER_TARGET,  D3D12_RESOURCE_STATE_COMMON },
-                { depth,             D3D12_RESOURCE_STATE_DEPTH_WRITE,    D3D12_RESOURCE_STATE_COMMON },
-            };
-            commandList.TransitionBarriers(barriers);
-        }
-        PIXEndEvent(commandList.GetDXCommandList().Get());
+						commandList.SetConstants(1, sizeof(PassConstants), &passConstants);
 
-        commandList.Close();
-    }
+						commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+						commandList.SetVertexBuffer(0, mesh->VertexBufferView);
+						if (!mesh->SkinningVertexData.empty())
+						{
+							commandList.SetVertexBuffer(1, mesh->SkinningVertexBufferView);
+						}
+						else
+						{
+							commandList.SetVertexBuffer(1, mesh->VertexBufferView);
+						}
+						commandList.SetIndexBuffer(mesh->IndexBufferView);
+
+						commandList.DrawIndexed(mesh->IndexData.size());
+					}
+					else
+					{
+						LOG_CRITICAL("Entity '{}' does not have a Mesh component.", entities[instanceIndex]->GetName());
+					}
+				};
+			for (size_t i = 0; i < entities.size(); ++i)
+			{
+				DrawMeshEntity(commandList, i);
+			}
+
+			DebugInfo::EndStatCollecting(commandList);
+
+			barriers =
+			{
+				{ albedoMetallic,    D3D12_RESOURCE_STATE_RENDER_TARGET,  D3D12_RESOURCE_STATE_COMMON },
+				{ normalRoughness,   D3D12_RESOURCE_STATE_RENDER_TARGET,  D3D12_RESOURCE_STATE_COMMON },
+				{ depth,             D3D12_RESOURCE_STATE_DEPTH_WRITE,    D3D12_RESOURCE_STATE_COMMON },
+			};
+			commandList.TransitionBarriers(barriers);
+		}
+		PIXEndEvent(commandList.GetDXCommandList().Get());
+
+		commandList.Close();
+	}
 } // namespace render

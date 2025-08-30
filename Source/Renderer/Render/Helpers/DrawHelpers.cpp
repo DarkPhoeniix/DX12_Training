@@ -2,7 +2,7 @@
 
 #include "DrawHelpers.h"
 
-#include "Scene/Entity/Components/Camera.h"
+#include "Render/Frame/Frame.h"
 
 namespace render
 {
@@ -24,50 +24,50 @@ namespace render
         }
     }
 
-    void DrawHelper::DrawBox(dx12::CommandList& commandList, const scene::Camera& camera, const DirectX::XMVECTOR& min, const DirectX::XMVECTOR& max, const DirectX::XMVECTOR& color)
+    void DrawHelper::DrawBox(dx12::CommandList& commandList, const Frame& frame, const DirectX::XMVECTOR& min, const DirectX::XMVECTOR& max, const DirectX::XMVECTOR& color)
     {
         ASSERT(_instance, "DrawHelper has not been initialized");
 
         commandList.SetPipelineState(_instance->_boxDebug);
 
-        commandList.SetConstants(0, 4, &min);
-        commandList.SetConstants(0, 4, &max, 4);
-        commandList.SetConstants(1, 16, &camera.ViewProjection());
-        commandList.SetConstants(2, 4, &color);
+        commandList.SetCBV(0, frame.GetBuffer()->OffsetGPU());
+        commandList.SetConstants(1, 3, &min);
+        commandList.SetConstants(1, 3, &max, 4);
+        commandList.SetConstants(1, 4, &color, 8);
 
         commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
 
         commandList.Draw(1);
     }
 
-    void DrawHelper::DrawSphere(dx12::CommandList& commandList, const scene::Camera& camera, float radius, const DirectX::XMVECTOR& position, const DirectX::XMVECTOR& color)
+    void DrawHelper::DrawSphere(dx12::CommandList& commandList, const Frame& frame, float radius, const DirectX::XMVECTOR& position, const DirectX::XMVECTOR& color)
     {
         ASSERT(_instance, "DrawHelper has not been initialized");
 
         commandList.SetPipelineState(_instance->_sphereDebug);
 
-        commandList.SetConstants(0, 16, &camera.ViewProjection());
+        commandList.SetCBV(0, frame.GetBuffer()->OffsetGPU());
         commandList.SetConstants(1, 3, &position);
         commandList.SetConstants(1, 1, &radius, 3);
-        commandList.SetConstants(2, 4, &color);
+        commandList.SetConstants(1, 4, &color, 4);
 
         commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
 
         commandList.Draw(1);
     }
 
-    void DrawHelper::DrawCone(dx12::CommandList& commandList, const scene::Camera& camera, float angle, float height, const DirectX::XMVECTOR& position, const DirectX::XMVECTOR& direction, const DirectX::XMVECTOR& color)
+    void DrawHelper::DrawCone(dx12::CommandList& commandList, const Frame& frame, float angle, float height, const DirectX::XMVECTOR& position, const DirectX::XMVECTOR& direction, const DirectX::XMVECTOR& color)
     {
         ASSERT(_instance, "DrawHelper has not been initialized");
 
         commandList.SetPipelineState(_instance->_coneDebug);
 
-        commandList.SetConstants(0, 16, &camera.ViewProjection());
+        commandList.SetCBV(0, frame.GetBuffer()->OffsetGPU());
         commandList.SetConstants(1, 3, &position);
         commandList.SetConstants(1, 1, &angle, 3);
         commandList.SetConstants(1, 3, &direction, 4);
         commandList.SetConstants(1, 1, &height, 7);
-        commandList.SetConstants(2, 4, &color);
+        commandList.SetConstants(1, 4, &color, 8);
 
         commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
 

@@ -1,6 +1,5 @@
 
-#include "ShadowMapping_rootsig.hlsli"
-
+#include "../UnifiedRootSignature.hlsli"
 #include "../CommonResources.hlsli"
 #include "../LightingCommon.hlsli"
 
@@ -24,18 +23,28 @@ struct BoneDesc
     row_major matrix Transform;
 };
 
-StructuredBuffer<BoneDesc> Bones : register(t0);
+struct PassConstants
+{
+    uint InstanceIndex;
+    uint LightIndex;
+};
 
-[RootSignature(ShadowMapping_RootSig)]
+ConstantBuffer<PassConstants> PassCB : register(b1);
+
+[RootSignature(URootSignature)]
 VSOutput main(VSinput IN)
 {
+    StructuredBuffer<ModelDesc> Instances = ResourceDescriptorHeap[FrameCB.InstancesBufferIndex];
+    ModelDesc Model = Instances[PassCB.InstanceIndex];
+    
     row_major matrix boneTransform = float4x4(
         float4(1.0f, 0.0f, 0.0f, 0.0f),
         float4(0.0f, 1.0f, 0.0f, 0.0f),
         float4(0.0f, 0.0f, 1.0f, 0.0f),
         float4(0.0f, 0.0f, 0.0f, 1.0f));
-    if (Model.useSkinning == 1)
+    if (Model.BonesBufferIndex != -1)
     {
+        StructuredBuffer<BoneDesc> Bones = ResourceDescriptorHeap[Model.BonesBufferIndex];
         boneTransform = Bones[IN.BoneIds[0]].Transform * IN.BoneWeights[0];
         boneTransform += Bones[IN.BoneIds[1]].Transform * IN.BoneWeights[1];
         boneTransform += Bones[IN.BoneIds[2]].Transform * IN.BoneWeights[2];

@@ -17,6 +17,7 @@ An experimental real-time renderer built with C++ and DirectX 12 for exploring m
 - Deferred rendering pipeline
 - Asynchronous command lists building
 - Render Graph (Frame graph) for pass scheduling
+- Bindless resource binding
 - Physically-based rendering (PBR)
 - Image-based lighting support (IBL)
 - Shadow mapping (spot/point lights) with GPU-driven shadow caster culling
@@ -45,6 +46,7 @@ EquinoxEngine.sln       # Visual Studio solution file for building the project
 - Visual Studio 2022
 - Windows 10 SDK
 - Installed vcpkg manager for dependencies
+- Shader Model 6.6+
 
 ### Building
 
@@ -63,7 +65,6 @@ git clone https://github.com/DarkPhoeniix/EquinoxEngine.git
 - [ ] Frustum culling (possible GPU-side)
 - [ ] Render pass for (semi-)transparent meshes
 - [ ] Ray tracing (DXR) + denoising
-- [ ] Bindless resources
 - [ ] Full scene serialization/deserialization
 - [ ] Cascaded shadow maps
 - [ ] Bloom, DoF, Bokeh effect, SSR

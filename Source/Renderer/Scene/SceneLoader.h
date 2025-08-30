@@ -2,6 +2,8 @@
 
 #include "DescriptorHeap.h"
 #include "PipelineState.h"
+#include "Core/ResourceTable.h"
+#include "Core/TextureManager.h"
 
 class TaskGPU;
 
@@ -32,6 +34,10 @@ namespace scene::helpers
     class SceneLoader
     {
     public:
+        SceneLoader();
+
+        void Init(ResourceTable& resourceTable, TextureManager& textureManager);
+
         void LoadScene(TaskGPU& task, const std::string& filepath, std::shared_ptr<Scene> scene);
 
         std::shared_ptr<dx12::Resource> GenerateEnvironmentDiffuseIrradianceMap(dx12::CommandList& commandList, std::shared_ptr<Scene> scene);
@@ -54,12 +60,12 @@ namespace scene::helpers
 
         void CleanIntermediates();
 
-        dx12::DescriptorHeap _descHeap;
         dx12::PipelineState _IBL_DiffuseIrradianceConvolution;
         dx12::PipelineState _IBL_PreFilterEnvMap;
         dx12::PipelineState _IBL_BRDFGenerateLUT;
 
-        scene::SceneCache* _cache;
+        ResourceTable* _resourceTable;
+        TextureManager* _textureManager;
         std::vector<std::shared_ptr<dx12::Resource>> _intermediates;
     };
 }

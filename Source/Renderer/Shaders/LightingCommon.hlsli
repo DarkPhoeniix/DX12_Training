@@ -1,50 +1,54 @@
 #pragma once
 
-struct Surface
+#define LIGHT_TYPE_DIRECTIONAL  0
+#define LIGHT_TYPE_POINT        1
+#define LIGHT_TYPE_SPOT         2
+
+#define CONSTANT_SHADOW_BIAS    0.0002f
+#define SLOPE_SHADOW_BIAS       0.00005f
+
+struct Surface          // 152 bytes
 {
-    float4 NDCPosition;
-    float4 Position;
+    float4              NDCPosition;
+    float4              Position;
     
-    float4 Albedo;
-    float4 Normal;
-    float Metallic;
-    float Roughness;
+    float4              Albedo;
+    float4              Normal;
+    float               Metallic;
+    float               Roughness;
     
-    float4 FinalColor;
+    float4              FinalColor;
     
-    float4 ViewDirection;
-    float4 ToLight;
-    float4 Reflect;
-    float DistanceToL;
-    float NdotV;
-    float NdotL;
-    float NdotH;
+    float4              ViewDirection;
+    float4              ToLight;
+    float4              Reflect;
+    
+    float               DistanceToL;
+    float               NdotV;
+    float               NdotL;
+    float               NdotH;
 };
 
-#define LIGHT_TYPE_DIRECTIONAL 0
-#define LIGHT_TYPE_POINT 1
-#define LIGHT_TYPE_SPOT 2
-
-struct LightDesc
+struct LightDesc        // 480 bytes
 {
-    float4 Direction;
-    float4 Position;
-    float4 Color;
+    float4              Direction;
+    float4              Position;
+    float4              Color;
     
-    float Intesity;
-    float Range;
-    float OuterAngle;
-    float InnerAngle;
+    float               Intesity;
+    float               Range;
+    float               OuterAngle;
+    float               InnerAngle;
     
-    uint Type;
-    uint CastShadows;
+    uint                Type;
+    uint                CastShadows;
     
-    float2 PerspectiveValues;
-    row_major matrix ViewProj[6];
+    float2              PerspectiveValues;
+    row_major matrix    ViewProj[6];
     
-    uint ShadowMapIndex;
+    uint                ShadowMapIndex;
     
-    uint pad[3];
+    uint                pad[3];
 };
 
 float CalculatePointLightAttenuation(in LightDesc light, in Surface surface)
@@ -107,9 +111,6 @@ uint GetCubeFaceIndex(float3 toPixel)
     
     return faceIndex;
 }
-
-#define CONSTANT_SHADOW_BIAS 0.0002f
-#define SLOPE_SHADOW_BIAS 0.00005f
 
 float CalculatePointLightShadowAttenuation(in TextureCube texture, in SamplerComparisonState cmpSampler, in LightDesc light, in Surface surface)
 {

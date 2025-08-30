@@ -1,27 +1,25 @@
 
-struct Geometryinput
+#include "../UnifiedRootSignature.hlsli"
+#include "../CommonResources.hlsli"
+
+struct GeometryInput
 {
-    uint primitive : INDEX;
+    uint Primitive : INDEX;
 };
 
-struct Pixelinput
+struct PixelInput
 {
-    float4 posH : SV_POSITION;
+    float4 PosH : SV_POSITION;
 };
 
-struct MeshData
+struct PassConstants
 {
-    float4 fMin;
-    float4 fMax;
+    float3 BoxMin;
+    float3 BoxMax;
+    float4 Color;
 };
 
-ConstantBuffer<MeshData> Instance : register(b0);
-
-struct ViewData
-{
-    row_major matrix ViewProj;
-};
-ConstantBuffer<ViewData> View : register(b1);
+ConstantBuffer<PassConstants> PassCB : register(b1);
 
 const static float3 _kBoxMin = float3(-1.0f, -1.0f, -1.0f);
 const static float3 _kBoxMax = float3(+1.0f, +1.0f, +1.0f);
@@ -48,29 +46,29 @@ const static uint _kusBoxIndeces[24] =
 };
 
 [maxvertexcount(24)]
-void main(point Geometryinput input[1], inout LineStream<Pixelinput> lineStream)
+void main(point GeometryInput input[1], inout LineStream<PixelInput> lineStream)
 {
 	// temp box values 
     float4 _kBoxVertsW[8];
 
 	// calcualting half and extends of the AABB
-    float3 fCenter = (Instance.fMax.xyz + Instance.fMin.xyz) * 0.5f;
-    float3 fHalfSize = (Instance.fMax.xyz - Instance.fMin.xyz) * 0.5f;
+    float3 fCenter = (PassCB.BoxMax.xyz + PassCB.BoxMin.xyz) * 0.5f;
+    float3 fHalfSize = (PassCB.BoxMax.xyz - PassCB.BoxMin.xyz) * 0.5f;
 
 	// converting all 8 box vertexes to Homo coordinate
 	[unroll]
     for (uint i = 0; i < 8; ++i)
     {
         _kBoxVertsW[i].xyz = _kBoxVerts[i] * fHalfSize + fCenter;
-        _kBoxVertsW[i] = mul(float4(_kBoxVertsW[i].xyz, 1.0f), View.ViewProj);
+        _kBoxVertsW[i] = mul(float4(_kBoxVertsW[i].xyz, 1.0f), FrameCB.ViewProjection);
     }
 	
 	// for each pair of line, adding to stream
 	[unroll]
     for (uint i = 0; i < 24; i += 2)
     {
-        lineStream.Append((Pixelinput) _kBoxVertsW[_kusBoxIndeces[i + 0]]);
-        lineStream.Append((Pixelinput) _kBoxVertsW[_kusBoxIndeces[i + 1]]);
+        lineStream.Append((PixelInput) _kBoxVertsW[_kusBoxIndeces[i + 0]]);
+        lineStream.Append((PixelInput) _kBoxVertsW[_kusBoxIndeces[i + 1]]);
 		
         lineStream.RestartStrip();
     }

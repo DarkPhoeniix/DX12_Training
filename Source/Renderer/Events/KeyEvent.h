@@ -12,7 +12,8 @@ namespace core
         public:
             KeyEvent(DIKeyCode keyCode)
                 : keyCode(keyCode)
-            {   }
+            {
+            }
 
             DIKeyCode keyCode;
         };

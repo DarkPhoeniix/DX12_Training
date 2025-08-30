@@ -16,18 +16,14 @@ namespace rg
 {
     RenderGraph::RenderGraph()
         : _frame(nullptr)
+        , _context()
 #ifdef RG_MULTITHREADED
         , _workerManager(RENDER_THREADS_NUM)
 #endif
     {
     }
 
-    CacheGPU& RenderGraph::GetCache()
-    {
-        return _context.GetCache();
-    }
-
-    dx12::ResourceTable& RenderGraph::GetResourceTable()
+    ResourceTable& RenderGraph::GetResourceTable()
     {
         return _context.GetResourceTable();
     }
@@ -35,25 +31,21 @@ namespace rg
     void RenderGraph::SetFrame(Frame& frame)
     {
         _frame = &frame;
-        _context._currentFrameIndex = frame.Index;
+        _context._frame = &frame;
+    }
+
+    void RenderGraph::Init(ResourceTable& resourceTable, TextureManager& textureManager)
+    {
+		_context.Init(resourceTable, textureManager);
     }
 
     void RenderGraph::Reset()
     {
         _context._mapNameToId.clear();
-        _context._resources.clear();
+        _context._mapIdToResource.clear();
 
         _passes.clear();
         _sortedPasses.clear();
-
-        for (CacheGPU& cache : _context._cache)
-        {
-            cache.Clear();
-        }
-        for (dx12::ResourceTable& table : _context._resourceTable)
-        {
-            table.Reset();
-        }
     }
 
     void RenderGraph::Compile()
@@ -94,7 +86,7 @@ namespace rg
                 task->SetName(pass->_name);
 
 #ifdef RG_MULTITHREADED
-                _workerManager.Submit({ pass.get(), &_context, task});
+                _workerManager.Submit({ pass.get(), &_context, task });
 #else
                 pass->Execute(_context, *task);
 #endif
@@ -131,18 +123,26 @@ namespace rg
     void RenderGraph::ImportResource(std::shared_ptr<dx12::Resource> resource)
     {
         ASSERT(resource, "Trying to import a null resource into the render graph.");
-        ResourceId id = _context._mapNameToId.size();
 
-        _context._mapNameToId[resource->GetName()] = id;
-        _context._resources[id] = resource;
+        auto it = _context._mapNameToId.find(resource->GetName());
+        if (it != _context._mapNameToId.end())
+        {
+            _context._mapIdToResource[it->second] = resource;
+        }
+        else
+        {
+            const ResourceId& id = resource->GetID();
+            _context._mapNameToId[resource->GetName()] = id;
+            _context._mapIdToResource[id] = resource;
+        }
     }
 
     std::shared_ptr<dx12::Resource> RenderGraph::ExportResource(const std::string& name)
     {
         ResourceId id = _context._mapNameToId[name];
 
-        auto resourceIt = _context._resources.find(id);
-        if (resourceIt == _context._resources.end())
+        auto resourceIt = _context._mapIdToResource.find(id);
+        if (resourceIt == _context._mapIdToResource.end())
         {
             LOG_ERROR("Resource with name '{}' does not exist in the render graph context.", name);
             return nullptr;
@@ -199,7 +199,7 @@ namespace rg
 
         for (std::uint32_t i = 0; i < _passes.size(); i++)
         {
-            if (visited[i] == false) 
+            if (visited[i] == false)
             {
                 DFS(i);
             }

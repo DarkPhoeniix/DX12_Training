@@ -1,14 +1,16 @@
 
-#define IBL_GenerateBRDFEnvironmentLUT_RootSig \
-	"RootFlags(0), " \
-    "DescriptorTable(UAV(u0), visibility = SHADER_VISIBILITY_ALL)"
-
+#include "../UnifiedRootSignature.hlsli"
 #include "../CommonConstants.hlsli"
 #include "IBL_Helpers.hlsli"
 
 #define THREADS_PER_DIMENSION 8
 
-RWTexture2DArray<float2> BRDF_LUT : register(u0);
+struct PassConstants
+{
+    uint brdfLUTTextureIndex;
+};
+
+ConstantBuffer<PassConstants> PassCB : register(b1);
 
 const static uint k_SamplesCount = 1024u;
 
@@ -53,10 +55,12 @@ float2 IntegrateBRDF(float NdotV, float roughness, uint sampleCount)
     return float2(A, B);
 }
 
-[RootSignature(IBL_GenerateBRDFEnvironmentLUT_RootSig)]
+[RootSignature(URootSignature)]
 [numthreads(THREADS_PER_DIMENSION, THREADS_PER_DIMENSION, 1)]
 void main(uint3 DTid : SV_DispatchThreadID)
 {
+    RWTexture2DArray<float2> BRDF_LUT = ResourceDescriptorHeap[PassCB.brdfLUTTextureIndex];
+    
     float x, y, z;
     BRDF_LUT.GetDimensions(x, y, z);
     

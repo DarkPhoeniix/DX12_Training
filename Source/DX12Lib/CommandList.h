@@ -1,6 +1,7 @@
 #pragma once
 
 #include "PipelineState.h"
+#include "CommandSignature.h"
 
 namespace scene
 {
@@ -62,8 +63,8 @@ namespace dx12
         void EndQuery(ComPtr<ID3D12QueryHeap> queryHeap, D3D12_QUERY_TYPE type, std::uint32_t index);
 
         // Sets a resource transition barrier (to change resource states between pipeline stages).
-        void TransitionBarrier(ResourceBarrier& barrier);
-        void TransitionBarriers(std::vector<ResourceBarrier>& barrier);
+        void TransitionBarrier(const ResourceBarrier& barrier);
+        void TransitionBarriers(const std::vector<ResourceBarrier>& barrier);
         // Sets a resource transition barrier (to change resource states between pipeline stages).
         // Before state is a current resource state
         void TransitionBarrier(Resource& resource, D3D12_RESOURCE_STATES stateAfter, std::uint32_t subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
@@ -119,7 +120,7 @@ namespace dx12
         void Dispatch(std::uint32_t xThreadGroupsCount = 1, std::uint32_t yThreadGroupsCount = 1, std::uint32_t zThreadGroupsCount = 1);
 
         // TODO: comment ExecuteIndirect
-        void ExecuteIndirect(ComPtr<ID3D12CommandSignature> cmdSignature, std::uint32_t maxCommandCount, Resource& argumentBuffer, std::shared_ptr<Resource> countBuffer, std::uint32_t argumentBufferOffset = 0, std::uint32_t countBufferOffset = 0);
+        void ExecuteIndirect(const CommandSignature& commandSignature, std::uint32_t maxCommandCount, Resource& argumentBuffer, std::shared_ptr<Resource> countBuffer, std::uint32_t argumentBufferOffset = 0, std::uint32_t countBufferOffset = 0);
 
         // Sets the descriptor heaps for the command list. Descriptor heaps are used to manage resources like buffers, textures, etc.
         void SetDescriptorHeaps(const std::vector<ID3D12DescriptorHeap*> descriptorHeaps);

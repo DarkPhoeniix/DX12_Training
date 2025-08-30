@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Texture.h"
 #include "Scene/Entity/Components/IComponent.h"
+#include "Core/TextureManager.h"
 
 namespace scene
 {
@@ -10,12 +10,16 @@ namespace scene
     public:
         Material()
             : IComponent("Material")
+            , AlbedoTextureHandle(InvalidTextureHandle)
+            , NormalMapTextureHandle(InvalidTextureHandle)
+            , MetalnessTextureHandle(InvalidTextureHandle)
+            , RoughnessTextureHandle(InvalidTextureHandle)
         {
         }
 
-        std::string Albedo;
-        std::string NormalMap;
-        std::string Metalness;
-        std::string Roughness;
+        TextureHandle AlbedoTextureHandle;
+        TextureHandle NormalMapTextureHandle;
+        TextureHandle MetalnessTextureHandle;
+        TextureHandle RoughnessTextureHandle;
     };
 } // namespace scene

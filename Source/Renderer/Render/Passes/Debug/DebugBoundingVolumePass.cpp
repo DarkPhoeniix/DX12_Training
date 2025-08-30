@@ -3,7 +3,6 @@
 #include "DebugBoundingVolumePass.h"
 
 #include "Render/Helpers/DrawHelpers.h"
-#include "Render/Passes/PassResources.h"
 #include "Scene/Entity/Components/Light.h"
 #include "Scene/Entity/Components/Mesh.h"
 #include "Scene/Entity/Components/Transformation.h"
@@ -15,77 +14,79 @@
 
 namespace render
 {
-    DebugBoundingVolumePass::DebugBoundingVolumePass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-        : RenderPass<DebugBoundingVolumePassData>("Debug Volumes Pass", rg::RenderPassType::Graphics)
-        , _scene(scene)
-        , _camera(camera)
-    {
-    }
+	DebugBoundingVolumePass::DebugBoundingVolumePass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
+		: RenderPass<DebugBoundingVolumePassData>("Debug Volumes Pass", rg::RenderPassType::Graphics)
+		, _scene(scene)
+		, _camera(camera)
+	{
+	}
 
-    void DebugBoundingVolumePass::Setup(rg::RenderPassBuilder& builder)
-    {
-        _data.Target = builder.WriteResource(TARGET);
-        _data.Depth = builder.ReadResource(DEPTH);
-    }
+	void DebugBoundingVolumePass::Setup(rg::RenderPassBuilder& builder)
+	{
+		_data.Target = builder.WriteResource("render_target");
+		_data.Depth = builder.ReadResource("depth_target");
+	}
 
-    void DebugBoundingVolumePass::Execute(rg::RenderContext& context, TaskGPU& task)
-    {
-        dx12::CommandList& commandList = *task.GetCommandLists().front();
-        commandList.SetName("Render Debug Volumes command list");
+	void DebugBoundingVolumePass::Execute(rg::RenderContext& context, TaskGPU& task)
+	{
+		dx12::CommandList& commandList = *task.GetCommandLists().front();
+		commandList.SetName("Render Debug Volumes command list");
 
-        PIXBeginEvent(commandList.GetDXCommandList().Get(), 5, "Debug Volumes");
-        {
-            std::shared_ptr<dx12::Resource> target = context.GetResource(_data.Target);
-            std::shared_ptr<dx12::Resource> depth = context.GetResource(_data.Depth);
+		PIXBeginEvent(commandList.GetDXCommandList().Get(), 5, "Debug Volumes");
+		{
+			std::shared_ptr<dx12::Resource> target = context.GetResource(_data.Target);
+			std::shared_ptr<dx12::Resource> depth = context.GetResource(_data.Depth);
 
-            D3D12_CPU_DESCRIPTOR_HANDLE rtv = context.GetCPUHandle(target->GetAsRTV());
-            D3D12_CPU_DESCRIPTOR_HANDLE dsv = context.GetCPUHandle(depth->GetAsDSV());
+			DescriptorHandle rtv = context.GetStaticResourceHandle(target->GetAsRTV());
+			DescriptorHandle dsv = context.GetStaticResourceHandle(depth->GetAsDSV());
 
-            std::vector<dx12::ResourceBarrier> barriers =
-            {
-                { target, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RENDER_TARGET },
-                { depth,  D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE }
-            };
-            commandList.TransitionBarriers(barriers);
+			std::vector<dx12::ResourceBarrier> barriers =
+			{
+				{ target, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RENDER_TARGET },
+				{ depth,  D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE }
+			};
+			commandList.TransitionBarriers(barriers);
 
-            commandList.SetViewport(_camera->GetViewport());
-            commandList.SetRenderTarget(&rtv, &dsv);
+			context.BindBindlessTable(commandList);
 
-            auto lights = _scene->FilterNodesByComponent("Light");
-            for (auto& entity : lights)
-            {
-                std::shared_ptr<scene::Light> light = entity->GetComponentAs<scene::Light>("Light");
-                std::shared_ptr<scene::Transformation> t = entity->GetComponentAs<scene::Transformation>("Transformation");
+			commandList.SetViewport(_camera->GetViewport());
+			commandList.SetRenderTarget(&rtv.CpuHandle, &dsv.CpuHandle);
 
-                switch (light->Type)
-                {
-                case scene::LightType::Point:
-                    DrawHelper::DrawSphere(commandList, *_camera, light->Range, t->Transform.r[3], light->Color);
-                    break;
-                case scene::LightType::Spot:
-                    DrawHelper::DrawCone(commandList, *_camera, light->OuterAngle, light->Range, t->Transform.r[3], light->Direction, light->Color);
-                    break;
-                }
-            }
+			auto lights = _scene->FilterNodesByComponent("Light");
+			for (auto& entity : lights)
+			{
+				std::shared_ptr<scene::Light> light = entity->GetComponentAs<scene::Light>("Light");
+				std::shared_ptr<scene::Transformation> t = entity->GetComponentAs<scene::Transformation>("Transformation");
 
-            auto meshes = _scene->FilterNodesByComponent("Mesh");
-            for (auto& entity : meshes)
-            {
-                std::shared_ptr<scene::Mesh> mesh = entity->GetComponentAs<scene::Mesh>("Mesh");
-                scene::AABBVolume aabb = mesh->GlobalAABB;
+				switch (light->Type)
+				{
+				case scene::LightType::Point:
+					DrawHelper::DrawSphere(commandList, *context.GetFrame(), light->Range, t->Transform.r[3], light->Color);
+					break;
+				case scene::LightType::Spot:
+					DrawHelper::DrawCone(commandList, *context.GetFrame(), light->OuterAngle, light->Range, t->Transform.r[3], light->Direction, light->Color);
+					break;
+				}
+			}
 
-                DrawHelper::DrawBox(commandList, *_camera, aabb.Min, aabb.Max, DirectX::XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f));
-            }
+			auto meshes = _scene->FilterNodesByComponent("Mesh");
+			for (auto& entity : meshes)
+			{
+				std::shared_ptr<scene::Mesh> mesh = entity->GetComponentAs<scene::Mesh>("Mesh");
+				scene::AABBVolume aabb = mesh->GlobalAABB;
 
-            barriers =
-            {
-                { target, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON},
-                { depth,  D3D12_RESOURCE_STATE_DEPTH_WRITE,   D3D12_RESOURCE_STATE_COMMON}
-            };
-            commandList.TransitionBarriers(barriers);
-        }
-        PIXEndEvent(commandList.GetDXCommandList().Get());
+				DrawHelper::DrawBox(commandList, *context.GetFrame(), aabb.Min, aabb.Max, DirectX::XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f));
+			}
 
-        commandList.Close();
-    }
+			barriers =
+			{
+				{ target, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON},
+				{ depth,  D3D12_RESOURCE_STATE_DEPTH_WRITE,   D3D12_RESOURCE_STATE_COMMON}
+			};
+			commandList.TransitionBarriers(barriers);
+		}
+		PIXEndEvent(commandList.GetDXCommandList().Get());
+
+		commandList.Close();
+	}
 } // namespace render

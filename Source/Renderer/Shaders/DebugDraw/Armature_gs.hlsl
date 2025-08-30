@@ -1,48 +1,41 @@
 
+#include "../UnifiedRootSignature.hlsli"
 #include "../CommonResources.hlsli"
 
-struct Geometryinput
+struct GeometryInput
 {
     uint Primitive : INDEX;
 };
 
-struct Pixelinput
+struct PixelInput
 {
     float4 Position : SV_Position;
     float2 Color : COLOR;
 };
 
-struct ViewData
+struct PassConstants
 {
-    row_major matrix ViewProj;
+    float4 Start;
+    float4 End;
 };
 
-struct ArmatureData
-{
-    float4 start;
-    float4 end;
-};
-
-ConstantBuffer<ViewData> Instance : register(b0);
-ConstantBuffer<ArmatureData> Armature : register(b1);
-
-StructuredBuffer<float4> BonePositions : register(t0);
+ConstantBuffer<PassConstants> PassCB : register(b1);
 
 [maxvertexcount(170)]
-void main(point Geometryinput input[1], inout LineStream<Pixelinput> lineStream)
+void main(point GeometryInput input[1], inout LineStream<PixelInput> lineStream)
 {
 	// for each pair of line, adding to stream
-    Pixelinput psinput;
+    PixelInput psinput;
         
-    float4 pos = Armature.start;
+    float4 pos = PassCB.Start;
         
-    psinput.Position = mul(pos, Instance.ViewProj);
+    psinput.Position = mul(pos, FrameCB.ViewProjection);
     psinput.Color = float2(1.0f, 0.0f);
     lineStream.Append(psinput);
         
-    pos = Armature.end;
+    pos = PassCB.End;
         
-    psinput.Position = mul(pos, Instance.ViewProj);
+    psinput.Position = mul(pos, FrameCB.ViewProjection);
     psinput.Color = float2(0.0f, 1.0f);
     lineStream.Append(psinput);
 }

@@ -11,7 +11,7 @@ namespace
         DirectX::XMMATRIX ViewProjection = DirectX::XMMatrixIdentity();
         DirectX::XMMATRIX View = DirectX::XMMatrixIdentity();
         DirectX::XMMATRIX Projection = DirectX::XMMatrixIdentity();
-        
+
         DirectX::XMMATRIX InvView = DirectX::XMMatrixIdentity();
         DirectX::XMMATRIX InvProjection = DirectX::XMMatrixIdentity();
 
@@ -30,14 +30,12 @@ namespace scene
     Scene::Scene(const Scene& other)
         : _name(other._name)
         , _rootNodes(other._rootNodes)
-        , _cache(other._cache)
     {
     }
 
     Scene::Scene(Scene&& other) noexcept
         : _name(std::move(other._name))
         , _rootNodes(std::move(other._rootNodes))
-        , _cache(std::move(other._cache))
     {
     }
 
@@ -47,7 +45,6 @@ namespace scene
         {
             _name = other._name;
             _rootNodes = other._rootNodes;
-            _cache = other._cache;
         }
 
         return *this;
@@ -59,7 +56,6 @@ namespace scene
         {
             _name = std::move(other._name);
             _rootNodes = std::move(other._rootNodes);
-            _cache = std::move(other._cache);
         }
 
         return *this;
@@ -158,12 +154,6 @@ namespace scene
     {
         _name = "";
         _rootNodes.clear();
-        _cache.Clear();
-    }
-
-    SceneCache& Scene::GetCache()
-    {
-        return _cache;
     }
 
     void Scene::SetName(const std::string& name)

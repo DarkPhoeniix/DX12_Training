@@ -2,7 +2,7 @@
 
 #include "DebugInfoWidget.h"
 
-#include "Render/RenderSettings.h"
+#include "Core/RenderSettings.h"
 #include "Utility/DebugInfo.h"
 
 namespace gui

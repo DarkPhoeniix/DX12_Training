@@ -1,8 +1,11 @@
 #pragma once
 
+#include "Core/ResourceTable.h"
+#include "Core/TextureManager.h"
 #include "RenderPass.h"
 #include "RenderContext.h"
 
+// TODO: isolate RG_MULTITHREADED to this lib
 #ifdef RG_MULTITHREADED
 #include "Helpers/PassWorkerManager.h"
 #endif
@@ -27,10 +30,11 @@ namespace rg
         RenderGraph& operator=(const RenderGraph&) = delete;
         RenderGraph& operator=(RenderGraph&&) = default;
 
-        CacheGPU& GetCache();
-        dx12::ResourceTable& GetResourceTable();
+        ResourceTable& GetResourceTable();
 
         void SetFrame(Frame& frame);
+
+        void Init(ResourceTable& resourceTable, TextureManager& textureManager);
 
         void Reset();
         void Compile();
@@ -46,7 +50,7 @@ namespace rg
 
         void BuildAdjacencyLists();
         void TopologicalSort();
-        
+
         std::vector<std::vector<std::uint32_t>> _adjacencyLists;
         std::vector<std::shared_ptr<IRenderPass>> _passes;
         std::vector<std::uint32_t> _sortedPasses;
