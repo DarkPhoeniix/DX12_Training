@@ -4,6 +4,7 @@
 // 
 
 #include "../UnifiedRootSignature.hlsli"
+#include "../CommonResources.hlsli"
 #include "../PixelPacking.hlsli"
 
 struct PassConstants

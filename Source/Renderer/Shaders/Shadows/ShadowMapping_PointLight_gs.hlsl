@@ -1,5 +1,6 @@
 
 #include "../UnifiedRootSignature.hlsli"
+#include "../CommonResources.hlsli"
 #include "../LightingCommon.hlsli"
 
 struct GSOutput

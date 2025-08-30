@@ -112,7 +112,7 @@ namespace render
 				.AverageLuminanceBufferIndex = avgLuminanceHandle.Index,
 				.TargetTextureIndex = targetHandle.Index
 			};
-			commandList.SetCBV(0, context.GetFrame()->_frameBuffer->OffsetGPU());
+			commandList.SetCBV(0, context.GetFrame()->GetBuffer()->OffsetGPU());
 			commandList.SetConstants(1, 6, &constants);
 
 			// Execute

@@ -10,15 +10,15 @@ namespace
 {
     dx12::CommandListType GetCmdListType(D3D12_COMMAND_LIST_TYPE commandListType)
     {
-        if (commandListType == D3D12_COMMAND_LIST_TYPE_DIRECT) 
+        if (commandListType == D3D12_COMMAND_LIST_TYPE_DIRECT)
         {
             return dx12::CommandListType::Graphics;
         }
-        else if (commandListType == D3D12_COMMAND_LIST_TYPE_COMPUTE) 
+        else if (commandListType == D3D12_COMMAND_LIST_TYPE_COMPUTE)
         {
             return dx12::CommandListType::Compute;
         }
-        else if (commandListType == D3D12_COMMAND_LIST_TYPE_COPY) 
+        else if (commandListType == D3D12_COMMAND_LIST_TYPE_COPY)
         {
             return dx12::CommandListType::Copy;
         }
@@ -158,7 +158,7 @@ namespace dx12
         }
     }
 
-    void CommandList::TransitionBarriers(std::vector<ResourceBarrier>& barriers)
+    void CommandList::TransitionBarriers(const std::vector<ResourceBarrier>& barriers)
     {
         ASSERT(!barriers.empty(), "Barriers vector is empty.");
 
@@ -272,7 +272,7 @@ namespace dx12
     {
         FAIL((_type == CommandListType::Graphics) || (_type == CommandListType::Compute), "Command list type is not Graphics or Compute.")
 
-        _commandList->SetPipelineState(rootSignature.GetPipelineState().Get());
+            _commandList->SetPipelineState(rootSignature.GetPipelineState().Get());
 
         if (_type == CommandListType::Graphics)
         {

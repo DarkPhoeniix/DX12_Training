@@ -17,7 +17,8 @@ namespace core
                 , y(0)
                 , relativeX(0)
                 , relativeY(0)
-            {   }
+            {
+            }
 
             bool leftButton;    // Is the left mouse button down?
             bool middleButton;  // Is the middle mouse button down?

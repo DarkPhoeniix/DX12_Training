@@ -2,6 +2,7 @@
 #include "../UnifiedRootSignature.hlsli"
 #include "../CommonConstants.hlsli"
 #include "../CommonFunctions.hlsli"
+#include "../CommonResources.hlsli"
 #include "IBL_Helpers.hlsli"
 
 #define THREADS_PER_DIMENSION 8

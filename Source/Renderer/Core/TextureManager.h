@@ -19,8 +19,8 @@ public:
 	TextureManager(TextureManager&& other) noexcept = default;
 	TextureManager(const TextureManager& other) = delete;
 
-	TextureManager& operator=(const TextureManager& other) = delete;
-	TextureManager& operator=(TextureManager&& other) noexcept = default;
+    TextureManager& operator=(const TextureManager& other) = delete;
+    TextureManager& operator=(TextureManager&& other) noexcept = default;
 
 	static void Create(ResourceTable& resourceTable);
 	static TextureManager& Get();
@@ -28,11 +28,11 @@ public:
 	[[nodiscard]] TextureHandle EnqueueTexture(const std::string& filepath);
 	void UploadTextures(dx12::CommandList& commandList);
 
-	void ClearIntermediates();
-	void Clear();
+    void ClearIntermediates();
+    void Clear();
 
-	[[nodiscard]] TextureHandle AddTexture(std::shared_ptr<dx12::Resource> texture);
-	[[nodiscard]] std::shared_ptr<dx12::Resource> GetTexture(TextureHandle handle) const;
+    [[nodiscard]] TextureHandle AddTexture(std::shared_ptr<dx12::Resource> texture);
+    [[nodiscard]] std::shared_ptr<dx12::Resource> GetTexture(TextureHandle handle) const;
 
 private:
 	TextureManager(ResourceTable& resourceTable);
@@ -40,7 +40,7 @@ private:
 	std::unordered_map<TextureHandle, std::shared_ptr<dx12::Resource>> _handleToTexture;
 	TextureHandle _nextTextureHandle;
 
-	std::unordered_map<std::string, TextureHandle> _uploadQueue; // use set to remove duplicates
+    std::unordered_map<std::string, TextureHandle> _uploadQueue; // use set to remove duplicates
 
 	ResourceTable& _resourceTable;
 	dx12::Heap _texturesHeap;

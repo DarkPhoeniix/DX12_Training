@@ -56,52 +56,52 @@ namespace rg
         return resourceIt->second;
     }
 
-    const DescriptorHandle& RenderContext::GetStaticResourceHandle(const dx12::RenderTargetView& rtv) const
+    DescriptorHandle RenderContext::GetStaticResourceHandle(const dx12::RenderTargetView& rtv) const
     {
         return _resourceTable->GetStaticResourceHandle(rtv);
     }
 
-    const DescriptorHandle& RenderContext::GetStaticResourceHandle(const dx12::DepthStencilView& dsv) const
+    DescriptorHandle RenderContext::GetStaticResourceHandle(const dx12::DepthStencilView& dsv) const
     {
         return _resourceTable->GetStaticResourceHandle(dsv);
     }
 
-    const DescriptorHandle& RenderContext::GetStaticResourceHandle(const dx12::ShaderResourceView& srv) const
+    DescriptorHandle RenderContext::GetStaticResourceHandle(const dx12::ShaderResourceView& srv) const
     {
         return _resourceTable->GetStaticResourceHandle(srv);
     }
 
-    const DescriptorHandle& RenderContext::GetStaticResourceHandle(const dx12::UnorderedAccessView& uav) const
+    DescriptorHandle RenderContext::GetStaticResourceHandle(const dx12::UnorderedAccessView& uav) const
     {
         return _resourceTable->GetStaticResourceHandle(uav);
     }
 
-    const DescriptorHandle& RenderContext::GetStaticResourceHandle(const dx12::ConstantBufferView& cbv) const
+    DescriptorHandle RenderContext::GetStaticResourceHandle(const dx12::ConstantBufferView& cbv) const
     {
         return _resourceTable->GetStaticResourceHandle(cbv);
     }
 
-    const DescriptorHandle& RenderContext::GetTransientResourceHandle(const dx12::RenderTargetView& rtv) const
+    DescriptorHandle RenderContext::GetTransientResourceHandle(const dx12::RenderTargetView& rtv) const
     {
         return _resourceTable->GetTransientResourceHandle(rtv);
     }
 
-    const DescriptorHandle& RenderContext::GetTransientResourceHandle(const dx12::DepthStencilView& dsv) const
+    DescriptorHandle RenderContext::GetTransientResourceHandle(const dx12::DepthStencilView& dsv) const
     {
         return _resourceTable->GetTransientResourceHandle(dsv);
     }
 
-    const DescriptorHandle& RenderContext::GetTransientResourceHandle(const dx12::ShaderResourceView& srv) const
+    DescriptorHandle RenderContext::GetTransientResourceHandle(const dx12::ShaderResourceView& srv) const
     {
         return _resourceTable->GetTransientResourceHandle(srv);
     }
 
-    const DescriptorHandle& RenderContext::GetTransientResourceHandle(const dx12::UnorderedAccessView& uav) const
+    DescriptorHandle RenderContext::GetTransientResourceHandle(const dx12::UnorderedAccessView& uav) const
     {
         return _resourceTable->GetTransientResourceHandle(uav);
     }
 
-    const DescriptorHandle& RenderContext::GetTransientResourceHandle(const dx12::ConstantBufferView& cbv) const
+    DescriptorHandle RenderContext::GetTransientResourceHandle(const dx12::ConstantBufferView& cbv) const
     {
         return _resourceTable->GetTransientResourceHandle(cbv);
     }

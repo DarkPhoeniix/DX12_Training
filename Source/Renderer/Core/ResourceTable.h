@@ -7,12 +7,12 @@ class ResourceTable
 {
 public:
     ResourceTable(DescriptorHeapManager& descriptorHeapManager);
-	ResourceTable(const ResourceTable&) = delete;
-	ResourceTable(ResourceTable&&) noexcept = default;
+    ResourceTable(const ResourceTable&) = delete;
+    ResourceTable(ResourceTable&&) noexcept = default;
     ~ResourceTable() = default;
 
-	ResourceTable& operator=(const ResourceTable&) = delete;
-	ResourceTable& operator=(ResourceTable&&) noexcept = default;
+    ResourceTable& operator=(const ResourceTable&) = delete;
+    ResourceTable& operator=(ResourceTable&&) noexcept = default;
 
     void Reset();
     void ResetTransientResources();

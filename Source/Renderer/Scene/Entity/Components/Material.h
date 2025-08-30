@@ -10,10 +10,10 @@ namespace scene
     public:
         Material()
             : IComponent("Material")
-			, AlbedoTextureHandle(InvalidTextureHandle)
-			, NormalMapTextureHandle(InvalidTextureHandle)
-			, MetalnessTextureHandle(InvalidTextureHandle)
-			, RoughnessTextureHandle(InvalidTextureHandle)
+            , AlbedoTextureHandle(InvalidTextureHandle)
+            , NormalMapTextureHandle(InvalidTextureHandle)
+            , MetalnessTextureHandle(InvalidTextureHandle)
+            , RoughnessTextureHandle(InvalidTextureHandle)
         {
         }
 

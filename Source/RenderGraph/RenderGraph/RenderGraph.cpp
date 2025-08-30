@@ -86,7 +86,7 @@ namespace rg
                 task->SetName(pass->_name);
 
 #ifdef RG_MULTITHREADED
-                _workerManager.Submit({ pass.get(), &_context, task});
+                _workerManager.Submit({ pass.get(), &_context, task });
 #else
                 pass->Execute(_context, *task);
 #endif
@@ -199,7 +199,7 @@ namespace rg
 
         for (std::uint32_t i = 0; i < _passes.size(); i++)
         {
-            if (visited[i] == false) 
+            if (visited[i] == false)
             {
                 DFS(i);
             }

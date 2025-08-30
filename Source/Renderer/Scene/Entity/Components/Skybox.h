@@ -10,9 +10,9 @@ namespace scene
     public:
         Skybox()
             : IComponent("Skybox")
-			, SkydomeTextureHandle(InvalidTextureHandle)
+            , SkydomeTextureHandle(InvalidTextureHandle)
         {
-		}
+        }
 
         TextureHandle SkydomeTextureHandle;
     };

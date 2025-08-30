@@ -30,7 +30,7 @@ namespace render
 
         commandList.SetPipelineState(_instance->_boxDebug);
 
-        commandList.SetCBV(0, frame._frameBuffer->OffsetGPU());
+        commandList.SetCBV(0, frame.GetBuffer()->OffsetGPU());
         commandList.SetConstants(1, 3, &min);
         commandList.SetConstants(1, 3, &max, 4);
         commandList.SetConstants(1, 4, &color, 8);
@@ -46,7 +46,7 @@ namespace render
 
         commandList.SetPipelineState(_instance->_sphereDebug);
 
-        commandList.SetCBV(0, frame._frameBuffer->OffsetGPU());
+        commandList.SetCBV(0, frame.GetBuffer()->OffsetGPU());
         commandList.SetConstants(1, 3, &position);
         commandList.SetConstants(1, 1, &radius, 3);
         commandList.SetConstants(1, 4, &color, 4);
@@ -62,7 +62,7 @@ namespace render
 
         commandList.SetPipelineState(_instance->_coneDebug);
 
-		commandList.SetCBV(0, frame._frameBuffer->OffsetGPU());
+        commandList.SetCBV(0, frame.GetBuffer()->OffsetGPU());
         commandList.SetConstants(1, 3, &position);
         commandList.SetConstants(1, 1, &angle, 3);
         commandList.SetConstants(1, 3, &direction, 4);

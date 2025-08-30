@@ -2,21 +2,20 @@
 
 #include "Frame.h"
 
-#include "CommandList.h"
 #include "Fence.h"
-#include "SwapChain.h"
 #include "PipelineState.h"
 
 Frame::Frame()
     : Index(0)
     , Prev(nullptr)
     , Next(nullptr)
-    , _targetTexture(nullptr)
     , _currentTasks{}
+    , _tasks{}
     , _allocatorPool(nullptr)
     , _fencePool(nullptr)
     , _syncPoint(nullptr)
-    , _tasks{}
+    , _targetTexture(nullptr)
+    , _frameBuffer(nullptr)
 {
 }
 
@@ -30,7 +29,7 @@ Frame::~Frame()
     _syncPoint = nullptr;
 }
 
-void Frame::Init(const DirectX::XMUINT2& size, uint32_t cacheSize)
+void Frame::Init(const DirectX::XMUINT2& size)
 {
     // Create resource for the target texture
     {
@@ -172,6 +171,16 @@ std::vector<TaskGPU> Frame::GetTasks() const
 std::shared_ptr<dx12::Resource> Frame::GetTargetTexture()
 {
     return _targetTexture;
+}
+
+void Frame::SetBuffer(std::shared_ptr<dx12::Resource> buffer)
+{
+    _frameBuffer = buffer;
+}
+
+std::shared_ptr<dx12::Resource> Frame::GetBuffer() const
+{
+    return _frameBuffer;
 }
 
 void Frame::SetSyncPoint(dx12::Fence* syncPoint)

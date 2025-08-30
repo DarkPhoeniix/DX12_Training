@@ -129,7 +129,7 @@ namespace render
 		dx12::CommandList& commandList = *task.GetCommandLists().front();
 		commandList.SetName("Shadow pass command list - culling");
 
-		std::shared_ptr<dx12::Resource> frameBuffer = context.GetFrame()->_frameBuffer;
+		std::shared_ptr<dx12::Resource> frameBuffer = context.GetFrame()->GetBuffer();
 		std::shared_ptr<dx12::Resource> aabbBuffer = context.GetResource(_data.AABBBuffer);
 		std::shared_ptr<dx12::Resource> counterResetBuffer = context.GetResource(_data.CounterResetBuffer);
 
@@ -244,7 +244,7 @@ namespace render
 			};
 
 			// Setup root signature
-			commandList.SetCBV(0, context.GetFrame()->_frameBuffer->OffsetGPU());
+			commandList.SetCBV(0, context.GetFrame()->GetBuffer()->OffsetGPU());
 			commandList.SetConstants(1, 5, &passConstants);
 
 			// Dispatch culling compute shader

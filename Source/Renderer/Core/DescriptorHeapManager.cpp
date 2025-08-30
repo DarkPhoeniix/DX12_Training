@@ -52,12 +52,10 @@ DescriptorHandle DescriptorHeapManager::AllocateStatic(DescriptorHeapType type)
     case DescriptorHeapType::RTV:
         handle.Index = _RTVAllocator.Allocate();
         handle.CpuHandle = _RTVDescriptorHeap.GetCPUHandleWithOffset(handle.Index);
-        //handle.GpuHandle = _RTVDescriptorHeap.GetGPUHandleWithOffset(handle.Index);
         break;
     case DescriptorHeapType::DSV:
         handle.Index = _DSVAllocator.Allocate();
         handle.CpuHandle = _DSVDescriptorHeap.GetCPUHandleWithOffset(handle.Index);
-        //handle.GpuHandle = _DSVDescriptorHeap.GetGPUHandleWithOffset(handle.Index);
         break;
     case DescriptorHeapType::Static:
         handle.Index = _staticAllocator.Allocate();

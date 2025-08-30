@@ -1,6 +1,7 @@
 // https://www.alextardif.com/HistogramLuminance.html
 
 #include "../UnifiedRootSignature.hlsli"
+#include "../CommonResources.hlsli"
 #include "ToneMapping.hlsli"
 
 #define NUM_HISTOGRAM_BINS 256

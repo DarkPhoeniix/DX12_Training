@@ -21,7 +21,7 @@ enum class DescriptorHeapType
     Dynamic // Dynamic resources (CBV/SRV/UAV)
 };
 
-class DescriptorHeapManager 
+class DescriptorHeapManager
 {
 public:
     DescriptorHeapManager(std::uint32_t maxRTVDescriptors, std::uint32_t maxDSVDescriptors, std::uint32_t maxStaticDescriptors, std::uint32_t maxDynamicDescriptors);

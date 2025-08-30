@@ -114,7 +114,7 @@ namespace render
 
 			DebugInfo::StartStatCollecting(commandList);
 
-			commandList.SetCBV(0, context.GetFrame()->_frameBuffer->OffsetGPU());
+			commandList.SetCBV(0, context.GetFrame()->GetBuffer()->OffsetGPU());
 
 			const std::vector<std::shared_ptr<scene::Entity>>& entities = _scene->FilterNodesByComponent("Mesh");
 

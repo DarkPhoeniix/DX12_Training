@@ -10,12 +10,14 @@ namespace scene
         AABBVolume()
             : Min(DirectX::XMVectorSet(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), 1.0f))
             , Max(DirectX::XMVectorSet(-std::numeric_limits<float>::max(), -std::numeric_limits<float>::max(), -std::numeric_limits<float>::max(), 1.0f))
-        {   }
+        {
+        }
 
         AABBVolume(const DirectX::XMVECTOR& min, const DirectX::XMVECTOR& max)
             : Min(min)
             , Max(max)
-        {   }
+        {
+        }
 
         AABBVolume Transform(const DirectX::XMMATRIX& transform);
 

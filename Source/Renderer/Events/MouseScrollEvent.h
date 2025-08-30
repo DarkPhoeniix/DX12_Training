@@ -11,7 +11,8 @@ namespace core
         public:
             MouseScrollEvent(float wheelDelta)
                 : scrollDelta(wheelDelta)
-            {   }
+            {
+            }
 
             float scrollDelta;
         };

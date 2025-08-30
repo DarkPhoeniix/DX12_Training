@@ -63,7 +63,7 @@ namespace dx12
 
         // Sets a resource transition barrier (to change resource states between pipeline stages).
         void TransitionBarrier(const ResourceBarrier& barrier);
-        void TransitionBarriers(std::vector<ResourceBarrier>& barrier);
+        void TransitionBarriers(const std::vector<ResourceBarrier>& barrier);
         // Sets a resource transition barrier (to change resource states between pipeline stages).
         // Before state is a current resource state
         void TransitionBarrier(Resource& resource, D3D12_RESOURCE_STATES stateAfter, std::uint32_t subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);

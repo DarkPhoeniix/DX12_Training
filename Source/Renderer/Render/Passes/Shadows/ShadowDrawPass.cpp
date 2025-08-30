@@ -110,7 +110,7 @@ namespace render
 		dx12::CommandList& commandList = *task.GetCommandLists().front();
 		commandList.SetName("Shadow pass command list - draw");
 
-		std::shared_ptr<dx12::Resource> frameBuffer = context.GetFrame()->_frameBuffer;
+		std::shared_ptr<dx12::Resource> frameBuffer = context.GetFrame()->GetBuffer();
 
 		std::vector<std::shared_ptr<scene::Entity>> lightEntities = _scene->FilterNodesByComponent("Light");
 		std::vector<std::shared_ptr<scene::Entity>> meshes = _scene->FilterNodesByComponent("Mesh");

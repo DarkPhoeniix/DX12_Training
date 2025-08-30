@@ -9,14 +9,16 @@ namespace dx12
         , _description{}
         , _heapIncrementSize(0)
         , _currentOffset(0)
-    {   }
+    {
+    }
 
     DescriptorHeap::DescriptorHeap(const DescriptorHeapDescription& description)
         : _descriptorHeap(nullptr)
         , _description(description)
         , _heapIncrementSize(0)
         , _currentOffset(0)
-    {   }
+    {
+    }
 
     DescriptorHeap::DescriptorHeap(const DescriptorHeap& other)
         : _descriptorHeap(other._descriptorHeap)

@@ -244,7 +244,7 @@ namespace render
 						.ColorQueueBufferIndex = colorQueueUAV.Index,
 						.LumaTextureIndex = lumaHandleUAV.Index
 					};
-					commandList.SetCBV(0, context.GetFrame()->_frameBuffer->OffsetGPU());
+					commandList.SetCBV(0, context.GetFrame()->GetBuffer()->OffsetGPU());
 					commandList.SetConstants(1, 10, &pass1Constants);
 
 					int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 16.0f);
@@ -267,7 +267,7 @@ namespace render
 						.WorkQueueBufferIndex = workQueueUAV.Index,
 						.WorkCountsBufferIndex = workCountersUAV.Index
 					};
-					commandList.SetCBV(0, context.GetFrame()->_frameBuffer->OffsetGPU());
+					commandList.SetCBV(0, context.GetFrame()->GetBuffer()->OffsetGPU());
 					commandList.SetConstants(1, 4, &passResolveConstants);
 
 					commandList.Dispatch();
@@ -299,7 +299,7 @@ namespace render
 						.ColorQueueBufferIndex = colorQueueSRV.Index,
 						.OutputTextureIndex = targetHandleUAV.Index
 					};
-					commandList.SetCBV(0, context.GetFrame()->_frameBuffer->OffsetGPU());
+					commandList.SetCBV(0, context.GetFrame()->GetBuffer()->OffsetGPU());
 					commandList.SetConstants(1, 9, &pass2Constants);
 
 					context.BindBindlessTable(commandList);

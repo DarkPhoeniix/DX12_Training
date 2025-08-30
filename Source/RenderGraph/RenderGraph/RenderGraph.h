@@ -50,7 +50,7 @@ namespace rg
 
         void BuildAdjacencyLists();
         void TopologicalSort();
-        
+
         std::vector<std::vector<std::uint32_t>> _adjacencyLists;
         std::vector<std::shared_ptr<IRenderPass>> _passes;
         std::vector<std::uint32_t> _sortedPasses;

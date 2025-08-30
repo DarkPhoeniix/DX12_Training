@@ -11,7 +11,7 @@ namespace
         DirectX::XMMATRIX ViewProjection = DirectX::XMMatrixIdentity();
         DirectX::XMMATRIX View = DirectX::XMMatrixIdentity();
         DirectX::XMMATRIX Projection = DirectX::XMMatrixIdentity();
-        
+
         DirectX::XMMATRIX InvView = DirectX::XMMatrixIdentity();
         DirectX::XMMATRIX InvProjection = DirectX::XMMatrixIdentity();
 

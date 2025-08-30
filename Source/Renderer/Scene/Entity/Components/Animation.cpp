@@ -31,7 +31,7 @@ namespace scene
         std::map<BoneId, XMMATRIX> transforms;
 
         float normalizedTime = std::fmodf(CurrentTime * TicksPerSecond, Duration);
-        float interpolation  = std::fmodf(CurrentTime * TicksPerSecond, 1.0f);
+        float interpolation = std::fmodf(CurrentTime * TicksPerSecond, 1.0f);
 
         const auto& interpolatedKeyFrames = GetInterpolatedKeyFrame(Frames, normalizedTime);
         const AnimationFrame& firstFrame = interpolatedKeyFrames.first;

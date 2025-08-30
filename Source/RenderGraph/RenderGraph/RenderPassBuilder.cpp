@@ -6,7 +6,8 @@ namespace rg
 {
     RenderPassBuilder::RenderPassBuilder(RenderGraph& renderGraph, IRenderPass* renderPass)
         : _renderGraph(renderGraph), _renderPass(renderPass)
-    {   }
+    {
+    }
 
     ResourceId RenderPassBuilder::CreateResourceVirtual(const std::string& name)
     {
@@ -16,7 +17,7 @@ namespace rg
         _renderPass->_reads.push_back(resourceId);
         _renderPass->_writes.push_back(resourceId);
 
-		return resourceId;
+        return resourceId;
     }
 
     ResourceId RenderPassBuilder::CreateResource(const std::string& name, dx12::ResourceDescription desc, void* data /*= nullptr*/, size_t dataSize /*= 0*/)

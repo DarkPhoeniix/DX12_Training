@@ -177,7 +177,7 @@ namespace dx12
 
     void Device::CreateUnorderedAccessView(const UnorderedAccessView& view, D3D12_CPU_DESCRIPTOR_HANDLE descriptor, std::shared_ptr<Resource> counterResource)
     {
-		ID3D12Resource* counter = view.Owner->GetResourceDescription().GetUAVCounterOffset() != std::uint32_t(-1) ? view.Owner->GetDXResource().Get() : nullptr; // TODO: Use counterResource if provided
+        ID3D12Resource* counter = view.Owner->GetResourceDescription().GetUAVCounterOffset() != std::uint32_t(-1) ? view.Owner->GetDXResource().Get() : nullptr; // TODO: Use counterResource if provided
         _instance->_device->CreateUnorderedAccessView(view.Owner->GetDXResource().Get(), counter, &view, descriptor);
     }
 

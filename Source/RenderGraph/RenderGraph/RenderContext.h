@@ -29,17 +29,17 @@ namespace rg
 
         std::shared_ptr<dx12::Resource> GetResource(ResourceId id);
 
-        const DescriptorHandle& GetStaticResourceHandle(const dx12::RenderTargetView& rtv) const;
-        const DescriptorHandle& GetStaticResourceHandle(const dx12::DepthStencilView& dsv) const;
-        const DescriptorHandle& GetStaticResourceHandle(const dx12::ShaderResourceView& srv) const;
-        const DescriptorHandle& GetStaticResourceHandle(const dx12::UnorderedAccessView& uav) const;
-        const DescriptorHandle& GetStaticResourceHandle(const dx12::ConstantBufferView& cbv) const;
+        DescriptorHandle GetStaticResourceHandle(const dx12::RenderTargetView& rtv) const;
+        DescriptorHandle GetStaticResourceHandle(const dx12::DepthStencilView& dsv) const;
+        DescriptorHandle GetStaticResourceHandle(const dx12::ShaderResourceView& srv) const;
+        DescriptorHandle GetStaticResourceHandle(const dx12::UnorderedAccessView& uav) const;
+        DescriptorHandle GetStaticResourceHandle(const dx12::ConstantBufferView& cbv) const;
 
-        const DescriptorHandle& GetTransientResourceHandle(const dx12::RenderTargetView& rtv) const;
-        const DescriptorHandle& GetTransientResourceHandle(const dx12::DepthStencilView& dsv) const;
-        const DescriptorHandle& GetTransientResourceHandle(const dx12::ShaderResourceView& srv) const;
-        const DescriptorHandle& GetTransientResourceHandle(const dx12::UnorderedAccessView& uav) const;
-        const DescriptorHandle& GetTransientResourceHandle(const dx12::ConstantBufferView& cbv) const;
+        DescriptorHandle GetTransientResourceHandle(const dx12::RenderTargetView& rtv) const;
+        DescriptorHandle GetTransientResourceHandle(const dx12::DepthStencilView& dsv) const;
+        DescriptorHandle GetTransientResourceHandle(const dx12::ShaderResourceView& srv) const;
+        DescriptorHandle GetTransientResourceHandle(const dx12::UnorderedAccessView& uav) const;
+        DescriptorHandle GetTransientResourceHandle(const dx12::ConstantBufferView& cbv) const;
 
     private:
         friend class RenderGraph;

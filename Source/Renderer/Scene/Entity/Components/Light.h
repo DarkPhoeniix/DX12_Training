@@ -32,6 +32,6 @@ namespace scene
         float InnerAngle;
 
         bool CastShadows;
-		TextureHandle ShadowMapHandle = InvalidTextureHandle;
+        TextureHandle ShadowMapHandle = InvalidTextureHandle;
     };
 }

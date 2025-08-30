@@ -19,7 +19,6 @@
 #include "Scene/Entity/Components/Light.h"
 #include "Scene/Entity/Components/Material.h"
 #include "Scene/Entity/Components/Mesh.h"
-#include "Scene/Entity/Components/Skybox.h"
 #include "Scene/Entity/Entity.h"
 #include "Utility/DebugInfo.h"
 
@@ -204,13 +203,14 @@ namespace render
             dx12::ResourceDescription frameBufferDesc;
             {
                 frameBufferDesc.SetSize({ static_cast<std::uint32_t>(sizeof(GPUFrameDesc)), 1 });
-				frameBufferDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
+                frameBufferDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
             }
             for (size_t i = 0; i < dx12::BACK_BUFFER_COUNT; ++i)
             {
-				std::shared_ptr<dx12::Resource> frameBuffer = ResourceFactory::Create(std::format("frame_buffer_{}", i), frameBufferDesc);
-                _currentFrame->_frameBuffer = frameBuffer;
-                _currentFrame->_frameBuffer->CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_DEST);
+                std::shared_ptr<dx12::Resource> frameBuffer = ResourceFactory::Create(std::format("frame_buffer_{}", i), frameBufferDesc);
+                frameBuffer->CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_DEST);
+
+                _currentFrame->SetBuffer(frameBuffer);
 
                 _currentFrame = _currentFrame->Next;
             }
@@ -437,7 +437,7 @@ namespace render
             {
                 dx12::ResourceDescription modelBufferDesc;
                 modelBufferDesc.SetSize({ static_cast<uint32_t>(meshEntities.size() * sizeof(GPUModelDesc)), 1 });
-				modelBufferDesc.SetStride(sizeof(GPUModelDesc));
+                modelBufferDesc.SetStride(sizeof(GPUModelDesc));
                 modelBufferDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
                 modelBuffer = _sceneBuffers[static_cast<size_t>(SceneBufferType::Model)] = ResourceFactory::Create("Scene models buffer", modelBufferDesc);
                 modelBuffer->CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_DEST);
@@ -447,7 +447,7 @@ namespace render
             {
                 dx12::ResourceDescription lightBufferDesc;
                 lightBufferDesc.SetSize({ static_cast<uint32_t>(lightEntities.size() * sizeof(GPULightDesc)), 1 });
-				lightBufferDesc.SetStride(sizeof(GPULightDesc));
+                lightBufferDesc.SetStride(sizeof(GPULightDesc));
                 lightBufferDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
                 lightBuffer = _sceneBuffers[static_cast<size_t>(SceneBufferType::Light)] = ResourceFactory::Create("Scene lights buffer", lightBufferDesc);
                 lightBuffer->CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_DEST);
@@ -465,7 +465,7 @@ namespace render
 			std::shared_ptr<dx12::Resource> shadowMap = TextureManager::Get().GetTexture(lightComponent->ShadowMapHandle);
 			DescriptorHandle shadowMapHandle = _resourceTable.GetStaticResourceHandle(shadowMap->GetAsSRV());
 
-			auto views = GetLightViews(lightEntity);
+            auto views = GetLightViews(lightEntity);
             XMMATRIX proj = XMMatrixIdentity();
             switch (lightComponent->Type)
             {
@@ -480,7 +480,7 @@ namespace render
             for (auto& view : views)
             {
                 view *= proj;
-			}
+            }
 
             lights[lightIndex] =
             {
@@ -508,12 +508,12 @@ namespace render
         for (size_t index = 0; index < meshEntities.size(); ++index)
         {
             std::shared_ptr<scene::Entity> entity = meshEntities[index];
-			std::shared_ptr<scene::Material> materialComponent = entity->GetComponentAs<scene::Material>("Material");
+            std::shared_ptr<scene::Material> materialComponent = entity->GetComponentAs<scene::Material>("Material");
             std::shared_ptr<scene::Transformation> transformComponent = entity->GetComponentAs<scene::Transformation>("Transformation");
             std::shared_ptr<scene::Animation> animationComponent = entity->GetComponentAs<scene::Animation>("Animation");
             std::shared_ptr<scene::Armature> armatureComponent = entity->GetComponentAs<scene::Armature>("Armature");
 
-			std::uint32_t bonesBufferIndex = -1;
+            std::uint32_t bonesBufferIndex = -1;
 
             if (armatureComponent && animationComponent)
             {
@@ -523,11 +523,11 @@ namespace render
 
                 const std::vector<scene::Bone*>& bones = armatureComponent->GetSortedBones();
 
-				dx12::ResourceDescription bonesBufferDesc;
+                dx12::ResourceDescription bonesBufferDesc;
                 bonesBufferDesc.SetSize({ static_cast<std::uint32_t>(sizeof(DirectX::XMMATRIX) * bones.size()), 1 });
-				bonesBufferDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
+                bonesBufferDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
                 std::shared_ptr<dx12::Resource> bonesBuffer = ResourceFactory::Create(entity->GetName() + "_bones_buffer", bonesBufferDesc);
-				bonesBuffer->CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_DEST);
+                bonesBuffer->CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_DEST);
 
                 DirectX::XMMATRIX* data = bonesBuffer->Map<DirectX::XMMATRIX>();
 
@@ -570,7 +570,7 @@ namespace render
                 }
             }
 
-			// TOOD: this is a temporary solution, need to be fixed
+            // TOOD: this is a temporary solution, need to be fixed
             models[index] =
             {
                 .Transform = transformComponent->Transform,
@@ -580,17 +580,17 @@ namespace render
                 .RoughnessTextureIndex = roughnessTextureIndex,
 
                 .HasMesh = 1,
-				.BonesBufferIndex = std::uint32_t(-1)
-			};
+                .BonesBufferIndex = std::uint32_t(-1)
+            };
         }
 
         DescriptorHandle modelBufferHandle = _resourceTable.AddTransientResourceView(modelBuffer->GetAsSRV());
-        DescriptorHandle lightBufferHandle =  _resourceTable.AddTransientResourceView(lightBuffer->GetAsSRV());
+        DescriptorHandle lightBufferHandle = _resourceTable.AddTransientResourceView(lightBuffer->GetAsSRV());
 
         {
-            GPUFrameDesc* frameBufferData = _currentFrame->_frameBuffer->Map<GPUFrameDesc>();
+            GPUFrameDesc* frameBufferData = _currentFrame->GetBuffer()->Map<GPUFrameDesc>();
 
-			DirectX::XMUINT2 windowSize = _cameraComponent->GetViewport().GetSize();
+            DirectX::XMUINT2 windowSize = _cameraComponent->GetViewport().GetSize();
 
             frameBufferData[0] =
             {
@@ -608,9 +608,9 @@ namespace render
                 .ReciprocalWindowSize = { 1.0f / windowSize.x, 1.0f / windowSize.y },
                 .NearFar = { _cameraComponent->NearZ, _cameraComponent->FarZ },
 
-				.InstancesBufferIndex = modelBufferHandle.Index,
-				.LightsBufferIndex = lightBufferHandle.Index,
-				.LightsNum = static_cast<std::uint32_t>(lightEntities.size()),
+                .InstancesBufferIndex = modelBufferHandle.Index,
+                .LightsBufferIndex = lightBufferHandle.Index,
+                .LightsNum = static_cast<std::uint32_t>(lightEntities.size()),
 
                 .DeltaTime = _deltaTime
             };
@@ -650,14 +650,14 @@ namespace render
                         break;
                     }
                     shadowMapDesc.SetResourceType(dx12::ResourceType::DepthStencil | dx12::ResourceType::Texture);
-				}
+                }
 
                 std::shared_ptr<dx12::Resource> shadowMap = ResourceFactory::Create(lightEntity->GetName() + "_shadow_map", shadowMapDesc);
-				shadowMap->CreateCommitedResource();
+                shadowMap->CreateCommitedResource();
 
                 lightComponent->ShadowMapHandle = TextureManager::Get().AddTexture(shadowMap);
             }
-		}
+        }
     }
 
     void DXRenderer::UpdateEntity(std::shared_ptr<scene::Entity> entity)

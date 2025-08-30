@@ -16,8 +16,8 @@ namespace
         XMVECTOR aabbHalfSize = (aabb.Max - aabb.Min) * 0.5f;
 
         float rg = abs(XMVectorGetX(plane) * XMVectorGetX(aabbHalfSize))
-                 + abs(XMVectorGetY(plane) * XMVectorGetY(aabbHalfSize))
-                 + abs(XMVectorGetZ(plane) * XMVectorGetZ(aabbHalfSize));
+            + abs(XMVectorGetY(plane) * XMVectorGetY(aabbHalfSize))
+            + abs(XMVectorGetZ(plane) * XMVectorGetZ(aabbHalfSize));
 
         if (XMVectorGetX(XMPlaneDotCoord(plane, aabbCenter)) <= -rg)
         {

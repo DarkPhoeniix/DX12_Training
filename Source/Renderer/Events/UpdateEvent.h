@@ -13,7 +13,8 @@ namespace core
                 : elapsedTime(fDeltaTime)
                 , totalTime(fTotalTime)
                 , frameIndex(frameIndex)
-            {   }
+            {
+            }
 
             double elapsedTime;
             double totalTime;

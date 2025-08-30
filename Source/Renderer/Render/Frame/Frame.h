@@ -20,7 +20,7 @@ public:
     Frame();
     ~Frame();
 
-    void Init(const DirectX::XMUINT2& size, uint32_t cacheSize = _16MB);
+    void Init(const DirectX::XMUINT2& size);
 
     TaskGPU* CreateTask(D3D12_COMMAND_LIST_TYPE type, dx12::PipelineState* rootSignature = nullptr);
 
@@ -40,22 +40,21 @@ public:
 
     std::shared_ptr<dx12::Resource> GetTargetTexture();
 
+    void SetBuffer(std::shared_ptr<dx12::Resource> buffer);
+    std::shared_ptr<dx12::Resource> GetBuffer() const;
+
     unsigned int Index;
     Frame* Prev;
     Frame* Next;
 
-    std::shared_ptr<dx12::Resource> _frameBuffer = nullptr;
-
 private:
     std::vector<Executor*> _currentTasks;
+    std::vector<TaskGPU> _tasks;
 
     AllocatorPool* _allocatorPool;
     FencePool* _fencePool;
     dx12::Fence* _syncPoint;
 
-    dx12::Heap _resourcesHeap;
-
     std::shared_ptr<dx12::Resource> _targetTexture;
-
-    std::vector<TaskGPU> _tasks;
+    std::shared_ptr<dx12::Resource> _frameBuffer;
 };

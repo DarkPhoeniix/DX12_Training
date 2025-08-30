@@ -1,6 +1,7 @@
 
 #include "../UnifiedRootSignature.hlsli"
 #include "../CommonConstants.hlsli"
+#include "../CommonResources.hlsli"
 
 struct Geometryinput
 {

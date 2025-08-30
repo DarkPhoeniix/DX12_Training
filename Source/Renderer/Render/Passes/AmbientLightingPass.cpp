@@ -109,7 +109,7 @@ namespace render
 				.TargetTextureIndex = hdrTargetHandle.Index
 			};
 
-			commandList.SetCBV(0, context.GetFrame()->_frameBuffer->OffsetGPU());
+			commandList.SetCBV(0, context.GetFrame()->GetBuffer()->OffsetGPU());
 			commandList.SetConstants(1, 7, &passCB);
 
 			DirectX::XMUINT2 viewportSize = _camera->GetViewport().GetSize();

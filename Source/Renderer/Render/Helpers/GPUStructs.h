@@ -20,7 +20,7 @@ struct alignas(16) GPUFrameDesc
     std::uint32_t LightsBufferIndex = -1;
     std::uint32_t LightsNum = 0;
 
-	float DeltaTime = 0.0f;
+    float DeltaTime = 0.0f;
 };
 
 struct alignas(16) GPUSceneDesc
