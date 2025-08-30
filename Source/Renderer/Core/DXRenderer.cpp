@@ -151,7 +151,8 @@ namespace render
         , _resourceTable(_descriptorHeapManager)
         , _scene(std::make_shared<scene::Scene>())
     {
-		TextureManager::Create(_resourceTable);
+		TextureManager::Create();
+        GeometryCacheManager::Create();
 
 		_renderGraph.Init(_resourceTable, TextureManager::Get());
 		_sceneLoader.Init(_resourceTable, TextureManager::Get());
@@ -177,6 +178,12 @@ namespace render
 
         uploadTask->SetName("Upload Data");
         dx12::CommandList& commandList = *uploadTask->GetCommandLists().front();
+
+        {
+            TextureManager::Get().Clear();
+
+            _descriptorHeapManager.Reset();
+        }
 
         {
             // Load scene
@@ -233,6 +240,8 @@ namespace render
     void DXRenderer::UnloadContent()
     {
         render::DrawHelper::Destroy();
+        TextureManager::Destroy();
+        GeometryCacheManager::Destroy();
 
         _contentLoaded = false;
     }
@@ -484,14 +493,14 @@ namespace render
 
             lights[lightIndex] =
             {
-                .Direction = lightComponent->Direction,
+                .Direction = DirectX::XMVector3Normalize(lightComponent->Direction),
                 .Position = transformComponent->Transform.r[3],
                 .Color = lightComponent->Color,
 
                 .Intensity = lightComponent->Intensity,
                 .Range = lightComponent->Range,
-                .OuterAngle = lightComponent->OuterAngle,
-                .InnerAngle = lightComponent->InnerAngle,
+                .OuterAngle = std::cosf(XMConvertToRadians(lightComponent->OuterAngle * 0.5f)), // TODO: fix later
+                .InnerAngle = std::cosf(XMConvertToRadians(lightComponent->InnerAngle * 0.5f)),
 
                 .Type = static_cast<std::uint32_t>(lightComponent->Type),
                 .CastShadows = lightComponent->CastShadows ? 1u : 0u,
@@ -517,18 +526,25 @@ namespace render
 
             if (armatureComponent && animationComponent)
             {
-                const auto& transforms = animationComponent->GetBonesTransforms(_deltaTime);
+                const auto& transforms = animationComponent->GetBonesTransforms();
                 armatureComponent->ApplyAnimation(transforms);
                 armatureComponent->UpdateGlobalTransformations();
 
                 const std::vector<scene::Bone*>& bones = armatureComponent->GetSortedBones();
 
-                dx12::ResourceDescription bonesBufferDesc;
-                bonesBufferDesc.SetSize({ static_cast<std::uint32_t>(sizeof(DirectX::XMMATRIX) * bones.size()), 1 });
-                bonesBufferDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
-                std::shared_ptr<dx12::Resource> bonesBuffer = ResourceFactory::Create(entity->GetName() + "_bones_buffer", bonesBufferDesc);
-                bonesBuffer->CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_DEST);
+                if (armatureComponent->GetBoneBufferHandle() == InvalidGeometryHandle)
+                {
+                    dx12::ResourceDescription bonesBufferDesc;
+                    bonesBufferDesc.SetSize({ static_cast<std::uint32_t>(sizeof(DirectX::XMMATRIX) * bones.size()), 1 });
+                    bonesBufferDesc.SetStride(sizeof(DirectX::XMMATRIX));
+                    bonesBufferDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
+                    std::shared_ptr<dx12::Resource> bonesBuffer = ResourceFactory::Create(entity->GetName() + "_bones_buffer", bonesBufferDesc);
+                    bonesBuffer->CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_DEST);
 
+                    armatureComponent->SetBoneBufferHandle(GeometryCacheManager::Get().CacheGeometry(bonesBuffer));
+                }
+
+                std::shared_ptr<dx12::Resource> bonesBuffer = GeometryCacheManager::Get().GetGeometry(armatureComponent->GetBoneBufferHandle());
                 DirectX::XMMATRIX* data = bonesBuffer->Map<DirectX::XMMATRIX>();
 
                 for (int i = 0; i < bones.size(); ++i)
@@ -580,7 +596,7 @@ namespace render
                 .RoughnessTextureIndex = roughnessTextureIndex,
 
                 .HasMesh = 1,
-                .BonesBufferIndex = std::uint32_t(-1)
+                .BonesBufferIndex = bonesBufferIndex
             };
         }
 
@@ -666,14 +682,11 @@ namespace render
 
         std::shared_ptr<scene::Armature> armature = entity->GetComponentAs<scene::Armature>("Armature");
         std::shared_ptr<scene::Animation> animation = entity->GetComponentAs<scene::Animation>("Animation");
-        std::shared_ptr<scene::Transformation> transformation = entity->GetComponentAs<scene::Transformation>("Transformation");
         std::shared_ptr<scene::Mesh> mesh = entity->GetComponentAs<scene::Mesh>("Mesh");
 
         if (armature && animation)
         {
-            const auto& transforms = animation->GetBonesTransforms(_deltaTime);
-            armature->ApplyAnimation(transforms);
-            armature->UpdateGlobalTransformations();
+            animation->Update(_deltaTime);
         }
 
         if (mesh)

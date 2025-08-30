@@ -16,55 +16,8 @@ struct PassConstants
 
 ConstantBuffer<PassConstants> PassCB : register(b1);
 
-void SetLightParams(in LightDesc light, inout Surface surface)
-{
-    float3 lightDirection;
-    float distanceToLight = 0.0f;
-    float4 toLight;
-    if (light.Type == LIGHT_TYPE_DIRECTIONAL)
-    {
-        lightDirection = -normalize(light.Direction).xyz;
-    }
-    else if (light.Type == LIGHT_TYPE_POINT)
-    {
-        toLight = light.Position - surface.Position;
-        lightDirection = normalize(toLight);
-        distanceToLight = sqrt(dot(toLight, toLight));
-    }
-    else if (light.Type == LIGHT_TYPE_SPOT)
-    {
-        toLight = light.Position - surface.Position;
-        lightDirection = normalize(toLight).xyz;
-        distanceToLight = sqrt(dot(normalize(toLight), normalize(toLight)));
-    }
-    float3 eyeDir = normalize(FrameCB.EyePosition - surface.Position).xyz;
-    float3 halfway = normalize(eyeDir + lightDirection);
-        
-    surface.ViewDirection = float4(eyeDir, 0.0f);
-    surface.ToLight = toLight;
-    surface.Reflect = float4(reflect(-eyeDir, surface.Normal.xyz), 0.0f);
-    surface.DistanceToL = min(light.Range, distanceToLight);
-    surface.NdotV = max(dot(surface.Normal.xyz, eyeDir), 0.0f);
-    surface.NdotL = max(dot(surface.Normal.xyz, lightDirection), 0.0f);
-    surface.NdotH = max(dot(surface.Normal.xyz, halfway), 0.0f);
-}
-
-float CalculateShadowAttenuation_PCF3x3(in LightDesc light, in Surface surface)
-{
-    uint shadowMapTextureIndex = light.ShadowMapIndex;
-    if (light.Type == 1)
-    {
-        TextureCube shadowMap = ResourceDescriptorHeap[shadowMapTextureIndex];
-        return CalculatePointLightShadowAttenuation(shadowMap, ShadowClampSampler, light, surface);
-    }
-    else if (light.Type == 2)
-    {
-        Texture2D shadowMap = ResourceDescriptorHeap[shadowMapTextureIndex];
-        return CalculateSpotLightShadowAttenuation(shadowMap, ShadowClampSampler, light, surface);
-    }
-    
-    return 1.0f;
-}
+void SetLightParams(in LightDesc light, inout Surface surface);
+float CalculateShadowAttenuation_PCF3x3(in LightDesc light, in Surface surface);
 
 [RootSignature(URootSignature)]
 [numthreads(8, 8, 1)]
@@ -132,4 +85,54 @@ void main(uint3 DTid : SV_DispatchThreadID)
     }
     
     TargetTexture[DTid.xy] = surface.FinalColor;
+}
+
+void SetLightParams(in LightDesc light, inout Surface surface)
+{
+    float3 lightDirection;
+    float distanceToLight = 0.0f;
+    float4 toLight;
+    if (light.Type == LIGHT_TYPE_DIRECTIONAL)
+    {
+        lightDirection = -normalize(light.Direction).xyz;
+    }
+    else if (light.Type == LIGHT_TYPE_POINT)
+    {
+        toLight = light.Position - surface.Position;
+        lightDirection = normalize(toLight);
+        distanceToLight = sqrt(dot(toLight, toLight));
+    }
+    else if (light.Type == LIGHT_TYPE_SPOT)
+    {
+        toLight = light.Position - surface.Position;
+        lightDirection = normalize(toLight).xyz;
+        distanceToLight = sqrt(dot(normalize(toLight), normalize(toLight)));
+    }
+    float3 eyeDir = normalize(FrameCB.EyePosition - surface.Position).xyz;
+    float3 halfway = normalize(eyeDir + lightDirection);
+        
+    surface.ViewDirection = float4(eyeDir, 0.0f);
+    surface.ToLight = toLight;
+    surface.Reflect = float4(reflect(-eyeDir, surface.Normal.xyz), 0.0f);
+    surface.DistanceToL = min(light.Range, distanceToLight);
+    surface.NdotV = max(dot(surface.Normal.xyz, eyeDir), 0.0f);
+    surface.NdotL = max(dot(surface.Normal.xyz, lightDirection), 0.0f);
+    surface.NdotH = max(dot(surface.Normal.xyz, halfway), 0.0f);
+}
+
+float CalculateShadowAttenuation_PCF3x3(in LightDesc light, in Surface surface)
+{
+    uint shadowMapTextureIndex = light.ShadowMapIndex;
+    if (light.Type == LIGHT_TYPE_POINT)
+    {
+        TextureCube shadowMap = ResourceDescriptorHeap[shadowMapTextureIndex];
+        return CalculatePointLightShadowAttenuation(shadowMap, ShadowClampSampler, light, surface);
+    }
+    else if (light.Type == LIGHT_TYPE_SPOT)
+    {
+        Texture2D shadowMap = ResourceDescriptorHeap[shadowMapTextureIndex];
+        return CalculateSpotLightShadowAttenuation(shadowMap, ShadowClampSampler, light, surface);
+    }
+    
+    return 1.0f;
 }

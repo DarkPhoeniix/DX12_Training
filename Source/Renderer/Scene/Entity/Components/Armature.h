@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Core/GeometryCacheManager.h"
 #include "Scene/Entity/Components/IComponent.h"
 #include "Scene/Volumes/OBBVolume.h"
 
@@ -46,12 +47,17 @@ namespace scene
         void SetName(const std::string& name);
         const std::string& GetName() const;
 
+        GeometryHandle GetBoneBufferHandle() const;
+        void SetBoneBufferHandle(GeometryHandle handle);
+
         std::shared_ptr<dx12::Resource> BoneDebugTransforms;
 
     private:
         Bone* FindBone(BoneId id);
 
         std::string _name;
+
+        GeometryHandle _boneBufferHandle;
 
         Bone* _root;
         std::vector<Bone> _bones;

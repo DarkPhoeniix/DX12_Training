@@ -245,6 +245,7 @@
     <ClCompile Include="Core\TextureManager.cpp" />
     <ClCompile Include="Core\DXRenderer.cpp" />
     <ClCompile Include="Core\ResourceTable.cpp" />
+    <ClCompile Include="Core\GeometryCacheManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RendererPCH.h" />
@@ -419,6 +420,7 @@
     <ClInclude Include="Core\TextureManager.h" />
     <ClInclude Include="Core\DXRenderer.h" />
     <ClInclude Include="Core\ResourceTable.h" />
+    <ClInclude Include="Core\GeometryCacheManager.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\CommonResources.hlsli">

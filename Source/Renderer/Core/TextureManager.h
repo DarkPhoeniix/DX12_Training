@@ -1,9 +1,6 @@
 #pragma once
 
 #include "Heap.h"
-#include "Core/ResourceTable.h"
-
-#include <set>
 
 namespace dx12
 {
@@ -22,7 +19,8 @@ public:
     TextureManager& operator=(const TextureManager& other) = delete;
     TextureManager& operator=(TextureManager&& other) noexcept = default;
 
-	static void Create(ResourceTable& resourceTable);
+	static void Create();
+	static void Destroy();
 	static TextureManager& Get();
 
 	[[nodiscard]] TextureHandle EnqueueTexture(const std::string& filepath);
@@ -35,14 +33,13 @@ public:
     [[nodiscard]] std::shared_ptr<dx12::Resource> GetTexture(TextureHandle handle) const;
 
 private:
-	TextureManager(ResourceTable& resourceTable);
+	TextureManager();
 
 	std::unordered_map<TextureHandle, std::shared_ptr<dx12::Resource>> _handleToTexture;
 	TextureHandle _nextTextureHandle;
 
     std::unordered_map<std::string, TextureHandle> _uploadQueue; // use set to remove duplicates
 
-	ResourceTable& _resourceTable;
 	dx12::Heap _texturesHeap;
 	std::unordered_map<TextureHandle, std::shared_ptr<dx12::Resource>> _intermediateResources;
 

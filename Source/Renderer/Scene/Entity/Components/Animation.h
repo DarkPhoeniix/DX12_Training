@@ -24,7 +24,9 @@ namespace scene
         {
         }
 
-        std::map<BoneId, DirectX::XMMATRIX> GetBonesTransforms(float deltaTime);
+        void Update(float deltaTime);
+
+        std::map<BoneId, DirectX::XMMATRIX> GetBonesTransforms();
 
         std::string Name;
 

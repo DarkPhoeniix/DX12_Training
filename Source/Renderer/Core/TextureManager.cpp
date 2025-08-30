@@ -130,22 +130,33 @@ namespace
 
 std::unique_ptr<TextureManager> TextureManager::_instance = nullptr;
 
-TextureManager::TextureManager(ResourceTable& resourceTable)
-    : _resourceTable(resourceTable)
-    , _nextTextureHandle(0)
+TextureManager::TextureManager()
+    : _nextTextureHandle(0)
 {
 }
 
-void TextureManager::Create(ResourceTable& resourceTable)
+void TextureManager::Create()
 {
 	if (!_instance)
 	{
-		_instance = std::unique_ptr<TextureManager>(new TextureManager(resourceTable));
+		_instance = std::unique_ptr<TextureManager>(new TextureManager);
 	}
 	else
 	{
 		ERROR("TextureManager already created!");
 	}
+}
+
+void TextureManager::Destroy()
+{
+    if (_instance)
+    {
+        _instance.reset();
+    }
+    else
+    {
+        ERROR("TextureManager hasn't been created!");
+    }
 }
 
 TextureManager& TextureManager::Get()
