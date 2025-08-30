@@ -181,6 +181,7 @@ namespace render
 
         {
             TextureManager::Get().Clear();
+            GeometryCacheManager::Get().Clear();
 
             _descriptorHeapManager.Reset();
         }
@@ -526,10 +527,6 @@ namespace render
 
             if (armatureComponent && animationComponent)
             {
-                const auto& transforms = animationComponent->GetBonesTransforms();
-                armatureComponent->ApplyAnimation(transforms);
-                armatureComponent->UpdateGlobalTransformations();
-
                 const std::vector<scene::Bone*>& bones = armatureComponent->GetSortedBones();
 
                 if (armatureComponent->GetBoneBufferHandle() == InvalidGeometryHandle)
@@ -687,6 +684,10 @@ namespace render
         if (armature && animation)
         {
             animation->Update(_deltaTime);
+
+            const auto& transforms = animation->GetBonesTransforms();
+            armature->ApplyAnimation(transforms);
+            armature->UpdateGlobalTransformations();
         }
 
         if (mesh)
@@ -775,10 +776,10 @@ namespace render
             {
                 _renderGraph.AddPass(std::make_shared<DebugBoundingVolumePass>(_scene, _cameraComponent.get()));
             }
-            //if (RenderSettings::RenderDebugArmature())
-            //{
-            //    _renderGraph.AddPass(std::make_shared<DebugArmaturePass>(_scene, _cameraComponent.get()));
-            //}
+            if (RenderSettings::RenderDebugArmature())
+            {
+                _renderGraph.AddPass(std::make_shared<DebugArmaturePass>(_scene, _cameraComponent.get()));
+            }
 
             _renderGraph.Compile();
         }

@@ -25,15 +25,15 @@ namespace
         D3D12_GPU_VIRTUAL_ADDRESS SkinBufferAddress;
         UINT SkinBufferSize;
         UINT SkinBufferStride;
-        //D3D12_GPU_VIRTUAL_ADDRESS IndexBufferAddress;
-        //UINT IndexBufferSize;
-        //UINT IndexBufferFormat;
+        D3D12_GPU_VIRTUAL_ADDRESS IndexBufferAddress;
+        UINT IndexBufferSize;
+        UINT IndexBufferFormat;
 
         D3D12_GPU_VIRTUAL_ADDRESS FrameBufferAddress;
         UINT InstanceIndex;
         UINT LightIndex;
-
-        D3D12_DRAW_ARGUMENTS DrawArguments;
+        
+		D3D12_DRAW_INDEXED_ARGUMENTS DrawArguments;
     };
 
     std::uint32_t AlignToUAVCounterOffset(std::uint32_t size)
@@ -54,31 +54,32 @@ namespace render
 
         {
             // https://microsoft.github.io/DirectX-Specs/d3d/IndirectDrawing.html#root-constants--vertex-buffers
-            D3D12_INDIRECT_ARGUMENT_DESC argsDesc[5];
+            std::vector<D3D12_INDIRECT_ARGUMENT_DESC> argsDesc(6);
+
             argsDesc[0].Type = D3D12_INDIRECT_ARGUMENT_TYPE_VERTEX_BUFFER_VIEW;
             argsDesc[0].VertexBuffer.Slot = 0;
 
             argsDesc[1].Type = D3D12_INDIRECT_ARGUMENT_TYPE_VERTEX_BUFFER_VIEW;
             argsDesc[1].VertexBuffer.Slot = 1;
 
-            //argsDesc[2].Type = D3D12_INDIRECT_ARGUMENT_TYPE_INDEX_BUFFER_VIEW;
+            argsDesc[2].Type = D3D12_INDIRECT_ARGUMENT_TYPE_INDEX_BUFFER_VIEW;
 
-            argsDesc[2].Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT_BUFFER_VIEW;
-            argsDesc[2].ConstantBufferView.RootParameterIndex = 0;
+            argsDesc[3].Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT_BUFFER_VIEW;
+            argsDesc[3].ConstantBufferView.RootParameterIndex = 0;
 
-            argsDesc[3].Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT;
-            argsDesc[3].Constant.RootParameterIndex = 1;
-            argsDesc[3].Constant.Num32BitValuesToSet = 2;
-            argsDesc[3].Constant.DestOffsetIn32BitValues = 0;
+            argsDesc[4].Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT;
+            argsDesc[4].Constant.RootParameterIndex = 1;
+            argsDesc[4].Constant.Num32BitValuesToSet = 2;
+            argsDesc[4].Constant.DestOffsetIn32BitValues = 0;
 
-            argsDesc[4].Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW;
+            argsDesc[5].Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED;
 
-            D3D12_COMMAND_SIGNATURE_DESC commandSignatureDesc = {};
-            commandSignatureDesc.pArgumentDescs = argsDesc;
-            commandSignatureDesc.NumArgumentDescs = _countof(argsDesc);
-            commandSignatureDesc.ByteStride = sizeof(IndirectCommand);
+            for (const auto& arg : argsDesc)
+            {
+                _cmdSignature.AddArgument(arg);
+            }
 
-            dx12::Device::GetDXDevice()->CreateCommandSignature(&commandSignatureDesc, _spotLightShadowsPipeline.GetRootSignature().Get(), IID_PPV_ARGS(&_cmdSignature));
+            _cmdSignature.Create(sizeof(IndirectCommand), &_pointLightShadowsPipeline);
         }
     }
 

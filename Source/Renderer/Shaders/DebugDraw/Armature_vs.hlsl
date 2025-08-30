@@ -1,21 +1,21 @@
 
 #include "../UnifiedRootSignature.hlsli"
 
-struct Vertexinput
+struct VertexInput
 {
-    uint primitive : SV_InstanceID;
+    uint Primitive : SV_InstanceID;
 };
 
-struct Geometryinput
+struct GeometryInput
 {
-    uint primitive : INDEX;
+    uint Primitive : INDEX;
 };
 
 [RootSignature(URootSignature)]
-Geometryinput main(Vertexinput input)
+GeometryInput main(VertexInput input)
 {
-    Geometryinput output;
-    output.primitive = input.primitive;
+    GeometryInput output;
+    output.Primitive = input.Primitive;
 	
     return output;
 }

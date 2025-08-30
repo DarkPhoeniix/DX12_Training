@@ -26,15 +26,15 @@ namespace
 		D3D12_GPU_VIRTUAL_ADDRESS SkinBufferAddress;
 		UINT SkinBufferSize;
 		UINT SkinBufferStride;
-		//D3D12_GPU_VIRTUAL_ADDRESS IndexBufferAddress;
-		//UINT IndexBufferSize;
-  //      UINT IndexBufferFormat;
+		D3D12_GPU_VIRTUAL_ADDRESS IndexBufferAddress;
+		UINT IndexBufferSize;
+        UINT IndexBufferFormat;
 
 		D3D12_GPU_VIRTUAL_ADDRESS FrameBufferAddress;
 		UINT InstanceIndex;
 		UINT LightIndex;
 
-		D3D12_DRAW_ARGUMENTS DrawArguments;
+		D3D12_DRAW_INDEXED_ARGUMENTS DrawArguments;
 	};
 
 	struct PassConstants
@@ -61,7 +61,6 @@ namespace render
 		, _camera(camera)
 	{
 		_cullShadowsPipeline.Parse("PipelineDescriptions\\LightCulling_PointLight.tech");
-		_lightShadowsPipeline.Parse("PipelineDescriptions\\Shadow_SpotLight.tech");
 	}
 
 	void ShadowCullPass::Setup(rg::RenderPassBuilder& builder)
@@ -189,17 +188,18 @@ namespace render
 					command.SkinBufferStride = mesh->VertexBufferView.StrideInBytes;
 				}
 
-				//command.IndexBufferAddress = mesh->IndexBufferView.BufferLocation;
-	//            command.IndexBufferSize = mesh->IndexBufferView.SizeInBytes;
-				//command.IndexBufferFormat = mesh->IndexBufferView.Format;
+				command.IndexBufferAddress = mesh->IndexBufferView.BufferLocation;
+	            command.IndexBufferSize = mesh->IndexBufferView.SizeInBytes;
+				command.IndexBufferFormat = mesh->IndexBufferView.Format;
 
 				command.FrameBufferAddress = frameBuffer->OffsetGPU();
 				command.InstanceIndex = static_cast<std::uint32_t>(j);
 				command.LightIndex = static_cast<std::uint32_t>(lightIndex);
 
-				command.DrawArguments.VertexCountPerInstance = mesh->VertexData.size();
+				command.DrawArguments.IndexCountPerInstance = mesh->IndexData.size();
 				command.DrawArguments.InstanceCount = 1;
-				command.DrawArguments.StartVertexLocation = 0;
+                command.DrawArguments.StartIndexLocation = 0;
+				command.DrawArguments.BaseVertexLocation = 0;
 				command.DrawArguments.StartInstanceLocation = 0;
 			}
 

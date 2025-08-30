@@ -51,9 +51,9 @@ namespace render
 		{
 			D3D12_CLEAR_VALUE clearValue;
 			clearValue.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-			clearValue.Color[0] = 1.0f;
+			clearValue.Color[0] = 0.0f;
 			clearValue.Color[1] = 0.0f;
-			clearValue.Color[2] = 1.0f;
+			clearValue.Color[2] = 0.0f;
 			clearValue.Color[3] = 1.0f;
 
 			albedoMetallicDesc.SetSize(_camera->GetViewport().GetSize());

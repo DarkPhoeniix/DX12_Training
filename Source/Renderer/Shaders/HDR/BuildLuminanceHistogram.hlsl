@@ -50,13 +50,9 @@ void main(uint groupIndex : SV_GroupIndex, uint3 threadId : SV_DispatchThreadID,
     
     GroupMemoryBarrierWithGroupSync();
     
-    if (threadId.x < FrameCB.WindowSize.x && threadId.y < FrameCB.WindowSize.y)
-    {
-        // TODO: SampleLevel ?
-        float3 hdrColor = HDRTexture.Load(uint3(threadId.xy, 0)).rgb;
-        uint binIndex = HDRToHistogramBin(hdrColor);
-        InterlockedAdd(HistogramShared[binIndex], 1);
-    }
+    float3 hdrColor = HDRTexture.Load(uint3(threadId.xy, 0)).rgb;
+    uint binIndex = HDRToHistogramBin(hdrColor);
+    InterlockedAdd(HistogramShared[binIndex], 1);
     
     GroupMemoryBarrierWithGroupSync();
     

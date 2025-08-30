@@ -50,8 +50,6 @@ namespace scene
         GeometryHandle GetBoneBufferHandle() const;
         void SetBoneBufferHandle(GeometryHandle handle);
 
-        std::shared_ptr<dx12::Resource> BoneDebugTransforms;
-
     private:
         Bone* FindBone(BoneId id);
 

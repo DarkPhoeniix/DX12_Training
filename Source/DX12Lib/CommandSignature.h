@@ -8,15 +8,20 @@ namespace dx12
     {
     public:
         CommandSignature() = default;
+        CommandSignature(const CommandSignature& other) = delete;
+        CommandSignature(CommandSignature&& other) noexcept = default;
         ~CommandSignature() = default;
 
-        void Create();
+        CommandSignature& operator=(const CommandSignature& other) = delete;
+        CommandSignature& operator=(CommandSignature&& other) noexcept = default;
+
+        void Create(std::uint32_t size, PipelineState* pipelineState = nullptr);
 
         void AddArgument(D3D12_INDIRECT_ARGUMENT_DESC argumentDesc);
 
-    private:
-        PipelineState& _pipelineState;
+        ComPtr<ID3D12CommandSignature> GetDXCommandSignature() const;
 
+    private:
         std::vector<D3D12_INDIRECT_ARGUMENT_DESC> _arguments;
         ComPtr<ID3D12CommandSignature> _commandSignature;
     };

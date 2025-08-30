@@ -1,5 +1,6 @@
-
 #pragma once
+
+#include "CommandSignature.h"
 
 #include "RenderGraph/RenderPass.h"
 
@@ -31,7 +32,7 @@ namespace render
 		dx12::PipelineState _spotLightShadowsPipeline;
 		dx12::PipelineState _pointLightShadowsPipeline;
 
-		ComPtr<ID3D12CommandSignature> _cmdSignature;
+        dx12::CommandSignature _cmdSignature;
 
 		std::shared_ptr<scene::Scene> _scene;
 		scene::Camera* _camera;

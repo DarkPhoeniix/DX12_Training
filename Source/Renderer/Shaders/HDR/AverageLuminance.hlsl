@@ -1,5 +1,6 @@
 
 #include "../UnifiedRootSignature.hlsli"
+#include "../CommonResources.hlsli"
 
 #define NUM_HISTOGRAM_BINS 256
 
@@ -47,9 +48,11 @@ void main(uint3 localThreadIndex : SV_GroupThreadID)
     
     if (threadIndex == 0)
     {
+        float adaptation = min(FrameCB.DeltaTime * 2.5f, 1.0f);
+        
         float weightedLogAverage = (HistogramShared[0] / max((float) PassConstants.PixelCount - countForThisBin, 1.0)) - 1.0;
         float weightedAverageLuminance = exp2(((weightedLogAverage / (NUM_HISTOGRAM_BINS - 2)) * PassConstants.LogLuminanceRange) + PassConstants.MinLogLuminance);
-        //float adaptedLuminance = PrevAverageLum[0] + (weightedAverageLuminance - PrevAverageLum[0]) * PassConstants.Adaptation;
-        LuminanceOutput[0] = weightedAverageLuminance;
+        float adaptedLuminance = PrevAverageLum[0] + (weightedAverageLuminance - PrevAverageLum[0]) * adaptation;
+        LuminanceOutput[0] = adaptedLuminance;
     }
 }

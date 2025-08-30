@@ -30,7 +30,6 @@ namespace render
 
 	private:
 		dx12::PipelineState _cullShadowsPipeline;
-		dx12::PipelineState _lightShadowsPipeline;
 
 		ComPtr<ID3D12CommandSignature> _cmdSignature;
 

@@ -104,7 +104,7 @@ namespace render
 				.OutputLuminanceIndex = static_cast<std::uint32_t>(averageLuminanceHandle.Index)
 			};
 			commandList.SetCBV(0, context.GetFrame()->GetBuffer()->OffsetGPU());
-			commandList.SetConstants(1, 7, &passConstants);
+			commandList.SetConstants(1, 6, &passConstants);
 
 			// Execute
 

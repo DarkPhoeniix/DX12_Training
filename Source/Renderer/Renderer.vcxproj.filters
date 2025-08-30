@@ -2,151 +2,144 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <FxCompile Include="Shaders\DebugDraw\AABB_gs.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>Shaders\DebugDraw</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\DebugDraw\AABB_ps.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>Shaders\DebugDraw</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\DebugDraw\AABB_vs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\DebugDraw\Armature_gs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\DebugDraw\Armature_ps.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\DebugDraw\Armature_vs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\HDR\AverageLuminance.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\HDR\BuildLuminanceHistogram.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>Shaders\DebugDraw</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\DebugDraw\Cone_gs.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>Shaders\DebugDraw</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\DebugDraw\Cone_ps.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>Shaders\DebugDraw</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\DebugDraw\Cone_vs.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>Shaders\DebugDraw</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\DeferredShading\DeferredShading_cs.hlsl">
-      <Filter>Shaders</Filter>
+    <FxCompile Include="Shaders\DebugDraw\Armature_vs.hlsl">
+      <Filter>Shaders\DebugDraw</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\AntiAliasing\FXAA_Pass2_cs.hlsli">
-      <Filter>Shaders</Filter>
+    <FxCompile Include="Shaders\DebugDraw\Armature_ps.hlsl">
+      <Filter>Shaders\DebugDraw</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\AntiAliasing\FXAA_Pass2H_cs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\AntiAliasing\FXAA_Pass2H_Debug_cs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\AntiAliasing\FXAA_Pass2V_cs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\AntiAliasing\FXAA_Pass2V_Debug_cs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\AntiAliasing\FXAA_Resolve_cs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\GeometryPass\GPass_ps.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\GeometryPass\GPass_vs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\Shadows\LightCulling_PointLight.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\_deprecated\NegativePostFX_cs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\_deprecated\PostFX_cs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\Shadows\ShadowMapping_PointLight_gs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\Shadows\ShadowMapping_PointLight_vs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\Shadows\ShadowMapping_SpotLight_vs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\Skybox\Skybox_cs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\DebugDraw\Sphere_gs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\DebugDraw\Sphere_ps.hlsl">
-      <Filter>Shaders</Filter>
+    <FxCompile Include="Shaders\DebugDraw\Armature_gs.hlsl">
+      <Filter>Shaders\DebugDraw</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\DebugDraw\Sphere_vs.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>Shaders\DebugDraw</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\_deprecated\SwirlPostFX_cs.hlsl">
-      <Filter>Shaders</Filter>
+    <FxCompile Include="Shaders\DebugDraw\Sphere_ps.hlsl">
+      <Filter>Shaders\DebugDraw</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\DebugDraw\Sphere_gs.hlsl">
+      <Filter>Shaders\DebugDraw</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\AmbientOcclusion\SSAOCompute_cs.hlsl">
+      <Filter>Shaders\AmbientOcclusion</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\AmbientOcclusion\SSAOApply_cs.hlsl">
+      <Filter>Shaders\AmbientOcclusion</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\AmbientOcclusion\SSAOBlurHorizontal_cs.hlsl">
+      <Filter>Shaders\AmbientOcclusion</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\AmbientOcclusion\SSAOBlurVertical_cs.hlsl">
+      <Filter>Shaders\AmbientOcclusion</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\GeometryPass\GPass_vs.hlsl">
+      <Filter>Shaders\GeometryPass</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\GeometryPass\GPass_ps.hlsl">
+      <Filter>Shaders\GeometryPass</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\AntiAliasing\FXAA_Pass1_cs.hlsl">
+      <Filter>Shaders\AntiAliasing</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\AntiAliasing\FXAA_Pass2_cs.hlsli">
+      <Filter>Shaders\AntiAliasing</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\AntiAliasing\FXAA_Pass2H_cs.hlsl">
+      <Filter>Shaders\AntiAliasing</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\AntiAliasing\FXAA_Pass2H_Debug_cs.hlsl">
+      <Filter>Shaders\AntiAliasing</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\AntiAliasing\FXAA_Pass2V_cs.hlsl">
+      <Filter>Shaders\AntiAliasing</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\AntiAliasing\FXAA_Pass2V_Debug_cs.hlsl">
+      <Filter>Shaders\AntiAliasing</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\AntiAliasing\FXAA_Resolve_cs.hlsl">
+      <Filter>Shaders\AntiAliasing</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\IBL\IBL_DiffuseIrradianceConvolution_cs.hlsl">
+      <Filter>Shaders\IBL</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\IBL\IBL_EquirectangularToCubemap_cs.hlsl">
+      <Filter>Shaders\IBL</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\IBL\IBL_GenerateBRDFEnvironmentLUT_cs.hlsl">
+      <Filter>Shaders\IBL</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\IBL\IBL_PreFilterEnvironmentMap_cs.hlsl">
+      <Filter>Shaders\IBL</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\HDR\ToneMapping.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>Shaders\HDR</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\IBL\IBL_DiffuseIrradianceConvolution_cs.hlsl" />
-    <FxCompile Include="Shaders\IBL\IBL_EquirectangularToCubemap_cs.hlsl" />
-    <FxCompile Include="Shaders\IBL\IBL_PreFilterEnvironmentMap_cs.hlsl" />
-    <FxCompile Include="Shaders\IBL\IBL_GenerateBRDFEnvironmentLUT_cs.hlsl" />
-    <FxCompile Include="Shaders\AntiAliasing\FXAA_Pass1_cs.hlsl">
-      <Filter>Shaders</Filter>
+    <FxCompile Include="Shaders\HDR\AverageLuminance.hlsl">
+      <Filter>Shaders\HDR</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\DeferredShading\AmbientLighting_cs.hlsl" />
-    <FxCompile Include="Shaders\DeferredShading\AmbientLighting_IBL_cs.hlsl" />
-    <FxCompile Include="Shaders\AmbientOcclusion\SSAOCompute_cs.hlsl" />
-    <FxCompile Include="Shaders\AmbientOcclusion\SSAOApply_cs.hlsl" />
-    <FxCompile Include="Shaders\AmbientOcclusion\SSAOBlurHorizontal_cs.hlsl" />
-    <FxCompile Include="Shaders\AmbientOcclusion\SSAOBlurVertical_cs.hlsl" />
+    <FxCompile Include="Shaders\HDR\BuildLuminanceHistogram.hlsl">
+      <Filter>Shaders\HDR</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\Shadows\LightCulling_PointLight.hlsl">
+      <Filter>Shaders\Shadows</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\Shadows\ShadowMapping_PointLight_gs.hlsl">
+      <Filter>Shaders\Shadows</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\Shadows\ShadowMapping_PointLight_vs.hlsl">
+      <Filter>Shaders\Shadows</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\Shadows\ShadowMapping_SpotLight_vs.hlsl">
+      <Filter>Shaders\Shadows</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\Skybox\Skybox_cs.hlsl">
+      <Filter>Shaders\Skybox</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\_deprecated\NegativePostFX_cs.hlsl">
+      <Filter>Shaders\_deprecated</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\_deprecated\PostFX_cs.hlsl">
+      <Filter>Shaders\_deprecated</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\_deprecated\SwirlPostFX_cs.hlsl">
+      <Filter>Shaders\_deprecated</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\DeferredShading\AmbientLighting_cs.hlsl">
+      <Filter>Shaders\DeferredShading</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\DeferredShading\AmbientLighting_IBL_cs.hlsl">
+      <Filter>Shaders\DeferredShading</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\DeferredShading\DeferredShading_cs.hlsl">
+      <Filter>Shaders\DeferredShading</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RendererPCH.cpp" />
-    <ClCompile Include="Render\Passes\PFX\ToneMapping\AverageLuminancePass.cpp">
-      <Filter>Render\Passes</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\Passes\Debug\DebugBoundingVolumePass.cpp">
-      <Filter>Render\Passes</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\Passes\Debug\DebugArmaturePass.cpp">
-      <Filter>Render\Passes</Filter>
-    </ClCompile>
     <ClCompile Include="Render\Passes\GeometryPass.cpp">
-      <Filter>Render\Passes</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\Passes\PFX\AntiAliasing\FXAAPass.cpp">
-      <Filter>Render\Passes</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\Passes\PFX\ToneMapping\LuminanceHistogramPass.cpp">
       <Filter>Render\Passes</Filter>
     </ClCompile>
     <ClCompile Include="Render\Passes\LightingPass.cpp">
       <Filter>Render\Passes</Filter>
     </ClCompile>
-    <ClCompile Include="Render\Passes\Shadows\ShadowCullPass.cpp">
-      <Filter>Render\Passes</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\Passes\Shadows\ShadowClearPass.cpp">
-      <Filter>Render\Passes</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\Passes\Shadows\ShadowDrawPass.cpp">
-      <Filter>Render\Passes</Filter>
-    </ClCompile>
     <ClCompile Include="Render\Passes\SkyboxPass.cpp">
-      <Filter>Render\Passes</Filter>
-    </ClCompile>
-    <ClCompile Include="Render\Passes\PFX\ToneMapping\ToneMappingPass.cpp">
       <Filter>Render\Passes</Filter>
     </ClCompile>
     <ClCompile Include="Render\Frame\AllocatorPool.cpp">
@@ -236,53 +229,73 @@
     <ClCompile Include="Render\Frame\CacheGPU.cpp">
       <Filter>Render\Frame</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\SceneLoader.cpp" />
-    <ClCompile Include="Render\Passes\AmbientLightingPass.cpp" />
-    <ClCompile Include="Render\Passes\PFX\AmbientOcclusion\SSAOComputePass.cpp" />
-    <ClCompile Include="Render\Passes\PFX\AmbientOcclusion\SSAOApplyPass.cpp" />
-    <ClCompile Include="Render\Passes\PFX\AmbientOcclusion\SSAOBlurPass.cpp" />
-    <ClCompile Include="Core\DescriptorHeapManager.cpp" />
-    <ClCompile Include="Core\TextureManager.cpp" />
-    <ClCompile Include="Core\DXRenderer.cpp" />
-    <ClCompile Include="Core\ResourceTable.cpp" />
-    <ClCompile Include="Core\GeometryCacheManager.cpp" />
+    <ClCompile Include="Core\DXRenderer.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\DescriptorHeapManager.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\GeometryCacheManager.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Passes\AmbientLightingPass.cpp">
+      <Filter>Render\Passes</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\ResourceTable.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\TextureManager.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Passes\Shadows\ShadowClearPass.cpp">
+      <Filter>Render\Passes\Shadows</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Passes\Shadows\ShadowCullPass.cpp">
+      <Filter>Render\Passes\Shadows</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Passes\Shadows\ShadowDrawPass.cpp">
+      <Filter>Render\Passes\Shadows</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Passes\PFX\AntiAliasing\FXAAPass.cpp">
+      <Filter>Render\Passes\PFX\AntiAliasing</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Passes\PFX\AmbientOcclusion\SSAOApplyPass.cpp">
+      <Filter>Render\Passes\PFX\AmbientOcclusion</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Passes\PFX\AmbientOcclusion\SSAOBlurPass.cpp">
+      <Filter>Render\Passes\PFX\AmbientOcclusion</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Passes\PFX\AmbientOcclusion\SSAOComputePass.cpp">
+      <Filter>Render\Passes\PFX\AmbientOcclusion</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Passes\PFX\ToneMapping\AverageLuminancePass.cpp">
+      <Filter>Render\Passes\PFX\ToneMapping</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Passes\PFX\ToneMapping\LuminanceHistogramPass.cpp">
+      <Filter>Render\Passes\PFX\ToneMapping</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Passes\PFX\ToneMapping\ToneMappingPass.cpp">
+      <Filter>Render\Passes\PFX\ToneMapping</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Passes\Debug\DebugArmaturePass.cpp">
+      <Filter>Render\Passes\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="Render\Passes\Debug\DebugBoundingVolumePass.cpp">
+      <Filter>Render\Passes\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\SceneLoader.cpp">
+      <Filter>Scene</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RendererPCH.h" />
-    <ClInclude Include="Render\Passes\PFX\ToneMapping\AverageLuminancePass.h">
-      <Filter>Render\Passes</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\Passes\Debug\DebugBoundingVolumePass.h">
-      <Filter>Render\Passes</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\Passes\Debug\DebugArmaturePass.h">
-      <Filter>Render\Passes</Filter>
-    </ClInclude>
     <ClInclude Include="Render\Passes\GeometryPass.h">
-      <Filter>Render\Passes</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\Passes\PFX\AntiAliasing\FXAAPass.h">
-      <Filter>Render\Passes</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\Passes\PFX\ToneMapping\LuminanceHistogramPass.h">
       <Filter>Render\Passes</Filter>
     </ClInclude>
     <ClInclude Include="Render\Passes\LightingPass.h">
       <Filter>Render\Passes</Filter>
     </ClInclude>
-    <ClInclude Include="Render\Passes\Shadows\ShadowCullPass.h">
-      <Filter>Render\Passes</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\Passes\Shadows\ShadowClearPass.h">
-      <Filter>Render\Passes</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\Passes\Shadows\ShadowDrawPass.h">
-      <Filter>Render\Passes</Filter>
-    </ClInclude>
     <ClInclude Include="Render\Passes\SkyboxPass.h">
-      <Filter>Render\Passes</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\Passes\PFX\ToneMapping\ToneMappingPass.h">
       <Filter>Render\Passes</Filter>
     </ClInclude>
     <ClInclude Include="Render\Frame\AllocatorPool.h">
@@ -411,25 +424,69 @@
     <ClInclude Include="Events\RenderEvent.h">
       <Filter>Events</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\SceneLoader.h" />
-    <ClInclude Include="Render\Passes\AmbientLightingPass.h" />
-    <ClInclude Include="Render\Passes\PFX\AmbientOcclusion\SSAOComputePass.h" />
-    <ClInclude Include="Render\Passes\PFX\AmbientOcclusion\SSAOApplyPass.h" />
-    <ClInclude Include="Render\Passes\PFX\AmbientOcclusion\SSAOBlurPass.h" />
-    <ClInclude Include="Core\DescriptorHeapManager.h" />
-    <ClInclude Include="Core\TextureManager.h" />
-    <ClInclude Include="Core\DXRenderer.h" />
-    <ClInclude Include="Core\ResourceTable.h" />
-    <ClInclude Include="Core\GeometryCacheManager.h" />
+    <ClInclude Include="Core\DXRenderer.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\DescriptorHeapManager.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\GeometryCacheManager.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Passes\AmbientLightingPass.h">
+      <Filter>Render\Passes</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\ResourceTable.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\TextureManager.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Passes\Shadows\ShadowDrawPass.h">
+      <Filter>Render\Passes\Shadows</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Passes\Shadows\ShadowClearPass.h">
+      <Filter>Render\Passes\Shadows</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Passes\Shadows\ShadowCullPass.h">
+      <Filter>Render\Passes\Shadows</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Passes\PFX\AntiAliasing\FXAAPass.h">
+      <Filter>Render\Passes\PFX\AntiAliasing</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Passes\PFX\AmbientOcclusion\SSAOApplyPass.h">
+      <Filter>Render\Passes\PFX\AmbientOcclusion</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Passes\PFX\AmbientOcclusion\SSAOBlurPass.h">
+      <Filter>Render\Passes\PFX\AmbientOcclusion</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Passes\PFX\AmbientOcclusion\SSAOComputePass.h">
+      <Filter>Render\Passes\PFX\AmbientOcclusion</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Passes\PFX\ToneMapping\AverageLuminancePass.h">
+      <Filter>Render\Passes\PFX\ToneMapping</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Passes\PFX\ToneMapping\LuminanceHistogramPass.h">
+      <Filter>Render\Passes\PFX\ToneMapping</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Passes\PFX\ToneMapping\ToneMappingPass.h">
+      <Filter>Render\Passes\PFX\ToneMapping</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Passes\Debug\DebugArmaturePass.h">
+      <Filter>Render\Passes\Debug</Filter>
+    </ClInclude>
+    <ClInclude Include="Render\Passes\Debug\DebugBoundingVolumePass.h">
+      <Filter>Render\Passes\Debug</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\SceneLoader.h">
+      <Filter>Scene</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\CommonResources.hlsli">
       <Filter>Shaders</Filter>
     </None>
     <None Include="Shaders\DepthFuncs.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\_deprecated\LambertLighting.hlsli">
       <Filter>Shaders</Filter>
     </None>
     <None Include="Shaders\LightingCommon.hlsli">
@@ -439,15 +496,6 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="Shaders\PixelPacking.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\_deprecated\PostFX_rootsig.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\_deprecated\SemiAmbientLighting.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\HDR\ToneMapping.hlsli">
       <Filter>Shaders</Filter>
     </None>
     <None Include="PipelineDescriptions\AverageLuminancePipeline.tech">
@@ -498,20 +546,60 @@
     <None Include="PipelineDescriptions\ToneMappingPipeline.tech">
       <Filter>PipelineDescriptions</Filter>
     </None>
-    <None Include="Shaders\CommonConstants.hlsli" />
-    <None Include="PipelineDescriptions\IBL_PreFilterEnvMap.tech" />
-    <None Include="PipelineDescriptions\IBL_BRDFGenerateLUT.tech" />
-    <None Include="Shaders\IBL\IBL_Helpers.hlsli" />
-    <None Include="Shaders\CommonFunctions.hlsli" />
-    <None Include="PipelineDescriptions\AmbientLightingIBLPipeline.tech" />
-    <None Include="PipelineDescriptions\AmbientLightingPipeline.tech" />
-    <None Include="PipelineDescriptions\SSAOBlurHorizontalPipeline.tech" />
-    <None Include="PipelineDescriptions\SSAOBlurVerticalPipeline.tech" />
-    <None Include="PipelineDescriptions\SSAOComputePipeline.tech" />
-    <None Include="PipelineDescriptions\SSAOApplyPipeline.tech" />
-    <None Include="Shaders\AmbientOcclusion\SSAOBlur_cs.hlsli" />
-    <None Include="Core\ResourceTable.inl" />
-    <None Include="Shaders\UnifiedRootSignature.hlsli" />
+    <None Include="Shaders\CommonConstants.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\CommonFunctions.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\UnifiedRootSignature.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="PipelineDescriptions\IBL_BRDFGenerateLUT.tech">
+      <Filter>PipelineDescriptions</Filter>
+    </None>
+    <None Include="PipelineDescriptions\IBL_PreFilterEnvMap.tech">
+      <Filter>PipelineDescriptions</Filter>
+    </None>
+    <None Include="PipelineDescriptions\SSAOBlurHorizontalPipeline.tech">
+      <Filter>PipelineDescriptions</Filter>
+    </None>
+    <None Include="PipelineDescriptions\SSAOApplyPipeline.tech">
+      <Filter>PipelineDescriptions</Filter>
+    </None>
+    <None Include="PipelineDescriptions\SSAOBlurVerticalPipeline.tech">
+      <Filter>PipelineDescriptions</Filter>
+    </None>
+    <None Include="PipelineDescriptions\SSAOComputePipeline.tech">
+      <Filter>PipelineDescriptions</Filter>
+    </None>
+    <None Include="PipelineDescriptions\AmbientLightingPipeline.tech">
+      <Filter>PipelineDescriptions</Filter>
+    </None>
+    <None Include="Core\ResourceTable.inl">
+      <Filter>Core</Filter>
+    </None>
+    <None Include="Shaders\AmbientOcclusion\SSAOBlur_cs.hlsli">
+      <Filter>Shaders\AmbientOcclusion</Filter>
+    </None>
+    <None Include="Shaders\IBL\IBL_Helpers.hlsli">
+      <Filter>Shaders\IBL</Filter>
+    </None>
+    <None Include="Shaders\HDR\ToneMapping.hlsli">
+      <Filter>Shaders\HDR</Filter>
+    </None>
+    <None Include="Shaders\_deprecated\LambertLighting.hlsli">
+      <Filter>Shaders\_deprecated</Filter>
+    </None>
+    <None Include="Shaders\_deprecated\PostFX_rootsig.hlsli">
+      <Filter>Shaders\_deprecated</Filter>
+    </None>
+    <None Include="Shaders\_deprecated\SemiAmbientLighting.hlsli">
+      <Filter>Shaders\_deprecated</Filter>
+    </None>
+    <None Include="PipelineDescriptions\AmbientLightingIBLPipeline.tech">
+      <Filter>Shaders\DeferredShading</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include="PipelineDescriptions\AABBRenderPipeline.blend">
@@ -547,7 +635,9 @@
     <Text Include="PipelineDescriptions\SkyboxPipeline.tech">
       <Filter>PipelineDescriptions</Filter>
     </Text>
-    <Text Include="PipelineDescriptions\IBL_DiffuseIrradianceConvolution.tech" />
+    <Text Include="PipelineDescriptions\IBL_DiffuseIrradianceConvolution.tech">
+      <Filter>PipelineDescriptions</Filter>
+    </Text>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Render">
@@ -592,8 +682,56 @@
     <Filter Include="Render\Helpers">
       <UniqueIdentifier>{f98000ae-d9e5-496f-a238-ab49e86ccebb}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Render\SceneProcessors">
-      <UniqueIdentifier>{ef11173c-8bfe-4456-977c-ffb037dcbc09}</UniqueIdentifier>
+    <Filter Include="Core">
+      <UniqueIdentifier>{b471a2ca-ae2e-46f5-a381-d49979a645ad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Passes\PFX">
+      <UniqueIdentifier>{6134efa8-471e-43e1-bfbe-93a60ad26f48}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Passes\Debug">
+      <UniqueIdentifier>{7c34d9b3-c3d6-456c-bbf7-1c9e71c46b1a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Passes\Shadows">
+      <UniqueIdentifier>{832bef58-ae9f-4d0e-a1af-ca77c6ab30a9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Passes\PFX\AntiAliasing">
+      <UniqueIdentifier>{203b5882-57ad-49bf-985c-7abc901f4465}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Passes\PFX\ToneMapping">
+      <UniqueIdentifier>{e4f9c429-db53-4b21-ae07-3e17edd714a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Passes\PFX\AmbientOcclusion">
+      <UniqueIdentifier>{428481c2-2296-48dd-a616-3dc7d84b2dad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\AmbientOcclusion">
+      <UniqueIdentifier>{2aa6c347-f570-4e1a-900e-80e53b035247}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\DebugDraw">
+      <UniqueIdentifier>{14cf90d9-d26a-43d8-84d6-71fb02fbcd2f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Shadows">
+      <UniqueIdentifier>{c5ccf19b-75b7-4ac6-8c3a-fb02b9742b00}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Skybox">
+      <UniqueIdentifier>{94a534b4-2e11-43a4-bf44-1ee4912e46a0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\GeometryPass">
+      <UniqueIdentifier>{b236510f-000c-4735-a329-a74aa33c95bf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\DeferredShading">
+      <UniqueIdentifier>{f8bb0057-b5c4-4dc8-b31a-761e832e0c85}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\AntiAliasing">
+      <UniqueIdentifier>{c28998fe-3e84-423d-ad36-64437802182b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\IBL">
+      <UniqueIdentifier>{767e6fbf-0eb5-4dc9-8ccd-b9678ba7b590}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\HDR">
+      <UniqueIdentifier>{9f32fcc9-ac02-41ef-9eeb-fe373adc9abb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\_deprecated">
+      <UniqueIdentifier>{bb7043aa-e993-420f-89fb-3d43a4b5ef82}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

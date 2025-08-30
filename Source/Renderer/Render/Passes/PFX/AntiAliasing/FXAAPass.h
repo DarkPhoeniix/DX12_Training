@@ -1,5 +1,7 @@
 #pragma once
 
+#include "CommandSignature.h"
+
 #include "RenderGraph/RenderPass.h"
 
 #include "PipelineState.h"
@@ -33,7 +35,7 @@ namespace render
 		dx12::PipelineState _FXAA_Pass2H_Pipeline;
 		dx12::PipelineState _FXAA_Pass2V_Pipeline;
 
-		ComPtr<ID3D12CommandSignature> _cmdSignature;
+		dx12::CommandSignature _cmdSignature;
 
 		std::shared_ptr<dx12::Resource> _paramsReset;
 

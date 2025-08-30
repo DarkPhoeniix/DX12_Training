@@ -15,15 +15,16 @@ struct IndirectCommand
     uint  SkinBufferSize;
     uint  SkinBufferStride;     // 32
     
-    //uint2 IndexBufferAddress;
-    //uint  IndexBufferSize;
-    //uint  IndexBufferStride;    // 48
+    uint2 IndexBufferAddress;
+    uint IndexBufferSize;
+    uint IndexBufferStride;     // 48
     
     uint2 FrameBufferAddress;
     uint  InstanceIndex;
     uint  LightIndex;           // 64
     
-    uint4 DrawArguments;        // 80
+    uint DrawArguments[5];      // 84
+    uint pad[3];                // 96
 };
 
 struct MinMax
@@ -60,21 +61,20 @@ void main(uint3 groupId : SV_GroupID, uint groupIndex : SV_GroupIndex)
     // than commands.
     if (index < PassCB.CommandsCount)
     {
-        OutputCommands.Append(InputCommands[index]);
-        //LightDesc light = Lights[PassCB.LightIndex];
-        //float dmin = 0;
-        //
-        //if (light.Position.x < AABB[index].Min.x) dmin += pow(light.Position.x - AABB[index].Min.x, 2); else
-        //if (light.Position.x > AABB[index].Max.x) dmin += pow(light.Position.x - AABB[index].Max.x, 2);
-        //if (light.Position.y < AABB[index].Min.y) dmin += pow(light.Position.y - AABB[index].Min.y, 2); else
-        //if (light.Position.y > AABB[index].Max.y) dmin += pow(light.Position.y - AABB[index].Max.y, 2);
-        //if (light.Position.z < AABB[index].Min.z) dmin += pow(light.Position.z - AABB[index].Min.z, 2); else
-        //if (light.Position.z > AABB[index].Max.z) dmin += pow(light.Position.z - AABB[index].Max.z, 2);
-        //
-        //if (dmin <= (light.Range * light.Range))
-        //{
-        //    IndirectCommand command = InputCommands[index];
-        //    OutputCommands.Append(command);
-        //}
+        LightDesc light = Lights[PassCB.LightIndex];
+        float dmin = 0;
+        
+        if (light.Position.x < AABB[index].Min.x) dmin += pow(light.Position.x - AABB[index].Min.x, 2); else
+        if (light.Position.x > AABB[index].Max.x) dmin += pow(light.Position.x - AABB[index].Max.x, 2);
+        if (light.Position.y < AABB[index].Min.y) dmin += pow(light.Position.y - AABB[index].Min.y, 2); else
+        if (light.Position.y > AABB[index].Max.y) dmin += pow(light.Position.y - AABB[index].Max.y, 2);
+        if (light.Position.z < AABB[index].Min.z) dmin += pow(light.Position.z - AABB[index].Min.z, 2); else
+        if (light.Position.z > AABB[index].Max.z) dmin += pow(light.Position.z - AABB[index].Max.z, 2);
+        
+        if (dmin <= (light.Range * light.Range))
+        {
+            IndirectCommand command = InputCommands[index];
+            OutputCommands.Append(command);
+        }
     }
 }

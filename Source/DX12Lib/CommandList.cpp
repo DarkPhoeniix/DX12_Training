@@ -325,10 +325,10 @@ namespace dx12
         _commandList->Dispatch(xThreadGroupsCount, yThreadGroupsCount, zThreadGroupsCount);
     }
 
-    void CommandList::ExecuteIndirect(ComPtr<ID3D12CommandSignature> cmdSignature, std::uint32_t maxCommandCount, Resource& argumentBuffer, std::shared_ptr<Resource> countBuffer, std::uint32_t argumentBufferOffset, std::uint32_t countBufferOffset)
+    void CommandList::ExecuteIndirect(const CommandSignature& commandSignature, std::uint32_t maxCommandCount, Resource& argumentBuffer, std::shared_ptr<Resource> countBuffer, std::uint32_t argumentBufferOffset, std::uint32_t countBufferOffset)
     {
         ID3D12Resource* counter = countBuffer ? countBuffer->GetDXResource().Get() : nullptr;
-        _commandList->ExecuteIndirect(cmdSignature.Get(), maxCommandCount, argumentBuffer.GetDXResource().Get(), argumentBufferOffset, counter, countBufferOffset);
+        _commandList->ExecuteIndirect(commandSignature.GetDXCommandSignature().Get(), maxCommandCount, argumentBuffer.GetDXResource().Get(), argumentBufferOffset, counter, countBufferOffset);
     }
 
     void CommandList::SetDescriptorHeaps(const std::vector<ID3D12DescriptorHeap*> descriptorHeaps)

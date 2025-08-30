@@ -12,6 +12,15 @@
 
 #include "ResourceBarrier.h"
 
+namespace
+{
+	struct PassConstants
+	{
+		DirectX::XMVECTOR BoneStart;
+		DirectX::XMVECTOR BoneEnd;
+	};
+} // namespace unnamed
+
 namespace render
 {
 	DebugArmaturePass::DebugArmaturePass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
@@ -19,7 +28,7 @@ namespace render
 		, _scene(scene)
 		, _camera(camera)
 	{
-		_debugArmaturePipeline.Parse("PipelineDescriptions\\ArmatureDEbugPipeline.tech");
+		_debugArmaturePipeline.Parse("PipelineDescriptions\\ArmatureDebugPipeline.tech");
 	}
 
 	void DebugArmaturePass::Setup(rg::RenderPassBuilder& builder)
@@ -53,32 +62,29 @@ namespace render
 			commandList.SetViewport(_camera->GetViewport());
 			commandList.SetRenderTarget(&rtv.CpuHandle, &dsv.CpuHandle);
 
-			for (auto& node : _scene->GetRootNodes())
+			commandList.SetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
+
+			commandList.SetCBV(0, context.GetFrame()->GetBuffer()->OffsetGPU());
+
+			auto meshes = _scene->FilterNodesByComponent("Mesh");
+			for (size_t i = 0; i < meshes.size(); ++i)
 			{
-				std::shared_ptr<scene::Armature> arm = node->GetComponentAs<scene::Armature>("Armature");
-				std::shared_ptr<scene::Transformation> transform = node->GetComponentAs<scene::Transformation>("Transformation");
+				std::shared_ptr<scene::Armature> armature = meshes[i]->GetComponentAs<scene::Armature>("Armature");
+				std::shared_ptr<scene::Transformation> transform = meshes[i]->GetComponentAs<scene::Transformation>("Transformation");
 
-				if (arm)
+				if (armature)
 				{
-					DirectX::XMMATRIX vp = _camera->ViewProjection();
-					DirectX::XMVECTOR* data = arm->BoneDebugTransforms->Map<DirectX::XMVECTOR>();
-
-					commandList.SetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
-
-					commandList.SetConstants(0, 16, &vp);
-					commandList.SetSRV(2, arm->BoneDebugTransforms->OffsetGPU(0));
-
-					const auto& sortedBones = arm->GetSortedBones();
-					int ind = 0;
+					const auto& sortedBones = armature->GetSortedBones();
 					for (const auto& bone : sortedBones)
 					{
 						for (const auto& child : bone->Children)
 						{
-							data[0] = DirectX::XMVector4Transform(bone->GlobalTransform.r[3], transform->Transform);
-							data[1] = DirectX::XMVector4Transform(child->GlobalTransform.r[3], transform->Transform);
-
-							commandList.SetConstants(1, 4, &data[0]);
-							commandList.SetConstants(1, 4, &data[1], 4);
+							PassConstants passCB
+							{
+								.BoneStart = DirectX::XMVector4Transform(bone->GlobalTransform.r[3], transform->Transform),
+								.BoneEnd = DirectX::XMVector4Transform(child->GlobalTransform.r[3], transform->Transform)
+							};
+							commandList.SetConstants(1, 8, &passCB);
 
 							commandList.Draw(1);
 						}

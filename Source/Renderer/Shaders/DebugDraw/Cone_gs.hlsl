@@ -3,12 +3,12 @@
 #include "../CommonConstants.hlsli"
 #include "../CommonResources.hlsli"
 
-struct Geometryinput
+struct GeometryInput
 {
     uint Primitive : INDEX;
 };
 
-struct Pixelinput
+struct PixelInput
 {
     float4 Position : SV_Position;
 };
@@ -36,7 +36,7 @@ float3 SphericalToCartesian(float radius, float polar, float azimuth)
 static const int NUM_SEGMENTS = 15;
 
 [maxvertexcount(256)]
-void main(point Geometryinput input[1], inout LineStream<Pixelinput> lineStream)
+void main(point GeometryInput input[1], inout LineStream<PixelInput> lineStream)
 {
     float3 up = float3(0, 1, 0); // Original cone up direction
     float3 newY = normalize(PassCB.Direction);
@@ -50,7 +50,7 @@ void main(point Geometryinput input[1], inout LineStream<Pixelinput> lineStream)
         float3 positionLocal = mul(float3(0.0f, 0.0f, 0.0f), rotationMatrix);
         positionLocal += PassCB.Position;
         float4 position = mul(float4(positionLocal, 1.0f), FrameCB.ViewProjection);
-        lineStream.Append((Pixelinput) position);
+        lineStream.Append((PixelInput) position);
         
         
         float angle = 2.0f * k_PI * i / NUM_SEGMENTS;
@@ -59,9 +59,9 @@ void main(point Geometryinput input[1], inout LineStream<Pixelinput> lineStream)
         positionLocal += PassCB.Position;
         position = mul(float4(positionLocal, 1.0f), FrameCB.ViewProjection);
         
-        lineStream.Append((Pixelinput) position);
+        lineStream.Append((PixelInput) position);
         lineStream.RestartStrip();
-        lineStream.Append((Pixelinput) position);
+        lineStream.Append((PixelInput) position);
         
         angle = 2.0f * k_PI * (i - 1) / NUM_SEGMENTS;
         positionLocal = float3(PassCB.Radius * sin(angle), PassCB.Height, PassCB.Radius * cos(angle));
@@ -69,7 +69,7 @@ void main(point Geometryinput input[1], inout LineStream<Pixelinput> lineStream)
         positionLocal += PassCB.Position;
         position = mul(float4(positionLocal, 1.0f), FrameCB.ViewProjection);
         
-        lineStream.Append((Pixelinput) position);
+        lineStream.Append((PixelInput) position);
         lineStream.RestartStrip();
     }
 }

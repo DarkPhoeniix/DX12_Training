@@ -83,15 +83,12 @@ namespace render
 
 		{
 			// https://microsoft.github.io/DirectX-Specs/d3d/IndirectDrawing.html#root-constants--vertex-buffers
-			D3D12_INDIRECT_ARGUMENT_DESC argsDesc[1];
-			argsDesc[0].Type = D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH;
+			D3D12_INDIRECT_ARGUMENT_DESC argsDesc;
+			argsDesc.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH;
 
-			D3D12_COMMAND_SIGNATURE_DESC commandSignatureDesc = {};
-			commandSignatureDesc.pArgumentDescs = argsDesc;
-			commandSignatureDesc.NumArgumentDescs = _countof(argsDesc);
-			commandSignatureDesc.ByteStride = sizeof(D3D12_DISPATCH_ARGUMENTS);
+            _cmdSignature.AddArgument(argsDesc);
 
-			dx12::Device::GetDXDevice()->CreateCommandSignature(&commandSignatureDesc, nullptr, IID_PPV_ARGS(&_cmdSignature));
+			_cmdSignature.Create(sizeof(D3D12_DISPATCH_ARGUMENTS), nullptr);
 		}
 
 		{

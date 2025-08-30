@@ -31,8 +31,3 @@ namespace render
 		scene::Camera* _camera;
 	};
 } // namespace render
-
-class AverageLuminancePass
-{
-};
-

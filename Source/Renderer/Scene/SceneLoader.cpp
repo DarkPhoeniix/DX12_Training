@@ -280,10 +280,6 @@ namespace scene::helpers
 
         DescriptorHandle skyboxTextureHandle = _resourceTable->GetStaticResourceHandle(skyboxTexture->GetAsSRV());
 
-        for (std::uint32_t i = 0; i < preFilteredEnvTextureDesc.GetMipLevels(); ++i)
-        {
-        }
-
         // Transition resources
 
         std::vector<dx12::ResourceBarrier> barriers =
@@ -373,7 +369,6 @@ namespace scene::helpers
 
         // Create SRV/UAV for the textures
 
-        //std::uint32_t currentResourceOffset = _descHeap.GetCurrentOffset();
 		DescriptorHandle brdfLUTTextureHandle = _resourceTable->AddStaticResourceView(brdfLUT->GetAsUAV());
 
         // Transition resources
