@@ -104,6 +104,8 @@ namespace render
 			commandList.TransitionBarriers(barriers);
 
 			commandList.ClearDSV(depthHandle.CpuHandle, D3D12_CLEAR_FLAG_DEPTH);
+			float color[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+			commandList.ClearRTV(albedoMetallicHandle.CpuHandle, color, &_camera->GetViewport());
 
 			context.BindBindlessTable(commandList);
 

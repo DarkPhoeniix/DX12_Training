@@ -3,6 +3,8 @@
 #include "../CommonResources.hlsli"
 #include "../LightingCommon.hlsli"
 
+#define ALPHA_THRESHOLD 0.1f
+
 struct PSinput
 {
     float4 WorldPosition    : POSITION0;
@@ -26,7 +28,6 @@ struct PassConstants
 
 ConstantBuffer<PassConstants> PassCB : register(b1);
 
-[earlydepthstencil]
 PSOutput main(PSinput IN)
 {
     StructuredBuffer<ModelDesc> Instances = ResourceDescriptorHeap[FrameCB.InstancesBufferIndex];
@@ -41,7 +42,9 @@ PSOutput main(PSinput IN)
     float2 uv                   = IN.Texture;
     uv.y                        = 1.0f - uv.y;
     
-    float3 albedo               = AlbedoTexture.Sample(LinearWrapSampler, uv).rgb;
+    float4 color                = AlbedoTexture.Sample(LinearWrapSampler, uv).rgba;
+    clip(color.a - ALPHA_THRESHOLD); // Discard pixel if alpha is below threshold
+    
     float3 normalMap            = NormalTexture.Sample(PointWrapSampler, uv).rgb;
     float metalness             = MetalnessTexture.Sample(PointWrapSampler, uv).x;
     float roughness             = RoughnessTexture.Sample(PointWrapSampler, uv).x;
@@ -57,7 +60,7 @@ PSOutput main(PSinput IN)
 
     // Setup output buffer
     PSOutput output;
-    output.AlbedoMetalness      = float4(albedo, metalness);
+    output.AlbedoMetalness      = float4(color.rgb, metalness);
     output.NormalRougness       = float4(finalNormal, roughness);
     
     return output;
