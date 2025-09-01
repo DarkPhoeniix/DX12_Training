@@ -567,20 +567,51 @@ namespace scene::helpers
         Json::Value materialData;
         file >> materialData;
 
-        std::string albedoFilepath          = filepath + '/' + materialData["Albedo"].asString();
-        std::string normalFilepath          = filepath + '/' + materialData["Normal"].asString();
-        std::string metalnessFilepath       = filepath + '/' + materialData["Metalness"].asString();
-        std::string roughnessFilepath       = filepath + '/' + materialData["Roughness"].asString();
-
-        component->AlbedoTextureHandle      = _textureManager->EnqueueTexture(albedoFilepath);
-		component->NormalMapTextureHandle   = _textureManager->EnqueueTexture(normalFilepath);
-		component->MetalnessTextureHandle   = _textureManager->EnqueueTexture(metalnessFilepath);
-		component->RoughnessTextureHandle   = _textureManager->EnqueueTexture(roughnessFilepath);
-
-		std::shared_ptr<dx12::Resource> albedoTexture = _textureManager->GetTexture(component->AlbedoTextureHandle);
-		std::shared_ptr<dx12::Resource> normalTexture = _textureManager->GetTexture(component->NormalMapTextureHandle);
-		std::shared_ptr<dx12::Resource> metalnessTexture = _textureManager->GetTexture(component->MetalnessTextureHandle);
-		std::shared_ptr<dx12::Resource> roughnessTexture = _textureManager->GetTexture(component->RoughnessTextureHandle);
+        if (const Json::Value& albedoTextureNode = materialData["AlbedoTexture"]; !albedoTextureNode.isNull())
+        {
+            std::string albedoFilepath = filepath + '/' + albedoTextureNode.asString();
+            component->AlbedoTextureHandle = _textureManager->EnqueueTexture(albedoFilepath);
+        }
+        if (const Json::Value& albedoNode = materialData["Albedo"]; !albedoNode.isNull())
+        {
+            component->AlbedoColor = ParseVector(albedoNode.asString());
+        }
+        if (const Json::Value& normalTextureNode = materialData["NormalTexture"]; !normalTextureNode.isNull())
+        {
+            std::string normalFilepath = filepath + '/' + normalTextureNode.asString();
+            component->NormalMapTextureHandle = _textureManager->EnqueueTexture(normalFilepath);
+        }
+        if (const Json::Value& metalnessTextureNode = materialData["MetallicTexture"]; !metalnessTextureNode.isNull())
+        {
+            std::string metalnessFilepath = filepath + '/' + metalnessTextureNode.asString();
+            component->MetalnessTextureHandle = _textureManager->EnqueueTexture(metalnessFilepath);
+        }
+        if (const Json::Value& metalnessValueNode = materialData["Metallic"]; !metalnessValueNode.isNull())
+        {
+            component->MetallicValue = metalnessValueNode.asFloat();
+        }
+        if (const Json::Value& roughnessNode = materialData["RoughnessTexture"]; !roughnessNode.isNull())
+        {
+            std::string roughnessFilepath = filepath + '/' + roughnessNode.asString();
+            component->RoughnessTextureHandle = _textureManager->EnqueueTexture(roughnessFilepath);
+        }
+        if (const Json::Value& roughnessValueNode = materialData["Roughness"]; !roughnessValueNode.isNull())
+        {
+            component->RoughnessValue = roughnessValueNode.asFloat();
+        }
+        if (const Json::Value& emissionNode = materialData["EmissionTexture"]; !emissionNode.isNull())
+        {
+            std::string emissionFilepath = filepath + '/' + emissionNode.asString();
+            component->EmissionTextureHandle = _textureManager->EnqueueTexture(emissionFilepath);
+        }
+        if (const Json::Value& emissionColorNode = materialData["EmissionColor"]; !emissionColorNode.isNull())
+        {
+            component->EmissionColor = ParseVector(emissionColorNode.asString());
+        }
+        if (const Json::Value& emissionIntensityNode = materialData["EmissionIntensity"]; !emissionIntensityNode.isNull())
+        {
+            component->EmissionIntensity = emissionIntensityNode.asFloat();
+        }
     }
 
     void SceneLoader::LoadComponent(const std::string& filepath, Json::Value& jsonValue, std::shared_ptr<Mesh> component, dx12::CommandList& commandList)

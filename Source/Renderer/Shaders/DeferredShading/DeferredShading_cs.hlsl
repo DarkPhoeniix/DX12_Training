@@ -10,6 +10,7 @@ struct PassConstants
 {
     uint AlbedoMetallicTextureIndex;
     uint NormalRoughnessTextureIndex;
+    uint EmissionTextureIndex;
     uint DepthTextureIndex;
     uint TargetTextureIndex;
 };
@@ -30,27 +31,30 @@ void main(uint3 DTid : SV_DispatchThreadID)
     
     Texture2D AlbedoMetallicTexture             = ResourceDescriptorHeap[PassCB.AlbedoMetallicTextureIndex];
     Texture2D NormalRoughnessTexture            = ResourceDescriptorHeap[PassCB.NormalRoughnessTextureIndex];
-    Texture2D DepthTexture                      = ResourceDescriptorHeap[PassCB.DepthTextureIndex];
+    Texture2D<float3> EmissionTexture           = ResourceDescriptorHeap[PassCB.EmissionTextureIndex];
+    Texture2D<float> DepthTexture               = ResourceDescriptorHeap[PassCB.DepthTextureIndex];
     RWTexture2D<float4> TargetTexture           = ResourceDescriptorHeap[PassCB.TargetTextureIndex];
     
     StructuredBuffer<LightDesc> LightsBuffer    = ResourceDescriptorHeap[FrameCB.LightsBufferIndex];
     
     // Setup surface
     Surface surface;
-    float depth = DepthTexture.Load(uint3(DTid.xy, 0)).r;
+    uint3 textureLocation = uint3(DTid.xy, 0);
+    float depth = DepthTexture.Load(textureLocation);
     surface.Position = ReconstructPosW(depth, DTid.xy, FrameCB.WindowSize, FrameCB.InvProjection, FrameCB.InvView);
     surface.NDCPosition = mul(surface.Position, FrameCB.ViewProjection);
-    surface.Albedo = float4(AlbedoMetallicTexture.Load(uint3(DTid.xy, 0)).rgb, 1.0f);
-    surface.Normal = float4(NormalRoughnessTexture.Load(uint3(DTid.xy, 0)).xyz, 0.0f);
-    surface.Metallic = AlbedoMetallicTexture.Load(uint3(DTid.xy, 0)).a;
-    surface.Roughness = NormalRoughnessTexture.Load(uint3(DTid.xy, 0)).a;
-    surface.FinalColor = TargetTexture.Load(uint3(DTid.xy, 0));
+    surface.Albedo = AlbedoMetallicTexture.Load(textureLocation).rgb;
+    surface.Metallic = AlbedoMetallicTexture.Load(textureLocation).a;
+    surface.Normal = NormalRoughnessTexture.Load(textureLocation).xyz;
+    surface.Roughness = NormalRoughnessTexture.Load(textureLocation).a;
+    surface.Emission = EmissionTexture.Load(textureLocation);
+    surface.FinalColor = TargetTexture.Load(textureLocation);
     
     // Direct lighting
     {
         float3 F0 = float3(0.04f, 0.04f, 0.04f);
         // Metallic factor
-        F0 = lerp(F0, surface.Albedo.rgb, surface.Metallic);
+        F0 = lerp(F0, surface.Albedo, surface.Metallic);
         float3 kS = max(0.0f, FresnelSchlick(surface, F0));
         float3 kD = 1.0 - kS;
         kD *= 1.0 - surface.Metallic;
@@ -70,14 +74,13 @@ void main(uint3 DTid : SV_DispatchThreadID)
             
             float3 specularColor = (F * G * D) / max(0.00001f, (4.0f * surface.NdotL * surface.NdotV));
             
-            float3 lightAttenuation = CalculateAttenuation(light, surface) * light.Color.rgb * light.Intesity;
-            float3 diffuseColor = surface.Albedo.rgb * kD;
+            float3 lightAttenuation = CalculateAttenuation(light, surface) * light.Color * light.Intesity;
+            float3 diffuseColor = surface.Albedo * kD;
             float3 surfaceColor = (diffuseColor + specularColor) * surface.NdotL;
             
-            float3 lightingModel = surfaceColor * lightAttenuation;
+            float3 lightingModel = surfaceColor * lightAttenuation + surface.Emission;
             
             float shadowAttenuation = CalculateShadowAttenuation_PCF3x3(light, surface);
-            //float shadowAttenuation = 1.0f;
             lightingModel *= (LightsBuffer[i].CastShadows != 0) ? shadowAttenuation : 1.0f;
             
             surface.FinalColor += float4(lightingModel, 0.0f);
@@ -113,11 +116,11 @@ void SetLightParams(in LightDesc light, inout Surface surface)
         
     surface.ViewDirection = float4(eyeDir, 0.0f);
     surface.ToLight = toLight;
-    surface.Reflect = float4(reflect(-eyeDir, surface.Normal.xyz), 0.0f);
+    surface.Reflect = float4(reflect(-eyeDir, surface.Normal), 0.0f);
     surface.DistanceToL = min(light.Range, distanceToLight);
-    surface.NdotV = max(dot(surface.Normal.xyz, eyeDir), 0.0f);
-    surface.NdotL = max(dot(surface.Normal.xyz, lightDirection), 0.0f);
-    surface.NdotH = max(dot(surface.Normal.xyz, halfway), 0.0f);
+    surface.NdotV = max(dot(surface.Normal, eyeDir), 0.0f);
+    surface.NdotL = max(dot(surface.Normal, lightDirection), 0.0f);
+    surface.NdotH = max(dot(surface.Normal, halfway), 0.0f);
 }
 
 float CalculateShadowAttenuation_PCF3x3(in LightDesc light, in Surface surface)

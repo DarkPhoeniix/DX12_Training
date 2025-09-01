@@ -472,8 +472,14 @@ namespace render
             std::shared_ptr<scene::Light> lightComponent = lightEntity->GetComponentAs<scene::Light>("Light");
             std::shared_ptr<scene::Transformation> transformComponent = lightEntity->GetComponentAs<scene::Transformation>("Transformation");
 
-			std::shared_ptr<dx12::Resource> shadowMap = TextureManager::Get().GetTexture(lightComponent->ShadowMapHandle);
-			DescriptorHandle shadowMapHandle = _resourceTable.GetStaticResourceHandle(shadowMap->GetAsSRV());
+            std::uint32_t shadowMapIndex = -1;
+
+            if (lightComponent->CastShadows)
+            {
+                std::shared_ptr<dx12::Resource> shadowMap = TextureManager::Get().GetTexture(lightComponent->ShadowMapHandle);
+                DescriptorHandle shadowMapHandle = _resourceTable.GetStaticResourceHandle(shadowMap->GetAsSRV());
+                shadowMapIndex = shadowMapHandle.Index;
+            }
 
             auto views = GetLightViews(lightEntity);
             XMMATRIX proj = XMMatrixIdentity();
@@ -509,7 +515,7 @@ namespace render
                 .PerspectiveValues = { proj.r[2].m128_f32[2], proj.r[3].m128_f32[2] },
                 .ViewProj = views,
 
-                .ShadowMapIndex = shadowMapHandle.Index
+                .ShadowMapIndex = shadowMapIndex
             };
         }
 
@@ -554,6 +560,7 @@ namespace render
             }
 
             std::uint32_t albedoTextureIndex = -1;
+            std::uint32_t emissionTextureIndex = -1;
             std::uint32_t normalMapIndex = -1;
             std::uint32_t metalnessTextureIndex = -1;
             std::uint32_t roughnessTextureIndex = -1;
@@ -561,6 +568,7 @@ namespace render
             if (materialComponent)
             {
                 std::shared_ptr<dx12::Resource> albedoTexture = TextureManager::Get().GetTexture(materialComponent->AlbedoTextureHandle);
+                std::shared_ptr<dx12::Resource> emissionTexture = TextureManager::Get().GetTexture(materialComponent->EmissionTextureHandle);
                 std::shared_ptr<dx12::Resource> normalMapTexture = TextureManager::Get().GetTexture(materialComponent->NormalMapTextureHandle);
                 std::shared_ptr<dx12::Resource> metalnessTexture = TextureManager::Get().GetTexture(materialComponent->MetalnessTextureHandle);
                 std::shared_ptr<dx12::Resource> roughnessTexture = TextureManager::Get().GetTexture(materialComponent->RoughnessTextureHandle);
@@ -568,6 +576,10 @@ namespace render
                 if (albedoTexture)
                 {
                     albedoTextureIndex = _resourceTable.GetStaticResourceHandle(albedoTexture->GetAsSRV()).Index;
+                }
+                if (emissionTexture)
+                {
+                    emissionTextureIndex = _resourceTable.GetStaticResourceHandle(emissionTexture->GetAsSRV()).Index;
                 }
                 if (normalMapTexture)
                 {
@@ -588,9 +600,16 @@ namespace render
             {
                 .Transform = transformComponent->Transform,
                 .AlbedoTextureIndex = albedoTextureIndex,
+                .EmissionTextureIndex = emissionTextureIndex,
                 .NormalMapTextureIndex = normalMapIndex,
                 .MetalnessTextureIndex = metalnessTextureIndex,
                 .RoughnessTextureIndex = roughnessTextureIndex,
+
+                .EmissionIntensity = materialComponent ? materialComponent->EmissionIntensity : 0.0f,
+                .MetallicValue = materialComponent ? materialComponent->MetallicValue : 0.0f,
+                .RoughnessValue = materialComponent ? materialComponent->RoughnessValue : 1.0f,
+                .AlbedoColor = materialComponent ? materialComponent->AlbedoColor : DirectX::XMVectorSet(1.0f, 0.0f, 1.0f, 1.0f),
+                .EmissionColor = materialComponent ? materialComponent->EmissionColor : DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f),
 
                 .HasMesh = 1,
                 .BonesBufferIndex = bonesBufferIndex
