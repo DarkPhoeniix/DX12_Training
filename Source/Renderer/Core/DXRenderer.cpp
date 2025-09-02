@@ -32,9 +32,10 @@
 #include "Render/Passes/Debug/DebugArmaturePass.h"
 #include "Render/Passes/Debug/DebugBoundingVolumePass.h"
 #include "Render/Passes/AmbientLightingPass.h"
-#include "Render/Passes/PFX/AntiAliasing/FXAAPass.h"
 #include "Render/Passes/GeometryPass.h"
 #include "Render/Passes/LightingPass.h"
+#include "Render/Passes/PFX/AntiAliasing/FXAAPass.h"
+#include "Render/Passes/PFX/Bloom/BrightnessFilterPass.h"
 #include "Render/Passes/PFX/ToneMapping/AverageLuminancePass.h"
 #include "Render/Passes/PFX/ToneMapping/LuminanceHistogramPass.h"
 #include "Render/Passes/PFX/ToneMapping/ToneMappingPass.h"
@@ -788,6 +789,7 @@ namespace render
             {
                 _renderGraph.AddPass(std::make_shared<FXAAPass>(_scene, _cameraComponent.get()));
             }
+            _renderGraph.AddPass(std::make_shared<BrightnessFilterPass>(_scene, _cameraComponent.get()));
             _renderGraph.AddPass(std::make_shared<LuminanceHistogramPass>(_scene, _cameraComponent.get()));
             _renderGraph.AddPass(std::make_shared<AverageLuminancePass>(_scene, _cameraComponent.get()));
             _renderGraph.AddPass(std::make_shared<ToneMappingPass>(_scene, _cameraComponent.get()));

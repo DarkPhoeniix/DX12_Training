@@ -5,7 +5,6 @@
 #include "CommandList.h"
 #include "ResourceBarrier.h"
 
-#include "Scene/Entity/Components/Material.h"
 #include "Scene/Entity/Components/Mesh.h"
 
 #include "Utility/DebugInfo.h"

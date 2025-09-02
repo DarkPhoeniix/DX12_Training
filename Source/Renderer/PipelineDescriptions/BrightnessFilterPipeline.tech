@@ -1,0 +1,7 @@
+{
+	"Type": "BrightnessFilterTechnique",
+
+	"IsGraphicsPipeline": false,
+
+	"CS": "Shaders\\BrightnessFilter_cs.cso"
+}

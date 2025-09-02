@@ -2,7 +2,7 @@
 
 #include "../UnifiedRootSignature.hlsli"
 #include "../CommonResources.hlsli"
-#include "ToneMapping.hlsli"
+#include "../ToneMapping.hlsli"
 
 #define NUM_HISTOGRAM_BINS 256
 #define THREADS_PER_DIMENSION 16

@@ -130,6 +130,7 @@
     <FxCompile Include="Shaders\DeferredShading\DeferredShading_cs.hlsl">
       <Filter>Shaders\DeferredShading</Filter>
     </FxCompile>
+    <FxCompile Include="Shaders\Bloom\BrightnessFilter_cs.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RendererPCH.cpp" />
@@ -286,6 +287,7 @@
     <ClCompile Include="Scene\SceneLoader.cpp">
       <Filter>Scene</Filter>
     </ClCompile>
+    <ClCompile Include="Render\Passes\PFX\Bloom\BrightnessFilterPass.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RendererPCH.h" />
@@ -481,6 +483,7 @@
     <ClInclude Include="Scene\SceneLoader.h">
       <Filter>Scene</Filter>
     </ClInclude>
+    <ClInclude Include="Render\Passes\PFX\Bloom\BrightnessFilterPass.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\CommonResources.hlsli">
@@ -585,7 +588,7 @@
     <None Include="Shaders\IBL\IBL_Helpers.hlsli">
       <Filter>Shaders\IBL</Filter>
     </None>
-    <None Include="Shaders\HDR\ToneMapping.hlsli">
+    <None Include="Shaders\ToneMapping.hlsli">
       <Filter>Shaders\HDR</Filter>
     </None>
     <None Include="Shaders\_deprecated\LambertLighting.hlsli">
@@ -600,6 +603,7 @@
     <None Include="PipelineDescriptions\AmbientLightingIBLPipeline.tech">
       <Filter>Shaders\DeferredShading</Filter>
     </None>
+    <None Include="PipelineDescriptions\BrightnessFilterPipeline.tech" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="PipelineDescriptions\AABBRenderPipeline.blend">
