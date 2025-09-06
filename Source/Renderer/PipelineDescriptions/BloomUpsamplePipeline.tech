@@ -1,0 +1,7 @@
+{
+	"Type": "BloomUpsampleTechnique",
+
+	"IsGraphicsPipeline": false,
+
+	"CS": "Shaders\\BloomUpsample_cs.cso"
+}

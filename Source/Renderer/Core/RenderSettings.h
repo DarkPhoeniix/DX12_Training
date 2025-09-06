@@ -3,6 +3,12 @@
 class RenderSettings
 {
 public:
+    struct BloomParameters
+    {
+        float Intensity = 0.04f;
+        float Radius = 0.005f;
+    };
+
     RenderSettings(const RenderSettings&) = delete;
     RenderSettings& operator+(const RenderSettings&) = delete;
 
@@ -12,6 +18,9 @@ public:
     static bool& UseSSAO();
     static bool& UseFXAA();
     static bool& DebugFXAA();
+
+    static bool& UseBloom();
+    static BloomParameters& Bloom();
 
 private:
     RenderSettings();
@@ -25,4 +34,7 @@ private:
     bool _useSSAO;
     bool _useFXAA;
     bool _debugFXAA;
+
+    bool _useBloom;
+    BloomParameters _bloom;
 };
