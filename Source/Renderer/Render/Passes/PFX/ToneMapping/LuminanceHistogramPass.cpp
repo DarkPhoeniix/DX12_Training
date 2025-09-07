@@ -5,6 +5,7 @@
 #include "CommandList.h"
 #include "ResourceBarrier.h"
 
+#include "Core/RenderSettings.h"
 #include "Scene/Entity/Components/Camera.h"
 
 #include "RenderGraph/RenderPassBuilder.h"
@@ -17,11 +18,6 @@ namespace render
 		constexpr std::uint32_t LUM_HISTOGRAM_BINS_NUM = 256;
 		constexpr std::uint32_t LUM_HISTOGRAM_THREADS_NUM = 16;
 		constexpr std::uint32_t TONE_MAPPING_THREADS_NUM = 8;
-
-		constexpr float MIN_LOG_LUM = -10.0f;
-		constexpr float MAX_LOG_LUM = 4.0f;
-		constexpr float LOG_LUM_RANGE = (MAX_LOG_LUM - MIN_LOG_LUM);
-		constexpr float RCP_LOG_LUM_RANGE = 1.0f / LOG_LUM_RANGE;
 
 		struct PassCB
 		{
@@ -85,8 +81,8 @@ namespace render
 
 			PassCB constants =
 			{
-				.MinLogLuminance = MIN_LOG_LUM,
-				.OneOverLogLuminanceRange = RCP_LOG_LUM_RANGE,
+				.MinLogLuminance = RenderSettings::ToneMapping().MinLogLuminance,
+				.OneOverLogLuminanceRange = 1.0f / (RenderSettings::ToneMapping().MaxLogLuminance - RenderSettings::ToneMapping().MinLogLuminance),
 				.HDRTextureIndex = static_cast<uint32_t>(harTargetHandle.Index),
 				.LuminanceHistogramBufferIndex = static_cast<uint32_t>(luminanceHistogramHandle.Index)
 			};

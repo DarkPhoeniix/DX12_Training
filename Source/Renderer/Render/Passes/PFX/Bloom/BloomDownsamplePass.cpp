@@ -5,12 +5,14 @@
 #include "CommandList.h"
 #include "ResourceBarrier.h"
 
+#include "Core/RenderSettings.h"
+
 #include "RenderGraph/RenderContext.h"
 #include "RenderGraph/RenderPassBuilder.h"
 
 namespace
 {
-    static constexpr std::uint32_t MAX_MIP_LEVELS = 5;
+    static constexpr std::uint32_t MAX_MIP_LEVELS = 6;
 }
 
 namespace render
@@ -20,6 +22,7 @@ namespace render
         , _scene(scene)
         , _camera(camera)
     {
+        _bloomDownsamplePass1Pipeline.Parse("PipelineDescriptions\\BloomDownsamplePass1Pipeline.tech");
         _bloomDownsamplePipeline.Parse("PipelineDescriptions\\BloomDownsamplePipeline.tech");
     }
 
@@ -63,7 +66,7 @@ namespace render
             commandList.TransitionBarriers(barriers);
 
             context.BindBindlessTable(commandList);
-            commandList.SetPipelineState(_bloomDownsamplePipeline);
+            commandList.SetPipelineState(_bloomDownsamplePass1Pipeline);
 
             {
                 std::shared_ptr<dx12::Resource> bloomTarget = context.GetResource(_data.BloomMips[0]);
@@ -80,8 +83,10 @@ namespace render
                 {
                     std::uint32_t InputTextureIndex;
                     std::uint32_t OutputTextureIndex;
-                } passCB{ .InputTextureIndex = hdrTargetHandle.Index, .OutputTextureIndex = bloomTargetHandle.Index };
-                commandList.SetConstants(1, 2, &passCB);
+
+                    float Gamma;
+                } passCB{ .InputTextureIndex = hdrTargetHandle.Index, .OutputTextureIndex = bloomTargetHandle.Index, .Gamma = RenderSettings::ToneMapping().Gamma };
+                commandList.SetConstants(1, 3, &passCB);
 
                 std::uint32_t xThreadGroups = (std::uint32_t)std::ceilf(bloomTarget->GetResourceDescription().GetSize().x / 16.0f);
                 std::uint32_t yThreadGroups = (std::uint32_t)std::ceilf(bloomTarget->GetResourceDescription().GetSize().y / 16.0f);
@@ -93,6 +98,9 @@ namespace render
                 };
                 commandList.TransitionBarriers(barriers);
             }
+
+            context.BindBindlessTable(commandList);
+            commandList.SetPipelineState(_bloomDownsamplePipeline);
 
             for (std::uint32_t mip = 0; mip < _mipCount - 1; ++mip)
             {
@@ -112,8 +120,10 @@ namespace render
                 {
                     std::uint32_t InputTextureIndex;
                     std::uint32_t OutputTextureIndex;
-                } passCB{ .InputTextureIndex = bloomATargetHandle.Index, .OutputTextureIndex = bloomBTargetHandle.Index };
-                commandList.SetConstants(1, 2, &passCB);
+
+                    float Gamma;
+                } passCB{ .InputTextureIndex = bloomATargetHandle.Index, .OutputTextureIndex = bloomBTargetHandle.Index, .Gamma = RenderSettings::ToneMapping().Gamma };
+                commandList.SetConstants(1, 3, &passCB);
 
                 std::uint32_t xThreadGroups = (std::uint32_t)std::ceilf(bloomBTarget->GetResourceDescription().GetSize().x / 16.0f);
                 std::uint32_t yThreadGroups = (std::uint32_t)std::ceilf(bloomBTarget->GetResourceDescription().GetSize().y / 16.0f);

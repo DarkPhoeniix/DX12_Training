@@ -8,26 +8,23 @@
 
 namespace render
 {
-	struct BloomDownsamplePassData
+	struct BloomApplyPassData
 	{
-        rg::ResourceId HDRTarget;
-		std::vector<rg::ResourceId> BloomMips;
+		rg::ResourceId HDRTarget;
+		rg::ResourceId Bloom;
 	};
 
-	class BloomDownsamplePass : public rg::RenderPass<BloomDownsamplePassData>
+	class BloomApplyPass : public rg::RenderPass<BloomApplyPassData>
 	{
 	public:
-		BloomDownsamplePass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
+		BloomApplyPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
 
 		// Inherited via RenderPass
 		void Setup(rg::RenderPassBuilder& builder) override;
 		void Execute(rg::RenderContext& context, TaskGPU& task) override;
 
 	private:
-		dx12::PipelineState _bloomDownsamplePass1Pipeline;
-		dx12::PipelineState _bloomDownsamplePipeline;
-
-		std::uint32_t _mipCount;
+		dx12::PipelineState _bloomApplyPipeline;
 
 		std::shared_ptr<scene::Scene> _scene;
 		scene::Camera* _camera;

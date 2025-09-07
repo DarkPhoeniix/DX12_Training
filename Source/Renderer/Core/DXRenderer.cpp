@@ -36,6 +36,9 @@
 #include "Render/Passes/LightingPass.h"
 #include "Render/Passes/PFX/AntiAliasing/FXAAPass.h"
 #include "Render/Passes/PFX/Bloom/BrightnessFilterPass.h"
+#include "Render/Passes/PFX/Bloom/BloomApplyPass.h"
+#include "Render/Passes/PFX/Bloom/BloomDownsamplePass.h"
+#include "Render/Passes/PFX/Bloom/BloomUpsamplePass.h"
 #include "Render/Passes/PFX/ToneMapping/AverageLuminancePass.h"
 #include "Render/Passes/PFX/ToneMapping/LuminanceHistogramPass.h"
 #include "Render/Passes/PFX/ToneMapping/ToneMappingPass.h"
@@ -785,11 +788,13 @@ namespace render
             }
             _renderGraph.AddPass(std::make_shared<LightingPass>(_scene, _cameraComponent.get()));
             _renderGraph.AddPass(std::make_shared<SkyboxPass>(_scene, _cameraComponent.get()));
+            _renderGraph.AddPass(std::make_shared<BloomDownsamplePass>(_scene, _cameraComponent.get()));
+            _renderGraph.AddPass(std::make_shared<BloomUpsamplePass>(_scene, _cameraComponent.get()));
+            _renderGraph.AddPass(std::make_shared<BloomApplyPass>(_scene, _cameraComponent.get()));
             if (RenderSettings::UseFXAA())
             {
                 _renderGraph.AddPass(std::make_shared<FXAAPass>(_scene, _cameraComponent.get()));
             }
-            _renderGraph.AddPass(std::make_shared<BrightnessFilterPass>(_scene, _cameraComponent.get()));
             _renderGraph.AddPass(std::make_shared<LuminanceHistogramPass>(_scene, _cameraComponent.get()));
             _renderGraph.AddPass(std::make_shared<AverageLuminancePass>(_scene, _cameraComponent.get()));
             _renderGraph.AddPass(std::make_shared<ToneMappingPass>(_scene, _cameraComponent.get()));

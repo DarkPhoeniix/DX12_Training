@@ -46,7 +46,7 @@ namespace gui
         {
             ImGui::Text("FPS: %i", DebugInfo::GetFPS());
             int id = 0;
-            if (ImGui::TreeNode((void*)id, "Frame Time: %.03f ms", DebugInfo::GetMsPerFrame()))
+            if (ImGui::TreeNode((void*)id++, "Frame Time: %.03f ms", DebugInfo::GetMsPerFrame()))
             {
                 ImGui::Text("Update Time: %.03f ms", DebugInfo::GetUpdateCPUTime());
                 ImGui::Text("Render Time: %.03f ms", DebugInfo::GetRenderCPUTime());
@@ -91,6 +91,13 @@ namespace gui
                 if (ImGui::Checkbox("Render debug armature", &RenderSettings::RenderDebugArmature()))
                 {
                     pendingUpdate = true;
+                }
+                if (ImGui::TreeNode((void*)id++, "Bloom", RenderSettings::UseBloom()))
+                {
+                    ImGui::DragFloat("Intensity", &RenderSettings::Bloom().Intensity, 0.001f, 0.001f, 1.0f);
+                    ImGui::DragFloat("Radius", &RenderSettings::Bloom().Radius, 0.01f, 0.01f, 5.0f, "%.2f");
+
+                    ImGui::TreePop();
                 }
 
                 if (pendingUpdate)

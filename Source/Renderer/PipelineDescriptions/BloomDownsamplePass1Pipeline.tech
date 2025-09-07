@@ -1,0 +1,7 @@
+{
+	"Type": "BloomDownsamplePass1Technique",
+
+	"IsGraphicsPipeline": false,
+
+	"CS": "Shaders\\BloomDownsample_Pass1_cs.cso"
+}

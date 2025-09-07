@@ -12,7 +12,7 @@
 
 namespace
 {
-    static constexpr std::uint32_t MAX_MIP_LEVELS = 5;
+    static constexpr std::uint32_t MAX_MIP_LEVELS = 6;
 }
 
 namespace render
@@ -78,6 +78,7 @@ namespace render
                     { bloomBTarget, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON }
                 };
                 commandList.TransitionBarriers(barriers);
+                commandList.UAVBarrier(bloomBTarget);
             }
         }
         PIXEndEvent(commandList.GetDXCommandList().Get());

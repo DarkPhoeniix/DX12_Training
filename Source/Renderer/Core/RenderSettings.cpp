@@ -42,6 +42,11 @@ RenderSettings::BloomParameters& RenderSettings::Bloom()
     return Instance()._bloom;
 }
 
+RenderSettings::ToneMappingParameters& RenderSettings::ToneMapping()
+{
+    return Instance()._toneMapping;
+}
+
 RenderSettings::RenderSettings()
     : _useIBL(true)
     , _renderDebugVolumes(false)

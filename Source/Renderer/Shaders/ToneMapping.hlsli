@@ -11,6 +11,12 @@ static float3 LinearToRGB(float3 color, float gamma)
     return pow(color, 1.0f / gamma);
 }
 
+float KarisAverage(float3 color, float gamma)
+{
+    float luma = Luminance(LinearToRGB(color, gamma)) * 0.25f;
+    return 1.0f / (1.0f + luma);
+}
+
 float3 ReinhardToneMapping(float3 HDRColor, float gamma)
 {
     // Find the luminance scale for the current pixel

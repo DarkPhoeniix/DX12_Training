@@ -3,7 +3,7 @@
 #include "../CommonResources.hlsli"
 #include "../LightingCommon.hlsli"
 
-#define ALPHA_THRESHOLD 0.1f
+#define ALPHA_THRESHOLD 0.5f
 
 struct PSinput
 {
