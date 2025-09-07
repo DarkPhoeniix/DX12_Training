@@ -1,6 +1,13 @@
 {
-    "Albedo": "Wyvern_albedo.dds",
-    "Metalness": "Wyvern_metalness.dds",
-    "Roughness": "Wyvern_roughness.dds",
-    "Normal": "Wyvern_nmap.dds"
+    "NormalTexture": "Snake2_v2_Default_nmap.dds",
+    "AlbedoTexture": "Snake2_v2_Default_color.dds",
+    "MetallicTexture": "Snake2_v2_Default_metalness.dds",
+    "EmissionTexture": "Snake2_v2_Default_illum.dds",
+    "RoughnessTexture": "Snake2_v2_Default_roughness.dds",
+    "Albedo": "0.800000011920929 0.800000011920929 0.800000011920929 1.0",
+    "Metallic": 0.0,
+    "Roughness": 0.7085561752319336,
+    "EmissionColor": "0.0 0.0 0.0 1.0",
+    "EmissionIntensity": 2.0,
+    "BlendMode": "OPAQUE"
 }

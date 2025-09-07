@@ -1,6 +1,8 @@
 {
-    "Albedo": "Sphere_albedo.png",
-    "Metalness": "Sphere_metalness.png",
-    "Roughness": "Sphere_roughness.png",
-    "Normal": "Sphere_nmap.png"
+    "Albedo": "0.800000011920929 0.800000011920929 0.800000011920929 1.0",
+    "Metallic": 0.0,
+    "Roughness": 0.5,
+    "EmissionColor": "1.0 0.08264586329460144 0.20447345077991486 1.0",
+    "EmissionIntensity": 10.0,
+    "BlendMode": "OPAQUE"
 }

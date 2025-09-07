@@ -1,12 +1,15 @@
 {
-    "Name": "AnimTest",
+    "Name": "WyvernNew",
     "Nodes": [
-        "Floor.node",
-        "Sphere.node",
         "Wyvern.node",
-        "PointLight.001.node",
-        "PointLight.002.node",
-        "SpotLight.node",
+        "Sun.node",
+        "Floor.node",
+        "Cube.node",
+        "Cone.node",
+        "Sphere.node",
+        "Point.node",
+        "Torus.node",
+        "Icosphere.node",
         "Skybox.node",
         "Camera.node"
     ]
