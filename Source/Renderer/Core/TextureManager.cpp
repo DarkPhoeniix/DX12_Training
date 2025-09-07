@@ -193,6 +193,11 @@ void TextureManager::UploadTextures(dx12::CommandList& commandList)
     std::uint64_t totalRequiredHeapSize = 0;
     std::uint64_t maxTextureSize = 0;
 
+    if (_uploadQueue.empty())
+    {
+        return;
+    }
+
     for (const auto& [filepath, handle] : _uploadQueue)
     {
         std::filesystem::path path(filepath);

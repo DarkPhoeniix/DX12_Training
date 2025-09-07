@@ -2,6 +2,8 @@
 
 #include "EntityComponentsWidget.h"
 
+#include "Core/DescriptorHeapManager.h"
+
 #include "Scene/Entity/Entity.h"
 #include "Scene/Entity/Components/Animation.h"
 #include "Scene/Entity/Components/Armature.h"
