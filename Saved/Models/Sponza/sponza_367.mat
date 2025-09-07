@@ -1,6 +1,9 @@
 {
-    "Albedo": "vase_plant.dds",
-    "Metalness": "Material__57_metalness.dds",
-    "Roughness": "Material__57_roughness.dds",
-    "Normal": "Material__57_nmap.dds"
+    "AlbedoTexture": "vase_plant.dds",
+    "Albedo": "0.47040000557899475 0.47040000557899475 0.47040000557899475 1.0",
+    "Metallic": 0.0,
+    "Roughness": 0.911438524723053,
+    "EmissionColor": "1.0 1.0 1.0 1.0",
+    "EmissionIntensity": 0.0,
+    "BlendMode": "OPAQUE"
 }

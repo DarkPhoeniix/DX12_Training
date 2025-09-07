@@ -1,6 +1,10 @@
 {
-    "Albedo": "sponza_floor_a_diff.dds",
-    "Metalness": "floor_metalness.dds",
-    "Roughness": "floor_roughness.dds",
-    "Normal": "floor_nmap.dds"
+    "AlbedoTexture": "sponza_floor_a_diff.dds",
+    "NormalTexture": "sponza_floor_a_ddn.dds",
+    "Albedo": "0.47040000557899475 0.47040000557899475 0.47040000557899475 1.0",
+    "Metallic": 0.0,
+    "Roughness": 0.911438524723053,
+    "EmissionColor": "1.0 1.0 1.0 1.0",
+    "EmissionIntensity": 0.0,
+    "BlendMode": "OPAQUE"
 }

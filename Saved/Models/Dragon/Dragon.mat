@@ -1,0 +1,12 @@
+{
+    "NormalTexture": "Dragon_nmap.dds",
+    "AlbedoTexture": "Dragon_albedo.dds",
+    "MetallicTexture": "Dragon_metalness.dds",
+    "RoughnessTexture": "Dragon_roughness.dds",
+    "Albedo": "0.800000011920929 0.800000011920929 0.800000011920929 1.0",
+    "Metallic": 0.0,
+    "Roughness": 0.5,
+    "EmissionColor": "0.0 0.0 0.0 1.0",
+    "EmissionIntensity": 1.0,
+    "BlendMode": "TRANSLUCENT"
+}
