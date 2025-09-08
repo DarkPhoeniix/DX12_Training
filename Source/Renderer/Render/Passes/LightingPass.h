@@ -12,6 +12,7 @@ namespace render
 	{
 		rg::ResourceId AlbedoMetallic;
 		rg::ResourceId NormalRoughness;
+		rg::ResourceId Emission;
 		rg::ResourceId Depth;
 
 		rg::ResourceId ShadowMaps;

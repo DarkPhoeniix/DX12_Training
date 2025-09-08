@@ -32,13 +32,29 @@ bool& RenderSettings::DebugFXAA()
     return Instance()._debugFXAA;
 }
 
+bool& RenderSettings::UseBloom()
+{
+    return Instance()._useBloom;
+}
+
+RenderSettings::BloomParameters& RenderSettings::Bloom()
+{
+    return Instance()._bloom;
+}
+
+RenderSettings::ToneMappingParameters& RenderSettings::ToneMapping()
+{
+    return Instance()._toneMapping;
+}
+
 RenderSettings::RenderSettings()
     : _useIBL(true)
     , _renderDebugVolumes(false)
     , _renderDebugArmature(false)
-    , _useSSAO(true)
+    , _useSSAO(false)
     , _useFXAA(true)
     , _debugFXAA(false)
+    , _useBloom(true)
 {
 }
 

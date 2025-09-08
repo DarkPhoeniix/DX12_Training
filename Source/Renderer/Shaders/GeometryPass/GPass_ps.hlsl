@@ -3,7 +3,7 @@
 #include "../CommonResources.hlsli"
 #include "../LightingCommon.hlsli"
 
-#define ALPHA_THRESHOLD 0.1f
+#define ALPHA_THRESHOLD 0.5f
 
 struct PSinput
 {
@@ -17,8 +17,9 @@ struct PSinput
 
 struct PSOutput
 {
-    float4 AlbedoMetalness  : SV_Target0;
+    float4 AlbedoMetallic   : SV_Target0;
     float4 NormalRougness   : SV_Target1;
+    float3 Emission         : SV_Target2;
 };
 
 struct PassConstants
@@ -33,22 +34,66 @@ PSOutput main(PSinput IN)
     StructuredBuffer<ModelDesc> Instances = ResourceDescriptorHeap[FrameCB.InstancesBufferIndex];
     ModelDesc Model = Instances[PassCB.Instance];
     
-    Texture2D AlbedoTexture     = ResourceDescriptorHeap[Model.AlbedoTextureIndex];
-    Texture2D NormalTexture     = ResourceDescriptorHeap[Model.NormalTextureIndex];
-    Texture2D MetalnessTexture  = ResourceDescriptorHeap[Model.MetalnessTextureIndex];
-    Texture2D RoughnessTexture  = ResourceDescriptorHeap[Model.RoughnessTextureIndex];
-    
     // Sample textures
-    float2 uv                   = IN.Texture;
-    uv.y                        = 1.0f - uv.y;
+    float2 uv = IN.Texture;
+    uv.y = 1.0f - uv.y;
     
-    float4 color                = AlbedoTexture.Sample(LinearWrapSampler, uv).rgba;
+    float4 color = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    float3 emission = float3(0.0f, 0.0f, 0.0f);
+    float3 normalMap = float3(0.0f, 0.0f, 0.0f);
+    float metallic = 0.0f;
+    float roughness = 0.0f;
+    
+    if (Model.AlbedoTextureIndex != -1)
+    {
+        Texture2D AlbedoTexture = ResourceDescriptorHeap[Model.AlbedoTextureIndex];
+        color = AlbedoTexture.Sample(LinearWrapSampler, uv).rgba;
+    }
+    else
+    {
+        color = Model.AlbedoColor;
+    }
     clip(color.a - ALPHA_THRESHOLD); // Discard pixel if alpha is below threshold
     
-    float3 normalMap            = NormalTexture.Sample(PointWrapSampler, uv).rgb;
-    float metalness             = MetalnessTexture.Sample(PointWrapSampler, uv).x;
-    float roughness             = RoughnessTexture.Sample(PointWrapSampler, uv).x;
-    roughness                   = max(0.05f, roughness); // Set minimum to 0.05 to avoid some visual artifacts in PBR
+    if (Model.EmissionTextureIndex != -1)
+    {
+        Texture2D EmissionTexture = ResourceDescriptorHeap[Model.EmissionTextureIndex];
+        emission = EmissionTexture.Sample(LinearWrapSampler, uv).rgb * EmissionTexture.Sample(LinearWrapSampler, uv).a * Model.EmissiveIntensity;
+    }
+    else
+    {
+        emission = Model.EmissiveColor * Model.EmissiveIntensity;
+    }
+    
+    if (Model.NormalTextureIndex != -1)
+    {
+        Texture2D NormalTexture = ResourceDescriptorHeap[Model.NormalTextureIndex];
+        normalMap = NormalTexture.Sample(PointWrapSampler, uv).rgb;
+    }
+    else
+    {
+        normalMap = float3(0.5f, 0.5f, 1.0f); // Default normal map value
+    }
+    
+    if (Model.MetallicTextureIndex != -1)
+    {
+        Texture2D MetallicTexture = ResourceDescriptorHeap[Model.MetallicTextureIndex];
+        metallic = MetallicTexture.Sample(PointWrapSampler, uv).x;
+    }
+    else
+    {
+        metallic = Model.MetallicValue;
+    }
+    
+    if (Model.RoughnessTextureIndex != -1)
+    {
+        Texture2D RoughnessTexture = ResourceDescriptorHeap[Model.RoughnessTextureIndex];
+        roughness = RoughnessTexture.Sample(PointWrapSampler, uv).x;
+    }
+    else
+    {
+        roughness = Model.RoughnessValue;
+    }
     
     // Calculate the TBN matrix and a new normal vector
     float3 normal               = normalize(IN.Normal.xyz);
@@ -60,8 +105,9 @@ PSOutput main(PSinput IN)
 
     // Setup output buffer
     PSOutput output;
-    output.AlbedoMetalness      = float4(color.rgb, metalness);
+    output.AlbedoMetallic       = float4(color.rgb, metallic);
     output.NormalRougness       = float4(finalNormal, roughness);
+    output.Emission             = emission;
     
     return output;
 }

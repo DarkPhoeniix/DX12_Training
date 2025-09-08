@@ -5,7 +5,6 @@
 #include "CommandList.h"
 #include "ResourceBarrier.h"
 
-#include "Scene/Entity/Components/Material.h"
 #include "Scene/Entity/Components/Mesh.h"
 
 #include "Utility/DebugInfo.h"
@@ -78,6 +77,22 @@ namespace render
 			normalRoughnessDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::RenderTarget);
 		}
 		_data.NormalRoughness = builder.CreateResource("normal_roughness_target", normalRoughnessDesc);
+
+		dx12::ResourceDescription emissionDesc;
+		{
+			D3D12_CLEAR_VALUE clearValue;
+			clearValue.Format = DXGI_FORMAT_R11G11B10_FLOAT;
+			clearValue.Color[0] = 0.0f;
+			clearValue.Color[1] = 0.0f;
+			clearValue.Color[2] = 0.0f;
+			clearValue.Color[3] = 1.0f;
+
+			emissionDesc.SetSize(_camera->GetViewport().GetSize());
+			emissionDesc.SetFormat(DXGI_FORMAT_R11G11B10_FLOAT);
+			emissionDesc.SetClearValue(clearValue);
+			emissionDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::RenderTarget);
+		}
+		_data.Emission = builder.CreateResource("emission_target", emissionDesc);
 	}
 
 	void GeometryPass::Execute(rg::RenderContext& context, TaskGPU& task)
@@ -88,10 +103,12 @@ namespace render
 		PIXBeginEvent(commandList.GetDXCommandList().Get(), 2, "Geometry Pass");
 		{
 			std::shared_ptr<dx12::Resource> albedoMetallic = context.GetResource(_data.AlbedoMetallic);
+            std::shared_ptr<dx12::Resource> emission = context.GetResource(_data.Emission);
 			std::shared_ptr<dx12::Resource> normalRoughness = context.GetResource(_data.NormalRoughness);
 			std::shared_ptr<dx12::Resource> depth = context.GetResource(_data.Depth);
 
 			DescriptorHandle albedoMetallicHandle = context.GetStaticResourceHandle(albedoMetallic->GetAsRTV());
+            DescriptorHandle emissionHandle = context.GetStaticResourceHandle(emission->GetAsRTV());
 			DescriptorHandle normalSpecularHandle = context.GetStaticResourceHandle(normalRoughness->GetAsRTV());
 			DescriptorHandle depthHandle = context.GetStaticResourceHandle(depth->GetAsDSV());
 
@@ -99,6 +116,7 @@ namespace render
 			{
 				{ albedoMetallic,     D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_RENDER_TARGET },
 				{ normalRoughness,    D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_RENDER_TARGET },
+				{ emission,           D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_RENDER_TARGET },
 				{ depth,              D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_DEPTH_WRITE },
 			};
 			commandList.TransitionBarriers(barriers);
@@ -112,7 +130,7 @@ namespace render
 			commandList.SetPipelineState(_geometryPipeline);
 
 			commandList.SetViewport(_camera->GetViewport());
-			commandList.SetRenderTargets({ albedoMetallicHandle.CpuHandle, normalSpecularHandle.CpuHandle }, &depthHandle.CpuHandle);
+			commandList.SetRenderTargets({ albedoMetallicHandle.CpuHandle, normalSpecularHandle.CpuHandle, emissionHandle.CpuHandle }, &depthHandle.CpuHandle);
 
 			DebugInfo::StartStatCollecting(commandList);
 
@@ -161,6 +179,7 @@ namespace render
 			{
 				{ albedoMetallic,    D3D12_RESOURCE_STATE_RENDER_TARGET,  D3D12_RESOURCE_STATE_COMMON },
 				{ normalRoughness,   D3D12_RESOURCE_STATE_RENDER_TARGET,  D3D12_RESOURCE_STATE_COMMON },
+                { emission,          D3D12_RESOURCE_STATE_RENDER_TARGET,  D3D12_RESOURCE_STATE_COMMON },
 				{ depth,             D3D12_RESOURCE_STATE_DEPTH_WRITE,    D3D12_RESOURCE_STATE_COMMON },
 			};
 			commandList.TransitionBarriers(barriers);

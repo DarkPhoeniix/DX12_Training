@@ -13,6 +13,7 @@ namespace render
 		rg::ResourceId Depth;
 		rg::ResourceId AlbedoMetallic;
 		rg::ResourceId NormalRoughness;
+		rg::ResourceId Emission;
 	};
 
 	class GeometryPass : public rg::RenderPass<GeometryPassData>

@@ -130,6 +130,11 @@
     <FxCompile Include="Shaders\DeferredShading\DeferredShading_cs.hlsl">
       <Filter>Shaders\DeferredShading</Filter>
     </FxCompile>
+    <FxCompile Include="Shaders\Bloom\BrightnessFilter_cs.hlsl" />
+    <FxCompile Include="Shaders\Bloom\BloomDownsample_cs.hlsl" />
+    <FxCompile Include="Shaders\Bloom\BloomUpsample_cs.hlsl" />
+    <FxCompile Include="Shaders\Bloom\BloomApply_cs.hlsl" />
+    <FxCompile Include="Shaders\Bloom\BloomDownsample_Pass1_cs.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RendererPCH.cpp" />
@@ -268,9 +273,6 @@
     <ClCompile Include="Render\Passes\PFX\AmbientOcclusion\SSAOComputePass.cpp">
       <Filter>Render\Passes\PFX\AmbientOcclusion</Filter>
     </ClCompile>
-    <ClCompile Include="Render\Passes\PFX\ToneMapping\AverageLuminancePass.cpp">
-      <Filter>Render\Passes\PFX\ToneMapping</Filter>
-    </ClCompile>
     <ClCompile Include="Render\Passes\PFX\ToneMapping\LuminanceHistogramPass.cpp">
       <Filter>Render\Passes\PFX\ToneMapping</Filter>
     </ClCompile>
@@ -286,6 +288,11 @@
     <ClCompile Include="Scene\SceneLoader.cpp">
       <Filter>Scene</Filter>
     </ClCompile>
+    <ClCompile Include="Render\Passes\PFX\Bloom\BrightnessFilterPass.cpp" />
+    <ClCompile Include="Render\Passes\PFX\Bloom\BloomDownsamplePass.cpp" />
+    <ClCompile Include="Render\Passes\PFX\Bloom\BloomUpsamplePass.cpp" />
+    <ClCompile Include="Render\Passes\PFX\Bloom\BloomApplyPass.cpp" />
+    <ClCompile Include="Render\Passes\PFX\ToneMapping\AverageLuminancePass.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RendererPCH.h" />
@@ -463,9 +470,6 @@
     <ClInclude Include="Render\Passes\PFX\AmbientOcclusion\SSAOComputePass.h">
       <Filter>Render\Passes\PFX\AmbientOcclusion</Filter>
     </ClInclude>
-    <ClInclude Include="Render\Passes\PFX\ToneMapping\AverageLuminancePass.h">
-      <Filter>Render\Passes\PFX\ToneMapping</Filter>
-    </ClInclude>
     <ClInclude Include="Render\Passes\PFX\ToneMapping\LuminanceHistogramPass.h">
       <Filter>Render\Passes\PFX\ToneMapping</Filter>
     </ClInclude>
@@ -481,6 +485,11 @@
     <ClInclude Include="Scene\SceneLoader.h">
       <Filter>Scene</Filter>
     </ClInclude>
+    <ClInclude Include="Render\Passes\PFX\Bloom\BrightnessFilterPass.h" />
+    <ClInclude Include="Render\Passes\PFX\Bloom\BloomDownsamplePass.h" />
+    <ClInclude Include="Render\Passes\PFX\Bloom\BloomUpsamplePass.h" />
+    <ClInclude Include="Render\Passes\PFX\Bloom\BloomApplyPass.h" />
+    <ClInclude Include="Render\Passes\PFX\ToneMapping\AverageLuminancePass.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\CommonResources.hlsli">
@@ -585,7 +594,7 @@
     <None Include="Shaders\IBL\IBL_Helpers.hlsli">
       <Filter>Shaders\IBL</Filter>
     </None>
-    <None Include="Shaders\HDR\ToneMapping.hlsli">
+    <None Include="Shaders\ToneMapping.hlsli">
       <Filter>Shaders\HDR</Filter>
     </None>
     <None Include="Shaders\_deprecated\LambertLighting.hlsli">
@@ -600,6 +609,11 @@
     <None Include="PipelineDescriptions\AmbientLightingIBLPipeline.tech">
       <Filter>Shaders\DeferredShading</Filter>
     </None>
+    <None Include="PipelineDescriptions\BrightnessFilterPipeline.tech" />
+    <None Include="PipelineDescriptions\BloomDownsamplePipeline.tech" />
+    <None Include="PipelineDescriptions\BloomUpsamplePipeline.tech" />
+    <None Include="PipelineDescriptions\BloomApplyPipeline.tech" />
+    <None Include="PipelineDescriptions\BloomDownsamplePass1Pipeline.tech" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="PipelineDescriptions\AABBRenderPipeline.blend">

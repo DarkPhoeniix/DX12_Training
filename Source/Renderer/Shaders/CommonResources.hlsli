@@ -24,14 +24,21 @@ struct FrameConstants   // 400 bytes
     uint                pad[2];
 };
 
-struct ModelDesc        // 96 bytes
+struct ModelDesc        // 144 bytes
 {
     row_major matrix    Transform;
     
     uint                AlbedoTextureIndex;
+    uint                EmissionTextureIndex;
     uint                NormalTextureIndex;
-    uint                MetalnessTextureIndex;
+    uint                MetallicTextureIndex;
     uint                RoughnessTextureIndex;
+    
+    float               EmissiveIntensity;
+    float               MetallicValue;
+    float               RoughnessValue;
+    float4              AlbedoColor;
+    float4              EmissiveColor;
     
     uint                HasMesh;
     uint                BonesBufferIndex;

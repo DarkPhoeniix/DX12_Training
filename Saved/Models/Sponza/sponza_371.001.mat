@@ -1,6 +1,10 @@
 {
-    "Albedo": "vase_round.dds",
-    "Metalness": "vase_round_metalness.dds",
-    "Roughness": "vase_round_roughness.dds",
-    "Normal": "vase_round_ddn.dds"
+    "AlbedoTexture": "vase_round.dds",
+    "NormalTexture": "vase_round_ddn.dds",
+    "Albedo": "0.47040000557899475 0.47040000557899475 0.47040000557899475 1.0",
+    "Metallic": 0.0,
+    "Roughness": 0.911438524723053,
+    "EmissionColor": "1.0 1.0 1.0 1.0",
+    "EmissionIntensity": 0.0,
+    "BlendMode": "OPAQUE"
 }

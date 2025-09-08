@@ -2,6 +2,8 @@
 
 #include "EntityComponentsWidget.h"
 
+#include "Core/DescriptorHeapManager.h"
+
 #include "Scene/Entity/Entity.h"
 #include "Scene/Entity/Components/Animation.h"
 #include "Scene/Entity/Components/Armature.h"
@@ -241,11 +243,49 @@ namespace gui
 			std::shared_ptr<dx12::Resource> normalMapTexture = TextureManager::Get().GetTexture(material->NormalMapTextureHandle);
 			std::shared_ptr<dx12::Resource> metalnessTexture = TextureManager::Get().GetTexture(material->MetalnessTextureHandle);
 			std::shared_ptr<dx12::Resource> roughnessTexture = TextureManager::Get().GetTexture(material->RoughnessTextureHandle);
+            std::shared_ptr<dx12::Resource> emissionTexture = TextureManager::Get().GetTexture(material->EmissionTextureHandle);
 
-            ImGui::Text("Albedo: %s (ID: %i)", albedoTexture->GetName().c_str(), albedoTexture->GetID());
-            ImGui::Text("Normal map: %s (ID: %i)", normalMapTexture->GetName().c_str(), normalMapTexture->GetID());
-            ImGui::Text("Metalness: %s (ID: %i)", metalnessTexture->GetName().c_str(), metalnessTexture->GetID());
-            ImGui::Text("Roughness: %s (ID: %i)", roughnessTexture->GetName().c_str(), roughnessTexture->GetID());
+            if (albedoTexture)
+            {
+                ImGui::Text("Albedo: %s (ID: %i)", albedoTexture->GetName().c_str(), albedoTexture->GetID());
+            }
+            else
+            {
+                ImGui::ColorPicker3("Albedo color", &material->AlbedoColor.m128_f32[0], ImGuiColorEditFlags_DisplayRGB);
+            }
+
+            if (normalMapTexture)
+            {
+                ImGui::Text("Normal map: %s (ID: %i)", normalMapTexture->GetName().c_str(), normalMapTexture->GetID());
+            }
+
+            if (metalnessTexture)
+            {
+                ImGui::Text("Metalness: %s (ID: %i)", metalnessTexture->GetName().c_str(), metalnessTexture->GetID());
+            }
+            else
+            {
+                ImGui::DragFloat("Metallic value", &material->MetallicValue, 0.01f, 0.0f, 1.0f);
+            }
+
+            if (roughnessTexture)
+            {
+                ImGui::Text("Roughness: %s (ID: %i)", roughnessTexture->GetName().c_str(), roughnessTexture->GetID());
+            }
+            else
+            {
+                ImGui::DragFloat("Roughness value", &material->RoughnessValue, 0.01f, 0.0f, 1.0f);
+            }
+
+            if (emissionTexture)
+            {
+                ImGui::Text("Emission: %s (ID: %i)", emissionTexture->GetName().c_str(), emissionTexture->GetID());
+            }
+            else
+            {
+                ImGui::ColorPicker3("Emission color", &material->EmissionColor.m128_f32[0], ImGuiColorEditFlags_DisplayRGB);
+            }
+            ImGui::DragFloat("Emission intensity", &material->EmissionIntensity, 0.01f, 0.0f);
         }
     }
 

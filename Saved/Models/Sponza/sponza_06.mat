@@ -1,6 +1,10 @@
 {
-    "Albedo": "spnza_bricks_a_diff.dds",
-    "Metalness": "bricks_metalness.dds",
-    "Roughness": "bricks_roughness.dds",
-    "Normal": "spnza_bricks_a_ddn.dds"
+    "AlbedoTexture": "spnza_bricks_a_diff.dds",
+    "NormalTexture": "spnza_bricks_a_ddn.dds",
+    "Albedo": "0.47040000557899475 0.47040000557899475 0.47040000557899475 1.0",
+    "Metallic": 0.0,
+    "Roughness": 0.911438524723053,
+    "EmissionColor": "1.0 1.0 1.0 1.0",
+    "EmissionIntensity": 0.0,
+    "BlendMode": "OPAQUE"
 }

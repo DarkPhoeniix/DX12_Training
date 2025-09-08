@@ -1,0 +1,8 @@
+{
+    "Albedo": "0.397061824798584 0.0 0.8011890649795532 1.0",
+    "Metallic": 1.0,
+    "Roughness": 0.5,
+    "EmissionColor": "1.0 1.0 1.0 1.0",
+    "EmissionIntensity": 0.0,
+    "BlendMode": "OPAQUE"
+}

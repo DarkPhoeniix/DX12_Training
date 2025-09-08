@@ -1,6 +1,6 @@
 
 #include "../UnifiedRootSignature.hlsli"
-#include "ToneMapping.hlsli"
+#include "../ToneMapping.hlsli"
 
 struct PassConstants
 {

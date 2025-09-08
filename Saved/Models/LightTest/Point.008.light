@@ -1,8 +1,0 @@
-{
-    "Color": "0.9 0.5 0.6 1.0",
-    "Energy": 10.0,
-    "Type": "Point",
-    "Range": 20.0,
-    "Intensity": 0.6,
-    "CastShadows": 1
-}

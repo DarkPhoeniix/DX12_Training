@@ -7,15 +7,16 @@
 #define CONSTANT_SHADOW_BIAS    0.0002f
 #define SLOPE_SHADOW_BIAS       0.00005f
 
-struct Surface          // 152 bytes
+struct Surface          // 164 bytes
 {
     float4              NDCPosition;
     float4              Position;
     
-    float4              Albedo;
-    float4              Normal;
+    float3              Albedo;
     float               Metallic;
+    float3              Normal;
     float               Roughness;
+    float3              Emission;
     
     float4              FinalColor;
     
