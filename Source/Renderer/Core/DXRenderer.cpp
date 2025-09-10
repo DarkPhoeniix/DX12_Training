@@ -481,6 +481,11 @@ namespace render
 
             if (lightComponent->CastShadows)
             {
+                if (lightComponent->ShadowMapHandle == InvalidTextureHandle)
+                {
+                    CreateShadowMap(lightEntity);
+                }
+
                 std::shared_ptr<dx12::Resource> shadowMap = TextureManager::Get().GetTexture(lightComponent->ShadowMapHandle);
                 DescriptorHandle shadowMapHandle = ResourceTable::Get().GetStaticResourceHandle(shadowMap->GetAsSRV());
                 shadowMapIndex = shadowMapHandle.Index;
@@ -654,6 +659,45 @@ namespace render
         }
     }
 
+    void DXRenderer::CreateShadowMap(std::shared_ptr<scene::Entity> light)
+    {
+        std::shared_ptr<scene::Light> lightComponent = light->GetComponentAs<scene::Light>("Light");
+
+        if (lightComponent && lightComponent->CastShadows)
+        {
+            auto viewportSize = _cameraComponent->GetViewport().GetSize();
+
+            dx12::ResourceDescription shadowMapDesc;
+            {
+                std::uint32_t size = std::max(viewportSize.x, viewportSize.y) / 2.0f;
+
+                D3D12_CLEAR_VALUE clearValue;
+                clearValue.Format = DXGI_FORMAT_D32_FLOAT;
+                clearValue.DepthStencil.Depth = 1;
+                clearValue.DepthStencil.Stencil = 0;
+
+                shadowMapDesc.SetSize({ size, size });
+                shadowMapDesc.SetFormat(DXGI_FORMAT_D32_FLOAT);
+                shadowMapDesc.SetClearValue(clearValue);
+                switch (lightComponent->Type)
+                {
+                case scene::LightType::Spot:
+                    shadowMapDesc.SetDepthOrArraySize(1);
+                    break;
+                case scene::LightType::Point:
+                    shadowMapDesc.SetDepthOrArraySize(6);
+                    break;
+                }
+                shadowMapDesc.SetResourceType(dx12::ResourceType::DepthStencil | dx12::ResourceType::Texture);
+            }
+
+            std::shared_ptr<dx12::Resource> shadowMap = ResourceFactory::Create(light->GetName() + "_shadow_map", shadowMapDesc);
+            shadowMap->CreateCommitedResource();
+
+            lightComponent->ShadowMapHandle = TextureManager::Get().AddTexture(shadowMap);
+        }
+    }
+
     void DXRenderer::CreateShadowMaps()
     {
         std::vector<std::shared_ptr<scene::Entity>> lightEntities = _scene->FilterNodesByComponent("Light");
@@ -662,38 +706,7 @@ namespace render
 
         for (const auto& lightEntity : lightEntities)
         {
-            std::shared_ptr<scene::Light> lightComponent = lightEntity->GetComponentAs<scene::Light>("Light");
-            if (lightComponent && lightComponent->CastShadows)
-            {
-                dx12::ResourceDescription shadowMapDesc;
-                {
-                    std::uint32_t size = std::max(viewportSize.x, viewportSize.y) / 2.0f;
-
-                    D3D12_CLEAR_VALUE clearValue;
-                    clearValue.Format = DXGI_FORMAT_D32_FLOAT;
-                    clearValue.DepthStencil.Depth = 1;
-                    clearValue.DepthStencil.Stencil = 0;
-
-                    shadowMapDesc.SetSize({ size, size });
-                    shadowMapDesc.SetFormat(DXGI_FORMAT_D32_FLOAT);
-                    shadowMapDesc.SetClearValue(clearValue);
-                    switch (lightComponent->Type)
-                    {
-                    case scene::LightType::Spot:
-                        shadowMapDesc.SetDepthOrArraySize(1);
-                        break;
-                    case scene::LightType::Point:
-                        shadowMapDesc.SetDepthOrArraySize(6);
-                        break;
-                    }
-                    shadowMapDesc.SetResourceType(dx12::ResourceType::DepthStencil | dx12::ResourceType::Texture);
-                }
-
-                std::shared_ptr<dx12::Resource> shadowMap = ResourceFactory::Create(lightEntity->GetName() + "_shadow_map", shadowMapDesc);
-                shadowMap->CreateCommitedResource();
-
-                lightComponent->ShadowMapHandle = TextureManager::Get().AddTexture(shadowMap);
-            }
+            CreateShadowMap(lightEntity);
         }
     }
 

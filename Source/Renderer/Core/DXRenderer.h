@@ -44,6 +44,7 @@ namespace render
 
     private:
         void UpdateSceneBuffers();
+        void CreateShadowMap(std::shared_ptr<scene::Entity> light);
         void CreateShadowMaps();
 
         void UpdateEntity(std::shared_ptr<scene::Entity> entity);
