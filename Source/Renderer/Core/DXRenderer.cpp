@@ -151,15 +151,15 @@ namespace render
         , _isMinimized(false)
         , _isCameraMoving(false)
         , _deltaTime(0.0f)
-        , _resourceTable()
         , _scene(std::make_shared<scene::Scene>())
     {
         DescriptorHeapManager::Create(2048, 128, 4096, 1024);
+        ResourceTable::Create();
 		TextureManager::Create();
         GeometryCacheManager::Create();
 
-		_renderGraph.Init(_resourceTable, TextureManager::Get());
-		_sceneLoader.Init(_resourceTable, TextureManager::Get());
+		_renderGraph.Init(ResourceTable::Get(), TextureManager::Get());
+		_sceneLoader.Init(ResourceTable::Get(), TextureManager::Get());
     }
 
     DXRenderer::~DXRenderer()
@@ -246,6 +246,7 @@ namespace render
         render::DrawHelper::Destroy();
         TextureManager::Destroy();
         GeometryCacheManager::Destroy();
+        ResourceTable::Destroy();
         DescriptorHeapManager::Destroy();
 
         _contentLoaded = false;
@@ -263,7 +264,7 @@ namespace render
         _deltaTime = updateEvent.elapsedTime;
 
         DescriptorHeapManager::Get().AdvanceFrameIndex();
-        _resourceTable.ResetTransientResources();
+        ResourceTable::Get().ResetTransientResources();
 
         // Clear marker map for current frame before execution
         std::shared_ptr<tracking::IGPUCrashTracker> crashTracker = dx12::Device::GetCrashTracker();
@@ -481,7 +482,7 @@ namespace render
             if (lightComponent->CastShadows)
             {
                 std::shared_ptr<dx12::Resource> shadowMap = TextureManager::Get().GetTexture(lightComponent->ShadowMapHandle);
-                DescriptorHandle shadowMapHandle = _resourceTable.GetStaticResourceHandle(shadowMap->GetAsSRV());
+                DescriptorHandle shadowMapHandle = ResourceTable::Get().GetStaticResourceHandle(shadowMap->GetAsSRV());
                 shadowMapIndex = shadowMapHandle.Index;
             }
 
@@ -559,7 +560,7 @@ namespace render
                     data[i] = bones[i]->Offset * bones[i]->GlobalTransform;
                 }
 
-                DescriptorHandle bonesBufferHandle = _resourceTable.AddTransientResourceView(bonesBuffer->GetAsSRV());
+                DescriptorHandle bonesBufferHandle = ResourceTable::Get().AddTransientResourceView(bonesBuffer->GetAsSRV());
                 bonesBufferIndex = bonesBufferHandle.Index;
             }
 
@@ -579,23 +580,23 @@ namespace render
 
                 if (albedoTexture)
                 {
-                    albedoTextureIndex = _resourceTable.GetStaticResourceHandle(albedoTexture->GetAsSRV()).Index;
+                    albedoTextureIndex = ResourceTable::Get().GetStaticResourceHandle(albedoTexture->GetAsSRV()).Index;
                 }
                 if (emissionTexture)
                 {
-                    emissionTextureIndex = _resourceTable.GetStaticResourceHandle(emissionTexture->GetAsSRV()).Index;
+                    emissionTextureIndex = ResourceTable::Get().GetStaticResourceHandle(emissionTexture->GetAsSRV()).Index;
                 }
                 if (normalMapTexture)
                 {
-                    normalMapIndex = _resourceTable.GetStaticResourceHandle(normalMapTexture->GetAsSRV()).Index;
+                    normalMapIndex = ResourceTable::Get().GetStaticResourceHandle(normalMapTexture->GetAsSRV()).Index;
                 }
                 if (metalnessTexture)
                 {
-                    metalnessTextureIndex = _resourceTable.GetStaticResourceHandle(metalnessTexture->GetAsSRV()).Index;
+                    metalnessTextureIndex = ResourceTable::Get().GetStaticResourceHandle(metalnessTexture->GetAsSRV()).Index;
                 }
                 if (roughnessTexture)
                 {
-                    roughnessTextureIndex = _resourceTable.GetStaticResourceHandle(roughnessTexture->GetAsSRV()).Index;
+                    roughnessTextureIndex = ResourceTable::Get().GetStaticResourceHandle(roughnessTexture->GetAsSRV()).Index;
                 }
             }
 
@@ -620,8 +621,8 @@ namespace render
             };
         }
 
-        DescriptorHandle modelBufferHandle = _resourceTable.AddTransientResourceView(modelBuffer->GetAsSRV());
-        DescriptorHandle lightBufferHandle = _resourceTable.AddTransientResourceView(lightBuffer->GetAsSRV());
+        DescriptorHandle modelBufferHandle = ResourceTable::Get().AddTransientResourceView(modelBuffer->GetAsSRV());
+        DescriptorHandle lightBufferHandle = ResourceTable::Get().AddTransientResourceView(lightBuffer->GetAsSRV());
 
         {
             GPUFrameDesc* frameBufferData = _currentFrame->GetBuffer()->Map<GPUFrameDesc>();

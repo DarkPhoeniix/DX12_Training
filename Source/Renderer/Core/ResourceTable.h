@@ -6,13 +6,17 @@
 class ResourceTable
 {
 public:
-    ResourceTable();
     ResourceTable(const ResourceTable&) = delete;
     ResourceTable(ResourceTable&&) noexcept = default;
     ~ResourceTable() = default;
 
     ResourceTable& operator=(const ResourceTable&) = delete;
     ResourceTable& operator=(ResourceTable&&) noexcept = default;
+
+    static void Create();
+    static void Destroy();
+
+    static ResourceTable& Get();
 
     void Reset();
     void ResetTransientResources();
@@ -30,6 +34,8 @@ public:
         constexpr DescriptorHandle GetTransientResourceHandle(const T& desc);
 
 private:
+    ResourceTable() = default;
+
     std::unordered_map<dx12::ResourceID, DescriptorHandle> _staticRTVs;
     std::unordered_map<dx12::ResourceID, DescriptorHandle> _staticDSVs;
     std::unordered_map<dx12::ResourceID, DescriptorHandle> _staticCBVs;
@@ -41,6 +47,8 @@ private:
     std::unordered_map<dx12::ResourceID, DescriptorHandle> _transientCBVs;
     std::unordered_map<dx12::ResourceID, DescriptorHandle> _transientSRVs;
     std::unordered_map<dx12::ResourceID, DescriptorHandle> _transientUAVs;
+
+    static std::unique_ptr<ResourceTable> _instance;
 };
 
 #include "ResourceTable.inl"

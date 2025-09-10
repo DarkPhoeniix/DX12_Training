@@ -56,8 +56,6 @@ namespace render
 
         Frame* _currentFrame;
 
-        ResourceTable _resourceTable;
-
         rg::RenderGraph _renderGraph;
 
         scene::helpers::SceneLoader _sceneLoader;

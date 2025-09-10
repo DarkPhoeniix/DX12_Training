@@ -61,8 +61,34 @@ namespace internal
     };
 } // namespace internal
 
-ResourceTable::ResourceTable()
+std::unique_ptr<ResourceTable> ResourceTable::_instance = nullptr;
+
+void ResourceTable::Create()
 {
+    if (_instance)
+    {
+        LOG_WARNING("ResourceTable instance already exists. Creation skipped.");
+        return;
+    }
+    _instance = std::unique_ptr<ResourceTable>(new ResourceTable());
+}
+
+void ResourceTable::Destroy()
+{
+    if (_instance)
+    {
+        _instance.reset();
+    }
+    else
+    {
+        LOG_WARNING("ResourceTable instance does not exist. Destruction skipped.");
+    }
+}
+
+ResourceTable& ResourceTable::Get()
+{
+    ASSERT(_instance, "ResourceTable instance is not created. Call Create() first.");
+    return *_instance;
 }
 
 const dx12::DescriptorHeap& ResourceTable::GetShaderResourcesDescriptorHeap() const
