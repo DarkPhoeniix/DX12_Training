@@ -20,7 +20,7 @@ namespace scene
 
 namespace gui
 {
-    class EntityComponentsWidget : IWidget
+    class EntityComponentsWidget : public IWidget
     {
     public:
         EntityComponentsWidget(std::shared_ptr<Editor> editor);

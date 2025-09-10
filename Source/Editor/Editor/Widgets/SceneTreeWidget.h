@@ -11,7 +11,7 @@ namespace scene
 
 namespace gui
 {
-    class SceneTreeWidget : IWidget
+    class SceneTreeWidget : public IWidget
     {
     public:
         SceneTreeWidget(std::shared_ptr<Editor> editor);

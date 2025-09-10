@@ -2,8 +2,9 @@
 
 #include "EntityComponentsWidget.h"
 
-#include "Core/DescriptorHeapManager.h"
+#include "Core/ResourceTable.h"
 
+#include "Scene/Scene.h"
 #include "Scene/Entity/Entity.h"
 #include "Scene/Entity/Components/Animation.h"
 #include "Scene/Entity/Components/Armature.h"
@@ -87,7 +88,18 @@ namespace gui
     {
         IWidget::Update();
 
-        ImGui::BeginChild("Entity Components", { 0.0f, 0.0f }, ImGuiChildFlags_FrameStyle);
+        std::shared_ptr<scene::Entity> activeCamera = _editor->GetScene()->FindNodeByComponentName("Camera");
+        std::shared_ptr<scene::Camera> cameraComponent = activeCamera->GetComponentAs<scene::Camera>("Camera");
+        scene::Viewport viewport = cameraComponent->GetViewport();
+
+        DirectX::XMUINT2 viewportSize = viewport.GetSize();
+
+        float positionX = (float)(viewportSize.x - (viewportSize.x * 0.2f));
+        float positionY = 0.0f;
+        float sizeX = (float)(viewportSize.x * 0.2f);
+        float sizeY = (float)(viewportSize.y);
+
+        ImGui::BeginChild("Entity Components", { 0.0f, sizeY * 0.6f }, ImGuiChildFlags_FrameStyle);
 
         std::shared_ptr<scene::Entity> entity = _editor->GetSelectedEntity();
         if (!entity)
@@ -245,9 +257,13 @@ namespace gui
 			std::shared_ptr<dx12::Resource> roughnessTexture = TextureManager::Get().GetTexture(material->RoughnessTextureHandle);
             std::shared_ptr<dx12::Resource> emissionTexture = TextureManager::Get().GetTexture(material->EmissionTextureHandle);
 
+            ImVec2 menuSize = ImGui::GetWindowSize();
+            float imageSize = menuSize.x * 0.9f;
+
             if (albedoTexture)
             {
                 ImGui::Text("Albedo: %s (ID: %i)", albedoTexture->GetName().c_str(), albedoTexture->GetID());
+                ImGui::Image((ImTextureID)ResourceTable::Get().GetStaticResourceHandle(albedoTexture->GetAsSRV()).GpuHandle.ptr, { imageSize, imageSize });
             }
             else
             {
@@ -257,11 +273,13 @@ namespace gui
             if (normalMapTexture)
             {
                 ImGui::Text("Normal map: %s (ID: %i)", normalMapTexture->GetName().c_str(), normalMapTexture->GetID());
+                ImGui::Image((ImTextureID)ResourceTable::Get().GetStaticResourceHandle(normalMapTexture->GetAsSRV()).GpuHandle.ptr, { imageSize, imageSize });
             }
 
             if (metalnessTexture)
             {
                 ImGui::Text("Metalness: %s (ID: %i)", metalnessTexture->GetName().c_str(), metalnessTexture->GetID());
+                ImGui::Image((ImTextureID)ResourceTable::Get().GetStaticResourceHandle(metalnessTexture->GetAsSRV()).GpuHandle.ptr, { imageSize, imageSize });
             }
             else
             {
@@ -271,6 +289,7 @@ namespace gui
             if (roughnessTexture)
             {
                 ImGui::Text("Roughness: %s (ID: %i)", roughnessTexture->GetName().c_str(), roughnessTexture->GetID());
+                ImGui::Image((ImTextureID)ResourceTable::Get().GetStaticResourceHandle(roughnessTexture->GetAsSRV()).GpuHandle.ptr, { imageSize, imageSize });
             }
             else
             {
@@ -280,6 +299,7 @@ namespace gui
             if (emissionTexture)
             {
                 ImGui::Text("Emission: %s (ID: %i)", emissionTexture->GetName().c_str(), emissionTexture->GetID());
+                ImGui::Image((ImTextureID)ResourceTable::Get().GetStaticResourceHandle(emissionTexture->GetAsSRV()).GpuHandle.ptr, { imageSize, imageSize });
             }
             else
             {

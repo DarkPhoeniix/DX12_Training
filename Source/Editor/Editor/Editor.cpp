@@ -5,6 +5,7 @@
 #include "CommandList.h"
 #include "SwapChain.h"
 
+#include "Core/DescriptorHeapManager.h"
 #include "Scene/Scene.h"
 #include "Scene/Entity/Components/Camera.h"
 #include "Widgets/DebugInfoWidget.h"
@@ -36,29 +37,22 @@ namespace gui
         , _scene(nullptr)
         , _selectedEntity(nullptr)
     {
-        dx12::DescriptorHeapDescription desc;
-        desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-        desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
-        desc.SetNumDescriptors(1);
-
-        _srvDescriptorHeap = std::make_shared<dx12::DescriptorHeap>();
-        _srvDescriptorHeap->Create(desc);
-        _srvDescriptorHeap->SetName("GUI SRV descriptor heap");
-
         // Setup Dear ImGui context
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
         ImGuiIO& io = ImGui::GetIO();
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
 
+        DescriptorHandle handle = DescriptorHeapManager::Get().AllocateStatic(DescriptorHeapType::Static);
+
         // Setup Platform/Renderer backends
         ImGui_ImplWin32_Init(windowHandle);
         ImGui_ImplDX12_Init(dx12::Device::GetDXDevice().Get(),
             dx12::BACK_BUFFER_COUNT,
             DXGI_FORMAT_R8G8B8A8_UNORM,
-            _srvDescriptorHeap->GetDXDescriptorHeap().Get(),
-            _srvDescriptorHeap->GetHeapStartCPUHandle(),
-            _srvDescriptorHeap->GetHeapStartGPUHandle());
+            DescriptorHeapManager::Get().GetShaderResourcesDescriptorHeap().GetDXDescriptorHeap().Get(),
+            handle.CpuHandle,
+            handle.GpuHandle);
 
         ImGuiStyle& style = ImGui::GetStyle();
 
@@ -169,7 +163,6 @@ namespace gui
         _debugInfoWidget.reset();
         _entityComponentsWidget.reset();
         _scene.reset();
-        _srvDescriptorHeap.reset();
     }
 
     void Editor::SetRenderGraph(rg::RenderGraph* renderGraph)
@@ -268,7 +261,7 @@ namespace gui
     void Editor::Render(dx12::CommandList& commandList)
     {
         ImGui::Render();
-        commandList.SetDescriptorHeaps({ _srvDescriptorHeap->GetDXDescriptorHeap().Get() });
+        commandList.SetDescriptorHeaps({ DescriptorHeapManager::Get().GetShaderResourcesDescriptorHeap().GetDXDescriptorHeap().Get()});
         ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList.GetDXCommandList().Get());
     }
 

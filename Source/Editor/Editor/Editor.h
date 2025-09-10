@@ -80,8 +80,6 @@ namespace gui
         std::shared_ptr<DebugInfoWidget> _debugInfoWidget;
         std::shared_ptr<EntityComponentsWidget> _entityComponentsWidget;
 
-        std::shared_ptr<dx12::DescriptorHeap> _srvDescriptorHeap;
-
         WCHAR _filepath[2048];
     };
 } // namespace gui
