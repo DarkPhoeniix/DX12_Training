@@ -56,7 +56,6 @@ namespace render
 
         Frame* _currentFrame;
 
-        DescriptorHeapManager _descriptorHeapManager;
         ResourceTable _resourceTable;
 
         rg::RenderGraph _renderGraph;

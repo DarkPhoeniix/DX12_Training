@@ -2,6 +2,8 @@
 
 #include "DescriptorHeapManager.h"
 
+std::unique_ptr<DescriptorHeapManager> DescriptorHeapManager::_instance = nullptr;
+
 DescriptorHeapManager::DescriptorHeapManager(std::uint32_t maxRTVDescriptors, std::uint32_t maxDSVDescriptors, std::uint32_t maxStaticDescriptors, std::uint32_t maxDynamicDescriptors)
     : _frameIndex(0)
 {
@@ -37,6 +39,34 @@ DescriptorHeapManager::DescriptorHeapManager(std::uint32_t maxRTVDescriptors, st
     buffersHeapDesc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
     _shaderResourcesDescriptorHeap.Create(buffersHeapDesc);
     _shaderResourcesDescriptorHeap.SetName("Shader Resources Descriptor Heap");
+}
+
+void DescriptorHeapManager::Create(std::uint32_t maxRTVDescriptors, std::uint32_t maxDSVDescriptors, std::uint32_t maxStaticDescriptors, std::uint32_t maxDynamicDescriptors)
+{
+    if (_instance)
+    {
+        LOG_WARNING("DescriptorHeapManager instance already exists. Creation skipped.");
+        return;
+    }
+    _instance = std::unique_ptr<DescriptorHeapManager>(new DescriptorHeapManager(maxRTVDescriptors, maxDSVDescriptors, maxStaticDescriptors, maxDynamicDescriptors));
+}
+
+void DescriptorHeapManager::Destroy()
+{
+    if (_instance)
+    {
+        _instance.reset();
+    }
+    else
+    {
+        LOG_WARNING("DescriptorHeapManager instance does not exist. Destruction skipped.");
+    }
+}
+
+DescriptorHeapManager& DescriptorHeapManager::Get()
+{
+    ASSERT(_instance, "DescriptorHeapManager instance is not created. Call Create() first.");
+    return *_instance;
 }
 
 DescriptorHandle DescriptorHeapManager::AllocateStatic(DescriptorHeapType type)

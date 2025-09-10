@@ -151,10 +151,10 @@ namespace render
         , _isMinimized(false)
         , _isCameraMoving(false)
         , _deltaTime(0.0f)
-        , _descriptorHeapManager(1024, 1024, 4096, 1024)
-        , _resourceTable(_descriptorHeapManager)
+        , _resourceTable()
         , _scene(std::make_shared<scene::Scene>())
     {
+        DescriptorHeapManager::Create(2048, 128, 4096, 1024);
 		TextureManager::Create();
         GeometryCacheManager::Create();
 
@@ -186,8 +186,7 @@ namespace render
         {
             TextureManager::Get().Clear();
             GeometryCacheManager::Get().Clear();
-
-            _descriptorHeapManager.Reset();
+            DescriptorHeapManager::Get().Reset();
         }
 
         {
@@ -247,6 +246,7 @@ namespace render
         render::DrawHelper::Destroy();
         TextureManager::Destroy();
         GeometryCacheManager::Destroy();
+        DescriptorHeapManager::Destroy();
 
         _contentLoaded = false;
     }
@@ -262,7 +262,7 @@ namespace render
 
         _deltaTime = updateEvent.elapsedTime;
 
-        _descriptorHeapManager.AdvanceFrameIndex();
+        DescriptorHeapManager::Get().AdvanceFrameIndex();
         _resourceTable.ResetTransientResources();
 
         // Clear marker map for current frame before execution

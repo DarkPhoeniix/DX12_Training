@@ -24,8 +24,12 @@ enum class DescriptorHeapType
 class DescriptorHeapManager
 {
 public:
-    DescriptorHeapManager(std::uint32_t maxRTVDescriptors, std::uint32_t maxDSVDescriptors, std::uint32_t maxStaticDescriptors, std::uint32_t maxDynamicDescriptors);
     ~DescriptorHeapManager() = default;
+
+    static void Create(std::uint32_t maxRTVDescriptors, std::uint32_t maxDSVDescriptors, std::uint32_t maxStaticDescriptors, std::uint32_t maxDynamicDescriptors);
+    static void Destroy();
+
+    [[nodiscard]] static DescriptorHeapManager& Get();
 
     [[nodiscard]] DescriptorHandle AllocateStatic(DescriptorHeapType type);
     [[nodiscard]] DescriptorHandle AllocateTransient(DescriptorHeapType type);
@@ -40,6 +44,8 @@ public:
     const dx12::DescriptorHeap& GetShaderResourcesDescriptorHeap() const;
 
 private:
+    DescriptorHeapManager(std::uint32_t maxRTVDescriptors, std::uint32_t maxDSVDescriptors, std::uint32_t maxStaticDescriptors, std::uint32_t maxDynamicDescriptors);
+
     struct DescriptorAllocator
     {
         DescriptorAllocator() = default;
@@ -65,4 +71,6 @@ private:
     DescriptorAllocator _DSVAllocator;
     DescriptorAllocator _staticAllocator;
     std::vector<DescriptorAllocator> _dynamicAllocator;
+
+    static std::unique_ptr<DescriptorHeapManager> _instance;
 };

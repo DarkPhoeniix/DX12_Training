@@ -6,7 +6,7 @@ DescriptorHandle ResourceTable::AddStaticResourceView(const T& view)
 {
     if constexpr (std::same_as<T, dx12::RenderTargetView>)
     {
-        DescriptorHandle handle = _descriptorHeapManager.AllocateStatic(DescriptorHeapType::RTV);
+        DescriptorHandle handle = DescriptorHeapManager::Get().AllocateStatic(DescriptorHeapType::RTV);
         dx12::Device::CreateRenderTargetView(view, handle.CpuHandle);
         _staticRTVs[view.Owner->GetID()] = handle;
 
@@ -14,7 +14,7 @@ DescriptorHandle ResourceTable::AddStaticResourceView(const T& view)
     }
     else if constexpr (std::same_as<T, dx12::DepthStencilView>)
     {
-        DescriptorHandle handle = _descriptorHeapManager.AllocateStatic(DescriptorHeapType::DSV);
+        DescriptorHandle handle = DescriptorHeapManager::Get().AllocateStatic(DescriptorHeapType::DSV);
         dx12::Device::CreateDepthStencilView(view, handle.CpuHandle);
         _staticDSVs[view.Owner->GetID()] = handle;
 
@@ -22,7 +22,7 @@ DescriptorHandle ResourceTable::AddStaticResourceView(const T& view)
     }
     else if constexpr (std::same_as<T, dx12::ConstantBufferView>)
     {
-        DescriptorHandle handle = _descriptorHeapManager.AllocateStatic(DescriptorHeapType::Static);
+        DescriptorHandle handle = DescriptorHeapManager::Get().AllocateStatic(DescriptorHeapType::Static);
         dx12::Device::CreateConstantBufferView(view, handle.CpuHandle);
         _staticCBVs[view.Owner->GetID()] = handle;
 
@@ -30,7 +30,7 @@ DescriptorHandle ResourceTable::AddStaticResourceView(const T& view)
     }
     else if constexpr (std::same_as<T, dx12::ShaderResourceView>)
     {
-        DescriptorHandle handle = _descriptorHeapManager.AllocateStatic(DescriptorHeapType::Static);
+        DescriptorHandle handle = DescriptorHeapManager::Get().AllocateStatic(DescriptorHeapType::Static);
         dx12::Device::CreateShaderResourceView(view, handle.CpuHandle);
         _staticSRVs[view.Owner->GetID()] = handle;
 
@@ -38,7 +38,7 @@ DescriptorHandle ResourceTable::AddStaticResourceView(const T& view)
     }
     else if constexpr (std::same_as<T, dx12::UnorderedAccessView>)
     {
-        DescriptorHandle handle = _descriptorHeapManager.AllocateStatic(DescriptorHeapType::Static);
+        DescriptorHandle handle = DescriptorHeapManager::Get().AllocateStatic(DescriptorHeapType::Static);
         dx12::Device::CreateUnorderedAccessView(view, handle.CpuHandle);
         _staticUAVs[view.Owner->GetID()] = handle;
 
@@ -56,7 +56,7 @@ DescriptorHandle ResourceTable::AddTransientResourceView(const T& view)
 {
     if constexpr (std::same_as<T, dx12::RenderTargetView>)
     {
-        DescriptorHandle handle = _descriptorHeapManager.AllocateTransient(DescriptorHeapType::RTV);
+        DescriptorHandle handle = DescriptorHeapManager::Get().AllocateTransient(DescriptorHeapType::RTV);
         dx12::Device::CreateRenderTargetView(view, handle.CpuHandle);
         _transientRTVs[view.Owner->GetID()] = handle;
 
@@ -64,7 +64,7 @@ DescriptorHandle ResourceTable::AddTransientResourceView(const T& view)
     }
     else if constexpr (std::same_as<T, dx12::DepthStencilView>)
     {
-        DescriptorHandle handle = _descriptorHeapManager.AllocateTransient(DescriptorHeapType::DSV);
+        DescriptorHandle handle = DescriptorHeapManager::Get().AllocateTransient(DescriptorHeapType::DSV);
         dx12::Device::CreateDepthStencilView(view, handle.CpuHandle);
         _transientDSVs[view.Owner->GetID()] = handle;
 
@@ -72,7 +72,7 @@ DescriptorHandle ResourceTable::AddTransientResourceView(const T& view)
     }
     else if constexpr (std::same_as<T, dx12::ConstantBufferView>)
     {
-        DescriptorHandle handle = _descriptorHeapManager.AllocateTransient(DescriptorHeapType::Static);
+        DescriptorHandle handle = DescriptorHeapManager::Get().AllocateTransient(DescriptorHeapType::Static);
         dx12::Device::CreateConstantBufferView(view, handle.CpuHandle);
         _transientCBVs[view.Owner->GetID()] = handle;
 
@@ -80,7 +80,7 @@ DescriptorHandle ResourceTable::AddTransientResourceView(const T& view)
     }
     else if constexpr (std::same_as<T, dx12::ShaderResourceView>)
     {
-        DescriptorHandle handle = _descriptorHeapManager.AllocateTransient(DescriptorHeapType::Static);
+        DescriptorHandle handle = DescriptorHeapManager::Get().AllocateTransient(DescriptorHeapType::Static);
         dx12::Device::CreateShaderResourceView(view, handle.CpuHandle);
         _transientSRVs[view.Owner->GetID()] = handle;
 
@@ -88,7 +88,7 @@ DescriptorHandle ResourceTable::AddTransientResourceView(const T& view)
     }
     else if constexpr (std::same_as<T, dx12::UnorderedAccessView>)
     {
-        DescriptorHandle handle = _descriptorHeapManager.AllocateTransient(DescriptorHeapType::Static);
+        DescriptorHandle handle = DescriptorHeapManager::Get().AllocateTransient(DescriptorHeapType::Static);
         dx12::Device::CreateUnorderedAccessView(view, handle.CpuHandle);
         _transientUAVs[view.Owner->GetID()] = handle;
 

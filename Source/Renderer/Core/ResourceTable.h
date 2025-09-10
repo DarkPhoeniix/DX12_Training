@@ -6,7 +6,7 @@
 class ResourceTable
 {
 public:
-    ResourceTable(DescriptorHeapManager& descriptorHeapManager);
+    ResourceTable();
     ResourceTable(const ResourceTable&) = delete;
     ResourceTable(ResourceTable&&) noexcept = default;
     ~ResourceTable() = default;
@@ -30,8 +30,6 @@ public:
         constexpr DescriptorHandle GetTransientResourceHandle(const T& desc);
 
 private:
-    DescriptorHeapManager& _descriptorHeapManager;
-
     std::unordered_map<dx12::ResourceID, DescriptorHandle> _staticRTVs;
     std::unordered_map<dx12::ResourceID, DescriptorHandle> _staticDSVs;
     std::unordered_map<dx12::ResourceID, DescriptorHandle> _staticCBVs;

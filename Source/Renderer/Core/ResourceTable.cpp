@@ -61,19 +61,18 @@ namespace internal
     };
 } // namespace internal
 
-ResourceTable::ResourceTable(DescriptorHeapManager& descriptorHeapManager)
-    : _descriptorHeapManager(descriptorHeapManager)
+ResourceTable::ResourceTable()
 {
 }
 
 const dx12::DescriptorHeap& ResourceTable::GetShaderResourcesDescriptorHeap() const
 {
-    return _descriptorHeapManager.GetShaderResourcesDescriptorHeap();
+    return DescriptorHeapManager::Get().GetShaderResourcesDescriptorHeap();
 }
 
 void ResourceTable::Reset()
 {
-    _descriptorHeapManager.Reset();
+    DescriptorHeapManager::Get().Reset();
 
     _staticRTVs.clear();
     _staticDSVs.clear();
@@ -86,7 +85,7 @@ void ResourceTable::Reset()
 
 void ResourceTable::ResetTransientResources()
 {
-    _descriptorHeapManager.ResetTransient();
+    DescriptorHeapManager::Get().ResetTransient();
 
     _transientRTVs.clear();
     _transientDSVs.clear();
