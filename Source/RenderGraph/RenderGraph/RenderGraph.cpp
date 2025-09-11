@@ -18,7 +18,9 @@ namespace rg
         : _frame(nullptr)
         , _context()
 #ifdef RG_MULTITHREADED
-        , _workerManager(RENDER_THREADS_NUM)
+        , _workerManager(std::make_unique<mt::PassWorkerManager>(RENDER_THREADS_NUM))
+#else
+        , _workerManager(nullptr)
 #endif
     {
     }
@@ -86,7 +88,7 @@ namespace rg
                 task->SetName(pass->_name);
 
 #ifdef RG_MULTITHREADED
-                _workerManager.Submit({ pass.get(), &_context, task });
+                _workerManager->Submit({ pass.get(), &_context, task });
 #else
                 pass->Execute(_context, *task);
 #endif
@@ -96,7 +98,7 @@ namespace rg
         }
 
 #ifdef RG_MULTITHREADED
-        _workerManager.Wait();
+        _workerManager->Wait();
 #endif
 
         for (std::uint32_t passIndex : _sortedPasses)

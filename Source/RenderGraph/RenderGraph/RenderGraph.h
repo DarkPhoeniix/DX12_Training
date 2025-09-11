@@ -1,15 +1,12 @@
 #pragma once
 
-#include "Core/ResourceTable.h"
-#include "Core/TextureManager.h"
 #include "RenderPass.h"
 #include "RenderContext.h"
 
-// TODO: isolate RG_MULTITHREADED to this lib
-#ifdef RG_MULTITHREADED
 #include "Helpers/PassWorkerManager.h"
-#endif
 
+#include "Core/ResourceTable.h"
+#include "Core/TextureManager.h"
 #include "Scene/Scene.h"
 
 class Frame;
@@ -61,8 +58,6 @@ namespace rg
 
         std::shared_ptr<scene::Scene> _scene;
 
-#ifdef RG_MULTITHREADED
-        mt::PassWorkerManager _workerManager;
-#endif
+        std::unique_ptr<mt::PassWorkerManager> _workerManager;
     };
 } // namespace rg

@@ -2,7 +2,6 @@
 
 #include "Core/ResourceTable.h"
 #include "Core/TextureManager.h"
-#include "Render/Frame/CacheGPU.h"
 #include "Render/Frame/Frame.h"
 
 namespace rg

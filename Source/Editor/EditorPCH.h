@@ -47,5 +47,8 @@ using namespace Microsoft::WRL;
 
 #include <memory>
 #include <chrono>
+#include <mutex>
+#include <thread>
+#include <functional>
 
 #endif // EDITOR_PCH_H
