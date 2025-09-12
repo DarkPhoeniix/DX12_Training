@@ -41,9 +41,6 @@ namespace render
 
 	void ToneMappingPass::Setup(rg::RenderPassBuilder& builder)
 	{
-		_data.HDRTarget = builder.ReadResource("hdr_target");
-		_data.AverageLuminance = builder.ReadResource("average_luminance");
-
 		dx12::ResourceDescription targetDesc;
 		{
 			D3D12_CLEAR_VALUE clearValue;
@@ -58,7 +55,11 @@ namespace render
 			targetDesc.SetClearValue(clearValue);
 			targetDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::RenderTarget | dx12::ResourceType::Unordered);
 		}
-		_data.Target = builder.CreateResource("render_target", targetDesc);
+		builder.DeclareTexture("render_target", targetDesc);
+
+		_data.Target = builder.RenderTarget("render_target");
+		_data.AverageLuminance = builder.ReadBuffer("average_luminance");
+		_data.HDRTarget = builder.ReadTexture("hdr_target");
 	}
 
 	void ToneMappingPass::Execute(rg::RenderContext& context, TaskGPU& task)
@@ -77,14 +78,6 @@ namespace render
 			DescriptorHandle hdrTargetHandle = context.GetStaticResourceHandle(hdrTarget->GetAsSRV());
 			DescriptorHandle avgLuminanceHandle = context.GetStaticResourceHandle(avgLuminance->GetAsSRV());
 			DescriptorHandle targetHandle = context.GetStaticResourceHandle(target->GetAsUAV());
-
-			std::vector<dx12::ResourceBarrier> barriers =
-			{
-				{ hdrTarget,      D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-				{ avgLuminance,   D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-				{ target,         D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_UNORDERED_ACCESS }
-			};
-			commandList.TransitionBarriers(barriers);
 
 			// Setup pipeline state
 
@@ -114,14 +107,6 @@ namespace render
 			std::uint32_t yThreadGroups = (std::uint32_t)std::ceilf(viewportSize.y / float(TONE_MAPPING_THREADS_NUM));
 
 			commandList.Dispatch(xThreadGroups, yThreadGroups);
-
-			barriers =
-			{
-				{ hdrTarget,      D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,   D3D12_RESOURCE_STATE_COMMON },
-				{ avgLuminance,   D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,   D3D12_RESOURCE_STATE_COMMON },
-				{ target,         D3D12_RESOURCE_STATE_UNORDERED_ACCESS,            D3D12_RESOURCE_STATE_COMMON }
-			};
-			commandList.TransitionBarriers(barriers);
 		}
 		PIXEndEvent(commandList.GetDXCommandList().Get());
 

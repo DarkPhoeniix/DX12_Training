@@ -11,7 +11,6 @@ namespace render
 	struct AverageLuminancePassData
 	{
 		rg::ResourceId LuminanceHistogram;
-		rg::ResourceId PrevAverageLuminance;
 		rg::ResourceId AverageLuminance;
 	};
 

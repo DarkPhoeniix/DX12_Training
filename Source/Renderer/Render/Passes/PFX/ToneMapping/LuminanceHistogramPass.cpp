@@ -38,15 +38,16 @@ namespace render
 
 	void LuminanceHistogramPass::Setup(rg::RenderPassBuilder& builder)
 	{
-		_data.HDRTarget = builder.ReadResource("hdr_target");
-
 		dx12::ResourceDescription lumDesc;
 		{
 			lumDesc.SetSize({ LUM_HISTOGRAM_BINS_NUM * sizeof(std::uint32_t), 1 });
 			lumDesc.SetStride(sizeof(std::uint32_t));
 			lumDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Unordered);
 		}
-		_data.LuminanceHistogram = builder.CreateResource("luminance_histogram", lumDesc);
+		builder.DeclareBuffer("luminance_histogram", lumDesc);
+
+		_data.LuminanceHistogram = builder.WriteBuffer("luminance_histogram");
+		_data.HDRTarget = builder.ReadTexture("hdr_target");
 	}
 
 	void LuminanceHistogramPass::Execute(rg::RenderContext& context, TaskGPU& task)
@@ -72,13 +73,6 @@ namespace render
 
 			// Setup root signature components
 
-			std::vector<dx12::ResourceBarrier> barriers =
-			{
-				{ hdrTarget,            D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE},
-				{ luminanceHistogram,   D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_UNORDERED_ACCESS }
-			};
-			commandList.TransitionBarriers(barriers);
-
 			PassCB constants =
 			{
 				.MinLogLuminance = RenderSettings::ToneMapping().MinLogLuminance,
@@ -95,13 +89,6 @@ namespace render
 			std::uint32_t xThreadGroups = (std::uint32_t)std::ceilf(viewportSize.x / float(LUM_HISTOGRAM_THREADS_NUM));
 			std::uint32_t yThreadGroups = (std::uint32_t)std::ceilf(viewportSize.y / float(LUM_HISTOGRAM_THREADS_NUM));
 			commandList.Dispatch(xThreadGroups, yThreadGroups);
-
-			barriers =
-			{
-				{ hdrTarget,            D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
-				{ luminanceHistogram,   D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON }
-			};
-			commandList.TransitionBarriers(barriers);
 		}
 		PIXEndEvent(commandList.GetDXCommandList().Get());
 

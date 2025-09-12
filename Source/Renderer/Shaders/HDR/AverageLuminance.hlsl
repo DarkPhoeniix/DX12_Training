@@ -10,9 +10,8 @@ struct PassCB
     float MinLogLuminance;
     float LogLuminanceRange;
     
-    uint PrevLuminanceIndex;
     uint LuminanceHistogramIndex;
-    uint OutputLuminanceIndex;
+    uint AverageLuminanceBufferIndex;
 };
 
 ConstantBuffer<PassCB> PassConstants : register(b1);
@@ -23,9 +22,8 @@ groupshared float HistogramShared[NUM_HISTOGRAM_BINS];
 [numthreads(NUM_HISTOGRAM_BINS, 1, 1)]
 void main(uint3 localThreadIndex : SV_GroupThreadID)
 {
-    StructuredBuffer<float> PrevAverageLum      = ResourceDescriptorHeap[PassConstants.PrevLuminanceIndex];
     RWStructuredBuffer<uint> LuminanceHistogram = ResourceDescriptorHeap[PassConstants.LuminanceHistogramIndex];
-    RWStructuredBuffer<float> LuminanceOutput   = ResourceDescriptorHeap[PassConstants.OutputLuminanceIndex];
+    RWStructuredBuffer<float> AverageLuminance = ResourceDescriptorHeap[PassConstants.AverageLuminanceBufferIndex];
     
     uint threadIndex = localThreadIndex.x;
     float countForThisBin = (float) LuminanceHistogram.Load(threadIndex);
@@ -52,7 +50,7 @@ void main(uint3 localThreadIndex : SV_GroupThreadID)
         
         float weightedLogAverage = (HistogramShared[0] / max((float) PassConstants.PixelCount - countForThisBin, 1.0)) - 1.0;
         float weightedAverageLuminance = exp2(((weightedLogAverage / (NUM_HISTOGRAM_BINS - 2)) * PassConstants.LogLuminanceRange) + PassConstants.MinLogLuminance);
-        float adaptedLuminance = PrevAverageLum[0] + (weightedAverageLuminance - PrevAverageLum[0]) * adaptation;
-        LuminanceOutput[0] = adaptedLuminance;
+        float adaptedLuminance = AverageLuminance[0] + (weightedAverageLuminance - AverageLuminance[0]) * adaptation;
+        AverageLuminance[0] = adaptedLuminance;
     }
 }
