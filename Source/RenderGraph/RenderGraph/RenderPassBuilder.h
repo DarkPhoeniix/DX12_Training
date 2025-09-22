@@ -1,11 +1,11 @@
 #pragma once
 
+#include "RenderGraphResourceId.h"
 #include "RenderGraph.h"
 
 namespace rg
 {
     class IRenderPass;
-    class RenderGraph;
 
     class RenderPassBuilder
     {
@@ -18,28 +18,31 @@ namespace rg
         RenderPassBuilder& operator=(const RenderPassBuilder&) = default;
         RenderPassBuilder& operator=(RenderPassBuilder&&) = default;
 
-        ResourceId CreateResourceVirtual(const std::string& name);
-        ResourceId CreateResource(const std::string& name, dx12::ResourceDescription desc, void* data = nullptr, size_t dataSize = 0);
-        ResourceId ReadResource(const std::string& name);
-        ResourceId WriteResource(const std::string& name);
+        RGResourceId CreateResourceVirtual(const std::string& name);
+        RGResourceId CreateResource(const std::string& name, dx12::ResourceDescription desc, void* data = nullptr, size_t dataSize = 0);
+        RGResourceId ReadResource(const std::string& name);
+        RGResourceId WriteResource(const std::string& name);
 
-        void DeclareBuffer(const std::string& name, const dx12::ResourceDescription& desc, void* data = nullptr, size_t dataSize = 0);
-        void DeclareTexture(const std::string& name, const dx12::ResourceDescription& desc, void* data = nullptr, size_t dataSize = 0);
-        void DeclareVirtualResource(const std::string& name);
+        RGResourceId DeclareBuffer(const std::string& name, const dx12::ResourceDescription& desc, void* data = nullptr, size_t dataSize = 0);
+        RGResourceId DeclareTexture(const std::string& name, const dx12::ResourceDescription& desc, void* data = nullptr, size_t dataSize = 0);
+        RGResourceId DeclareVirtualResource(const std::string& name);
 
-        [[nodiscard]] ResourceId ReadBuffer(const std::string& name);
-        [[nodiscard]] ResourceId WriteBuffer(const std::string& name);
-        [[nodiscard]] ResourceId CopySrcBuffer(const std::string& name);
-        [[nodiscard]] ResourceId CopyDstBuffer(const std::string& name);
-        [[nodiscard]] ResourceId IndirectArgBuffer(const std::string& name);
+        [[nodiscard]] RGBufferReadId ReadBuffer(const std::string& name);
+        [[nodiscard]] RGBufferWriteId WriteBuffer(const std::string& name);
+        [[nodiscard]] RGBufferCopySrcId CopySrcBuffer(const std::string& name);
+        [[nodiscard]] RGBufferCopyDstId CopyDstBuffer(const std::string& name);
+        [[nodiscard]] RGBufferIndirectArgsId IndirectArgBuffer(const std::string& name);
 
-        [[nodiscard]] ResourceId ReadTexture(const std::string& name);
-        [[nodiscard]] ResourceId WriteTexture(const std::string& name);
-        [[nodiscard]] ResourceId CopySrcTexture(const std::string& name);
-        [[nodiscard]] ResourceId CopyDstTexture(const std::string& name);
-        [[nodiscard]] ResourceId RenderTarget(const std::string& name);
-        [[nodiscard]] ResourceId DepthStencilRead(const std::string& name);
-        [[nodiscard]] ResourceId DepthStencilWrite(const std::string& name);
+        [[nodiscard]] RGTextureReadId ReadTexture(const std::string& name);
+        [[nodiscard]] RGTextureWriteId WriteTexture(const std::string& name);
+        [[nodiscard]] RGTextureCopySrcId CopySrcTexture(const std::string& name);
+        [[nodiscard]] RGTextureCopyDstId CopyDstTexture(const std::string& name);
+        [[nodiscard]] RGTextureRenderTargetId RenderTarget(const std::string& name);
+        [[nodiscard]] RGTextureDepthStencilReadId DepthStencilRead(const std::string& name);
+        [[nodiscard]] RGTextureDepthStencilWriteId DepthStencilWrite(const std::string& name);
+
+        [[nodiscard]] RGVirtualResourceReadId ReadVirtualResource(const std::string& name);
+        [[nodiscard]] RGVirtualResourceWriteId WriteVirtualResource(const std::string& name);
 
     private:
         IRenderPass* _renderPass;

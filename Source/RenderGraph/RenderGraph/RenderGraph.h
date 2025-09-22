@@ -27,8 +27,6 @@ namespace rg
         RenderGraph& operator=(const RenderGraph&) = delete;
         RenderGraph& operator=(RenderGraph&&) = default;
 
-        ResourceTable& GetResourceTable();
-
         void SetFrame(Frame& frame);
 
         void Init(ResourceTable& resourceTable, TextureManager& textureManager);
@@ -37,21 +35,30 @@ namespace rg
         void Compile();
         void Execute();
 
+        template<typename PassData, typename ...Args> requires std::is_constructible_v<RenderPass<PassData>, Args...>
+        void AddPass(Args&& ...args)
+        {
+            auto pass = std::make_shared<RenderPass<PassData>>(std::forward<Args>(args)...);
+            AddPass(pass);
+        }
         void AddPass(std::shared_ptr<IRenderPass> pass);
 
         void ImportResource(std::shared_ptr<dx12::Resource> resource);
-        std::shared_ptr<dx12::Resource> ExportResource(const std::string& name);
+        void ExportResource(const std::string& name, std::shared_ptr<dx12::Resource> desctination);
 
     private:
         friend class RenderPassBuilder;
 
         void BuildAdjacencyLists();
         void TopologicalSort();
+        void TransitionResourcesToWorkingState();
 
         std::vector<std::vector<std::uint32_t>> _adjacencyLists;
         std::vector<std::shared_ptr<IRenderPass>> _passes;
         std::vector<std::uint32_t> _sortedPasses;
         std::vector<TaskGPU*> _GPUTasks;
+
+        bool _transitionedToWorkingState = false;
 
         Frame* _frame;
         RenderContext _context;

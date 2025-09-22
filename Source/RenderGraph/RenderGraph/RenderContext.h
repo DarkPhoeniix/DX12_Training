@@ -1,5 +1,7 @@
 #pragma once
 
+#include "RenderGraphResourceId.h"
+
 #include "Core/ResourceTable.h"
 #include "Core/TextureManager.h"
 #include "Render/Frame/Frame.h"
@@ -8,8 +10,6 @@ namespace rg
 {
     class RenderGraph;
     class RenderPassBuilder;
-
-    using ResourceId = std::uint64_t;
 
     class RenderContext
     {
@@ -21,12 +21,11 @@ namespace rg
         const Frame* GetFrame() const;
         std::uint32_t GetFrameIndex() const;
 
-        ResourceTable& GetResourceTable();
 		TextureManager& GetTextureManager();
 
         void BindBindlessTable(dx12::CommandList& commandList) const;
 
-        std::shared_ptr<dx12::Resource> GetResource(ResourceId id);
+        std::shared_ptr<dx12::Resource> GetResource(RGResourceId id);
 
         DescriptorHandle GetStaticResourceHandle(const dx12::RenderTargetView& rtv) const;
         DescriptorHandle GetStaticResourceHandle(const dx12::DepthStencilView& dsv) const;
@@ -44,15 +43,37 @@ namespace rg
         friend class RenderGraph;
         friend class RenderPassBuilder;
 
-        ResourceId CreateResourceVirtual(const std::string& name);
-        ResourceId CreateResource(const std::string& name, dx12::ResourceDescription desc, void* data = nullptr, size_t dataSize = 0);
-        ResourceId ReadResource(const std::string& name);
-        ResourceId WriteResource(const std::string& name);
+        RGResourceId CreateResourceVirtual(const std::string& name);
+        RGResourceId CreateResource(const std::string& name, dx12::ResourceDescription desc, void* data = nullptr, size_t dataSize = 0);
+        RGResourceId ReadResource(const std::string& name);
+        RGResourceId WriteResource(const std::string& name);
 
-        void FillResource(std::shared_ptr<dx12::Resource> resource, void* data, size_t dataSize = 0);
+        RGResourceId DeclareBuffer(const std::string& name, const dx12::ResourceDescription& desc, void* data = nullptr, size_t dataSize = 0);
+        RGResourceId DeclareTexture(const std::string& name, const dx12::ResourceDescription& desc, void* data = nullptr, size_t dataSize = 0);
+        RGResourceId DeclareVirtualResource(const std::string& name);
 
-        std::unordered_map<std::string, ResourceId> _mapNameToId;
-        std::unordered_map<ResourceId, std::shared_ptr<dx12::Resource>> _mapIdToResource;
+        [[nodiscard]] RGBufferReadId ReadBuffer(const std::string& name);
+        [[nodiscard]] RGBufferWriteId WriteBuffer(const std::string& name);
+        [[nodiscard]] RGBufferCopySrcId CopySrcBuffer(const std::string& name);
+        [[nodiscard]] RGBufferCopyDstId CopyDstBuffer(const std::string& name);
+        [[nodiscard]] RGBufferIndirectArgsId IndirectArgBuffer(const std::string& name);
+
+        [[nodiscard]] RGTextureReadId ReadTexture(const std::string& name);
+        [[nodiscard]] RGTextureWriteId WriteTexture(const std::string& name);
+        [[nodiscard]] RGTextureCopySrcId CopySrcTexture(const std::string& name);
+        [[nodiscard]] RGTextureCopyDstId CopyDstTexture(const std::string& name);
+        [[nodiscard]] RGTextureRenderTargetId RenderTarget(const std::string& name);
+        [[nodiscard]] RGTextureDepthStencilReadId DepthStencilRead(const std::string& name);
+        [[nodiscard]] RGTextureDepthStencilWriteId DepthStencilWrite(const std::string& name);
+
+        [[nodiscard]] RGVirtualResourceReadId ReadVirtualResource(const std::string& name);
+        [[nodiscard]] RGVirtualResourceWriteId WriteVirtualResource(const std::string& name);
+
+        void FillBuffer(std::shared_ptr<dx12::Resource> resource, void* data, size_t dataSize = 0);
+        void FillTexture(std::shared_ptr<dx12::Resource> resource, void* data, size_t dataSize = 0);
+
+        std::unordered_map<std::string, RGResourceId> _mapNameToId;
+        std::unordered_map<RGResourceId, std::shared_ptr<dx12::Resource>> _mapIdToResource;
 
         Frame* _frame;
 

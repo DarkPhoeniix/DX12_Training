@@ -59,7 +59,9 @@ namespace rg::mt
                 onComplete = _callback;
             }
 
+            _work.RenderPass->PreExecute(*_work.Context, *_work.Task);
             _work.RenderPass->Execute(*_work.Context, *_work.Task);
+            _work.RenderPass->PostExecute(*_work.Context, *_work.Task);
 
             {
                 std::lock_guard<std::mutex> lock(_mutex);
