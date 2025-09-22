@@ -112,7 +112,7 @@ namespace dx12
 
             dx12::Device::GetDXDevice()->CreateRenderTargetView(backBuffer.Get(), nullptr, rtvHandle);
 
-            _backBuffers[i] = ResourceFactory::Create("Backbuffer " + std::to_string(i), backBuffer);
+            _backBuffers[i] = ResourceFactory::Create("swapchain_" + std::to_string(i), backBuffer);
 
             rtvHandle.Offset(_RTVDescriptorSize);
         }

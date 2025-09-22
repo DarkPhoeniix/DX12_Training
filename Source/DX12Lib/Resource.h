@@ -49,10 +49,13 @@ namespace dx12
         // Getter for the resource description.
         [[nodiscard]] ResourceDescription GetResourceDescription() const;
 
+        // Gets the initial state of the resource when it was created.
+        [[nodiscard]] D3D12_RESOURCE_STATES GetInitialState() const;
+
         // Sets the current state of the resource (e.g., copy, render target).
         void SetCurrentState(D3D12_RESOURCE_STATES state);
         // Getter for the current state of the resource.
-        D3D12_RESOURCE_STATES GetCurrentState() const;
+        [[nodiscard]] D3D12_RESOURCE_STATES GetCurrentState() const;
 
         // Getter for resource allocation info (e.g., size, alignment).
         [[nodiscard]] D3D12_RESOURCE_ALLOCATION_INFO GetAllocationInfo() const;

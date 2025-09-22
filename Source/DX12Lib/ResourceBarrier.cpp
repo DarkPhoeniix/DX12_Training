@@ -4,7 +4,17 @@
 
 #include "CommandList.h"
 
-void dx12::ResourceBarrier::Transition(CommandList& commandList)
+namespace dx12
 {
-    commandList.TransitionBarrier(*this);
-}
+    ResourceBarrier::ResourceBarrier(std::shared_ptr<Resource> targetResource, D3D12_RESOURCE_STATES beforeState, D3D12_RESOURCE_STATES afterState)
+        : TargetResource(targetResource)
+        , BeforeState(beforeState)
+        , AfterState(afterState)
+    {
+    }
+
+    void ResourceBarrier::Transition(CommandList& commandList)
+    {
+        commandList.TransitionBarrier(*this);
+    }
+} // namespace dx12

@@ -137,6 +137,11 @@ namespace dx12
         return _resourceDesc;
     }
 
+    [[nodiscard]] D3D12_RESOURCE_STATES Resource::GetInitialState() const
+    {
+        return _initialState;
+    }
+
     void Resource::SetCurrentState(D3D12_RESOURCE_STATES state)
     {
         _currentState = state;
