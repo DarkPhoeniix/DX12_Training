@@ -10,7 +10,7 @@ namespace render
 {
 	struct BloomUpsamplePassData
 	{
-		std::vector<rg::ResourceId> BloomMips;
+		std::vector<rg::RGResourceId> BloomMips;
 	};
 
 	class BloomUpsamplePass : public rg::RenderPass<BloomUpsamplePassData>

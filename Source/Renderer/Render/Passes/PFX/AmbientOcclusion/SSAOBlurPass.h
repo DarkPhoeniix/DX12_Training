@@ -10,11 +10,11 @@ namespace render
 {
 	struct SSAOBlurPassData
 	{
-		rg::ResourceId WeightsBuffer;
+		rg::RGResourceId WeightsBuffer;
 
-		rg::ResourceId Depth;
-		rg::ResourceId AOTarget;
-		rg::ResourceId TempBlurTarget;
+		rg::RGResourceId Depth;
+		rg::RGResourceId AOTarget;
+		rg::RGResourceId TempBlurTarget;
 	};
 
 	class SSAOBlurPass : public rg::RenderPass<SSAOBlurPassData>

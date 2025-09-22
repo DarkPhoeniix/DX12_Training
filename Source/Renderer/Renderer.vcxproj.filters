@@ -293,6 +293,7 @@
     <ClCompile Include="Render\Passes\PFX\Bloom\BloomUpsamplePass.cpp" />
     <ClCompile Include="Render\Passes\PFX\Bloom\BloomApplyPass.cpp" />
     <ClCompile Include="Render\Passes\PFX\ToneMapping\AverageLuminancePass.cpp" />
+    <ClCompile Include="Render\Passes\PresentPass.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RendererPCH.h" />
@@ -490,6 +491,7 @@
     <ClInclude Include="Render\Passes\PFX\Bloom\BloomUpsamplePass.h" />
     <ClInclude Include="Render\Passes\PFX\Bloom\BloomApplyPass.h" />
     <ClInclude Include="Render\Passes\PFX\ToneMapping\AverageLuminancePass.h" />
+    <ClInclude Include="Render\Passes\PresentPass.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\CommonResources.hlsli">

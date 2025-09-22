@@ -57,7 +57,7 @@ namespace render
 		}
 		builder.DeclareTexture("render_target", targetDesc);
 
-		_data.Target = builder.RenderTarget("render_target");
+		_data.Target = builder.WriteTexture("render_target");
 		_data.AverageLuminance = builder.ReadBuffer("average_luminance");
 		_data.HDRTarget = builder.ReadTexture("hdr_target");
 	}

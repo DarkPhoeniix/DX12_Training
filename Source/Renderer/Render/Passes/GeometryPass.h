@@ -10,10 +10,10 @@ namespace render
 {
 	struct GeometryPassData
 	{
-		rg::ResourceId Depth;
-		rg::ResourceId AlbedoMetallic;
-		rg::ResourceId NormalRoughness;
-		rg::ResourceId Emission;
+		rg::RGTextureDepthStencilWriteId Depth;
+		rg::RGTextureRenderTargetId AlbedoMetallic;
+		rg::RGTextureRenderTargetId NormalRoughness;
+		rg::RGTextureRenderTargetId Emission;
 	};
 
 	class GeometryPass : public rg::RenderPass<GeometryPassData>

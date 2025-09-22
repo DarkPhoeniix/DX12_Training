@@ -41,6 +41,8 @@ using namespace Microsoft::WRL;
 #include "Resource.h"
 #include "Device.h"
 
+#include "RenderGraph/RenderGraphResourceId.h"
+
 #include <imgui.h>
 #include <imgui_impl_win32.h>
 #include <imgui_impl_dx12.h>

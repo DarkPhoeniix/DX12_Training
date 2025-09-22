@@ -46,6 +46,7 @@
 #include "Render/Passes/Shadows/ShadowCullPass.h"
 #include "Render/Passes/Shadows/ShadowDrawPass.h"
 #include "Render/Passes/SkyboxPass.h"
+#include "Render/Passes/PresentPass.h"
 #include "Render/Helpers/DrawHelpers.h"
 
 using namespace DirectX;
@@ -294,36 +295,7 @@ namespace render
         }
 
         _renderGraph.SetFrame(*_currentFrame);
-
         _renderGraph.Execute();
-
-        std::shared_ptr<dx12::Resource> target = _renderGraph.ExportResource("render_target");
-
-        // Present
-        {
-            TaskGPU* task = _currentFrame->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT, nullptr);
-            task->SetName("present");
-            task->AddDependency("GUI Pass"); // TODO: remove hardcoded render dependency !!!
-
-            dx12::CommandList& commandList = *task->GetCommandLists().front();
-            commandList.SetName("present");
-
-            PIXBeginEvent(commandList.GetDXCommandList().Get(), 6, "Copy to backbuffer");
-            {
-                std::shared_ptr<dx12::Resource> swapChainTexture = dx12::Device::GetBackBuffer();
-
-                commandList.TransitionBarrier(*swapChainTexture, D3D12_RESOURCE_STATE_COPY_DEST);
-                commandList.TransitionBarrier(*target, D3D12_RESOURCE_STATE_COPY_SOURCE);
-
-                commandList.CopyResource(*target, *swapChainTexture);
-
-                commandList.TransitionBarrier(*swapChainTexture, D3D12_RESOURCE_STATE_PRESENT);
-                commandList.TransitionBarrier(*target, D3D12_RESOURCE_STATE_COMMON);
-            }
-            PIXEndEvent(commandList.GetDXCommandList().Get());
-
-            commandList.Close();
-        }
 
         DebugInfo::EndRender();
     }
@@ -785,6 +757,8 @@ namespace render
         {
             _renderGraph.Reset();
 
+            _renderGraph.SetFrame(*_currentFrame);
+
             _renderGraph.ImportResource(_diffuseIrradianceMap);
             _renderGraph.ImportResource(_brdfLUT);
             _renderGraph.ImportResource(_preFilteredEnvironmentMap);
@@ -793,7 +767,7 @@ namespace render
             //_renderGraph.AddPass(std::make_shared<ShadowClearPass>(_scene, _cameraComponent.get()));
             //_renderGraph.AddPass(std::make_shared<ShadowCullPass>(_scene, _cameraComponent.get()));
             //_renderGraph.AddPass(std::make_shared<ShadowDrawPass>(_scene, _cameraComponent.get()));
-            //_renderGraph.AddPass(std::make_shared<AmbientLightingPass>(_scene, _cameraComponent.get()));
+            _renderGraph.AddPass(std::make_shared<AmbientLightingPass>(_scene, _cameraComponent.get()));
             //if (RenderSettings::UseSSAO())
             //{
             //    _renderGraph.AddPass(std::make_shared<SSAOComputePass>(_scene, _cameraComponent.get()));
@@ -823,6 +797,7 @@ namespace render
             //{
             //    _renderGraph.AddPass(std::make_shared<DebugArmaturePass>(_scene, _cameraComponent.get()));
             //}
+            _renderGraph.AddPass(std::make_shared<PresentPass>(_scene, _cameraComponent.get()));
 
             _renderGraph.Compile();
         }

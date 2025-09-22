@@ -10,7 +10,7 @@ namespace render
 {
 	struct ShadowClearPassData
 	{
-		rg::ResourceId ShadowMaps;
+		rg::RGResourceId ShadowMaps;
 	};
 
 	class ShadowClearPass : public rg::RenderPass<ShadowClearPassData>

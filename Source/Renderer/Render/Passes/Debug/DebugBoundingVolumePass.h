@@ -9,8 +9,8 @@ namespace render
 {
 	struct DebugBoundingVolumePassData
 	{
-		rg::ResourceId Target;
-		rg::ResourceId Depth;
+		rg::RGResourceId Target;
+		rg::RGResourceId Depth;
 	};
 
 	class DebugBoundingVolumePass : public rg::RenderPass<DebugBoundingVolumePassData>

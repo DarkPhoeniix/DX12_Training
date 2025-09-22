@@ -404,6 +404,7 @@ namespace scene::helpers
             { brdfLUT,          D3D12_RESOURCE_STATE_UNORDERED_ACCESS,          D3D12_RESOURCE_STATE_COMMON }
         };
         commandList.TransitionBarriers(barriers);
+        commandList.UAVBarrier(brdfLUT);
 
         return brdfLUT;
     }
