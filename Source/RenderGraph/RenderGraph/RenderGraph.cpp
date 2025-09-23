@@ -53,6 +53,8 @@ namespace rg
         BuildAdjacencyLists();
         TopologicalSort();
 
+        _transitionedToWorkingState = false;
+
         LOG_INFO("Render graph compiled successfully with {} passes.", _passes.size());
     }
 
@@ -272,7 +274,7 @@ namespace rg
                     if (lastPass->_resourceStateMap.find(id) != lastPass->_resourceStateMap.end())
                     {
                         D3D12_RESOURCE_STATES lastState = lastPass->_resourceStateMap[id];
-                        D3D12_RESOURCE_STATES currState = resource->GetInitialState();;
+                        D3D12_RESOURCE_STATES currState = resource->GetCurrentState();;
                         if (lastState != currState)
                         {
                             barriers.push_back({ resource, currState, lastState });
@@ -285,6 +287,11 @@ namespace rg
             {
                 for (auto readId : renderPass->_reads)
                 {
+                    if (std::find(renderPass->_creates.cbegin(), renderPass->_creates.cend(), readId) != renderPass->_creates.cend())
+                    {
+                        continue;
+                    }
+
                     int refCount = 1;
 
                     for (std::shared_ptr<IRenderPass> p : _passes)
@@ -299,7 +306,13 @@ namespace rg
                     if (refCount <= 1)
                     {
                         std::shared_ptr<dx12::Resource> resource = _context.GetResource(readId);
-                        barriers.push_back({ resource, resource->GetInitialState(), renderPass->_resourceStateMap[readId] });
+
+                        D3D12_RESOURCE_STATES lastState = renderPass->_resourceStateMap[readId];
+                        D3D12_RESOURCE_STATES currState = resource->GetCurrentState();;
+                        if (lastState != currState)
+                        {
+                            barriers.push_back({ resource, currState, lastState });
+                        }
                     }
                 }
             }
