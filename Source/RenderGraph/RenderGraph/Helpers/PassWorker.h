@@ -10,7 +10,9 @@ namespace rg::mt
     {
         IRenderPass* RenderPass = nullptr;
         RenderContext* Context = nullptr;
-        TaskGPU* Task = nullptr;
+        TaskGPU* PreExecuteTask = nullptr;
+        TaskGPU* ExecuteTask = nullptr;
+        TaskGPU* PostExecuteTask = nullptr;
     };
 
     class PassWorker

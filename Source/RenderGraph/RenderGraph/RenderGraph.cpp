@@ -96,7 +96,7 @@ namespace rg
                 executionTask->SetName(pass->_name);
 
 #ifdef RG_MULTITHREADED
-                _workerManager->Submit({ pass.get(), &_context, task });
+                _workerManager->Submit({ pass.get(), &_context, preExecutionTask, executionTask, executionTask });
 #else
                 pass->PreExecute(_context, *preExecutionTask);
                 pass->Execute(_context, *executionTask);
