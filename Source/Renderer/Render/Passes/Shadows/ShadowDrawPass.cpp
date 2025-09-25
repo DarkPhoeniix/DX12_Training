@@ -32,8 +32,8 @@ namespace
         D3D12_GPU_VIRTUAL_ADDRESS FrameBufferAddress;
         UINT InstanceIndex;
         UINT LightIndex;
-        
-		D3D12_DRAW_INDEXED_ARGUMENTS DrawArguments;
+
+        D3D12_DRAW_INDEXED_ARGUMENTS DrawArguments;
     };
 
     std::uint32_t AlignToUAVCounterOffset(std::uint32_t size)
@@ -85,18 +85,13 @@ namespace render
 
     void ShadowDrawPass::Setup(rg::RenderPassBuilder& builder)
     {
-        _data.ShadowMaps = builder.ReadResource("shadow_maps");
-
         std::vector<std::shared_ptr<scene::Entity>> lightEntities = _scene->FilterNodesByComponent("Light");
         size_t lightsNum = lightEntities.size();
 
-        for (size_t frame = 0; frame < dx12::BACK_BUFFER_COUNT; ++frame)
+        _data.LightCommandBuffers.resize(lightsNum);
+        for (size_t i = 0; i < lightsNum; ++i)
         {
-            _data.LightCommandBuffers[frame].resize(lightsNum);
-            for (size_t i = 0; i < lightsNum; ++i)
-            {
-                _data.LightCommandBuffers[frame][i] = builder.ReadResource(std::format("shadow_culled_instances_buffer_{} (frame {})", i, frame));
-            }
+            _data.LightCommandBuffers[i] = builder.IndirectArgBuffer(std::format("shadow_culled_instances_buffer_{}", i));
         }
     }
 
@@ -138,17 +133,14 @@ namespace render
                 PIXBeginEvent(commandList.GetDXCommandList().Get(), 1, lightEntities[lightIndex]->GetName().c_str());
 
                 std::shared_ptr<dx12::Resource> shadowMap = context.GetTextureManager().GetTexture(light->ShadowMapHandle);
-                std::shared_ptr<dx12::Resource> commandBuffer = context.GetResource(_data.LightCommandBuffers[context.GetFrameIndex()][lightIndex]);
+                std::shared_ptr<dx12::Resource> commandBuffer = context.GetResource(_data.LightCommandBuffers[lightIndex]);
 
                 // Transition resources
-                std::vector<dx12::ResourceBarrier> barriers =
-                {
-                    { shadowMap, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE },
-                    { commandBuffer, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT }
-                };
-                commandList.TransitionBarriers(barriers);
+                commandList.TransitionBarrier({ shadowMap, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE });
 
                 DescriptorHandle depthHandle = context.GetStaticResourceHandle(shadowMap->GetAsDSV());
+                commandList.ClearDSV(depthHandle.CpuHandle, D3D12_CLEAR_FLAG_DEPTH);
+
                 commandList.SetViewport(scene::Viewport(shadowMap->GetResourceDescription().GetSize()));
                 commandList.SetRenderTargets({ }, &depthHandle.CpuHandle);
 
@@ -157,11 +149,7 @@ namespace render
                 std::uint32_t counterBufferOffset = commandBuffer->GetResourceDescription().GetSize().x - sizeof(UINT);
                 commandList.ExecuteIndirect(_cmdSignature, objectsNum, *commandBuffer, commandBuffer, 0, counterBufferOffset);
 
-                barriers =
-                {
-                    { shadowMap, D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE }
-                };
-                commandList.TransitionBarriers(barriers);
+                commandList.TransitionBarrier({ shadowMap, D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_COMMON });
 
                 PIXEndEvent(commandList.GetDXCommandList().Get());
             }
@@ -197,17 +185,14 @@ namespace render
                 PIXBeginEvent(commandList.GetDXCommandList().Get(), 1, lightEntities[lightIndex]->GetName().c_str());
 
                 std::shared_ptr<dx12::Resource> shadowMap = context.GetTextureManager().GetTexture(light->ShadowMapHandle);
-                std::shared_ptr<dx12::Resource> commandBuffer = context.GetResource(_data.LightCommandBuffers[context.GetFrameIndex()][lightIndex]);
+                std::shared_ptr<dx12::Resource> commandBuffer = context.GetResource(_data.LightCommandBuffers[lightIndex]);
 
                 // Transition resources
-                std::vector<dx12::ResourceBarrier> barriers =
-                {
-                    { shadowMap, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE },
-                    { commandBuffer, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT }
-                };
-                commandList.TransitionBarriers(barriers);
+                commandList.TransitionBarrier({ shadowMap, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE });
 
                 DescriptorHandle depthHandle = context.GetStaticResourceHandle(shadowMap->GetAsDSV());
+                commandList.ClearDSV(depthHandle.CpuHandle, D3D12_CLEAR_FLAG_DEPTH);
+
                 commandList.SetViewport(scene::Viewport(shadowMap->GetResourceDescription().GetSize()));
                 commandList.SetRenderTargets({ }, &depthHandle.CpuHandle);
 
@@ -216,11 +201,7 @@ namespace render
                 std::uint32_t counterBufferOffset = commandBuffer->GetResourceDescription().GetSize().x - sizeof(UINT);
                 commandList.ExecuteIndirect(_cmdSignature, objectsNum, *commandBuffer, commandBuffer, 0, counterBufferOffset);
 
-                barriers =
-                {
-                    { shadowMap, D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_COMMON }
-                };
-                commandList.TransitionBarriers(barriers);
+                commandList.TransitionBarrier({ shadowMap, D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_COMMON });
 
                 PIXEndEvent(commandList.GetDXCommandList().Get());
             }

@@ -246,7 +246,18 @@ namespace rg
         }
         return RGBufferWriteId(IdIt->second);
     }
-    
+
+    RGBufferUploadId RenderContext::UploadBuffer(const std::string& name)
+    {
+        auto IdIt = _mapNameToId.find(name);
+        if (IdIt == _mapNameToId.end())
+        {
+            LOG_CRITICAL("Buffer is not exist in render graph context: {}", name);
+            return RGResourceId::InvalidID;
+        }
+        return RGBufferUploadId(IdIt->second);
+    }
+
     RGBufferCopySrcId RenderContext::CopySrcBuffer(const std::string& name)
     {
         auto IdIt = _mapNameToId.find(name);

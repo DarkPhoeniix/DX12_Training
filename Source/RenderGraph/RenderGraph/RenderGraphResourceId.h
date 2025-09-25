@@ -13,6 +13,7 @@ namespace rg
     {
         Read,
         Write,
+        Upload,
         CopySrc,
         CopyDst,
         IndirectArgs,
@@ -82,6 +83,7 @@ namespace rg
 
     using RGBufferReadId = RGBufferModeId<RGResourceMode::Read>;
     using RGBufferWriteId = RGBufferModeId<RGResourceMode::Write>;
+    using RGBufferUploadId = RGBufferModeId<RGResourceMode::Upload>;
     using RGBufferCopySrcId = RGBufferModeId<RGResourceMode::CopySrc>;
     using RGBufferCopyDstId = RGBufferModeId<RGResourceMode::CopyDst>;
     using RGBufferIndirectArgsId = RGBufferModeId<RGResourceMode::IndirectArgs>;

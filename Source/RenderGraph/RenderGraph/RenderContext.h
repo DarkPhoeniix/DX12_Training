@@ -54,6 +54,7 @@ namespace rg
 
         [[nodiscard]] RGBufferReadId ReadBuffer(const std::string& name);
         [[nodiscard]] RGBufferWriteId WriteBuffer(const std::string& name);
+        [[nodiscard]] RGBufferUploadId UploadBuffer(const std::string& name);
         [[nodiscard]] RGBufferCopySrcId CopySrcBuffer(const std::string& name);
         [[nodiscard]] RGBufferCopyDstId CopyDstBuffer(const std::string& name);
         [[nodiscard]] RGBufferIndirectArgsId IndirectArgBuffer(const std::string& name);

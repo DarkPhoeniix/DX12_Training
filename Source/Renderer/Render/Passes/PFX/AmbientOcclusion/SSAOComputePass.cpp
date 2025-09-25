@@ -67,7 +67,7 @@ namespace render
 
 			noiseData[i] = XMVector3Normalize(noiseData[i]);
 		}
-		_data.Noise = builder.CreateResource("SSAO noise texture", noiseDesc, noiseData.data(), sizeof(XMVECTOR) * noiseData.size());
+        builder.DeclareBuffer("ssao_noise", noiseDesc, noiseData.data(), sizeof(XMVECTOR) * noiseData.size());
 
 		dx12::ResourceDescription kernelsDesc;
 		{
@@ -89,10 +89,7 @@ namespace render
 			scale = std::lerp(0.1f, 1.0f, scale * scale);
 			kernelsData[i] *= scale;
 		}
-		_data.Kernels = builder.CreateResource("SSAO kernels", kernelsDesc, kernelsData.data(), sizeof(XMVECTOR) * kernelsData.size());
-
-		_data.NormalRoughness = builder.ReadResource("normal_roughness_target");
-		_data.Depth = builder.ReadResource("depth_target");
+		builder.DeclareBuffer("ssao_kernels", kernelsDesc, kernelsData.data(), sizeof(XMVECTOR) * kernelsData.size());
 
 		dx12::ResourceDescription aoDesc;
 		{
@@ -100,7 +97,13 @@ namespace render
 			aoDesc.SetFormat(DXGI_FORMAT_R32_FLOAT);
 			aoDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::Unordered);
 		}
-		_data.AOTarget = builder.CreateResource("ao_target", aoDesc);
+		builder.DeclareTexture("ao_target", aoDesc);
+
+        _data.Noise = builder.ReadBuffer("ssao_noise");
+        _data.Kernels = builder.ReadBuffer("ssao_kernels");
+		_data.NormalRoughness = builder.ReadTexture("normal_roughness_target");
+		_data.Depth = builder.DepthStencilRead("depth_target");
+        _data.AOTarget = builder.WriteTexture("ao_target");
 	}
 
 	void SSAOComputePass::Execute(rg::RenderContext& context, TaskGPU& task)
@@ -121,14 +124,6 @@ namespace render
 			DescriptorHandle normalSpecularHandle = context.GetStaticResourceHandle(normalRoughness->GetAsSRV());
 			DescriptorHandle depthHandle = context.GetStaticResourceHandle(depth->GetAsSRV());
 			DescriptorHandle aoTargetHandle = context.GetStaticResourceHandle(aoTarget->GetAsUAV());
-
-			std::vector<dx12::ResourceBarrier> barriers =
-			{
-				{ normalRoughness,    D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-				{ depth,              D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-				{ aoTarget,           D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS }
-			};
-			commandList.TransitionBarriers(barriers);
 
 			context.BindBindlessTable(commandList);
 			commandList.SetPipelineState(_SSAOPipeline);
@@ -152,14 +147,6 @@ namespace render
 			int yThreadGroups = (uint32_t)std::ceilf(viewportSize.y / 16.0f);
 
 			commandList.Dispatch(xThreadGroups, yThreadGroups);
-
-			barriers =
-			{
-				{ normalRoughness,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
-				{ depth,              D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
-				{ aoTarget,           D3D12_RESOURCE_STATE_UNORDERED_ACCESS,          D3D12_RESOURCE_STATE_COMMON }
-			};
-			commandList.TransitionBarriers(barriers);
 		}
 		PIXEndEvent(commandList.GetDXCommandList().Get());
 

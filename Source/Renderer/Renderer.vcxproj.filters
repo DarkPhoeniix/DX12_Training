@@ -252,9 +252,6 @@
     <ClCompile Include="Core\TextureManager.cpp">
       <Filter>Core</Filter>
     </ClCompile>
-    <ClCompile Include="Render\Passes\Shadows\ShadowClearPass.cpp">
-      <Filter>Render\Passes\Shadows</Filter>
-    </ClCompile>
     <ClCompile Include="Render\Passes\Shadows\ShadowCullPass.cpp">
       <Filter>Render\Passes\Shadows</Filter>
     </ClCompile>
@@ -451,9 +448,6 @@
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="Render\Passes\Shadows\ShadowDrawPass.h">
-      <Filter>Render\Passes\Shadows</Filter>
-    </ClInclude>
-    <ClInclude Include="Render\Passes\Shadows\ShadowClearPass.h">
       <Filter>Render\Passes\Shadows</Filter>
     </ClInclude>
     <ClInclude Include="Render\Passes\Shadows\ShadowCullPass.h">

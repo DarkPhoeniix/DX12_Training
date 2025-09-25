@@ -258,6 +258,11 @@ namespace rg
                 for (auto id : renderPass->_creates)
                 {
                     std::shared_ptr<dx12::Resource> resource = _context.GetResource(id);
+                    if (!resource)
+                    {
+                        continue;
+                    }
+
                     std::shared_ptr<IRenderPass> lastPass = nullptr;
                     std::shared_ptr<IRenderPass> currentPass = renderPass;
 
@@ -271,10 +276,10 @@ namespace rg
                         currentPass = currentPass->_nextPass.lock();
                     }
 
-                    if (lastPass->_resourceStateMap.find(id) != lastPass->_resourceStateMap.end())
+                    if (lastPass && lastPass->_resourceStateMap.find(id) != lastPass->_resourceStateMap.end())
                     {
                         D3D12_RESOURCE_STATES lastState = lastPass->_resourceStateMap[id];
-                        D3D12_RESOURCE_STATES currState = resource->GetCurrentState();;
+                        D3D12_RESOURCE_STATES currState = resource->GetCurrentState();
                         if (lastState != currState)
                         {
                             barriers.push_back({ resource, currState, lastState });
@@ -307,11 +312,14 @@ namespace rg
                     {
                         std::shared_ptr<dx12::Resource> resource = _context.GetResource(readId);
 
-                        D3D12_RESOURCE_STATES lastState = renderPass->_resourceStateMap[readId];
-                        D3D12_RESOURCE_STATES currState = resource->GetCurrentState();;
-                        if (lastState != currState)
+                        if (resource)
                         {
-                            barriers.push_back({ resource, currState, lastState });
+                            D3D12_RESOURCE_STATES lastState = renderPass->_resourceStateMap[readId];
+                            D3D12_RESOURCE_STATES currState = resource->GetCurrentState();
+                            if (lastState != currState)
+                            {
+                                barriers.push_back({ resource, currState, lastState });
+                            }
                         }
                     }
                 }

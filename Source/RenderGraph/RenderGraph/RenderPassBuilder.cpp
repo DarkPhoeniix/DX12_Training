@@ -104,6 +104,14 @@ namespace rg
         return id;
     }
 
+    RGBufferUploadId RenderPassBuilder::UploadBuffer(const std::string& name)
+    {
+        RGBufferUploadId id = _renderGraph._context.UploadBuffer(name);
+        _renderPass->_resourceStateMap[id] = D3D12_RESOURCE_STATE_GENERIC_READ;
+        _renderPass->_reads.push_back(id);
+        return id;
+    }
+
     RGBufferCopySrcId RenderPassBuilder::CopySrcBuffer(const std::string& name)
     {
         RGBufferCopySrcId id = _renderGraph._context.CopySrcBuffer(name);

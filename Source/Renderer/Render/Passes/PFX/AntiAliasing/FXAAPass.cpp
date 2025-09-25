@@ -111,15 +111,13 @@ namespace render
 
 	void FXAAPass::Setup(rg::RenderPassBuilder& builder)
 	{
-		_data.Target = builder.WriteResource("hdr_target");
-
 		dx12::ResourceDescription workCountersDesc;
 		{
 			workCountersDesc.SetSize({ sizeof(std::uint32_t) * 2, 1 });
 			workCountersDesc.SetStride(sizeof(std::uint32_t));
 			workCountersDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Unordered);
 		}
-		_data.WorkCounters = builder.CreateResource("fxaa_work_counter", workCountersDesc);
+        builder.DeclareBuffer("fxaa_work_counter", workCountersDesc);
 
 		dx12::ResourceDescription workQueueDesc;
 		{
@@ -129,8 +127,8 @@ namespace render
 			workQueueDesc.SetStride(sizeof(std::uint32_t));
 			workQueueDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Unordered);
 		}
-		_data.WorkQueue = builder.CreateResource("fxaa_work_queue", workQueueDesc);
-		_data.ColorQueue = builder.CreateResource("fxaa_color_queue", workQueueDesc);
+		builder.DeclareBuffer("fxaa_work_queue", workQueueDesc);
+        builder.DeclareBuffer("fxaa_color_queue", workQueueDesc);
 
 		dx12::ResourceDescription lumaBufferDesc;
 		{
@@ -146,7 +144,7 @@ namespace render
 			lumaBufferDesc.SetFormat(DXGI_FORMAT_R8_UNORM);
 			lumaBufferDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::Unordered);
 		}
-		_data.LumaBuffer = builder.CreateResource("luma_texture", lumaBufferDesc);
+        builder.DeclareTexture("luma_texture", lumaBufferDesc);
 
 		dx12::ResourceDescription indirectArgsDesc;
 		{
@@ -155,7 +153,14 @@ namespace render
 			indirectArgsDesc.SetStride(sizeof(D3D12_DISPATCH_ARGUMENTS));
 			indirectArgsDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Unordered);
 		}
-		_data.IndirectParams = builder.CreateResource("fxaa_indirect_args", indirectArgsDesc);
+        builder.DeclareBuffer("fxaa_indirect_args", indirectArgsDesc);
+
+        _data.Target = builder.WriteTexture("hdr_target");
+		_data.IndirectParams = builder.IndirectArgBuffer("fxaa_indirect_args");
+        _data.LumaBuffer = builder.WriteTexture("luma_texture");
+        _data.WorkCounters = builder.WriteBuffer("fxaa_work_counter");
+        _data.WorkQueue = builder.WriteBuffer("fxaa_work_queue");
+        _data.ColorQueue = builder.WriteBuffer("fxaa_color_queue");
 	}
 
 	void FXAAPass::Execute(rg::RenderContext& context, TaskGPU& task)
@@ -183,23 +188,11 @@ namespace render
 			DescriptorHandle targetHandleSRV = context.GetStaticResourceHandle(target->GetAsSRV());
 			DescriptorHandle targetHandleUAV = context.GetStaticResourceHandle(target->GetAsUAV());
 
-			std::vector<dx12::ResourceBarrier> barriers =
-			{
-				{ indirectArgs,   D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_COPY_DEST }
-			};
-			commandList.TransitionBarriers(barriers);
+			commandList.TransitionBarrier({ indirectArgs,   D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT,    D3D12_RESOURCE_STATE_COPY_DEST });
 
 			commandList.CopyResource(*_paramsReset, *indirectArgs);
 
-			barriers =
-			{
-				{ indirectArgs,   D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT },
-				{ workQueue,      D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-				{ colorQueue,     D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-				{ luma,           D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-				{ target,         D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_UNORDERED_ACCESS },
-			};
-			commandList.TransitionBarriers(barriers);
+			commandList.TransitionBarrier({ indirectArgs,   D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT });
 
 			for (int x = 0; x < 2; ++x)
 			{
@@ -207,16 +200,7 @@ namespace render
 				{
 					// Pass 1 begin
 
-					barriers =
-					{
-						{ indirectArgs,   D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT,         D3D12_RESOURCE_STATE_UNORDERED_ACCESS },
-						{ workCounters,   D3D12_RESOURCE_STATE_COMMON,                    D3D12_RESOURCE_STATE_UNORDERED_ACCESS },
-						{ workQueue,      D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS },
-						{ colorQueue,     D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS },
-						{ luma,           D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS },
-						{ target,         D3D12_RESOURCE_STATE_UNORDERED_ACCESS,          D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-					};
-					commandList.TransitionBarriers(barriers);
+					commandList.TransitionBarrier({ indirectArgs, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT, D3D12_RESOURCE_STATE_UNORDERED_ACCESS });
 
 					context.BindBindlessTable(commandList);
 					commandList.SetPipelineState(_FXAA_Pass1_Pipeline);
@@ -275,16 +259,7 @@ namespace render
 
 					// Pass 2 begin
 
-					barriers =
-					{
-						{ indirectArgs,   D3D12_RESOURCE_STATE_UNORDERED_ACCESS,          D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT },
-						{ workCounters,   D3D12_RESOURCE_STATE_UNORDERED_ACCESS,          D3D12_RESOURCE_STATE_COMMON },
-						{ workQueue,      D3D12_RESOURCE_STATE_UNORDERED_ACCESS,          D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-						{ colorQueue,     D3D12_RESOURCE_STATE_UNORDERED_ACCESS,          D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-						{ luma,           D3D12_RESOURCE_STATE_UNORDERED_ACCESS,          D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-						{ target,         D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS },
-					};
-					commandList.TransitionBarriers(barriers);
+					commandList.TransitionBarrier({ indirectArgs, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT });
 
 					Pass2Constants pass2Constants =
 					{
@@ -312,17 +287,6 @@ namespace render
 					commandList.UAVBarrier(target);
 				}
 			}
-
-			barriers =
-			{
-				{ indirectArgs,   D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT,         D3D12_RESOURCE_STATE_COMMON },
-				{ workQueue,      D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
-				{ colorQueue,     D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
-				{ luma,           D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
-				{ target,         D3D12_RESOURCE_STATE_UNORDERED_ACCESS,          D3D12_RESOURCE_STATE_COMMON },
-			};
-			commandList.TransitionBarriers(barriers);
-
 		}
 		PIXEndEvent(commandList.GetDXCommandList().Get());
 

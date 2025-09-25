@@ -31,8 +31,8 @@ namespace render
 
 	void SSAOApplyPass::Setup(rg::RenderPassBuilder& builder)
 	{
-		_data.AOTarget = builder.ReadResource("ao_target");
-		_data.HDRTarget = builder.WriteResource("hdr_target");
+		_data.AOTarget = builder.ReadTexture("ao_target");
+		_data.HDRTarget = builder.WriteTexture("hdr_target");
 	}
 
 	void SSAOApplyPass::Execute(rg::RenderContext& context, TaskGPU& task)
@@ -47,13 +47,6 @@ namespace render
 
 			DescriptorHandle aoTargetHandle = context.GetStaticResourceHandle(aoTarget->GetAsSRV());
 			DescriptorHandle hdrTargetHandle = context.GetStaticResourceHandle(hdtTarget->GetAsUAV());
-
-			std::vector<dx12::ResourceBarrier> barriers =
-			{
-				{ aoTarget,   D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-				{ hdtTarget,  D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS }
-			};
-			commandList.TransitionBarriers(barriers);
 
 			context.BindBindlessTable(commandList);
 			commandList.SetPipelineState(_SSAOPipeline);
@@ -71,13 +64,6 @@ namespace render
 			int yThreadGroups = (uint32_t)std::ceilf(viewportSize.y / 16.0f);
 
 			commandList.Dispatch(xThreadGroups, yThreadGroups);
-
-			barriers =
-			{
-				{ aoTarget,   D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
-				{ hdtTarget,  D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON }
-			};
-			commandList.TransitionBarriers(barriers);
 		}
 		PIXEndEvent(commandList.GetDXCommandList().Get());
 
