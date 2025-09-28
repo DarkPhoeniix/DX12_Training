@@ -37,6 +37,15 @@ namespace gui
         , _scene(nullptr)
         , _selectedEntity(nullptr)
     {
+        {
+            dx12::DescriptorHeapDescription desc;
+            desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+            desc.SetNumDescriptors(1);
+            desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
+
+            _descriptorHeap.Create(desc);
+        }
+
         // Setup Dear ImGui context
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
@@ -50,9 +59,9 @@ namespace gui
         ImGui_ImplDX12_Init(dx12::Device::GetDXDevice().Get(),
             dx12::BACK_BUFFER_COUNT,
             DXGI_FORMAT_R8G8B8A8_UNORM,
-            DescriptorHeapManager::Get().GetShaderResourcesDescriptorHeap().GetDXDescriptorHeap().Get(),
-            handle.CpuHandle,
-            handle.GpuHandle);
+            _descriptorHeap.GetDXDescriptorHeap().Get(),
+            _descriptorHeap.GetHeapStartCPUHandle(),
+            _descriptorHeap.GetHeapStartGPUHandle());
 
         ImGuiStyle& style = ImGui::GetStyle();
 
@@ -261,7 +270,7 @@ namespace gui
     void Editor::Render(dx12::CommandList& commandList)
     {
         ImGui::Render();
-        commandList.SetDescriptorHeaps({ DescriptorHeapManager::Get().GetShaderResourcesDescriptorHeap().GetDXDescriptorHeap().Get()});
+        commandList.SetDescriptorHeaps({ _descriptorHeap.GetDXDescriptorHeap().Get()});
         ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList.GetDXCommandList().Get());
     }
 

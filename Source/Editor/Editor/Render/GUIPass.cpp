@@ -21,7 +21,7 @@ namespace render
     void GUIPass::Setup(rg::RenderPassBuilder& builder)
     {
         _data.Target = builder.RenderTarget("render_target");
-        _data.Depth = builder.DepthStencilRead("depth_target");
+        _data.Depth = builder.DepthStencilWrite("depth_target");
     }
 
     void GUIPass::Execute(rg::RenderContext& context, TaskGPU& task)
