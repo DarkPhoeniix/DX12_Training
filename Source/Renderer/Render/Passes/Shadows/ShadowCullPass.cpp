@@ -65,16 +65,15 @@ namespace render
 
 	void ShadowCullPass::Setup(rg::RenderPassBuilder& builder)
 	{
-		_data.ShadowMaps = builder.ReadResource("shadow_maps");
-
 		dx12::ResourceDescription counterResetBuffer;
-		counterResetBuffer.SetSize({ sizeof(UINT), 1 });
-		counterResetBuffer.SetStride(sizeof(UINT));
-		counterResetBuffer.SetLayout(D3D12_TEXTURE_LAYOUT_ROW_MAJOR);
-		counterResetBuffer.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
-
+		{
+			counterResetBuffer.SetSize({ sizeof(UINT), 1 });
+			counterResetBuffer.SetStride(sizeof(UINT));
+			counterResetBuffer.SetLayout(D3D12_TEXTURE_LAYOUT_ROW_MAJOR);
+			counterResetBuffer.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
+		}
 		std::uint32_t value = 0;
-		_data.CounterResetBuffer = builder.CreateResource("shadow_counter_reset_buffer", counterResetBuffer, &value, sizeof(std::uint32_t));
+        builder.DeclareBuffer("shadow_counter_reset_buffer", counterResetBuffer, &value, sizeof(std::uint32_t));
 
 		std::vector<std::shared_ptr<scene::Entity>> lightEntities = _scene->FilterNodesByComponent("Light");
 		std::vector<std::shared_ptr<scene::Entity>> meshes = _scene->FilterNodesByComponent("Mesh");
@@ -87,7 +86,7 @@ namespace render
 			aabbBufferDescription.SetStride(sizeof(scene::AABBVolume));
 			aabbBufferDescription.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
 		}
-		_data.AABBBuffer = builder.CreateResource("aabb_buffer", aabbBufferDescription);
+		builder.DeclareBuffer("aabb_buffer", aabbBufferDescription);
 
 		std::uint32_t commandSize = static_cast<std::uint32_t>(sizeof(IndirectCommand));
 		std::uint32_t alignedBufferSize = AlignToUAVCounterOffset(MAX_INSTANCES_NUM * commandSize);
@@ -102,7 +101,8 @@ namespace render
 		_data.CandidateInstancesBuffer.resize(lightsNum);
 		for (size_t i = 0; i < lightsNum; ++i)
 		{
-			_data.CandidateInstancesBuffer[i] = builder.CreateResource(std::format("shadow_candidate_instances_buffer_{}", i), candidateBufferDescription);
+            builder.DeclareBuffer(std::format("shadow_candidate_instances_buffer_{}", i), candidateBufferDescription);
+			_data.CandidateInstancesBuffer[i] = builder.UploadBuffer(std::format("shadow_candidate_instances_buffer_{}", i));
 		}
 
 		dx12::ResourceDescription commandsBufferDescription;
@@ -112,15 +112,17 @@ namespace render
 			commandsBufferDescription.SetUAVCounterOffset(alignedBufferSize);
 			commandsBufferDescription.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Unordered);
 		}
-		// TODO: optimize to use addresses not the full copy
-		for (size_t frame = 0; frame < dx12::BACK_BUFFER_COUNT; ++frame)
 		{
-			_data.LightCommandBuffers[frame].resize(lightsNum);
+			_data.LightCommandBuffers.resize(lightsNum);
 			for (size_t i = 0; i < lightsNum; ++i)
 			{
-				_data.LightCommandBuffers[frame][i] = builder.CreateResource(std::format("shadow_culled_instances_buffer_{} (frame {})", i, frame), commandsBufferDescription);
+                builder.DeclareBuffer(std::format("shadow_culled_instances_buffer_{}", i), commandsBufferDescription);
+				_data.LightCommandBuffers[i] = builder.WriteBuffer(std::format("shadow_culled_instances_buffer_{}", i));
 			}
 		}
+
+        _data.CounterResetBuffer = builder.CopySrcBuffer("shadow_counter_reset_buffer");
+        _data.AABBBuffer = builder.UploadBuffer("aabb_buffer");
 	}
 
 	void ShadowCullPass::Execute(rg::RenderContext& context, TaskGPU& task)
@@ -151,7 +153,7 @@ namespace render
 			std::shared_ptr<scene::Light> light = lightEntities[lightIndex]->GetComponentAs<scene::Light>("Light");
 
 			std::shared_ptr<dx12::Resource> candidateInstancesBuffer = context.GetResource(_data.CandidateInstancesBuffer[lightIndex]);
-			std::shared_ptr<dx12::Resource> outputCommandBuffer = context.GetResource(_data.LightCommandBuffers[context.GetFrameIndex()][lightIndex]);
+			std::shared_ptr<dx12::Resource> outputCommandBuffer = context.GetResource(_data.LightCommandBuffers[lightIndex]);
 
 			DescriptorHandle inputCommandsHandle = context.GetStaticResourceHandle(candidateInstancesBuffer->GetAsSRV());
 			DescriptorHandle outputCommandBufferHandle = context.GetStaticResourceHandle(outputCommandBuffer->GetAsUAV());
@@ -217,22 +219,14 @@ namespace render
 			}
 
 			// Transition resources
-			std::vector<dx12::ResourceBarrier> barriers =
-			{
-				{ outputCommandBuffer, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT,    D3D12_RESOURCE_STATE_COPY_DEST }
-			};
-			commandList.TransitionBarriers(barriers);
+			commandList.TransitionBarrier({ outputCommandBuffer, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_DEST });
 
 			// Reset commands counter
 			std::uint32_t counterBufferOffset = outputCommandBuffer->GetResourceDescription().GetSize().x - sizeof(UINT);
 			commandList.CopyBufferRegion(*counterResetBuffer, *outputCommandBuffer, sizeof(UINT), 0, counterBufferOffset);
 
 			// Transition resources
-			barriers =
-			{
-				{ outputCommandBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_UNORDERED_ACCESS }
-			};
-			commandList.TransitionBarriers(barriers);
+			commandList.TransitionBarrier({ outputCommandBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_UNORDERED_ACCESS });
 
 			PassConstants passConstants =
 			{

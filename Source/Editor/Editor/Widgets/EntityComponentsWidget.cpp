@@ -263,7 +263,7 @@ namespace gui
             if (albedoTexture)
             {
                 ImGui::Text("Albedo: %s (ID: %i)", albedoTexture->GetName().c_str(), albedoTexture->GetID());
-                ImGui::Image((ImTextureID)ResourceTable::Get().GetStaticResourceHandle(albedoTexture->GetAsSRV()).GpuHandle.ptr, { imageSize, imageSize });
+                //ImGui::Image((ImTextureID)ResourceTable::Get().GetStaticResourceHandle(albedoTexture->GetAsSRV()).GpuHandle.ptr, { imageSize, imageSize });
             }
             else
             {
@@ -273,13 +273,13 @@ namespace gui
             if (normalMapTexture)
             {
                 ImGui::Text("Normal map: %s (ID: %i)", normalMapTexture->GetName().c_str(), normalMapTexture->GetID());
-                ImGui::Image((ImTextureID)ResourceTable::Get().GetStaticResourceHandle(normalMapTexture->GetAsSRV()).GpuHandle.ptr, { imageSize, imageSize });
+                //ImGui::Image((ImTextureID)ResourceTable::Get().GetStaticResourceHandle(normalMapTexture->GetAsSRV()).GpuHandle.ptr, { imageSize, imageSize });
             }
 
             if (metalnessTexture)
             {
                 ImGui::Text("Metalness: %s (ID: %i)", metalnessTexture->GetName().c_str(), metalnessTexture->GetID());
-                ImGui::Image((ImTextureID)ResourceTable::Get().GetStaticResourceHandle(metalnessTexture->GetAsSRV()).GpuHandle.ptr, { imageSize, imageSize });
+                //ImGui::Image((ImTextureID)ResourceTable::Get().GetStaticResourceHandle(metalnessTexture->GetAsSRV()).GpuHandle.ptr, { imageSize, imageSize });
             }
             else
             {
@@ -289,7 +289,7 @@ namespace gui
             if (roughnessTexture)
             {
                 ImGui::Text("Roughness: %s (ID: %i)", roughnessTexture->GetName().c_str(), roughnessTexture->GetID());
-                ImGui::Image((ImTextureID)ResourceTable::Get().GetStaticResourceHandle(roughnessTexture->GetAsSRV()).GpuHandle.ptr, { imageSize, imageSize });
+                //ImGui::Image((ImTextureID)ResourceTable::Get().GetStaticResourceHandle(roughnessTexture->GetAsSRV()).GpuHandle.ptr, { imageSize, imageSize });
             }
             else
             {
@@ -299,7 +299,7 @@ namespace gui
             if (emissionTexture)
             {
                 ImGui::Text("Emission: %s (ID: %i)", emissionTexture->GetName().c_str(), emissionTexture->GetID());
-                ImGui::Image((ImTextureID)ResourceTable::Get().GetStaticResourceHandle(emissionTexture->GetAsSRV()).GpuHandle.ptr, { imageSize, imageSize });
+                //ImGui::Image((ImTextureID)ResourceTable::Get().GetStaticResourceHandle(emissionTexture->GetAsSRV()).GpuHandle.ptr, { imageSize, imageSize });
             }
             else
             {

@@ -16,6 +16,7 @@ public:
 
     void AddCommandList(dx12::CommandList* commandList);
     std::vector<dx12::CommandList*> GetCommandLists() const;
+    dx12::CommandList& GetCommandList();
 
     void SetCommandQueue(ComPtr<ID3D12CommandQueue> commandQueue);
     ComPtr<ID3D12CommandQueue> GetCommandQueue() const;

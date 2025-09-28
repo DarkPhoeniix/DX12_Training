@@ -23,8 +23,8 @@ namespace render
 
 	void DebugBoundingVolumePass::Setup(rg::RenderPassBuilder& builder)
 	{
-		_data.Target = builder.WriteResource("render_target");
-		_data.Depth = builder.ReadResource("depth_target");
+		_data.Target = builder.RenderTarget("render_target");
+		_data.Depth = builder.DepthStencilWrite("depth_target");
 	}
 
 	void DebugBoundingVolumePass::Execute(rg::RenderContext& context, TaskGPU& task)
@@ -39,13 +39,6 @@ namespace render
 
 			DescriptorHandle rtv = context.GetStaticResourceHandle(target->GetAsRTV());
 			DescriptorHandle dsv = context.GetStaticResourceHandle(depth->GetAsDSV());
-
-			std::vector<dx12::ResourceBarrier> barriers =
-			{
-				{ target, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RENDER_TARGET },
-				{ depth,  D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE }
-			};
-			commandList.TransitionBarriers(barriers);
 
 			context.BindBindlessTable(commandList);
 
@@ -77,13 +70,6 @@ namespace render
 
 				DrawHelper::DrawBox(commandList, *context.GetFrame(), aabb.Min, aabb.Max, DirectX::XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f));
 			}
-
-			barriers =
-			{
-				{ target, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON},
-				{ depth,  D3D12_RESOURCE_STATE_DEPTH_WRITE,   D3D12_RESOURCE_STATE_COMMON}
-			};
-			commandList.TransitionBarriers(barriers);
 		}
 		PIXEndEvent(commandList.GetDXCommandList().Get());
 

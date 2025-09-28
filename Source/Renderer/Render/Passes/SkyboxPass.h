@@ -10,8 +10,8 @@ namespace render
 {
 	struct SkyboxPassData
 	{
-		rg::ResourceId Depth;
-		rg::ResourceId HDRTarget;
+		rg::RGTextureDepthStencilReadId Depth;
+		rg::RGTextureWriteId HDRTarget;
 	};
 
 	class SkyboxPass : public rg::RenderPass<SkyboxPassData>

@@ -239,7 +239,7 @@ namespace scene::helpers
         barriers =
         {
             { skyboxTexture,        D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
-            { diffuseIrradianceMap, D3D12_RESOURCE_STATE_UNORDERED_ACCESS,          D3D12_RESOURCE_STATE_COMMON }
+            { diffuseIrradianceMap, D3D12_RESOURCE_STATE_UNORDERED_ACCESS,          D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE }
         };
         commandList.TransitionBarriers(barriers);
 
@@ -332,7 +332,7 @@ namespace scene::helpers
         barriers =
         {
             { skyboxTexture,        D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
-            { preFilteredEnvMap,    D3D12_RESOURCE_STATE_UNORDERED_ACCESS,          D3D12_RESOURCE_STATE_COMMON }
+            { preFilteredEnvMap,    D3D12_RESOURCE_STATE_UNORDERED_ACCESS,          D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE }
         };
         commandList.TransitionBarriers(barriers);
 
@@ -401,9 +401,10 @@ namespace scene::helpers
         barriers =
         {
             { skyboxTexture,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
-            { brdfLUT,          D3D12_RESOURCE_STATE_UNORDERED_ACCESS,          D3D12_RESOURCE_STATE_COMMON }
+            { brdfLUT,          D3D12_RESOURCE_STATE_UNORDERED_ACCESS,          D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE }
         };
         commandList.TransitionBarriers(barriers);
+        commandList.UAVBarrier(brdfLUT);
 
         return brdfLUT;
     }

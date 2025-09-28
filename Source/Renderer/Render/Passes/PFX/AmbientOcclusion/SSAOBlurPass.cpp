@@ -62,10 +62,7 @@ namespace render
 		{
 			weightsData[kRadius + i] /= sum;
 		}
-		_data.WeightsBuffer = builder.CreateResource("ssao_blur_weights", weightsBufferDesc, weightsData.data(), sizeof(float) * weightsData.size());
-
-		_data.Depth = builder.ReadResource("depth_target");
-		_data.AOTarget = builder.ReadResource("ao_target");
+        builder.DeclareBuffer("ssao_blur_weights", weightsBufferDesc, weightsData.data(), sizeof(float) * weightsData.size());
 
 		dx12::ResourceDescription aoBlurDesc;
 		{
@@ -73,7 +70,12 @@ namespace render
 			aoBlurDesc.SetFormat(DXGI_FORMAT_R32_FLOAT);
 			aoBlurDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::Unordered);
 		}
-		_data.TempBlurTarget = builder.CreateResource("ao_blur_target", aoBlurDesc);
+        builder.DeclareTexture("ao_blur_target", aoBlurDesc);
+
+		_data.Depth = builder.DepthStencilRead("depth_target");
+		_data.AOTarget = builder.WriteTexture("ao_target");
+        _data.TempBlurTarget = builder.WriteTexture("ao_blur_target");
+		_data.WeightsBuffer = builder.ReadBuffer("ssao_blur_weights");
 	}
 
 	void SSAOBlurPass::Execute(rg::RenderContext& context, TaskGPU& task)
@@ -94,14 +96,6 @@ namespace render
 			DescriptorHandle blurTargetSRV = context.GetStaticResourceHandle(blurTarget->GetAsSRV());
 			DescriptorHandle aoTargetUAV = context.GetStaticResourceHandle(aoTarget->GetAsUAV());
 			DescriptorHandle blurTargetUAV = context.GetStaticResourceHandle(blurTarget->GetAsUAV());
-
-			std::vector<dx12::ResourceBarrier> barriers =
-			{
-				{ depth,      D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-				{ aoTarget,   D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-				{ blurTarget, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS }
-			};
-			commandList.TransitionBarriers(barriers);
 
 			context.BindBindlessTable(commandList);
 			commandList.SetPipelineState(_SSAOBlurHorizonralPipeline);
@@ -125,13 +119,6 @@ namespace render
 
 			commandList.Dispatch(xThreadGroups, yThreadGroups);
 
-			barriers =
-			{
-				{ aoTarget,   D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS },
-				{ blurTarget, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE }
-			};
-			commandList.TransitionBarriers(barriers);
-
 			context.BindBindlessTable(commandList);
 			commandList.SetPipelineState(_SSAOBlurVerticalPipeline);
 
@@ -139,14 +126,6 @@ namespace render
 			commandList.SetConstants(1, 7, &passCB);
 
 			commandList.Dispatch(xThreadGroups, yThreadGroups);
-
-			barriers =
-			{
-				{ depth,      D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
-				{ aoTarget,   D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON },
-				{ blurTarget, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON }
-			};
-			commandList.TransitionBarriers(barriers);
 		}
 		PIXEndEvent(commandList.GetDXCommandList().Get());
 

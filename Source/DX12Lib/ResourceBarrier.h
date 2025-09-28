@@ -9,9 +9,11 @@ namespace dx12
     class ResourceBarrier
     {
     public:
-        std::weak_ptr<Resource> Resource;
+        std::weak_ptr<Resource> TargetResource;
         D3D12_RESOURCE_STATES BeforeState;
         D3D12_RESOURCE_STATES AfterState;
+
+        ResourceBarrier(std::shared_ptr<Resource> targetResource = nullptr, D3D12_RESOURCE_STATES beforeState = D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATES afterState = D3D12_RESOURCE_STATE_COMMON);
 
         void Transition(CommandList& commandList);
     };

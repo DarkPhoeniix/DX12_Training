@@ -141,10 +141,10 @@ namespace dx12
 
     void CommandList::TransitionBarrier(const ResourceBarrier& barrier)
     {
-        FAIL(!barrier.Resource.expired(), "Resource is null.");
+        FAIL(!barrier.TargetResource.expired(), "Resource is null.");
         ASSERT(barrier.BeforeState != barrier.AfterState, "BeforeState and AfterState are the same.");
 
-        if (std::shared_ptr<Resource> resource = barrier.Resource.lock())
+        if (std::shared_ptr<Resource> resource = barrier.TargetResource.lock())
         {
             CD3DX12_RESOURCE_BARRIER dxBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
                 resource->GetDXResource().Get(),
@@ -167,8 +167,8 @@ namespace dx12
 
         for (size_t i = 0; i < numBarriers; ++i)
         {
-            ASSERT(!barriers[i].Resource.expired(), "Resource in barrier is null.");
-            if (std::shared_ptr<Resource> resource = barriers[i].Resource.lock())
+            ASSERT(!barriers[i].TargetResource.expired(), "Resource in barrier is null.");
+            if (std::shared_ptr<Resource> resource = barriers[i].TargetResource.lock())
             {
                 dxBarriers[i] = CD3DX12_RESOURCE_BARRIER::Transition(
                     resource->GetDXResource().Get(),

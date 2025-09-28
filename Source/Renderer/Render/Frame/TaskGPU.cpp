@@ -44,6 +44,11 @@ std::vector<dx12::CommandList*> TaskGPU::GetCommandLists() const
     return _commandLists;
 }
 
+dx12::CommandList& TaskGPU::GetCommandList()
+{
+    return *_commandLists.front();
+}
+
 void TaskGPU::SetFence(dx12::Fence* fence)
 {
     ASSERT(fence, "Trying to set a nullptr fence to the task.");

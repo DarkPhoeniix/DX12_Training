@@ -1,14 +1,16 @@
 #pragma once
 
+#include "RenderGraphResourceId.h"
+
 #include "Render/Frame/TaskGPU.h"
+
+#include <functional>
 
 namespace rg
 {
     class RenderGraph;
     class RenderPassBuilder;
     class RenderContext;
-
-    using ResourceId = std::uint64_t;
 
     enum class RenderPassType
     {
@@ -29,7 +31,10 @@ namespace rg
         IRenderPass& operator=(IRenderPass&&) = default;
 
         virtual void Setup(RenderPassBuilder& builder) = 0;
+
+        virtual void PreExecute(RenderContext& context, TaskGPU& task);
         virtual void Execute(RenderContext& context, TaskGPU& task) = 0;
+        virtual void PostExecute(RenderContext& context, TaskGPU& task);
 
         RenderPassType GetType() const;
 
@@ -37,21 +42,30 @@ namespace rg
         friend class RenderPassBuilder;
         friend class RenderGraph;
 
-        std::vector<ResourceId> _creates;
-        std::vector<ResourceId> _reads;
-        std::vector<ResourceId> _writes;
+        std::string _name;
+        RenderPassType _type;
+
+        std::weak_ptr<IRenderPass> _prevPass;
+        std::weak_ptr<IRenderPass> _nextPass;
+
+        std::vector<RGResourceId> _creates;
+        std::vector<RGResourceId> _writes;
+        std::vector<RGResourceId> _reads;
+
+        std::unordered_map<RGResourceId, D3D12_RESOURCE_STATES> _resourceStateMap;
 
         std::uint32_t _refCount;
-
-        RenderPassType _type;
-        std::string _name;
     };
 
     template<typename PassData>
     class RenderPass : public IRenderPass
     {
     public:
+        using SetupFunc = std::function<void(RenderPassBuilder&)>;
+        using ExecuteFunc = std::function<void(RenderContext&, TaskGPU&)>;
+
         RenderPass(const std::string& name, RenderPassType type = RenderPassType::Graphics);
+        RenderPass(const std::string& name, SetupFunc&& setup, ExecuteFunc&& execute, RenderPassType type = RenderPassType::Graphics);
         RenderPass(const RenderPass&) = delete;
         RenderPass(RenderPass&&) = default;
         ~RenderPass() = default;
@@ -61,8 +75,15 @@ namespace rg
 
         const PassData& GetData() const;
 
+        // Inherited via IRenderPass
+        void Setup(RenderPassBuilder& builder) override;
+        void Execute(RenderContext& context, TaskGPU& task) override;
+
     protected:
         PassData _data;
+
+        std::function<void(RenderPassBuilder&)> _setupFunc;
+        std::function<void(RenderContext&, TaskGPU&)> _executeFunc;
     };
 } // namespace rg
 

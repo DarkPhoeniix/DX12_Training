@@ -2,10 +2,87 @@
 
 #include "RenderPass.h"
 
+#include "RenderContext.h"
+
+#include "ResourceBarrier.h"
+
 namespace rg
 {
     IRenderPass::IRenderPass(const std::string& name, RenderPassType type)
-        : _name(name), _type(type)
+        : _creates{}
+        , _writes{}
+        , _reads{}
+        , _resourceStateMap{}
+        , _refCount(0)
+        , _type(type)
+        , _name(name)
+    {
+    }
+
+    void IRenderPass::PreExecute(RenderContext& context, TaskGPU& task)
+    {
+        std::vector<dx12::ResourceBarrier> barriers;
+
+        for (auto& [id, state] : _resourceStateMap)
+        {
+            std::shared_ptr<dx12::Resource> resource = context.GetResource(id);
+
+            bool flag = false;
+            {
+                std::shared_ptr<IRenderPass> firstPass = nullptr;
+                std::shared_ptr<IRenderPass> currentPass = _prevPass.lock();
+                while (currentPass)
+                {
+                    if (currentPass->_resourceStateMap.find(id) != currentPass->_resourceStateMap.end())
+                    {
+                        D3D12_RESOURCE_STATES prevState = currentPass->_resourceStateMap[id];
+                        if (prevState != state)
+                        {
+                            barriers.push_back({ resource, prevState, state });
+                        }
+                        flag = true;
+                        break;
+                    }
+
+                    currentPass = currentPass->_prevPass.lock();
+                }
+            }
+            if (!flag)
+            {
+                std::shared_ptr<IRenderPass> lastPass = nullptr;
+                std::shared_ptr<IRenderPass> currentPass = _nextPass.lock();
+                while (currentPass)
+                {
+                    if (currentPass->_resourceStateMap.find(id) != currentPass->_resourceStateMap.end())
+                    {
+                        lastPass = currentPass;
+                    }
+
+                    currentPass = currentPass->_nextPass.lock();
+                }
+
+                if (lastPass && lastPass->_resourceStateMap.find(id) != lastPass->_resourceStateMap.end())
+                {
+                    D3D12_RESOURCE_STATES lastState = lastPass->_resourceStateMap[id];
+                    if (lastState != state)
+                    {
+                        barriers.push_back({ resource, lastState, state });
+                        flag = true;
+                    }
+                }
+            }
+        }
+
+        dx12::CommandList& commandList = *task.GetCommandLists().front();
+        if (!barriers.empty())
+        {
+            commandList.TransitionBarriers(barriers);
+        }
+
+        commandList.Close();
+    }
+
+    void IRenderPass::PostExecute(RenderContext& context, TaskGPU& task)
     {
     }
 

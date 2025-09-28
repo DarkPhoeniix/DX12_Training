@@ -34,14 +34,12 @@ namespace render
 
     void LightingPass::Setup(rg::RenderPassBuilder& builder)
     {
-        _data.AlbedoMetallic = builder.ReadResource("albedo_metallic_target");
-        _data.NormalRoughness = builder.ReadResource("normal_roughness_target");
-        _data.Emission = builder.ReadResource("emission_target");
-        _data.Depth = builder.ReadResource("depth_target");
+        _data.AlbedoMetallic = builder.ReadTexture("albedo_metallic_target");
+        _data.NormalRoughness = builder.ReadTexture("normal_roughness_target");
+        _data.Emission = builder.ReadTexture("emission_target");
+        _data.Depth = builder.DepthStencilRead("depth_target");
 
-        _data.ShadowMaps = builder.ReadResource("shadow_maps");
-
-        _data.HDRTarget = builder.WriteResource("hdr_target");
+        _data.HDRTarget = builder.WriteTexture("hdr_target");
     }
 
     void LightingPass::Execute(rg::RenderContext& context, TaskGPU& task)
@@ -63,16 +61,6 @@ namespace render
             DescriptorHandle emissionHandle = context.GetStaticResourceHandle(emission->GetAsSRV());
             DescriptorHandle depthHandle = context.GetStaticResourceHandle(depth->GetAsSRV());
 
-            std::vector<dx12::ResourceBarrier> barriers =
-            {
-                { hdrTarget,        D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_UNORDERED_ACCESS },
-                { albedoMetallic,   D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-                { normalRoughness,  D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-                { emission,         D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-                { depth,            D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE }
-            };
-            commandList.TransitionBarriers(barriers);
-
             context.BindBindlessTable(commandList);
             commandList.SetPipelineState(_deferredPipeline);
 
@@ -93,16 +81,6 @@ namespace render
             int yThreadGroups = (uint32_t)std::ceilf(viewportSize.y / 8.0f);
 
             commandList.Dispatch(xThreadGroups, yThreadGroups);
-
-            barriers =
-            {
-                { hdrTarget,        D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON },
-                { albedoMetallic,   D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
-                { normalRoughness,  D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
-                { emission,         D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
-                { depth,            D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON }
-            };
-            commandList.TransitionBarriers(barriers);
         }
         PIXEndEvent(commandList.GetDXCommandList().Get());
 

@@ -10,14 +10,14 @@ namespace render
 {
 	struct LightingPassData
 	{
-		rg::ResourceId AlbedoMetallic;
-		rg::ResourceId NormalRoughness;
-		rg::ResourceId Emission;
-		rg::ResourceId Depth;
+		rg::RGTextureReadId AlbedoMetallic;
+		rg::RGTextureReadId NormalRoughness;
+		rg::RGTextureReadId Emission;
+		rg::RGTextureDepthStencilReadId Depth;
 
-		rg::ResourceId ShadowMaps;
+		rg::RGVirtualResourceReadId ShadowMaps;
 
-		rg::ResourceId HDRTarget;
+		rg::RGTextureWriteId HDRTarget;
 	};
 
 	class LightingPass : public rg::RenderPass<LightingPassData>

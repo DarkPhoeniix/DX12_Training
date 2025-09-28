@@ -10,8 +10,8 @@ namespace render
 {
 	struct BrightnessFilterPassData
 	{
-		rg::ResourceId HDRTarget;
-		rg::ResourceId BrightnessTarget;
+		rg::RGTextureReadId HDRTarget;
+		rg::RGTextureWriteId BrightnessTarget;
 	};
 
 	class BrightnessFilterPass : public rg::RenderPass<BrightnessFilterPassData>

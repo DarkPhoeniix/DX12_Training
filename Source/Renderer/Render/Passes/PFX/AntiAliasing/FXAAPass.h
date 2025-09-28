@@ -12,12 +12,12 @@ namespace render
 {
 	struct FXAAPassData
 	{
-		rg::ResourceId Target;
-		rg::ResourceId WorkCounters;
-		rg::ResourceId WorkQueue;
-		rg::ResourceId ColorQueue;
-		rg::ResourceId LumaBuffer;
-		rg::ResourceId IndirectParams;
+		rg::RGTextureWriteId Target;
+		rg::RGTextureWriteId LumaBuffer;
+		rg::RGBufferWriteId WorkCounters;
+		rg::RGBufferWriteId WorkQueue;
+		rg::RGBufferWriteId ColorQueue;
+		rg::RGBufferIndirectArgsId IndirectParams;
 	};
 
 	class FXAAPass : public rg::RenderPass<FXAAPassData>

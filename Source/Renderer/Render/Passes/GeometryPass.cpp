@@ -44,7 +44,7 @@ namespace render
 			depthDesc.SetClearValue(clearValue);
 			depthDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::DepthStencil);
 		}
-		_data.Depth = builder.CreateResource("depth_target", depthDesc);
+        builder.DeclareTexture("depth_target", depthDesc);
 
 		dx12::ResourceDescription albedoMetallicDesc;
 		{
@@ -60,7 +60,7 @@ namespace render
 			albedoMetallicDesc.SetClearValue(clearValue);
 			albedoMetallicDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::RenderTarget);
 		}
-		_data.AlbedoMetallic = builder.CreateResource("albedo_metallic_target", albedoMetallicDesc);
+        builder.DeclareTexture("albedo_metallic_target", albedoMetallicDesc);
 
 		dx12::ResourceDescription normalRoughnessDesc;
 		{
@@ -76,7 +76,7 @@ namespace render
 			normalRoughnessDesc.SetClearValue(clearValue);
 			normalRoughnessDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::RenderTarget);
 		}
-		_data.NormalRoughness = builder.CreateResource("normal_roughness_target", normalRoughnessDesc);
+        builder.DeclareTexture("normal_roughness_target", normalRoughnessDesc);
 
 		dx12::ResourceDescription emissionDesc;
 		{
@@ -92,7 +92,12 @@ namespace render
 			emissionDesc.SetClearValue(clearValue);
 			emissionDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::RenderTarget);
 		}
-		_data.Emission = builder.CreateResource("emission_target", emissionDesc);
+        builder.DeclareTexture("emission_target", emissionDesc);
+
+        _data.AlbedoMetallic = builder.RenderTarget("albedo_metallic_target");
+        _data.NormalRoughness = builder.RenderTarget("normal_roughness_target");
+        _data.Emission = builder.RenderTarget("emission_target");
+        _data.Depth = builder.DepthStencilWrite("depth_target");
 	}
 
 	void GeometryPass::Execute(rg::RenderContext& context, TaskGPU& task)
@@ -111,15 +116,6 @@ namespace render
             DescriptorHandle emissionHandle = context.GetStaticResourceHandle(emission->GetAsRTV());
 			DescriptorHandle normalSpecularHandle = context.GetStaticResourceHandle(normalRoughness->GetAsRTV());
 			DescriptorHandle depthHandle = context.GetStaticResourceHandle(depth->GetAsDSV());
-
-			std::vector<dx12::ResourceBarrier> barriers =
-			{
-				{ albedoMetallic,     D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_RENDER_TARGET },
-				{ normalRoughness,    D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_RENDER_TARGET },
-				{ emission,           D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_RENDER_TARGET },
-				{ depth,              D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_DEPTH_WRITE },
-			};
-			commandList.TransitionBarriers(barriers);
 
 			commandList.ClearDSV(depthHandle.CpuHandle, D3D12_CLEAR_FLAG_DEPTH);
 			float color[] = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -174,15 +170,6 @@ namespace render
 			}
 
 			DebugInfo::EndStatCollecting(commandList);
-
-			barriers =
-			{
-				{ albedoMetallic,    D3D12_RESOURCE_STATE_RENDER_TARGET,  D3D12_RESOURCE_STATE_COMMON },
-				{ normalRoughness,   D3D12_RESOURCE_STATE_RENDER_TARGET,  D3D12_RESOURCE_STATE_COMMON },
-                { emission,          D3D12_RESOURCE_STATE_RENDER_TARGET,  D3D12_RESOURCE_STATE_COMMON },
-				{ depth,             D3D12_RESOURCE_STATE_DEPTH_WRITE,    D3D12_RESOURCE_STATE_COMMON },
-			};
-			commandList.TransitionBarriers(barriers);
 		}
 		PIXEndEvent(commandList.GetDXCommandList().Get());
 

@@ -8,26 +8,21 @@
 
 namespace render
 {
-	struct ShadowClearPassData
+	struct PresentPassData
 	{
-		rg::ResourceId ShadowMaps;
+		rg::RGTextureCopySrcId RenderTarget;
 	};
 
-	class ShadowClearPass : public rg::RenderPass<ShadowClearPassData>
+	class PresentPass : public rg::RenderPass<PresentPassData>
 	{
 	public:
-		ShadowClearPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
+		PresentPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
 
 		// Inherited via RenderPass
 		void Setup(rg::RenderPassBuilder& builder) override;
 		void Execute(rg::RenderContext& context, TaskGPU& task) override;
 
 	private:
-		dx12::PipelineState _spotLightShadowsPipeline;
-		dx12::PipelineState _pointLightShadowsPipeline;
-
-		ComPtr<ID3D12CommandSignature> _cmdSignature;
-
 		std::shared_ptr<scene::Scene> _scene;
 		scene::Camera* _camera;
 	};

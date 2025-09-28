@@ -31,5 +31,5 @@ void main(uint3 DTid : SV_DispatchThreadID)
     float4 color = HDRTexture[DTid.xy];
     float4 bloom = BloomTexture.SampleLevel(LinearClampSampler, uv, 0);
     
-    HDRTexture[DTid.xy] = float4(lerp(color.rgb, bloom.rgb, PassCB.BloomStrength), color.a);
+    HDRTexture[DTid.xy] = float4(color.rgb + bloom.rgb * PassCB.BloomStrength, color.a);
 }

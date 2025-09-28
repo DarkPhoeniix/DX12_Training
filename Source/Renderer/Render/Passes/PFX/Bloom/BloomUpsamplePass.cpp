@@ -33,7 +33,7 @@ namespace render
         _mipCount = std::min(maxMipCount - 1, MAX_MIP_LEVELS);
         for (std::uint32_t i = 1; i < (_mipCount + 1); ++i)
         {
-            _data.BloomMips.push_back(builder.WriteResource("bloom_mip_" + std::to_string(i)));
+            _data.BloomMips.push_back(builder.WriteTexture("bloom_mip_" + std::to_string(i)));
         }
     }
 
@@ -53,31 +53,19 @@ namespace render
                 DescriptorHandle bloomATargetHandle = context.GetStaticResourceHandle(bloomATarget->GetAsSRV());
                 DescriptorHandle bloomBTargetHandle = context.GetStaticResourceHandle(bloomBTarget->GetAsUAV());
 
-                std::vector<dx12::ResourceBarrier> barriers =
-                {
-                    { bloomATarget, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-                    { bloomBTarget, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS }
-                };
-                commandList.TransitionBarriers(barriers);
-
                 struct PassConstants
                 {
                     std::uint32_t InputTextureIndex;
                     std::uint32_t OutputTextureIndex;
                     float FilterRadius;
-                } passCB{ .InputTextureIndex = bloomATargetHandle.Index, .OutputTextureIndex = bloomBTargetHandle.Index, .FilterRadius = RenderSettings::Bloom().Radius };
-                commandList.SetConstants(1, 3, &passCB);
+                    float Intensity;
+                } passCB{ .InputTextureIndex = bloomATargetHandle.Index, .OutputTextureIndex = bloomBTargetHandle.Index, .FilterRadius = RenderSettings::Bloom().Radius, .Intensity = RenderSettings::Bloom().Intensity1 };
+                commandList.SetConstants(1, 4, &passCB);
 
                 std::uint32_t xThreadGroups = (std::uint32_t)std::ceilf(bloomBTarget->GetResourceDescription().GetSize().x / 16.0f);
                 std::uint32_t yThreadGroups = (std::uint32_t)std::ceilf(bloomBTarget->GetResourceDescription().GetSize().y / 16.0f);
                 commandList.Dispatch(xThreadGroups, yThreadGroups, 1);
 
-                barriers =
-                {
-                    { bloomATarget, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
-                    { bloomBTarget, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON }
-                };
-                commandList.TransitionBarriers(barriers);
                 commandList.UAVBarrier(bloomBTarget);
             }
         }

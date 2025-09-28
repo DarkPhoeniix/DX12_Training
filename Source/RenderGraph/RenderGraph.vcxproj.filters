@@ -31,6 +31,7 @@
       <Filter>RenderGraph\Helpers</Filter>
     </ClInclude>
     <ClInclude Include="RenderGraphPCH.h" />
+    <ClInclude Include="RenderGraph\RenderGraphResourceId.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderGraph\RenderContext.cpp">
@@ -55,6 +56,7 @@
       <Filter>RenderGraph\Helpers</Filter>
     </ClCompile>
     <ClCompile Include="RenderGraphPCH.cpp" />
+    <ClCompile Include="RenderGraph\RenderGraphResourceId.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="RenderGraph\RenderPass.inl">

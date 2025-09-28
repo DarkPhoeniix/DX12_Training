@@ -252,9 +252,6 @@
     <ClCompile Include="Core\TextureManager.cpp">
       <Filter>Core</Filter>
     </ClCompile>
-    <ClCompile Include="Render\Passes\Shadows\ShadowClearPass.cpp">
-      <Filter>Render\Passes\Shadows</Filter>
-    </ClCompile>
     <ClCompile Include="Render\Passes\Shadows\ShadowCullPass.cpp">
       <Filter>Render\Passes\Shadows</Filter>
     </ClCompile>
@@ -293,6 +290,7 @@
     <ClCompile Include="Render\Passes\PFX\Bloom\BloomUpsamplePass.cpp" />
     <ClCompile Include="Render\Passes\PFX\Bloom\BloomApplyPass.cpp" />
     <ClCompile Include="Render\Passes\PFX\ToneMapping\AverageLuminancePass.cpp" />
+    <ClCompile Include="Render\Passes\PresentPass.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RendererPCH.h" />
@@ -452,9 +450,6 @@
     <ClInclude Include="Render\Passes\Shadows\ShadowDrawPass.h">
       <Filter>Render\Passes\Shadows</Filter>
     </ClInclude>
-    <ClInclude Include="Render\Passes\Shadows\ShadowClearPass.h">
-      <Filter>Render\Passes\Shadows</Filter>
-    </ClInclude>
     <ClInclude Include="Render\Passes\Shadows\ShadowCullPass.h">
       <Filter>Render\Passes\Shadows</Filter>
     </ClInclude>
@@ -490,6 +485,7 @@
     <ClInclude Include="Render\Passes\PFX\Bloom\BloomUpsamplePass.h" />
     <ClInclude Include="Render\Passes\PFX\Bloom\BloomApplyPass.h" />
     <ClInclude Include="Render\Passes\PFX\ToneMapping\AverageLuminancePass.h" />
+    <ClInclude Include="Render\Passes\PresentPass.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\CommonResources.hlsli">

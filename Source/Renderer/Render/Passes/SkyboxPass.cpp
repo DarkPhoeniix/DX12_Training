@@ -33,8 +33,8 @@ namespace render
 
 	void SkyboxPass::Setup(rg::RenderPassBuilder& builder)
 	{
-		_data.Depth = builder.ReadResource("depth_target");
-		_data.HDRTarget = builder.WriteResource("hdr_target");
+		_data.Depth = builder.DepthStencilRead("depth_target");
+		_data.HDRTarget = builder.WriteTexture("hdr_target");
 	}
 
 	void SkyboxPass::Execute(rg::RenderContext& context, TaskGPU& task)
@@ -55,14 +55,6 @@ namespace render
 			DescriptorHandle depthHandle = context.GetStaticResourceHandle(depth->GetAsSRV());
 			DescriptorHandle skyboxHandle = context.GetStaticResourceHandle(skybox->GetAsSRV());
 
-			std::vector<dx12::ResourceBarrier> barriers =
-			{
-				{ target, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS },
-				{ skybox, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-				{ depth, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE }
-			};
-			commandList.TransitionBarriers(barriers);
-
 			context.BindBindlessTable(commandList);
 			commandList.SetPipelineState(_skyboxPipeline);
 
@@ -80,14 +72,6 @@ namespace render
 			int yThreadGroups = (uint32_t)std::ceilf(viewportSize.y / 8.0f);
 
 			commandList.Dispatch(xThreadGroups, yThreadGroups);
-
-			barriers =
-			{
-				{ target, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON },
-				{ skybox, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
-				{ depth, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON }
-			};
-			commandList.TransitionBarriers(barriers);
 		}
 		PIXEndEvent(commandList.GetDXCommandList().Get());
 

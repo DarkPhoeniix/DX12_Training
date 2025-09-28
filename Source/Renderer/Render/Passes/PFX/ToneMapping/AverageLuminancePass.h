@@ -10,9 +10,8 @@ namespace render
 {
 	struct AverageLuminancePassData
 	{
-		rg::ResourceId LuminanceHistogram;
-		rg::ResourceId PrevAverageLuminance;
-		rg::ResourceId AverageLuminance;
+		rg::RGBufferReadId LuminanceHistogram;
+		rg::RGBufferWriteId AverageLuminance;
 	};
 
 	class AverageLuminancePass : public rg::RenderPass<AverageLuminancePassData>

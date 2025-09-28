@@ -4,8 +4,8 @@
 
 void AllocatorPool::Init()
 {
-    Make(streams, 64, D3D12_COMMAND_LIST_TYPE_DIRECT);
-    Make(computes, 64, D3D12_COMMAND_LIST_TYPE_COMPUTE);
+    Make(streams, 128, D3D12_COMMAND_LIST_TYPE_DIRECT);
+    Make(computes, 128, D3D12_COMMAND_LIST_TYPE_COMPUTE);
     Make(copies, 4, D3D12_COMMAND_LIST_TYPE_COPY);
 }
 

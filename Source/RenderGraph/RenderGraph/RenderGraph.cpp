@@ -4,6 +4,7 @@
 
 #include "RenderPassBuilder.h"
 
+#include "ResourceBarrier.h"
 #include "Render/Frame/Frame.h"
 #include "Render/Frame/TaskGPU.h"
 
@@ -23,11 +24,6 @@ namespace rg
         , _workerManager(nullptr)
 #endif
     {
-    }
-
-    ResourceTable& RenderGraph::GetResourceTable()
-    {
-        return _context.GetResourceTable();
     }
 
     void RenderGraph::SetFrame(Frame& frame)
@@ -57,44 +53,59 @@ namespace rg
         BuildAdjacencyLists();
         TopologicalSort();
 
+        _transitionedToWorkingState = false;
+
         LOG_INFO("Render graph compiled successfully with {} passes.", _passes.size());
     }
 
     void RenderGraph::Execute()
     {
+        if (!_transitionedToWorkingState)
+        {
+            TransitionResourcesToWorkingState();
+            _transitionedToWorkingState = true;
+        }
+
         _GPUTasks.clear();
-        _GPUTasks.resize(_passes.size(), nullptr);
+        _GPUTasks.resize(_passes.size() * 2, nullptr);
 
         for (std::uint32_t passIndex : _sortedPasses)
         {
             std::shared_ptr<IRenderPass> pass = _passes[passIndex];
 
-            TaskGPU* task = nullptr;
+            TaskGPU* preExecutionTask = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT);
+            preExecutionTask->SetName(std::format("{} - PreExecute task", pass->_name));
+
+            TaskGPU* executionTask = nullptr;
             switch (pass->GetType())
             {
             case RenderPassType::Graphics:
-                task = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT);
+                executionTask = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT);
                 break;
             case RenderPassType::Compute:
-                task = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE);
+                executionTask = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE);
                 break;
             case RenderPassType::Copy:
-                task = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_COPY);
+                executionTask = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_COPY);
                 break;
             }
+            executionTask->SetName(std::format("{} - Execute task", pass->_name));
 
-            if (task)
+            if (executionTask)
             {
-                task->SetName(pass->_name);
+                executionTask->SetName(pass->_name);
 
 #ifdef RG_MULTITHREADED
-                _workerManager->Submit({ pass.get(), &_context, task });
+                _workerManager->Submit({ pass.get(), &_context, preExecutionTask, executionTask, executionTask });
 #else
-                pass->Execute(_context, *task);
+                pass->PreExecute(_context, *preExecutionTask);
+                pass->Execute(_context, *executionTask);
+                pass->PostExecute(_context, *executionTask);
 #endif
             }
 
-            _GPUTasks[passIndex] = task;
+            _GPUTasks[passIndex * 2] = preExecutionTask;
+            _GPUTasks[passIndex * 2 + 1] = executionTask;
         }
 
 #ifdef RG_MULTITHREADED
@@ -103,13 +114,16 @@ namespace rg
 
         for (std::uint32_t passIndex : _sortedPasses)
         {
-            TaskGPU* currentTask = _GPUTasks[passIndex];
+            TaskGPU* currentPreTask = _GPUTasks[passIndex * 2];
+            TaskGPU* currentTask = _GPUTasks[passIndex * 2 + 1];
 
             for (std::uint32_t adjacentPassIndex : _adjacencyLists[passIndex])
             {
-                TaskGPU* dependentTask = _GPUTasks[adjacentPassIndex];
+                TaskGPU* dependentTask = _GPUTasks[adjacentPassIndex * 2];
                 dependentTask->AddDependency(currentTask->GetName());
             }
+
+            currentTask->AddDependency(currentPreTask->GetName());
         }
     }
 
@@ -133,24 +147,37 @@ namespace rg
         }
         else
         {
-            const ResourceId& id = resource->GetID();
+            const RGResourceId& id = resource->GetID();
             _context._mapNameToId[resource->GetName()] = id;
             _context._mapIdToResource[id] = resource;
         }
     }
 
-    std::shared_ptr<dx12::Resource> RenderGraph::ExportResource(const std::string& name)
+    void RenderGraph::ExportResource(const std::string& name, std::shared_ptr<dx12::Resource> destination)
     {
-        ResourceId id = _context._mapNameToId[name];
+        ASSERT(destination, "Trying to export a resource to a null destination.");
 
-        auto resourceIt = _context._mapIdToResource.find(id);
-        if (resourceIt == _context._mapIdToResource.end())
+        struct ExportPassData
         {
-            LOG_ERROR("Resource with name '{}' does not exist in the render graph context.", name);
-            return nullptr;
-        }
+            RGResourceId SourceId;
+        } data;
 
-        return resourceIt->second;
+
+        AddPass<ExportPassData>("Export Pass",
+            [&](RenderPassBuilder& builder)
+            {
+                data.SourceId = builder.CopySrcTexture(name);
+            },
+            [&](RenderContext& context, TaskGPU& task)
+            {
+                task.SetName("Export Pass");
+                dx12::CommandList& commandList = task.GetCommandList();
+
+                std::shared_ptr<dx12::Resource> source = context.GetResource(data.SourceId);
+                commandList.CopyResource(*destination, *source);
+                commandList.Close();
+            }, 
+            RenderPassType::Copy);
     }
 
     void RenderGraph::BuildAdjacencyLists()
@@ -168,9 +195,9 @@ namespace rg
             for (size_t i = passIndex + 1; i < passesCount; ++i)
             {
                 std::shared_ptr<IRenderPass>& otherPass = _passes[i];
-                for (ResourceId readId : otherPass->_reads)
+                for (RGResourceId readId : otherPass->_reads)
                 {
-                    const std::vector<rg::ResourceId>& passWriteIds = pass->_writes;
+                    const std::vector<rg::RGResourceId>& passWriteIds = pass->_writes;
                     if (std::find(passWriteIds.cbegin(), passWriteIds.cend(), readId) != passWriteIds.cend())
                     {
                         passAdjacencyList.push_back(i);
@@ -208,5 +235,103 @@ namespace rg
         }
 
         std::reverse(_sortedPasses.begin(), _sortedPasses.end());
+
+        // Set previous and next pass pointers
+        for (size_t i = 0; i < _sortedPasses.size() - 1; ++i)
+        {
+            std::shared_ptr<IRenderPass> currentPass = _passes[_sortedPasses[i]];
+            std::shared_ptr<IRenderPass> nextPass = _passes[_sortedPasses[i + 1]];
+
+            currentPass->_nextPass = nextPass;
+            nextPass->_prevPass = currentPass;
+        }
+    }
+
+    void RenderGraph::TransitionResourcesToWorkingState()
+    {
+        std::vector<dx12::ResourceBarrier> barriers;
+
+        for (std::shared_ptr<IRenderPass> renderPass : _passes)
+        {
+            if (!renderPass->_creates.empty())
+            {
+                for (auto id : renderPass->_creates)
+                {
+                    std::shared_ptr<dx12::Resource> resource = _context.GetResource(id);
+                    if (!resource)
+                    {
+                        continue;
+                    }
+
+                    std::shared_ptr<IRenderPass> lastPass = nullptr;
+                    std::shared_ptr<IRenderPass> currentPass = renderPass;
+
+                    while (currentPass)
+                    {
+                        if (currentPass->_resourceStateMap.find(id) != currentPass->_resourceStateMap.end())
+                        {
+                            lastPass = currentPass;
+                        }
+
+                        currentPass = currentPass->_nextPass.lock();
+                    }
+
+                    if (lastPass && lastPass->_resourceStateMap.find(id) != lastPass->_resourceStateMap.end())
+                    {
+                        D3D12_RESOURCE_STATES lastState = lastPass->_resourceStateMap[id];
+                        D3D12_RESOURCE_STATES currState = resource->GetCurrentState();
+                        if (lastState != currState)
+                        {
+                            barriers.push_back({ resource, currState, lastState });
+                        }
+                    }
+                }
+            }
+
+            if (!renderPass->_reads.empty())
+            {
+                for (auto readId : renderPass->_reads)
+                {
+                    if (std::find(renderPass->_creates.cbegin(), renderPass->_creates.cend(), readId) != renderPass->_creates.cend())
+                    {
+                        continue;
+                    }
+
+                    int refCount = 1;
+
+                    for (std::shared_ptr<IRenderPass> p : _passes)
+                    {
+                        if (p != renderPass && p->_resourceStateMap.find(readId) != p->_resourceStateMap.end())
+                        {
+                            refCount++;
+                            break;
+                        }
+                    }
+
+                    if (refCount <= 1)
+                    {
+                        std::shared_ptr<dx12::Resource> resource = _context.GetResource(readId);
+
+                        if (resource)
+                        {
+                            D3D12_RESOURCE_STATES lastState = renderPass->_resourceStateMap[readId];
+                            D3D12_RESOURCE_STATES currState = resource->GetCurrentState();
+                            if (lastState != currState)
+                            {
+                                barriers.push_back({ resource, currState, lastState });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        TaskGPU& task = *_frame->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT);
+        task.SetName("Resource State Transition");
+
+        dx12::CommandList& commandList = task.GetCommandList();
+
+        commandList.TransitionBarriers(barriers);
+        commandList.Close();
     }
 } // namespace rg

@@ -28,8 +28,6 @@ namespace render
 
     void BloomDownsamplePass::Setup(rg::RenderPassBuilder& builder)
     {
-        _data.HDRTarget = builder.ReadResource("hdr_target");
-
         DirectX::XMUINT2 viewportSize = _camera->GetViewport().GetSize();
 
         std::uint32_t size = std::max(viewportSize.x, viewportSize.y) / 2;
@@ -45,8 +43,12 @@ namespace render
             std::uint32_t targetWidth = viewportSize.x / std::pow(2, i);
             std::uint32_t targetHeight = viewportSize.y / std::pow(2, i);
             brightnessDesc.SetSize({ targetWidth, targetHeight });
-            _data.BloomMips.push_back(builder.CreateResource("bloom_mip_" + std::to_string(i), brightnessDesc));
+            builder.DeclareTexture("bloom_mip_" + std::to_string(i), brightnessDesc);
+
+            _data.BloomMips.push_back(builder.WriteTexture("bloom_mip_" + std::to_string(i)));
         }
+
+        _data.HDRTarget = builder.ReadTexture("hdr_target");
     }
 
     void BloomDownsamplePass::Execute(rg::RenderContext& context, TaskGPU& task)
@@ -59,12 +61,6 @@ namespace render
 
             DescriptorHandle hdrTargetHandle = context.GetStaticResourceHandle(hdrTarget->GetAsSRV());
 
-            std::vector<dx12::ResourceBarrier> barriers =
-            {
-                { hdrTarget,        D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE }
-            };
-            commandList.TransitionBarriers(barriers);
-
             context.BindBindlessTable(commandList);
             commandList.SetPipelineState(_bloomDownsamplePass1Pipeline);
 
@@ -72,12 +68,6 @@ namespace render
                 std::shared_ptr<dx12::Resource> bloomTarget = context.GetResource(_data.BloomMips[0]);
 
                 DescriptorHandle bloomTargetHandle = context.GetStaticResourceHandle(bloomTarget->GetAsUAV());
-
-                barriers =
-                {
-                    { bloomTarget, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS }
-                };
-                commandList.TransitionBarriers(barriers);
 
                 struct PassConstants
                 {
@@ -91,12 +81,6 @@ namespace render
                 std::uint32_t xThreadGroups = (std::uint32_t)std::ceilf(bloomTarget->GetResourceDescription().GetSize().x / 16.0f);
                 std::uint32_t yThreadGroups = (std::uint32_t)std::ceilf(bloomTarget->GetResourceDescription().GetSize().y / 16.0f);
                 commandList.Dispatch(xThreadGroups, yThreadGroups, 1);
-
-                barriers =
-                {
-                    { bloomTarget, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON }
-                };
-                commandList.TransitionBarriers(barriers);
             }
 
             context.BindBindlessTable(commandList);
@@ -110,12 +94,6 @@ namespace render
                 DescriptorHandle bloomATargetHandle = context.GetStaticResourceHandle(bloomATarget->GetAsSRV());
                 DescriptorHandle bloomBTargetHandle = context.GetStaticResourceHandle(bloomBTarget->GetAsUAV());
 
-                barriers =
-                {
-                    { bloomBTarget, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS }
-                };
-                commandList.TransitionBarriers(barriers);
-
                 struct PassConstants
                 {
                     std::uint32_t InputTextureIndex;
@@ -128,19 +106,7 @@ namespace render
                 std::uint32_t xThreadGroups = (std::uint32_t)std::ceilf(bloomBTarget->GetResourceDescription().GetSize().x / 16.0f);
                 std::uint32_t yThreadGroups = (std::uint32_t)std::ceilf(bloomBTarget->GetResourceDescription().GetSize().y / 16.0f);
                 commandList.Dispatch(xThreadGroups, yThreadGroups, 1);
-
-                barriers =
-                {
-                    { bloomBTarget, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON }
-                };
-                commandList.TransitionBarriers(barriers);
             }
-
-            barriers =
-            {
-                { hdrTarget,        D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON }
-            };
-            commandList.TransitionBarriers(barriers);
         }
         PIXEndEvent(commandList.GetDXCommandList().Get());
 

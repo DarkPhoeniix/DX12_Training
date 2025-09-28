@@ -10,10 +10,10 @@ namespace render
 {
 	struct ToneMappingPassData
 	{
-		rg::ResourceId HDRTarget;
-		rg::ResourceId AverageLuminance;
+		rg::RGTextureReadId HDRTarget;
+		rg::RGBufferReadId AverageLuminance;
 
-		rg::ResourceId Target;
+		rg::RGTextureWriteId Target;
 	};
 
 	class ToneMappingPass : public rg::RenderPass<ToneMappingPassData>
