@@ -10,12 +10,11 @@ namespace render
 {
 	struct SSAOComputePassData
 	{
-		rg::RGResourceId Noise;
-		rg::RGResourceId Kernels;
-
-		rg::RGResourceId NormalRoughness;
-		rg::RGResourceId Depth;
-		rg::RGResourceId AOTarget;
+		rg::RGTextureReadId NormalRoughness;
+		rg::RGTextureDepthStencilReadId Depth;
+		rg::RGTextureWriteId AOTarget;
+		rg::RGBufferUploadId Noise;
+		rg::RGBufferUploadId Kernels;
 	};
 
 	class SSAOComputePass : public rg::RenderPass<SSAOComputePassData>

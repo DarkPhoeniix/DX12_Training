@@ -10,8 +10,8 @@ namespace render
 {
 	struct DebugArmaturePassData
 	{
-		rg::RGResourceId Target;
-		rg::RGResourceId Depth;
+		rg::RGTextureRenderTargetId Target;
+		rg::RGTextureDepthStencilWriteId Depth;
 	};
 
 	class DebugArmaturePass : public rg::RenderPass<DebugArmaturePassData>

@@ -10,8 +10,8 @@ namespace render
 {
 	struct BloomDownsamplePassData
 	{
-        rg::RGResourceId HDRTarget;
-		std::vector<rg::RGResourceId> BloomMips;
+        rg::RGTextureReadId HDRTarget;
+		std::vector<rg::RGTextureWriteId> BloomMips;
 	};
 
 	class BloomDownsamplePass : public rg::RenderPass<BloomDownsamplePassData>

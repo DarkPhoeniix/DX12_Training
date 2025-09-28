@@ -9,78 +9,22 @@ namespace rg
     {
     }
 
-    RGResourceId RenderPassBuilder::CreateResourceVirtual(const std::string& name)
-    {
-        RGResourceId resourceId = _renderGraph._context.CreateResourceVirtual(name);
-
-        _renderPass->_creates.push_back(resourceId);
-        _renderPass->_reads.push_back(resourceId);
-        _renderPass->_writes.push_back(resourceId);
-
-        return resourceId;
-    }
-
-    RGResourceId RenderPassBuilder::CreateResource(const std::string& name, dx12::ResourceDescription desc, void* data /*= nullptr*/, size_t dataSize /*= 0*/)
-    {
-        RGResourceId resourceId = _renderGraph._context.CreateResource(name, desc, data, dataSize);
-
-        _renderPass->_creates.push_back(resourceId);
-        _renderPass->_reads.push_back(resourceId);
-        _renderPass->_writes.push_back(resourceId);
-
-        return resourceId;
-    }
-
-    RGResourceId RenderPassBuilder::ReadResource(const std::string& name)
-    {
-        RGResourceId resourceId = _renderGraph._context.ReadResource(name);
-
-        _renderPass->_reads.push_back(resourceId);
-
-        return resourceId;
-    }
-
-    RGResourceId RenderPassBuilder::WriteResource(const std::string& name)
-    {
-        RGResourceId resourceId = _renderGraph._context.WriteResource(name);
-
-        _renderPass->_reads.push_back(resourceId);
-        _renderPass->_writes.push_back(resourceId);
-
-        return resourceId;
-    }
-
-    RGResourceId RenderPassBuilder::DeclareBuffer(const std::string& name, const dx12::ResourceDescription& desc, void* data, size_t dataSize)
+    void RenderPassBuilder::DeclareBuffer(const std::string& name, const dx12::ResourceDescription& desc, void* data, size_t dataSize)
     {
         RGResourceId id = _renderGraph._context.DeclareBuffer(name, desc, data, dataSize);
 
         _renderPass->_creates.push_back(id);
         _renderPass->_reads.push_back(id);
         _renderPass->_writes.push_back(id);
-
-        return id;
     }
     
-    RGResourceId RenderPassBuilder::DeclareTexture(const std::string& name, const dx12::ResourceDescription& desc, void* data, size_t dataSize)
+    void RenderPassBuilder::DeclareTexture(const std::string& name, const dx12::ResourceDescription& desc, void* data, size_t dataSize)
     {
         RGResourceId id = _renderGraph._context.DeclareTexture(name, desc, data, dataSize);
 
         _renderPass->_creates.push_back(id);
         _renderPass->_reads.push_back(id);
         _renderPass->_writes.push_back(id);
-
-        return id;
-    }
-
-    RGResourceId RenderPassBuilder::DeclareVirtualResource(const std::string& name)
-    {
-        RGResourceId id = _renderGraph._context.DeclareVirtualResource(name);
-
-        _renderPass->_creates.push_back(id);
-        _renderPass->_reads.push_back(id);
-        _renderPass->_writes.push_back(id);
-
-        return id;
     }
 
     RGBufferReadId RenderPassBuilder::ReadBuffer(const std::string& name)

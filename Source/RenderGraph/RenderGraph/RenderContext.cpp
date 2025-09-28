@@ -215,16 +215,6 @@ namespace rg
         return resource->GetID();
     }
 
-    RGResourceId RenderContext::DeclareVirtualResource(const std::string& name)
-    {
-        ASSERT(!name.empty(), "Resource name cannot be empty.");
-
-        std::shared_ptr<dx12::Resource> resource = ResourceFactory::Create(name);
-        _mapNameToId[name] = resource->GetID();
-
-        return resource->GetID();
-    }
-
     RGBufferReadId RenderContext::ReadBuffer(const std::string& name)
     {
         auto IdIt = _mapNameToId.find(name);

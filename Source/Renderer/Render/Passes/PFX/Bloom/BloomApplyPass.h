@@ -10,8 +10,8 @@ namespace render
 {
 	struct BloomApplyPassData
 	{
-		rg::RGResourceId HDRTarget;
-		rg::RGResourceId Bloom;
+		rg::RGTextureWriteId HDRTarget;
+		rg::RGTextureReadId Bloom;
 	};
 
 	class BloomApplyPass : public rg::RenderPass<BloomApplyPassData>

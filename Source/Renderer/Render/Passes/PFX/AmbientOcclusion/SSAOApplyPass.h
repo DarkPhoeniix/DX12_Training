@@ -10,8 +10,8 @@ namespace render
 {
 	struct SSAOApplyPassData
 	{
-		rg::RGResourceId AOTarget;
-		rg::RGResourceId HDRTarget;
+		rg::RGTextureWriteId AOTarget;
+		rg::RGTextureReadId HDRTarget;
 	};
 
 	class SSAOApplyPass : public rg::RenderPass<SSAOApplyPassData>

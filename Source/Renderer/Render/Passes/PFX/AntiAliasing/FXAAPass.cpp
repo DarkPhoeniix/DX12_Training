@@ -156,11 +156,11 @@ namespace render
         builder.DeclareBuffer("fxaa_indirect_args", indirectArgsDesc);
 
         _data.Target = builder.WriteTexture("hdr_target");
-		_data.IndirectParams = builder.IndirectArgBuffer("fxaa_indirect_args");
         _data.LumaBuffer = builder.WriteTexture("luma_texture");
         _data.WorkCounters = builder.WriteBuffer("fxaa_work_counter");
         _data.WorkQueue = builder.WriteBuffer("fxaa_work_queue");
         _data.ColorQueue = builder.WriteBuffer("fxaa_color_queue");
+		_data.IndirectParams = builder.IndirectArgBuffer("fxaa_indirect_args");
 	}
 
 	void FXAAPass::Execute(rg::RenderContext& context, TaskGPU& task)

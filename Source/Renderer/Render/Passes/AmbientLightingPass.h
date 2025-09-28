@@ -10,15 +10,15 @@ namespace render
 {
 	struct AmbientLightingPassData
 	{
-		rg::RGResourceId AlbedoMetallic;
-		rg::RGResourceId NormalRoughness;
-		rg::RGResourceId Depth;
+		rg::RGTextureReadId AlbedoMetallic;
+		rg::RGTextureReadId NormalRoughness;
+		rg::RGTextureReadId Depth;
 
-		rg::RGResourceId DiffuseIrradianceMap;
-		rg::RGResourceId PreFilteredMap;
-		rg::RGResourceId BRDF_LUT;
+		rg::RGTextureReadId DiffuseIrradianceMap;
+		rg::RGTextureReadId PreFilteredMap;
+		rg::RGTextureReadId BRDF_LUT;
 
-		rg::RGResourceId HDRTarget;
+		rg::RGTextureWriteId HDRTarget;
 	};
 
 	class AmbientLightingPass : public rg::RenderPass<AmbientLightingPassData>

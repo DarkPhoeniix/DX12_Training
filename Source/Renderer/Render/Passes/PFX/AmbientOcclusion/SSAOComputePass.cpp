@@ -99,11 +99,11 @@ namespace render
 		}
 		builder.DeclareTexture("ao_target", aoDesc);
 
-        _data.Noise = builder.ReadBuffer("ssao_noise");
-        _data.Kernels = builder.ReadBuffer("ssao_kernels");
 		_data.NormalRoughness = builder.ReadTexture("normal_roughness_target");
 		_data.Depth = builder.DepthStencilRead("depth_target");
         _data.AOTarget = builder.WriteTexture("ao_target");
+		_data.Noise = builder.UploadBuffer("ssao_noise");
+		_data.Kernels = builder.UploadBuffer("ssao_kernels");
 	}
 
 	void SSAOComputePass::Execute(rg::RenderContext& context, TaskGPU& task)
