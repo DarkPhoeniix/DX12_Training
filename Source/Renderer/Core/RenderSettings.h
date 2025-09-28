@@ -5,8 +5,9 @@ class RenderSettings
 public:
     struct BloomParameters
     {
-        float Intensity = 0.04f;
-        float Radius = 1.0f;
+        float Intensity = 0.2f;
+        float Intensity1 = 0.4f;
+        float Radius = 2.0f;
     };
 
     struct ToneMappingParameters

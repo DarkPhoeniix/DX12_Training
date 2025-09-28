@@ -94,7 +94,13 @@ namespace gui
                 }
                 if (ImGui::TreeNode((void*)id++, "Bloom", RenderSettings::UseBloom()))
                 {
+                    if (ImGui::Checkbox("Use bloom", &RenderSettings::UseBloom()))
+                    {
+                        pendingUpdate = true;
+                    }
+
                     ImGui::DragFloat("Intensity", &RenderSettings::Bloom().Intensity, 0.001f, 0.001f, 1.0f);
+                    ImGui::DragFloat("Intensity1", &RenderSettings::Bloom().Intensity1, 0.001f, 0.001f, 1.0f);
                     ImGui::DragFloat("Radius", &RenderSettings::Bloom().Radius, 0.01f, 0.01f, 5.0f, "%.2f");
 
                     ImGui::TreePop();

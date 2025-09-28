@@ -58,8 +58,9 @@ namespace render
                     std::uint32_t InputTextureIndex;
                     std::uint32_t OutputTextureIndex;
                     float FilterRadius;
-                } passCB{ .InputTextureIndex = bloomATargetHandle.Index, .OutputTextureIndex = bloomBTargetHandle.Index, .FilterRadius = RenderSettings::Bloom().Radius };
-                commandList.SetConstants(1, 3, &passCB);
+                    float Intensity;
+                } passCB{ .InputTextureIndex = bloomATargetHandle.Index, .OutputTextureIndex = bloomBTargetHandle.Index, .FilterRadius = RenderSettings::Bloom().Radius, .Intensity = RenderSettings::Bloom().Intensity1 };
+                commandList.SetConstants(1, 4, &passCB);
 
                 std::uint32_t xThreadGroups = (std::uint32_t)std::ceilf(bloomBTarget->GetResourceDescription().GetSize().x / 16.0f);
                 std::uint32_t yThreadGroups = (std::uint32_t)std::ceilf(bloomBTarget->GetResourceDescription().GetSize().y / 16.0f);

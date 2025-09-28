@@ -8,6 +8,7 @@ struct PassConstants
     uint OutputTextureIndex;
     
     float FilterRadius;
+    float Intesity;
 };
 
 ConstantBuffer<PassConstants> PassCB : register(b1);
@@ -40,17 +41,17 @@ void main(uint3 DTid : SV_DispatchThreadID)
     // d - e - f
     // g - h - i
     
-    float4 a = InputTexture.SampleLevel(LinearClampSampler, uv, 0, int2(-1,  1));
-    float4 b = InputTexture.SampleLevel(LinearClampSampler, uv, 0, int2( 0,  1));
-    float4 c = InputTexture.SampleLevel(LinearClampSampler, uv, 0, int2( 1,  1));
+    float4 a = InputTexture.SampleLevel(LinearClampSampler, float2(uv.x - filterSize.x, uv.y + filterSize.y), 0);
+    float4 b = InputTexture.SampleLevel(LinearClampSampler, float2(uv.x               , uv.y + filterSize.y), 0);
+    float4 c = InputTexture.SampleLevel(LinearClampSampler, float2(uv.x + filterSize.x, uv.y + filterSize.y), 0);
     
-    float4 d = InputTexture.SampleLevel(LinearClampSampler, uv, 0, int2(-1,  0));
-    float4 e = InputTexture.SampleLevel(LinearClampSampler, uv, 0, int2( 0,  0));
-    float4 f = InputTexture.SampleLevel(LinearClampSampler, uv, 0, int2( 1,  0));
+    float4 d = InputTexture.SampleLevel(LinearClampSampler, float2(uv.x - filterSize.x, uv.y               ), 0);
+    float4 e = InputTexture.SampleLevel(LinearClampSampler, float2(uv.x               , uv.y               ), 0);
+    float4 f = InputTexture.SampleLevel(LinearClampSampler, float2(uv.x + filterSize.x, uv.y               ), 0);
     
-    float4 g = InputTexture.SampleLevel(LinearClampSampler, uv, 0, int2(-1, -1));
-    float4 h = InputTexture.SampleLevel(LinearClampSampler, uv, 0, int2( 0, -1));
-    float4 i = InputTexture.SampleLevel(LinearClampSampler, uv, 0, int2( 1, -1));
+    float4 g = InputTexture.SampleLevel(LinearClampSampler, float2(uv.x - filterSize.x, uv.y - filterSize.y), 0);
+    float4 h = InputTexture.SampleLevel(LinearClampSampler, float2(uv.x               , uv.y - filterSize.y), 0);
+    float4 i = InputTexture.SampleLevel(LinearClampSampler, float2(uv.x + filterSize.x, uv.y - filterSize.y), 0);
     
     float4 lowColor = e * 4.0f +
                       (b + d + f + h) * 2.0f +
@@ -58,5 +59,5 @@ void main(uint3 DTid : SV_DispatchThreadID)
            lowColor *= 1.0f / 16.0f;
     float4 highColor = OutputTexture.Load(uint3(pixel, 0));
     
-    OutputTexture[pixel] = highColor + lowColor * PassCB.FilterRadius;
+    OutputTexture[pixel] = float4(lerp(highColor.rgb, lowColor.rgb, PassCB.Intesity), 1.0f);
 }
