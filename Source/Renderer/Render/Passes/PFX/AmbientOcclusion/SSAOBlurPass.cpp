@@ -5,6 +5,8 @@
 #include "CommandList.h"
 #include "ResourceBarrier.h"
 
+#include "Core/RenderSettings.h"
+
 #include "RenderGraph/RenderContext.h"
 #include "RenderGraph/RenderPassBuilder.h"
 
@@ -14,10 +16,6 @@ namespace render
 
 	namespace
 	{
-		constexpr int kRadius = 4;
-		constexpr float kDepthThreshold = 0.2f;
-		constexpr float kSharpness = 50.0f;
-
 		struct PassConstants
 		{
 			int Radius;
@@ -42,25 +40,27 @@ namespace render
 
 	void SSAOBlurPass::Setup(rg::RenderPassBuilder& builder)
 	{
+        int radius = RenderSettings::SSAO().BlurRadius;
+
 		dx12::ResourceDescription weightsBufferDesc;
 		{
-			weightsBufferDesc.SetSize({ (kRadius * 2 + 1) * sizeof(float), 1 });
+			weightsBufferDesc.SetSize({ (std::uint32_t)((radius * 2 + 1) * sizeof(float)), 1 });
 			weightsBufferDesc.SetStride(sizeof(float));
 			weightsBufferDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
 		}
-		std::vector<float> weightsData(kRadius * 2 + 1);
+		std::vector<float> weightsData(radius * 2 + 1);
 		const float sigma = 2.0f;
 		float sum = 0.0f;
-		for (int i = -kRadius; i <= kRadius; ++i)
+		for (int i = -radius; i <= radius; ++i)
 		{
 			float weight = std::exp(-0.5f * (float(i) / sigma) * (float(i) / sigma));
 
-			weightsData[kRadius + i] = weight;
+			weightsData[radius + i] = weight;
 			sum += weight;
 		}
-		for (int i = -kRadius; i <= kRadius; ++i)
+		for (int i = -radius; i <= radius; ++i)
 		{
-			weightsData[kRadius + i] /= sum;
+			weightsData[radius + i] /= sum;
 		}
         builder.DeclareBuffer("ssao_blur_weights", weightsBufferDesc, weightsData.data(), sizeof(float) * weightsData.size());
 
@@ -102,9 +102,9 @@ namespace render
 
 			PassConstants passCB =
 			{
-				.Radius = kRadius,
-				.DepthThreshold = kDepthThreshold,
-				.Sharpness = kSharpness,
+				.Radius = static_cast<int>(RenderSettings::SSAO().BlurRadius),
+				.DepthThreshold = RenderSettings::SSAO().DepthThreshold,
+				.Sharpness = RenderSettings::SSAO().Sharpness,
 				.WeightsBufferIndex = weightsBufferSRV.Index,
 				.DepthTextureIndex = depthHandle.Index,
 				.InputTextureIndex = aoTargetSRV.Index,
@@ -122,6 +122,8 @@ namespace render
 			context.BindBindlessTable(commandList);
 			commandList.SetPipelineState(_SSAOBlurVerticalPipeline);
 
+			passCB.InputTextureIndex = blurTargetUAV.Index;
+			passCB.OutputTextureIndex = aoTargetSRV.Index;
 			commandList.SetCBV(0, context.GetFrame()->GetBuffer()->OffsetGPU());
 			commandList.SetConstants(1, 7, &passCB);
 

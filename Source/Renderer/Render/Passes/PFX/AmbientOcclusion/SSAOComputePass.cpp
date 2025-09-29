@@ -5,6 +5,8 @@
 #include "CommandList.h"
 #include "ResourceBarrier.h"
 
+#include "Core/RenderSettings.h"
+
 #include "RenderGraph/RenderContext.h"
 #include "RenderGraph/RenderPassBuilder.h"
 
@@ -18,8 +20,6 @@ namespace render
 	{
 		// TODO: move to parameters
 		constexpr std::uint32_t kKernelSize = 16;
-		constexpr float kRadius = 2.5f;
-		constexpr float kBias = 0.025f;
 
 		struct PassConstants
 		{
@@ -131,8 +131,8 @@ namespace render
 			PassConstants passCB =
 			{
 				.KernelSize = kKernelSize,
-				.Radius = kRadius,
-				.Bias = kBias,
+				.Radius = RenderSettings::SSAO().Radius,
+				.Bias = RenderSettings::SSAO().Bias,
 				.KernelBufferIndex = kernelsHandle.Index,
 				.NoiseBufferIndex = noiseHandle.Index,
 				.DepthTextureIndex = depthHandle.Index,

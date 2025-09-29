@@ -72,10 +72,6 @@ namespace gui
                 {
                     pendingUpdate = true;
                 }
-                if (ImGui::Checkbox("Use SSAO", &RenderSettings::UseSSAO()))
-                {
-                    pendingUpdate = true;
-                }
                 if (ImGui::Checkbox("Use FXAA", &RenderSettings::UseFXAA()))
                 {
                     pendingUpdate = true;
@@ -102,6 +98,24 @@ namespace gui
                     ImGui::DragFloat("Intensity", &RenderSettings::Bloom().Intensity, 0.001f, 0.001f, 1.0f);
                     ImGui::DragFloat("Intensity1", &RenderSettings::Bloom().Intensity1, 0.001f, 0.001f, 1.0f);
                     ImGui::DragFloat("Radius", &RenderSettings::Bloom().Radius, 0.01f, 0.01f, 5.0f, "%.2f");
+
+                    ImGui::TreePop();
+                }
+                if (ImGui::TreeNode((void*)id++, "SSAO"))
+                {
+                    if (ImGui::Checkbox("Use SSAO", &RenderSettings::UseSSAO()))
+                    {
+                        pendingUpdate = true;
+                    }
+
+                    ImGui::DragFloat("Radius", &RenderSettings::SSAO().Radius, 0.01f, 0.01f, 5.0f, "%.2f");
+                    ImGui::DragFloat("Bias", &RenderSettings::SSAO().Bias, 0.001f, 0.0f, 0.5f, "%.3f");
+                    if (ImGui::DragInt("Blur radius", &RenderSettings::SSAO().BlurRadius, 1, 1, 10, "%d"))
+                    {
+                        pendingUpdate = true;
+                    }
+                    ImGui::DragFloat("Depth threshold", &RenderSettings::SSAO().DepthThreshold, 0.01f, 0.0f, 1.0f, "%.2f");
+                    ImGui::DragFloat("Sharpness", &RenderSettings::SSAO().Sharpness, 1.0f, 1.0f, 200.0f, "%.0f");
 
                     ImGui::TreePop();
                 }

@@ -19,7 +19,7 @@ bool& RenderSettings::RenderDebugArmature()
 
 bool& RenderSettings::UseSSAO()
 {
-    return Instance()._useSSAO;
+    return Instance().SSAO().Enabled;
 }
 
 bool& RenderSettings::UseFXAA()
@@ -47,11 +47,15 @@ RenderSettings::ToneMappingParameters& RenderSettings::ToneMapping()
     return Instance()._toneMapping;
 }
 
+RenderSettings::SSAOParameters& RenderSettings::SSAO()
+{
+    return Instance()._ssao;
+}
+
 RenderSettings::RenderSettings()
     : _useIBL(true)
     , _renderDebugVolumes(false)
     , _renderDebugArmature(false)
-    , _useSSAO(false)
     , _useFXAA(true)
     , _debugFXAA(false)
     , _useBloom(true)

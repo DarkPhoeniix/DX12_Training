@@ -20,6 +20,18 @@ public:
         float MaxLogLuminance = 4.0f;
     };
 
+    struct SSAOParameters
+    {
+        bool Enabled = true;
+
+        float Radius = 2.5f;
+        float Bias = 0.05f;
+
+        int BlurRadius = 5;
+        float DepthThreshold = 0.2f;
+        float Sharpness = 50.0f;
+    };
+
     RenderSettings(const RenderSettings&) = delete;
     RenderSettings& operator+(const RenderSettings&) = delete;
 
@@ -29,10 +41,11 @@ public:
     static bool& UseSSAO();
     static bool& UseFXAA();
     static bool& DebugFXAA();
-
     static bool& UseBloom();
+
     static BloomParameters& Bloom();
     static ToneMappingParameters& ToneMapping();
+    static SSAOParameters& SSAO();
 
 private:
     RenderSettings();
@@ -43,11 +56,11 @@ private:
     bool _useIBL;
     bool _renderDebugVolumes;
     bool _renderDebugArmature;
-    bool _useSSAO;
     bool _useFXAA;
     bool _debugFXAA;
 
     bool _useBloom;
     BloomParameters _bloom;
     ToneMappingParameters _toneMapping;
+    SSAOParameters _ssao;
 };
