@@ -723,7 +723,7 @@ namespace render
             for (const auto& bone : armature->GetSortedBones())
             {
                 DirectX::XMMATRIX boneOBB = bone->OBB.Bounds;
-                boneOBB *= bone->Offset * bone->GlobalTransform * transformation->Transform;
+                boneOBB *= bone->GlobalTransform * transformation->Transform;
 
                 scene::OBBVolume obb;
                 obb.Bounds = boneOBB;
