@@ -16,8 +16,8 @@ An experimental real-time renderer built with C++ and DirectX 12 for exploring m
 
 - Deferred rendering pipeline
 - Asynchronous command lists building
-- Render Graph (Frame graph) for pass scheduling
-- Bindless resource binding
+- Render Graph (Frame graph) for pass scheduling with automated resource state transitions
+- Bindless resource management
 - Physically-based rendering (PBR)
 - Image-based lighting support (IBL)
 - Shadow mapping (spot/point lights) with GPU-driven shadow caster culling
@@ -63,7 +63,7 @@ git clone https://github.com/DarkPhoeniix/EquinoxEngine.git
 ## 🧪 Future Enhancements
 
 - [ ] Frustum culling (possible GPU-side)
-- [ ] Render pass for (semi-)transparent meshes
+- [ ] Vulkan backend
 - [ ] Ray tracing (DXR) + denoising
 - [ ] Full scene serialization/deserialization
 - [ ] Cascaded shadow maps
