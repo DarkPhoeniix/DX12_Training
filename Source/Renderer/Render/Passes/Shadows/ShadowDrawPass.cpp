@@ -136,7 +136,7 @@ namespace render
                 std::shared_ptr<dx12::Resource> commandBuffer = context.GetResource(_data.LightCommandBuffers[lightIndex]);
 
                 // Transition resources
-                commandList.TransitionBarrier({ shadowMap, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE });
+                commandList.TransitionBarrier({ shadowMap, dx12::ResourceState::Common, dx12::ResourceState::DepthWrite });
 
                 DescriptorHandle depthHandle = context.GetStaticResourceHandle(shadowMap->GetAsDSV());
                 commandList.ClearDSV(depthHandle.CpuHandle, D3D12_CLEAR_FLAG_DEPTH);
@@ -149,7 +149,7 @@ namespace render
                 std::uint32_t counterBufferOffset = commandBuffer->GetResourceDescription().GetSize().x - sizeof(UINT);
                 commandList.ExecuteIndirect(_cmdSignature, objectsNum, *commandBuffer, commandBuffer, 0, counterBufferOffset);
 
-                commandList.TransitionBarrier({ shadowMap, D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_COMMON });
+                commandList.TransitionBarrier({ shadowMap, dx12::ResourceState::DepthWrite, dx12::ResourceState::Common });
 
                 PIXEndEvent(commandList.GetDXCommandList().Get());
             }
@@ -188,7 +188,7 @@ namespace render
                 std::shared_ptr<dx12::Resource> commandBuffer = context.GetResource(_data.LightCommandBuffers[lightIndex]);
 
                 // Transition resources
-                commandList.TransitionBarrier({ shadowMap, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE });
+                commandList.TransitionBarrier({ shadowMap, dx12::ResourceState::Common, dx12::ResourceState::DepthWrite });
 
                 DescriptorHandle depthHandle = context.GetStaticResourceHandle(shadowMap->GetAsDSV());
                 commandList.ClearDSV(depthHandle.CpuHandle, D3D12_CLEAR_FLAG_DEPTH);
@@ -201,7 +201,7 @@ namespace render
                 std::uint32_t counterBufferOffset = commandBuffer->GetResourceDescription().GetSize().x - sizeof(UINT);
                 commandList.ExecuteIndirect(_cmdSignature, objectsNum, *commandBuffer, commandBuffer, 0, counterBufferOffset);
 
-                commandList.TransitionBarrier({ shadowMap, D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_COMMON });
+                commandList.TransitionBarrier({ shadowMap, dx12::ResourceState::DepthWrite, dx12::ResourceState::Common });
 
                 PIXEndEvent(commandList.GetDXCommandList().Get());
             }

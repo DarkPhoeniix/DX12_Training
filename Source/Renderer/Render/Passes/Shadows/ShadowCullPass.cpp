@@ -219,14 +219,14 @@ namespace render
 			}
 
 			// Transition resources
-			commandList.TransitionBarrier({ outputCommandBuffer, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_DEST });
+			commandList.TransitionBarrier({ outputCommandBuffer, dx12::ResourceState::UnorderedAccess, dx12::ResourceState::CopyDest });
 
 			// Reset commands counter
 			std::uint32_t counterBufferOffset = outputCommandBuffer->GetResourceDescription().GetSize().x - sizeof(UINT);
 			commandList.CopyBufferRegion(*counterResetBuffer, *outputCommandBuffer, sizeof(UINT), 0, counterBufferOffset);
 
 			// Transition resources
-			commandList.TransitionBarrier({ outputCommandBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_UNORDERED_ACCESS });
+			commandList.TransitionBarrier({ outputCommandBuffer, dx12::ResourceState::CopyDest, dx12::ResourceState::UnorderedAccess });
 
 			PassConstants passConstants =
 			{

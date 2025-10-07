@@ -18,7 +18,7 @@
 using namespace Microsoft::WRL;
 
 // DirectX12 specific headers
-#include <d3dx12.h>             // D3D12 extension library
+#include <directx/d3dx12.h>     // D3D12 extension library
 #include <dxgi1_6.h>            // Microsoft DirectX Graphics Infrastructure
 #include <d3dcompiler.h>        // Contains functions to compile HLSL code at runtime
 #include <DirectXMath.h>        // SIMD-friendly C++ types and functions

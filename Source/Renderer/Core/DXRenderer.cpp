@@ -219,7 +219,7 @@ namespace render
             for (size_t i = 0; i < dx12::BACK_BUFFER_COUNT; ++i)
             {
                 std::shared_ptr<dx12::Resource> frameBuffer = ResourceFactory::Create(std::format("frame_buffer_{}", i), frameBufferDesc);
-                frameBuffer->CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_DEST);
+                frameBuffer->CreateCommitedResource(dx12::ResourceState::CopyDest);
 
                 _currentFrame->SetBuffer(frameBuffer);
 
@@ -426,7 +426,7 @@ namespace render
                 modelBufferDesc.SetStride(sizeof(GPUModelDesc));
                 modelBufferDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
                 modelBuffer = _sceneBuffers[static_cast<size_t>(SceneBufferType::Model)] = ResourceFactory::Create("Scene models buffer", modelBufferDesc);
-                modelBuffer->CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_DEST);
+                modelBuffer->CreateCommitedResource(dx12::ResourceState::CopyDest);
             }
 
             if (!lightBuffer || (lightEntities.size() > (lightBuffer->GetResourceDescription().GetSize().x / sizeof(GPULightDesc))))
@@ -436,7 +436,7 @@ namespace render
                 lightBufferDesc.SetStride(sizeof(GPULightDesc));
                 lightBufferDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
                 lightBuffer = _sceneBuffers[static_cast<size_t>(SceneBufferType::Light)] = ResourceFactory::Create("Scene lights buffer", lightBufferDesc);
-                lightBuffer->CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_DEST);
+                lightBuffer->CreateCommitedResource(dx12::ResourceState::CopyDest);
             }
         }
 
@@ -523,7 +523,7 @@ namespace render
                     bonesBufferDesc.SetStride(sizeof(DirectX::XMMATRIX));
                     bonesBufferDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
                     std::shared_ptr<dx12::Resource> bonesBuffer = ResourceFactory::Create(entity->GetName() + "_bones_buffer", bonesBufferDesc);
-                    bonesBuffer->CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_DEST);
+                    bonesBuffer->CreateCommitedResource(dx12::ResourceState::CopyDest);
 
                     armatureComponent->SetBoneBufferHandle(GeometryCacheManager::Get().CacheGeometry(bonesBuffer));
                 }

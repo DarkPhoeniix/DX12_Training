@@ -278,8 +278,8 @@ namespace rg
 
                     if (lastPass && lastPass->_resourceStateMap.find(id) != lastPass->_resourceStateMap.end())
                     {
-                        D3D12_RESOURCE_STATES lastState = lastPass->_resourceStateMap[id];
-                        D3D12_RESOURCE_STATES currState = resource->GetCurrentState();
+                        dx12::ResourceState lastState = lastPass->_resourceStateMap[id];
+                        dx12::ResourceState currState = resource->GetCurrentState();
                         if (lastState != currState)
                         {
                             barriers.push_back({ resource, currState, lastState });
@@ -314,8 +314,8 @@ namespace rg
 
                         if (resource)
                         {
-                            D3D12_RESOURCE_STATES lastState = renderPass->_resourceStateMap[readId];
-                            D3D12_RESOURCE_STATES currState = resource->GetCurrentState();
+                            dx12::ResourceState lastState = renderPass->_resourceStateMap[readId];
+                            dx12::ResourceState currState = resource->GetCurrentState();
                             if (lastState != currState)
                             {
                                 barriers.push_back({ resource, currState, lastState });

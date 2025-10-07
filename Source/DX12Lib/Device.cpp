@@ -78,6 +78,11 @@ namespace dx12
         LOG_INFO("DX12 device destroyed.");
     }
 
+    bool Device::IsEnhancedBarriersSupported()
+    {
+        return _instance->_enhancedBarriersSupported;
+    }
+
     void Device::BindSwapChain(SwapChain* swapChain)
     {
         ASSERT(swapChain, "SwapChain is nullptr when trying to bind it to the device.");
@@ -196,6 +201,8 @@ namespace dx12
         CreateAdapter();
         CreateDevice();
         CreateQueues();
+
+        CheckFeatureSupport();
     }
 
     Device::~Device()
@@ -291,6 +298,7 @@ namespace dx12
                 D3D12_MESSAGE_ID_CLEARRENDERTARGETVIEW_MISMATCHINGCLEARVALUE,   // I'm really not sure how to avoid this message.
                 D3D12_MESSAGE_ID_MAP_INVALID_NULLRANGE,                         // This warning occurs when using capture frame while graphics debugging.
                 D3D12_MESSAGE_ID_UNMAP_INVALID_NULLRANGE,                       // This warning occurs when using capture frame while graphics debugging.
+                D3D12_MESSAGE_ID_NON_OPTIMAL_BARRIER_ONLY_EXECUTE_COMMAND_LISTS 
             };
 
             D3D12_INFO_QUEUE_FILTER NewFilter = {};
@@ -327,5 +335,15 @@ namespace dx12
         _queueCopy->SetName(L"Copy Queue");
 
         LOG_INFO("DX12 Command Queues created.");
+    }
+
+    void Device::CheckFeatureSupport()
+    {
+        D3D12_FEATURE_DATA_D3D12_OPTIONS12 options12 = {};
+
+        HRESULT result = _device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS12, &options12, sizeof(options12));
+        CHECK(result, "Failed to check D3D12 options 12.");
+
+        _enhancedBarriersSupported = options12.EnhancedBarriersSupported;
     }
 } // namespace dx12

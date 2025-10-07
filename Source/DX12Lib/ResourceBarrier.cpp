@@ -6,7 +6,7 @@
 
 namespace dx12
 {
-    ResourceBarrier::ResourceBarrier(std::shared_ptr<Resource> targetResource, D3D12_RESOURCE_STATES beforeState, D3D12_RESOURCE_STATES afterState)
+    ResourceBarrier::ResourceBarrier(std::shared_ptr<Resource> targetResource, ResourceState beforeState, ResourceState afterState)
         : TargetResource(targetResource)
         , BeforeState(beforeState)
         , AfterState(afterState)

@@ -134,14 +134,14 @@ namespace scene::helpers
 {
     SceneLoader::SceneLoader()
         : _resourceTable(nullptr)
-		, _textureManager(nullptr)
+        , _textureManager(nullptr)
     {
     }
 
     void SceneLoader::Init(ResourceTable& resourceTable, TextureManager& textureManager)
     {
         _resourceTable = &resourceTable;
-		_textureManager = &textureManager;
+        _textureManager = &textureManager;
     }
 
     void SceneLoader::LoadScene(TaskGPU& task, const std::string& filepath, std::shared_ptr<Scene> scene)
@@ -204,29 +204,29 @@ namespace scene::helpers
 
         // Create SRV/UAV for the textures
 
-		DescriptorHandle skyboxTextureHandle = _resourceTable->GetStaticResourceHandle(skyboxTexture->GetAsSRV());
+        DescriptorHandle skyboxTextureHandle = _resourceTable->GetStaticResourceHandle(skyboxTexture->GetAsSRV());
         DescriptorHandle diffuseIrradianceMapHandle = _resourceTable->AddStaticResourceView(diffuseIrradianceMap->GetAsUAV());
 
         // Transition resources
 
         std::vector<dx12::ResourceBarrier> barriers =
         {
-            { skyboxTexture,        D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-            { diffuseIrradianceMap, D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_UNORDERED_ACCESS }
+            { skyboxTexture, dx12::ResourceState::Common, dx12::ResourceState::NonPixelShaderResource },
+            { diffuseIrradianceMap, dx12::ResourceState::Common, dx12::ResourceState::UnorderedAccess }
         };
         commandList.TransitionBarriers(barriers);
 
         // Diffuse irradiance convolution pipeline
 
-		commandList.SetDescriptorHeaps({ _resourceTable->GetShaderResourcesDescriptorHeap().GetDXDescriptorHeap().Get()});
+        commandList.SetDescriptorHeaps({ _resourceTable->GetShaderResourcesDescriptorHeap().GetDXDescriptorHeap().Get() });
         commandList.SetPipelineState(_IBL_DiffuseIrradianceConvolution);
 
         struct PassConstants
         {
             std::uint32_t SkyboxTextureIndex;
             std::uint32_t DiffuseIrradianceMapIndex;
-        } passCB { .SkyboxTextureIndex = skyboxTextureHandle.Index, .DiffuseIrradianceMapIndex = diffuseIrradianceMapHandle.Index };
-		commandList.SetConstants(1, 2, &passCB);
+        } passCB{ .SkyboxTextureIndex = skyboxTextureHandle.Index, .DiffuseIrradianceMapIndex = diffuseIrradianceMapHandle.Index };
+        commandList.SetConstants(1, 2, &passCB);
 
         std::uint32_t xThreadGroups = (uint32_t)std::ceilf(diffuseIrradianceTextureDesc.GetSize().x / 8.0f);
         std::uint32_t yThreadGroups = (uint32_t)std::ceilf(diffuseIrradianceTextureDesc.GetSize().y / 8.0f);
@@ -238,8 +238,8 @@ namespace scene::helpers
 
         barriers =
         {
-            { skyboxTexture,        D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
-            { diffuseIrradianceMap, D3D12_RESOURCE_STATE_UNORDERED_ACCESS,          D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE }
+            { skyboxTexture, dx12::ResourceState::NonPixelShaderResource, dx12::ResourceState::Common },
+            { diffuseIrradianceMap, dx12::ResourceState::UnorderedAccess, dx12::ResourceState::NonPixelShaderResource }
         };
         commandList.TransitionBarriers(barriers);
 
@@ -284,8 +284,8 @@ namespace scene::helpers
 
         std::vector<dx12::ResourceBarrier> barriers =
         {
-            { skyboxTexture,        D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-            { preFilteredEnvMap,    D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_UNORDERED_ACCESS }
+            { skyboxTexture, dx12::ResourceState::Common, dx12::ResourceState::NonPixelShaderResource },
+            { preFilteredEnvMap, dx12::ResourceState::Common, dx12::ResourceState::UnorderedAccess }
         };
         commandList.TransitionBarriers(barriers);
 
@@ -331,8 +331,8 @@ namespace scene::helpers
 
         barriers =
         {
-            { skyboxTexture,        D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
-            { preFilteredEnvMap,    D3D12_RESOURCE_STATE_UNORDERED_ACCESS,          D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE }
+            { skyboxTexture, dx12::ResourceState::NonPixelShaderResource, dx12::ResourceState::Common },
+            { preFilteredEnvMap, dx12::ResourceState::UnorderedAccess, dx12::ResourceState::NonPixelShaderResource }
         };
         commandList.TransitionBarriers(barriers);
 
@@ -369,14 +369,14 @@ namespace scene::helpers
 
         // Create SRV/UAV for the textures
 
-		DescriptorHandle brdfLUTTextureHandle = _resourceTable->AddStaticResourceView(brdfLUT->GetAsUAV());
+        DescriptorHandle brdfLUTTextureHandle = _resourceTable->AddStaticResourceView(brdfLUT->GetAsUAV());
 
         // Transition resources
 
         std::vector<dx12::ResourceBarrier> barriers =
         {
-            { skyboxTexture,    D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE },
-            { brdfLUT,          D3D12_RESOURCE_STATE_COMMON,    D3D12_RESOURCE_STATE_UNORDERED_ACCESS }
+            { skyboxTexture, dx12::ResourceState::Common, dx12::ResourceState::NonPixelShaderResource },
+            { brdfLUT, dx12::ResourceState::Common, dx12::ResourceState::UnorderedAccess }
         };
         commandList.TransitionBarriers(barriers);
 
@@ -400,8 +400,8 @@ namespace scene::helpers
 
         barriers =
         {
-            { skyboxTexture,    D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COMMON },
-            { brdfLUT,          D3D12_RESOURCE_STATE_UNORDERED_ACCESS,          D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE }
+            { skyboxTexture, dx12::ResourceState::NonPixelShaderResource, dx12::ResourceState::Common },
+            { brdfLUT, dx12::ResourceState::UnorderedAccess, dx12::ResourceState::NonPixelShaderResource }
         };
         commandList.TransitionBarriers(barriers);
         commandList.UAVBarrier(brdfLUT);
@@ -726,7 +726,7 @@ namespace scene::helpers
     {
         std::string skyboxFilepath = filepath + '/' + jsonValue["Skybox"].asString();
 
-		component->SkydomeTextureHandle = _textureManager->EnqueueTexture(skyboxFilepath);
+        component->SkydomeTextureHandle = _textureManager->EnqueueTexture(skyboxFilepath);
     }
 
     void SceneLoader::LoadRawMesh(const std::string& filepath, std::shared_ptr<Mesh> meshComponent)

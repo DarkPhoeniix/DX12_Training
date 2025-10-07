@@ -19,7 +19,7 @@ void Executor::Allocate(D3D12_COMMAND_LIST_TYPE type)
     HRESULT createAllocatorResult = dx12::Device::GetDXDevice()->CreateCommandAllocator(type, IID_PPV_ARGS(&_allocator));
     CHECK(createAllocatorResult, "Failed to create command allocator.");
 
-    ComPtr<ID3D12GraphicsCommandList> commandList;
+    ComPtr<ID3D12GraphicsCommandList7> commandList;
     HRESULT createCmdListResult = dx12::Device::GetDXDevice()->CreateCommandList(0, type, _allocator.Get(), nullptr, IID_PPV_ARGS(&commandList));
     CHECK(createCmdListResult, "Failed to create command list.");
 

@@ -52,7 +52,7 @@ namespace rg
         std::vector<RGResourceId> _writes;
         std::vector<RGResourceId> _reads;
 
-        std::unordered_map<RGResourceId, D3D12_RESOURCE_STATES> _resourceStateMap;
+        std::unordered_map<RGResourceId, dx12::ResourceState> _resourceStateMap;
 
         std::uint32_t _refCount;
     };

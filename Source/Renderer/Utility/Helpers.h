@@ -26,6 +26,20 @@
 		return (type)((int)x ^ (int)y);\
 	}
 
+template<typename Enum> requires std::is_enum_v<Enum>
+inline constexpr bool HasFlag(Enum value, Enum flag)
+{
+	using Underlying = std::underlying_type_t<Enum>;
+    return (static_cast<Underlying>(value) & static_cast<Underlying>(flag)) == static_cast<Underlying>(flag);
+};
+
+template<typename Enum> requires std::is_enum_v<Enum>
+inline constexpr bool HasAnyFlag(Enum value, Enum flag)
+{
+	using Underlying = std::underlying_type_t<Enum>;
+	return (static_cast<Underlying>(value) & static_cast<Underlying>(flag)) != 0;
+}
+
 namespace Math
 {
     template <typename T>

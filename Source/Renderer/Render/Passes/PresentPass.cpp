@@ -33,9 +33,9 @@ namespace render
             std::shared_ptr<dx12::Resource> target = context.GetResource(_data.RenderTarget);
             std::shared_ptr<dx12::Resource> swapChainTexture = dx12::Device::GetBackBuffer();
 
-            commandList.TransitionBarrier(*swapChainTexture, D3D12_RESOURCE_STATE_COPY_DEST);
+            commandList.TransitionBarrier(*swapChainTexture, dx12::ResourceState::CopyDest);
             commandList.CopyResource(*target, *swapChainTexture);
-            commandList.TransitionBarrier(*swapChainTexture, D3D12_RESOURCE_STATE_PRESENT);
+            commandList.TransitionBarrier(*swapChainTexture, dx12::ResourceState::Present);
 		}
 		PIXEndEvent(commandList.GetDXCommandList().Get());
 

@@ -32,7 +32,7 @@ namespace rg
         RGBufferReadId id = _renderGraph._context.ReadBuffer(name);
 
         _renderPass->_resourceStateMap[id] = (_renderPass->GetType() == RenderPassType::Compute) ? 
-            D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE : D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+            dx12::ResourceState::NonPixelShaderResource : dx12::ResourceState::PixelShaderResource;
 
         _renderPass->_reads.push_back(id);
 
@@ -42,7 +42,7 @@ namespace rg
     RGBufferWriteId RenderPassBuilder::WriteBuffer(const std::string& name)
     {
         RGBufferWriteId id = _renderGraph._context.WriteBuffer(name);
-        _renderPass->_resourceStateMap[id] = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+        _renderPass->_resourceStateMap[id] = dx12::ResourceState::UnorderedAccess;
         _renderPass->_reads.push_back(id);
         _renderPass->_writes.push_back(id);
         return id;
@@ -51,7 +51,7 @@ namespace rg
     RGBufferUploadId RenderPassBuilder::UploadBuffer(const std::string& name)
     {
         RGBufferUploadId id = _renderGraph._context.UploadBuffer(name);
-        _renderPass->_resourceStateMap[id] = D3D12_RESOURCE_STATE_GENERIC_READ;
+        _renderPass->_resourceStateMap[id] = dx12::ResourceState::GenericRead;
         _renderPass->_reads.push_back(id);
         return id;
     }
@@ -59,7 +59,7 @@ namespace rg
     RGBufferCopySrcId RenderPassBuilder::CopySrcBuffer(const std::string& name)
     {
         RGBufferCopySrcId id = _renderGraph._context.CopySrcBuffer(name);
-        _renderPass->_resourceStateMap[id] = D3D12_RESOURCE_STATE_COPY_SOURCE;
+        _renderPass->_resourceStateMap[id] = dx12::ResourceState::CopySource;
         _renderPass->_reads.push_back(id);
         return id;
     }
@@ -67,7 +67,7 @@ namespace rg
     RGBufferCopyDstId RenderPassBuilder::CopyDstBuffer(const std::string& name)
     {
         RGBufferCopyDstId id = _renderGraph._context.CopyDstBuffer(name);
-        _renderPass->_resourceStateMap[id] = D3D12_RESOURCE_STATE_COPY_DEST;
+        _renderPass->_resourceStateMap[id] = dx12::ResourceState::CopyDest;
         _renderPass->_reads.push_back(id);
         _renderPass->_writes.push_back(id);
         return id;
@@ -76,7 +76,7 @@ namespace rg
     RGBufferIndirectArgsId RenderPassBuilder::IndirectArgBuffer(const std::string& name)
     {
         RGBufferIndirectArgsId id = _renderGraph._context.IndirectArgBuffer(name);
-        _renderPass->_resourceStateMap[id] = D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT;
+        _renderPass->_resourceStateMap[id] = dx12::ResourceState::IndirectArgument;
         _renderPass->_reads.push_back(id);
         return id;
     }
@@ -85,7 +85,7 @@ namespace rg
     {
         RGTextureReadId id = _renderGraph._context.ReadTexture(name);
         _renderPass->_resourceStateMap[id] = (_renderPass->GetType() == RenderPassType::Compute) ? 
-            D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE : D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+            dx12::ResourceState::NonPixelShaderResource : dx12::ResourceState::PixelShaderResource;
         _renderPass->_reads.push_back(id);
         return id;
     }
@@ -93,7 +93,7 @@ namespace rg
     RGTextureWriteId RenderPassBuilder::WriteTexture(const std::string& name)
     {
         RGTextureWriteId id = _renderGraph._context.WriteTexture(name);
-        _renderPass->_resourceStateMap[id] = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+        _renderPass->_resourceStateMap[id] = dx12::ResourceState::UnorderedAccess;
         _renderPass->_reads.push_back(id);
         _renderPass->_writes.push_back(id);
         return id;
@@ -102,7 +102,7 @@ namespace rg
     RGTextureCopySrcId RenderPassBuilder::CopySrcTexture(const std::string& name)
     {
         RGTextureCopySrcId id = _renderGraph._context.CopySrcTexture(name);
-        _renderPass->_resourceStateMap[id] = D3D12_RESOURCE_STATE_COPY_SOURCE;
+        _renderPass->_resourceStateMap[id] = dx12::ResourceState::CopySource;
         _renderPass->_reads.push_back(id);
         return id;
     }
@@ -110,7 +110,7 @@ namespace rg
     RGTextureCopyDstId RenderPassBuilder::CopyDstTexture(const std::string& name)
     {
         RGTextureCopyDstId id = _renderGraph._context.CopyDstTexture(name);
-        _renderPass->_resourceStateMap[id] = D3D12_RESOURCE_STATE_COPY_DEST;
+        _renderPass->_resourceStateMap[id] = dx12::ResourceState::CopyDest;
         _renderPass->_reads.push_back(id);
         _renderPass->_writes.push_back(id);
         return id;
@@ -119,7 +119,7 @@ namespace rg
     RGTextureRenderTargetId RenderPassBuilder::RenderTarget(const std::string& name)
     {
         RGTextureRenderTargetId id = _renderGraph._context.RenderTarget(name);
-        _renderPass->_resourceStateMap[id] = D3D12_RESOURCE_STATE_RENDER_TARGET;
+        _renderPass->_resourceStateMap[id] = dx12::ResourceState::RenderTarget;
         _renderPass->_reads.push_back(id);
         _renderPass->_writes.push_back(id);
         return id;
@@ -128,7 +128,7 @@ namespace rg
     RGTextureDepthStencilReadId RenderPassBuilder::DepthStencilRead(const std::string& name)
     {
         RGTextureDepthStencilReadId id = _renderGraph._context.DepthStencilRead(name);
-        _renderPass->_resourceStateMap[id] = D3D12_RESOURCE_STATE_DEPTH_READ;
+        _renderPass->_resourceStateMap[id] = dx12::ResourceState::DepthRead;
         _renderPass->_reads.push_back(id);
         return id;
     }
@@ -136,7 +136,7 @@ namespace rg
     RGTextureDepthStencilWriteId RenderPassBuilder::DepthStencilWrite(const std::string& name)
     {
         RGTextureDepthStencilWriteId id = _renderGraph._context.DepthStencilWrite(name);
-        _renderPass->_resourceStateMap[id] = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+        _renderPass->_resourceStateMap[id] = dx12::ResourceState::DepthWrite;
         _renderPass->_reads.push_back(id);
         _renderPass->_writes.push_back(id);
         return id;
