@@ -201,15 +201,17 @@ namespace dx12
 
         if (Device::IsEnhancedBarriersSupported())
         {
+            std::vector<CD3DX12_TEXTURE_BARRIER> textureBarriers;
+            std::vector<CD3DX12_BUFFER_BARRIER> bufferBarriers;
+
             for (size_t i = 0; i < numBarriers; ++i)
             {
                 if (std::shared_ptr<Resource> resource = barriers[i].TargetResource.lock())
                 {
                     const ResourceBarrier& barrier = barriers[i];
-                    if ((resource->GetResourceDescription().GetResourceType() & ResourceType::Texture) != ResourceType::None)
+                    if (HasFlag(resource->GetResourceDescription().GetResourceType(), ResourceType::Texture))
                     {
-                        CD3DX12_TEXTURE_BARRIER textureBarrier(
-                            GetSyncFlags(barrier.BeforeState),
+                        textureBarriers.emplace_back(GetSyncFlags(barrier.BeforeState),
                             GetSyncFlags(barrier.AfterState),
                             GetAccessFlags(barrier.BeforeState),
                             GetAccessFlags(barrier.AfterState),
@@ -219,27 +221,29 @@ namespace dx12
                             CD3DX12_BARRIER_SUBRESOURCE_RANGE(0xffffffff),       // All subresources
                             D3D12_TEXTURE_BARRIER_FLAG_NONE);
 
-                        D3D12_BARRIER_GROUP barrierGroup[] = { CD3DX12_BARRIER_GROUP(1, &textureBarrier) };
-
-                        _commandList->Barrier(1, barrierGroup);
                         resource->SetCurrentState(barriers[i].AfterState);
                     }
                     else
                     {
-                        CD3DX12_BUFFER_BARRIER bufferBarrier(
+                        bufferBarriers.emplace_back(
                             GetSyncFlags(barrier.BeforeState),
                             GetSyncFlags(barrier.AfterState),
                             GetAccessFlags(barrier.BeforeState),
                             GetAccessFlags(barrier.AfterState),
                             resource->GetDXResource().Get());
 
-                        D3D12_BARRIER_GROUP barrierGroup[] = { CD3DX12_BARRIER_GROUP(1, &bufferBarrier) };
-
-                        _commandList->Barrier(1, barrierGroup);
                         resource->SetCurrentState(barriers[i].AfterState);
                     }
                 }
             }
+
+            D3D12_BARRIER_GROUP barrierGroups[] =
+            {
+                CD3DX12_BARRIER_GROUP(bufferBarriers.size(), bufferBarriers.data()),
+                CD3DX12_BARRIER_GROUP(textureBarriers.size(), textureBarriers.data()),
+            };
+
+            _commandList->Barrier(2, barrierGroups);
         }
         else
         {
