@@ -32,6 +32,28 @@ public:
         float Sharpness = 50.0f;
     };
 
+    struct DebugViewParameters
+    {
+        bool ShowAlbedo = false;
+        bool ShowNormals = false;
+        bool ShowMetalness = false;
+        bool ShowRoughness = false;
+        bool ShowDepth = false;
+        bool ShowSSAO = false;
+        bool ShowBloom = false;
+
+        void DisableAll()
+        {
+            ShowAlbedo = false;
+            ShowNormals = false;
+            ShowMetalness = false;
+            ShowRoughness = false;
+            ShowDepth = false;
+            ShowSSAO = false;
+            ShowBloom = false;
+        }
+    };
+
     RenderSettings(const RenderSettings&) = delete;
     RenderSettings& operator+(const RenderSettings&) = delete;
 
@@ -46,6 +68,7 @@ public:
     static BloomParameters& Bloom();
     static ToneMappingParameters& ToneMapping();
     static SSAOParameters& SSAO();
+    static DebugViewParameters& DebugView();
 
 private:
     RenderSettings();
@@ -63,4 +86,5 @@ private:
     BloomParameters _bloom;
     ToneMappingParameters _toneMapping;
     SSAOParameters _ssao;
+    DebugViewParameters _debugView;
 };

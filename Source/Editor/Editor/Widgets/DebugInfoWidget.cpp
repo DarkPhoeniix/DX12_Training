@@ -119,6 +119,68 @@ namespace gui
 
                     ImGui::TreePop();
                 }
+                if (ImGui::TreeNode((void*)id++, "Debug view"))
+                {
+                    static int selected = -1;
+
+                    if (ImGui::Selectable("None", selected == 0)) 
+                    {
+                        selected = 0;
+                        RenderSettings::DebugView().DisableAll();
+                        pendingUpdate = true;
+                    }
+                    if (ImGui::Selectable("Show albedo", selected == 1)) 
+                    {
+                        selected = 1;
+                        RenderSettings::DebugView().DisableAll();
+                        RenderSettings::DebugView().ShowAlbedo = true;
+                        pendingUpdate = true;
+                    }
+                    if (ImGui::Selectable("Show normals", selected == 2)) 
+                    {
+                        selected = 2;
+                        RenderSettings::DebugView().DisableAll();
+                        RenderSettings::DebugView().ShowNormals = true;
+                        pendingUpdate = true;
+                    }
+                    if (ImGui::Selectable("Show metalness", selected == 3)) 
+                    {
+                        selected = 3;
+                        RenderSettings::DebugView().DisableAll();
+                        RenderSettings::DebugView().ShowMetalness = true;
+                        pendingUpdate = true;
+                    }
+                    if (ImGui::Selectable("Show roughness", selected == 4)) 
+                    {
+                        selected = 4;
+                        RenderSettings::DebugView().DisableAll();
+                        RenderSettings::DebugView().ShowRoughness = true;
+                        pendingUpdate = true;
+                    }
+                    if (ImGui::Selectable("Show depth", selected == 5)) 
+                    {
+                        selected = 5;
+                        RenderSettings::DebugView().DisableAll();
+                        RenderSettings::DebugView().ShowDepth = true;
+                        pendingUpdate = true;
+                    }
+                    if (ImGui::Selectable("Show SSAO", selected == 6)) 
+                    {
+                        selected = 6;
+                        RenderSettings::DebugView().DisableAll();
+                        RenderSettings::DebugView().ShowSSAO = true;
+                        pendingUpdate = true;
+                    }
+                    if (ImGui::Selectable("Show bloom", selected == 7)) 
+                    {
+                        selected = 7;
+                        RenderSettings::DebugView().DisableAll();
+                        RenderSettings::DebugView().ShowBloom = true;
+                        pendingUpdate = true;
+                    }
+
+                    ImGui::TreePop();
+                }
 
                 if (pendingUpdate)
                 {
