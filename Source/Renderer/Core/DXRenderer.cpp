@@ -33,6 +33,8 @@
 #include "Render/Passes/Debug/DebugBoundingVolumePass.h"
 #include "Render/Passes/Debug/Views/DebugAlbedoViewPass.h"
 #include "Render/Passes/Debug/Views/DebugMetallicViewPass.h"
+#include "Render/Passes/Debug/Views/DebugNormalViewPass.h"
+#include "Render/Passes/Debug/Views/DebugRoughnessViewPass.h"
 #include "Render/Passes/AmbientLightingPass.h"
 #include "Render/Passes/GeometryPass.h"
 #include "Render/Passes/LightingPass.h"
@@ -803,6 +805,14 @@ namespace render
             else if (RenderSettings::DebugView().ShowMetalness)
             {
                 _renderGraph.AddPass(std::make_shared<DebugMetallicViewPass>(_scene, _cameraComponent.get()));
+            }
+            else if (RenderSettings::DebugView().ShowRoughness)
+            {
+                _renderGraph.AddPass(std::make_shared<DebugRoughnessViewPass>(_scene, _cameraComponent.get()));
+            }
+            else if (RenderSettings::DebugView().ShowNormals)
+            {
+                _renderGraph.AddPass(std::make_shared<DebugNormalViewPass>(_scene, _cameraComponent.get()));
             }
             _renderGraph.AddPass(std::make_shared<PresentPass>(_scene, _cameraComponent.get()));
 

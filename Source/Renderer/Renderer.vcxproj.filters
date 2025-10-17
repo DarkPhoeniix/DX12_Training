@@ -138,6 +138,8 @@
     <FxCompile Include="Shaders\Helpers\DebugAlbedoView_ps.hlsl" />
     <FxCompile Include="Shaders\Helpers\FullscreenTriangle_vs.hlsl" />
     <FxCompile Include="Shaders\Helpers\DebugMetallicView_ps.hlsl" />
+    <FxCompile Include="Shaders\Helpers\DebugNormalView_ps.hlsl" />
+    <FxCompile Include="Shaders\Helpers\DebugRoughnessView_ps.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RendererPCH.cpp" />
@@ -296,6 +298,8 @@
     <ClCompile Include="Render\Passes\PresentPass.cpp" />
     <ClCompile Include="Render\Passes\Debug\Views\DebugAlbedoViewPass.cpp" />
     <ClCompile Include="Render\Passes\Debug\Views\DebugMetallicViewPass.cpp" />
+    <ClCompile Include="Render\Passes\Debug\Views\DebugRoughnessViewPass.cpp" />
+    <ClCompile Include="Render\Passes\Debug\Views\DebugNormalViewPass.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RendererPCH.h" />
@@ -493,6 +497,8 @@
     <ClInclude Include="Render\Passes\PresentPass.h" />
     <ClInclude Include="Render\Passes\Debug\Views\DebugAlbedoViewPass.h" />
     <ClInclude Include="Render\Passes\Debug\Views\DebugMetallicViewPass.h" />
+    <ClInclude Include="Render\Passes\Debug\Views\DebugRoughnessViewPass.h" />
+    <ClInclude Include="Render\Passes\Debug\Views\DebugNormalViewPass.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\CommonResources.hlsli">
@@ -619,6 +625,8 @@
     <None Include="PipelineDescriptions\BloomDownsamplePass1Pipeline.tech" />
     <None Include="PipelineDescriptions\DebugAlbedoView.tech" />
     <None Include="PipelineDescriptions\DebugMetallicView.tech" />
+    <None Include="PipelineDescriptions\DebugNormalView.tech" />
+    <None Include="PipelineDescriptions\DebugRoughnessView.tech" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="PipelineDescriptions\AABBRenderPipeline.blend">
