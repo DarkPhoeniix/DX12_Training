@@ -270,7 +270,8 @@ namespace dx12
             { "R8G8B8A8_SNORM", DXGI_FORMAT_R8G8B8A8_SNORM },
             { "R32G32B32A32_FLOAT", DXGI_FORMAT_R32G32B32A32_FLOAT },
             { "R11G11B10_FLOAT", DXGI_FORMAT_R11G11B10_FLOAT },
-            { "D32_FLOAT", DXGI_FORMAT_D32_FLOAT }
+            { "D32_FLOAT", DXGI_FORMAT_D32_FLOAT },
+            { "R32_FLOAT", DXGI_FORMAT_R32_FLOAT }
         };
 
         DXGI_FORMAT ParseTexFormat(const std::string& str)

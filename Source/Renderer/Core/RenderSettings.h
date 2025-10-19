@@ -38,9 +38,8 @@ public:
         bool ShowNormals = false;
         bool ShowMetalness = false;
         bool ShowRoughness = false;
-        bool ShowDepth = false;
         bool ShowSSAO = false;
-        bool ShowBloom = false;
+        bool ShowEmission = false;
 
         void DisableAll()
         {
@@ -48,9 +47,8 @@ public:
             ShowNormals = false;
             ShowMetalness = false;
             ShowRoughness = false;
-            ShowDepth = false;
             ShowSSAO = false;
-            ShowBloom = false;
+            ShowEmission = false;
         }
     };
 

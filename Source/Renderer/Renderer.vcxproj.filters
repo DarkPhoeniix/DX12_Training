@@ -140,6 +140,8 @@
     <FxCompile Include="Shaders\Helpers\DebugMetallicView_ps.hlsl" />
     <FxCompile Include="Shaders\Helpers\DebugNormalView_ps.hlsl" />
     <FxCompile Include="Shaders\Helpers\DebugRoughnessView_ps.hlsl" />
+    <FxCompile Include="Shaders\Helpers\DebugSSAOView_ps.hlsl" />
+    <FxCompile Include="Shaders\Helpers\DebugEmissiveView_ps.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RendererPCH.cpp" />
@@ -300,6 +302,8 @@
     <ClCompile Include="Render\Passes\Debug\Views\DebugMetallicViewPass.cpp" />
     <ClCompile Include="Render\Passes\Debug\Views\DebugRoughnessViewPass.cpp" />
     <ClCompile Include="Render\Passes\Debug\Views\DebugNormalViewPass.cpp" />
+    <ClCompile Include="Render\Passes\Debug\Views\DebugSSAOViewPass.cpp" />
+    <ClCompile Include="Render\Passes\Debug\Views\DebugEmissiveViewPass.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RendererPCH.h" />
@@ -499,6 +503,8 @@
     <ClInclude Include="Render\Passes\Debug\Views\DebugMetallicViewPass.h" />
     <ClInclude Include="Render\Passes\Debug\Views\DebugRoughnessViewPass.h" />
     <ClInclude Include="Render\Passes\Debug\Views\DebugNormalViewPass.h" />
+    <ClInclude Include="Render\Passes\Debug\Views\DebugSSAOViewPass.h" />
+    <ClInclude Include="Render\Passes\Debug\Views\DebugEmissiveViewPass.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\CommonResources.hlsli">
@@ -627,6 +633,8 @@
     <None Include="PipelineDescriptions\DebugMetallicView.tech" />
     <None Include="PipelineDescriptions\DebugNormalView.tech" />
     <None Include="PipelineDescriptions\DebugRoughnessView.tech" />
+    <None Include="PipelineDescriptions\DebugSSAOView.tech" />
+    <None Include="PipelineDescriptions\DebugEmissiveView.tech" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="PipelineDescriptions\AABBRenderPipeline.blend">

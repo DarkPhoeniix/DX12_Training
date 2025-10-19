@@ -157,13 +157,6 @@ namespace gui
                         RenderSettings::DebugView().ShowRoughness = true;
                         pendingUpdate = true;
                     }
-                    if (ImGui::Selectable("Show depth", selected == 5)) 
-                    {
-                        selected = 5;
-                        RenderSettings::DebugView().DisableAll();
-                        RenderSettings::DebugView().ShowDepth = true;
-                        pendingUpdate = true;
-                    }
                     if (ImGui::Selectable("Show SSAO", selected == 6)) 
                     {
                         selected = 6;
@@ -171,11 +164,11 @@ namespace gui
                         RenderSettings::DebugView().ShowSSAO = true;
                         pendingUpdate = true;
                     }
-                    if (ImGui::Selectable("Show bloom", selected == 7)) 
+                    if (ImGui::Selectable("Show emission", selected == 7)) 
                     {
                         selected = 7;
                         RenderSettings::DebugView().DisableAll();
-                        RenderSettings::DebugView().ShowBloom = true;
+                        RenderSettings::DebugView().ShowEmission = true;
                         pendingUpdate = true;
                     }
 
