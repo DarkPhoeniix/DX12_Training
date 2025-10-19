@@ -114,19 +114,22 @@ namespace render
 
 			DescriptorHandle albedoMetallicHandle = context.GetStaticResourceHandle(albedoMetallic->GetAsRTV());
             DescriptorHandle emissionHandle = context.GetStaticResourceHandle(emission->GetAsRTV());
-			DescriptorHandle normalSpecularHandle = context.GetStaticResourceHandle(normalRoughness->GetAsRTV());
+			DescriptorHandle normalRoughnessHandle = context.GetStaticResourceHandle(normalRoughness->GetAsRTV());
 			DescriptorHandle depthHandle = context.GetStaticResourceHandle(depth->GetAsDSV());
 
 			commandList.ClearDSV(depthHandle.CpuHandle, D3D12_CLEAR_FLAG_DEPTH);
 			float color[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 			commandList.ClearRTV(albedoMetallicHandle.CpuHandle, color, &_camera->GetViewport());
+			commandList.ClearRTV(emissionHandle.CpuHandle, color, &_camera->GetViewport());
+            color[3] = 0.0f;
+			commandList.ClearRTV(normalRoughnessHandle.CpuHandle, color, &_camera->GetViewport());
 
 			context.BindBindlessTable(commandList);
 
 			commandList.SetPipelineState(_geometryPipeline);
 
 			commandList.SetViewport(_camera->GetViewport());
-			commandList.SetRenderTargets({ albedoMetallicHandle.CpuHandle, normalSpecularHandle.CpuHandle, emissionHandle.CpuHandle }, &depthHandle.CpuHandle);
+			commandList.SetRenderTargets({ albedoMetallicHandle.CpuHandle, normalRoughnessHandle.CpuHandle, emissionHandle.CpuHandle }, &depthHandle.CpuHandle);
 
 			DebugInfo::StartStatCollecting(commandList);
 

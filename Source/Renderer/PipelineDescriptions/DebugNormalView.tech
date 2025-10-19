@@ -1,0 +1,19 @@
+{
+	"Type": "DebugNormalView",
+
+	"IsGraphicsPipeline": true,
+
+	"TopologyType": "triangle",
+
+	"Blend": "PipelineDescriptions\\ArmatureDebugPipeline.blend",
+	"Raster": "PipelineDescriptions\\Raster_Solid.raster",
+	"Depth": "PipelineDescriptions\\Depth_None.depth",
+
+	"RenderTargets": [
+		"R8G8B8A8_UNORM"
+	],
+	"Layout": null,
+
+	"VS": "Shaders\\FullscreenTriangle_vs.cso",
+	"PS": "Shaders\\DebugNormalView_ps.cso"
+}

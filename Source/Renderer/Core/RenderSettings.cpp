@@ -52,6 +52,11 @@ RenderSettings::SSAOParameters& RenderSettings::SSAO()
     return Instance()._ssao;
 }
 
+RenderSettings::DebugViewParameters& RenderSettings::DebugView()
+{
+    return Instance()._debugView;
+}
+
 RenderSettings::RenderSettings()
     : _useIBL(true)
     , _renderDebugVolumes(false)
