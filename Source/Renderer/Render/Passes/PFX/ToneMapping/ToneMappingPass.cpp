@@ -2,9 +2,6 @@
 
 #include "ToneMappingPass.h"
 
-#include "CommandList.h"
-#include "ResourceBarrier.h"
-
 #include "Core/RenderSettings.h"
 #include "Scene/Entity/Components/Camera.h"
 
@@ -32,7 +29,7 @@ namespace render
 	} // namespace unnamed
 
 	ToneMappingPass::ToneMappingPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-		: RenderPass<ToneMappingPassData>("Tone Mapping Pass", rg::RenderPassType::Compute)
+		: RenderPass<ToneMappingPassData>("tone_mapping_pass", rg::RenderPassType::Compute)
 		, _scene(scene)
 		, _camera(camera)
 	{
@@ -65,10 +62,11 @@ namespace render
 	void ToneMappingPass::Execute(rg::RenderContext& context, TaskGPU& task)
 	{
 		dx12::CommandList& commandList = *task.GetCommandLists().front();
-		commandList.SetName("Tone mapping command list");
+		commandList.SetName("tone_mapping_pass_cmd_list");
 
-		PIXBeginEvent(commandList.GetDXCommandList().Get(), 7, "Tone Mapping");
 		{
+            PIXScopedEvent(commandList.GetDXCommandList().Get(), 7, "Tone Mapping Pass");
+
 			// Copy and setup needed resources
 
 			std::shared_ptr<dx12::Resource> hdrTarget = context.GetResource(_data.HDRTarget);
@@ -108,7 +106,6 @@ namespace render
 
 			commandList.Dispatch(xThreadGroups, yThreadGroups);
 		}
-		PIXEndEvent(commandList.GetDXCommandList().Get());
 
 		commandList.Close();
 	}

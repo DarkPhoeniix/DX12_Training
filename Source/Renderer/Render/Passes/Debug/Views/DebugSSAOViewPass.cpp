@@ -2,15 +2,13 @@
 
 #include "DebugSSAOViewPass.h"
 
-#include "CommandList.h"
-
 #include "RenderGraph/RenderContext.h"
 #include "RenderGraph/RenderPassBuilder.h"
 
 namespace render
 {
 	DebugSSAOViewPass::DebugSSAOViewPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-		: RenderPass<DebugSSAOViewPassData>("Debug SSAO Pass", rg::RenderPassType::Graphics)
+		: RenderPass<DebugSSAOViewPassData>("debug_ssao_pass", rg::RenderPassType::Graphics)
 		, _scene(scene)
 		, _camera(camera)
 	{
@@ -26,10 +24,11 @@ namespace render
 	void DebugSSAOViewPass::Execute(rg::RenderContext& context, TaskGPU& task)
 	{
 		dx12::CommandList& commandList = *task.GetCommandLists().front();
-		commandList.SetName("Render Debug Albedo command list");
+		commandList.SetName("debug_ssao_cmd_list");
 
-		PIXBeginEvent(commandList.GetDXCommandList().Get(), 9, "Debug View - SSAO");
 		{
+            PIXScopedEvent(commandList.GetDXCommandList().Get(), 9, "Debug View Pass - SSAO");
+
 			std::shared_ptr<dx12::Resource> ssaoTexture = context.GetResource(_data.SSAOTexture);
 			std::shared_ptr<dx12::Resource> target = context.GetResource(_data.Target);
 
@@ -54,7 +53,6 @@ namespace render
 
 			commandList.Draw(3);
 		}
-		PIXEndEvent(commandList.GetDXCommandList().Get());
 
 		commandList.Close();
 	}

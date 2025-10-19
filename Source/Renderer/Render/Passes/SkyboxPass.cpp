@@ -2,9 +2,6 @@
 
 #include "SkyboxPass.h"
 
-#include "CommandList.h"
-#include "ResourceBarrier.h"
-
 #include "Scene/Entity/Components/Camera.h"
 #include "Scene/Entity/Components/Skybox.h"
 
@@ -24,7 +21,7 @@ namespace
 namespace render
 {
 	SkyboxPass::SkyboxPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-		: RenderPass<SkyboxPassData>("Skybox Pass", rg::RenderPassType::Compute)
+		: RenderPass<SkyboxPassData>("skybox_pass", rg::RenderPassType::Compute)
 		, _scene(scene)
 		, _camera(camera)
 	{
@@ -40,10 +37,11 @@ namespace render
 	void SkyboxPass::Execute(rg::RenderContext& context, TaskGPU& task)
 	{
 		dx12::CommandList& commandList = *task.GetCommandLists().front();
-		commandList.SetName("Skybox pass command list");
+		commandList.SetName("skybox_pass_cmd_list");
 
-		PIXBeginEvent(commandList.GetDXCommandList().Get(), 2, "Skybox Pass");
 		{
+            PIXScopedEvent(commandList.GetDXCommandList().Get(), 2, "Skybox Pass");
+
 			std::shared_ptr<scene::Entity> entity = _scene->FindNodeByComponentName("Skybox");
 			std::shared_ptr<scene::Skybox> skyboxComponent = entity->GetComponentAs<scene::Skybox>("Skybox");
 
@@ -73,7 +71,6 @@ namespace render
 
 			commandList.Dispatch(xThreadGroups, yThreadGroups);
 		}
-		PIXEndEvent(commandList.GetDXCommandList().Get());
 
 		commandList.Close();
 	}

@@ -2,15 +2,13 @@
 
 #include "DebugEmissiveViewPass.h"
 
-#include "CommandList.h"
-
 #include "RenderGraph/RenderContext.h"
 #include "RenderGraph/RenderPassBuilder.h"
 
 namespace render
 {
 	DebugEmissiveViewPass::DebugEmissiveViewPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-		: RenderPass<DebugEmissiveViewPassData>("Debug Emissive Pass", rg::RenderPassType::Graphics)
+		: RenderPass<DebugEmissiveViewPassData>("debug_emissive_pass", rg::RenderPassType::Graphics)
 		, _scene(scene)
 		, _camera(camera)
 	{
@@ -26,10 +24,11 @@ namespace render
 	void DebugEmissiveViewPass::Execute(rg::RenderContext& context, TaskGPU& task)
 	{
 		dx12::CommandList& commandList = *task.GetCommandLists().front();
-		commandList.SetName("Render Debug Emissive command list");
+		commandList.SetName("debug_emissive_cmd_list");
 
-		PIXBeginEvent(commandList.GetDXCommandList().Get(), 9, "Debug View - Emissive");
 		{
+			PIXScopedEvent(commandList.GetDXCommandList().Get(), 9, "Debug View Pass - Emissive");
+
 			std::shared_ptr<dx12::Resource> emission = context.GetResource(_data.Emission);
 			std::shared_ptr<dx12::Resource> target = context.GetResource(_data.Target);
 
@@ -54,7 +53,6 @@ namespace render
 
 			commandList.Draw(3);
 		}
-		PIXEndEvent(commandList.GetDXCommandList().Get());
 
 		commandList.Close();
 	}

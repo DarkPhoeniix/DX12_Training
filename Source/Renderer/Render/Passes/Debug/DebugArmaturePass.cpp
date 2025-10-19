@@ -2,15 +2,11 @@
 
 #include "DebugArmaturePass.h"
 
-#include "CommandList.h"
-
 #include "Scene/Entity/Components/Armature.h"
 #include "Scene/Entity/Components/Transformation.h"
 
 #include "RenderGraph/RenderContext.h"
 #include "RenderGraph/RenderPassBuilder.h"
-
-#include "ResourceBarrier.h"
 
 namespace
 {
@@ -24,7 +20,7 @@ namespace
 namespace render
 {
 	DebugArmaturePass::DebugArmaturePass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-		: RenderPass<DebugArmaturePassData>("Debug Armature Pass", rg::RenderPassType::Graphics)
+		: RenderPass<DebugArmaturePassData>("debug_armature_pass", rg::RenderPassType::Graphics)
 		, _scene(scene)
 		, _camera(camera)
 	{
@@ -40,10 +36,11 @@ namespace render
 	void DebugArmaturePass::Execute(rg::RenderContext& context, TaskGPU& task)
 	{
 		dx12::CommandList& commandList = *task.GetCommandLists().front();
-		commandList.SetName("Render Debug Armature command list");
+		commandList.SetName("debug_armature_cmd_list");
 
-		PIXBeginEvent(commandList.GetDXCommandList().Get(), 0, "Debug Armature");
 		{
+            PIXScopedEvent(commandList.GetDXCommandList().Get(), 9, "Debug View Pass - Armature");
+
 			std::shared_ptr<dx12::Resource> target = context.GetResource(_data.Target);
 			std::shared_ptr<dx12::Resource> depth = context.GetResource(_data.Depth);
 
@@ -85,7 +82,6 @@ namespace render
 				}
 			}
 		}
-		PIXEndEvent(commandList.GetDXCommandList().Get());
 
 		commandList.Close();
 	}

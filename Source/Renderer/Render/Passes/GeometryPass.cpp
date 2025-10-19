@@ -2,11 +2,7 @@
 
 #include "GeometryPass.h"
 
-#include "CommandList.h"
-#include "ResourceBarrier.h"
-
 #include "Scene/Entity/Components/Mesh.h"
-
 #include "Utility/DebugInfo.h"
 
 #include "RenderGraph/RenderContext.h"
@@ -23,7 +19,7 @@ namespace
 namespace render
 {
 	GeometryPass::GeometryPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-		: RenderPass<GeometryPassData>("Geometry Pass", rg::RenderPassType::Graphics)
+		: RenderPass<GeometryPassData>("geometry_pass", rg::RenderPassType::Graphics)
 		, _scene(scene)
 		, _camera(camera)
 	{
@@ -103,10 +99,11 @@ namespace render
 	void GeometryPass::Execute(rg::RenderContext& context, TaskGPU& task)
 	{
 		dx12::CommandList& commandList = *task.GetCommandLists().front();
-		commandList.SetName("Geometry pass command list");
+		commandList.SetName("geometry_pass_cmd_list");
 
-		PIXBeginEvent(commandList.GetDXCommandList().Get(), 2, "Geometry Pass");
 		{
+			PIXScopedEvent(commandList.GetDXCommandList().Get(), 0, "Geometry Pass");
+
 			std::shared_ptr<dx12::Resource> albedoMetallic = context.GetResource(_data.AlbedoMetallic);
             std::shared_ptr<dx12::Resource> emission = context.GetResource(_data.Emission);
 			std::shared_ptr<dx12::Resource> normalRoughness = context.GetResource(_data.NormalRoughness);
@@ -174,7 +171,6 @@ namespace render
 
 			DebugInfo::EndStatCollecting(commandList);
 		}
-		PIXEndEvent(commandList.GetDXCommandList().Get());
 
 		commandList.Close();
 	}

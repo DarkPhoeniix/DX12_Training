@@ -2,15 +2,13 @@
 
 #include "DebugAlbedoViewPass.h"
 
-#include "CommandList.h"
-
 #include "RenderGraph/RenderContext.h"
 #include "RenderGraph/RenderPassBuilder.h"
 
 namespace render
 {
 	DebugAlbedoViewPass::DebugAlbedoViewPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-		: RenderPass<DebugAlbedoViewPassData>("Debug Albedo Pass", rg::RenderPassType::Graphics)
+		: RenderPass<DebugAlbedoViewPassData>("debug_albedo_pass", rg::RenderPassType::Graphics)
 		, _scene(scene)
 		, _camera(camera)
 	{
@@ -26,10 +24,11 @@ namespace render
 	void DebugAlbedoViewPass::Execute(rg::RenderContext& context, TaskGPU& task)
 	{
 		dx12::CommandList& commandList = *task.GetCommandLists().front();
-		commandList.SetName("Render Debug Albedo command list");
+		commandList.SetName("debug_albedo_pass_cmd_list");
 
-		PIXBeginEvent(commandList.GetDXCommandList().Get(), 9, "Debug View - Albedo");
 		{
+			PIXScopedEvent(commandList.GetDXCommandList().Get(), 9, "Debug View Pass - Albedo");
+
             std::shared_ptr<dx12::Resource> albedoMetallic = context.GetResource(_data.AlbedoMetallic);
 			std::shared_ptr<dx12::Resource> target = context.GetResource(_data.Target);
 
@@ -54,7 +53,6 @@ namespace render
 
 			commandList.Draw(3);
 		}
-		PIXEndEvent(commandList.GetDXCommandList().Get());
 
 		commandList.Close();
 	}

@@ -2,9 +2,6 @@
 
 #include "SSAOComputePass.h"
 
-#include "CommandList.h"
-#include "ResourceBarrier.h"
-
 #include "Core/RenderSettings.h"
 
 #include "RenderGraph/RenderContext.h"
@@ -36,7 +33,7 @@ namespace render
 	} // namespace unnamed
 
 	SSAOComputePass::SSAOComputePass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-		: RenderPass<SSAOComputePassData>("SSAO Pass", rg::RenderPassType::Compute)
+		: RenderPass<SSAOComputePassData>("ssao_compute_pass", rg::RenderPassType::Compute)
 		, _scene(scene)
 		, _camera(camera)
 	{
@@ -109,10 +106,11 @@ namespace render
 	void SSAOComputePass::Execute(rg::RenderContext& context, TaskGPU& task)
 	{
 		dx12::CommandList& commandList = *task.GetCommandLists().front();
-		commandList.SetName("SSAO pass command list");
+		commandList.SetName("ssao_compute_pass_cmd_pass");
 
-		PIXBeginEvent(commandList.GetDXCommandList().Get(), 3, "SSAO");
 		{
+            PIXScopedEvent(commandList.GetDXCommandList().Get(), 3, "SSAO Compute Pass");
+
 			std::shared_ptr<dx12::Resource> noise = context.GetResource(_data.Noise);
 			std::shared_ptr<dx12::Resource> kernels = context.GetResource(_data.Kernels);
 			std::shared_ptr<dx12::Resource> normalRoughness = context.GetResource(_data.NormalRoughness);
@@ -148,7 +146,6 @@ namespace render
 
 			commandList.Dispatch(xThreadGroups, yThreadGroups);
 		}
-		PIXEndEvent(commandList.GetDXCommandList().Get());
 
 		commandList.Close();
 	}

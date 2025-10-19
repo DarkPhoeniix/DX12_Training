@@ -10,12 +10,10 @@
 #include "RenderGraph/RenderContext.h"
 #include "RenderGraph/RenderPassBuilder.h"
 
-#include "ResourceBarrier.h"
-
 namespace render
 {
 	DebugBoundingVolumePass::DebugBoundingVolumePass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-		: RenderPass<DebugBoundingVolumePassData>("Debug Volumes Pass", rg::RenderPassType::Graphics)
+		: RenderPass<DebugBoundingVolumePassData>("debug_volumes_pass", rg::RenderPassType::Graphics)
 		, _scene(scene)
 		, _camera(camera)
 	{
@@ -30,10 +28,11 @@ namespace render
 	void DebugBoundingVolumePass::Execute(rg::RenderContext& context, TaskGPU& task)
 	{
 		dx12::CommandList& commandList = *task.GetCommandLists().front();
-		commandList.SetName("Render Debug Volumes command list");
+		commandList.SetName("debug_volumes_cmd_list");
 
-		PIXBeginEvent(commandList.GetDXCommandList().Get(), 5, "Debug Volumes");
 		{
+            PIXScopedEvent(commandList.GetDXCommandList().Get(), 9, "Debug View Pass - Bounding Volumes");
+
 			std::shared_ptr<dx12::Resource> target = context.GetResource(_data.Target);
 			std::shared_ptr<dx12::Resource> depth = context.GetResource(_data.Depth);
 
@@ -71,7 +70,6 @@ namespace render
 				DrawHelper::DrawBox(commandList, *context.GetFrame(), aabb.Min, aabb.Max, DirectX::XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f));
 			}
 		}
-		PIXEndEvent(commandList.GetDXCommandList().Get());
 
 		commandList.Close();
 	}

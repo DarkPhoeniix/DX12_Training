@@ -2,15 +2,13 @@
 
 #include "DebugMetallicViewPass.h"
 
-#include "CommandList.h"
-
 #include "RenderGraph/RenderContext.h"
 #include "RenderGraph/RenderPassBuilder.h"
 
 namespace render
 {
 	DebugMetallicViewPass::DebugMetallicViewPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-		: RenderPass<DebugMetallicViewPassData>("Debug Metallic Pass", rg::RenderPassType::Graphics)
+		: RenderPass<DebugMetallicViewPassData>("debug_metallic_pass", rg::RenderPassType::Graphics)
 		, _scene(scene)
 		, _camera(camera)
 	{
@@ -26,10 +24,11 @@ namespace render
 	void DebugMetallicViewPass::Execute(rg::RenderContext& context, TaskGPU& task)
 	{
 		dx12::CommandList& commandList = *task.GetCommandLists().front();
-		commandList.SetName("Render Debug Metallic command list");
+		commandList.SetName("debug_metallic_cmd_list");
 
-		PIXBeginEvent(commandList.GetDXCommandList().Get(), 9, "Debug View - Metallic");
 		{
+			PIXScopedEvent(commandList.GetDXCommandList().Get(), 9, "Debug View Pass - Metallic");
+
 			std::shared_ptr<dx12::Resource> albedoMetallic = context.GetResource(_data.AlbedoMetallic);
 			std::shared_ptr<dx12::Resource> target = context.GetResource(_data.Target);
 
@@ -54,7 +53,6 @@ namespace render
 
 			commandList.Draw(3);
 		}
-		PIXEndEvent(commandList.GetDXCommandList().Get());
 
 		commandList.Close();
 	}

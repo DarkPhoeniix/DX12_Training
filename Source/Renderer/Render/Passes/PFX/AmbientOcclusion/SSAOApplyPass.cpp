@@ -2,9 +2,6 @@
 
 #include "SSAOApplyPass.h"
 
-#include "CommandList.h"
-#include "ResourceBarrier.h"
-
 #include "RenderGraph/RenderContext.h"
 #include "RenderGraph/RenderPassBuilder.h"
 
@@ -22,7 +19,7 @@ namespace render
 	using namespace DirectX;
 
 	SSAOApplyPass::SSAOApplyPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-		: RenderPass<SSAOApplyPassData>("SSAO Apply Pass", rg::RenderPassType::Compute)
+		: RenderPass<SSAOApplyPassData>("ssao_apply_pass", rg::RenderPassType::Compute)
 		, _scene(scene)
 		, _camera(camera)
 	{
@@ -38,10 +35,11 @@ namespace render
 	void SSAOApplyPass::Execute(rg::RenderContext& context, TaskGPU& task)
 	{
 		dx12::CommandList& commandList = *task.GetCommandLists().front();
-		commandList.SetName("SSAO apply pass command list");
+		commandList.SetName("ssao_apply_pass_cmd_list");
 
-		PIXBeginEvent(commandList.GetDXCommandList().Get(), 3, "SSAO Apply");
 		{
+            PIXScopedEvent(commandList.GetDXCommandList().Get(), 4, "SSAO Apply Pass");
+
 			std::shared_ptr<dx12::Resource> aoTarget = context.GetResource(_data.AOTarget);
 			std::shared_ptr<dx12::Resource> hdtTarget = context.GetResource(_data.HDRTarget);
 
@@ -65,7 +63,6 @@ namespace render
 
 			commandList.Dispatch(xThreadGroups, yThreadGroups);
 		}
-		PIXEndEvent(commandList.GetDXCommandList().Get());
 
 		commandList.Close();
 	}

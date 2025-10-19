@@ -2,15 +2,13 @@
 
 #include "DebugRoughnessViewPass.h"
 
-#include "CommandList.h"
-
 #include "RenderGraph/RenderContext.h"
 #include "RenderGraph/RenderPassBuilder.h"
 
 namespace render
 {
 	DebugRoughnessViewPass::DebugRoughnessViewPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-		: RenderPass<DebugRoughnessViewPassData>("Debug Roughness Pass", rg::RenderPassType::Graphics)
+		: RenderPass<DebugRoughnessViewPassData>("debug_roughness_pass", rg::RenderPassType::Graphics)
 		, _scene(scene)
 		, _camera(camera)
 	{
@@ -26,10 +24,11 @@ namespace render
 	void DebugRoughnessViewPass::Execute(rg::RenderContext& context, TaskGPU& task)
 	{
 		dx12::CommandList& commandList = *task.GetCommandLists().front();
-		commandList.SetName("Render Debug Roughness command list");
+		commandList.SetName("debug_roughness_cmd_list");
 
-		PIXBeginEvent(commandList.GetDXCommandList().Get(), 9, "Debug View - Roughness");
 		{
+            PIXScopedEvent(commandList.GetDXCommandList().Get(), 9, "Debug View Pass - Roughness");
+
 			std::shared_ptr<dx12::Resource> normalRoughness = context.GetResource(_data.NormalRoughness);
 			std::shared_ptr<dx12::Resource> target = context.GetResource(_data.Target);
 
@@ -54,7 +53,6 @@ namespace render
 
 			commandList.Draw(3);
 		}
-		PIXEndEvent(commandList.GetDXCommandList().Get());
 
 		commandList.Close();
 	}

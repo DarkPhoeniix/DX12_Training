@@ -292,7 +292,6 @@
     <ClCompile Include="Scene\SceneLoader.cpp">
       <Filter>Scene</Filter>
     </ClCompile>
-    <ClCompile Include="Render\Passes\PFX\Bloom\BrightnessFilterPass.cpp" />
     <ClCompile Include="Render\Passes\PFX\Bloom\BloomDownsamplePass.cpp" />
     <ClCompile Include="Render\Passes\PFX\Bloom\BloomUpsamplePass.cpp" />
     <ClCompile Include="Render\Passes\PFX\Bloom\BloomApplyPass.cpp" />
@@ -493,7 +492,6 @@
     <ClInclude Include="Scene\SceneLoader.h">
       <Filter>Scene</Filter>
     </ClInclude>
-    <ClInclude Include="Render\Passes\PFX\Bloom\BrightnessFilterPass.h" />
     <ClInclude Include="Render\Passes\PFX\Bloom\BloomDownsamplePass.h" />
     <ClInclude Include="Render\Passes\PFX\Bloom\BloomUpsamplePass.h" />
     <ClInclude Include="Render\Passes\PFX\Bloom\BloomApplyPass.h" />

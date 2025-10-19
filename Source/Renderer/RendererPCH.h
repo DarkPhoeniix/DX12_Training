@@ -47,8 +47,10 @@ using namespace Microsoft::WRL;
 #include "Utility/Defines.h"
 #include "Utility/Helpers.h"
 
+#include "ResourceBarrier.h"
 #include "Resource.h"
 #include "ResourceFactory.h"
+#include "CommandList.h"
 #include "Device.h"
 
 #include "RenderGraph/RenderGraphResourceId.h"

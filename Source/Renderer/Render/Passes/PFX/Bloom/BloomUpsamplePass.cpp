@@ -2,9 +2,6 @@
 
 #include "BloomUpsamplePass.h"
 
-#include "CommandList.h"
-#include "ResourceBarrier.h"
-
 #include "Core/RenderSettings.h"
 
 #include "RenderGraph/RenderContext.h"
@@ -18,7 +15,7 @@ namespace
 namespace render
 {
     BloomUpsamplePass::BloomUpsamplePass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-        : RenderPass<BloomUpsamplePassData>("Bloom Upsample Pass", rg::RenderPassType::Compute)
+        : RenderPass<BloomUpsamplePassData>("bloom_upsample_pass", rg::RenderPassType::Compute)
         , _scene(scene)
         , _camera(camera)
     {
@@ -40,9 +37,11 @@ namespace render
     void BloomUpsamplePass::Execute(rg::RenderContext& context, TaskGPU& task)
     {
         dx12::CommandList& commandList = *task.GetCommandLists().front();
-        commandList.SetName("Bloom upsample pass command list");
-        PIXBeginEvent(commandList.GetDXCommandList().Get(), 8, "Bloom Upsample Pass");
+        commandList.SetName("bloom_upsample_pass_cmd_list");
+
         {
+            PIXScopedEvent(commandList.GetDXCommandList().Get(), 8, "Bloom Upsample Pass");
+
             context.BindBindlessTable(commandList);
             commandList.SetPipelineState(_bloomUpsamplePipeline);
 
@@ -69,7 +68,6 @@ namespace render
                 commandList.UAVBarrier(bloomBTarget);
             }
         }
-        PIXEndEvent(commandList.GetDXCommandList().Get());
 
         commandList.Close();
     }

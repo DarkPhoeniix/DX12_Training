@@ -2,9 +2,6 @@
 
 #include "AmbientLightingPass.h"
 
-#include "CommandList.h"
-#include "ResourceBarrier.h"
-
 #include "Core/RenderSettings.h"
 
 #include "RenderGraph/RenderContext.h"
@@ -27,7 +24,7 @@ namespace
 namespace render
 {
 	AmbientLightingPass::AmbientLightingPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-		: RenderPass<AmbientLightingPassData>("Ambient lighting Pass", rg::RenderPassType::Compute)
+		: RenderPass<AmbientLightingPassData>("ambient_lighting_pass", rg::RenderPassType::Compute)
 		, _scene(scene)
 		, _camera(camera)
 	{
@@ -63,10 +60,11 @@ namespace render
 	void AmbientLightingPass::Execute(rg::RenderContext& context, TaskGPU& task)
 	{
 		dx12::CommandList& commandList = *task.GetCommandLists().front();
-		commandList.SetName("Ambient pass command list");
+		commandList.SetName("ambient_pass_cmd_list");
 
-		PIXBeginEvent(commandList.GetDXCommandList().Get(), 3, "Ambient Lighting");
 		{
+			PIXScopedEvent(commandList.GetDXCommandList().Get(), 3, "Ambient Lighting Pass");
+
 			std::shared_ptr<dx12::Resource> hdrTarget = context.GetResource(_data.HDRTarget);
 			std::shared_ptr<dx12::Resource> albedoMetallic = context.GetResource(_data.AlbedoMetallic);
 			std::shared_ptr<dx12::Resource> normalRoughness = context.GetResource(_data.NormalRoughness);
@@ -106,7 +104,6 @@ namespace render
 
 			commandList.Dispatch(xThreadGroups, yThreadGroups);
 		}
-		PIXEndEvent(commandList.GetDXCommandList().Get());
 
 		commandList.Close();
 	}

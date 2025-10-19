@@ -255,7 +255,7 @@ void Application::_ExecuteFrameTasks()
 
         task.GetCommandQueue()->ExecuteCommandLists(frameCommandLists.size(), frameCommandLists.data());
 
-        if (task.GetName() == "Present Pass")
+        if (task.GetName() == "present_pass")
         {
             dx12::Device::Present();
             _currentFrame->SetSyncPoint(task.GetFence());

@@ -2,9 +2,6 @@
 
 #include "LuminanceHistogramPass.h"
 
-#include "CommandList.h"
-#include "ResourceBarrier.h"
-
 #include "Core/RenderSettings.h"
 #include "Scene/Entity/Components/Camera.h"
 
@@ -29,7 +26,7 @@ namespace render
 	} // namespace unnamed
 
 	LuminanceHistogramPass::LuminanceHistogramPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-		: RenderPass<LuminanceHistogramPassData>("Luminance Histogram Pass", rg::RenderPassType::Compute)
+		: RenderPass<LuminanceHistogramPassData>("luminance_histogram_pass", rg::RenderPassType::Compute)
 		, _scene(scene)
 		, _camera(camera)
 	{
@@ -53,10 +50,11 @@ namespace render
 	void LuminanceHistogramPass::Execute(rg::RenderContext& context, TaskGPU& task)
 	{
 		dx12::CommandList& commandList = *task.GetCommandLists().front();
-		commandList.SetName("Luminance histogram pass command list");
+		commandList.SetName("luminance_histogram_pass_cmd_list");
 
-		PIXBeginEvent(commandList.GetDXCommandList().Get(), 5, "Luminance histogram");
 		{
+            PIXScopedEvent(commandList.GetDXCommandList().Get(), 5, "Build Luminance Histogram Pass");
+
 			// Copy and setup needed resources
 
 			std::shared_ptr<dx12::Resource> hdrTarget = context.GetResource(_data.HDRTarget);
@@ -90,7 +88,6 @@ namespace render
 			std::uint32_t yThreadGroups = (std::uint32_t)std::ceilf(viewportSize.y / float(LUM_HISTOGRAM_THREADS_NUM));
 			commandList.Dispatch(xThreadGroups, yThreadGroups);
 		}
-		PIXEndEvent(commandList.GetDXCommandList().Get());
 
 		commandList.Close();
 	}

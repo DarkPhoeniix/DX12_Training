@@ -2,9 +2,6 @@
 
 #include "BloomDownsamplePass.h"
 
-#include "CommandList.h"
-#include "ResourceBarrier.h"
-
 #include "Core/RenderSettings.h"
 
 #include "RenderGraph/RenderContext.h"
@@ -18,7 +15,7 @@ namespace
 namespace render
 {
     BloomDownsamplePass::BloomDownsamplePass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-        : RenderPass<BloomDownsamplePassData>("Bloom Downsample Pass", rg::RenderPassType::Compute)
+        : RenderPass<BloomDownsamplePassData>("bloom_downsample_pass", rg::RenderPassType::Compute)
         , _scene(scene)
         , _camera(camera)
     {
@@ -54,9 +51,11 @@ namespace render
     void BloomDownsamplePass::Execute(rg::RenderContext& context, TaskGPU& task)
     {
         dx12::CommandList& commandList = *task.GetCommandLists().front();
-        commandList.SetName("Bloom downsample pass command list");
-        PIXBeginEvent(commandList.GetDXCommandList().Get(), 8, "Bloom Downsample Pass");
+        commandList.SetName("bloom_downsample_pass_cmd_list");
+
         {
+            PIXScopedEvent(commandList.GetDXCommandList().Get(), 8, "Bloom Downsample Pass");
+
             std::shared_ptr<dx12::Resource> hdrTarget = context.GetResource(_data.HDRTarget);
 
             DescriptorHandle hdrTargetHandle = context.GetStaticResourceHandle(hdrTarget->GetAsSRV());
@@ -108,7 +107,6 @@ namespace render
                 commandList.Dispatch(xThreadGroups, yThreadGroups, 1);
             }
         }
-        PIXEndEvent(commandList.GetDXCommandList().Get());
 
         commandList.Close();
     }

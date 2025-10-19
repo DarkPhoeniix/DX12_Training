@@ -2,11 +2,6 @@
 
 #include "LightingPass.h"
 
-#include "CommandList.h"
-#include "ResourceBarrier.h"
-
-#include "Scene/Entity/Components/Light.h"
-
 #include "RenderGraph/RenderContext.h"
 #include "RenderGraph/RenderPassBuilder.h"
 
@@ -25,7 +20,7 @@ namespace
 namespace render
 {
     LightingPass::LightingPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-        : RenderPass<LightingPassData>("Lighting Pass", rg::RenderPassType::Compute)
+        : RenderPass<LightingPassData>("lighting_pass", rg::RenderPassType::Compute)
         , _scene(scene)
         , _camera(camera)
     {
@@ -45,10 +40,11 @@ namespace render
     void LightingPass::Execute(rg::RenderContext& context, TaskGPU& task)
     {
         dx12::CommandList& commandList = *task.GetCommandLists().front();
-        commandList.SetName("Lighting pass command list");
+        commandList.SetName("lighting_pass_cmd_list");
 
-        PIXBeginEvent(commandList.GetDXCommandList().Get(), 4, "Deferred Shading");
         {
+            PIXScopedEvent(commandList.GetDXCommandList().Get(), 4, "Deferred Shading Pass");
+
             std::shared_ptr<dx12::Resource> hdrTarget = context.GetResource(_data.HDRTarget);
             std::shared_ptr<dx12::Resource> albedoMetallic = context.GetResource(_data.AlbedoMetallic);
             std::shared_ptr<dx12::Resource> normalRoughness = context.GetResource(_data.NormalRoughness);
@@ -82,7 +78,6 @@ namespace render
 
             commandList.Dispatch(xThreadGroups, yThreadGroups);
         }
-        PIXEndEvent(commandList.GetDXCommandList().Get());
 
         commandList.Close();
     }

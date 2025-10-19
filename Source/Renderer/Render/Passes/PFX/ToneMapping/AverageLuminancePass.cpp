@@ -2,9 +2,6 @@
 
 #include "AverageLuminancePass.h"
 
-#include "CommandList.h"
-#include "ResourceBarrier.h"
-
 #include "Scene/Entity/Components/Camera.h"
 
 #include "RenderGraph/RenderPassBuilder.h"
@@ -35,7 +32,7 @@ namespace render
 	} // namespace unnamed
 
 	AverageLuminancePass::AverageLuminancePass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-		: RenderPass<AverageLuminancePassData>("Average Luminance Pass", rg::RenderPassType::Compute)
+		: RenderPass<AverageLuminancePassData>("average_luminance_pass", rg::RenderPassType::Compute)
 		, _scene(scene)
 		, _camera(camera)
 	{
@@ -59,10 +56,11 @@ namespace render
 	void AverageLuminancePass::Execute(rg::RenderContext& context, TaskGPU& task)
 	{
 		dx12::CommandList& commandList = *task.GetCommandLists().front();
-		commandList.SetName("Luminance histogram pass command list");
+		commandList.SetName("average_luminance_pass_cmd_list");
 
-		PIXBeginEvent(commandList.GetDXCommandList().Get(), 5, "Average luminance");
 		{
+            PIXScopedEvent(commandList.GetDXCommandList().Get(), 5, "Compute Average Luminance Pass");
+
 			// Copy and setup needed resources
 
 			std::shared_ptr<dx12::Resource> luminanceHistogram = context.GetResource(_data.LuminanceHistogram);
@@ -99,9 +97,7 @@ namespace render
 			std::uint32_t xThreadGroups = (std::uint32_t)std::ceilf(viewportSize.x / float(LUM_HISTOGRAM_THREADS_NUM));
 			std::uint32_t yThreadGroups = (std::uint32_t)std::ceilf(viewportSize.y / float(LUM_HISTOGRAM_THREADS_NUM));
 			commandList.Dispatch();
-
 		}
-		PIXEndEvent(commandList.GetDXCommandList().Get());
 
 		commandList.Close();
 	}
