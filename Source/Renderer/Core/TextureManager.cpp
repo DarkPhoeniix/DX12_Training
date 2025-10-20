@@ -20,12 +20,12 @@ namespace
             HRESULT result = DirectX::GetMetadataFromDDSFile(path.c_str(), DirectX::DDS_FLAGS_NONE, metadata);
             CHECK(result, "Failed to get metadata from DDS file: " + path.string());
         }
-        else if (path.extension() == HDR_EXTENSION)
+        else if (extension == HDR_EXTENSION)
         {
             HRESULT result = DirectX::GetMetadataFromHDRFile(path.c_str(), metadata);
             CHECK(result, "Failed to get metadata from HDR file: " + path.string());
         }
-        else if (path.extension() == TGA_EXTENSION)
+        else if (extension == TGA_EXTENSION)
         {
             HRESULT result = DirectX::GetMetadataFromTGAFile(path.c_str(), metadata);
             CHECK(result, "Failed to get metadata from TGA file: " + path.string());
@@ -124,8 +124,8 @@ namespace
             0, 0, static_cast<std::uint32_t>(subresources.size()),
             subresources.data());
 
-		commandList.TransitionBarrier(*texture, D3D12_RESOURCE_STATE_COMMON);
-	}
+        commandList.TransitionBarrier(*texture, D3D12_RESOURCE_STATE_COMMON);
+    }
 } // namespace unnamed
 
 std::unique_ptr<TextureManager> TextureManager::_instance = nullptr;
@@ -137,14 +137,14 @@ TextureManager::TextureManager()
 
 void TextureManager::Create()
 {
-	if (!_instance)
-	{
-		_instance = std::unique_ptr<TextureManager>(new TextureManager);
-	}
-	else
-	{
-		ERROR("TextureManager already created!");
-	}
+    if (!_instance)
+    {
+        _instance = std::unique_ptr<TextureManager>(new TextureManager);
+    }
+    else
+    {
+        ERROR("TextureManager already created!");
+    }
 }
 
 void TextureManager::Destroy()
@@ -161,11 +161,11 @@ void TextureManager::Destroy()
 
 TextureManager& TextureManager::Get()
 {
-	ASSERT(_instance, "TextureManager not created yet!");
-	if (_instance)
-	{
-		return *_instance;
-	}
+    ASSERT(_instance, "TextureManager not created yet!");
+    if (_instance)
+    {
+        return *_instance;
+    }
 }
 
 TextureHandle TextureManager::EnqueueTexture(const std::string& filepath)
@@ -174,8 +174,12 @@ TextureHandle TextureManager::EnqueueTexture(const std::string& filepath)
 
     std::filesystem::path path(filepath);
 
-    auto it = _uploadQueue.try_emplace(filepath, _nextTextureHandle);
-    handle = it.second ? _nextTextureHandle++ : it.first->second;
+    {
+        std::lock_guard lock(_queueMutex);
+
+        auto it = _uploadQueue.try_emplace(filepath, _nextTextureHandle);
+        handle = it.second ? _nextTextureHandle++ : it.first->second;
+    }
 
     DirectX::TexMetadata metadata = GetTextureMetadata(path);
     dx12::ResourceDescription description = GetTextureDescription(metadata);
@@ -183,7 +187,10 @@ TextureHandle TextureManager::EnqueueTexture(const std::string& filepath)
 
     std::string textureName = path.filename().string();
 
-    _handleToTexture[handle] = ResourceFactory::Create(textureName, description);
+    {
+        std::unique_lock textureLock(_textureMutex);
+        _handleToTexture[handle] = ResourceFactory::Create(textureName, description);
+    }
 
     return handle;
 }
@@ -193,17 +200,27 @@ void TextureManager::UploadTextures(dx12::CommandList& commandList)
     std::uint64_t totalRequiredHeapSize = 0;
     std::uint64_t maxTextureSize = 0;
 
-    if (_uploadQueue.empty())
+    std::unordered_map<std::string, TextureHandle> uploadQueueCopy;
+    {
+        std::lock_guard lock(_queueMutex);
+
+        uploadQueueCopy.swap(_uploadQueue);
+    }
+
+    if (uploadQueueCopy.empty())
     {
         return;
     }
 
-    for (const auto& [filepath, handle] : _uploadQueue)
+    for (const auto& [filepath, handle] : uploadQueueCopy)
     {
         std::filesystem::path path(filepath);
         std::string textureName = path.filename().string();
 
+        std::shared_lock textureLock(_textureMutex);
         dx12::ResourceDescription description = _handleToTexture[handle]->GetResourceDescription();
+        textureLock.unlock();
+
         D3D12_RESOURCE_DESC desc = description.CreateDXResourceDescription();
 
         D3D12_RESOURCE_ALLOCATION_INFO allocInfo = dx12::Device::GetDXDevice()->GetResourceAllocationInfo(0, 1, &desc);
@@ -231,16 +248,25 @@ void TextureManager::UploadTextures(dx12::CommandList& commandList)
     }
     _texturesHeap.Create(heapDesc);
 
-    for (const auto& [filepath, handle] : _uploadQueue)
+    for (const auto& [filepath, handle] : uploadQueueCopy)
     {
         std::filesystem::path path(filepath);
         const std::string textureName = path.filename().string();
 
+        std::shared_lock textureLock(_textureMutex);
         std::shared_ptr<dx12::Resource> texture = _handleToTexture[handle];
+        textureLock.unlock();
 
         _texturesHeap.PlaceResource(*texture, D3D12_RESOURCE_STATE_COPY_DEST);
         UploadTextureData(commandList, path, texture, _intermediateResources[handle]);
     }
+}
+
+bool TextureManager::AreTexturesPendingUpload() const
+{
+    std::lock_guard lock(_queueMutex);
+
+    return !_uploadQueue.empty();
 }
 
 void TextureManager::ClearIntermediates()
@@ -250,6 +276,9 @@ void TextureManager::ClearIntermediates()
 
 void TextureManager::Clear()
 {
+    ASSERT(!AreTexturesPendingUpload(), "Cannot clear TextureManager while there are pending texture uploads!");
+    std::unique_lock writeLock(_textureMutex);
+
     _texturesHeap.Reset();
 
     _nextTextureHandle = 0;
@@ -260,8 +289,9 @@ void TextureManager::Clear()
 
 TextureHandle TextureManager::AddTexture(std::shared_ptr<dx12::Resource> texture)
 {
-    TextureHandle handle = _nextTextureHandle++;
+    std::lock_guard writeLock(_textureMutex);
 
+    TextureHandle handle = _nextTextureHandle++;
     _handleToTexture[handle] = texture;
 
     return handle;
@@ -269,7 +299,10 @@ TextureHandle TextureManager::AddTexture(std::shared_ptr<dx12::Resource> texture
 
 std::shared_ptr<dx12::Resource> TextureManager::GetTexture(TextureHandle handle) const
 {
+    std::shared_lock readLock(_textureMutex);
     auto it = _handleToTexture.find(handle);
+    readLock.unlock();
+
     if (it == _handleToTexture.end())
     {
         return nullptr;
