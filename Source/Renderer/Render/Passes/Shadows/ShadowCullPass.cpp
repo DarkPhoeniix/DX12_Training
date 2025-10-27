@@ -216,34 +216,33 @@ namespace render
 					}
 				}
 
-			// Transition resources
-			commandList.TransitionBarrier({ outputCommandBuffer, dx12::ResourceState::UnorderedAccess, dx12::ResourceState::CopyDest });
+				// Transition resources
+				commandList.TransitionBarrier({ outputCommandBuffer, dx12::ResourceState::UnorderedAccess, dx12::ResourceState::CopyDest });
 
-			// Reset commands counter
-			std::uint32_t counterBufferOffset = outputCommandBuffer->GetResourceDescription().GetSize().x - sizeof(UINT);
-			commandList.CopyBufferRegion(*counterResetBuffer, *outputCommandBuffer, sizeof(UINT), 0, counterBufferOffset);
+				// Reset commands counter
+				std::uint32_t counterBufferOffset = outputCommandBuffer->GetResourceDescription().GetSize().x - sizeof(UINT);
+				commandList.CopyBufferRegion(*counterResetBuffer, *outputCommandBuffer, sizeof(UINT), 0, counterBufferOffset);
 
-			// Transition resources
-			commandList.TransitionBarrier({ outputCommandBuffer, dx12::ResourceState::CopyDest, dx12::ResourceState::UnorderedAccess });
+				// Transition resources
+				commandList.TransitionBarrier({ outputCommandBuffer, dx12::ResourceState::CopyDest, dx12::ResourceState::UnorderedAccess });
 
-			PassConstants passConstants =
-			{
-				.LightIndex = lightIndex,
-				.CommandsCount = static_cast<std::uint32_t>(objectsNum),
-				.AABBBufferIndex = aabbBufferHandle.Index,
-				.InputCommandsBufferIndex = inputCommandsHandle.Index,
-				.OutputCommandsBufferIndex = outputCommandBufferHandle.Index
-			};
+				PassConstants passConstants =
+				{
+					.LightIndex = lightIndex,
+					.CommandsCount = static_cast<std::uint32_t>(objectsNum),
+					.AABBBufferIndex = aabbBufferHandle.Index,
+					.InputCommandsBufferIndex = inputCommandsHandle.Index,
+					.OutputCommandsBufferIndex = outputCommandBufferHandle.Index
+				};
 
-			// Setup root signature
-			commandList.SetCBV(0, context.GetFrame()->GetBuffer()->OffsetGPU());
-			commandList.SetConstants(1, 5, &passConstants);
+				// Setup root signature
+				commandList.SetCBV(0, context.GetFrame()->GetBuffer()->OffsetGPU());
+				commandList.SetConstants(1, 5, &passConstants);
 
-			// Dispatch culling compute shader
-			std::uint32_t xThreadGroups = (std::uint32_t)std::ceilf(objectsNum / (float)CULLING_PASS_THREADS_NUM);
-			commandList.Dispatch(xThreadGroups);
-
-			PIXEndEvent(commandList.GetDXCommandList().Get());
+				// Dispatch culling compute shader
+				std::uint32_t xThreadGroups = (std::uint32_t)std::ceilf(objectsNum / (float)CULLING_PASS_THREADS_NUM);
+				commandList.Dispatch(xThreadGroups);
+			}
 		}
 
 		commandList.Close();

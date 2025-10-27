@@ -10,7 +10,7 @@
       ]
     },
     "jsoncpp",
-	  "spdlog",
+	"spdlog",
     "winpixevent"
   ],
   "builtin-baseline": "d504de05dcd7b55df34976be1c824324ec6bca2b"

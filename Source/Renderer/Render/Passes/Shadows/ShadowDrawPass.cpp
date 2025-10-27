@@ -148,8 +148,6 @@ namespace render
                 commandList.ExecuteIndirect(_cmdSignature, objectsNum, *commandBuffer, commandBuffer, 0, counterBufferOffset);
 
                 commandList.TransitionBarrier({ shadowMap, dx12::ResourceState::DepthWrite, dx12::ResourceState::Common });
-
-                PIXEndEvent(commandList.GetDXCommandList().Get());
             }
         }
     }
@@ -200,8 +198,6 @@ namespace render
                 commandList.ExecuteIndirect(_cmdSignature, objectsNum, *commandBuffer, commandBuffer, 0, counterBufferOffset);
 
                 commandList.TransitionBarrier({ shadowMap, dx12::ResourceState::DepthWrite, dx12::ResourceState::Common });
-
-                PIXEndEvent(commandList.GetDXCommandList().Get());
             }
         }
 
