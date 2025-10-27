@@ -94,7 +94,8 @@ namespace render
 			counterResetBuffer.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
 
 			_paramsReset = ResourceFactory::Create("fxaa_reset_buffer", counterResetBuffer);
-			_paramsReset->CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_SOURCE);
+			_paramsReset->CreateCommitedResource(dx12::ResourceState::CopySource);
+      
 			std::uint32_t* val = _paramsReset->Map<std::uint32_t>();
 			val[0] = 0;
 			val[1] = 1;
@@ -185,11 +186,11 @@ namespace render
 			DescriptorHandle targetHandleSRV = context.GetStaticResourceHandle(target->GetAsSRV());
 			DescriptorHandle targetHandleUAV = context.GetStaticResourceHandle(target->GetAsUAV());
 
-			commandList.TransitionBarrier({ indirectArgs,   D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT,    D3D12_RESOURCE_STATE_COPY_DEST });
+			commandList.TransitionBarrier({ indirectArgs, dx12::ResourceState::IndirectArgument, dx12::ResourceState::CopyDest });
 
 			commandList.CopyResource(*_paramsReset, *indirectArgs);
 
-			commandList.TransitionBarrier({ indirectArgs,   D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT });
+			commandList.TransitionBarrier({ indirectArgs, dx12::ResourceState::CopyDest, dx12::ResourceState::IndirectArgument });
 
 			for (int x = 0; x < 2; ++x)
 			{
@@ -197,7 +198,7 @@ namespace render
 				{
 					// Pass 1 begin
 
-					commandList.TransitionBarrier({ indirectArgs, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT, D3D12_RESOURCE_STATE_UNORDERED_ACCESS });
+					commandList.TransitionBarrier({ indirectArgs, dx12::ResourceState::IndirectArgument, dx12::ResourceState::UnorderedAccess });
 
 					context.BindBindlessTable(commandList);
 					commandList.SetPipelineState(_FXAA_Pass1_Pipeline);
@@ -256,7 +257,7 @@ namespace render
 
 					// Pass 2 begin
 
-					commandList.TransitionBarrier({ indirectArgs, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT });
+					commandList.TransitionBarrier({ indirectArgs, dx12::ResourceState::UnorderedAccess, dx12::ResourceState::IndirectArgument });
 
 					Pass2Constants pass2Constants =
 					{

@@ -4,12 +4,96 @@
 
 namespace dx12
 {
+    D3D12_RESOURCE_STATES GetResourceState(ResourceState state)
+    {
+        D3D12_RESOURCE_STATES d3dState = D3D12_RESOURCE_STATE_COMMON;
+
+        if (HasFlag(state, ResourceState::Common))                  d3dState |= D3D12_RESOURCE_STATE_COMMON;
+        if (HasFlag(state, ResourceState::VertexAndConstantBuffer)) d3dState |= D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
+        if (HasFlag(state, ResourceState::IndexBuffer))             d3dState |= D3D12_RESOURCE_STATE_INDEX_BUFFER;
+        if (HasFlag(state, ResourceState::RenderTarget))            d3dState |= D3D12_RESOURCE_STATE_RENDER_TARGET;
+        if (HasFlag(state, ResourceState::UnorderedAccess))         d3dState |= D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+        if (HasFlag(state, ResourceState::DepthWrite))              d3dState |= D3D12_RESOURCE_STATE_DEPTH_WRITE;
+        if (HasFlag(state, ResourceState::DepthRead))               d3dState |= D3D12_RESOURCE_STATE_DEPTH_READ;
+        if (HasFlag(state, ResourceState::AllShaderResource))    d3dState |= D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+        if (HasFlag(state, ResourceState::NonPixelShaderResource))  d3dState |= D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+        if (HasFlag(state, ResourceState::PixelShaderResource))     d3dState |= D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+        if (HasFlag(state, ResourceState::CopyDest))                d3dState |= D3D12_RESOURCE_STATE_COPY_DEST;
+        if (HasFlag(state, ResourceState::CopySource))              d3dState |= D3D12_RESOURCE_STATE_COPY_SOURCE;
+        if (HasFlag(state, ResourceState::ResolveDest))             d3dState |= D3D12_RESOURCE_STATE_RESOLVE_DEST;
+        if (HasFlag(state, ResourceState::ResolveSource))           d3dState |= D3D12_RESOURCE_STATE_RESOLVE_SOURCE;
+        if (HasFlag(state, ResourceState::IndirectArgument))        d3dState |= D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT;
+        if (HasFlag(state, ResourceState::Present))                 d3dState |= D3D12_RESOURCE_STATE_PRESENT;
+
+        return d3dState;
+    }
+
+    D3D12_BARRIER_SYNC GetSyncFlags(ResourceState state)
+    {
+        D3D12_BARRIER_SYNC flags = D3D12_BARRIER_SYNC_NONE;
+
+        if (HasFlag(state, ResourceState::VertexAndConstantBuffer)) flags |= D3D12_BARRIER_SYNC_ALL_SHADING;
+        //if (HasFlag(state, ResourceState::IndexBuffer))             flags |= D3D12_BARRIER_SYNC_INDEX_INPUT;
+        if (HasFlag(state, ResourceState::RenderTarget))            flags |= D3D12_BARRIER_SYNC_RENDER_TARGET;
+        if (HasFlag(state, ResourceState::UnorderedAccess))         flags |= D3D12_BARRIER_SYNC_ALL_SHADING;
+        if (HasAnyFlag(state, ResourceState::AllDSV))               flags |= D3D12_BARRIER_SYNC_DEPTH_STENCIL;
+        if (HasFlag(state, ResourceState::NonPixelShaderResource))  flags |= D3D12_BARRIER_SYNC_NON_PIXEL_SHADING;
+        if (HasFlag(state, ResourceState::PixelShaderResource))     flags |= D3D12_BARRIER_SYNC_PIXEL_SHADING;
+        if (HasAnyFlag(state, ResourceState::AllCopy))              flags |= D3D12_BARRIER_SYNC_COPY;
+        if (HasAnyFlag(state, ResourceState::AllResolve))           flags |= D3D12_BARRIER_SYNC_RESOLVE;
+        if (HasFlag(state, ResourceState::IndirectArgument))        flags |= D3D12_BARRIER_SYNC_EXECUTE_INDIRECT;
+        if (HasFlag(state, ResourceState::Split))                   flags |= D3D12_BARRIER_SYNC_SPLIT;
+        if (flags == D3D12_BARRIER_SYNC_NONE)                       flags = D3D12_BARRIER_SYNC_ALL; // Fallback to ALL if no specific sync is set
+
+        return flags;
+    }
+
+    D3D12_BARRIER_ACCESS GetAccessFlags(ResourceState state)
+    {
+        D3D12_BARRIER_ACCESS flags = D3D12_BARRIER_ACCESS_COMMON;
+
+        if (HasFlag(state, ResourceState::Common))                  flags |= D3D12_BARRIER_ACCESS_COMMON;
+        //if (HasFlag(state, ResourceState::VertexAndConstantBuffer)) flags |= D3D12_BARRIER_ACCESS_VERTEX_BUFFER | D3D12_BARRIER_ACCESS_CONSTANT_BUFFER;
+        //if (HasFlag(state, ResourceState::IndexBuffer))             flags |= D3D12_BARRIER_ACCESS_INDEX_BUFFER;
+        if (HasFlag(state, ResourceState::RenderTarget))            flags |= D3D12_BARRIER_ACCESS_RENDER_TARGET;
+        if (HasFlag(state, ResourceState::UnorderedAccess))         flags |= D3D12_BARRIER_ACCESS_UNORDERED_ACCESS;
+        if (HasFlag(state, ResourceState::DepthWrite))              flags |= D3D12_BARRIER_ACCESS_DEPTH_STENCIL_WRITE;
+        if (HasFlag(state, ResourceState::DepthRead))               flags |= D3D12_BARRIER_ACCESS_DEPTH_STENCIL_READ;
+        if (HasAnyFlag(state, ResourceState::AllShaderResource))    flags |= D3D12_BARRIER_ACCESS_SHADER_RESOURCE;
+        if (HasFlag(state, ResourceState::CopyDest))                flags |= D3D12_BARRIER_ACCESS_COPY_DEST;
+        if (HasFlag(state, ResourceState::CopySource))              flags |= D3D12_BARRIER_ACCESS_COPY_SOURCE;
+        if (HasFlag(state, ResourceState::IndirectArgument))        flags |= D3D12_BARRIER_ACCESS_INDIRECT_ARGUMENT;
+        if (HasFlag(state, ResourceState::ResolveDest))             flags |= D3D12_BARRIER_ACCESS_RESOLVE_DEST;
+        if (HasFlag(state, ResourceState::ResolveSource))           flags |= D3D12_BARRIER_ACCESS_RESOLVE_SOURCE;
+
+        return flags;
+    }
+
+    D3D12_BARRIER_LAYOUT GetLayout(ResourceState state)
+    {
+        // TODO: it would be better to use queue-specific layouts here
+
+        if (HasFlag(state, ResourceState::RenderTarget))            return D3D12_BARRIER_LAYOUT_RENDER_TARGET;
+        if (HasFlag(state, ResourceState::UnorderedAccess))         return D3D12_BARRIER_LAYOUT_UNORDERED_ACCESS;
+        if (HasFlag(state, ResourceState::DepthWrite))              return D3D12_BARRIER_LAYOUT_DEPTH_STENCIL_WRITE;
+        if (HasFlag(state, ResourceState::DepthRead))               return D3D12_BARRIER_LAYOUT_DEPTH_STENCIL_READ;
+        if (HasAnyFlag(state, ResourceState::AllShaderResource))    return D3D12_BARRIER_LAYOUT_SHADER_RESOURCE;
+        if (HasFlag(state, ResourceState::CopyDest))                return D3D12_BARRIER_LAYOUT_COPY_DEST;
+        if (HasFlag(state, ResourceState::CopySource))              return D3D12_BARRIER_LAYOUT_COPY_SOURCE;
+        if (HasFlag(state, ResourceState::ResolveDest))             return D3D12_BARRIER_LAYOUT_RESOLVE_DEST;
+        if (HasFlag(state, ResourceState::ResolveSource))           return D3D12_BARRIER_LAYOUT_RESOLVE_SOURCE;
+        if (HasFlag(state, ResourceState::Present))                 return D3D12_BARRIER_LAYOUT_PRESENT;
+
+        FAIL("Unsupported resource state for layout conversion: %u", static_cast<std::uint32_t>(state));
+        return D3D12_BARRIER_LAYOUT_UNDEFINED;
+    }
+
     Resource::Resource(const std::string& name)
         : _ID(InvalidResourceID)
         , _resource(nullptr)
         , _resourceDesc()
-        , _currentState(D3D12_RESOURCE_STATE_COMMON)
-        , _initialState(D3D12_RESOURCE_STATE_COMMON)
+        , _currentState(ResourceState::Common)
+        , _initialState(ResourceState::Common)
         , _allocationInfo()
         , _uavCounterOffset(std::uint32_t(-1))
         , _name(name)
@@ -20,8 +104,8 @@ namespace dx12
         : _ID(InvalidResourceID)
         , _resource(nullptr)
         , _resourceDesc(resourceDesc)
-        , _currentState(D3D12_RESOURCE_STATE_COMMON)
-        , _initialState(D3D12_RESOURCE_STATE_COMMON)
+        , _currentState(ResourceState::Common)
+        , _initialState(ResourceState::Common)
         , _allocationInfo()
         , _uavCounterOffset(std::uint32_t(-1))
         , _name(name)
@@ -32,8 +116,8 @@ namespace dx12
         : _ID(InvalidResourceID)
         , _resource(resource)
         , _resourceDesc(resource->GetDesc())
-        , _currentState(D3D12_RESOURCE_STATE_COMMON)
-        , _initialState(D3D12_RESOURCE_STATE_COMMON)
+        , _currentState(ResourceState::Common)
+        , _initialState(ResourceState::Common)
         , _allocationInfo()
         , _uavCounterOffset(std::uint32_t(-1))
     {
@@ -137,17 +221,17 @@ namespace dx12
         return _resourceDesc;
     }
 
-    [[nodiscard]] D3D12_RESOURCE_STATES Resource::GetInitialState() const
+    [[nodiscard]] ResourceState Resource::GetInitialState() const
     {
         return _initialState;
     }
 
-    void Resource::SetCurrentState(D3D12_RESOURCE_STATES state)
+    void Resource::SetCurrentState(ResourceState state)
     {
         _currentState = state;
     }
 
-    D3D12_RESOURCE_STATES Resource::GetCurrentState() const
+    ResourceState Resource::GetCurrentState() const
     {
         return _currentState;
     }
@@ -183,7 +267,7 @@ namespace dx12
         return result;
     }
 
-    ComPtr<ID3D12Resource> Resource::CreateCommitedResource(D3D12_RESOURCE_STATES initialState)
+    ComPtr<ID3D12Resource> Resource::CreateCommitedResource(ResourceState initialState)
     {
         _initialState = initialState;
         _currentState = _initialState;
@@ -200,7 +284,7 @@ namespace dx12
             if (_resourceDesc.IsType(ResourceType::Dynamic))
             {
                 heapDesc.Type = D3D12_HEAP_TYPE_UPLOAD;
-                _initialState = D3D12_RESOURCE_STATE_GENERIC_READ;
+                _initialState = ResourceState::GenericRead;
                 _currentState = _initialState;
             }
             else if (_resourceDesc.IsType(ResourceType::ReadBack))
@@ -220,7 +304,7 @@ namespace dx12
             &heapDesc,
             D3D12_HEAP_FLAG_NONE,
             &resourceDesc,
-            _initialState,
+            GetResourceState(_initialState),
             clearValue,
             IID_PPV_ARGS(&_resource));
         CHECK(result, "Failed to create committed resource.");
@@ -231,7 +315,7 @@ namespace dx12
         return _resource;
     }
 
-    ComPtr<ID3D12Resource> Resource::CreatePlacedResource(ComPtr<ID3D12Heap> heap, std::uint64_t offset, D3D12_RESOURCE_STATES initialState)
+    ComPtr<ID3D12Resource> Resource::CreatePlacedResource(ComPtr<ID3D12Heap> heap, std::uint64_t offset, ResourceState initialState)
     {
         _initialState = initialState;
         _currentState = _initialState;
@@ -243,7 +327,7 @@ namespace dx12
             heap.Get(),
             offset,
             &resourceDesc,
-            _initialState,
+            GetResourceState(_initialState),
             clearValue,
             IID_PPV_ARGS(&_resource));
         CHECK(result, "Failed to create placed resource.");

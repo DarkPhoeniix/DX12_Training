@@ -10,10 +10,10 @@ namespace dx12
     {
     public:
         std::weak_ptr<Resource> TargetResource;
-        D3D12_RESOURCE_STATES BeforeState;
-        D3D12_RESOURCE_STATES AfterState;
+        ResourceState BeforeState;
+        ResourceState AfterState;
 
-        ResourceBarrier(std::shared_ptr<Resource> targetResource = nullptr, D3D12_RESOURCE_STATES beforeState = D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATES afterState = D3D12_RESOURCE_STATE_COMMON);
+        ResourceBarrier(std::shared_ptr<Resource> targetResource = nullptr, ResourceState beforeState = ResourceState::Common, ResourceState afterState = ResourceState::Common);
 
         void Transition(CommandList& commandList);
     };

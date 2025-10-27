@@ -74,7 +74,7 @@ namespace dx12
             statisticsResourceDesc.SetResourceType(ResourceType::Buffer | ResourceType::ReadBack);
         }
         _statisticsResource = ResourceFactory::Create("Statistcs query buffer", statisticsResourceDesc);
-        _statisticsResource->CreateCommitedResource(D3D12_RESOURCE_STATE_COPY_DEST);
+        _statisticsResource->CreateCommitedResource(dx12::ResourceState::CopyDest);
     }
 
     void StatisticsQuery::BeginQuery(CommandList& commandList)

@@ -35,7 +35,7 @@ namespace rg
                 {
                     if (currentPass->_resourceStateMap.find(id) != currentPass->_resourceStateMap.end())
                     {
-                        D3D12_RESOURCE_STATES prevState = currentPass->_resourceStateMap[id];
+                        dx12::ResourceState prevState = currentPass->_resourceStateMap[id];
                         if (prevState != state)
                         {
                             barriers.push_back({ resource, prevState, state });
@@ -63,7 +63,7 @@ namespace rg
 
                 if (lastPass && lastPass->_resourceStateMap.find(id) != lastPass->_resourceStateMap.end())
                 {
-                    D3D12_RESOURCE_STATES lastState = lastPass->_resourceStateMap[id];
+                    dx12::ResourceState lastState = lastPass->_resourceStateMap[id];
                     if (lastState != state)
                     {
                         barriers.push_back({ resource, lastState, state });

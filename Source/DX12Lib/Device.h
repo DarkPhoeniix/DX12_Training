@@ -30,6 +30,9 @@ namespace dx12
         // Cleans up and releases the DirectX 12 device resources.
         static void Destroy();
 
+        // Checks if enhanced barriers are supported by the device.
+        static bool IsEnhancedBarriersSupported();
+
         // Binds a swap chain to the device for rendering output.
         static void BindSwapChain(SwapChain* swapChain);
 
@@ -88,11 +91,15 @@ namespace dx12
         void CreateDevice();
         // Creates the command queues.
         void CreateQueues();
+        // Check features that are not supported on all hardware.
+        void CheckFeatureSupport();
 
         // DirectX 12 device.
         ComPtr<ID3D12Device2> _device;
         // DirectX 12 adapter.
         ComPtr<IDXGIAdapter4> _adapter;
+
+        bool _enhancedBarriersSupported;
 
         ComPtr<ID3D12CommandQueue> _queueCompute;
         ComPtr<ID3D12CommandQueue> _queueStream;

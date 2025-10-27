@@ -124,8 +124,8 @@ namespace
             0, 0, static_cast<std::uint32_t>(subresources.size()),
             subresources.data());
 
-        commandList.TransitionBarrier(*texture, D3D12_RESOURCE_STATE_COMMON);
-    }
+		commandList.TransitionBarrier(*texture, dx12::ResourceState::Common);
+	}
 } // namespace unnamed
 
 std::unique_ptr<TextureManager> TextureManager::_instance = nullptr;
@@ -257,7 +257,7 @@ void TextureManager::UploadTextures(dx12::CommandList& commandList)
         std::shared_ptr<dx12::Resource> texture = _handleToTexture[handle];
         textureLock.unlock();
 
-        _texturesHeap.PlaceResource(*texture, D3D12_RESOURCE_STATE_COPY_DEST);
+        _texturesHeap.PlaceResource(*texture, dx12::ResourceState::CopyDest);
         UploadTextureData(commandList, path, texture, _intermediateResources[handle]);
     }
 }

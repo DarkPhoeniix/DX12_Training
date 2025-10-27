@@ -31,7 +31,7 @@ namespace dx12
 
         // Place a resource in the heap at a specified offset.
         // If offset is (UINT64)-1, the function determines the placement automatically.
-        void PlaceResource(Resource& resource, D3D12_RESOURCE_STATES state = D3D12_RESOURCE_STATE_COMMON, std::uint64_t offset = (std::uint64_t)-1);
+        void PlaceResource(Resource& resource, ResourceState state = ResourceState::Common, std::uint64_t offset = (std::uint64_t)-1);
 
         // Reset the heap, releasing resources.
         void Reset();

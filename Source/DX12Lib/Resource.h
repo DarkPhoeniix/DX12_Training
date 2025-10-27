@@ -15,6 +15,38 @@ namespace dx12
     using ResourceID = std::uint64_t;
     static ResourceID InvalidResourceID = ResourceID(-1);
 
+    enum class ResourceState : std::uint16_t
+    {
+        Common = 0,
+        Present = Common,
+        VertexAndConstantBuffer = 1 << 0,
+        IndexBuffer = 1 << 1,
+        RenderTarget = 1 << 2,
+        UnorderedAccess = 1 << 3,
+        DepthWrite = 1 << 4,
+        DepthRead = 1 << 5,
+        NonPixelShaderResource = 1 << 6,
+        PixelShaderResource = 1 << 7,
+        IndirectArgument = 1 << 8,
+        CopyDest = 1 << 9,
+        CopySource = 1 << 10,
+        ResolveDest = 1 << 11,
+        ResolveSource = 1 << 12,
+        Split = 1 << 13,
+
+        GenericRead = VertexAndConstantBuffer | IndexBuffer | NonPixelShaderResource | PixelShaderResource | IndirectArgument | CopySource,
+        AllShaderResource = NonPixelShaderResource | PixelShaderResource,
+        AllDSV = DepthRead | DepthWrite,
+        AllCopy = CopySource | CopyDest,
+        AllResolve = ResolveSource | ResolveDest,
+    };
+    DEFINE_ENUM_FLAG_OPERATORS(ResourceState);
+
+    D3D12_RESOURCE_STATES GetResourceState(ResourceState state);
+    D3D12_BARRIER_SYNC GetSyncFlags(ResourceState state);
+    D3D12_BARRIER_ACCESS GetAccessFlags(ResourceState state);
+    D3D12_BARRIER_LAYOUT GetLayout(ResourceState state);
+
     // Resource class representing a general GPU resource (e.g., texture, buffer).
     class Resource : public std::enable_shared_from_this<Resource>
     {
@@ -50,12 +82,12 @@ namespace dx12
         [[nodiscard]] ResourceDescription GetResourceDescription() const;
 
         // Gets the initial state of the resource when it was created.
-        [[nodiscard]] D3D12_RESOURCE_STATES GetInitialState() const;
+        [[nodiscard]] ResourceState GetInitialState() const;
 
         // Sets the current state of the resource (e.g., copy, render target).
-        void SetCurrentState(D3D12_RESOURCE_STATES state);
+        void SetCurrentState(ResourceState state);
         // Getter for the current state of the resource.
-        [[nodiscard]] D3D12_RESOURCE_STATES GetCurrentState() const;
+        [[nodiscard]] ResourceState GetCurrentState() const;
 
         // Getter for resource allocation info (e.g., size, alignment).
         [[nodiscard]] D3D12_RESOURCE_ALLOCATION_INFO GetAllocationInfo() const;
@@ -73,9 +105,9 @@ namespace dx12
         void Reset();
 
         // Create a committed resource.
-        ComPtr<ID3D12Resource> CreateCommitedResource(D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_COMMON);
+        ComPtr<ID3D12Resource> CreateCommitedResource(ResourceState initialState = ResourceState::Common);
         // Create a placed resource (resource placed in a specific memory heap).
-        ComPtr<ID3D12Resource> CreatePlacedResource(ComPtr<ID3D12Heap> heap, std::uint64_t offset, D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_COMMON);
+        ComPtr<ID3D12Resource> CreatePlacedResource(ComPtr<ID3D12Heap> heap, std::uint64_t offset, ResourceState initialState = ResourceState::Common);
 
         // Get the resource as a Render Target View (RTV) for rendering operations.
         [[nodiscard]] RenderTargetView GetAsRTV();
@@ -109,9 +141,9 @@ namespace dx12
         ResourceDescription _resourceDesc;
 
         // The initial state of the resource when it was created.
-        D3D12_RESOURCE_STATES _initialState;
+        ResourceState _initialState;
         // The current state of the resource during its lifecycle.
-        D3D12_RESOURCE_STATES _currentState;
+        ResourceState _currentState;
 
         // Allocation info (e.g., size, alignment) of the resource.
         D3D12_RESOURCE_ALLOCATION_INFO _allocationInfo;

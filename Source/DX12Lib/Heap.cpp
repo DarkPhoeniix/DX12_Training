@@ -71,7 +71,7 @@ namespace dx12
         Create();
     }
 
-    void Heap::PlaceResource(Resource& resource, D3D12_RESOURCE_STATES state, std::uint64_t offset)
+    void Heap::PlaceResource(Resource& resource, ResourceState state, std::uint64_t offset)
     {
         ASSERT(dx12::Device::GetDXDevice(), "Device is nullptr when placing resource in a heap.");
 

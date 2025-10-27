@@ -29,7 +29,7 @@ namespace dx12
         // Default constructor initializes a CommandList object.
         CommandList();
         // Constructor that initializes a CommandList from an existing DirectX 12 command list.
-        CommandList(ComPtr<ID3D12GraphicsCommandList> DXCommandList);
+        CommandList(ComPtr<ID3D12GraphicsCommandList7> DXCommandList);
         // Copy constructor.
         CommandList(const CommandList& other);
         // Move constructor.
@@ -46,11 +46,11 @@ namespace dx12
         CommandListType GetCommandListType() const;
 
         // Sets the underlying DirectX command list.
-        void SetDXCommandList(ComPtr<ID3D12GraphicsCommandList> commandList);
+        void SetDXCommandList(ComPtr<ID3D12GraphicsCommandList7> commandList);
         // Retrieves the underlying DirectX command list.
-        ComPtr<ID3D12GraphicsCommandList> GetDXCommandList() const;
+        ComPtr<ID3D12GraphicsCommandList7> GetDXCommandList() const;
         // Retrieves a reference to the underlying DirectX command list.
-        ComPtr<ID3D12GraphicsCommandList>& GetDXCommandList();
+        ComPtr<ID3D12GraphicsCommandList7>& GetDXCommandList();
 
         // Sets the predication (conditional execution) for the command list using a buffer and offset.
         void SetPredication(std::shared_ptr<Resource> buffer, std::uint64_t offset, D3D12_PREDICATION_OP operation);
@@ -67,7 +67,7 @@ namespace dx12
         void TransitionBarriers(const std::vector<ResourceBarrier>& barrier);
         // Sets a resource transition barrier (to change resource states between pipeline stages).
         // Before state is a current resource state
-        void TransitionBarrier(Resource& resource, D3D12_RESOURCE_STATES stateAfter, std::uint32_t subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
+        void TransitionBarrier(Resource& resource, ResourceState stateAfter, std::uint32_t subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
         // Sets an aliasing barrier (for aliasing resource states between different resource usages).
         void AliasingBarrier(std::shared_ptr<Resource> beforeResource = nullptr, std::shared_ptr<Resource> afterResource = nullptr);
         // Sets an UAV barrier for the specified resource (all UAV accesses must complete before any future UAV accesses can begin)
@@ -150,7 +150,7 @@ namespace dx12
 
     private:
         // Raw DirectX 12 command list.
-        ComPtr<ID3D12GraphicsCommandList> _commandList;
+        ComPtr<ID3D12GraphicsCommandList7> _commandList;
         // Type of the current command list
         CommandListType _type;
 

@@ -36,7 +36,7 @@ namespace dx12
     {
     }
 
-    CommandList::CommandList(ComPtr<ID3D12GraphicsCommandList> DXCommandList)
+    CommandList::CommandList(ComPtr<ID3D12GraphicsCommandList7> DXCommandList)
         : _commandList(DXCommandList)
         , _type(GetCmdListType(DXCommandList->GetType()))
     {
@@ -96,18 +96,18 @@ namespace dx12
         return _type;
     }
 
-    void CommandList::SetDXCommandList(ComPtr<ID3D12GraphicsCommandList> commandList)
+    void CommandList::SetDXCommandList(ComPtr<ID3D12GraphicsCommandList7> commandList)
     {
         _commandList = commandList;
         _type = GetCmdListType(commandList->GetType());
     }
 
-    ComPtr<ID3D12GraphicsCommandList> CommandList::GetDXCommandList() const
+    ComPtr<ID3D12GraphicsCommandList7> CommandList::GetDXCommandList() const
     {
         return _commandList;
     }
 
-    ComPtr<ID3D12GraphicsCommandList>& CommandList::GetDXCommandList()
+    ComPtr<ID3D12GraphicsCommandList7>& CommandList::GetDXCommandList()
     {
         return _commandList;
     }
@@ -146,14 +146,49 @@ namespace dx12
 
         if (std::shared_ptr<Resource> resource = barrier.TargetResource.lock())
         {
-            CD3DX12_RESOURCE_BARRIER dxBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
-                resource->GetDXResource().Get(),
-                barrier.BeforeState,
-                barrier.AfterState,
-                D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
+            if (Device::IsEnhancedBarriersSupported())
+            {
+                if ((resource->GetResourceDescription().GetResourceType() & ResourceType::Texture) != ResourceType::None)
+                {
+                    CD3DX12_TEXTURE_BARRIER textureBarrier(
+                        GetSyncFlags(barrier.BeforeState),
+                        GetSyncFlags(barrier.AfterState),
+                        GetAccessFlags(barrier.BeforeState),
+                        GetAccessFlags(barrier.AfterState),
+                        GetLayout(barrier.BeforeState),
+                        GetLayout(barrier.AfterState),
+                        resource->GetDXResource().Get(),
+                        CD3DX12_BARRIER_SUBRESOURCE_RANGE(0xffffffff),       // All subresources
+                        D3D12_TEXTURE_BARRIER_FLAG_NONE);
 
-            _commandList->ResourceBarrier(1, &dxBarrier);
+                    D3D12_BARRIER_GROUP barrierGroup[] = { CD3DX12_BARRIER_GROUP(1, &textureBarrier) };
 
+                    _commandList->Barrier(1, barrierGroup);
+                }
+                else
+                {
+                    CD3DX12_BUFFER_BARRIER bufferBarrier(
+                        GetSyncFlags(barrier.BeforeState),
+                        GetSyncFlags(barrier.AfterState),
+                        GetAccessFlags(barrier.BeforeState),
+                        GetAccessFlags(barrier.AfterState),
+                        resource->GetDXResource().Get());
+
+                    D3D12_BARRIER_GROUP barrierGroup[] = { CD3DX12_BARRIER_GROUP(1, &bufferBarrier) };
+
+                    _commandList->Barrier(1, barrierGroup);
+                }
+            }
+            else
+            {
+                CD3DX12_RESOURCE_BARRIER dxBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
+                    resource->GetDXResource().Get(),
+                    GetResourceState(barrier.BeforeState),
+                    GetResourceState(barrier.AfterState),
+                    D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
+
+                _commandList->ResourceBarrier(1, &dxBarrier);
+            }
             resource->SetCurrentState(barrier.AfterState);
         }
     }
@@ -163,30 +198,80 @@ namespace dx12
         ASSERT(!barriers.empty(), "Barriers vector is empty.");
 
         std::uint32_t numBarriers = static_cast<std::uint32_t>(barriers.size());
-        std::vector<CD3DX12_RESOURCE_BARRIER> dxBarriers(numBarriers);
 
-        for (size_t i = 0; i < numBarriers; ++i)
+        if (Device::IsEnhancedBarriersSupported())
         {
-            ASSERT(!barriers[i].TargetResource.expired(), "Resource in barrier is null.");
-            if (std::shared_ptr<Resource> resource = barriers[i].TargetResource.lock())
-            {
-                dxBarriers[i] = CD3DX12_RESOURCE_BARRIER::Transition(
-                    resource->GetDXResource().Get(),
-                    barriers[i].BeforeState,
-                    barriers[i].AfterState,
-                    D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
-                resource->SetCurrentState(barriers[i].AfterState);
-            }
-        }
+            std::vector<CD3DX12_TEXTURE_BARRIER> textureBarriers;
+            std::vector<CD3DX12_BUFFER_BARRIER> bufferBarriers;
 
-        _commandList->ResourceBarrier(numBarriers, dxBarriers.data());
+            for (size_t i = 0; i < numBarriers; ++i)
+            {
+                if (std::shared_ptr<Resource> resource = barriers[i].TargetResource.lock())
+                {
+                    const ResourceBarrier& barrier = barriers[i];
+                    if (HasFlag(resource->GetResourceDescription().GetResourceType(), ResourceType::Texture))
+                    {
+                        textureBarriers.emplace_back(GetSyncFlags(barrier.BeforeState),
+                            GetSyncFlags(barrier.AfterState),
+                            GetAccessFlags(barrier.BeforeState),
+                            GetAccessFlags(barrier.AfterState),
+                            GetLayout(barrier.BeforeState),
+                            GetLayout(barrier.AfterState),
+                            resource->GetDXResource().Get(),
+                            CD3DX12_BARRIER_SUBRESOURCE_RANGE(0xffffffff),       // All subresources
+                            D3D12_TEXTURE_BARRIER_FLAG_NONE);
+
+                        resource->SetCurrentState(barriers[i].AfterState);
+                    }
+                    else
+                    {
+                        bufferBarriers.emplace_back(
+                            GetSyncFlags(barrier.BeforeState),
+                            GetSyncFlags(barrier.AfterState),
+                            GetAccessFlags(barrier.BeforeState),
+                            GetAccessFlags(barrier.AfterState),
+                            resource->GetDXResource().Get());
+
+                        resource->SetCurrentState(barriers[i].AfterState);
+                    }
+                }
+            }
+
+            D3D12_BARRIER_GROUP barrierGroups[] =
+            {
+                CD3DX12_BARRIER_GROUP(bufferBarriers.size(), bufferBarriers.data()),
+                CD3DX12_BARRIER_GROUP(textureBarriers.size(), textureBarriers.data()),
+            };
+
+            _commandList->Barrier(2, barrierGroups);
+        }
+        else
+        {
+            std::vector<CD3DX12_RESOURCE_BARRIER> dxBarriers(numBarriers);
+
+            for (size_t i = 0; i < numBarriers; ++i)
+            {
+                ASSERT(!barriers[i].TargetResource.expired(), "Resource in barrier is null.");
+                if (std::shared_ptr<Resource> resource = barriers[i].TargetResource.lock())
+                {
+                    dxBarriers[i] = CD3DX12_RESOURCE_BARRIER::Transition(
+                        resource->GetDXResource().Get(),
+                        GetResourceState(barriers[i].BeforeState),
+                        GetResourceState(barriers[i].AfterState),
+                        D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
+                    resource->SetCurrentState(barriers[i].AfterState);
+                }
+            }
+
+            _commandList->ResourceBarrier(numBarriers, dxBarriers.data());
+        }
     }
 
-    void CommandList::TransitionBarrier(Resource& resource, D3D12_RESOURCE_STATES stateAfter, std::uint32_t subresource)
+    void CommandList::TransitionBarrier(Resource& resource, ResourceState stateAfter, std::uint32_t subresource)
     {
         ASSERT(resource.GetCurrentState() != stateAfter, "Current state and state after are the same.");
 
-        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(resource.GetDXResource().Get(), resource.GetCurrentState(), stateAfter, subresource);
+        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(resource.GetDXResource().Get(), GetResourceState(resource.GetCurrentState()), GetResourceState(stateAfter), subresource);
         _commandList->ResourceBarrier(1, &barrier);
         resource.SetCurrentState(stateAfter);
     }

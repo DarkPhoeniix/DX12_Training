@@ -29,8 +29,9 @@ namespace render
         dx12::CommandList& commandList = *task.GetCommandLists().front();
         commandList.SetName("Render GUI command list");
 
-        PIXBeginEvent(commandList.GetDXCommandList().Get(), 5, "GUI");
         {
+            PIXScopedEvent(commandList.GetDXCommandList().Get(), 5, "GUI");
+
             std::shared_ptr<dx12::Resource> target = context.GetResource(_data.Target);
             std::shared_ptr<dx12::Resource> depth = context.GetResource(_data.Depth);
 
@@ -43,7 +44,6 @@ namespace render
             _editor->Update();
             _editor->Render(commandList);
         }
-        PIXEndEvent(commandList.GetDXCommandList().Get());
 
         commandList.Close();
     }
