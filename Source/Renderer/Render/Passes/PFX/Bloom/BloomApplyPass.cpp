@@ -2,9 +2,6 @@
 
 #include "BloomApplyPass.h"
 
-#include "CommandList.h"
-#include "ResourceBarrier.h"
-
 #include "Core/RenderSettings.h"
 
 #include "RenderGraph/RenderContext.h"
@@ -13,7 +10,7 @@
 namespace render
 {
     BloomApplyPass::BloomApplyPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-        : RenderPass<BloomApplyPassData>("Bloom Apply Pass", rg::RenderPassType::Compute)
+        : RenderPass<BloomApplyPassData>("bloom_apply_pass", rg::RenderPassType::Compute)
         , _scene(scene)
         , _camera(camera)
     {
@@ -29,9 +26,11 @@ namespace render
     void BloomApplyPass::Execute(rg::RenderContext& context, TaskGPU& task)
     {
         dx12::CommandList& commandList = *task.GetCommandLists().front();
-        commandList.SetName("Bloom apply pass command list");
-        PIXBeginEvent(commandList.GetDXCommandList().Get(), 9, "Bloom Apply Pass");
+        commandList.SetName("bloom_apply_pass_cmd_list");
+
         {
+            PIXScopedEvent(commandList.GetDXCommandList().Get(), 9, "Bloom Apply Pass");
+
             std::shared_ptr<dx12::Resource> hdrTarget = context.GetResource(_data.HDRTarget);
             std::shared_ptr<dx12::Resource> bloomTarget = context.GetResource(_data.Bloom);
 
@@ -53,7 +52,6 @@ namespace render
             std::uint32_t yThreadGroups = (std::uint32_t)std::ceilf(hdrTarget->GetResourceDescription().GetSize().y / 16.0f);
             commandList.Dispatch(xThreadGroups, yThreadGroups, 1);
         }
-        PIXEndEvent(commandList.GetDXCommandList().Get());
 
         commandList.Close();
     }

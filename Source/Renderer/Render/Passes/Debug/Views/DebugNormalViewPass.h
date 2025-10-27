@@ -8,23 +8,23 @@
 
 namespace render
 {
-	struct BrightnessFilterPassData
+	struct DebugNormalViewPassData
 	{
-		rg::RGTextureReadId HDRTarget;
-		rg::RGTextureWriteId BrightnessTarget;
+		rg::RGTextureReadId NormalRoughness;
+		rg::RGTextureWriteId Target;
 	};
 
-	class BrightnessFilterPass : public rg::RenderPass<BrightnessFilterPassData>
+	class DebugNormalViewPass : public rg::RenderPass<DebugNormalViewPassData>
 	{
 	public:
-		BrightnessFilterPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
+		DebugNormalViewPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
 
 		// Inherited via RenderPass
 		void Setup(rg::RenderPassBuilder& builder) override;
 		void Execute(rg::RenderContext& context, TaskGPU& task) override;
 
 	private:
-		dx12::PipelineState _brightnessFilterPipeline;
+		dx12::PipelineState _debugNormalViewPipeline;
 
 		std::shared_ptr<scene::Scene> _scene;
 		scene::Camera* _camera;

@@ -2,15 +2,11 @@
 
 #include "FXAAPass.h"
 
-#include "CommandList.h"
-
-#include "Scene/Entity/Components/Camera.h"
 #include "Core/RenderSettings.h"
+#include "Scene/Entity/Components/Camera.h"
 
 #include "RenderGraph/RenderPassBuilder.h"
 #include "RenderGraph/RenderContext.h"
-
-#include "ResourceBarrier.h"
 
 namespace
 {
@@ -64,7 +60,7 @@ namespace
 namespace render
 {
 	FXAAPass::FXAAPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-		: RenderPass<FXAAPassData>("FXAA Pass", rg::RenderPassType::Compute)
+		: RenderPass<FXAAPassData>("fxaa_pass", rg::RenderPassType::Compute)
 		, _scene(scene)
 		, _camera(camera)
 	{
@@ -97,8 +93,9 @@ namespace render
 			counterResetBuffer.SetLayout(D3D12_TEXTURE_LAYOUT_ROW_MAJOR);
 			counterResetBuffer.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
 
-			_paramsReset = ResourceFactory::Create("FXAA reset buffer", counterResetBuffer);
+			_paramsReset = ResourceFactory::Create("fxaa_reset_buffer", counterResetBuffer);
 			_paramsReset->CreateCommitedResource(dx12::ResourceState::CopySource);
+      
 			std::uint32_t* val = _paramsReset->Map<std::uint32_t>();
 			val[0] = 0;
 			val[1] = 1;
@@ -166,10 +163,11 @@ namespace render
 	void FXAAPass::Execute(rg::RenderContext& context, TaskGPU& task)
 	{
 		dx12::CommandList& commandList = *task.GetCommandLists().front();
-		commandList.SetName("FXAA command list");
+		commandList.SetName("fxaa_cmd_list");
 
-		PIXBeginEvent(commandList.GetDXCommandList().Get(), 6, "FXAA Pass");
 		{
+            PIXScopedEvent(commandList.GetDXCommandList().Get(), 6, "FXAA Compute Pass");
+
 			std::shared_ptr<dx12::Resource> workCounters = context.GetResource(_data.WorkCounters);
 			std::shared_ptr<dx12::Resource> workQueue = context.GetResource(_data.WorkQueue);
 			std::shared_ptr<dx12::Resource> colorQueue = context.GetResource(_data.ColorQueue);
@@ -288,7 +286,6 @@ namespace render
 				}
 			}
 		}
-		PIXEndEvent(commandList.GetDXCommandList().Get());
 
 		commandList.Close();
 	}

@@ -2,9 +2,6 @@
 
 #include "ShadowCullPass.h"
 
-#include "CommandList.h"
-#include "ResourceBarrier.h"
-
 #include "Scene/Entity/Components/Light.h"
 #include "Scene/Entity/Components/Mesh.h"
 #include "Scene/Volumes/AABBVolume.h"
@@ -56,7 +53,7 @@ namespace
 namespace render
 {
 	ShadowCullPass::ShadowCullPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-		: RenderPass<ShadowCullPassData>("Shadow Culling Pass", rg::RenderPassType::Compute)
+		: RenderPass<ShadowCullPassData>("shadow_culling_pass", rg::RenderPassType::Compute)
 		, _scene(scene)
 		, _camera(camera)
 	{
@@ -128,95 +125,96 @@ namespace render
 	void ShadowCullPass::Execute(rg::RenderContext& context, TaskGPU& task)
 	{
 		dx12::CommandList& commandList = *task.GetCommandLists().front();
-		commandList.SetName("Shadow pass command list - culling");
+		commandList.SetName("shadow_culling_pass_cmd_list");
 
-		std::shared_ptr<dx12::Resource> frameBuffer = context.GetFrame()->GetBuffer();
-		std::shared_ptr<dx12::Resource> aabbBuffer = context.GetResource(_data.AABBBuffer);
-		std::shared_ptr<dx12::Resource> counterResetBuffer = context.GetResource(_data.CounterResetBuffer);
-
-		DescriptorHandle aabbBufferHandle = context.GetStaticResourceHandle(aabbBuffer->GetAsSRV());
-
-		std::vector<std::shared_ptr<scene::Entity>> lightEntities = _scene->FilterNodesByComponent("Light");
-		std::vector<std::shared_ptr<scene::Entity>> meshes = _scene->FilterNodesByComponent("Mesh");
-		size_t objectsNum = meshes.size();
-
-		PIXBeginEvent(commandList.GetDXCommandList().Get(), 1, "Shadow Pass | Culling");
-
-		// Setup pipeline
-		context.BindBindlessTable(commandList);
-		commandList.SetPipelineState(_cullShadowsPipeline);
-
-		for (uint32_t lightIndex = 0; lightIndex < lightEntities.size(); ++lightIndex)
 		{
-			PIXBeginEvent(commandList.GetDXCommandList().Get(), 1, lightEntities[lightIndex]->GetName().c_str());
+			PIXScopedEvent(commandList.GetDXCommandList().Get(), 1, "Shadow Culling Pass");
 
-			std::shared_ptr<scene::Light> light = lightEntities[lightIndex]->GetComponentAs<scene::Light>("Light");
+			std::shared_ptr<dx12::Resource> frameBuffer = context.GetFrame()->GetBuffer();
+			std::shared_ptr<dx12::Resource> aabbBuffer = context.GetResource(_data.AABBBuffer);
+			std::shared_ptr<dx12::Resource> counterResetBuffer = context.GetResource(_data.CounterResetBuffer);
 
-			std::shared_ptr<dx12::Resource> candidateInstancesBuffer = context.GetResource(_data.CandidateInstancesBuffer[lightIndex]);
-			std::shared_ptr<dx12::Resource> outputCommandBuffer = context.GetResource(_data.LightCommandBuffers[lightIndex]);
+			DescriptorHandle aabbBufferHandle = context.GetStaticResourceHandle(aabbBuffer->GetAsSRV());
 
-			DescriptorHandle inputCommandsHandle = context.GetStaticResourceHandle(candidateInstancesBuffer->GetAsSRV());
-			DescriptorHandle outputCommandBufferHandle = context.GetStaticResourceHandle(outputCommandBuffer->GetAsUAV());
+			std::vector<std::shared_ptr<scene::Entity>> lightEntities = _scene->FilterNodesByComponent("Light");
+			std::vector<std::shared_ptr<scene::Entity>> meshes = _scene->FilterNodesByComponent("Mesh");
+			size_t objectsNum = meshes.size();
 
-			IndirectCommand* commandsList = candidateInstancesBuffer->Map<IndirectCommand>();
+			// Setup pipeline
+			context.BindBindlessTable(commandList);
+			commandList.SetPipelineState(_cullShadowsPipeline);
 
-			// Record all draw command to the commandBuffer
-
-			for (size_t j = 0; j < objectsNum; ++j)
+			for (uint32_t lightIndex = 0; lightIndex < lightEntities.size(); ++lightIndex)
 			{
-				std::shared_ptr<scene::Mesh> mesh = meshes[j]->GetComponentAs<scene::Mesh>("Mesh");
+				PIXScopedEvent(commandList.GetDXCommandList().Get(), 1, lightEntities[lightIndex]->GetName().c_str());
 
-				if (!mesh)
+				std::shared_ptr<scene::Light> light = lightEntities[lightIndex]->GetComponentAs<scene::Light>("Light");
+
+				std::shared_ptr<dx12::Resource> candidateInstancesBuffer = context.GetResource(_data.CandidateInstancesBuffer[lightIndex]);
+				std::shared_ptr<dx12::Resource> outputCommandBuffer = context.GetResource(_data.LightCommandBuffers[lightIndex]);
+
+				DescriptorHandle inputCommandsHandle = context.GetStaticResourceHandle(candidateInstancesBuffer->GetAsSRV());
+				DescriptorHandle outputCommandBufferHandle = context.GetStaticResourceHandle(outputCommandBuffer->GetAsUAV());
+
+				IndirectCommand* commandsList = candidateInstancesBuffer->Map<IndirectCommand>();
+
+				// Record all draw command to the commandBuffer
+
+				for (size_t j = 0; j < objectsNum; ++j)
 				{
-					continue;
+					std::shared_ptr<scene::Mesh> mesh = meshes[j]->GetComponentAs<scene::Mesh>("Mesh");
+
+					if (!mesh)
+					{
+						continue;
+					}
+
+					IndirectCommand& command = commandsList[j];
+
+					command.VertexBufferAddress = mesh->VertexBufferView.BufferLocation;
+					command.VertexBufferSize = mesh->VertexBufferView.SizeInBytes;
+					command.VertexBufferStride = mesh->VertexBufferView.StrideInBytes;
+
+					if (!mesh->SkinningVertexData.empty())
+					{
+						command.SkinBufferAddress = mesh->SkinningVertexBufferView.BufferLocation;
+						command.SkinBufferSize = mesh->SkinningVertexBufferView.SizeInBytes;
+						command.SkinBufferStride = mesh->SkinningVertexBufferView.StrideInBytes;
+					}
+					else // put any dummy data to the skinning buffer to avoid GPU errors
+					{
+						command.SkinBufferAddress = mesh->VertexBufferView.BufferLocation;
+						command.SkinBufferSize = mesh->VertexBufferView.SizeInBytes;
+						command.SkinBufferStride = mesh->VertexBufferView.StrideInBytes;
+					}
+
+					command.IndexBufferAddress = mesh->IndexBufferView.BufferLocation;
+					command.IndexBufferSize = mesh->IndexBufferView.SizeInBytes;
+					command.IndexBufferFormat = mesh->IndexBufferView.Format;
+
+					command.FrameBufferAddress = frameBuffer->OffsetGPU();
+					command.InstanceIndex = static_cast<std::uint32_t>(j);
+					command.LightIndex = static_cast<std::uint32_t>(lightIndex);
+
+					command.DrawArguments.IndexCountPerInstance = mesh->IndexData.size();
+					command.DrawArguments.InstanceCount = 1;
+					command.DrawArguments.StartIndexLocation = 0;
+					command.DrawArguments.BaseVertexLocation = 0;
+					command.DrawArguments.StartInstanceLocation = 0;
 				}
 
-				IndirectCommand& command = commandsList[j];
-
-				command.VertexBufferAddress = mesh->VertexBufferView.BufferLocation;
-				command.VertexBufferSize = mesh->VertexBufferView.SizeInBytes;
-				command.VertexBufferStride = mesh->VertexBufferView.StrideInBytes;
-
-				if (!mesh->SkinningVertexData.empty())
+				// Write all models bounding boxes to the buffer
+				for (size_t j = 0, count = 0; j < objectsNum; ++j)
 				{
-					command.SkinBufferAddress = mesh->SkinningVertexBufferView.BufferLocation;
-					command.SkinBufferSize = mesh->SkinningVertexBufferView.SizeInBytes;
-					command.SkinBufferStride = mesh->SkinningVertexBufferView.StrideInBytes;
+					if (std::shared_ptr<scene::Mesh> mesh = _scene->GetRootNodes()[j]->GetComponentAs<scene::Mesh>("Mesh"))
+					{
+						DirectX::XMVECTOR* data = aabbBuffer->Map<DirectX::XMVECTOR>();
+						scene::AABBVolume aabb = mesh->GlobalAABB;
+
+						data[count++] = aabb.Min;
+						data[count++] = aabb.Max;
+					}
 				}
-				else // put any dummy data to the skinning buffer to avoid GPU errors
-				{
-					command.SkinBufferAddress = mesh->VertexBufferView.BufferLocation;
-					command.SkinBufferSize = mesh->VertexBufferView.SizeInBytes;
-					command.SkinBufferStride = mesh->VertexBufferView.StrideInBytes;
-				}
-
-				command.IndexBufferAddress = mesh->IndexBufferView.BufferLocation;
-	            command.IndexBufferSize = mesh->IndexBufferView.SizeInBytes;
-				command.IndexBufferFormat = mesh->IndexBufferView.Format;
-
-				command.FrameBufferAddress = frameBuffer->OffsetGPU();
-				command.InstanceIndex = static_cast<std::uint32_t>(j);
-				command.LightIndex = static_cast<std::uint32_t>(lightIndex);
-
-				command.DrawArguments.IndexCountPerInstance = mesh->IndexData.size();
-				command.DrawArguments.InstanceCount = 1;
-                command.DrawArguments.StartIndexLocation = 0;
-				command.DrawArguments.BaseVertexLocation = 0;
-				command.DrawArguments.StartInstanceLocation = 0;
-			}
-
-			// Write all models bounding boxes to the buffer
-			for (size_t j = 0, count = 0; j < objectsNum; ++j)
-			{
-				if (std::shared_ptr<scene::Mesh> mesh = _scene->GetRootNodes()[j]->GetComponentAs<scene::Mesh>("Mesh"))
-				{
-					DirectX::XMVECTOR* data = aabbBuffer->Map<DirectX::XMVECTOR>();
-					scene::AABBVolume aabb = mesh->GlobalAABB;
-
-					data[count++] = aabb.Min;
-					data[count++] = aabb.Max;
-				}
-			}
 
 			// Transition resources
 			commandList.TransitionBarrier({ outputCommandBuffer, dx12::ResourceState::UnorderedAccess, dx12::ResourceState::CopyDest });
@@ -247,7 +245,6 @@ namespace render
 
 			PIXEndEvent(commandList.GetDXCommandList().Get());
 		}
-		PIXEndEvent(commandList.GetDXCommandList().Get());
 
 		commandList.Close();
 	}

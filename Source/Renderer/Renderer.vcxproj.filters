@@ -135,6 +135,13 @@
     <FxCompile Include="Shaders\Bloom\BloomUpsample_cs.hlsl" />
     <FxCompile Include="Shaders\Bloom\BloomApply_cs.hlsl" />
     <FxCompile Include="Shaders\Bloom\BloomDownsample_Pass1_cs.hlsl" />
+    <FxCompile Include="Shaders\Helpers\DebugAlbedoView_ps.hlsl" />
+    <FxCompile Include="Shaders\Helpers\FullscreenTriangle_vs.hlsl" />
+    <FxCompile Include="Shaders\Helpers\DebugMetallicView_ps.hlsl" />
+    <FxCompile Include="Shaders\Helpers\DebugNormalView_ps.hlsl" />
+    <FxCompile Include="Shaders\Helpers\DebugRoughnessView_ps.hlsl" />
+    <FxCompile Include="Shaders\Helpers\DebugSSAOView_ps.hlsl" />
+    <FxCompile Include="Shaders\Helpers\DebugEmissiveView_ps.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RendererPCH.cpp" />
@@ -285,12 +292,17 @@
     <ClCompile Include="Scene\SceneLoader.cpp">
       <Filter>Scene</Filter>
     </ClCompile>
-    <ClCompile Include="Render\Passes\PFX\Bloom\BrightnessFilterPass.cpp" />
     <ClCompile Include="Render\Passes\PFX\Bloom\BloomDownsamplePass.cpp" />
     <ClCompile Include="Render\Passes\PFX\Bloom\BloomUpsamplePass.cpp" />
     <ClCompile Include="Render\Passes\PFX\Bloom\BloomApplyPass.cpp" />
     <ClCompile Include="Render\Passes\PFX\ToneMapping\AverageLuminancePass.cpp" />
     <ClCompile Include="Render\Passes\PresentPass.cpp" />
+    <ClCompile Include="Render\Passes\Debug\Views\DebugAlbedoViewPass.cpp" />
+    <ClCompile Include="Render\Passes\Debug\Views\DebugMetallicViewPass.cpp" />
+    <ClCompile Include="Render\Passes\Debug\Views\DebugRoughnessViewPass.cpp" />
+    <ClCompile Include="Render\Passes\Debug\Views\DebugNormalViewPass.cpp" />
+    <ClCompile Include="Render\Passes\Debug\Views\DebugSSAOViewPass.cpp" />
+    <ClCompile Include="Render\Passes\Debug\Views\DebugEmissiveViewPass.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RendererPCH.h" />
@@ -480,12 +492,17 @@
     <ClInclude Include="Scene\SceneLoader.h">
       <Filter>Scene</Filter>
     </ClInclude>
-    <ClInclude Include="Render\Passes\PFX\Bloom\BrightnessFilterPass.h" />
     <ClInclude Include="Render\Passes\PFX\Bloom\BloomDownsamplePass.h" />
     <ClInclude Include="Render\Passes\PFX\Bloom\BloomUpsamplePass.h" />
     <ClInclude Include="Render\Passes\PFX\Bloom\BloomApplyPass.h" />
     <ClInclude Include="Render\Passes\PFX\ToneMapping\AverageLuminancePass.h" />
     <ClInclude Include="Render\Passes\PresentPass.h" />
+    <ClInclude Include="Render\Passes\Debug\Views\DebugAlbedoViewPass.h" />
+    <ClInclude Include="Render\Passes\Debug\Views\DebugMetallicViewPass.h" />
+    <ClInclude Include="Render\Passes\Debug\Views\DebugRoughnessViewPass.h" />
+    <ClInclude Include="Render\Passes\Debug\Views\DebugNormalViewPass.h" />
+    <ClInclude Include="Render\Passes\Debug\Views\DebugSSAOViewPass.h" />
+    <ClInclude Include="Render\Passes\Debug\Views\DebugEmissiveViewPass.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\CommonResources.hlsli">
@@ -610,6 +627,12 @@
     <None Include="PipelineDescriptions\BloomUpsamplePipeline.tech" />
     <None Include="PipelineDescriptions\BloomApplyPipeline.tech" />
     <None Include="PipelineDescriptions\BloomDownsamplePass1Pipeline.tech" />
+    <None Include="PipelineDescriptions\DebugAlbedoView.tech" />
+    <None Include="PipelineDescriptions\DebugMetallicView.tech" />
+    <None Include="PipelineDescriptions\DebugNormalView.tech" />
+    <None Include="PipelineDescriptions\DebugRoughnessView.tech" />
+    <None Include="PipelineDescriptions\DebugSSAOView.tech" />
+    <None Include="PipelineDescriptions\DebugEmissiveView.tech" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="PipelineDescriptions\AABBRenderPipeline.blend">

@@ -17,6 +17,8 @@ namespace render
         static void Init();
         static void Destroy();
 
+        static void DrawFullscreenTriangle(dx12::CommandList& commandList);
+
         static void DrawBox(dx12::CommandList& commandList,
             const Frame& frame,
             const DirectX::XMVECTOR& min,

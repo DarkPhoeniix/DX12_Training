@@ -2,8 +2,6 @@
 
 #include "PresentPass.h"
 
-#include "CommandList.h"
-
 #include "Scene/Entity/Components/Camera.h"
 
 #include "RenderGraph/RenderContext.h"
@@ -12,7 +10,7 @@
 namespace render
 {
 	PresentPass::PresentPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-		: RenderPass<PresentPassData>("Present Pass", rg::RenderPassType::Graphics)
+		: RenderPass<PresentPassData>("present_pass", rg::RenderPassType::Graphics)
 		, _scene(scene)
 		, _camera(camera)
 	{
@@ -26,10 +24,11 @@ namespace render
 	void PresentPass::Execute(rg::RenderContext& context, TaskGPU& task)
 	{
 		dx12::CommandList& commandList = *task.GetCommandLists().front();
-		commandList.SetName("Present pass command list");
+		commandList.SetName("present_pass_cmd_list");
 
-		PIXBeginEvent(commandList.GetDXCommandList().Get(), 2, "Present Pass");
 		{
+			PIXScopedEvent(commandList.GetDXCommandList().Get(), 2, "Present Pass");
+
             std::shared_ptr<dx12::Resource> target = context.GetResource(_data.RenderTarget);
             std::shared_ptr<dx12::Resource> swapChainTexture = dx12::Device::GetBackBuffer();
 
@@ -37,7 +36,6 @@ namespace render
             commandList.CopyResource(*target, *swapChainTexture);
             commandList.TransitionBarrier(*swapChainTexture, dx12::ResourceState::Present);
 		}
-		PIXEndEvent(commandList.GetDXCommandList().Get());
 
 		commandList.Close();
 	}

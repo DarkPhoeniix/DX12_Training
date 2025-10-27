@@ -77,9 +77,6 @@ namespace dx12
         HRESULT getDescResult = _dxgiSwapChain->GetDesc(&_swapChainDesc);
         CHECK(getDescResult, "Failed to get swap chain description.");
 
-        HRESULT resizeResult = _dxgiSwapChain->ResizeBuffers(BACK_BUFFER_COUNT, _width, _height, _swapChainDesc.BufferDesc.Format, _swapChainDesc.Flags);
-        CHECK(resizeResult, "Failed to resize swap chain buffers.");
-
         _currentBackBufferIndex = _dxgiSwapChain->GetCurrentBackBufferIndex();
 
         UpdateRenderTargetViews();

@@ -31,11 +31,16 @@
 #include "Render/Passes/PFX/AmbientOcclusion/SSAOComputePass.h"
 #include "Render/Passes/Debug/DebugArmaturePass.h"
 #include "Render/Passes/Debug/DebugBoundingVolumePass.h"
+#include "Render/Passes/Debug/Views/DebugAlbedoViewPass.h"
+#include "Render/Passes/Debug/Views/DebugEmissiveViewPass.h"
+#include "Render/Passes/Debug/Views/DebugMetallicViewPass.h"
+#include "Render/Passes/Debug/Views/DebugNormalViewPass.h"
+#include "Render/Passes/Debug/Views/DebugRoughnessViewPass.h"
+#include "Render/Passes/Debug/Views/DebugSSAOViewPass.h"
 #include "Render/Passes/AmbientLightingPass.h"
 #include "Render/Passes/GeometryPass.h"
 #include "Render/Passes/LightingPass.h"
 #include "Render/Passes/PFX/AntiAliasing/FXAAPass.h"
-#include "Render/Passes/PFX/Bloom/BrightnessFilterPass.h"
 #include "Render/Passes/PFX/Bloom/BloomApplyPass.h"
 #include "Render/Passes/PFX/Bloom/BloomDownsamplePass.h"
 #include "Render/Passes/PFX/Bloom/BloomUpsamplePass.h"
@@ -794,6 +799,30 @@ namespace render
             if (RenderSettings::RenderDebugArmature())
             {
                 _renderGraph.AddPass(std::make_shared<DebugArmaturePass>(_scene, _cameraComponent.get()));
+            }
+            if (RenderSettings::DebugView().ShowAlbedo)
+            {
+                _renderGraph.AddPass(std::make_shared<DebugAlbedoViewPass>(_scene, _cameraComponent.get()));
+            }
+            else if (RenderSettings::DebugView().ShowMetalness)
+            {
+                _renderGraph.AddPass(std::make_shared<DebugMetallicViewPass>(_scene, _cameraComponent.get()));
+            }
+            else if (RenderSettings::DebugView().ShowRoughness)
+            {
+                _renderGraph.AddPass(std::make_shared<DebugRoughnessViewPass>(_scene, _cameraComponent.get()));
+            }
+            else if (RenderSettings::DebugView().ShowNormals)
+            {
+                _renderGraph.AddPass(std::make_shared<DebugNormalViewPass>(_scene, _cameraComponent.get()));
+            }
+            else if (RenderSettings::DebugView().ShowSSAO)
+            {
+                _renderGraph.AddPass(std::make_shared<DebugSSAOViewPass>(_scene, _cameraComponent.get()));
+            }
+            else if (RenderSettings::DebugView().ShowEmission)
+            {
+                _renderGraph.AddPass(std::make_shared<DebugEmissiveViewPass>(_scene, _cameraComponent.get()));
             }
             _renderGraph.AddPass(std::make_shared<PresentPass>(_scene, _cameraComponent.get()));
 

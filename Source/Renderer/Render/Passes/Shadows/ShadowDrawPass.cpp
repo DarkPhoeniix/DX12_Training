@@ -2,9 +2,6 @@
 
 #include "ShadowDrawPass.h"
 
-#include "CommandList.h"
-#include "ResourceBarrier.h"
-
 #include "Scene/Entity/Components/Camera.h"
 #include "Scene/Entity/Components/Light.h"
 
@@ -45,7 +42,7 @@ namespace
 namespace render
 {
     ShadowDrawPass::ShadowDrawPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-        : RenderPass<ShadowDrawPassData>("Shadow Draw Pass", rg::RenderPassType::Graphics)
+        : RenderPass<ShadowDrawPassData>("shadow_draw_pass", rg::RenderPassType::Graphics)
         , _scene(scene)
         , _camera(camera)
     {
@@ -104,7 +101,7 @@ namespace render
     void ShadowDrawPass::DrawSpotLightShadows(rg::RenderContext& context, TaskGPU& task)
     {
         dx12::CommandList& commandList = *task.GetCommandLists().front();
-        commandList.SetName("Shadow pass command list - draw");
+        commandList.SetName("shadow_draw_pass_cmd_list");
 
         std::shared_ptr<dx12::Resource> frameBuffer = context.GetFrame()->GetBuffer();
 
@@ -112,13 +109,16 @@ namespace render
         std::vector<std::shared_ptr<scene::Entity>> meshes = _scene->FilterNodesByComponent("Mesh");
         size_t objectsNum = meshes.size();
 
-        PIXBeginEvent(commandList.GetDXCommandList().Get(), 1, "Shadow Pass (spot lights) | Draw");
         {
+            PIXScopedEvent(commandList.GetDXCommandList().Get(), 1, "Shadow Draw Pass (spot lights)");
+
             context.BindBindlessTable(commandList);
             commandList.SetPipelineState(_spotLightShadowsPipeline);
 
             for (uint32_t lightIndex = 0; lightIndex < lightEntities.size(); ++lightIndex)
             {
+                PIXScopedEvent(commandList.GetDXCommandList().Get(), 1, lightEntities[lightIndex]->GetName().c_str());
+
                 std::shared_ptr<scene::Light> light = lightEntities[lightIndex]->GetComponentAs<scene::Light>("Light");
                 if (light->Type != scene::LightType::Spot)
                 {
@@ -130,8 +130,6 @@ namespace render
                     continue;
                 }
 
-                PIXBeginEvent(commandList.GetDXCommandList().Get(), 1, lightEntities[lightIndex]->GetName().c_str());
-
                 std::shared_ptr<dx12::Resource> shadowMap = context.GetTextureManager().GetTexture(light->ShadowMapHandle);
                 std::shared_ptr<dx12::Resource> commandBuffer = context.GetResource(_data.LightCommandBuffers[lightIndex]);
 
@@ -154,23 +152,25 @@ namespace render
                 PIXEndEvent(commandList.GetDXCommandList().Get());
             }
         }
-        PIXEndEvent(commandList.GetDXCommandList().Get());
     }
 
     void ShadowDrawPass::DrawPointLightShadows(rg::RenderContext& context, TaskGPU& task)
     {
         dx12::CommandList& commandList = *task.GetCommandLists().front();
 
-        std::vector<std::shared_ptr<scene::Entity>> lightEntities = _scene->FilterNodesByComponent("Light");
-        std::vector<std::shared_ptr<scene::Entity>> meshes = _scene->FilterNodesByComponent("Mesh");
-        size_t objectsNum = meshes.size();
-
-        PIXBeginEvent(commandList.GetDXCommandList().Get(), 1, "Shadow Pass (point lights) | Draw");
         {
+            PIXScopedEvent(commandList.GetDXCommandList().Get(), 1, "Shadow Draw Pass (point lights)");
+
+            std::vector<std::shared_ptr<scene::Entity>> lightEntities = _scene->FilterNodesByComponent("Light");
+            std::vector<std::shared_ptr<scene::Entity>> meshes = _scene->FilterNodesByComponent("Mesh");
+            size_t objectsNum = meshes.size();
+
             commandList.SetPipelineState(_pointLightShadowsPipeline);
 
             for (uint32_t lightIndex = 0; lightIndex < lightEntities.size(); ++lightIndex)
             {
+                PIXScopedEvent(commandList.GetDXCommandList().Get(), 1, lightEntities[lightIndex]->GetName().c_str());
+
                 std::shared_ptr<scene::Light> light = lightEntities[lightIndex]->GetComponentAs<scene::Light>("Light");
                 if (light->Type != scene::LightType::Point)
                 {
@@ -182,8 +182,6 @@ namespace render
                     continue;
                 }
 
-                PIXBeginEvent(commandList.GetDXCommandList().Get(), 1, lightEntities[lightIndex]->GetName().c_str());
-
                 std::shared_ptr<dx12::Resource> shadowMap = context.GetTextureManager().GetTexture(light->ShadowMapHandle);
                 std::shared_ptr<dx12::Resource> commandBuffer = context.GetResource(_data.LightCommandBuffers[lightIndex]);
 
@@ -206,7 +204,6 @@ namespace render
                 PIXEndEvent(commandList.GetDXCommandList().Get());
             }
         }
-        PIXEndEvent(commandList.GetDXCommandList().Get());
 
         commandList.Close();
     }

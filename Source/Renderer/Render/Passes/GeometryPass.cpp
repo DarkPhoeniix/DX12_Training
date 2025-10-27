@@ -2,11 +2,7 @@
 
 #include "GeometryPass.h"
 
-#include "CommandList.h"
-#include "ResourceBarrier.h"
-
 #include "Scene/Entity/Components/Mesh.h"
-
 #include "Utility/DebugInfo.h"
 
 #include "RenderGraph/RenderContext.h"
@@ -23,7 +19,7 @@ namespace
 namespace render
 {
 	GeometryPass::GeometryPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-		: RenderPass<GeometryPassData>("Geometry Pass", rg::RenderPassType::Graphics)
+		: RenderPass<GeometryPassData>("geometry_pass", rg::RenderPassType::Graphics)
 		, _scene(scene)
 		, _camera(camera)
 	{
@@ -103,10 +99,11 @@ namespace render
 	void GeometryPass::Execute(rg::RenderContext& context, TaskGPU& task)
 	{
 		dx12::CommandList& commandList = *task.GetCommandLists().front();
-		commandList.SetName("Geometry pass command list");
+		commandList.SetName("geometry_pass_cmd_list");
 
-		PIXBeginEvent(commandList.GetDXCommandList().Get(), 2, "Geometry Pass");
 		{
+			PIXScopedEvent(commandList.GetDXCommandList().Get(), 0, "Geometry Pass");
+
 			std::shared_ptr<dx12::Resource> albedoMetallic = context.GetResource(_data.AlbedoMetallic);
             std::shared_ptr<dx12::Resource> emission = context.GetResource(_data.Emission);
 			std::shared_ptr<dx12::Resource> normalRoughness = context.GetResource(_data.NormalRoughness);
@@ -114,19 +111,22 @@ namespace render
 
 			DescriptorHandle albedoMetallicHandle = context.GetStaticResourceHandle(albedoMetallic->GetAsRTV());
             DescriptorHandle emissionHandle = context.GetStaticResourceHandle(emission->GetAsRTV());
-			DescriptorHandle normalSpecularHandle = context.GetStaticResourceHandle(normalRoughness->GetAsRTV());
+			DescriptorHandle normalRoughnessHandle = context.GetStaticResourceHandle(normalRoughness->GetAsRTV());
 			DescriptorHandle depthHandle = context.GetStaticResourceHandle(depth->GetAsDSV());
 
 			commandList.ClearDSV(depthHandle.CpuHandle, D3D12_CLEAR_FLAG_DEPTH);
 			float color[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 			commandList.ClearRTV(albedoMetallicHandle.CpuHandle, color, &_camera->GetViewport());
+			commandList.ClearRTV(emissionHandle.CpuHandle, color, &_camera->GetViewport());
+            color[3] = 0.0f;
+			commandList.ClearRTV(normalRoughnessHandle.CpuHandle, color, &_camera->GetViewport());
 
 			context.BindBindlessTable(commandList);
 
 			commandList.SetPipelineState(_geometryPipeline);
 
 			commandList.SetViewport(_camera->GetViewport());
-			commandList.SetRenderTargets({ albedoMetallicHandle.CpuHandle, normalSpecularHandle.CpuHandle, emissionHandle.CpuHandle }, &depthHandle.CpuHandle);
+			commandList.SetRenderTargets({ albedoMetallicHandle.CpuHandle, normalRoughnessHandle.CpuHandle, emissionHandle.CpuHandle }, &depthHandle.CpuHandle);
 
 			DebugInfo::StartStatCollecting(commandList);
 
@@ -171,7 +171,6 @@ namespace render
 
 			DebugInfo::EndStatCollecting(commandList);
 		}
-		PIXEndEvent(commandList.GetDXCommandList().Get());
 
 		commandList.Close();
 	}

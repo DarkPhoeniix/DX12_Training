@@ -2,9 +2,6 @@
 
 #include "SSAOBlurPass.h"
 
-#include "CommandList.h"
-#include "ResourceBarrier.h"
-
 #include "Core/RenderSettings.h"
 
 #include "RenderGraph/RenderContext.h"
@@ -30,7 +27,7 @@ namespace render
 	} // namespace unnamed
 
 	SSAOBlurPass::SSAOBlurPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-		: RenderPass<SSAOBlurPassData>("SSAO Blur Pass", rg::RenderPassType::Compute)
+		: RenderPass<SSAOBlurPassData>("ssao_blur_pass", rg::RenderPassType::Compute)
 		, _scene(scene)
 		, _camera(camera)
 	{
@@ -81,10 +78,11 @@ namespace render
 	void SSAOBlurPass::Execute(rg::RenderContext& context, TaskGPU& task)
 	{
 		dx12::CommandList& commandList = *task.GetCommandLists().front();
-		commandList.SetName("SSAO Blur pass command list");
+		commandList.SetName("ssao_blur_pass_cmd_list");
 
-		PIXBeginEvent(commandList.GetDXCommandList().Get(), 3, "SSAO Blur");
 		{
+            PIXScopedEvent(commandList.GetDXCommandList().Get(), 3, "SSAO Blur Pass");
+
 			std::shared_ptr<dx12::Resource> weights = context.GetResource(_data.WeightsBuffer);
 			std::shared_ptr<dx12::Resource> depth = context.GetResource(_data.Depth);
 			std::shared_ptr<dx12::Resource> aoTarget = context.GetResource(_data.AOTarget);
@@ -129,7 +127,6 @@ namespace render
 
 			commandList.Dispatch(xThreadGroups, yThreadGroups);
 		}
-		PIXEndEvent(commandList.GetDXCommandList().Get());
 
 		commandList.Close();
 	}
