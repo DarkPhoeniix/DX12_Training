@@ -7,7 +7,10 @@
 
 #include "Editor/Editor.h"
 
-class Win32Window;
+namespace core
+{
+    class Win32Window;
+} // namespace core
 
 namespace render
 {

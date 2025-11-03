@@ -7,6 +7,8 @@
 #include "events/MouseMoveEvent.h"
 #include "events/ResizeEvent.h"
 
+#include "RHI/SwapChain.h"
+
 namespace core
 {
     using events::MouseMoveEvent;

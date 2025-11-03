@@ -223,19 +223,16 @@ namespace gui
                     _filepath[0] = '\0';
 
                     open.lStructSize = sizeof(OPENFILENAME);
-                    open.lpstrFilter = L".scene\0*.scene\0\0";
+                    open.lpstrFilter = ".scene\0*.scene\0\0";
                     open.nFileOffset = 1;
                     open.nMaxFile = 2048;
-                    open.lpstrTitle = L"Desc...";
+                    open.lpstrTitle = "Desc...";
                     open.lpstrFile = _filepath;
                     open.Flags = OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
 
                     WCHAR* ecfas;
                     if (GetOpenFileName(&open))
                     {
-                        std::wstring wstr(_filepath);
-                        std::string spath(wstr.begin(), wstr.end());
-
                         PostMessage(_windowHandle, WM_LOAD_SCENE, NULL, (LPARAM)_filepath);
                     }
                 }

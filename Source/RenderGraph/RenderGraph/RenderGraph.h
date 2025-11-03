@@ -5,9 +5,9 @@
 
 #include "Helpers/PassWorkerManager.h"
 
-#include "Core/ResourceTable.h"
-#include "Core/TextureManager.h"
-#include "Scene/Scene.h"
+#include "Renderer/Core/ResourceTable.h"
+#include "Renderer/Core/TextureManager.h"
+#include "Renderer/Scene/Scene.h"
 
 class Frame;
 class TaskGPU;

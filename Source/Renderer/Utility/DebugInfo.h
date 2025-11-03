@@ -1,7 +1,7 @@
 #pragma once
 
-#include "StatisticsQuery.h"
-#include "HighResolutionClock.h"
+#include "RHI/StatisticsQuery.h"
+#include "Utility/HighResolutionClock.h"
 
 namespace core::events
 {

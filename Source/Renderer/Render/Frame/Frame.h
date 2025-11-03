@@ -1,11 +1,9 @@
 #pragma once
 
-#include "Heap.h"
-
-#include "Render/Frame/AllocatorPool.h"
-#include "Render/Frame/Executor.h"
-#include "Render/Frame/TaskGPU.h"
-#include "Render/Frame/FencePool.h"
+#include "Renderer/Render/Frame/AllocatorPool.h"
+#include "Renderer/Render/Frame/Executor.h"
+#include "Renderer/Render/Frame/TaskGPU.h"
+#include "Renderer/Render/Frame/FencePool.h"
 
 // TODO: refactor the Frame class
 

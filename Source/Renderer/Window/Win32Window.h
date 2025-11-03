@@ -1,7 +1,11 @@
 #pragma once
 
-#include "SwapChain.h"
 #include "Window/IWindowEventListener.h"
+
+namespace dx12
+{
+    class SwapChain;
+} // namespace dx12
 
 namespace core
 {

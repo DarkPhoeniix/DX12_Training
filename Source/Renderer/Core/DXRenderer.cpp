@@ -1,10 +1,11 @@
+
 #include "RendererPCH.h"
 
 #include "DXRenderer.h"
 
-#include "CommandList.h"
+#include "RHI/CommandList.h"
 
-#include "IGPUCrashTracker.h"
+#include "GPUCrashTracker/IGPUCrashTracker.h"
 
 #include "Events/KeyEvent.h"
 #include "Events/MouseButtonEvent.h"

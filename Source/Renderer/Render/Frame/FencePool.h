@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Fence.h"
+#include "RHI/Fence.h"
 
 class FencePool
 {

@@ -49,7 +49,7 @@ namespace render
 
 			commandList.SetPipelineState(_debugArmaturePipeline);
 
-			commandList.SetViewport(_camera->GetViewport());
+			commandList.SetViewport(_camera->GetViewport().GetDXViewport(), _camera->GetViewport().GetScissorRectangle());
 			commandList.SetRenderTarget(&rtv.CpuHandle, &dsv.CpuHandle);
 
 			commandList.SetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_POINTLIST);

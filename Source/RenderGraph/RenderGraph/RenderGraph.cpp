@@ -4,9 +4,9 @@
 
 #include "RenderPassBuilder.h"
 
-#include "ResourceBarrier.h"
-#include "Render/Frame/Frame.h"
-#include "Render/Frame/TaskGPU.h"
+#include "RHI/ResourceBarrier.h"
+#include "Renderer/Render/Frame/Frame.h"
+#include "Renderer/Render/Frame/TaskGPU.h"
 
 namespace
 {

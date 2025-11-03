@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Resource.h"
-#include "Core/DescriptorHeapManager.h"
+#include "RHI/Resource.h"
+#include "Renderer/Core/DescriptorHeapManager.h"
 
 class ResourceTable
 {

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Scene/Entity/Components/IComponent.h"
-#include "Scene/Entity/Components/Transformation.h"
+#include "Renderer/Scene/Entity/Components/IComponent.h"
+#include "Renderer/Scene/Entity/Components/Transformation.h"
 
 namespace scene
 {

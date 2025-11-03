@@ -1,9 +1,10 @@
 #pragma once
 
-#include "DescriptorHeap.h"
-#include "PipelineState.h"
 #include "Core/ResourceTable.h"
 #include "Core/TextureManager.h"
+
+#include "RHI/DescriptorHeap.h"
+#include "RHI/PipelineState.h"
 
 class TaskGPU;
 

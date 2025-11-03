@@ -1,8 +1,23 @@
 ﻿
+# Visual Studio ignores
 **/.vs
-*.vcxproj.user
+**.sln
+**.vcxproj
+**.vcxproj.filters
+**.vcxproj.user
+/x64
 
+vcpkg-manifest-install.log
+
+# Project-specific ignores
 /Bin
+/External
 /Intermediate
 /ThirdParty
 /vcpkg_installed
+
+# CMake ignores
+**/CMakeFiles
+*.dir
+**/cmake_install.cmake
+**/CMakeCache.txt

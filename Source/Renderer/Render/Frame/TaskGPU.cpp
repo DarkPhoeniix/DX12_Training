@@ -2,10 +2,11 @@
 
 #include "TaskGPU.h"
 
-#include "CommandList.h"
+#include "RHI/CommandList.h"
+#include "RHI/Fence.h"
 
-#include "IGPUCrashTracker.h"
-#include "ICommandListCrashContext.h"
+#include "GPUCrashTracker/IGPUCrashTracker.h"
+#include "GPUCrashTracker/ICommandListCrashContext.h"
 
 TaskGPU::TaskGPU()
     : _commandQueue(nullptr)
