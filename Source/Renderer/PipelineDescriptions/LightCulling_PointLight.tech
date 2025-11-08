@@ -3,5 +3,5 @@
 
 	"IsGraphicsPipeline": false,
 
-	"CS": "Shaders\\LightCulling_PointLight.cso"
+	"CS": "Shaders\\LightCulling_PointLight_cs.cso"
 }

@@ -1,5 +1,0 @@
-// DX12LibPCH.cpp: source file corresponding to the pre-compiled header
-
-#include "DX12LibPCH.h"
-
-// When you are using pre-compiled headers, this source file is necessary for compilation to succeed.

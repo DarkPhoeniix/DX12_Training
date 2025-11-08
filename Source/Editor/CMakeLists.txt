@@ -1,6 +1,4 @@
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/Bin/}) 
-
 find_package(imgui CONFIG REQUIRED)
 find_package(directx-headers CONFIG REQUIRED)
 find_package(winpixevent CONFIG REQUIRED)
@@ -17,6 +15,13 @@ file(GLOB_RECURSE Editor_SOURCES CONFIGURE_DEPENDS
 
 target_sources(Editor PRIVATE ${Editor_SOURCES})
 
+foreach(config IN ITEMS DEBUG PROFILE RELEASE)
+    set_property(TARGET Editor PROPERTY LIBRARY_OUTPUT_DIRECTORY_${config} "${LIB_OUTPUT_DIR}")
+    set_property(TARGET Editor PROPERTY ARCHIVE_OUTPUT_DIRECTORY_${config} "${LIB_OUTPUT_DIR}")
+    set_property(TARGET Editor PROPERTY RUNTIME_OUTPUT_DIRECTORY_${config} "${EXE_OUTPUT_DIR}")
+endforeach()
+
+set_target_properties(Editor PROPERTIES OUTPUT_NAME "Equinox Engine")
 target_include_directories(Editor PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(Editor PRIVATE ${EXTERNAL_DIR} ${EXTERNAL_DIR}/ImGui ${CMAKE_SOURCE_DIR}/Source)
 target_compile_options(Editor PRIVATE /MP)

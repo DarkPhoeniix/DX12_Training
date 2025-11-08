@@ -11,7 +11,7 @@ float rand(float2 co)
 
 [RootSignature(PostFX_RootSig)]
 [numthreads(2, 2, 1)]
-void CSMain(uint3 DTid : SV_DispatchThreadID)
+void main(uint3 DTid : SV_DispatchThreadID)
 {
     float4 color = AlbedoTexture[DTid.xy];
     color = 1.0f - color;

@@ -3,5 +3,5 @@
 
 	"IsGraphicsPipeline": false,
 
-	"CS": "Shaders\\ToneMapping.cso"
+	"CS": "Shaders\\ToneMapping_cs.cso"
 }

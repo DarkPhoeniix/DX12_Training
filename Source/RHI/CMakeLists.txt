@@ -1,6 +1,4 @@
 
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/Bin/}) 
-
 find_package(jsoncpp CONFIG REQUIRED)
 find_package(directxtex CONFIG REQUIRED)
 find_package(directx-headers CONFIG REQUIRED)
@@ -15,6 +13,12 @@ file(GLOB_RECURSE RHI_SOURCES CONFIGURE_DEPENDS
 )
 
 target_sources(RHI PRIVATE ${RHI_SOURCES})
+
+foreach(config IN ITEMS DEBUG PROFILE RELEASE)
+    set_property(TARGET RHI PROPERTY LIBRARY_OUTPUT_DIRECTORY_${config} "${LIB_OUTPUT_DIR}")
+    set_property(TARGET RHI PROPERTY ARCHIVE_OUTPUT_DIRECTORY_${config} "${LIB_OUTPUT_DIR}")
+    set_property(TARGET RHI PROPERTY RUNTIME_OUTPUT_DIRECTORY_${config} "${EXE_OUTPUT_DIR}")
+endforeach()
 
 target_include_directories(RHI PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(RHI PRIVATE ${EXTERNAL_DIR} ${CMAKE_SOURCE_DIR}/Source)
