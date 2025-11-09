@@ -21,8 +21,13 @@ file(GLOB_RECURSE Renderer_CS_SHADERS CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_D
 
 if (CMAKE_GENERATOR MATCHES "Visual Studio")
     foreach(ShaderFile ${Renderer_ALL_SRC_SHADERS})
-        get_filename_component(ShaderName ${ShaderFile} NAME_WE)
-        set_source_files_properties(${ShaderFile} PROPERTIES VS_SHADER_OBJECT_FILE_NAME "${EXE_OUTPUT_DIR}/Shaders/${ShaderName}.cso")
+        foreach(config IN ITEMS Debug Profile Release)
+            string(TOUPPER ${config} CONFIG_UPPER)
+            set_source_files_properties(${ShaderFile} PROPERTIES
+                VS_SHADER_OBJECT_FILE_NAME_DEBUG
+                "${BIN_OUTPUT_DIR}/Debug/Shaders/${ShaderName}.cso"
+            )
+        endforeach()
     endforeach(ShaderFile)
 
     set_source_files_properties(${Renderer_ALL_SHADERS} PROPERTIES VS_SHADER_MODEL "6.6")
@@ -39,13 +44,11 @@ file(GLOB_RECURSE Renderer_PIPELINES CONFIGURE_DEPENDS
     ${CMAKE_CURRENT_SOURCE_DIR}/PipelineDescriptions/*.blend
 )
 
-set(COMPILED_SHADERS_DIR ${EXE_OUTPUT_DIR}/Shaders)
-
 target_sources(Renderer PRIVATE ${Renderer_SOURCES} ${Renderer_ALL_SHADERS} ${Renderer_PIPELINES})
 
 foreach(config IN ITEMS DEBUG PROFILE RELEASE)
-    set_property(TARGET Renderer PROPERTY LIBRARY_OUTPUT_DIRECTORY_${config} "${LIB_OUTPUT_DIR}")
-    set_property(TARGET Renderer PROPERTY ARCHIVE_OUTPUT_DIRECTORY_${config} "${LIB_OUTPUT_DIR}")
+    set_property(TARGET Renderer PROPERTY LIBRARY_OUTPUT_DIRECTORY_${config} "${EXE_OUTPUT_DIR}/Libs")
+    set_property(TARGET Renderer PROPERTY ARCHIVE_OUTPUT_DIRECTORY_${config} "${EXE_OUTPUT_DIR}/Libs")
     set_property(TARGET Renderer PROPERTY RUNTIME_OUTPUT_DIRECTORY_${config} "${EXE_OUTPUT_DIR}")
 endforeach()
 
@@ -74,3 +77,23 @@ GroupSourcesByFolder(Renderer)
 #    copy_pipeline_desc(${PIPELINE_DESC} Renderer)
 #endforeach(PIPELINE_DESC)
 
+add_custom_command(TARGET Renderer POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${EXE_OUTPUT_DIR}/Shaders"
+)
+
+include(${CMAKE_SOURCE_DIR}/Scripts/CompileShaderDxc.cmake)
+foreach(ShaderFile ${Renderer_VS_SHADERS})
+    CompileShader("${EXE_OUTPUT_DIR}/Shaders" "${ShaderFile}" "vs" "O3")
+endforeach()
+
+foreach(ShaderFile ${Renderer_GS_SHADERS})
+    CompileShader("${EXE_OUTPUT_DIR}/Shaders" "${ShaderFile}" "gs" "O3")
+endforeach()
+
+foreach(ShaderFile ${Renderer_PS_SHADERS})
+    CompileShader("${EXE_OUTPUT_DIR}/Shaders" "${ShaderFile}" "ps" "O3")
+endforeach()
+
+foreach(ShaderFile ${Renderer_CS_SHADERS})
+    CompileShader("${EXE_OUTPUT_DIR}/Shaders" "${ShaderFile}" "cs" "O3")
+endforeach()

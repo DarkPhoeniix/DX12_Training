@@ -11,8 +11,8 @@ file(GLOB_RECURSE GPUCrashTracker_SOURCES CONFIGURE_DEPENDS
 target_sources(GPUCrashTracker PRIVATE ${GPUCrashTracker_SOURCES})
 
 foreach(config IN ITEMS DEBUG PROFILE RELEASE)
-    set_property(TARGET GPUCrashTracker PROPERTY LIBRARY_OUTPUT_DIRECTORY_${config} "${LIB_OUTPUT_DIR}")
-    set_property(TARGET GPUCrashTracker PROPERTY ARCHIVE_OUTPUT_DIRECTORY_${config} "${LIB_OUTPUT_DIR}")
+    set_property(TARGET GPUCrashTracker PROPERTY LIBRARY_OUTPUT_DIRECTORY_${config} "${EXE_OUTPUT_DIR}/Libs")
+    set_property(TARGET GPUCrashTracker PROPERTY ARCHIVE_OUTPUT_DIRECTORY_${config} "${EXE_OUTPUT_DIR}/Libs")
     set_property(TARGET GPUCrashTracker PROPERTY RUNTIME_OUTPUT_DIRECTORY_${config} "${EXE_OUTPUT_DIR}")
 endforeach()
 

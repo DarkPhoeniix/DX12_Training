@@ -1,7 +1,7 @@
 
 cmake_minimum_required(VERSION 3.29)
 
-set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
+SET(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "")
 set(VCPKG_TARGET_TRIPLET "x64-windows")
 
 set(CMAKE_CONFIGURATION_TYPES Debug Profile Release CACHE STRING "" FORCE)
@@ -34,9 +34,10 @@ option(USE_AFTERMATH "Enable Nvidia Aftermath SDK usage for crash tracking (Prof
 # Fetch all dependencies
 include(FetchContent)
 
+set(BIN_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/Bin")
+set(EXE_OUTPUT_DIR "${BIN_OUTPUT_DIR}/$<CONFIG>")
+set(LIB_OUTPUT_DIR "${EXE_OUTPUT_DIR}/Libs")
 set(EXTERNAL_DIR "${CMAKE_SOURCE_DIR}/External")
-set(EXE_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/Bin")
-set(LIB_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/Bin/Libs")
 set(FETCHCONTENT_BASE_DIR "${EXTERNAL_DIR}/Source")
 
 if (USE_AFTERMATH)

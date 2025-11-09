@@ -13,8 +13,8 @@ file(GLOB_RECURSE RenderGraph_SOURCES CONFIGURE_DEPENDS
 target_sources(RenderGraph PRIVATE ${RenderGraph_SOURCES})
 
 foreach(config IN ITEMS DEBUG PROFILE RELEASE)
-    set_property(TARGET RenderGraph PROPERTY LIBRARY_OUTPUT_DIRECTORY_${config} "${LIB_OUTPUT_DIR}")
-    set_property(TARGET RenderGraph PROPERTY ARCHIVE_OUTPUT_DIRECTORY_${config} "${LIB_OUTPUT_DIR}")
+    set_property(TARGET RenderGraph PROPERTY LIBRARY_OUTPUT_DIRECTORY_${config} "${EXE_OUTPUT_DIR}/Libs")
+    set_property(TARGET RenderGraph PROPERTY ARCHIVE_OUTPUT_DIRECTORY_${config} "${EXE_OUTPUT_DIR}/Libs")
     set_property(TARGET RenderGraph PROPERTY RUNTIME_OUTPUT_DIRECTORY_${config} "${EXE_OUTPUT_DIR}")
 endforeach()
 

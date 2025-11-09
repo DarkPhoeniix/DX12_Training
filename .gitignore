@@ -6,6 +6,8 @@
 **.vcxproj.filters
 **.vcxproj.user
 /x64
+/out
+/build
 
 vcpkg-manifest-install.log
 

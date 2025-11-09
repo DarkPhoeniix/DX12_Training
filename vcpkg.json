@@ -1,17 +1,17 @@
 {
-  "dependencies": [
-    "directxtex",
-    "directx-headers",
-    {
-      "name": "imgui",
-      "features": [
-        "dx12-binding",
-        "win32-binding"
-      ]
-    },
-    "jsoncpp",
-	  "spdlog",
-    "winpixevent"
-  ],
-  "builtin-baseline": "d504de05dcd7b55df34976be1c824324ec6bca2b"
+    "dependencies": [
+        "directxtex",
+        "directx-headers",
+        {
+            "name": "imgui",
+            "features": [
+                "dx12-binding",
+                "win32-binding"
+            ]
+        },
+        "jsoncpp",
+        "spdlog",
+        "winpixevent"
+    ],
+    "builtin-baseline": "d504de05dcd7b55df34976be1c824324ec6bca2b"
 }

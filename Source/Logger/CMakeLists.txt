@@ -13,8 +13,8 @@ file(GLOB_RECURSE Logger_SOURCES CONFIGURE_DEPENDS
 target_sources(Logger PRIVATE ${Logger_SOURCES})
 
 foreach(config IN ITEMS DEBUG PROFILE RELEASE)
-    set_property(TARGET Logger PROPERTY LIBRARY_OUTPUT_DIRECTORY_${config} "${LIB_OUTPUT_DIR}")
-    set_property(TARGET Logger PROPERTY ARCHIVE_OUTPUT_DIRECTORY_${config} "${LIB_OUTPUT_DIR}")
+    set_property(TARGET Logger PROPERTY LIBRARY_OUTPUT_DIRECTORY_${config} "${EXE_OUTPUT_DIR}/Libs")
+    set_property(TARGET Logger PROPERTY ARCHIVE_OUTPUT_DIRECTORY_${config} "${EXE_OUTPUT_DIR}/Libs")
     set_property(TARGET Logger PROPERTY RUNTIME_OUTPUT_DIRECTORY_${config} "${EXE_OUTPUT_DIR}")
 endforeach()
 
