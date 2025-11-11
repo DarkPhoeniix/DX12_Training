@@ -3,6 +3,18 @@ find_package(directx-headers CONFIG REQUIRED)
 find_package(winpixevent CONFIG REQUIRED)
 find_package(jsoncpp CONFIG REQUIRED)
 
+if(MSVC)
+    add_compile_options(/MP /utf-8)
+    add_compile_definitions(
+        UNICODE
+        _UNICODE
+        NOMINMAX
+        _CRT_SECURE_NO_WARNINGS
+		WIN32_LEAN_AND_MEAN
+		"SOLUTION_DIR=R\"(${CMAKE_SOURCE_DIR})\""
+		"SOLUTION_DIR_W=LR\"(${CMAKE_SOURCE_DIR})\""
+    )
+endif()
 add_library(Renderer STATIC ${Renderer_SOURCES})
 
 file(GLOB_RECURSE Renderer_SOURCES CONFIGURE_DEPENDS
@@ -61,21 +73,11 @@ target_precompile_headers(Renderer PRIVATE "RendererPCH.h")
 include(${CMAKE_SOURCE_DIR}/Scripts/GroupSourcesByFolder.cmake)
 GroupSourcesByFolder(Renderer)
 
-#function(copy_pipeline_desc FILEPATH TARGET_NAME)
-    add_custom_command(TARGET Renderer POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${EXE_OUTPUT_DIR}/PipelineDescriptions/"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/PipelineDescriptions" "${EXE_OUTPUT_DIR}/PipelineDescriptions"
-        COMMENT "Copying ${SOURCE_FILE} to output directory"
-    )
-#endfunction()
-
-#add_custom_target(copy-runtime-files ALL
-#    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/PipelineDescriptions ${EXE_OUTPUT_DIR}/PipelineDescriptions
-#    DEPENDS Renderer)
-
-#foreach(PIPELINE_DESC ${Renderer_PIPELINES})
-#    copy_pipeline_desc(${PIPELINE_DESC} Renderer)
-#endforeach(PIPELINE_DESC)
+add_custom_command(TARGET Renderer POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${EXE_OUTPUT_DIR}/PipelineDescriptions/"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/PipelineDescriptions" "${EXE_OUTPUT_DIR}/PipelineDescriptions"
+    COMMENT "Copying ${SOURCE_FILE} to output directory"
+)
 
 add_custom_command(TARGET Renderer POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory "${EXE_OUTPUT_DIR}/Shaders"

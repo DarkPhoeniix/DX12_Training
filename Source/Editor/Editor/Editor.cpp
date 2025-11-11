@@ -223,10 +223,10 @@ namespace gui
                     _filepath[0] = '\0';
 
                     open.lStructSize = sizeof(OPENFILENAME);
-                    open.lpstrFilter = ".scene\0*.scene\0\0";
+                    open.lpstrFilter = L".scene\0*.scene\0\0";
                     open.nFileOffset = 1;
                     open.nMaxFile = 2048;
-                    open.lpstrTitle = "Desc...";
+                    open.lpstrTitle = L"Desc...";
                     open.lpstrFile = _filepath;
                     open.Flags = OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
 

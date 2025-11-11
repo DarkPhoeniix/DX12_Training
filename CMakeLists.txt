@@ -20,8 +20,12 @@ string(APPEND CMAKE_CXX_FLAGS_DEBUG " /Zi /D_DEBUG")
 string(APPEND CMAKE_CXX_FLAGS_PROFILE " /Zi /DPROFILE")
 
 if(MSVC)
-    add_compile_options(/MP)
+    add_compile_options(/MP /utf-8)
     add_compile_definitions(
+        UNICODE
+        _UNICODE
+        NOMINMAX
+        _CRT_SECURE_NO_WARNINGS
 		WIN32_LEAN_AND_MEAN
 		"SOLUTION_DIR=R\"(${CMAKE_SOURCE_DIR})\""
 		"SOLUTION_DIR_W=LR\"(${CMAKE_SOURCE_DIR})\""
@@ -34,9 +38,9 @@ option(USE_AFTERMATH "Enable Nvidia Aftermath SDK usage for crash tracking (Prof
 # Fetch all dependencies
 include(FetchContent)
 
-set(BIN_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/Bin")
-set(EXE_OUTPUT_DIR "${BIN_OUTPUT_DIR}/$<CONFIG>")
-set(LIB_OUTPUT_DIR "${EXE_OUTPUT_DIR}/Libs")
+set(BIN_OUTPUT_DIR "${BIN_DIR}")
+set(EXE_OUTPUT_DIR "${EXE_DIR}")
+set(LIB_OUTPUT_DIR "${EXE_DIR}/Libs")
 set(EXTERNAL_DIR "${CMAKE_SOURCE_DIR}/External")
 set(FETCHCONTENT_BASE_DIR "${EXTERNAL_DIR}/Source")
 

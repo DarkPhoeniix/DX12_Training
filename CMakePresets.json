@@ -12,6 +12,8 @@
             "architecture": "x64",
             "binaryDir": "${sourceDir}/build/${presetName}",
             "cacheVariables": {
+                "BIN_DIR": "${sourceDir}/Bin",
+                "EXE_DIR":  "${sourceDir}/Bin/${presetName}",
                 "CMAKE_ARCHIVE_OUTPUT_DIRECTORY": "${sourceDir}/Bin/${presetName}/Libs",
                 "CMAKE_LIBRARY_OUTPUT_DIRECTORY": "${sourceDir}/Bin/${presetName}/Libs",
                 "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "${sourceDir}/Bin/${presetName}"

@@ -82,6 +82,6 @@ namespace gui
 
         dx12::DescriptorHeap _descriptorHeap;
 
-        CHAR _filepath[2048];
+        WCHAR _filepath[2048];
     };
 } // namespace gui

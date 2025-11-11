@@ -59,7 +59,7 @@ using namespace core;
 
 namespace
 {
-    constexpr char DEFAULT_SCENE_PATH[] = "Sponza\\Sponza.scene";
+    constexpr char DEFAULT_SCENE_PATH[] = "Assets\\Sponza\\Sponza.scene";
 
     void CheckLightsNum(std::shared_ptr<scene::Entity> node, uint32_t& lightsNum)
     {

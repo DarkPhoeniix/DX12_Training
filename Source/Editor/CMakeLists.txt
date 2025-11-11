@@ -4,6 +4,20 @@ find_package(directx-headers CONFIG REQUIRED)
 find_package(winpixevent CONFIG REQUIRED)
 find_package(jsoncpp CONFIG REQUIRED)
 
+set(CMAKE_AUTORCC ON)
+
+if(MSVC)
+    add_compile_options(/MP /utf-8)
+    add_compile_definitions(
+        UNICODE
+        _UNICODE
+        NOMINMAX
+        _CRT_SECURE_NO_WARNINGS
+		WIN32_LEAN_AND_MEAN
+		"SOLUTION_DIR=R\"(${CMAKE_SOURCE_DIR})\""
+		"SOLUTION_DIR_W=LR\"(${CMAKE_SOURCE_DIR})\""
+    )
+endif()
 add_executable(Editor WIN32 ${Editor_SOURCES})
 
 file(GLOB_RECURSE Editor_SOURCES CONFIGURE_DEPENDS
@@ -11,6 +25,7 @@ file(GLOB_RECURSE Editor_SOURCES CONFIGURE_DEPENDS
     ${CMAKE_CURRENT_SOURCE_DIR}/*.h
     ${CMAKE_CURRENT_SOURCE_DIR}/*.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/*.inl
+    ${CMAKE_CURRENT_SOURCE_DIR}/*.rc
 )
 
 target_sources(Editor PRIVATE ${Editor_SOURCES})
@@ -45,3 +60,9 @@ target_precompile_headers(Editor PRIVATE "EditorPCH.h")
 
 include(${CMAKE_SOURCE_DIR}/Scripts/GroupSourcesByFolder.cmake)
 GroupSourcesByFolder(Editor)
+
+add_custom_command(TARGET Editor POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${EXE_OUTPUT_DIR}/Assets/"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${CMAKE_SOURCE_DIR}/Saved/Assets" "${EXE_OUTPUT_DIR}/Assets"
+    COMMENT "Copying assets to output directory"
+)
