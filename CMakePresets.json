@@ -6,7 +6,7 @@
     },
     "configurePresets": [
         {
-            "name": "Base",
+            "name": "Base-x64",
             "hidden": true,
             "generator": "Visual Studio 17 2022",
             "architecture": "x64",
@@ -20,8 +20,8 @@
             }
         },
         {
-            "name": "Debug",
-            "inherits": "Base",
+            "name": "Debug-x64",
+            "inherits": "Base-x64",
             "displayName": "Debug (x64)",
             "description": "Build with debug information and no optimizations",
             "cacheVariables": {
@@ -30,8 +30,8 @@
             }
         },
         {
-            "name": "Profile",
-            "inherits": "Base",
+            "name": "Profile-x64",
+            "inherits": "Base-x64",
             "displayName": "Profile (x64)",
             "description": "Build with profiling flags enabled",
             "cacheVariables": {
@@ -40,8 +40,8 @@
             }
         },
         {
-            "name": "Release",
-            "inherits": "Base",
+            "name": "Release-x64",
+            "inherits": "Base-x64",
             "displayName": "Release (x64)",
             "description": "Optimized release build",
             "cacheVariables": {
@@ -52,15 +52,15 @@
     "buildPresets": [
         {
             "name": "Debug-x64",
-            "configurePreset": "Debug"
+            "configurePreset": "Debug-x64"
         },
         {
             "name": "Profile-x64",
-            "configurePreset": "Profile"
+            "configurePreset": "Profile-x64"
         },
         {
             "name": "Release-x64",
-            "configurePreset": "Release"
+            "configurePreset": "Release-x64"
         }
     ]
 }
