@@ -11,11 +11,11 @@ on:
       configuration:
         description: 'Build configuration'
         required: true
-        default: 'Release'
+        default: 'Release-x64'
         type: choice
         options:
-          - Release-x64
           - Debug-x64
+          - Release-x64
 
 env:
   # Path to the solution file relative to the root of the project.
@@ -47,8 +47,8 @@ jobs:
 
     - name: Setup CMake
       working-directory: ${{ env.GITHUB_WORKSPACE }}
-      run: cmake --preset=${{ github.event.inputs.configuration }}
+      run: cmake --preset=${{ github.event.inputs.configuration || 'Release-x64' }} -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
 
     - name: Build
       working-directory: ${{ env.GITHUB_WORKSPACE }}
-      run: cmake --build --preset=${{ github.event.inputs.configuration }} -j
+      run: cmake --build --preset=${{ github.event.inputs.configuration || 'Release-x64' }} -j

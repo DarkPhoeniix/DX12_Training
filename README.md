@@ -57,41 +57,40 @@ vcpkg.json              # vcpkg dependencies manifest
 
 ### Building
 
-##### Visual Studio
-
-1. Clone the repository:
-```
-```
-2. Open the CMakeLists.txt in Visual Studio with ```CMake...```
-3. Configure the project with the desired preset (Debug/Profile/Release)
-4. Build the project.
-5. Run *Equinox Engine.exe*
-6. *Optionally*: set a custom scene path as a command line parameter
-
-##### CMake + vcpkg
+#### Visual Studio
 
 1. Clone the repository:
 ```
 git clone https://github.com/DarkPhoeniix/EquinoxEngine.git
 ```
-2. Create a build directory and navigate into it:
+2. Open the CMakeLists.txt in Visual Studio with ```CMake...```
+3. Configure the project with the desired preset (Debug-x64/Profile-x64/Release-x64)
+4. Build the project.
+5. Run the executable from the *Bin* directory:
 ```
-mkdir build
-cd build
+Bin/[preset]/Equinox Engine.exe
 ```
-3. Configure the project with CMake, specifying the vcpkg toolchain file:
+6. *Optionally*: set a custom ```*.scene``` path as a command line parameter
+
+#### CMake + vcpkg
+
+1. Clone the repository:
 ```
-cmake .. -DCMAKE_TOOLCHAIN_FILE=[vcpkg_root]/scripts/buildsystems/vcpkg.cmake -DCMAKE_BUILD_TYPE=Release
+git clone https://github.com/DarkPhoeniix/EquinoxEngine.git
 ```
-4. Build the project:
+2. Configure the project with CMake, specifying the vcpkg toolchain file and preset (Debug-x64/Profile-x64/Release-x64):
 ```
-cmake --build . --config Release
+cmake -DCMAKE_TOOLCHAIN_FILE=[vcpkg_root]/scripts/buildsystems/vcpkg.cmake --preset=[preset]
 ```
-5. Run the executable from the build directory:
+3. Build the project with the desired preset (Debug-x64/Profile-x64/Release-x64):
 ```
-./EquinoxEngine/Equinox Engine.exe
+cmake --build --preset=[preset]
 ```
-6. *Optionally*: set a custom scene path as a command line parameter
+4. Run the executable from the *Bin* directory:
+```
+Bin/[preset]/Equinox Engine.exe
+```
+5. *Optionally*: set a custom ```*.scene``` path as a command line parameter
 
 ## 🧪 Future Enhancements
 
