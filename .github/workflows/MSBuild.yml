@@ -14,15 +14,12 @@ on:
         default: 'Release'
         type: choice
         options:
-          - Release
-          - Debug
+          - Release-x64
+          - Debug-x64
 
 env:
   # Path to the solution file relative to the root of the project.
   SOLUTION_FILE_PATH: .
-
-  # Platform to build.
-  BUILD_PLATFORM: x64
 
 permissions:
   contents: read
@@ -40,9 +37,6 @@ jobs:
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1.0.2
 
-    - name: Get Aftermath SDK
-      run: ./DownloadAftermathSDK.bat
-
     - name: Clone vcpkg
       run: git clone https://github.com/microsoft/vcpkg.git vcpkg
 
@@ -51,6 +45,10 @@ jobs:
         ./vcpkg/bootstrap-vcpkg.bat
         vcpkg integrate install
 
+    - name: Setup CMake
+      working-directory: ${{ env.GITHUB_WORKSPACE }}
+      run: cmake --preset=${{ github.event.inputs.configuration }}
+
     - name: Build
       working-directory: ${{ env.GITHUB_WORKSPACE }}
-      run: msbuild ${{ env.SOLUTION_FILE_PATH }} /m /t:Clean,Rebuild /p:Configuration=${{ github.event.inputs.configuration == '' && github.event.inputs || 'Release' }} /p:Platform=${{ env.BUILD_PLATFORM }} /p:VcpkgEnableManifest=true /verbosity:normal
+      run: cmake --build --preset=${{ github.event.inputs.configuration }} -j
