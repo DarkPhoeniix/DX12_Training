@@ -52,15 +52,18 @@
     "buildPresets": [
         {
             "name": "Debug-x64",
-            "configurePreset": "Debug-x64"
+            "configurePreset": "Debug-x64",
+            "configuration": "Debug"
         },
         {
             "name": "Profile-x64",
-            "configurePreset": "Profile-x64"
+            "configurePreset": "Profile-x64",
+            "configuration": "Profile"
         },
         {
             "name": "Release-x64",
-            "configurePreset": "Release-x64"
+            "configurePreset": "Release-x64",
+            "configuration": "Release"
         }
     ]
 }
