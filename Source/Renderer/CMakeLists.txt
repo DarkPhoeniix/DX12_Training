@@ -33,11 +33,11 @@ file(GLOB_RECURSE Renderer_CS_SHADERS CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_D
 
 if (CMAKE_GENERATOR MATCHES "Visual Studio")
     foreach(ShaderFile ${Renderer_ALL_SRC_SHADERS})
-        foreach(config IN ITEMS Debug Profile Release)
+        foreach(config IN ITEMS Debug RelWithDebInfo Release)
             string(TOUPPER ${config} CONFIG_UPPER)
             set_source_files_properties(${ShaderFile} PROPERTIES
                 VS_SHADER_OBJECT_FILE_NAME_DEBUG
-                "${BIN_OUTPUT_DIR}/Debug/Shaders/${ShaderName}.cso"
+                "${EXE_OUTPUT_DIR}/Shaders/${ShaderName}.cso"
             )
         endforeach()
     endforeach(ShaderFile)
@@ -58,7 +58,7 @@ file(GLOB_RECURSE Renderer_PIPELINES CONFIGURE_DEPENDS
 
 target_sources(Renderer PRIVATE ${Renderer_SOURCES} ${Renderer_ALL_SHADERS} ${Renderer_PIPELINES})
 
-foreach(config IN ITEMS DEBUG PROFILE RELEASE)
+foreach(config IN ITEMS DEBUG RELWITHDEBINFO RELEASE)
     set_property(TARGET Renderer PROPERTY LIBRARY_OUTPUT_DIRECTORY_${config} "${EXE_OUTPUT_DIR}/Libs")
     set_property(TARGET Renderer PROPERTY ARCHIVE_OUTPUT_DIRECTORY_${config} "${EXE_OUTPUT_DIR}/Libs")
     set_property(TARGET Renderer PROPERTY RUNTIME_OUTPUT_DIRECTORY_${config} "${EXE_OUTPUT_DIR}")

@@ -10,7 +10,7 @@ file(GLOB_RECURSE Utility_SOURCES CONFIGURE_DEPENDS
 
 target_sources(Utility PRIVATE ${Utility_SOURCES})
 
-foreach(config IN ITEMS DEBUG PROFILE RELEASE)
+foreach(config IN ITEMS DEBUG RELWITHDEBINFO RELEASE)
     set_property(TARGET Utility PROPERTY LIBRARY_OUTPUT_DIRECTORY_${config} "${EXE_OUTPUT_DIR}/Libs")
     set_property(TARGET Utility PROPERTY ARCHIVE_OUTPUT_DIRECTORY_${config} "${EXE_OUTPUT_DIR}/Libs")
     set_property(TARGET Utility PROPERTY RUNTIME_OUTPUT_DIRECTORY_${config} "${EXE_OUTPUT_DIR}")

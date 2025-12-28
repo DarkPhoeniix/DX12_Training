@@ -6,14 +6,14 @@
     },
     "configurePresets": [
         {
-            "name": "Base-x64",
+            "name": "Base",
             "hidden": true,
             "generator": "Visual Studio 17 2022",
             "architecture": "x64",
             "binaryDir": "${sourceDir}/build/${presetName}",
             "cacheVariables": {
                 "BIN_DIR": "${sourceDir}/Bin",
-                "EXE_DIR":  "${sourceDir}/Bin/${presetName}",
+                "EXE_DIR": "${sourceDir}/Bin/${presetName}",
                 "CMAKE_ARCHIVE_OUTPUT_DIRECTORY": "${sourceDir}/Bin/${presetName}/Libs",
                 "CMAKE_LIBRARY_OUTPUT_DIRECTORY": "${sourceDir}/Bin/${presetName}/Libs",
                 "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "${sourceDir}/Bin/${presetName}"
@@ -21,47 +21,44 @@
         },
         {
             "name": "Debug-x64",
-            "inherits": "Base-x64",
-            "displayName": "Debug (x64)",
+            "inherits": "Base",
+            "displayName": "Debug|x64",
             "description": "Build with debug information and no optimizations",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_CXX_FLAGS_DEBUG": "/D_DEBUG"
             }
         },
         {
             "name": "Profile-x64",
-            "inherits": "Base-x64",
-            "displayName": "Profile (x64)",
+            "inherits": "Base",
+            "displayName": "Profile|x64",
             "description": "Build with profiling flags enabled",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Profile",
                 "CMAKE_CXX_FLAGS_PROFILE": "/DPROFILE"
             }
         },
         {
             "name": "Release-x64",
-            "inherits": "Base-x64",
-            "displayName": "Release (x64)",
+            "inherits": "Base",
+            "displayName": "Release|x64",
             "description": "Optimized release build",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release"
             }
         }
     ],
     "buildPresets": [
         {
-            "name": "Debug-x64",
+            "name": "Debug",
             "configurePreset": "Debug-x64",
             "configuration": "Debug"
         },
         {
-            "name": "Profile-x64",
+            "name": "Profile",
             "configurePreset": "Profile-x64",
-            "configuration": "Profile"
+            "configuration": "RelWithDebInfo"
         },
         {
-            "name": "Release-x64",
+            "name": "Release",
             "configurePreset": "Release-x64",
             "configuration": "Release"
         }

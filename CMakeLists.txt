@@ -4,20 +4,10 @@ cmake_minimum_required(VERSION 3.29)
 SET(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "")
 set(VCPKG_TARGET_TRIPLET "x64-windows")
 
-set(CMAKE_CONFIGURATION_TYPES Debug Profile Release CACHE STRING "" FORCE)
-
-# Define Profile configuration type
-# Copy Release flags as baseline
-set(CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS_RELEASE}" CACHE STRING "" FORCE)
-set(CMAKE_C_FLAGS_PROFILE "${CMAKE_C_FLAGS_RELEASE}" CACHE STRING "" FORCE)
-set(CMAKE_EXE_LINKER_FLAGS_PROFILE "${CMAKE_EXE_LINKER_FLAGS_RELEASE}" CACHE STRING "" FORCE)
-set(CMAKE_SHARED_LINKER_FLAGS_PROFILE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE}" CACHE STRING "" FORCE)
-
-# Add profiling/debug info and PROFILE define
-string(APPEND CMAKE_CXX_FLAGS_DEBUG " /Zi /D_DEBUG")
-
-# Add profiling/debug info and PROFILE define
-string(APPEND CMAKE_CXX_FLAGS_PROFILE " /Zi /DPROFILE")
+set(CMAKE_CONFIGURATION_TYPES
+    "Debug;Release;RelWithDebInfo"
+    CACHE STRING "" FORCE
+)
 
 if(MSVC)
     add_compile_options(/MP /utf-8)
