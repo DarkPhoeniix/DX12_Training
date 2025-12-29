@@ -2,8 +2,9 @@
 
 #include "SceneLoader.h"
 
-#include "CommandList.h"
-#include "ResourceBarrier.h"
+#include "RHI/CommandList.h"
+#include "RHI/Fence.h"
+#include "RHI/ResourceBarrier.h"
 
 #include "Render/Frame/TaskGPU.h"
 

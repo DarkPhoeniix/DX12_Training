@@ -1,11 +1,11 @@
 #pragma once
 
-#include "Fence.h"
-#include "ICommandListCrashContext.h"
+#include "GPUCrashTracker/ICommandListCrashContext.h"
 
 namespace dx12
 {
     class CommandList;
+    class Fence;
 } // namespace dx12
 
 class TaskGPU

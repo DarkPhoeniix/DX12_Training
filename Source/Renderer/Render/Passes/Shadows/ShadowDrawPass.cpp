@@ -139,7 +139,11 @@ namespace render
                 DescriptorHandle depthHandle = context.GetStaticResourceHandle(shadowMap->GetAsDSV());
                 commandList.ClearDSV(depthHandle.CpuHandle, D3D12_CLEAR_FLAG_DEPTH);
 
-                commandList.SetViewport(scene::Viewport(shadowMap->GetResourceDescription().GetSize()));
+                CD3DX12_VIEWPORT viewport(0.0f, 0.0f,
+                    static_cast<float>(shadowMap->GetResourceDescription().GetSize().x),
+                    static_cast<float>(shadowMap->GetResourceDescription().GetSize().y));
+                CD3DX12_RECT scissorRect(0, 0, LONG_MAX, LONG_MAX);
+                commandList.SetViewport(viewport, scissorRect);
                 commandList.SetRenderTargets({ }, &depthHandle.CpuHandle);
 
                 commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -189,7 +193,11 @@ namespace render
                 DescriptorHandle depthHandle = context.GetStaticResourceHandle(shadowMap->GetAsDSV());
                 commandList.ClearDSV(depthHandle.CpuHandle, D3D12_CLEAR_FLAG_DEPTH);
 
-                commandList.SetViewport(scene::Viewport(shadowMap->GetResourceDescription().GetSize()));
+                CD3DX12_VIEWPORT viewport(0.0f, 0.0f,
+                    static_cast<float>(shadowMap->GetResourceDescription().GetSize().x),
+                    static_cast<float>(shadowMap->GetResourceDescription().GetSize().y));
+                CD3DX12_RECT scissorRect(0, 0, LONG_MAX, LONG_MAX);
+                commandList.SetViewport(viewport, scissorRect);
                 commandList.SetRenderTargets({ }, &depthHandle.CpuHandle);
 
                 commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

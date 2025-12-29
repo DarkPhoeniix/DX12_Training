@@ -3,5 +3,5 @@
 
 	"IsGraphicsPipeline": false,
 
-	"CS": "Shaders\\BuildLuminanceHistogram.cso"
+	"CS": "Shaders\\BuildLuminanceHistogram_cs.cso"
 }

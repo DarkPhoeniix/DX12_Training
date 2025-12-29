@@ -1,6 +1,6 @@
 #pragma once
 
-#include "CommandList.h"
+#include "RHI/CommandList.h"
 
 using HeapIndex = std::uint32_t;
 constexpr HeapIndex InvalidHeapIndex = HeapIndex(-1);

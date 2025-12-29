@@ -1,0 +1,66 @@
+{
+    "version": 8,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 29
+    },
+    "configurePresets": [
+        {
+            "name": "Base",
+            "hidden": true,
+            "generator": "Visual Studio 17 2022",
+            "architecture": "x64",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "BIN_DIR": "${sourceDir}/Bin",
+                "EXE_DIR": "${sourceDir}/Bin/${presetName}",
+                "CMAKE_ARCHIVE_OUTPUT_DIRECTORY": "${sourceDir}/Bin/${presetName}/Libs",
+                "CMAKE_LIBRARY_OUTPUT_DIRECTORY": "${sourceDir}/Bin/${presetName}/Libs",
+                "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "${sourceDir}/Bin/${presetName}"
+            }
+        },
+        {
+            "name": "Debug-x64",
+            "inherits": "Base",
+            "displayName": "Debug|x64",
+            "description": "Build with debug information and no optimizations",
+            "cacheVariables": {
+                "CMAKE_CXX_FLAGS_DEBUG": "/D_DEBUG"
+            }
+        },
+        {
+            "name": "Profile-x64",
+            "inherits": "Base",
+            "displayName": "Profile|x64",
+            "description": "Build with profiling flags enabled",
+            "cacheVariables": {
+                "CMAKE_CXX_FLAGS_PROFILE": "/DPROFILE"
+            }
+        },
+        {
+            "name": "Release-x64",
+            "inherits": "Base",
+            "displayName": "Release|x64",
+            "description": "Optimized release build",
+            "cacheVariables": {
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "Debug-x64",
+            "configurePreset": "Debug-x64",
+            "configuration": "Debug"
+        },
+        {
+            "name": "Profile-x64",
+            "configurePreset": "Profile-x64",
+            "configuration": "RelWithDebInfo"
+        },
+        {
+            "name": "Release-x64",
+            "configurePreset": "Release-x64",
+            "configuration": "Release"
+        }
+    ]
+}

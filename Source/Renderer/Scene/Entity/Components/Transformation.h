@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Scene/Entity/Components/IComponent.h"
+#include "Renderer/Scene/Entity/Components/IComponent.h"
 
 namespace scene
 {

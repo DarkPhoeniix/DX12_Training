@@ -41,7 +41,7 @@ namespace render
 
 			context.BindBindlessTable(commandList);
 
-			commandList.SetViewport(_camera->GetViewport());
+			commandList.SetViewport(_camera->GetViewport().GetDXViewport(), _camera->GetViewport().GetScissorRectangle());
 			commandList.SetRenderTarget(&rtv.CpuHandle, &dsv.CpuHandle);
 
 			auto lights = _scene->FilterNodesByComponent("Light");

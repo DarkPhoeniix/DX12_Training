@@ -2,9 +2,9 @@
 
 #include "RenderGraphResourceId.h"
 
-#include "Core/ResourceTable.h"
-#include "Core/TextureManager.h"
-#include "Render/Frame/Frame.h"
+#include "Renderer/Core/ResourceTable.h"
+#include "Renderer/Core/TextureManager.h"
+#include "Renderer/Render/Frame/Frame.h"
 
 namespace rg
 {

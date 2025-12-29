@@ -21,8 +21,8 @@ using namespace Microsoft::WRL;
 #include <directx/d3dx12.h>     // D3D12 extension library
 #include <dxgi1_6.h>            // Microsoft DirectX Graphics Infrastructure
 #include <d3dcompiler.h>        // Contains functions to compile HLSL code at runtime
-#include <DirectXMath.h>        // SIMD-friendly C++ types and functions
-#include <DirectXTex.h>         // SIMD-friendly C++ types and functions
+#include <DirectXTex.h>
+#include <DirectXMath.h>
 
 #include <pix3.h>
 
@@ -42,15 +42,15 @@ using namespace Microsoft::WRL;
 #include <functional>
 #include <map>
 
-#include "Logger.h"
+#include "Logger/Logger.h"
 
 #include "Utility/Defines.h"
 #include "Utility/Helpers.h"
 
-#include "ResourceBarrier.h"
-#include "Resource.h"
-#include "ResourceFactory.h"
-#include "CommandList.h"
-#include "Device.h"
+#include "RHI/ResourceBarrier.h"
+#include "RHI/Resource.h"
+#include "RHI/ResourceFactory.h"
+#include "RHI/CommandList.h"
+#include "RHI/Device.h"
 
 #include "RenderGraph/RenderGraphResourceId.h"

@@ -14,6 +14,8 @@
 
 #include "Resources/resource.h"
 
+#include "Renderer/Window/Win32Window.h"
+
 using namespace core;
 using namespace render;
 
@@ -79,7 +81,7 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp, std::string cmdLine)
 {
     // Initialization
     {
-        _swapChain.Init(*_win32Window);
+        _swapChain.Init(_win32Window->GetWindowHandle(), _win32Window->GetWidth(), _win32Window->GetHeight(), _win32Window->IsVSync());
         _win32Window->SetSwapChain(&_swapChain);
         dx12::Device::BindSwapChain(&_swapChain);
 

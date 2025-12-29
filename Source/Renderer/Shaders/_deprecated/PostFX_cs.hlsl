@@ -13,7 +13,7 @@ float rand(float2 co)
 
 [RootSignature(PostFX_RootSig)]
 [numthreads(2, 2, 1)]
-void CSMain(uint3 DTid : SV_DispatchThreadID)
+void main(uint3 DTid : SV_DispatchThreadID)
 {
     float2 size = float2(1280.0f, 720.0f);
     

@@ -20,10 +20,9 @@ using namespace Microsoft::WRL;
 
 #include "Logger.h"
 
-#include "Utility/Helpers.h"
+#include "Helpers.h"
 #include "ResourceFactory.h"
 #include "Resource.h"
 #include "Device.h"
-#include "Utility/Defines.h"
 
 #endif // RENDER_GRAPH_PCH_H

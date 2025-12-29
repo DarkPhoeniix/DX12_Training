@@ -116,16 +116,16 @@ namespace render
 
 			commandList.ClearDSV(depthHandle.CpuHandle, D3D12_CLEAR_FLAG_DEPTH);
 			float color[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-			commandList.ClearRTV(albedoMetallicHandle.CpuHandle, color, &_camera->GetViewport());
-			commandList.ClearRTV(emissionHandle.CpuHandle, color, &_camera->GetViewport());
+			commandList.ClearRTV(albedoMetallicHandle.CpuHandle, color, &_camera->GetViewport().GetScissorRectangle());
+			commandList.ClearRTV(emissionHandle.CpuHandle, color, &_camera->GetViewport().GetScissorRectangle());
             color[3] = 0.0f;
-			commandList.ClearRTV(normalRoughnessHandle.CpuHandle, color, &_camera->GetViewport());
+			commandList.ClearRTV(normalRoughnessHandle.CpuHandle, color, &_camera->GetViewport().GetScissorRectangle());
 
 			context.BindBindlessTable(commandList);
 
 			commandList.SetPipelineState(_geometryPipeline);
 
-			commandList.SetViewport(_camera->GetViewport());
+			commandList.SetViewport(_camera->GetViewport().GetDXViewport(), _camera->GetViewport().GetScissorRectangle());
 			commandList.SetRenderTargets({ albedoMetallicHandle.CpuHandle, normalRoughnessHandle.CpuHandle, emissionHandle.CpuHandle }, &depthHandle.CpuHandle);
 
 			DebugInfo::StartStatCollecting(commandList);

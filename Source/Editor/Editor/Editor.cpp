@@ -233,9 +233,6 @@ namespace gui
                     WCHAR* ecfas;
                     if (GetOpenFileName(&open))
                     {
-                        std::wstring wstr(_filepath);
-                        std::string spath(wstr.begin(), wstr.end());
-
                         PostMessage(_windowHandle, WM_LOAD_SCENE, NULL, (LPARAM)_filepath);
                     }
                 }

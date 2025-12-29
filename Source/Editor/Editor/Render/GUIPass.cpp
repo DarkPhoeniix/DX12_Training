@@ -38,7 +38,7 @@ namespace render
             DescriptorHandle rtv = context.GetStaticResourceHandle(target->GetAsRTV());
             DescriptorHandle dsv = context.GetStaticResourceHandle(depth->GetAsDSV());
 
-            commandList.SetViewport(*_editor->GetViewport());
+            commandList.SetViewport(_editor->GetViewport()->GetDXViewport(), _editor->GetViewport()->GetScissorRectangle());
             commandList.SetRenderTarget(&rtv.CpuHandle, &dsv.CpuHandle);
 
             _editor->Update();

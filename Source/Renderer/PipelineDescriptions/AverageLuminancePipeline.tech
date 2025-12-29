@@ -3,5 +3,5 @@
 
 	"IsGraphicsPipeline": false,
 
-	"CS": "Shaders\\AverageLuminance.cso"
+	"CS": "Shaders\\AverageLuminance_cs.cso"
 }

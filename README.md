@@ -29,14 +29,17 @@ An experimental real-time renderer built with C++ and DirectX 12 for exploring m
 
 ```bash
 Source/
-├── DX12Lib/            # Abstractions over DirectX 12 API
 ├── Editor/             # Runtime scene editor and UI tools
 ├── GPUCrashTracker/    # Aftermath SDK wrapper to create crash dumps
 ├── Logger/             # Small logging lib with spdlog
+├── Renderer/           # Core rendering logic and systems
 ├── RenderGraph/        # Frame graph implementation for render pass scheduling
-└── Renderer/           # Core rendering logic and systems
+├── RHI/                # Abstractions over DirectX 12 API
+└── Utility/            # Helper functions (math, timers, etc)
 Saved/                  # Test scenes and demo screenshots
-EquinoxEngine.sln       # Visual Studio solution file for building the project
+CMakeLists.txt          # Root CMake build configuration
+CMakePresets.json       # CMake presets for configuring the build
+vcpkg.json              # vcpkg dependencies manifest
 ```
 
 ## ⚙️ Build Instructions
@@ -44,28 +47,55 @@ EquinoxEngine.sln       # Visual Studio solution file for building the project
 ### Prerequisites
 
 - Visual Studio 2022
+    * Desktop development with C++
+    * Game development with C++
+    * Cmake tools for Windows
+    * vcpkg integration
 - Windows 10 SDK
-- Installed vcpkg manager for dependencies
+- DirectX 12 compatible GPU
 - Shader Model 6.6+
 
 ### Building
 
+#### Visual Studio
+
+1. Clone the repository:
 ```
 git clone https://github.com/DarkPhoeniix/EquinoxEngine.git
 ```
-- Run ```DownloadAftermathSDK.bat```
-- Open EquinoxEngine.sln
-- Set Editor as the startup project
-- Build x64 Debug/Release configuration
-- Run *Equinox Engine.exe*
-- *Optionally*: set a custom scene path as a command line parameter
+2. Open the CMakeLists.txt in Visual Studio with ```CMake...```
+3. Configure the project with the desired preset (Debug-x64/Profile-x64/Release-x64)
+4. Build the project.
+5. Run the executable from the *Bin* directory:
+```
+Bin/[preset]/Equinox Engine.exe
+```
+6. *Optionally*: set a custom ```*.scene``` path as a command line parameter
+
+#### CMake + vcpkg
+
+1. Clone the repository:
+```
+git clone https://github.com/DarkPhoeniix/EquinoxEngine.git
+```
+2. Configure the project with CMake, specifying the vcpkg toolchain file and preset (Debug-x64/Profile-x64/Release-x64):
+```
+cmake -DCMAKE_TOOLCHAIN_FILE=[vcpkg_root]/scripts/buildsystems/vcpkg.cmake --preset=[preset]
+```
+3. Build the project with the desired preset (Debug-x64/Profile-x64/Release-x64):
+```
+cmake --build --preset=[preset]
+```
+4. Run the executable from the *Bin* directory:
+```
+Bin/[preset]/Equinox Engine.exe
+```
+5. *Optionally*: set a custom ```*.scene``` path as a command line parameter
 
 ## 🧪 Future Enhancements
 
 - [ ] Frustum culling (possible GPU-side)
+- [ ] Cascaded shadow maps
+- [ ] DoF, Bokeh effect, SSR
 - [ ] Vulkan backend
 - [ ] Ray tracing (DXR) + denoising
-- [ ] Full scene serialization/deserialization
-- [ ] Cascaded shadow maps
-- [ ] Bloom, DoF, Bokeh effect, SSR
-- [ ] One sunny day, I believe, there will be a place for CMake

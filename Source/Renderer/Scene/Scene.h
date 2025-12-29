@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Scene/Entity/Entity.h"
+#include "Renderer/Scene/Entity/Entity.h"
 
 namespace dx12
 {
