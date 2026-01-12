@@ -58,7 +58,8 @@ namespace dx12
         // Begins recording a query for GPU information).
         void BeginQuery(ComPtr<ID3D12QueryHeap> queryHeap, D3D12_QUERY_TYPE type, std::uint32_t index);
         // Resolves query data into a destination buffer.
-        void ResolveQueryData(ComPtr<ID3D12QueryHeap> queryHeap, D3D12_QUERY_TYPE type, std::uint32_t index, Resource& destination, std::uint64_t offset);
+        void ResolveQueryData(ComPtr<ID3D12QueryHeap> queryHeap, D3D12_QUERY_TYPE type, std::uint32_t index, std::shared_ptr<Resource> destination, std::uint64_t offset);
+        void ResolveQueryData(ComPtr<ID3D12QueryHeap> queryHeap, D3D12_QUERY_TYPE type, std::uint32_t index, std::uint32_t numQueries, std::shared_ptr<Resource> destination, std::uint64_t offset);
         // Ends a previously started query.
         void EndQuery(ComPtr<ID3D12QueryHeap> queryHeap, D3D12_QUERY_TYPE type, std::uint32_t index);
 

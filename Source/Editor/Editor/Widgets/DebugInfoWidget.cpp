@@ -2,8 +2,12 @@
 
 #include "DebugInfoWidget.h"
 
-#include "Core/RenderSettings.h"
-#include "Utility/DebugInfo.h"
+#include "Renderer/Core/RenderSettings.h"
+#include "Renderer/Helpers/Profiler.h"
+
+#include "RenderGraph/RenderGraph.h"
+
+#include "Helpers/DebugInfo.h"
 
 namespace gui
 {
@@ -44,15 +48,51 @@ namespace gui
 
         if (ImGui::BeginChild("Debug Info", {0,0}, ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY))
         {
+#if ENABLE_PROFILING
             ImGui::Text("FPS: %i", DebugInfo::GetFPS());
             int id = 0;
             if (ImGui::TreeNode((void*)id++, "Frame Time: %.03f ms", DebugInfo::GetMsPerFrame()))
             {
-                ImGui::Text("Update Time: %.03f ms", DebugInfo::GetUpdateCPUTime());
-                ImGui::Text("Render Time: %.03f ms", DebugInfo::GetRenderCPUTime());
+                if (Profiler* profiler = _editor->GetRenderGraph()->GetGPUProfiler())
+                {
+                    const Profiler::CPUStats& cpuStats = profiler->GetCPUStats();
+                    if (ImGui::TreeNode((void*)id++, "CPU Time: %.03f ms", cpuStats.FrameTimeMs))
+                    {
+                        float totalCPUTime = 0.0f;
+                        for (const auto& timerResult : cpuStats.TimerResults)
+                        {
+                            const std::string& timerName = profiler->GetTimerName(timerResult.ID);
+                            ImGui::Text("%s: %.03f ms", timerName.c_str(), timerResult.TimeMs);
+
+                            totalCPUTime += static_cast<float>(timerResult.TimeMs);
+                        }
+
+                        ImGui::Text(" - Total: %.03f ms", totalCPUTime);
+
+                        ImGui::TreePop();
+                    }
+
+                    const Profiler::GPUStats& gpuStats = profiler->GetGPUStats();
+                    if (ImGui::TreeNode((void*)id++, "GPU Time: %.03f ms", gpuStats.FrameTimeMs))
+                    {
+                        float totalGPUTime = 0.0f;
+                        for (const auto& timerResult : gpuStats.TimerResults)
+                        {
+                            const std::string& timerName = profiler->GetTimerName(timerResult.ID);
+                            ImGui::Text("%s: %.03f ms", timerName.c_str(), timerResult.TimeMs);
+
+                            totalGPUTime += static_cast<float>(timerResult.TimeMs);
+                        }
+
+                        ImGui::Text(" - Total: %.03f ms", totalGPUTime);
+
+                        ImGui::TreePop();
+                    }
+                }
 
                 ImGui::TreePop();
             }
+#endif
         
             if (ImGui::CollapsingHeader("Pipeline statistics"))
             {

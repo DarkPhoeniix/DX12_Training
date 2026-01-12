@@ -11,6 +11,7 @@ namespace rg
         : _frame(nullptr)
         , _resourceTable(nullptr)
         , _textureManager(nullptr)
+        , _gpuProfiler(nullptr)
     {
     }
 
@@ -100,6 +101,16 @@ namespace rg
     DescriptorHandle RenderContext::GetTransientResourceHandle(const dx12::ConstantBufferView& cbv) const
     {
         return _resourceTable->GetTransientResourceHandle(cbv);
+    }
+
+    void RenderContext::SetGPUProfiler(Profiler* gpuProfiler)
+    {
+        _gpuProfiler = gpuProfiler;
+    }
+
+    Profiler* RenderContext::GetGPUProfiler() const
+    {
+        return _gpuProfiler;
     }
 
     RGResourceId RenderContext::CreateResourceVirtual(const std::string& name)

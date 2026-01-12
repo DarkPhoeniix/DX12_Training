@@ -8,6 +8,7 @@
 #include "Renderer/Core/ResourceTable.h"
 #include "Renderer/Core/TextureManager.h"
 #include "Renderer/Scene/Scene.h"
+#include "Renderer/Helpers/Profiler.h"
 
 class Frame;
 class TaskGPU;
@@ -37,7 +38,7 @@ namespace rg
 
         template<typename PassData, typename ...Args> requires std::is_constructible_v<RenderPass<PassData>, Args...>
         void AddPass(Args&& ...args)
-        {
+        {   
             auto pass = std::make_shared<RenderPass<PassData>>(std::forward<Args>(args)...);
             AddPass(pass);
         }
@@ -46,8 +47,16 @@ namespace rg
         void ImportResource(std::shared_ptr<dx12::Resource> resource);
         void ExportResource(const std::string& name, std::shared_ptr<dx12::Resource> desctination);
 
+#if ENABLE_PROFILING
+        void SetGPUProfiler(Profiler* gpuProfiler);
+        Profiler* GetGPUProfiler() const { return _gpuProfiler; }
+#endif
+
     private:
         friend class RenderPassBuilder;
+
+        void BeginFrame();
+        void EndFrame();
 
         void BuildAdjacencyLists();
         void TopologicalSort();
@@ -57,6 +66,14 @@ namespace rg
         std::vector<std::shared_ptr<IRenderPass>> _passes;
         std::vector<std::uint32_t> _sortedPasses;
         std::vector<TaskGPU*> _GPUTasks;
+
+#if ENABLE_PROFILING
+        Profiler* _gpuProfiler;
+
+        TaskGPU* _beginFrameTask;
+        TaskGPU* _endFrameTask;
+        Profiler::TimerID _frameTimerID;
+#endif
 
         bool _transitionedToWorkingState = false;
 

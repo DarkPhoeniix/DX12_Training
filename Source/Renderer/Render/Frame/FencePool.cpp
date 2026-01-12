@@ -5,7 +5,7 @@
 void FencePool::Init()
 {
     // TODO: that sucks
-    fences.resize(64 + 64 + 4); // Direct + Compute + Copy
+    fences.resize(128 + 128 + 4); // Direct + Compute + Copy
 
     for (dx12::Fence& fence : fences)
     {

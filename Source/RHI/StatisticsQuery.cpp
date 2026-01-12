@@ -89,7 +89,7 @@ namespace dx12
 
     void StatisticsQuery::ResolveQueryData(CommandList& commandList)
     {
-        commandList.ResolveQueryData(_statisticsQueryHeap, D3D12_QUERY_TYPE_PIPELINE_STATISTICS, 0, *_statisticsResource, 0);
+        commandList.ResolveQueryData(_statisticsQueryHeap, D3D12_QUERY_TYPE_PIPELINE_STATISTICS, 0, _statisticsResource, 0);
     }
 
     const D3D12_QUERY_DATA_PIPELINE_STATISTICS& StatisticsQuery::GetStatistics()

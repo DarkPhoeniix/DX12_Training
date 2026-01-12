@@ -124,18 +124,25 @@ namespace dx12
         _commandList->BeginQuery(queryHeap.Get(), type, index);
     }
 
-    void CommandList::ResolveQueryData(ComPtr<ID3D12QueryHeap> queryHeap, D3D12_QUERY_TYPE type, std::uint32_t index, Resource& destination, std::uint64_t offset)
+    void CommandList::ResolveQueryData(ComPtr<ID3D12QueryHeap> queryHeap, D3D12_QUERY_TYPE type, std::uint32_t index, std::shared_ptr<Resource> destination, std::uint64_t offset)
     {
         FAIL(_type == CommandListType::Graphics, "Command list type is not Graphics.");
 
-        _commandList->ResolveQueryData(queryHeap.Get(), type, index, 1, destination.GetDXResource().Get(), offset);
+        _commandList->ResolveQueryData(queryHeap.Get(), type, index, 1, destination->GetDXResource().Get(), offset);
+    }
+
+    void CommandList::ResolveQueryData(ComPtr<ID3D12QueryHeap> queryHeap, D3D12_QUERY_TYPE type, std::uint32_t index, std::uint32_t numQueries, std::shared_ptr<Resource> destination, std::uint64_t offset)
+    {
+        FAIL(_type == CommandListType::Graphics, "Command list type is not Graphics.");
+
+        _commandList->ResolveQueryData(queryHeap.Get(), type, index, numQueries, destination->GetDXResource().Get(), offset);
     }
 
     void CommandList::EndQuery(ComPtr<ID3D12QueryHeap> queryHeap, D3D12_QUERY_TYPE type, std::uint32_t index)
     {
-        FAIL(_type == CommandListType::Graphics, "Command list type is not Graphics.");
-        FAIL(queryHeap, "Query heap is null.");
-
+        //FAIL(_type == CommandListType::Graphics, "Command list type is not Graphics.");
+        //FAIL(queryHeap, "Query heap is null.");
+        //
         _commandList->EndQuery(queryHeap.Get(), type, index);
     }
 

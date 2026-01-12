@@ -16,6 +16,7 @@ namespace rg
         , _refCount(0)
         , _type(type)
         , _name(name)
+        , _gpuTimerID(Profiler::InvalidTimerID)
     {
     }
 
@@ -74,16 +75,25 @@ namespace rg
         }
 
         dx12::CommandList& commandList = *task.GetCommandLists().front();
+
         if (!barriers.empty())
         {
             commandList.TransitionBarriers(barriers);
         }
 
+#if ENABLE_PROFILING
+        context.GetGPUProfiler()->BeginEvent(commandList, _gpuTimerID);
+#endif
         commandList.Close();
     }
 
     void IRenderPass::PostExecute(RenderContext& context, TaskGPU& task)
     {
+        dx12::CommandList& commandList = *task.GetCommandLists().front();
+#if ENABLE_PROFILING
+        context.GetGPUProfiler()->EndEvent(commandList, _gpuTimerID);
+#endif
+        commandList.Close();
     }
 
     RenderPassType IRenderPass::GetType() const
