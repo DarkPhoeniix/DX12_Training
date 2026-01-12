@@ -20,15 +20,7 @@ public:
         double TimeMs = 0.0;
     };
 
-    struct CPUStats
-    {
-        std::uint64_t FrameID = std::uint64_t(-1);
-        float FrameTimeMs = 0.0f;
-
-        std::vector<TimerResult> TimerResults = {};
-    };
-
-    struct GPUStats
+    struct Stats
     {
         std::uint64_t FrameID = std::uint64_t(-1);
         float FrameTimeMs = 0.0f;
@@ -47,8 +39,8 @@ public:
 
     void ResolveTimestamps(dx12::CommandList& commandList);
 
-    const CPUStats& GetCPUStats() const;
-    const GPUStats& GetGPUStats() const;
+    const Stats& GetCPUStats() const;
+    const Stats& GetGPUStats() const;
 
     const std::string& GetTimerName(TimerID id) const;
 
@@ -61,12 +53,12 @@ private:
     std::vector<TimerInfo> _timers;
 
     // CPU statistics
-    CPUStats _cpuStats;
+    Stats _cpuStats;
 
     std::vector<Timer> _cpuTimers;
 
     // GPU statistics
-    GPUStats _gpuStats;
+    Stats _gpuStats;
 
     dx12::TimestampQuery _timestampQuery;
     std::shared_ptr<dx12::Resource> _timestampResultBuffer;

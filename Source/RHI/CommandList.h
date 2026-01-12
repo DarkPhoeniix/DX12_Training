@@ -59,12 +59,14 @@ namespace dx12
         void BeginQuery(ComPtr<ID3D12QueryHeap> queryHeap, D3D12_QUERY_TYPE type, std::uint32_t index);
         // Resolves query data into a destination buffer.
         void ResolveQueryData(ComPtr<ID3D12QueryHeap> queryHeap, D3D12_QUERY_TYPE type, std::uint32_t index, std::shared_ptr<Resource> destination, std::uint64_t offset);
+        // Resolves multiple query data into a destination buffer.
         void ResolveQueryData(ComPtr<ID3D12QueryHeap> queryHeap, D3D12_QUERY_TYPE type, std::uint32_t index, std::uint32_t numQueries, std::shared_ptr<Resource> destination, std::uint64_t offset);
         // Ends a previously started query.
         void EndQuery(ComPtr<ID3D12QueryHeap> queryHeap, D3D12_QUERY_TYPE type, std::uint32_t index);
 
         // Sets a resource transition barrier (to change resource states between pipeline stages).
         void TransitionBarrier(const ResourceBarrier& barrier);
+        // Sets multiple resource barriers at once (to change resource states between pipeline stages).
         void TransitionBarriers(const std::vector<ResourceBarrier>& barrier);
         // Sets a resource transition barrier (to change resource states between pipeline stages).
         // Before state is a current resource state
@@ -76,6 +78,7 @@ namespace dx12
 
         // Copies a resource from a source to a destination.
         void CopyResource(Resource& sourceResource, Resource& destinationResource);
+        // Copies a region of a buffer from a source to a destination.
         void CopyBufferRegion(Resource& sourceResource, Resource& destinationResource, uint32_t numBytes, uint32_t sourceOffset = 0, uint32_t destinationOffset = 0);
 
         // Sets the primitive topology for the Input Assembly stage (e.g., points, lines, triangles).

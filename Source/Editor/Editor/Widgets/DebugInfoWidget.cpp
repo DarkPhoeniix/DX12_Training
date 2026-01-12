@@ -55,7 +55,7 @@ namespace gui
             {
                 if (Profiler* profiler = _editor->GetRenderGraph()->GetGPUProfiler())
                 {
-                    const Profiler::CPUStats& cpuStats = profiler->GetCPUStats();
+                    const Profiler::Stats& cpuStats = profiler->GetCPUStats();
                     if (ImGui::TreeNode((void*)id++, "CPU Time: %.03f ms", cpuStats.FrameTimeMs))
                     {
                         float totalCPUTime = 0.0f;
@@ -72,7 +72,7 @@ namespace gui
                         ImGui::TreePop();
                     }
 
-                    const Profiler::GPUStats& gpuStats = profiler->GetGPUStats();
+                    const Profiler::Stats& gpuStats = profiler->GetGPUStats();
                     if (ImGui::TreeNode((void*)id++, "GPU Time: %.03f ms", gpuStats.FrameTimeMs))
                     {
                         float totalGPUTime = 0.0f;

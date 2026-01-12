@@ -42,8 +42,8 @@ void Profiler::EndEvent(dx12::CommandList& commandList, TimerID id)
 Profiler::TimerID Profiler::RegisterTimer(const std::string& name)
 {
 #if _DEBUG
-    //auto timerIt = std::find(_timers.begin(), _timers.end(), [&](const Profiler::TimerInfo& info) { return info.name == name; });
-    //ASSERT(timerIt == _timers.end(), "Profiler: Timer with name \'{}\' is already registered.", name);
+    auto timerIt = std::find(_timers.begin(), _timers.end(), [&](const Profiler::TimerInfo& info) { return info.name == name; });
+    ASSERT(timerIt == _timers.end(), "Profiler: Timer with name \'{}\' is already registered.", name);
 #endif
 
     Profiler::TimerID id = static_cast<Profiler::TimerID>(_timers.size());
@@ -93,12 +93,12 @@ void Profiler::ResolveTimestamps(dx12::CommandList& commandList)
     }
 }
 
-const Profiler::CPUStats& Profiler::GetCPUStats() const
+const Profiler::Stats& Profiler::GetCPUStats() const
 {
     return _cpuStats;
 }
 
-const Profiler::GPUStats& Profiler::GetGPUStats() const
+const Profiler::Stats& Profiler::GetGPUStats() const
 {
     return _gpuStats;
 }

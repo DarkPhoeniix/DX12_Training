@@ -140,9 +140,9 @@ namespace dx12
 
     void CommandList::EndQuery(ComPtr<ID3D12QueryHeap> queryHeap, D3D12_QUERY_TYPE type, std::uint32_t index)
     {
-        //FAIL(_type == CommandListType::Graphics, "Command list type is not Graphics.");
-        //FAIL(queryHeap, "Query heap is null.");
-        //
+        FAIL(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Command list type is not Graphics.");
+        FAIL(queryHeap, "Query heap is null.");
+        
         _commandList->EndQuery(queryHeap.Get(), type, index);
     }
 
