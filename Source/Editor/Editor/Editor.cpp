@@ -179,6 +179,11 @@ namespace gui
         _renderGraph = renderGraph;
     }
 
+    rg::RenderGraph* Editor::GetRenderGraph() const
+    { 
+        return _renderGraph;
+    }
+
     void Editor::AddGUIRenderPass()
     {
         _renderGraph->AddPass(std::make_shared<render::GUIPass>(GetPtr()));

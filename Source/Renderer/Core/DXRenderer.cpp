@@ -21,7 +21,7 @@
 #include "Scene/Entity/Components/Material.h"
 #include "Scene/Entity/Components/Mesh.h"
 #include "Scene/Entity/Entity.h"
-#include "Utility/DebugInfo.h"
+#include "Helpers/DebugInfo.h"
 
 #include "Render/Helpers/GPUStructs.h"
 
@@ -53,6 +53,8 @@
 #include "Render/Passes/SkyboxPass.h"
 #include "Render/Passes/PresentPass.h"
 #include "Render/Helpers/DrawHelpers.h"
+
+#include "RenderGraph/RenderPassBuilder.h"
 
 using namespace DirectX;
 using namespace core;
@@ -158,6 +160,7 @@ namespace render
         , _isCameraMoving(false)
         , _deltaTime(0.0f)
         , _scene(std::make_shared<scene::Scene>())
+        , _gpuProfiler()
     {
         DescriptorHeapManager::Create(2048, 128, 4096, 1024);
         ResourceTable::Create();
@@ -166,6 +169,10 @@ namespace render
 
 		_renderGraph.Init(ResourceTable::Get(), TextureManager::Get());
 		_sceneLoader.Init(ResourceTable::Get(), TextureManager::Get());
+
+#if ENABLE_PROFILING
+        _renderGraph.SetGPUProfiler(&_gpuProfiler);
+#endif
     }
 
     DXRenderer::~DXRenderer()
@@ -290,9 +297,9 @@ namespace render
         _currentFrame->WaitCPU();
         _currentFrame->ResetGPU();
 
-        UpdateSceneBuffers();
-
         DebugInfo::BeginRender(renderEvent);
+
+        UpdateSceneBuffers();
 
         if (_isMinimized)
         {
@@ -758,6 +765,8 @@ namespace render
 
     void DXRenderer::SetupRenderPipeline()
     {
+        _gpuProfiler.UnregisterAllTimers();
+
         // Render Graph setup5
         {
             _renderGraph.Reset();

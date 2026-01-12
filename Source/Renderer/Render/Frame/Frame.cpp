@@ -59,7 +59,7 @@ void Frame::Init(const DirectX::XMUINT2& size)
     }
 
     // TODO: refactor this
-    _tasks.reserve(128);
+    _tasks.reserve(256);
 }
 
 TaskGPU* Frame::CreateTask(D3D12_COMMAND_LIST_TYPE type, dx12::PipelineState* rootSignature)

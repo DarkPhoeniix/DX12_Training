@@ -44,7 +44,7 @@ using namespace Microsoft::WRL;
 
 #include "Logger/Logger.h"
 
-#include "Utility/Defines.h"
+#include "Helpers/Defines.h"
 #include "Utility/Helpers.h"
 
 #include "RHI/ResourceBarrier.h"

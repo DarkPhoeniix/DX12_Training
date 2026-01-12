@@ -5,6 +5,7 @@
 #include "Renderer/Core/ResourceTable.h"
 #include "Renderer/Core/TextureManager.h"
 #include "Renderer/Render/Frame/Frame.h"
+#include "Renderer/Helpers/Profiler.h"
 
 namespace rg
 {
@@ -38,6 +39,9 @@ namespace rg
         DescriptorHandle GetTransientResourceHandle(const dx12::ShaderResourceView& srv) const;
         DescriptorHandle GetTransientResourceHandle(const dx12::UnorderedAccessView& uav) const;
         DescriptorHandle GetTransientResourceHandle(const dx12::ConstantBufferView& cbv) const;
+
+        void SetGPUProfiler(Profiler* gpuProfiler);
+        Profiler* GetGPUProfiler() const;
 
     private:
         friend class RenderGraph;
@@ -79,5 +83,7 @@ namespace rg
 
         ResourceTable* _resourceTable;
 		TextureManager* _textureManager;
+
+        Profiler* _gpuProfiler;
     };
 } // namespace rg
