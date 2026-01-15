@@ -40,6 +40,7 @@ namespace gui
         void Destroy();
 
         void SetRenderGraph(rg::RenderGraph* renderGraph);
+        rg::RenderGraph* GetRenderGraph() const;
         void AddGUIRenderPass();
 
         void NewFrame();

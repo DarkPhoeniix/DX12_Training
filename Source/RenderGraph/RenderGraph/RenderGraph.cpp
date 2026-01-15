@@ -11,6 +11,7 @@
 namespace
 {
     static constexpr std::uint32_t RENDER_THREADS_NUM = 4;
+    static constexpr std::uint32_t TASKS_PER_PASS = 3;
 }
 
 namespace rg
@@ -22,6 +23,9 @@ namespace rg
         , _workerManager(std::make_unique<mt::PassWorkerManager>(RENDER_THREADS_NUM))
 #else
         , _workerManager(nullptr)
+#endif
+#if ENABLE_PROFILING
+        , _gpuProfiler(nullptr)
 #endif
     {
     }
@@ -39,6 +43,13 @@ namespace rg
 
     void RenderGraph::Reset()
     {
+#if ENABLE_PROFILING
+        if (_gpuProfiler)
+        {
+            _frameTimerID = _gpuProfiler->RegisterTimer("Frame");
+        }
+#endif
+
         _context._mapNameToId.clear();
         _context._mapIdToResource.clear();
 
@@ -60,14 +71,10 @@ namespace rg
 
     void RenderGraph::Execute()
     {
-        if (!_transitionedToWorkingState)
-        {
-            TransitionResourcesToWorkingState();
-            _transitionedToWorkingState = true;
-        }
+        BeginFrame();
 
         _GPUTasks.clear();
-        _GPUTasks.resize(_passes.size() * 2, nullptr);
+        _GPUTasks.resize(_passes.size() * TASKS_PER_PASS, nullptr);
 
         for (std::uint32_t passIndex : _sortedPasses)
         {
@@ -91,46 +98,47 @@ namespace rg
             }
             executionTask->SetName(std::format("{} - Execute task", pass->_name));
 
+            TaskGPU* postExecutionTask = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT);
+            postExecutionTask->SetName(std::format("{} - PostExecute task", pass->_name));
+
             if (executionTask)
             {
                 executionTask->SetName(pass->_name);
 
 #ifdef RG_MULTITHREADED
-                _workerManager->Submit({ pass.get(), &_context, preExecutionTask, executionTask, executionTask });
+                _workerManager->Submit({ pass.get(), &_context, preExecutionTask, executionTask, postExecutionTask });
 #else
                 pass->PreExecute(_context, *preExecutionTask);
                 pass->Execute(_context, *executionTask);
-                pass->PostExecute(_context, *executionTask);
+                pass->PostExecute(_context, *postExecutionTask);
 #endif
             }
 
-            _GPUTasks[passIndex * 2] = preExecutionTask;
-            _GPUTasks[passIndex * 2 + 1] = executionTask;
+            _GPUTasks[passIndex * TASKS_PER_PASS] = preExecutionTask;
+            _GPUTasks[passIndex * TASKS_PER_PASS + 1] = executionTask;
+            _GPUTasks[passIndex * TASKS_PER_PASS + 2] = postExecutionTask;
         }
 
 #ifdef RG_MULTITHREADED
         _workerManager->Wait();
 #endif
 
-        for (std::uint32_t passIndex : _sortedPasses)
-        {
-            TaskGPU* currentPreTask = _GPUTasks[passIndex * 2];
-            TaskGPU* currentTask = _GPUTasks[passIndex * 2 + 1];
-
-            for (std::uint32_t adjacentPassIndex : _adjacencyLists[passIndex])
-            {
-                TaskGPU* dependentTask = _GPUTasks[adjacentPassIndex * 2];
-                dependentTask->AddDependency(currentTask->GetName());
-            }
-
-            currentTask->AddDependency(currentPreTask->GetName());
-        }
+        EndFrame();
     }
 
     void RenderGraph::AddPass(std::shared_ptr<IRenderPass> pass)
     {
         ASSERT(pass, "Trying to add a null render pass to the render graph.");
         _passes.push_back(pass);
+
+#if ENABLE_PROFILING
+        Profiler::TimerID timerID = Profiler::InvalidTimerID;
+        if (_gpuProfiler)
+        {
+            timerID = _gpuProfiler->RegisterTimer(pass->_name);
+        }
+        pass->_gpuTimerID = timerID;
+#endif
 
         RenderPassBuilder builder(*this, pass.get());
         _passes.back()->Setup(builder);
@@ -178,6 +186,81 @@ namespace rg
                 commandList.Close();
             }, 
             RenderPassType::Copy);
+    }
+
+#if ENABLE_PROFILING
+    void RenderGraph::SetGPUProfiler(Profiler* gpuProfiler)
+    {
+        _gpuProfiler = gpuProfiler;
+        _context.SetGPUProfiler(gpuProfiler);
+    }
+#endif
+
+    void RenderGraph::BeginFrame()
+    {
+#if ENABLE_PROFILING
+        if (_gpuProfiler)
+        {
+            _beginFrameTask = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT);
+            _beginFrameTask->SetName("Begin Frame Task");
+            dx12::CommandList& commandList = _beginFrameTask->GetCommandList();
+
+            _gpuProfiler->BeginEvent(commandList, _frameTimerID);
+
+            commandList.Close();
+        }
+#endif
+
+        if (!_transitionedToWorkingState)
+        {
+            TransitionResourcesToWorkingState();
+            _transitionedToWorkingState = true;
+        }
+    }
+
+    void RenderGraph::EndFrame()
+    {
+#if ENABLE_PROFILING
+        if (_gpuProfiler)
+        {
+            _endFrameTask = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT);
+            _endFrameTask->SetName("End Frame Task");
+            dx12::CommandList& commandList = _endFrameTask->GetCommandList();
+
+            _gpuProfiler->EndEvent(commandList, _frameTimerID);
+            _gpuProfiler->ResolveTimestamps(commandList);
+
+            commandList.Close();
+        }
+#endif
+
+        for (std::uint32_t passIndex : _sortedPasses)
+        {
+            TaskGPU* currentPreTask = _GPUTasks[passIndex * TASKS_PER_PASS];
+            TaskGPU* currentTask = _GPUTasks[passIndex * TASKS_PER_PASS + 1];
+            TaskGPU* currentPostTask = _GPUTasks[passIndex * TASKS_PER_PASS + 2];
+
+            for (std::uint32_t adjacentPassIndex : _adjacencyLists[passIndex])
+            {
+                TaskGPU* dependentTask = _GPUTasks[adjacentPassIndex * TASKS_PER_PASS];
+                dependentTask->AddDependency(currentTask->GetName());
+            }
+
+            currentTask->AddDependency(currentPreTask->GetName());
+            currentPostTask->AddDependency(currentTask->GetName());
+        }
+
+#if ENABLE_PROFILING
+        if (_gpuProfiler)
+        {
+            TaskGPU* firstTask = _GPUTasks[_sortedPasses.front() * TASKS_PER_PASS];
+            TaskGPU* preLastTask = _GPUTasks[(_sortedPasses.back() - 1) * TASKS_PER_PASS + 2];
+            TaskGPU* lastTask = _GPUTasks[_sortedPasses.back() * TASKS_PER_PASS];
+
+            firstTask->AddDependency(_beginFrameTask->GetName());
+            _endFrameTask->AddDependency(lastTask->GetName());
+        }
+#endif
     }
 
     void RenderGraph::BuildAdjacencyLists()

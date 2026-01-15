@@ -3,6 +3,7 @@
 #include "RenderGraphResourceId.h"
 
 #include "Renderer/Render/Frame/TaskGPU.h"
+#include "Renderer/Helpers/Profiler.h"
 
 #include <functional>
 
@@ -55,6 +56,8 @@ namespace rg
         std::unordered_map<RGResourceId, dx12::ResourceState> _resourceStateMap;
 
         std::uint32_t _refCount;
+
+        Profiler::TimerID _gpuTimerID;
     };
 
     template<typename PassData>

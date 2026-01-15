@@ -9,7 +9,7 @@
 #include "Input/InputDevice.h"
 
 #include "Core/DXRenderer.h"
-#include "Utility/DebugInfo.h"
+#include "Helpers/DebugInfo.h"
 #include "Window/Win32Window.h"
 
 #include "Resources/resource.h"

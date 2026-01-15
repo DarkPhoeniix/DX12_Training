@@ -3,7 +3,7 @@
 #include "GeometryPass.h"
 
 #include "Scene/Entity/Components/Mesh.h"
-#include "Utility/DebugInfo.h"
+#include "Helpers/DebugInfo.h"
 
 #include "RenderGraph/RenderContext.h"
 #include "RenderGraph/RenderPassBuilder.h"

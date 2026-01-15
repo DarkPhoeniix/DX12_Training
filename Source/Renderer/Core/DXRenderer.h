@@ -2,12 +2,13 @@
 
 #include "Core/DescriptorHeapManager.h"
 #include "Core/ResourceTable.h"
+#include "Core/TextureManager.h"
 
 #include "Render/Frame/Frame.h"
 #include "Scene/Entity/Components/Camera.h"
 #include "Scene/Scene.h"
 #include "Scene/SceneLoader.h"
-#include "Core/TextureManager.h"
+#include "Helpers/Profiler.h"
 #include "Window/IWindowEventListener.h"
 
 #include "RenderGraph/RenderGraph.h"
@@ -56,6 +57,9 @@ namespace render
         HWND _windowHandle;
 
         Frame* _currentFrame;
+
+        Profiler _gpuProfiler;
+        Profiler::TimerID _frameTimeTimerID;
 
         rg::RenderGraph _renderGraph;
 

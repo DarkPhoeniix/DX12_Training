@@ -70,6 +70,10 @@ target_compile_options(Renderer PRIVATE /MP)
 target_link_libraries(Renderer PRIVATE Microsoft::DirectX-Headers Microsoft::WinPixEventRuntime JsonCpp::JsonCpp RenderGraph RHI Logger Utility)
 target_precompile_headers(Renderer PRIVATE "RendererPCH.h")
 
+if (ENABLE_PROFILING)
+    target_compile_definitions(Renderer PUBLIC ENABLE_PROFILING)
+endif()
+
 include(${CMAKE_SOURCE_DIR}/Scripts/GroupSourcesByFolder.cmake)
 GroupSourcesByFolder(Renderer)
 
