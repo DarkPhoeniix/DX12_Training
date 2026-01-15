@@ -83,19 +83,29 @@ add_custom_command(TARGET Renderer POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory "${EXE_OUTPUT_DIR}/Shaders"
 )
 
+set(SHADER_DEBUG_INFO FALSE)
+set(SHADER_DEBUG_INFO $<$<config:Debug,RelWithDebInfo>:TRUE>)
+
+if (MSVC)
+    set_property(SOURCE ${Renderer_CS_SHADERS} PROPERTY VS_SETTINGS "ExcludedFromBuild=true")
+    set_property(SOURCE ${Renderer_VS_SHADERS} PROPERTY VS_SETTINGS "ExcludedFromBuild=true")
+    set_property(SOURCE ${Renderer_GS_SHADERS} PROPERTY VS_SETTINGS "ExcludedFromBuild=true")
+    set_property(SOURCE ${Renderer_PS_SHADERS} PROPERTY VS_SETTINGS "ExcludedFromBuild=true")
+endif()
+
 include(${CMAKE_SOURCE_DIR}/Scripts/CompileShaderDxc.cmake)
 foreach(ShaderFile ${Renderer_VS_SHADERS})
-    CompileShader("${EXE_OUTPUT_DIR}/Shaders" "${ShaderFile}" "vs" "O3")
+    CompileShader("${EXE_OUTPUT_DIR}/Shaders" "${ShaderFile}" "vs" "O3" SHADER_DEBUG_INFO)
 endforeach()
 
 foreach(ShaderFile ${Renderer_GS_SHADERS})
-    CompileShader("${EXE_OUTPUT_DIR}/Shaders" "${ShaderFile}" "gs" "O3")
+    CompileShader("${EXE_OUTPUT_DIR}/Shaders" "${ShaderFile}" "gs" "O3" SHADER_DEBUG_INFO)
 endforeach()
 
 foreach(ShaderFile ${Renderer_PS_SHADERS})
-    CompileShader("${EXE_OUTPUT_DIR}/Shaders" "${ShaderFile}" "ps" "O3")
+    CompileShader("${EXE_OUTPUT_DIR}/Shaders" "${ShaderFile}" "ps" "O3" SHADER_DEBUG_INFO)
 endforeach()
 
 foreach(ShaderFile ${Renderer_CS_SHADERS})
-    CompileShader("${EXE_OUTPUT_DIR}/Shaders" "${ShaderFile}" "cs" "O3")
+    CompileShader("${EXE_OUTPUT_DIR}/Shaders" "${ShaderFile}" "cs" "O3" SHADER_DEBUG_INFO)
 endforeach()
