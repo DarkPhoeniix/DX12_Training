@@ -88,18 +88,7 @@ namespace gui
     {
         IWidget::Update();
 
-        std::shared_ptr<scene::Entity> activeCamera = _editor->GetScene()->FindNodeByComponentName("Camera");
-        std::shared_ptr<scene::Camera> cameraComponent = activeCamera->GetComponentAs<scene::Camera>("Camera");
-        scene::Viewport viewport = cameraComponent->GetViewport();
-
-        DirectX::XMUINT2 viewportSize = viewport.GetSize();
-
-        float positionX = (float)(viewportSize.x - (viewportSize.x * 0.2f));
-        float positionY = 0.0f;
-        float sizeX = (float)(viewportSize.x * 0.2f);
-        float sizeY = (float)(viewportSize.y);
-
-        ImGui::BeginChild("Entity Components", { 0.0f, sizeY * 0.6f }, ImGuiChildFlags_FrameStyle);
+        ImGui::BeginChild("Entity Components", { 0.0f, 0.0f }, ImGuiChildFlags_FrameStyle);
 
         std::shared_ptr<scene::Entity> entity = _editor->GetSelectedEntity();
         if (!entity)

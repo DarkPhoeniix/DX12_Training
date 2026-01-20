@@ -259,7 +259,7 @@ namespace gui
         ImGui::End();
 
         ImGui::SetNextWindowPos({ positionX, menuSize.y });
-        ImGui::SetNextWindowSize({ sizeX, sizeY });
+        ImGui::SetNextWindowSize({ sizeX, sizeY - menuSize.y });
 
         if (ImGui::Begin("Scene", nullptr, ImGuiWindowFlags_NoMove))
         {

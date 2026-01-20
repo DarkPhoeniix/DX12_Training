@@ -26,18 +26,7 @@ namespace gui
     {
         IWidget::Update();
 
-        std::shared_ptr<scene::Entity> activeCamera = _editor->GetScene()->FindNodeByComponentName("Camera");
-        std::shared_ptr<scene::Camera> cameraComponent = activeCamera->GetComponentAs<scene::Camera>("Camera");
-        scene::Viewport viewport = cameraComponent->GetViewport();
-
-        DirectX::XMUINT2 viewportSize = viewport.GetSize();
-
-        float positionX = (float)(viewportSize.x - (viewportSize.x * 0.2f));
-        float positionY = 0.0f;
-        float sizeX = (float)(viewportSize.x * 0.2f);
-        float sizeY = (float)(viewportSize.y);
-
-        ImGui::BeginChild("Scene Tree", {0, sizeY * 0.4f}, ImGuiChildFlags_FrameStyle);
+        ImGui::BeginChild("Scene Tree", {0, ImGui::GetWindowHeight() * 0.4f}, ImGuiChildFlags_FrameStyle);
         ImGui::SeparatorText("Scene Hierarchy");
         for (const auto& root : _editor->GetScene()->GetRootNodes())
         {
