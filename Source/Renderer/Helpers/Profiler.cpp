@@ -42,7 +42,7 @@ void Profiler::EndEvent(dx12::CommandList& commandList, TimerID id)
 Profiler::TimerID Profiler::RegisterTimer(const std::string& name)
 {
 #if _DEBUG
-    auto timerIt = std::find(_timers.begin(), _timers.end(), [&](const Profiler::TimerInfo& info) { return info.name == name; });
+    auto timerIt = std::find_if(_timers.begin(), _timers.end(), [&](const Profiler::TimerInfo& info) { return info.name == name; });
     ASSERT(timerIt == _timers.end(), "Profiler: Timer with name \'{}\' is already registered.", name);
 #endif
 
