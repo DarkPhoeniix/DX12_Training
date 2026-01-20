@@ -8,9 +8,9 @@ function(CompileShader output_directory shader_path shader_type optimization_lev
         COMMAND dxc.exe 
                 /E main 
                 /T ${shader_type}_6_6 
-                -${optimization_level} 
+                /${optimization_level} 
                 /Fo ${output_directory}/${shader_name}.cso ${shader_path}
-                $<$<BOOL:${debug_info}>:/Zi>
+                $<$<BOOL:${debug_info}>:/Zi> $<$<BOOL:${debug_info}>:/Qembed_debug>
         VERBATIM
     )
 endfunction()
