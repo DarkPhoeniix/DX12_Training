@@ -104,9 +104,11 @@ namespace gui
                 ImGui::Text("PS invocations: %i", stats.PSInvocations);
             }
         
-            if (ImGui::CollapsingHeader("Custom render passes"))
+            if (ImGui::CollapsingHeader("Render settings"))
             {
                 bool pendingUpdate = false;
+
+                ImGui::Checkbox("Enable CPU frustum culling", &RenderSettings::EnableCPUFrustumCulling());
 
                 if (ImGui::Checkbox("Use IBL", &RenderSettings::UseIBL()))
                 {
