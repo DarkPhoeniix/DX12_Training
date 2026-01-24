@@ -21,5 +21,9 @@ endforeach()
 target_include_directories(Logger PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(Logger PRIVATE spdlog::spdlog)
 
+if (MSVC)
+    target_compile_definitions(Logger PRIVATE MSVC_LOG)
+endif()
+
 include(${CMAKE_SOURCE_DIR}/Scripts/GroupSourcesByFolder.cmake)
 GroupSourcesByFolder(Logger)

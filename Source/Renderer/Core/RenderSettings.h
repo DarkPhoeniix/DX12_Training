@@ -55,6 +55,8 @@ public:
     RenderSettings(const RenderSettings&) = delete;
     RenderSettings& operator+(const RenderSettings&) = delete;
 
+    static bool& EnableCPUFrustumCulling();
+
     static bool& UseIBL();
     static bool& RenderDebugVolumes();
     static bool& RenderDebugArmature();
@@ -73,6 +75,8 @@ private:
     ~RenderSettings() = default;
 
     static RenderSettings& Instance();
+
+    bool _enableCPUFrustumCulling;
 
     bool _useIBL;
     bool _renderDebugVolumes;

@@ -75,15 +75,11 @@ namespace scene
         planes[5] = XMPlaneNormalize(planes[5]);
     }
 
-    bool Intersect(const FrustumVolume& frustum, const AABBVolume& aabb, const DirectX::XMMATRIX& globalTransform)
+    bool Intersect(const FrustumVolume& frustum, const AABBVolume& aabb)
     {
-        AABBVolume transformedAABB = aabb;
-        transformedAABB.Min = DirectX::XMVector4Transform(aabb.Min, globalTransform);
-        transformedAABB.Max = DirectX::XMVector4Transform(aabb.Max, globalTransform);
-
         for (const XMVECTOR& plane : frustum.planes)
         {
-            if (!IntersectWithPlane(plane, transformedAABB))
+            if (!IntersectWithPlane(plane, aabb))
             {
                 return false;
             }

@@ -2,6 +2,11 @@
 
 #include "RenderSettings.h"
 
+bool& RenderSettings::EnableCPUFrustumCulling()
+{
+    return Instance()._enableCPUFrustumCulling;
+}
+
 bool& RenderSettings::UseIBL()
 {
     return Instance()._useIBL;
@@ -58,7 +63,8 @@ RenderSettings::DebugViewParameters& RenderSettings::DebugView()
 }
 
 RenderSettings::RenderSettings()
-    : _useIBL(true)
+    : _enableCPUFrustumCulling(true)
+    , _useIBL(true)
     , _renderDebugVolumes(false)
     , _renderDebugArmature(false)
     , _useFXAA(true)

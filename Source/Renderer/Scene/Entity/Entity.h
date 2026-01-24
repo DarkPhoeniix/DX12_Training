@@ -8,6 +8,9 @@ namespace scene
     class Entity
     {
     public:
+        using InstanceID = std::uint32_t;
+        constexpr static InstanceID InvalidInstanceID = static_cast<InstanceID>(-1);
+
         explicit Entity(Entity* parent = nullptr);
 
         const std::vector<std::shared_ptr<IComponent>>& GetComponents() const;
@@ -24,6 +27,9 @@ namespace scene
         std::vector<std::shared_ptr<Entity>>& GetChildrenNodes();
         void AddChild(std::shared_ptr<Entity> child);
 
+        void SetInstanceID(InstanceID id);
+        InstanceID GetInstanceID() const;
+
         void SetName(const std::string& name);
         const std::string& GetName() const;
 
@@ -34,6 +40,7 @@ namespace scene
         std::vector<std::shared_ptr<Entity>> _children;
         Entity* _parent;
 
+        InstanceID _instanceID;
         std::string _name;
     };
 

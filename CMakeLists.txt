@@ -23,8 +23,12 @@ if(MSVC)
 endif()
 
 option(USE_DX12 "Enable DirectX12 backend" ON)  # TODO: it doesn't work for now, fix it when implement Vulkan backend
-option(ENABLE_PROFILING "Enable profiling features" ON)
 option(USE_AFTERMATH "Enable Nvidia Aftermath SDK usage for crash tracking (Profile only)" ON)
+
+set(ENABLE_PROFILING 
+    $<$<config:Debug,RelWithDebInfo>:TRUE>
+    $<$<config:Release>:FALSE>
+)
 
 # Fetch all dependencies
 include(FetchContent)
