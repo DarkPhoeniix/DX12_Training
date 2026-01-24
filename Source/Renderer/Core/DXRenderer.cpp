@@ -523,6 +523,8 @@ namespace render
             std::shared_ptr<scene::Animation> animationComponent = entity->GetComponentAs<scene::Animation>("Animation");
             std::shared_ptr<scene::Armature> armatureComponent = entity->GetComponentAs<scene::Armature>("Armature");
 
+            entity->SetInstanceID(static_cast<scene::Entity::InstanceID>(index));
+
             std::uint32_t bonesBufferIndex = -1;
 
             if (armatureComponent && animationComponent)

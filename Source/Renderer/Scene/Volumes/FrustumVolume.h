@@ -11,7 +11,7 @@ namespace scene
     public:
         void BuildFromProjMatrix(const DirectX::XMMATRIX projectionMatrix);
 
-        friend bool Intersect(const FrustumVolume& frustum, const AABBVolume& aabb, const DirectX::XMMATRIX& globalTransform);
+        friend bool Intersect(const FrustumVolume& frustum, const AABBVolume& aabb);
 
         DirectX::XMVECTOR planes[6];
     };

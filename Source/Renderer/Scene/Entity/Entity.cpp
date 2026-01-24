@@ -6,6 +6,7 @@ namespace scene
 {
     Entity::Entity(Entity* parent)
         : _parent(parent)
+        , _instanceID(InvalidInstanceID)
     {
     }
 
@@ -60,6 +61,16 @@ namespace scene
     void Entity::AddChild(std::shared_ptr<Entity> child)
     {
         _children.push_back(child);
+    }
+
+    void Entity::SetInstanceID(Entity::InstanceID id)
+    {
+        _instanceID = id;
+    }
+
+    Entity::InstanceID Entity::GetInstanceID() const
+    {
+        return _instanceID;
     }
 
     void Entity::SetName(const std::string& name)
