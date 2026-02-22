@@ -47,7 +47,7 @@ PSOutput main(PSinput IN)
     if (Model.AlbedoTextureIndex != -1)
     {
         Texture2D AlbedoTexture = ResourceDescriptorHeap[Model.AlbedoTextureIndex];
-        color = AlbedoTexture.Sample(LinearWrapSampler, uv).rgba;
+        color = AlbedoTexture.Sample(AnisotropicWrapSampler, uv).rgba;
     }
     else
     {
@@ -58,7 +58,7 @@ PSOutput main(PSinput IN)
     if (Model.EmissionTextureIndex != -1)
     {
         Texture2D EmissionTexture = ResourceDescriptorHeap[Model.EmissionTextureIndex];
-        emission = EmissionTexture.Sample(LinearWrapSampler, uv).rgb * EmissionTexture.Sample(LinearWrapSampler, uv).a * Model.EmissiveIntensity;
+        emission = EmissionTexture.Sample(AnisotropicWrapSampler, uv).rgb * EmissionTexture.Sample(LinearWrapSampler, uv).a * Model.EmissiveIntensity;
     }
     else
     {
@@ -68,7 +68,7 @@ PSOutput main(PSinput IN)
     if (Model.NormalTextureIndex != -1)
     {
         Texture2D NormalTexture = ResourceDescriptorHeap[Model.NormalTextureIndex];
-        normalMap = NormalTexture.Sample(PointWrapSampler, uv).rgb;
+        normalMap = NormalTexture.Sample(LinearWrapSampler, uv).rgb;
     }
     else
     {
@@ -78,7 +78,7 @@ PSOutput main(PSinput IN)
     if (Model.MetallicTextureIndex != -1)
     {
         Texture2D MetallicTexture = ResourceDescriptorHeap[Model.MetallicTextureIndex];
-        metallic = MetallicTexture.Sample(PointWrapSampler, uv).x;
+        metallic = MetallicTexture.Sample(LinearWrapSampler, uv).x;
     }
     else
     {
@@ -88,7 +88,7 @@ PSOutput main(PSinput IN)
     if (Model.RoughnessTextureIndex != -1)
     {
         Texture2D RoughnessTexture = ResourceDescriptorHeap[Model.RoughnessTextureIndex];
-        roughness = RoughnessTexture.Sample(PointWrapSampler, uv).x;
+        roughness = RoughnessTexture.Sample(LinearWrapSampler, uv).x;
     }
     else
     {

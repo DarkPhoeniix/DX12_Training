@@ -8,9 +8,9 @@ constexpr HeapIndex InvalidHeapIndex = HeapIndex(-1);
 // A handle into the bindless descriptor heap, containing both CPU and GPU views.
 struct DescriptorHandle
 {
-    HeapIndex Index;
-    D3D12_CPU_DESCRIPTOR_HANDLE CpuHandle;
-    D3D12_GPU_DESCRIPTOR_HANDLE GpuHandle;
+    HeapIndex Index = InvalidHeapIndex;
+    D3D12_CPU_DESCRIPTOR_HANDLE CpuHandle = {};
+    D3D12_GPU_DESCRIPTOR_HANDLE GpuHandle = {};
 };
 
 enum class DescriptorHeapType

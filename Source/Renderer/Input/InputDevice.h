@@ -28,6 +28,7 @@ namespace core
             void _CreateKeyboardDevice();
             void _CreateMouseDevice();
 
+            void _NotifyKeyDown(DIKeyCode keyCode);
             void _NotifyKeyPressed(DIKeyCode keyCode);
             void _NotifyKeyReleased(DIKeyCode keyCode);
 

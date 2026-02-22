@@ -22,6 +22,7 @@ namespace core
         public:
             virtual void OnUpdate([[maybe_unused]] UpdateEvent& e) {}
             virtual void OnRender([[maybe_unused]] RenderEvent& e) {}
+            virtual void OnKeyDown([[maybe_unused]] KeyEvent& e) {}
             virtual void OnKeyPressed([[maybe_unused]] KeyEvent& e) {}
             virtual void OnKeyReleased([[maybe_unused]] KeyEvent& e) {}
             virtual void OnMouseMoved([[maybe_unused]] MouseMoveEvent& e) {}

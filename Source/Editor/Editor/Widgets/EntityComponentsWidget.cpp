@@ -188,7 +188,7 @@ namespace gui
             {
                 camera->Update();
             }
-            if (ImGui::DragFloat("Speed", &camera->Speed, 1.0f, 1.0f, 1000.0f))
+            if (ImGui::DragFloat("Speed", &camera->Speed, 0.01f, 0.01f, 100.0f))
             {
                 camera->Update();
             }

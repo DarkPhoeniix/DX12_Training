@@ -98,7 +98,8 @@ namespace
         {
             XMMATRIX view;
 
-            XMVECTOR lightDir = XMVector3Normalize(light->Direction);
+            XMVECTOR lightDir = XMVectorSet(0.0f, -1.0f, 0.0f, 0.0f);
+            lightDir = XMVector3TransformNormal(lightDir, transform->Transform);
             XMVECTOR lightPos = transform->Transform.r[3];
             XMVECTOR lightTar = lightPos + lightDir * light->Range;
 
@@ -158,6 +159,7 @@ namespace render
         , _contentLoaded(false)
         , _isMinimized(false)
         , _isCameraMoving(false)
+        , _enableAbsoluteMovement(false)
         , _deltaTime(0.0f)
         , _scene(std::make_shared<scene::Scene>())
         , _gpuProfiler()
@@ -220,7 +222,22 @@ namespace render
             uint32_t windowWidth = windowSize.right - windowSize.left;
             uint32_t windowHeight = windowSize.bottom - windowSize.top;
 
-            std::shared_ptr<scene::Entity> camera = _scene->FilterNodesByComponent("Camera").front();
+            std::shared_ptr<scene::Entity> camera = _scene->FindNodeByComponentName("Camera");
+            if (!camera)
+            {
+                camera = std::make_shared<scene::Entity>();
+                camera->SetName("Default camera");
+
+                std::shared_ptr<scene::Transformation> transform = std::make_shared<scene::Transformation>();
+                std::shared_ptr<scene::Camera> cameraComponent = std::make_shared<scene::Camera>();
+                cameraComponent->LookAt(XMVectorSet(5.0f, 1.0f, 0.0f, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
+                cameraComponent->SetLens(60.0f, 0.1f, 1000.0f);
+                cameraComponent->Speed = 1.0f;
+
+                camera->AddComponent(transform);
+                camera->AddComponent(cameraComponent);
+                _scene->AddRootNode(camera);
+            }
             _cameraComponent = camera->GetComponentAs<scene::Camera>("Camera");
             _cameraComponent->SetViewport(scene::Viewport({ windowWidth, windowHeight }));
 
@@ -312,33 +329,63 @@ namespace render
         DebugInfo::EndRender();
     }
 
-    void DXRenderer::OnKeyPressed(events::KeyEvent& e)
+    void DXRenderer::OnKeyDown(events::KeyEvent& e)
     {
-        XMVECTOR dir = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
+        XMVECTOR cameraMovement = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
+
+        XMVECTOR front = _cameraComponent->Look();
+        XMVECTOR right = _cameraComponent->Right();
+        XMVECTOR up = _cameraComponent->Up();
+
+        if (_enableAbsoluteMovement)
+        {
+            front = XMVectorSet(-1.0f, 0.0f, 0.0f, 0.0f);
+            right = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
+            up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+        }
+
         if (e.keyCode == DIKeyCode::DIK_W)
         {
-            dir += _cameraComponent->Look() * _deltaTime;
+            cameraMovement += front * _deltaTime;
         }
         if (e.keyCode == DIKeyCode::DIK_S)
         {
-            dir -= _cameraComponent->Look() * _deltaTime;
+            cameraMovement -= front * _deltaTime;
         }
         if (e.keyCode == DIKeyCode::DIK_D)
         {
-            dir += _cameraComponent->Right() * _deltaTime;
+            cameraMovement += right * _deltaTime;
         }
         if (e.keyCode == DIKeyCode::DIK_A)
         {
-            dir -= _cameraComponent->Right() * _deltaTime;
+            cameraMovement -= right * _deltaTime;
         }
-        _cameraComponent->Update(dir);
+        if (e.keyCode == DIKeyCode::DIK_SPACE)
+        {
+            cameraMovement += up * _deltaTime;
+        }
+        if (e.keyCode == DIKeyCode::DIK_LSHIFT)
+        {
+            cameraMovement -= up * _deltaTime;
+        }
+        _cameraComponent->Update(cameraMovement);
+    }
 
+    void DXRenderer::OnKeyPressed(events::KeyEvent& e)
+    {
         switch (e.keyCode)
         {
         case DIKeyCode::DIK_ESCAPE:
             ::SendMessage(_windowHandle, WM_DESTROY, 0, 0);
             break;
+        case DIKeyCode::DIK_F1:
+            _enableAbsoluteMovement = !_enableAbsoluteMovement;
+            break;
         }
+    }
+
+    void DXRenderer::OnKeyReleased(events::KeyEvent& e)
+    {
     }
 
     void DXRenderer::OnMouseMoved(events::MouseMoveEvent& e)
@@ -492,9 +539,12 @@ namespace render
                 view *= proj;
             }
 
+            XMVECTOR direction = XMVectorSet(0.0f, -1.0f, 0.0f, 0.0f);
+            direction = XMVector3TransformNormal(direction, transformComponent->Transform);
+
             lights[lightIndex] =
             {
-                .Direction = DirectX::XMVector3Normalize(lightComponent->Direction),
+                .Direction = DirectX::XMVector3Normalize(direction),
                 .Position = transformComponent->Transform.r[3],
                 .Color = lightComponent->Color,
 
@@ -769,15 +819,28 @@ namespace render
     {
         _gpuProfiler.UnregisterAllTimers();
 
-        // Render Graph setup5
+        // Render Graph setup
         {
             _renderGraph.Reset();
 
             _renderGraph.SetFrame(*_currentFrame);
 
-            _renderGraph.ImportResource(_diffuseIrradianceMap);
-            _renderGraph.ImportResource(_brdfLUT);
-            _renderGraph.ImportResource(_preFilteredEnvironmentMap);
+            // Import IBL textures to render graph
+
+            if (_diffuseIrradianceMap)
+            {
+                _renderGraph.ImportResource(_diffuseIrradianceMap);
+            }
+            if (_preFilteredEnvironmentMap)
+            {
+                _renderGraph.ImportResource(_preFilteredEnvironmentMap);
+            }
+            if (_brdfLUT)
+            {
+                _renderGraph.ImportResource(_brdfLUT);
+            }
+
+            // Add passes to render graph
 
             _renderGraph.AddPass(std::make_shared<GeometryPass>(_scene, _cameraComponent.get()));
             _renderGraph.AddPass(std::make_shared<ShadowCullPass>(_scene, _cameraComponent.get()));
@@ -790,7 +853,10 @@ namespace render
                 _renderGraph.AddPass(std::make_shared<SSAOApplyPass>(_scene, _cameraComponent.get()));
             }
             _renderGraph.AddPass(std::make_shared<LightingPass>(_scene, _cameraComponent.get()));
-            _renderGraph.AddPass(std::make_shared<SkyboxPass>(_scene, _cameraComponent.get()));
+            if (_scene->FindNodeByComponentName("Skybox"))
+            {
+                _renderGraph.AddPass(std::make_shared<SkyboxPass>(_scene, _cameraComponent.get()));
+            }
             if (RenderSettings::UseBloom())
             {
                 _renderGraph.AddPass(std::make_shared<BloomDownsamplePass>(_scene, _cameraComponent.get()));

@@ -33,8 +33,9 @@ namespace render
         // Inherited via IWindowEventListener
         void OnUpdate(core::events::UpdateEvent& e) override;
         void OnRender(core::events::RenderEvent& e) override;
+        void OnKeyDown(core::events::KeyEvent& e) override;
         void OnKeyPressed(core::events::KeyEvent& e) override;
-        void OnKeyReleased(core::events::KeyEvent& e) override {}
+        void OnKeyReleased(core::events::KeyEvent& e) override;
         void OnMouseMoved(core::events::MouseMoveEvent& e) override;
         void OnMouseButtonPressed(core::events::MouseButtonEvent& e) override;
         void OnMouseButtonReleased(core::events::MouseButtonEvent& e) override;
@@ -74,6 +75,8 @@ namespace render
 
         bool _isMinimized;
         bool _isCameraMoving;
+        bool _enableAbsoluteMovement;
+        bool _enableAbsoluteMovementPrevState;
         float _deltaTime;
 
         bool _contentLoaded;

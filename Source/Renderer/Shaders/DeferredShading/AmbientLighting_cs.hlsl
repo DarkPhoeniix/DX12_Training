@@ -76,7 +76,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
         // combine
         float3 ambient = (diffuseIBL + specularIBL);
 #else
-        float3 ambient = surface.Albedo.rgb * 0.1f;
+        float3 ambient = surface.Albedo.rgb * 0.01f;
 #endif
         surface.FinalColor += float4(ambient, 0.0f);
     }

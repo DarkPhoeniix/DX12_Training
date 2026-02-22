@@ -59,5 +59,25 @@
         "addressU = TEXTURE_ADDRESS_CLAMP," \
         "addressV = TEXTURE_ADDRESS_CLAMP," \
         "addressW = TEXTURE_ADDRESS_CLAMP," \
+        "filter = FILTER_ANISOTROPIC)," \
+    "StaticSampler(s9," \
+        "addressU = TEXTURE_ADDRESS_WRAP," \
+        "addressV = TEXTURE_ADDRESS_WRAP," \
+        "addressW = TEXTURE_ADDRESS_WRAP," \
+        "filter = FILTER_ANISOTROPIC)," \
+    "StaticSampler(s10," \
+        "addressU = TEXTURE_ADDRESS_MIRROR," \
+        "addressV = TEXTURE_ADDRESS_MIRROR," \
+        "addressW = TEXTURE_ADDRESS_MIRROR," \
+        "filter = FILTER_ANISOTROPIC)," \
+    "StaticSampler(s11," \
+        "addressU = TEXTURE_ADDRESS_BORDER," \
+        "addressV = TEXTURE_ADDRESS_BORDER," \
+        "addressW = TEXTURE_ADDRESS_BORDER," \
+        "filter = FILTER_ANISOTROPIC)," \
+    "StaticSampler(s12," \
+        "addressU = TEXTURE_ADDRESS_CLAMP," \
+        "addressV = TEXTURE_ADDRESS_CLAMP," \
+        "addressW = TEXTURE_ADDRESS_CLAMP," \
         "filter = FILTER_COMPARISON_MIN_MAG_MIP_LINEAR," \
         "comparisonFunc = COMPARISON_LESS)"

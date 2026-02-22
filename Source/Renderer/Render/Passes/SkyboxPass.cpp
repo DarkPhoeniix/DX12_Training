@@ -39,10 +39,10 @@ namespace render
 		dx12::CommandList& commandList = *task.GetCommandLists().front();
 		commandList.SetName("skybox_pass_cmd_list");
 
+		if (std::shared_ptr<scene::Entity> entity = _scene->FindNodeByComponentName("Skybox"))
 		{
             PIXScopedEvent(commandList.GetDXCommandList().Get(), 2, "Skybox Pass");
 
-			std::shared_ptr<scene::Entity> entity = _scene->FindNodeByComponentName("Skybox");
 			std::shared_ptr<scene::Skybox> skyboxComponent = entity->GetComponentAs<scene::Skybox>("Skybox");
 
 			std::shared_ptr<dx12::Resource> skybox = context.GetTextureManager().GetTexture(skyboxComponent->SkydomeTextureHandle);

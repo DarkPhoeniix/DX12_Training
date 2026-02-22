@@ -27,8 +27,10 @@ namespace render
 		: RenderPass<AmbientLightingPassData>("ambient_lighting_pass", rg::RenderPassType::Compute)
 		, _scene(scene)
 		, _camera(camera)
+        , _useIBL(RenderSettings::UseIBL())
 	{
-		if (RenderSettings::UseIBL())
+        bool hasSkybox = _scene->FindNodeByComponentName("Skybox") != nullptr;
+		if (_useIBL && hasSkybox)
 		{
 			_ambientLightingPipeline.Parse("PipelineDescriptions\\AmbientLightingIBLPipeline.tech");
 		}
@@ -48,13 +50,13 @@ namespace render
 		}
         builder.DeclareTexture("hdr_target", targetDesc);
 
-        _data.HDRTarget = builder.WriteTexture("hdr_target");
-        _data.AlbedoMetallic = builder.ReadTexture("albedo_metallic_target");
-        _data.NormalRoughness = builder.ReadTexture("normal_roughness_target");
-        _data.Depth = builder.DepthStencilRead("depth_target");
-        _data.DiffuseIrradianceMap = builder.ReadTexture("diffuse_irradiance_map");
-        _data.PreFilteredMap = builder.ReadTexture("prefiltered_environment_map");
-        _data.BRDF_LUT = builder.ReadTexture("brdf_lut");
+        _data.HDRTarget				= builder.WriteTexture("hdr_target");
+        _data.AlbedoMetallic		= builder.ReadTexture("albedo_metallic_target");
+        _data.NormalRoughness		= builder.ReadTexture("normal_roughness_target");
+        _data.Depth					= builder.DepthStencilRead("depth_target");
+        _data.DiffuseIrradianceMap	= _useIBL ? builder.ReadTexture("diffuse_irradiance_map")		: rg::RGResourceId::InvalidID;
+        _data.PreFilteredMap		= _useIBL ? builder.ReadTexture("prefiltered_environment_map")	: rg::RGResourceId::InvalidID;
+        _data.BRDF_LUT				= _useIBL ? builder.ReadTexture("brdf_lut")						: rg::RGResourceId::InvalidID;
 	}
 
 	void AmbientLightingPass::Execute(rg::RenderContext& context, TaskGPU& task)
@@ -73,13 +75,25 @@ namespace render
 			std::shared_ptr<dx12::Resource> preFilteredEnv = context.GetResource(_data.PreFilteredMap);
 			std::shared_ptr<dx12::Resource> brdfLUT = context.GetResource(_data.BRDF_LUT);
 
-			DescriptorHandle hdrTargetHandle = context.GetStaticResourceHandle(hdrTarget->GetAsUAV());
-			DescriptorHandle albedoMetallicHandle = context.GetStaticResourceHandle(albedoMetallic->GetAsSRV());
-			DescriptorHandle normalSpecularHandle = context.GetStaticResourceHandle(normalRoughness->GetAsSRV());
-			DescriptorHandle depthHandle = context.GetStaticResourceHandle(depth->GetAsSRV());
-			DescriptorHandle diffuseIrradianceMapHandle = context.GetStaticResourceHandle(diffuseIrradianceMap->GetAsSRV());
-			DescriptorHandle preFilteredEnvHandle = context.GetStaticResourceHandle(preFilteredEnv->GetAsSRV());
-			DescriptorHandle brdfLUTHandle = context.GetStaticResourceHandle(brdfLUT->GetAsSRV());
+			DescriptorHandle hdrTargetHandle			= context.GetStaticResourceHandle(hdrTarget->GetAsUAV());
+			DescriptorHandle albedoMetallicHandle		= context.GetStaticResourceHandle(albedoMetallic->GetAsSRV());
+			DescriptorHandle normalSpecularHandle		= context.GetStaticResourceHandle(normalRoughness->GetAsSRV());
+			DescriptorHandle depthHandle				= context.GetStaticResourceHandle(depth->GetAsSRV());
+			DescriptorHandle diffuseIrradianceMapHandle = {};
+			if (diffuseIrradianceMap)
+			{
+				diffuseIrradianceMapHandle = context.GetStaticResourceHandle(diffuseIrradianceMap->GetAsSRV());
+			}
+			DescriptorHandle preFilteredEnvHandle = {};
+			if (preFilteredEnv)
+			{
+				preFilteredEnvHandle = context.GetStaticResourceHandle(preFilteredEnv->GetAsSRV());
+			}
+			DescriptorHandle brdfLUTHandle = {};
+			if (brdfLUT)
+			{
+				brdfLUTHandle = context.GetStaticResourceHandle(brdfLUT->GetAsSRV());
+			}
 
 			context.BindBindlessTable(commandList);
 			commandList.SetPipelineState(_ambientLightingPipeline);

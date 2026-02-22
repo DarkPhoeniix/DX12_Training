@@ -32,6 +32,7 @@ namespace render
 
 	private:
 		dx12::PipelineState _ambientLightingPipeline;
+        bool _useIBL;
 
 		std::shared_ptr<scene::Scene> _scene;
 		scene::Camera* _camera;

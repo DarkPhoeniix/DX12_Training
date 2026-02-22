@@ -18,18 +18,24 @@ namespace core
                 HRESULT result = _keyboardDevice->GetDeviceState(sizeof(_currentKeyboardState), _currentKeyboardState);
                 CHECK(result, "Failed to get keyboard device state.");
 
+                bool keyDown = false;
                 bool keyPressed = false;
                 bool keyReleased = false;
                 for (int i = 0; i < 256; ++i)
                 {
-                    keyPressed = _currentKeyboardState[i] || (_prevKeyboardState[i] != _currentKeyboardState[i]);
-                    keyReleased = !_currentKeyboardState[i] && (_prevKeyboardState[i] != _currentKeyboardState[i]);
+                    keyDown = _currentKeyboardState[i];
+                    keyPressed = keyDown && (_prevKeyboardState[i] != _currentKeyboardState[i]);
+                    keyReleased = !keyDown && (_prevKeyboardState[i] != _currentKeyboardState[i]);
 
+                    if (keyDown)
+                    {
+                        _NotifyKeyDown((DIKeyCode)i);
+                    }
                     if (keyPressed)
                     {
                         _NotifyKeyPressed((DIKeyCode)i);
                     }
-                    else if (keyReleased)
+                    if (keyReleased)
                     {
                         _NotifyKeyReleased((DIKeyCode)i);
                     }
@@ -134,6 +140,15 @@ namespace core
             _mouseDevice->SetDataFormat(&c_dfDIMouse);
             _mouseDevice->SetCooperativeLevel(NULL, DISCL_FOREGROUND | DISCL_EXCLUSIVE);
             _mouseDevice->Acquire();
+        }
+
+        void InputDevice::_NotifyKeyDown(DIKeyCode keyCode)
+        {
+            KeyEvent keyEvent(keyCode);
+            for (IWindowEventListener* listener : _inputListeners)
+            {
+                listener->OnKeyDown(keyEvent);
+            }
         }
 
         void InputDevice::_NotifyKeyPressed(DIKeyCode keyCode)

@@ -59,4 +59,9 @@ SamplerState LinearWrapSampler              : register(s5);
 SamplerState LinearMirrorSampler            : register(s6);
 SamplerState LinearBorderSampler            : register(s7);
 
-SamplerComparisonState ShadowClampSampler   : register(s8);
+SamplerState AnisotropicClampSampler        : register(s8);
+SamplerState AnisotropicWrapSampler         : register(s9);
+SamplerState AnisotropicMirrorSampler       : register(s10);
+SamplerState AnisotropicBorderSampler       : register(s11);
+
+SamplerComparisonState ShadowClampSampler   : register(s12);
