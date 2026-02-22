@@ -1,0 +1,12 @@
+{
+    "Name": "ChineseDragon",
+    "Nodes": [
+        "Floor.node",
+        "dragon.node",
+        "Wall.003.node",
+        "Cube.node",
+        "Wall.001.node",
+        "Wall.002.node",
+        "Spot.node"
+    ]
+}

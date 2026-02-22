@@ -1,0 +1,11 @@
+{
+    "AlbedoTexture": "hexagonal_concrete_diffuse.dds",
+    "RoughnessTexture": "hexagonal_concrete_roughness.dds",
+    "NormalTexture": "hexagonal_concrete_normal_map.dds",
+    "Albedo": "0.800000011920929 0.800000011920929 0.800000011920929 1.0",
+    "Metallic": 0.0,
+    "Roughness": 0.5,
+    "EmissionColor": "1.0 1.0 1.0 1.0",
+    "EmissionIntensity": 0.0,
+    "BlendMode": "OPAQUE"
+}
