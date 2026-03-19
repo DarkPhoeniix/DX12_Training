@@ -25,6 +25,12 @@ An experimental real-time renderer built with C++ and DirectX 12 for exploring m
 - Scene tree with entity-component system (ECS)
 - Screen space ambient occlusion (SSAO)
 
+## 🌌 Screenshots
+
+| ![](Saved/Screenshots/v2025.09.png) | ![](Saved/Screenshots/Demo_Sponza.png) |
+| --- | --- |
+| ![](Saved/Screenshots/v2026.02.png) | ![](Saved/Screenshots/Demo_shadows.png) |
+
 ## 📂 Project Structure
 
 ```bash
@@ -49,7 +55,7 @@ vcpkg.json              # vcpkg dependencies manifest
 - Visual Studio 2022
     * Desktop development with C++
     * Game development with C++
-    * Cmake tools for Windows
+    * CMake tools for Windows
     * vcpkg integration
 - Windows 10 SDK
 - DirectX 12 compatible GPU
@@ -94,7 +100,6 @@ Bin/[preset]/Equinox Engine.exe
 
 ## 🧪 Future Enhancements
 
-- [ ] Frustum culling (possible GPU-side)
 - [ ] Cascaded shadow maps
 - [ ] DoF, Bokeh effect, SSR
 - [ ] Vulkan backend
