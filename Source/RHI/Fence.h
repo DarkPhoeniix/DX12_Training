@@ -1,56 +1,28 @@
 #pragma once
 
-namespace dx12
+namespace rhi
 {
-    // Wrapper for an ID3D12Fence object to synchronize the CPU and GPU.
     class Fence
     {
     public:
-        Fence();
-        // Copy constructor.
-        Fence(const Fence& other);
-        // Move constructor.
-        Fence(Fence&& other) noexcept;
-        // Destructor.
-        ~Fence();
+        Fence() = default;
+        Fence(const Fence&) = delete;
+        Fence(Fence&&) noexcept = default;
+        virtual ~Fence() = default;
 
-        // Copy assignment operator.
-        Fence& operator=(const Fence& other);
-        // Move assignment operator.
-        Fence& operator=(Fence&& other) noexcept;
+        Fence& operator=(const Fence&) = delete;
+        Fence& operator=(Fence&&) noexcept = default;
 
-        // Initializes the fence and marks it as free.
-        void Init();
+        virtual void Wait() = 0;
 
-        // Waits until the fence reaches the current value.
-        void Wait();
+        virtual void SetValue(std::uint64_t value) = 0;
+        virtual std::uint64_t GetValue() const = 0;
 
-        // Set the fence value.
-        void SetValue(UINT64 fenceValue);
-        // Get the current fence value.
-        UINT64 GetValue() const;
+        virtual void SetFree(bool isFree) = 0;
+        virtual bool IsFree() const = 0;
 
-        // Set whether the fence is free.
-        void SetFree(bool isFree);
-        // Check if the fence is free.
-        bool IsFree() const;
+        virtual void SetCompletionCallback(const std::function<void()>& callback) = 0;
 
-        // Get a pointer to the raw D3D12 fence object.
-        ComPtr<ID3D12Fence> GetDXFence();
-
-        void SetCompletionCallback(const std::function<void()>& callback);
-
-    private:
-        // Raw D3D12 fence object.
-        ComPtr<ID3D12Fence> _fence = nullptr;
-        // Event triggered when _fence reaches _fenceValue.
-        HANDLE _eventOnCompletion = nullptr;
-        // Function to execute after Wait
-        std::function<void()> _cpuCallback;
-        // Current fence value.
-        UINT64 _fenceValue = 0;
-
-        // Indicates whether the fence is available for use.
-        bool _isFree = true;
+        virtual void* GetNative() const = 0;
     };
-} // namespace dx12
+} // namespace rhi

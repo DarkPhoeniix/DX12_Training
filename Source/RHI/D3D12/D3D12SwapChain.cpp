@@ -1,15 +1,18 @@
+
 #include "RHI_PCH.h"
 
-#include "SwapChain.h"
+#include "D3D12SwapChain.h"
 
 #include "IGPUCrashTracker.h"
+#include "CommandQueue.h"
+#include "Texture.h"
 
-namespace dx12
+namespace rhi::d3d12
 {
-    SwapChain::SwapChain()
+    D3D12SwapChain::D3D12SwapChain(rhi::Device* device)
         : _dxgiSwapChain{}
-        , _swapChainDesc()
-        , _RTVDescriptorSize(dx12::Device::GetDXDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV))
+        , _device(device)
+        , _RTVDescriptorSize(device->GetDescriptorHandleIncrementSize(rhi::DescriptorHeapType::RTV))
         , _currentBackBufferIndex(0)
         , _windowHandle{}
         , _width(0)
@@ -17,19 +20,20 @@ namespace dx12
         , _vSync(false)
         , _tearingSupport(CheckTearingSupport())
     {
-        DescriptorHeapDescription desc;
-        desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-        desc.SetNumDescriptors(BACK_BUFFER_COUNT);
-        desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_NONE);
-        desc.SetNodeMask(0);
+        DescriptorHeapDescription desc =
+        {
+            .Type = rhi::DescriptorHeapType::RTV,
+            .NumDescriptors = BACK_BUFFER_COUNT,
+            .ShaderVisible = false,
+            .Flags = 0
+        };
 
-        _RTVDescriptorHeap.SetDescription(desc);
-        _RTVDescriptorHeap.Create();
+        _RTVDescriptorHeap = device->CreateDescriptorHeap(desc);
     }
 
-    SwapChain::SwapChain(SwapChain&& other) noexcept
+    D3D12SwapChain::D3D12SwapChain(D3D12SwapChain&& other) noexcept
         : _dxgiSwapChain(std::move(other._dxgiSwapChain))
-        , _swapChainDesc(other._swapChainDesc)
+        , _device(other._device)
         , _RTVDescriptorSize(other._RTVDescriptorSize)
         , _currentBackBufferIndex(other._currentBackBufferIndex)
         , _windowHandle(std::move(other._windowHandle))
@@ -38,19 +42,21 @@ namespace dx12
         , _vSync(other._vSync)
         , _tearingSupport(other._tearingSupport)
     {
+        NOT_IMPLEMENTED();
     }
 
-    SwapChain::~SwapChain()
+    D3D12SwapChain::~D3D12SwapChain()
     {
-        _dxgiSwapChain = nullptr;
+        NOT_IMPLEMENTED();
     }
 
-    SwapChain& SwapChain::operator=(SwapChain&& other) noexcept
+    D3D12SwapChain& D3D12SwapChain::operator=(D3D12SwapChain&& other) noexcept
     {
+        NOT_IMPLEMENTED();
         if (this != &other)
         {
             _dxgiSwapChain = std::move(other._dxgiSwapChain);
-            _swapChainDesc = other._swapChainDesc;
+            _device = other._device;
             _RTVDescriptorSize = other._RTVDescriptorSize;
             _currentBackBufferIndex = other._currentBackBufferIndex;
             _windowHandle = std::move(other._windowHandle);
@@ -63,7 +69,7 @@ namespace dx12
         return *this;
     }
 
-    void SwapChain::Init(HWND windowHandle, std::uint32_t width, std::uint32_t height, bool vSync)
+    void D3D12SwapChain::Init(HWND windowHandle, std::uint32_t width, std::uint32_t height, bool vSync)
     {
         _windowHandle = windowHandle;
         _width = width;
@@ -71,33 +77,24 @@ namespace dx12
         _vSync = vSync;
 
         _dxgiSwapChain = CreateSwapChain();
-
-        HRESULT getDescResult = _dxgiSwapChain->GetDesc(&_swapChainDesc);
-        CHECK(getDescResult, "Failed to get swap chain description.");
-
         _currentBackBufferIndex = _dxgiSwapChain->GetCurrentBackBufferIndex();
 
         UpdateRenderTargetViews();
     }
 
-    DXGI_SWAP_CHAIN_DESC SwapChain::GetDescription() const
-    {
-        return _swapChainDesc;
-    }
-
-    std::shared_ptr<Resource> SwapChain::GetBuffer(std::uint32_t index)
+    std::shared_ptr<rhi::Texture> D3D12SwapChain::GetBuffer(std::uint32_t index)
     {
         return _backBuffers[index];
     }
 
-    std::shared_ptr<Resource> SwapChain::GetBackBuffer()
+    std::shared_ptr<rhi::Texture> D3D12SwapChain::GetBackBuffer()
     {
         return _backBuffers[_currentBackBufferIndex];
     }
 
-    void SwapChain::UpdateRenderTargetViews()
+    void D3D12SwapChain::UpdateRenderTargetViews()
     {
-        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(_RTVDescriptorHeap.GetHeapStartCPUHandle());
+        rhi::CPUDescriptor heapStart = _RTVDescriptorHeap->GetHeapStartCPUHandle();
 
         for (int i = 0; i < BACK_BUFFER_COUNT; ++i)
         {
@@ -105,15 +102,14 @@ namespace dx12
             HRESULT result = _dxgiSwapChain->GetBuffer(i, IID_PPV_ARGS(&backBuffer));
             CHECK(result, "Failed to get back buffer from swap chain.");
 
-            dx12::Device::GetDXDevice()->CreateRenderTargetView(backBuffer.Get(), nullptr, rtvHandle);
+            _backBuffers[i] = _device->CreateTexture(backBuffer.Get());
+            _device->CreateTextureRTV(_backBuffers[i], heapStart);
 
-            _backBuffers[i] = ResourceFactory::Create("swapchain_" + std::to_string(i), backBuffer);
-
-            rtvHandle.Offset(_RTVDescriptorSize);
+            heapStart.Offset(_RTVDescriptorSize);
         }
     }
 
-    UINT SwapChain::Present()
+    UINT D3D12SwapChain::Present()
     {
         UINT syncInterval = _vSync ? 1 : 0;
         UINT presentFlags = (_tearingSupport && !_vSync) ? DXGI_PRESENT_ALLOW_TEARING : 0;
@@ -123,7 +119,7 @@ namespace dx12
         {
             LOG_CRITICAL("Failed to present swap chain. HRESULT: 0x{:X}", result);
             // Crash tracker need some time to process the crash dump.
-            Device::GetCrashTracker()->WaitUntilCrashDumpFinished();
+            _device->GetCrashTracker()->WaitUntilCrashDumpFinished();
             // Terminate on failure
             exit(-1);
         }
@@ -133,7 +129,7 @@ namespace dx12
         return _currentBackBufferIndex;
     }
 
-    void SwapChain::OnResize(const DirectX::XMUINT2& size)
+    void D3D12SwapChain::OnResize(const DirectX::XMUINT2& size)
     {
         if (_width != size.x || _height != size.y)
         {
@@ -142,7 +138,7 @@ namespace dx12
 
             for (int i = 0; i < BACK_BUFFER_COUNT; ++i)
             {
-                _backBuffers[i]->GetDXResource().Reset();
+                _backBuffers[i].reset();
             }
 
             DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
@@ -158,7 +154,7 @@ namespace dx12
         }
     }
 
-    ComPtr<IDXGISwapChain4> SwapChain::CreateSwapChain()
+    ComPtr<IDXGISwapChain4> D3D12SwapChain::CreateSwapChain()
     {
         ComPtr<IDXGISwapChain4> dxgiSwapChain4;
         ComPtr<IDXGIFactory4> dxgiFactory4;
@@ -184,7 +180,7 @@ namespace dx12
         // It is recommended to always allow tearing if tearing support is available.
         swapChainDesc.Flags = _tearingSupport ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
 
-        ID3D12CommandQueue* queue = dx12::Device::GetStreamQueue();
+        ID3D12CommandQueue* queue = D3D12Cast<ID3D12CommandQueue>(_device->GetStreamQueue()->GetNative());
 
         ComPtr<IDXGISwapChain1> swapChain1;
         HRESULT createSwapChainResult = dxgiFactory4->CreateSwapChainForHwnd(
@@ -209,7 +205,7 @@ namespace dx12
         return dxgiSwapChain4;
     }
 
-    bool SwapChain::CheckTearingSupport() const
+    bool D3D12SwapChain::CheckTearingSupport() const
     {
         BOOL allowTearing = FALSE;
 
@@ -230,7 +226,7 @@ namespace dx12
         return allowTearing == TRUE;
     }
 
-    ComPtr<IDXGIOutput> SwapChain::GetContainingOutput()
+    ComPtr<IDXGIOutput> D3D12SwapChain::GetContainingOutput()
     {
         ComPtr<IDXGIOutput> output;
         HRESULT result = _dxgiSwapChain->GetContainingOutput(&output);
@@ -238,4 +234,4 @@ namespace dx12
 
         return output;
     }
-} // namespace dx12
+} // namespace rhi::d3d12

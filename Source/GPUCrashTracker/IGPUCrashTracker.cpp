@@ -42,12 +42,12 @@ namespace tracking
 #endif
     }
 
-    std::shared_ptr<IGPUCrashTracker> IGPUCrashTracker::Create()
+    std::unique_ptr<IGPUCrashTracker> IGPUCrashTracker::Create()
     {
 #ifdef USE_NSIGHT_AFTERMATH
-        return std::make_shared<NsightAftermathGpuCrashTracker>();
+        return std::make_unique<NsightAftermathGpuCrashTracker>();
 #else
-        return std::make_shared<NullCrashTracker>();
+        return std::make_unique<NullCrashTracker>();
 #endif
     }
 } // namespace tracking

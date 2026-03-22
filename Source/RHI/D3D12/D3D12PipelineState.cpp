@@ -1,13 +1,14 @@
+
 #include "RHI_PCH.h"
 
-#include "PipelineState.h"
+#include "D3D12PipelineState.h"
 
 #include <json/json.h>
 
 #include <filesystem>
 #include <fstream>
 
-namespace dx12
+namespace rhi::d3d12
 {
     namespace
     {
@@ -25,19 +26,19 @@ namespace dx12
         }
 
         // TODO: add types !!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        const std::map<std::string, DXGI_FORMAT> FORMAT =
+        const std::map<std::string, rhi::Format> FORMAT =
         {
-            { "float4", DXGI_FORMAT_R32G32B32A32_FLOAT },
-            { "float3", DXGI_FORMAT_R32G32B32_FLOAT },
-            { "float2", DXGI_FORMAT_R32G32_FLOAT },
-            { "float", DXGI_FORMAT_R32_FLOAT },
-            { "uint4", DXGI_FORMAT_R32G32B32A32_UINT },
-            { "uint3", DXGI_FORMAT_R32G32B32_UINT },
-            { "uint2", DXGI_FORMAT_R32G32_UINT },
-            { "uint", DXGI_FORMAT_R32_UINT },
+            { "float4", rhi::Format::R32G32B32A32_FLOAT },
+            { "float3", rhi::Format::R32G32B32_FLOAT },
+            { "float2", rhi::Format::R32G32_FLOAT },
+            { "float", rhi::Format::R32_FLOAT },
+            { "uint4", rhi::Format::R32G32B32A32_UINT },
+            { "uint3", rhi::Format::R32G32B32_UINT },
+            { "uint2", rhi::Format::R32G32_UINT },
+            { "uint", rhi::Format::R32_UINT },
         };
 
-        DXGI_FORMAT ParseFormat(const std::string& str)
+        rhi::Format ParseFormat(const std::string& str)
         {
             auto it = FORMAT.find(str);
             if (it != FORMAT.end())
@@ -51,81 +52,81 @@ namespace dx12
 
         // Blend Description
 
-        const std::map<std::string, D3D12_BLEND> DEPTH =
+        const std::map<std::string, rhi::Blend> BLEND =
         {
-            { "D3D12_BLEND_ZERO", D3D12_BLEND_ZERO },
-            { "D3D12_BLEND_ONE", D3D12_BLEND_ONE },
-            { "D3D12_BLEND_SRC_COLOR", D3D12_BLEND_SRC_COLOR },
-            { "D3D12_BLEND_INV_SRC_COLOR", D3D12_BLEND_INV_SRC_COLOR },
-            { "D3D12_BLEND_SRC_ALPHA", D3D12_BLEND_SRC_ALPHA },
-            { "D3D12_BLEND_INV_SRC_ALPHA", D3D12_BLEND_INV_SRC_ALPHA },
-            { "D3D12_BLEND_DEST_ALPHA", D3D12_BLEND_DEST_ALPHA },
-            { "D3D12_BLEND_INV_DEST_ALPHA", D3D12_BLEND_INV_DEST_ALPHA },
-            { "D3D12_BLEND_DEST_COLOR", D3D12_BLEND_DEST_COLOR },
-            { "D3D12_BLEND_INV_DEST_COLOR", D3D12_BLEND_INV_DEST_COLOR },
-            { "D3D12_BLEND_SRC_ALPHA_SAT", D3D12_BLEND_SRC_ALPHA_SAT },
-            { "D3D12_BLEND_BLEND_FACTOR", D3D12_BLEND_BLEND_FACTOR },
-            { "D3D12_BLEND_INV_BLEND_FACTOR", D3D12_BLEND_INV_BLEND_FACTOR },
-            { "D3D12_BLEND_SRC1_COLOR", D3D12_BLEND_SRC1_COLOR },
-            { "D3D12_BLEND_INV_SRC1_COLOR", D3D12_BLEND_INV_SRC1_COLOR },
-            { "D3D12_BLEND_SRC1_ALPHA", D3D12_BLEND_SRC1_ALPHA },
-            { "D3D12_BLEND_INV_SRC1_ALPHA", D3D12_BLEND_INV_SRC1_ALPHA },
-            { "D3D12_BLEND_ALPHA_FACTOR", D3D12_BLEND_ALPHA_FACTOR },
-            { "D3D12_BLEND_INV_ALPHA_FACTOR", D3D12_BLEND_INV_ALPHA_FACTOR }
+            { "D3D12_BLEND_ZERO", rhi::Blend::Zero },
+            { "D3D12_BLEND_ONE", rhi::Blend::One },
+            { "D3D12_BLEND_SRC_COLOR", rhi::Blend::SrcColor },
+            { "D3D12_BLEND_INV_SRC_COLOR", rhi::Blend::InvSrcColor },
+            { "D3D12_BLEND_SRC_ALPHA", rhi::Blend::SrcAlpha },
+            { "D3D12_BLEND_INV_SRC_ALPHA", rhi::Blend::InvSrcAlpha },
+            { "D3D12_BLEND_DEST_ALPHA", rhi::Blend::DestAlpha },
+            { "D3D12_BLEND_INV_DEST_ALPHA", rhi::Blend::InvDestAlpha },
+            { "D3D12_BLEND_DEST_COLOR", rhi::Blend::DestColor },
+            { "D3D12_BLEND_INV_DEST_COLOR", rhi::Blend::InvDestColor },
+            { "D3D12_BLEND_SRC_ALPHA_SAT", rhi::Blend::SrcAlphaSat },
+            { "D3D12_BLEND_BLEND_FACTOR", rhi::Blend::BlendFactor },
+            { "D3D12_BLEND_INV_BLEND_FACTOR", rhi::Blend::InvBlendFactor },
+            { "D3D12_BLEND_SRC1_COLOR", rhi::Blend::Src1Color },
+            { "D3D12_BLEND_INV_SRC1_COLOR", rhi::Blend::InvSrc1Color },
+            { "D3D12_BLEND_SRC1_ALPHA", rhi::Blend::Src1Alpha },
+            { "D3D12_BLEND_INV_SRC1_ALPHA", rhi::Blend::InvSrc1Alpha },
+            { "D3D12_BLEND_ALPHA_FACTOR", rhi::Blend::AlphaFactor },
+            { "D3D12_BLEND_INV_ALPHA_FACTOR", rhi::Blend::InvAlphaFactor }
         };
 
-        const std::map<std::string, D3D12_BLEND_OP> BLEND_OP =
+        const std::map<std::string, rhi::BlendOpType> BLEND_OP =
         {
-            { "D3D12_BLEND_OP_ADD", D3D12_BLEND_OP_ADD },
-            { "D3D12_BLEND_OP_ADD", D3D12_BLEND_OP_SUBTRACT },
-            { "D3D12_BLEND_OP_ADD", D3D12_BLEND_OP_REV_SUBTRACT },
-            { "D3D12_BLEND_OP_ADD", D3D12_BLEND_OP_MIN },
-            { "D3D12_BLEND_OP_ADD", D3D12_BLEND_OP_MAX }
+            { "D3D12_BLEND_OP_ADD", rhi::BlendOpType::Add },
+            { "D3D12_BLEND_OP_ADD", rhi::BlendOpType::Subtract },
+            { "D3D12_BLEND_OP_ADD", rhi::BlendOpType::RevSubtract },
+            { "D3D12_BLEND_OP_ADD", rhi::BlendOpType::Min },
+            { "D3D12_BLEND_OP_ADD", rhi::BlendOpType::Max }
         };
 
-        const std::map<std::string, D3D12_COLOR_WRITE_ENABLE> COLOR_WRITE =
+        const std::map<std::string, rhi::ColorWriteEnable> COLOR_WRITE =
         {
-            { "D3D12_COLOR_WRITE_DISABLE", (D3D12_COLOR_WRITE_ENABLE)0 },
-            { "D3D12_COLOR_WRITE_ENABLE_RED", D3D12_COLOR_WRITE_ENABLE_RED },
-            { "D3D12_COLOR_WRITE_ENABLE_GREEN", D3D12_COLOR_WRITE_ENABLE_GREEN },
-            { "D3D12_COLOR_WRITE_ENABLE_BLUE", D3D12_COLOR_WRITE_ENABLE_BLUE },
-            { "D3D12_COLOR_WRITE_ENABLE_ALPHA", D3D12_COLOR_WRITE_ENABLE_ALPHA },
-            { "D3D12_COLOR_WRITE_ENABLE_ALL", D3D12_COLOR_WRITE_ENABLE_ALL }
+            { "D3D12_COLOR_WRITE_DISABLE", rhi::ColorWriteEnable::DisableAll },
+            { "D3D12_COLOR_WRITE_ENABLE_RED", rhi::ColorWriteEnable::Red },
+            { "D3D12_COLOR_WRITE_ENABLE_GREEN", rhi::ColorWriteEnable::Green },
+            { "D3D12_COLOR_WRITE_ENABLE_BLUE", rhi::ColorWriteEnable::Blue },
+            { "D3D12_COLOR_WRITE_ENABLE_ALPHA", rhi::ColorWriteEnable::Alpha },
+            { "D3D12_COLOR_WRITE_ENABLE_ALL", rhi::ColorWriteEnable::All }
         };
 
-        const std::map<std::string, D3D12_LOGIC_OP> LOGIC_OP =
+        const std::map<std::string, rhi::LogicOp> LOGIC_OP =
         {
-            { "D3D12_LOGIC_OP_CLEAR", D3D12_LOGIC_OP_CLEAR },
-            { "D3D12_LOGIC_OP_SET", D3D12_LOGIC_OP_SET },
-            { "D3D12_LOGIC_OP_COPY", D3D12_LOGIC_OP_COPY },
-            { "D3D12_LOGIC_OP_COPY_INVERTED", D3D12_LOGIC_OP_COPY_INVERTED },
-            { "D3D12_LOGIC_OP_NOOP", D3D12_LOGIC_OP_NOOP },
-            { "D3D12_LOGIC_OP_INVERT", D3D12_LOGIC_OP_INVERT },
-            { "D3D12_LOGIC_OP_AND", D3D12_LOGIC_OP_AND },
-            { "D3D12_LOGIC_OP_NAND", D3D12_LOGIC_OP_NAND },
-            { "D3D12_LOGIC_OP_OR", D3D12_LOGIC_OP_OR },
-            { "D3D12_LOGIC_OP_NOR", D3D12_LOGIC_OP_NOR },
-            { "D3D12_LOGIC_OP_XOR", D3D12_LOGIC_OP_XOR },
-            { "D3D12_LOGIC_OP_EQUIV", D3D12_LOGIC_OP_EQUIV },
-            { "D3D12_LOGIC_OP_AND_REVERSE", D3D12_LOGIC_OP_AND_REVERSE },
-            { "D3D12_LOGIC_OP_AND_INVERTED", D3D12_LOGIC_OP_AND_INVERTED },
-            { "D3D12_LOGIC_OP_OR_REVERSE", D3D12_LOGIC_OP_OR_REVERSE },
-            { "D3D12_LOGIC_OP_OR_INVERTED", D3D12_LOGIC_OP_OR_INVERTED }
+            { "D3D12_LOGIC_OP_CLEAR", rhi::LogicOp::Clear },
+            { "D3D12_LOGIC_OP_SET", rhi::LogicOp::Set },
+            { "D3D12_LOGIC_OP_COPY", rhi::LogicOp::Copy },
+            { "D3D12_LOGIC_OP_COPY_INVERTED", rhi::LogicOp::CopyInverted },
+            { "D3D12_LOGIC_OP_NOOP", rhi::LogicOp::NoOp },
+            { "D3D12_LOGIC_OP_INVERT", rhi::LogicOp::Invert },
+            { "D3D12_LOGIC_OP_AND", rhi::LogicOp::And },
+            { "D3D12_LOGIC_OP_NAND", rhi::LogicOp::Nand },
+            { "D3D12_LOGIC_OP_OR", rhi::LogicOp::Or },
+            { "D3D12_LOGIC_OP_NOR", rhi::LogicOp::Nor },
+            { "D3D12_LOGIC_OP_XOR", rhi::LogicOp::Xor },
+            { "D3D12_LOGIC_OP_EQUIV", rhi::LogicOp::Equiv },
+            { "D3D12_LOGIC_OP_AND_REVERSE", rhi::LogicOp::AndReverse },
+            { "D3D12_LOGIC_OP_AND_INVERTED", rhi::LogicOp::AndInverted },
+            { "D3D12_LOGIC_OP_OR_REVERSE", rhi::LogicOp::OrReverse },
+            { "D3D12_LOGIC_OP_OR_INVERTED", rhi::LogicOp::OrInverted }
         };
 
-        D3D12_BLEND ParseBlend(const std::string& str)
+        rhi::Blend ParseBlend(const std::string& str)
         {
-            auto it = DEPTH.find(str);
-            if (it != DEPTH.end())
+            auto it = BLEND.find(str);
+            if (it != BLEND.end())
             {
                 return it->second;
             }
 
             LOG_WARNING("Failed to parse {} from the blend description", str);
-            return DEPTH.begin()->second;
+            return BLEND.begin()->second;
         }
 
-        D3D12_BLEND_OP ParseBlendOp(const std::string& str)
+        rhi::BlendOpType ParseBlendOp(const std::string& str)
         {
             auto it = BLEND_OP.find(str);
             if (it != BLEND_OP.end())
@@ -137,7 +138,7 @@ namespace dx12
             return BLEND_OP.begin()->second;
         }
 
-        D3D12_COLOR_WRITE_ENABLE ParseColorWriteEnable(const std::string& str)
+        rhi::ColorWriteEnable ParseColorWriteEnable(const std::string& str)
         {
             auto it = COLOR_WRITE.find(str);
             if (it != COLOR_WRITE.end())
@@ -149,7 +150,7 @@ namespace dx12
             return COLOR_WRITE.begin()->second;
         }
 
-        D3D12_LOGIC_OP ParseLogicOp(const std::string& str)
+        rhi::LogicOp ParseLogicOp(const std::string& str)
         {
             auto it = LOGIC_OP.find(str);
             if (it != LOGIC_OP.end())
@@ -163,20 +164,20 @@ namespace dx12
 
         // Rasterizer Description
 
-        const std::map<std::string, D3D12_FILL_MODE> FILL_MODE =
+        const std::map<std::string, rhi::FillMode> FILL_MODE =
         {
-            { "D3D12_FILL_MODE_WIREFRAME", D3D12_FILL_MODE_WIREFRAME },
-            { "D3D12_FILL_MODE_SOLID", D3D12_FILL_MODE_SOLID }
+            { "D3D12_FILL_MODE_WIREFRAME", rhi::FillMode::Wireframe },
+            { "D3D12_FILL_MODE_SOLID", rhi::FillMode::Solid }
         };
 
-        const std::map<std::string, D3D12_CULL_MODE> CULL_MODE =
+        const std::map<std::string, rhi::CullMode> CULL_MODE =
         {
-            { "D3D12_CULL_MODE_NONE", D3D12_CULL_MODE_NONE },
-            { "D3D12_CULL_MODE_FRONT", D3D12_CULL_MODE_FRONT },
-            { "D3D12_CULL_MODE_BACK", D3D12_CULL_MODE_BACK }
+            { "D3D12_CULL_MODE_NONE", rhi::CullMode::None },
+            { "D3D12_CULL_MODE_FRONT", rhi::CullMode::Front },
+            { "D3D12_CULL_MODE_BACK", rhi::CullMode::Back }
         };
 
-        D3D12_FILL_MODE ParseFillMode(const std::string& str)
+        rhi::FillMode ParseFillMode(const std::string& str)
         {
             auto it = FILL_MODE.find(str);
             if (it != FILL_MODE.end())
@@ -188,7 +189,7 @@ namespace dx12
             return FILL_MODE.begin()->second;
         }
 
-        D3D12_CULL_MODE ParseCullMode(const std::string& str)
+        rhi::CullMode ParseCullMode(const std::string& str)
         {
             auto it = CULL_MODE.find(str);
             if (it != CULL_MODE.end())
@@ -202,25 +203,25 @@ namespace dx12
 
         // Depth Stencil Description
 
-        const std::map<std::string, D3D12_COMPARISON_FUNC> COMPARISON_FUNC =
+        const std::map<std::string, rhi::ComparisonFunc> COMPARISON_FUNC =
         {
-            { "D3D12_COMPARISON_FUNC_NEVER", D3D12_COMPARISON_FUNC_NEVER },
-            { "D3D12_COMPARISON_FUNC_LESS", D3D12_COMPARISON_FUNC_LESS },
-            { "D3D12_COMPARISON_FUNC_EQUAL", D3D12_COMPARISON_FUNC_EQUAL },
-            { "D3D12_COMPARISON_FUNC_LESS_EQUAL", D3D12_COMPARISON_FUNC_LESS_EQUAL },
-            { "D3D12_COMPARISON_FUNC_GREATER", D3D12_COMPARISON_FUNC_GREATER },
-            { "D3D12_COMPARISON_FUNC_NOT_EQUAL", D3D12_COMPARISON_FUNC_NOT_EQUAL },
-            { "D3D12_COMPARISON_FUNC_GREATER_EQUAL", D3D12_COMPARISON_FUNC_GREATER_EQUAL },
-            { "D3D12_COMPARISON_FUNC_ALWAYS", D3D12_COMPARISON_FUNC_ALWAYS }
+            { "D3D12_COMPARISON_FUNC_NEVER", rhi::ComparisonFunc::Never },
+            { "D3D12_COMPARISON_FUNC_LESS", rhi::ComparisonFunc::Less },
+            { "D3D12_COMPARISON_FUNC_EQUAL", rhi::ComparisonFunc::Equal },
+            { "D3D12_COMPARISON_FUNC_LESS_EQUAL", rhi::ComparisonFunc::LessEqual },
+            { "D3D12_COMPARISON_FUNC_GREATER", rhi::ComparisonFunc::Greater },
+            { "D3D12_COMPARISON_FUNC_NOT_EQUAL", rhi::ComparisonFunc::NotEqual },
+            { "D3D12_COMPARISON_FUNC_GREATER_EQUAL", rhi::ComparisonFunc::GreaterEqual },
+            { "D3D12_COMPARISON_FUNC_ALWAYS", rhi::ComparisonFunc::Always }
         };
 
-        const std::map<std::string, D3D12_DEPTH_WRITE_MASK> DEPTH_WRITE_MASK =
+        const std::map<std::string, rhi::DepthWriteMask> DEPTH_WRITE_MASK =
         {
-            { "D3D12_DEPTH_WRITE_MASK_ZERO", D3D12_DEPTH_WRITE_MASK_ZERO },
-            { "D3D12_DEPTH_WRITE_MASK_ALL", D3D12_DEPTH_WRITE_MASK_ALL }
+            { "D3D12_DEPTH_WRITE_MASK_ZERO", rhi::DepthWriteMask::Zero },
+            { "D3D12_DEPTH_WRITE_MASK_ALL", rhi::DepthWriteMask::All }
         };
 
-        D3D12_COMPARISON_FUNC ParseComparisonFunc(const std::string& str)
+        rhi::ComparisonFunc ParseComparisonFunc(const std::string& str)
         {
             auto it = COMPARISON_FUNC.find(str);
             if (it != COMPARISON_FUNC.end())
@@ -232,7 +233,7 @@ namespace dx12
             return COMPARISON_FUNC.begin()->second;
         }
 
-        D3D12_DEPTH_WRITE_MASK ParseDepthWriteMask(const std::string& str)
+        rhi::DepthWriteMask ParseDepthWriteMask(const std::string& str)
         {
             auto it = DEPTH_WRITE_MASK.find(str);
             if (it != DEPTH_WRITE_MASK.end())
@@ -287,73 +288,52 @@ namespace dx12
         }
     } // namespace unnamed
 
-    PipelineState::PipelineState()
+    D3D12PipelineState::D3D12PipelineState(rhi::Device* device)
         : _rootSignature(nullptr)
         , _pipelineState(nullptr)
         , _isGraphicsPipeline(false)
+        , _device(device)
     {
     }
 
-    PipelineState::PipelineState(const PipelineState& other)
-        : _rootSignature(other._rootSignature)
-        , _pipelineState(other._pipelineState)
-        , _isGraphicsPipeline(other._isGraphicsPipeline)
-    {
-    }
-
-    PipelineState::PipelineState(PipelineState&& other) noexcept
+    D3D12PipelineState::D3D12PipelineState(D3D12PipelineState&& other) noexcept
         : _rootSignature(std::move(other._rootSignature))
         , _pipelineState(std::move(other._pipelineState))
         , _isGraphicsPipeline(other._isGraphicsPipeline)
+        , _device(other._device)
     {
     }
 
-    PipelineState::~PipelineState()
+    D3D12PipelineState::~D3D12PipelineState()
     {
         _rootSignature = nullptr;
         _pipelineState = nullptr;
     }
 
-    PipelineState& PipelineState::operator=(const PipelineState& other)
-    {
-        if (this != &other)
-        {
-            _rootSignature = other._rootSignature;
-            _pipelineState = other._pipelineState;
-            _isGraphicsPipeline = other._isGraphicsPipeline;
-        }
-
-        return *this;
-    }
-
-    PipelineState& PipelineState::operator=(PipelineState&& other) noexcept
+    D3D12PipelineState& D3D12PipelineState::operator=(D3D12PipelineState&& other) noexcept
     {
         if (this != &other)
         {
             _rootSignature = std::move(other._rootSignature);
             _pipelineState = std::move(other._pipelineState);
             _isGraphicsPipeline = other._isGraphicsPipeline;
+            _device = other._device;
         }
 
         return *this;
     }
 
-    ComPtr<ID3D12RootSignature> PipelineState::GetRootSignature() const
+    ComPtr<ID3D12RootSignature> D3D12PipelineState::GetRootSignature() const
     {
         return _rootSignature;
     }
 
-    ComPtr<ID3D12PipelineState> PipelineState::GetPipelineState() const
+    ComPtr<ID3D12PipelineState> D3D12PipelineState::GetPipelineState() const
     {
         return _pipelineState;
     }
 
-    bool PipelineState::IsGraphicsPipeline() const
-    {
-        return _isGraphicsPipeline;
-    }
-
-    void PipelineState::Parse(const std::string& filepath)
+    void D3D12PipelineState::Parse(const std::string& filepath)
     {
         Json::Value jsonRoot = ParseJson(filepath);
         ASSERT(!jsonRoot.isNull() || jsonRoot.empty(), "Failed to parse JSON from file: " + filepath);
@@ -370,9 +350,9 @@ namespace dx12
         }
     }
 
-    void PipelineState::ParseGraphicsPipeline(const Json::Value& fileRoot)
+    void D3D12PipelineState::ParseGraphicsPipeline(const Json::Value& fileRoot)
     {
-        ComPtr<ID3D12Device> device = dx12::Device::GetDXDevice();
+        ID3D12Device* nativeDevice = D3D12Cast<ID3D12Device>(_device->GetNative());
 
         // Load the vertex shader
         ComPtr<ID3DBlob> vertexShaderBlob = nullptr;
@@ -415,7 +395,7 @@ namespace dx12
                 names[i] = layout["Name"].asCString();
                 inputLayout[i].SemanticName = names[i].c_str();
                 inputLayout[i].SemanticIndex = layout["SemanticIndex"].asUInt();
-                inputLayout[i].Format = ParseFormat(layout["Format"].asCString());
+                inputLayout[i].Format = GetDXGIFormat(ParseFormat(layout["Format"].asCString()));
                 inputLayout[i].AlignedByteOffset = layout["Offset"].asUInt();
                 inputLayout[i].InputSlot = layout["Slot"].asUInt();
             }
@@ -423,7 +403,7 @@ namespace dx12
 
         // Create the root signature
         {
-            HRESULT result = device->CreateRootSignature(0, vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize(), IID_PPV_ARGS(&_rootSignature));
+            HRESULT result = nativeDevice->CreateRootSignature(0, vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize(), IID_PPV_ARGS(&_rootSignature));
             CHECK(result, "Failed to create root signature from vertex shader blob.");
         }
 
@@ -443,9 +423,9 @@ namespace dx12
 
         // Set the pipeline state description properties
         {
-            pipelineStateDescription.BlendState = ParseBlendDescription(blendPipelineDescFilepath);
-            pipelineStateDescription.RasterizerState = ParseRasterizerDescription(rasterPipelineDescFilepath);
-            pipelineStateDescription.DepthStencilState = ParseDepthStencilDescription(depthPipelineDescFilepath);
+            pipelineStateDescription.BlendState = GetD3D12BlendDesc(ParseBlendDescription(blendPipelineDescFilepath));
+            pipelineStateDescription.RasterizerState = GetD3D12RasterizerDesc(ParseRasterizerDescription(rasterPipelineDescFilepath));
+            pipelineStateDescription.DepthStencilState = GetD3D12DepthStencilDesc(ParseDepthStencilDescription(depthPipelineDescFilepath));
             pipelineStateDescription.pRootSignature = _rootSignature.Get();
             pipelineStateDescription.InputLayout = { inputLayout, layoutElementsNum };
             pipelineStateDescription.PrimitiveTopologyType = ParseTopologyType(fileRoot["TopologyType"].asCString());
@@ -474,7 +454,7 @@ namespace dx12
 
         // Create the graphics pipeline state object
         {
-            HRESULT result = device->CreateGraphicsPipelineState(&pipelineStateDescription, IID_PPV_ARGS(&_pipelineState));
+            HRESULT result = nativeDevice->CreateGraphicsPipelineState(&pipelineStateDescription, IID_PPV_ARGS(&_pipelineState));
             CHECK(result, "Failed to create graphics pipeline state from the description.");
         }
 
@@ -488,9 +468,9 @@ namespace dx12
         delete[] inputLayout;
     }
 
-    void PipelineState::ParseComputePipeline(const Json::Value& fileRoot)
+    void D3D12PipelineState::ParseComputePipeline(const Json::Value& fileRoot)
     {
-        ComPtr<ID3D12Device> device = dx12::Device::GetDXDevice();
+        ID3D12Device* nativeDevice = D3D12Cast<ID3D12Device>(_device->GetNative());
 
         // Load the compute shader
         ComPtr<ID3DBlob> computeShaderBlob = nullptr;
@@ -503,7 +483,7 @@ namespace dx12
 
         // Create the root signature
         {
-            HRESULT result = device->CreateRootSignature(0, computeShaderBlob->GetBufferPointer(), computeShaderBlob->GetBufferSize(), IID_PPV_ARGS(&_rootSignature));
+            HRESULT result = nativeDevice->CreateRootSignature(0, computeShaderBlob->GetBufferPointer(), computeShaderBlob->GetBufferSize(), IID_PPV_ARGS(&_rootSignature));
             CHECK(result, "Failed to create root signature from compute shader blob.");
         }
 
@@ -524,7 +504,7 @@ namespace dx12
 
         // Create the compute pipeline state object
         {
-            HRESULT result = device->CreateComputePipelineState(&pipelineStateDescription, IID_PPV_ARGS(&_pipelineState));
+            HRESULT result = nativeDevice->CreateComputePipelineState(&pipelineStateDescription, IID_PPV_ARGS(&_pipelineState));
             CHECK(result, "Failed to create compute pipeline state from the description.");
         }
 
@@ -536,41 +516,47 @@ namespace dx12
         }
     }
 
-    D3D12_BLEND_DESC PipelineState::ParseBlendDescription(const std::string& filepath)
+    PipelineStateType D3D12PipelineState::GetType() const
+    {
+        NOT_IMPLEMENTED();
+        return PipelineStateType();
+    }
+
+    rhi::BlendState D3D12PipelineState::ParseBlendDescription(const std::string& filepath)
     {
         Json::Value root = ParseJson(filepath);
         ASSERT(!root.isNull() || root.empty(), "Failed to parse JSON from file: " + filepath);
 
-        D3D12_BLEND_DESC description = {};
+        rhi::BlendState description = {};
 
         int renderTargetsSize = root["RenderTargets"].size();
         for (int i = 0; i < renderTargetsSize; ++i)
         {
             Json::Value target = root["RenderTargets"][i];
-            description.RenderTarget[i].BlendEnable = target["BlendEnable"].asBool();
-            description.RenderTarget[i].SrcBlend = ParseBlend(target["SrcBlend"].asCString());
-            description.RenderTarget[i].DestBlend = ParseBlend(target["DestBlend"].asCString());
-            description.RenderTarget[i].BlendOp = ParseBlendOp(target["BlendOp"].asCString());
+            description.RenderTargets[i].BlendEnable = target["BlendEnable"].asBool();
+            description.RenderTargets[i].SrcBlend = ParseBlend(target["SrcBlend"].asCString());
+            description.RenderTargets[i].DestBlend = ParseBlend(target["DestBlend"].asCString());
+            description.RenderTargets[i].BlendOp = ParseBlendOp(target["BlendOp"].asCString());
 
-            description.RenderTarget[i].SrcBlendAlpha = ParseBlend(target["SrcBlendAlpha"].asCString());
-            description.RenderTarget[i].DestBlendAlpha = ParseBlend(target["DestBlendAlpha"].asCString());
-            description.RenderTarget[i].BlendOpAlpha = ParseBlendOp(target["BlendOpAlpha"].asCString());
+            description.RenderTargets[i].SrcBlendAlpha = ParseBlend(target["SrcBlendAlpha"].asCString());
+            description.RenderTargets[i].DestBlendAlpha = ParseBlend(target["DestBlendAlpha"].asCString());
+            description.RenderTargets[i].BlendOpAlpha = ParseBlendOp(target["BlendOpAlpha"].asCString());
 
-            description.RenderTarget[i].RenderTargetWriteMask = static_cast<UINT8>(ParseColorWriteEnable(target["RenderTargetWriteMask"].asCString()));
+            description.RenderTargets[i].RenderTargetWriteMask = ParseColorWriteEnable(target["RenderTargetWriteMask"].asCString());
 
-            description.RenderTarget[i].LogicOpEnable = target["LogicOpEnable"].asBool();
-            description.RenderTarget[i].LogicOp = ParseLogicOp(target["LogicOp"].asCString());
+            description.RenderTargets[i].LogicOpEnable = target["LogicOpEnable"].asBool();
+            description.RenderTargets[i].LogicOp = ParseLogicOp(target["LogicOp"].asCString());
         }
 
         return description;
     }
 
-    D3D12_RASTERIZER_DESC PipelineState::ParseRasterizerDescription(const std::string& filepath)
+    rhi::RasterizerState D3D12PipelineState::ParseRasterizerDescription(const std::string& filepath)
     {
         Json::Value root = ParseJson(filepath);
         ASSERT(!root.isNull() || root.empty(), "Failed to parse JSON from file: " + filepath);
 
-        D3D12_RASTERIZER_DESC description = {};
+        rhi::RasterizerState description = {};
         description.FillMode = ParseFillMode(root["FillMode"].asCString());
         description.CullMode = ParseCullMode(root["CullMode"].asCString());
         description.DepthClipEnable = root["DepthClipEnable"].asBool();
@@ -578,12 +564,12 @@ namespace dx12
         return description;
     }
 
-    D3D12_DEPTH_STENCIL_DESC PipelineState::ParseDepthStencilDescription(const std::string& filepath)
+    rhi::DepthStencilState D3D12PipelineState::ParseDepthStencilDescription(const std::string& filepath)
     {
         Json::Value root = ParseJson(filepath);
         ASSERT(!root.isNull() || root.empty(), "Failed to parse JSON from file: " + filepath);
 
-        D3D12_DEPTH_STENCIL_DESC description = {};
+        rhi::DepthStencilState description = {};
         description.DepthEnable = root["DepthEnable"].asBool();
         description.DepthFunc = ParseComparisonFunc(root["DepthFunc"].asCString());
         description.DepthWriteMask = ParseDepthWriteMask(root["DepthWriteMask"].asCString());
@@ -591,4 +577,9 @@ namespace dx12
 
         return description;
     }
-} // namespace dx12
+
+    void* D3D12PipelineState::GetNative() const
+    {
+        return static_cast<void*>(_pipelineState.Get());
+    }
+} // namespace rhi::d3d12

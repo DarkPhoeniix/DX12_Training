@@ -1,116 +1,94 @@
 #pragma once
 
 #include "SwapChain.h"
+#include "CommandList.h"
+#include "DescriptorHeap.h"
 
 namespace tracking
 {
     class IGPUCrashTracker;
 }
 
-namespace dx12
+namespace rhi
 {
+    class CommandQueue;
+    class Fence;
+    class Buffer;
+    class BufferDescription;
+    class Texture;
+    class TextureDescription;
     class DescriptorHeap;
+    class DescriptorHeapDescription;
+    class QueryHeap;
+    class QueryHeapDescription;
+    class Heap;
+    class HeapDescription;
+    class SwapChain;
+    class StatisticsQuery;
+    class TimestampQuery;
+    class RenderTargetView;
+    class DepthStencilView;
+    class ConstantBufferView;
+    class ShaderResourceView;
+    class UnorderedAccessView;
 
-    // The Device class encapsulates the DirectX 12 device, adapters, command queues, and swap chain.
+    enum class BackendAPI
+    {
+        D3D12,
+        Vulkan
+    };
+
     class Device
     {
     public:
-        // Delete copy constructor to enforce singleton pattern.
-        Device(const Device& other) = delete;
-        // Move constructor.
-        Device(Device&& other) noexcept;
+        Device() = default;
+        Device(const Device&) = delete;
+        Device(Device&&) noexcept = default;
+        virtual ~Device() = default;
 
-        // Delete copy assignment to enforce singleton pattern.
-        Device& operator=(const Device& other) = delete;
-        // Move assignment operator.
-        Device& operator=(Device&& other) noexcept;
+        Device& operator=(const Device&) = delete;
+        Device& operator=(Device&&) noexcept = default;
 
-        // Initializes the DirectX 12 device and necessary resources.
-        static void Init();
-        // Cleans up and releases the DirectX 12 device resources.
-        static void Destroy();
+        virtual bool IsEnhancedBarriersSupported() = 0;
 
-        // Checks if enhanced barriers are supported by the device.
-        static bool IsEnhancedBarriersSupported();
+        virtual void BindSwapChain(SwapChain& swapChain) = 0;
 
-        // Binds a swap chain to the device for rendering output.
-        static void BindSwapChain(SwapChain* swapChain);
+        virtual CommandQueue* GetComputeQueue() = 0;
+        virtual CommandQueue* GetStreamQueue() = 0;
+        virtual CommandQueue* GetCopyQueue() = 0;
 
-        // Retrieves the underlying DirectX 12 device instance.
-        static ComPtr<ID3D12Device2> GetDXDevice();
-        // Retrieves the DXGI adapter associated with the device.
-        static ComPtr<IDXGIAdapter4> GetDXAdapter();
+        virtual void OnResize(std::uint32_t width, std::uint32_t height) = 0;
+        virtual std::shared_ptr<Texture> GetBackBuffer() = 0;
 
-        // Retrieves the compute command queue for GPU compute operations.
-        static ID3D12CommandQueue* GetComputeQueue();
-        // Retrieves the stream command queue for resource streaming.
-        static ID3D12CommandQueue* GetStreamQueue();
-        // Retrieves the copy command queue for efficient resource copying.
-        static ID3D12CommandQueue* GetCopyQueue();
+        virtual void Present() = 0;
 
-        // Handles resizing events by updating necessary resources.
-        static void OnResize(const DirectX::XMUINT2& size);
-        // Gets the current back buffer resource from the swap chain.
-        static std::shared_ptr<dx12::Resource> GetBackBuffer();
+        virtual std::unique_ptr<CommandList> CreateCommandList(CommandListType type) = 0;
+        virtual std::unique_ptr<DescriptorHeap> CreateDescriptorHeap(const DescriptorHeapDescription& description) = 0;
+        virtual std::shared_ptr<Buffer> CreateBuffer(const BufferDescription& description, const void* initialData = nullptr) = 0;
+        virtual std::shared_ptr<Buffer> CreateBuffer(void* nativePtr) = 0;
+        virtual std::shared_ptr<Texture> CreateTexture(const TextureDescription& description, const void* initialData = nullptr) = 0;
+        virtual std::shared_ptr<Texture> CreateTexture(void* nativePtr) = 0;
+        virtual std::unique_ptr<QueryHeap> CreateQueryHeap(const QueryHeapDescription& description) = 0;
+        virtual std::unique_ptr<Fence> CreateFence(std::uint64_t initialValue) = 0;
+        virtual std::unique_ptr<Heap> CreateHeap(const HeapDescription& description) = 0;
+        virtual std::unique_ptr<StatisticsQuery> CreateStatisticsQuery() = 0;
+        virtual std::unique_ptr<TimestampQuery> CreateTimestampQuery(std::uint32_t timestampsCount) = 0;
 
-        // Presents the rendered frame to the screen.
-        static void Present();
+        virtual void CreateBufferSRV(std::shared_ptr<Buffer> resource, CPUDescriptor& descriptor) = 0;
+        virtual void CreateBufferCBV(std::shared_ptr<Buffer> resource, CPUDescriptor& descriptor) = 0;
+        virtual void CreateBufferUAV(std::shared_ptr<Buffer> resource, CPUDescriptor& descriptor, std::shared_ptr<Buffer> counterResource = nullptr) = 0;
+        virtual void CreateTextureRTV(std::shared_ptr<Texture> texture, CPUDescriptor& descriptor) = 0;
+        virtual void CreateTextureDSV(std::shared_ptr<Texture> texture, CPUDescriptor& descriptor) = 0;
+        virtual void CreateTextureSRV(std::shared_ptr<Texture> texture, CPUDescriptor& descriptor) = 0;
+        virtual void CreateTextureCBV(std::shared_ptr<Texture> texture, CPUDescriptor& descriptor) = 0;
+        virtual void CreateTextureUAV(std::shared_ptr<Texture> texture, CPUDescriptor& descriptor, std::shared_ptr<Buffer> counterResource = nullptr) = 0;
 
-        // Creates a Render Target View (RTV) in the specified descriptor heap.
-        static void CreateRenderTargetView(const RenderTargetView& view, DescriptorHeap& descriptorHeap);
-        // Creates a Depth Stencil View (DSV) in the specified descriptor heap.
-        static void CreateDepthStencilView(const DepthStencilView& view, DescriptorHeap& descriptorHeap);
-        // Creates a Constant Buffer View (CBV) in the specified descriptor heap.
-        static void CreateConstantBufferView(const ConstantBufferView& view, DescriptorHeap& descriptorHeap);
-        // Creates a Shader Resource View (SRV) in the specified descriptor heap.
-        static void CreateShaderResourceView(const ShaderResourceView& view, DescriptorHeap& descriptorHeap);
-        // Creates an Unordered Access View (UAV) in the specified descriptor heap.
-        static void CreateUnorderedAccessView(const UnorderedAccessView& view, DescriptorHeap& descriptorHeap, std::shared_ptr<Resource> counterResource = nullptr);
+        virtual std::uint32_t GetDescriptorHandleIncrementSize(rhi::DescriptorHeapType type) const = 0;
 
-        // Creates a Render Target View (RTV) in the specified descriptor heap.
-        static void CreateRenderTargetView(const RenderTargetView& view, D3D12_CPU_DESCRIPTOR_HANDLE descriptor);
-        // Creates a Depth Stencil View (DSV) in the specified descriptor heap.
-        static void CreateDepthStencilView(const DepthStencilView& view, D3D12_CPU_DESCRIPTOR_HANDLE descriptor);
-        // Creates a Constant Buffer View (CBV) in the specified descriptor heap.
-        static void CreateConstantBufferView(const ConstantBufferView& view, D3D12_CPU_DESCRIPTOR_HANDLE descriptor);
-        // Creates a Shader Resource View (SRV) in the specified descriptor heap.
-        static void CreateShaderResourceView(const ShaderResourceView& view, D3D12_CPU_DESCRIPTOR_HANDLE descriptor);
-        // Creates an Unordered Access View (UAV) in the specified descriptor heap.
-        static void CreateUnorderedAccessView(const UnorderedAccessView& view, D3D12_CPU_DESCRIPTOR_HANDLE descriptor, std::shared_ptr<Resource> counterResource = nullptr);
+        virtual tracking::IGPUCrashTracker* GetCrashTracker() = 0;
 
-        // Retrieves the current GPU crash tracker instance.
-        static std::shared_ptr<tracking::IGPUCrashTracker> GetCrashTracker();
-
-    private:
-        Device();
-        ~Device();
-
-        // Creates a DXGI adapter, optionally using WARP (software rasterizer).
-        void CreateAdapter(bool userWarp = false);
-        // Initializes the DirectX 12 device.
-        void CreateDevice();
-        // Creates the command queues.
-        void CreateQueues();
-        // Check features that are not supported on all hardware.
-        void CheckFeatureSupport();
-
-        // DirectX 12 device.
-        ComPtr<ID3D12Device2> _device;
-        // DirectX 12 adapter.
-        ComPtr<IDXGIAdapter4> _adapter;
-
-        bool _enhancedBarriersSupported;
-
-        ComPtr<ID3D12CommandQueue> _queueCompute;
-        ComPtr<ID3D12CommandQueue> _queueStream;
-        ComPtr<ID3D12CommandQueue> _queueCopy;
-
-        // Pointer to the swap chain bound to the device.
-        SwapChain* _swapChain;
-
-        // Singleton instance of the Device class.
-        static Device* _instance;      // TODO: std::unique_ptr
-
-        std::shared_ptr<tracking::IGPUCrashTracker> _crashTracker;
+        virtual void* GetNative() const = 0;
     };
-} // namespace dx12
+
+    static std::unique_ptr<Device> CreateDevice(BackendAPI backend);
+} // namespace rhi

@@ -1,46 +1,39 @@
 #pragma once
 
-#include "CommandList.h"
-
-namespace dx12
+namespace rhi
 {
-    // Wrapper for an ID3D12QueryHeap to gather rendering statistics.
+    class CommandList;
+
+    struct PipelineStatistics
+    {
+        std::uint64_t IAVertices;
+        std::uint64_t IAPrimitives;
+        std::uint64_t VSInvocations;
+        std::uint64_t GSInvocations;
+        std::uint64_t GSPrimitives;
+        std::uint64_t CInvocations;
+        std::uint64_t CPrimitives;
+        std::uint64_t PSInvocations;
+        std::uint64_t HSInvocations;
+        std::uint64_t DSInvocations;
+        std::uint64_t CSInvocations;
+    };
+
     class StatisticsQuery
     {
     public:
-        StatisticsQuery();
-        // Copy constructor.
-        StatisticsQuery(const StatisticsQuery& other);
-        // Move constructor.
-        StatisticsQuery(StatisticsQuery&& other) noexcept;
-        // Destructor.
-        ~StatisticsQuery();
+        StatisticsQuery() = default;
+        StatisticsQuery(const StatisticsQuery&) = delete;
+        StatisticsQuery(StatisticsQuery&&) noexcept = default;
+        virtual ~StatisticsQuery() = default;
 
-        // Copy assignment operator.
-        StatisticsQuery& operator=(const StatisticsQuery& other);
-        // Move assignment operator.
-        StatisticsQuery& operator=(StatisticsQuery&& other) noexcept;
+        StatisticsQuery& operator=(const StatisticsQuery&) = delete;
+        StatisticsQuery& operator=(StatisticsQuery&&) noexcept = default;
 
-        // Create the query heap and an associated resource to store render statistics.
-        void Create();
+        virtual void BeginQuery(CommandList& commandList) = 0;
+        virtual void EndQuery(CommandList& commandList) = 0;
 
-        // Start collecting rendering statistics.
-        void BeginQuery(CommandList& commandList);
-        // Stop collecting rendering statistics.
-        void EndQuery(CommandList& commandList);
-
-        // Resolve the statistics data gathered between BeginQuery and EndQuery calls.
-        void ResolveQueryData(CommandList& commandList);
-        // Retrieve the resolved rendering statistics.
-        const D3D12_QUERY_DATA_PIPELINE_STATISTICS& GetStatistics();
-
-    private:
-        // Pointer to the DirectX 12 query heap used for statistics gathering.
-        ComPtr<ID3D12QueryHeap> _statisticsQueryHeap;
-
-        // Resource used to store query results.
-        std::shared_ptr<dx12::Resource> _statisticsResource;
-        // Pointer to the resolved statistics data stored in _statisticsResource.
-        D3D12_QUERY_DATA_PIPELINE_STATISTICS* _statisticsData;
+        virtual void ResolveQueryData(CommandList& commandList) = 0;
+        virtual const PipelineStatistics& GetStatistics() = 0;
     };
-} // namespace dx12
+} // namespace rhi

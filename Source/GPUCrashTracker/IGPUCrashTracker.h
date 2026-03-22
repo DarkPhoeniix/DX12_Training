@@ -48,7 +48,7 @@ namespace tracking
         std::shared_ptr<ICommandListCrashContext> CreateCommandListCrashContext();
 
         // Factory method to create a GPU crash tracker instance.
-        static std::shared_ptr<IGPUCrashTracker> Create();
+        static std::unique_ptr<IGPUCrashTracker> Create();
 
     protected:
         // App-managed marker tracking

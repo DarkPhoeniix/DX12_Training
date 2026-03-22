@@ -1,20 +1,31 @@
 #pragma once
 
-#include "Resource.h"
-
-namespace dx12
+namespace rhi
 {
-    class CommandList;
+    class Buffer;
+    class Texture;
 
-    class ResourceBarrier
+    class BufferBarrier
     {
     public:
-        std::weak_ptr<Resource> TargetResource;
+        BufferBarrier(std::shared_ptr<Buffer> targetResource = nullptr, ResourceState beforeState = ResourceState::Common, ResourceState afterState = ResourceState::Common)
+            : TargetResource(targetResource), BeforeState(beforeState), AfterState(afterState) 
+        {   }
+
+        std::weak_ptr<Buffer> TargetResource;
         ResourceState BeforeState;
         ResourceState AfterState;
-
-        ResourceBarrier(std::shared_ptr<Resource> targetResource = nullptr, ResourceState beforeState = ResourceState::Common, ResourceState afterState = ResourceState::Common);
-
-        void Transition(CommandList& commandList);
     };
-} // namespace dx12
+
+    class TextureBarrier
+    {
+    public:
+        TextureBarrier(std::shared_ptr<Texture> targetResource = nullptr, ResourceState beforeState = ResourceState::Common, ResourceState afterState = ResourceState::Common)
+            : TargetResource(targetResource), BeforeState(beforeState), AfterState(afterState)
+        {   }
+
+        std::weak_ptr<Texture> TargetResource;
+        ResourceState BeforeState;
+        ResourceState AfterState;
+    };
+} // namespace rhi
