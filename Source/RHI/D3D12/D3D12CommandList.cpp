@@ -3,15 +3,20 @@
 
 #include "D3D12CommandList.h"
 
+#include "D3D12Descriptor.h"
+
 #include "Buffer.h"
 #include "Texture.h"
 #include "QueryHeap.h"
 #include "PipelineState.h"
 
+#include <algorithm>
+
 namespace rhi::d3d12
 {
     D3D12CommandList::D3D12CommandList(rhi::Device* device, rhi::CommandListType type, const std::string& name)
-        : _device(device)
+        : _commandList(nullptr)
+        , _device(device)
         , _type(type)
 #if ENABLE_DEBUG_NAMES
         , _name(name)
@@ -22,23 +27,27 @@ namespace rhi::d3d12
 
         D3D12_COMMAND_LIST_TYPE d3d12Type = GetD3D12CommandListType(_type);
 
-        nativeDevice->CreateCommandAllocator(d3d12Type, IID_PPV_ARGS(&_commandAllocator));
-        nativeDevice->CreateCommandList(0, d3d12Type, _commandAllocator.Get(), nullptr, IID_PPV_ARGS(&_commandList));
+        HRESULT result = nativeDevice->CreateCommandAllocator(d3d12Type, IID_PPV_ARGS(&_commandAllocator));
+        CHECK(result, "Failed to create D3D12CommandAllocator.");
 
+        result = nativeDevice->CreateCommandList(0, d3d12Type, _commandAllocator.Get(), nullptr, IID_PPV_ARGS(&_commandList));
+        CHECK(result, "Failed to create D3D12CommandList.");
+
+#if ENABLE_DEBUG_NAMES
+        SetD3D12Name(_commandAllocator.Get(), name);
         SetD3D12Name(_commandList.Get(), name);
+#endif // ENABLE_DEBUG_NAMES
     }
 
     D3D12CommandList::D3D12CommandList(D3D12CommandList&& other) noexcept
-        : _commandList(other._commandList)
+        : _commandList(std::move(other._commandList))
+        , _commandAllocator(std::move(other._commandAllocator))
+        , _device(other._device)
         , _type(other._type)
 #if ENABLE_DEBUG_NAMES
-        , _name(other._name)
+        , _name(std::move(other._name))
 #endif // ENABLE_DEBUG_NAMES
     {
-        if (this != &other)
-        {
-            other._commandList = nullptr;
-        }
     }
      
     D3D12CommandList::~D3D12CommandList()
@@ -49,13 +58,13 @@ namespace rhi::d3d12
     {
         if (this != &other)
         {
-            _commandList = other._commandList;
+            _commandList = std::move(other._commandList);
+            _commandAllocator = std::move(other._commandAllocator);
+            _device = std::move(other._device);
             _type = other._type;
 #if ENABLE_DEBUG_NAMES
-            _name = other._name;
+            _name = std::move(other._name);
 #endif // ENABLE_DEBUG_NAMES
-
-            other._commandList = nullptr;
         }
 
         return *this;
@@ -103,19 +112,141 @@ namespace rhi::d3d12
         _commandList->EndQuery(nativeQueryHeap, GetD3D12QueryType(type), index);
     }
 
-    void D3D12CommandList::TransitionBarriers(const std::vector<BufferBarrier>& barrier)
+    void D3D12CommandList::TransitionBarriers(const std::vector<BufferBarrier>& barriers)
     {
-        NOT_IMPLEMENTED();
+        ASSERT(!barriers.empty(), "Barriers vector is empty.");
+
+        std::uint32_t numBarriers = static_cast<std::uint32_t>(barriers.size());
+
+        if (_device->IsEnhancedBarriersSupported())
+        {
+            std::vector<CD3DX12_BUFFER_BARRIER> bufferBarriers;
+
+            for (size_t i = 0; i < numBarriers; ++i)
+            {
+                ASSERT(!barriers[i].TargetResource.expired(), "Resource in barrier is null.");
+                if (std::shared_ptr<Buffer> resource = barriers[i].TargetResource.lock())
+                {
+                    const BufferBarrier& barrier = barriers[i];
+                        bufferBarriers.emplace_back(
+                            GetD3D12SyncFlags(barrier.BeforeState),
+                            GetD3D12SyncFlags(barrier.AfterState),
+                            GetD3D12AccessFlags(barrier.BeforeState),
+                            GetD3D12AccessFlags(barrier.AfterState),
+                            D3D12Cast<ID3D12Resource>(resource->GetNative()));
+
+                    resource->SetCurrentState(barriers[i].AfterState);
+                }
+            }
+
+            D3D12_BARRIER_GROUP barrierGroups[] =
+            {
+                CD3DX12_BARRIER_GROUP(static_cast<UINT32>(bufferBarriers.size()), bufferBarriers.data()),
+            };
+
+            _commandList->Barrier(1, barrierGroups);
+        }
+        else
+        {
+            std::vector<CD3DX12_RESOURCE_BARRIER> dxBarriers(numBarriers);
+
+            for (size_t i = 0; i < numBarriers; ++i)
+            {
+                ASSERT(!barriers[i].TargetResource.expired(), "Resource in barrier is null.");
+                if (std::shared_ptr<Buffer> resource = barriers[i].TargetResource.lock())
+                {
+                    dxBarriers[i] = CD3DX12_RESOURCE_BARRIER::Transition(
+                        D3D12Cast<ID3D12Resource>(resource->GetNative()),
+                        GetD3D12ResourceState(barriers[i].BeforeState),
+                        GetD3D12ResourceState(barriers[i].AfterState),
+                        D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
+
+                    resource->SetCurrentState(barriers[i].AfterState);
+                }
+            }
+
+            _commandList->ResourceBarrier(numBarriers, dxBarriers.data());
+        }
     }
 
-    void D3D12CommandList::UAVBarrier(const rhi::BufferBarrier& barrier)
+    void D3D12CommandList::TransitionBarriers(const std::vector<TextureBarrier>& barriers)
     {
-        NOT_IMPLEMENTED();
+        ASSERT(!barriers.empty(), "Barriers vector is empty.");
+
+        std::uint32_t numBarriers = static_cast<std::uint32_t>(barriers.size());
+
+        if (_device->IsEnhancedBarriersSupported())
+        {
+            std::vector<CD3DX12_TEXTURE_BARRIER> textureBarriers;
+
+            for (size_t i = 0; i < numBarriers; ++i)
+            {
+                ASSERT(!barriers[i].TargetResource.expired(), "Resource in barrier is null.");
+                if (std::shared_ptr<Texture> resource = barriers[i].TargetResource.lock())
+                {
+                    const TextureBarrier& barrier = barriers[i];
+                        textureBarriers.emplace_back(
+                            GetD3D12SyncFlags(barrier.BeforeState),
+                            GetD3D12SyncFlags(barrier.AfterState),
+                            GetD3D12AccessFlags(barrier.BeforeState),
+                            GetD3D12AccessFlags(barrier.AfterState),
+                            GetD3D12Layout(barrier.BeforeState),
+                            GetD3D12Layout(barrier.AfterState),
+                            D3D12Cast<ID3D12Resource>(resource->GetNative()),
+                            CD3DX12_BARRIER_SUBRESOURCE_RANGE(0xffffffff),       // All subresources
+                            D3D12_TEXTURE_BARRIER_FLAG_NONE);
+
+                    resource->SetCurrentState(barriers[i].AfterState);
+                }
+            }
+
+            D3D12_BARRIER_GROUP barrierGroups[] =
+            {
+                CD3DX12_BARRIER_GROUP(static_cast<UINT32>(textureBarriers.size()), textureBarriers.data())
+            };
+
+            _commandList->Barrier(1, barrierGroups);
+        }
+        else
+        {
+            std::vector<CD3DX12_RESOURCE_BARRIER> dxBarriers(numBarriers);
+
+            for (size_t i = 0; i < numBarriers; ++i)
+            {
+                ASSERT(!barriers[i].TargetResource.expired(), "Resource in barrier is null.");
+                if (std::shared_ptr<Texture> resource = barriers[i].TargetResource.lock())
+                {
+                    dxBarriers[i] = CD3DX12_RESOURCE_BARRIER::Transition(
+                        D3D12Cast<ID3D12Resource>(resource->GetNative()),
+                        GetD3D12ResourceState(barriers[i].BeforeState),
+                        GetD3D12ResourceState(barriers[i].AfterState),
+                        D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
+                    resource->SetCurrentState(barriers[i].AfterState);
+                }
+            }
+
+            _commandList->ResourceBarrier(numBarriers, dxBarriers.data());
+        }
     }
 
-    void D3D12CommandList::UAVBarrier(const rhi::TextureBarrier& barrier)
+    void D3D12CommandList::UAVBarrier(std::shared_ptr<Buffer> buffer)
     {
-        NOT_IMPLEMENTED();
+        FAIL(buffer != nullptr, "Buffer is null.");
+
+        ID3D12Resource* nativeResource = D3D12Cast<ID3D12Resource>(buffer->GetNative());
+        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::UAV(nativeResource);
+
+        _commandList->ResourceBarrier(1, &barrier);
+    }
+
+    void D3D12CommandList::UAVBarrier(std::shared_ptr<Texture> texture)
+    {
+        FAIL(texture != nullptr, "Texture is null.");
+
+        ID3D12Resource* nativeResource = D3D12Cast<ID3D12Resource>(texture->GetNative());
+        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::UAV(nativeResource);
+
+        _commandList->ResourceBarrier(1, &barrier);
     }
 
     void D3D12CommandList::CopyBuffer(Buffer& sourceResource, Buffer& destinationResource)
@@ -158,16 +289,19 @@ namespace rhi::d3d12
 
         _commandList->SetPipelineState(nativePipelineState);
 
-        NOT_IMPLEMENTED();
-        // TODO: set root signature
-        //if (_type == CommandListType::Graphics)
-        //{
-        //    _commandList->SetGraphicsRootSignature(pipelineState.GetRootSignature().Get());
-        //}
-        //else if (_type == CommandListType::Compute)
-        //{
-        //    _commandList->SetComputeRootSignature(pipelineState.GetRootSignature().Get());
-        //}
+        ID3D12RootSignature* signature = D3D12Cast<ID3D12RootSignature>(pipelineState.GetNativeRootSignature());
+        switch (_type)
+        {
+        case rhi::CommandListType::Graphics:
+            _commandList->SetGraphicsRootSignature(signature);
+            break;
+        case rhi::CommandListType::Compute:
+            _commandList->SetComputeRootSignature(signature);
+            break;
+        default:
+            UNREACHABLE("Unsupported command list type.");
+            return;
+        }
     }
 
     void D3D12CommandList::SetPrimitiveTopology(PrimitiveTopology primitiveTopology)
@@ -200,27 +334,86 @@ namespace rhi::d3d12
     void D3D12CommandList::SetRenderTarget(rhi::CPUDescriptor* renderTargetDescriptor, rhi::CPUDescriptor* depthStencilDescriptor)
     {
         std::uint32_t numTargets = renderTargetDescriptor ? 1 : 0;
-        NOT_IMPLEMENTED();
+
+        D3D12_CPU_DESCRIPTOR_HANDLE* RTHandle = renderTargetDescriptor ? new D3D12_CPU_DESCRIPTOR_HANDLE(ToD3D12Handle(*renderTargetDescriptor)) : nullptr;
+        D3D12_CPU_DESCRIPTOR_HANDLE* DSHandle = depthStencilDescriptor ? new D3D12_CPU_DESCRIPTOR_HANDLE(ToD3D12Handle(*depthStencilDescriptor)) : nullptr;
+
+        _commandList->OMSetRenderTargets(numTargets, RTHandle, FALSE, DSHandle);
     }
 
-    void D3D12CommandList::SetRenderTargets(const std::vector<rhi::CPUDescriptor> renderTargetDescriptors, rhi::CPUDescriptor* depthStencilDescriptor)
+    void D3D12CommandList::SetRenderTargets(const std::vector<rhi::CPUDescriptor>& renderTargetDescriptors, rhi::CPUDescriptor* depthStencilDescriptor)
     {
-        NOT_IMPLEMENTED();
+        std::uint32_t numTargets = static_cast<std::uint32_t>(renderTargetDescriptors.size());
+
+        D3D12_CPU_DESCRIPTOR_HANDLE* RTHandles = new D3D12_CPU_DESCRIPTOR_HANDLE[numTargets];
+        for (size_t i = 0; i < numTargets; ++i)
+        {
+            RTHandles[i] = ToD3D12Handle(renderTargetDescriptors[i]);
+        }
+        D3D12_CPU_DESCRIPTOR_HANDLE* DSHandle = depthStencilDescriptor ? new D3D12_CPU_DESCRIPTOR_HANDLE(ToD3D12Handle(*depthStencilDescriptor)) : nullptr;
+
+        _commandList->OMSetRenderTargets(numTargets, RTHandles, FALSE, DSHandle);
     }
 
     void D3D12CommandList::SetViewport(const Viewport& viewport, const ScissorRect& scissorRectangle)
     {
-        NOT_IMPLEMENTED();
+        D3D12_VIEWPORT nativeViewport =
+        {
+            .TopLeftX = viewport.TopLeftX,
+            .TopLeftY = viewport.TopLeftY,
+            .Width = viewport.Width,
+            .Height = viewport.Height,
+            .MinDepth = viewport.MinDepth,
+            .MaxDepth = viewport.MaxDepth
+        };
+        _commandList->RSSetViewports(1, &nativeViewport);
+
+        D3D12_RECT nativeRect =
+        {
+            .left = scissorRectangle.Left,
+            .top = scissorRectangle.Top,
+            .right = scissorRectangle.Right,
+            .bottom = scissorRectangle.Bottom,
+        };
+        _commandList->RSSetScissorRects(1, &nativeRect);
     }
 
     void D3D12CommandList::ClearRTV(rhi::CPUDescriptor renderTargetView, const float color[4], ScissorRect* rectangle)
     {
-        NOT_IMPLEMENTED();
+        std::uint32_t numRects = rectangle ? 1 : 0;
+        D3D12_RECT scissorRect = {};
+
+        if (rectangle)
+        {
+            scissorRect =
+            {
+                .left = rectangle->Left,
+                .top = rectangle->Top,
+                .right = rectangle->Right,
+                .bottom = rectangle->Bottom
+            };
+        }
+
+        _commandList->ClearRenderTargetView(ToD3D12Handle(renderTargetView), color, numRects, rectangle ? &scissorRect : nullptr);
     }
 
     void D3D12CommandList::ClearDSV(rhi::CPUDescriptor depthStencilView, rhi::ClearFlags clearFlags, float depth, std::uint8_t stencil, ScissorRect* rectangle)
     {
-        NOT_IMPLEMENTED();
+        std::uint32_t numRects = rectangle ? 1 : 0;
+        D3D12_RECT scissorRect = {};
+
+        if (rectangle)
+        {
+            scissorRect =
+            {
+                .left = rectangle->Left,
+                .top = rectangle->Top,
+                .right = rectangle->Right,
+                .bottom = rectangle->Bottom
+            };
+        }
+
+        _commandList->ClearDepthStencilView(ToD3D12Handle(depthStencilView), GetD3D12ClearFlags(clearFlags), depth, stencil, numRects, rectangle ? &scissorRect : nullptr);
     }
 
     void D3D12CommandList::Draw(std::uint32_t vertexCount, std::uint32_t instanceCount, std::uint32_t startVertex, std::uint32_t startInstance)
@@ -246,12 +439,21 @@ namespace rhi::d3d12
 
     void D3D12CommandList::ExecuteIndirect(const rhi::CommandSignature& commandSignature, std::uint32_t maxCommandCount, std::shared_ptr<Buffer> argumentBuffer, std::shared_ptr<Buffer> countBuffer, std::uint32_t argumentBufferOffset, std::uint32_t countBufferOffset)
     {
-        NOT_IMPLEMENTED();
+        _commandList->ExecuteIndirect(D3D12Cast<ID3D12CommandSignature>(commandSignature.GetNative()), maxCommandCount, D3D12Cast<ID3D12Resource>(argumentBuffer->GetNative()), argumentBufferOffset, D3D12Cast<ID3D12Resource>(countBuffer->GetNative()), countBufferOffset);
     }
 
-    void D3D12CommandList::SetDescriptorHeaps(const std::vector<rhi::DescriptorHeap>& descriptorHeaps)
+    void D3D12CommandList::SetDescriptorHeaps(const std::vector<rhi::DescriptorHeap*>& descriptorHeaps)
     {
-        NOT_IMPLEMENTED();
+        const std::uint32_t heapCount = static_cast<std::uint32_t>(descriptorHeaps.size());
+        ASSERT(heapCount <= 2, "Too many decriptor heaps.");
+
+        ID3D12DescriptorHeap* nativeHeaps[2];
+        for (size_t i = 0; i < heapCount; ++i)
+        {
+            nativeHeaps[i] = D3D12Cast<ID3D12DescriptorHeap>(descriptorHeaps[i]->GetNative());
+        }
+
+        _commandList->SetDescriptorHeaps(heapCount, nativeHeaps);
     }
 
     void D3D12CommandList::SetConstant(std::uint32_t index, std::uint32_t data, std::uint32_t offset)
@@ -336,12 +538,23 @@ namespace rhi::d3d12
 
     void D3D12CommandList::SetDescriptorTable(std::uint32_t index, rhi::GPUDescriptor descriptor)
     {
-        NOT_IMPLEMENTED();
+        switch (_type)
+        {
+        case rhi::CommandListType::Graphics:
+            _commandList->SetGraphicsRootDescriptorTable(index, ToD3D12Handle(descriptor));
+            break;
+        case rhi::CommandListType::Compute:
+            _commandList->SetComputeRootDescriptorTable(index, ToD3D12Handle(descriptor));
+            break;
+        default:
+            UNREACHABLE("Unsupported command list type.");
+            break;
+        }
     }
 
-    void D3D12CommandList::Reset(CommandAllocator& commandAllocator, rhi::PipelineState* pipelineState)
+    void D3D12CommandList::Reset(rhi::PipelineState* pipelineState)
     {
-        NOT_IMPLEMENTED();
+        _commandList->Reset(_commandAllocator.Get(), pipelineState ? D3D12Cast<ID3D12PipelineState>(pipelineState->GetNative()) : nullptr);
     }
 
     void D3D12CommandList::Close()
@@ -354,378 +567,4 @@ namespace rhi::d3d12
     {
         return static_cast<void*>(_commandList.Get());
     }
-
-    //void D3D12CommandList::TransitionBarrier(const ResourceBarrier& barrier)
-    //{
-    //    FAIL(!barrier.TargetResource.expired(), "Resource is null.");
-    //    ASSERT(barrier.BeforeState != barrier.AfterState, "BeforeState and AfterState are the same.");
-
-    //    if (std::shared_ptr<Resource> resource = barrier.TargetResource.lock())
-    //    {
-    //        if (D3D12Device::IsEnhancedBarriersSupported())
-    //        {
-    //            if ((resource->GetResourceDescription().GetResourceType() & ResourceType::Texture) != ResourceType::None)
-    //            {
-    //                CD3DX12_TEXTURE_BARRIER textureBarrier(
-    //                    GetSyncFlags(barrier.BeforeState),
-    //                    GetSyncFlags(barrier.AfterState),
-    //                    GetAccessFlags(barrier.BeforeState),
-    //                    GetAccessFlags(barrier.AfterState),
-    //                    GetLayout(barrier.BeforeState),
-    //                    GetLayout(barrier.AfterState),
-    //                    resource->GetDXResource().Get(),
-    //                    CD3DX12_BARRIER_SUBRESOURCE_RANGE(0xffffffff),       // All subresources
-    //                    D3D12_TEXTURE_BARRIER_FLAG_NONE);
-
-    //                D3D12_BARRIER_GROUP barrierGroup[] = { CD3DX12_BARRIER_GROUP(1, &textureBarrier) };
-
-    //                _commandList->Barrier(1, barrierGroup);
-    //            }
-    //            else
-    //            {
-    //                CD3DX12_BUFFER_BARRIER bufferBarrier(
-    //                    GetSyncFlags(barrier.BeforeState),
-    //                    GetSyncFlags(barrier.AfterState),
-    //                    GetAccessFlags(barrier.BeforeState),
-    //                    GetAccessFlags(barrier.AfterState),
-    //                    resource->GetDXResource().Get());
-
-    //                D3D12_BARRIER_GROUP barrierGroup[] = { CD3DX12_BARRIER_GROUP(1, &bufferBarrier) };
-
-    //                _commandList->Barrier(1, barrierGroup);
-    //            }
-    //        }
-    //        else
-    //        {
-    //            CD3DX12_RESOURCE_BARRIER dxBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
-    //                resource->GetDXResource().Get(),
-    //                GetResourceState(barrier.BeforeState),
-    //                GetResourceState(barrier.AfterState),
-    //                D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
-
-    //            _commandList->ResourceBarrier(1, &dxBarrier);
-    //        }
-    //        resource->SetCurrentState(barrier.AfterState);
-    //    }
-    //}
-
-    //void D3D12CommandList::TransitionBarriers(const std::vector<ResourceBarrier>& barriers)
-    //{
-    //    ASSERT(!barriers.empty(), "Barriers vector is empty.");
-
-    //    std::uint32_t numBarriers = static_cast<std::uint32_t>(barriers.size());
-
-    //    if (D3D12Device::IsEnhancedBarriersSupported())
-    //    {
-    //        std::vector<CD3DX12_TEXTURE_BARRIER> textureBarriers;
-    //        std::vector<CD3DX12_BUFFER_BARRIER> bufferBarriers;
-
-    //        for (size_t i = 0; i < numBarriers; ++i)
-    //        {
-    //            if (std::shared_ptr<Resource> resource = barriers[i].TargetResource.lock())
-    //            {
-    //                const ResourceBarrier& barrier = barriers[i];
-    //                if (HasFlag(resource->GetResourceDescription().GetResourceType(), ResourceType::Texture))
-    //                {
-    //                    textureBarriers.emplace_back(GetSyncFlags(barrier.BeforeState),
-    //                        GetSyncFlags(barrier.AfterState),
-    //                        GetAccessFlags(barrier.BeforeState),
-    //                        GetAccessFlags(barrier.AfterState),
-    //                        GetLayout(barrier.BeforeState),
-    //                        GetLayout(barrier.AfterState),
-    //                        resource->GetDXResource().Get(),
-    //                        CD3DX12_BARRIER_SUBRESOURCE_RANGE(0xffffffff),       // All subresources
-    //                        D3D12_TEXTURE_BARRIER_FLAG_NONE);
-
-    //                    resource->SetCurrentState(barriers[i].AfterState);
-    //                }
-    //                else
-    //                {
-    //                    bufferBarriers.emplace_back(
-    //                        GetSyncFlags(barrier.BeforeState),
-    //                        GetSyncFlags(barrier.AfterState),
-    //                        GetAccessFlags(barrier.BeforeState),
-    //                        GetAccessFlags(barrier.AfterState),
-    //                        resource->GetDXResource().Get());
-
-    //                    resource->SetCurrentState(barriers[i].AfterState);
-    //                }
-    //            }
-    //        }
-
-    //        D3D12_BARRIER_GROUP barrierGroups[] =
-    //        {
-    //            CD3DX12_BARRIER_GROUP(bufferBarriers.size(), bufferBarriers.data()),
-    //            CD3DX12_BARRIER_GROUP(textureBarriers.size(), textureBarriers.data()),
-    //        };
-
-    //        _commandList->Barrier(2, barrierGroups);
-    //    }
-    //    else
-    //    {
-    //        std::vector<CD3DX12_RESOURCE_BARRIER> dxBarriers(numBarriers);
-
-    //        for (size_t i = 0; i < numBarriers; ++i)
-    //        {
-    //            ASSERT(!barriers[i].TargetResource.expired(), "Resource in barrier is null.");
-    //            if (std::shared_ptr<Resource> resource = barriers[i].TargetResource.lock())
-    //            {
-    //                dxBarriers[i] = CD3DX12_RESOURCE_BARRIER::Transition(
-    //                    resource->GetDXResource().Get(),
-    //                    GetResourceState(barriers[i].BeforeState),
-    //                    GetResourceState(barriers[i].AfterState),
-    //                    D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
-    //                resource->SetCurrentState(barriers[i].AfterState);
-    //            }
-    //        }
-
-    //        _commandList->ResourceBarrier(numBarriers, dxBarriers.data());
-    //    }
-    //}
-
-    //void D3D12CommandList::TransitionBarrier(Resource& resource, ResourceState stateAfter, std::uint32_t subresource)
-    //{
-    //    ASSERT(resource.GetCurrentState() != stateAfter, "Current state and state after are the same.");
-
-    //    CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(resource.GetDXResource().Get(), GetResourceState(resource.GetCurrentState()), GetResourceState(stateAfter), subresource);
-    //    _commandList->ResourceBarrier(1, &barrier);
-    //    resource.SetCurrentState(stateAfter);
-    //}
-
-    //void D3D12CommandList::AliasingBarrier(std::shared_ptr<Resource> beforeResource, std::shared_ptr<Resource> afterResource)
-    //{
-    //    FAIL(beforeResource || afterResource, "Resources are null.");
-    //    ASSERT(beforeResource != afterResource, "Before and after resources are the same.");
-
-    //    CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Aliasing(beforeResource->GetDXResource().Get(), afterResource->GetDXResource().Get());
-    //    _commandList->ResourceBarrier(1, &barrier);
-    //}
-
-    //void D3D12CommandList::UAVBarrier(std::shared_ptr<Resource> resource)
-    //{
-    //    FAIL(resource, "Resource is null.");
-
-    //    CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::UAV(resource->GetDXResource().Get());
-    //    _commandList->ResourceBarrier(1, &barrier);
-    //}
-
-    //void D3D12CommandList::CopyResource(Resource& sourceResource, Resource& destinationResource)
-    //{
-    //    ASSERT(sourceResource.GetDXResource() != destinationResource.GetDXResource(), "Source and destination resources are the same.");
-
-    //    _commandList->CopyResource(destinationResource.GetDXResource().Get(), sourceResource.GetDXResource().Get());
-    //}
-
-    //void D3D12CommandList::CopyBufferRegion(Resource& sourceResource, Resource& destinationResource, uint32_t numBytes, uint32_t sourceOffset, uint32_t destinationOffset)
-    //{
-    //    ASSERT(sourceResource.GetDXResource() != destinationResource.GetDXResource(), "Source and destination resources are the same.");
-    //    ASSERT(sourceOffset + numBytes <= sourceResource.GetAllocationInfo().SizeInBytes, "Source offset and size exceed source resource size.");
-    //    ASSERT(destinationOffset + numBytes <= destinationResource.GetAllocationInfo().SizeInBytes, "Destination offset and size exceed destination resource size.");
-
-    //    _commandList->CopyBufferRegion(destinationResource.GetDXResource().Get(), destinationOffset, sourceResource.GetDXResource().Get(), sourceOffset, numBytes);
-    //}
-
-    //void D3D12CommandList::SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY primitiveTopology)
-    //{
-    //    FAIL(_type == CommandListType::Graphics, "Command list type is not Graphics.");
-
-    //    _commandList->IASetPrimitiveTopology(primitiveTopology);
-    //}
-
-    //void D3D12CommandList::SetVertexBuffer(uint32_t slot, const D3D12_VERTEX_BUFFER_VIEW& vertexBufferView)
-    //{
-    //    FAIL(_type == CommandListType::Graphics, "Command list type is not Graphics.");
-
-    //    _commandList->IASetVertexBuffers(slot, 1, &vertexBufferView);
-    //}
-
-    //void D3D12CommandList::SetIndexBuffer(const D3D12_INDEX_BUFFER_VIEW& indexBufferView)
-    //{
-    //    FAIL(_type == CommandListType::Graphics, "Command list type is not Graphics.");
-
-    //    _commandList->IASetIndexBuffer(&indexBufferView);
-    //}
-
-    //void D3D12CommandList::SetRenderTarget(D3D12_CPU_DESCRIPTOR_HANDLE* renderTargetDescriptor, D3D12_CPU_DESCRIPTOR_HANDLE* depthStencilDescriptor)
-    //{
-    //    UINT numTargets = renderTargetDescriptor ? 1 : 0;
-    //    _commandList->OMSetRenderTargets(numTargets, renderTargetDescriptor, FALSE, depthStencilDescriptor);
-    //}
-
-    //void D3D12CommandList::SetRenderTargets(const std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> renderTargetDescriptors, D3D12_CPU_DESCRIPTOR_HANDLE* depthStencilDescriptor)
-    //{
-    //    FAIL(_type == CommandListType::Graphics, "Command list type is not Graphics.");
-
-    //    _commandList->OMSetRenderTargets(static_cast<std::uint32_t>(renderTargetDescriptors.size()), renderTargetDescriptors.data(), FALSE, depthStencilDescriptor);
-    //}
-
-    //void D3D12CommandList::SetViewport(const CD3DX12_VIEWPORT& viewport, const CD3DX12_RECT& scissorRectangle)
-    //{
-    //    FAIL(_type == CommandListType::Graphics, "Command list type is not Graphics.");
-
-    //    _commandList->RSSetViewports(1, &viewport);
-    //    _commandList->RSSetScissorRects(1, &scissorRectangle);
-    //}
-
-    //void D3D12CommandList::ClearRTV(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetView, const float color[4], CD3DX12_RECT* rectangle)
-    //{
-    //    FAIL(_type == CommandListType::Graphics, "Command list type is not Graphics.");
-
-    //    _commandList->ClearRenderTargetView(renderTargetView, color, rectangle ? 1 : 0, rectangle);
-    //}
-
-    //void D3D12CommandList::ClearDSV(D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, D3D12_CLEAR_FLAGS clearFlags, float depth, std::uint8_t stencil, CD3DX12_RECT* rectangle)
-    //{
-    //    FAIL(_type == CommandListType::Graphics, "Command list type is not Graphics.");
-
-    //    _commandList->ClearDepthStencilView(depthStencilView, clearFlags, depth, stencil, rectangle ? 1 : 0, rectangle);
-    //}
-
-    //void D3D12CommandList::Draw(std::uint32_t vertexCount, std::uint32_t instanceCount, std::uint32_t startVertex, std::uint32_t startInstance)
-    //{
-    //    FAIL(_type == CommandListType::Graphics, "Command list type is not Graphics.");
-
-    //    _commandList->DrawInstanced(vertexCount, instanceCount, startVertex, startInstance);
-    //}
-
-    //void D3D12CommandList::DrawIndexed(std::uint32_t indexCount, std::uint32_t instanceCount, std::uint32_t startIndex, std::uint32_t baseVertex, std::uint32_t startInstance)
-    //{
-    //    FAIL(_type == CommandListType::Graphics, "Command list type is not Graphics.");
-
-    //    _commandList->DrawIndexedInstanced(indexCount, instanceCount, startIndex, baseVertex, startInstance);
-    //}
-
-    //void D3D12CommandList::Dispatch(std::uint32_t xThreadGroupsCount, std::uint32_t yThreadGroupsCount, std::uint32_t zThreadGroupsCount)
-    //{
-    //    FAIL(_type == CommandListType::Compute, "Command list type is not Compute.");
-
-    //    _commandList->Dispatch(xThreadGroupsCount, yThreadGroupsCount, zThreadGroupsCount);
-    //}
-
-    //void D3D12CommandList::ExecuteIndirect(const CommandSignature& commandSignature, std::uint32_t maxCommandCount, Resource& argumentBuffer, std::shared_ptr<Resource> countBuffer, std::uint32_t argumentBufferOffset, std::uint32_t countBufferOffset)
-    //{
-    //    ID3D12Resource* counter = countBuffer ? countBuffer->GetDXResource().Get() : nullptr;
-    //    _commandList->ExecuteIndirect(commandSignature.GetDXCommandSignature().Get(), maxCommandCount, argumentBuffer.GetDXResource().Get(), argumentBufferOffset, counter, countBufferOffset);
-    //}
-
-    //void D3D12CommandList::SetDescriptorHeaps(const std::vector<ID3D12DescriptorHeap*> descriptorHeaps)
-    //{
-    //    ASSERT(descriptorHeaps.size() != 0, "Descriptor heaps vector is empty.");
-
-    //    _commandList->SetDescriptorHeaps(static_cast<std::uint32_t>(descriptorHeaps.size()), descriptorHeaps.data());
-    //}
-
-    //void D3D12CommandList::SetConstant(std::uint32_t index, std::uint32_t data, std::uint32_t offset)
-    //{
-    //    FAIL(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Command list type is not Graphics or Compute.");
-
-    //    if (_type == CommandListType::Graphics)
-    //    {
-    //        _commandList->SetGraphicsRoot32BitConstant(index, data, offset);
-    //    }
-    //    else if (_type == CommandListType::Compute)
-    //    {
-    //        _commandList->SetComputeRoot32BitConstant(index, data, offset);
-    //    }
-    //}
-
-    //void D3D12CommandList::SetConstants(std::uint32_t index, std::uint32_t numValues, const void* data, std::uint32_t offset)
-    //{
-    //    FAIL(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Command list type is not Graphics or Compute.");
-
-    //    if (_type == CommandListType::Graphics)
-    //    {
-    //        _commandList->SetGraphicsRoot32BitConstants(index, numValues, data, offset);
-    //    }
-    //    else if (_type == CommandListType::Compute)
-    //    {
-    //        _commandList->SetComputeRoot32BitConstants(index, numValues, data, offset);
-    //    }
-    //}
-
-    //void D3D12CommandList::SetCBV(std::uint32_t index, D3D12_GPU_VIRTUAL_ADDRESS bufferLocation)
-    //{
-    //    FAIL(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Command list type is not Graphics or Compute.");
-
-    //    if (_type == CommandListType::Graphics)
-    //    {
-    //        _commandList->SetGraphicsRootConstantBufferView(index, bufferLocation);
-    //    }
-    //    else if (_type == CommandListType::Compute)
-    //    {
-    //        _commandList->SetComputeRootConstantBufferView(index, bufferLocation);
-    //    }
-    //}
-
-    //void D3D12CommandList::SetSRV(std::uint32_t index, D3D12_GPU_VIRTUAL_ADDRESS bufferLocation)
-    //{
-    //    FAIL(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Command list type is not Graphics or Compute.");
-
-    //    if (_type == CommandListType::Graphics)
-    //    {
-    //        _commandList->SetGraphicsRootShaderResourceView(index, bufferLocation);
-    //    }
-    //    else if (_type == CommandListType::Compute)
-    //    {
-    //        _commandList->SetComputeRootShaderResourceView(index, bufferLocation);
-    //    }
-    //}
-
-    //void D3D12CommandList::SetUAV(std::uint32_t index, D3D12_GPU_VIRTUAL_ADDRESS bufferLocation)
-    //{
-    //    FAIL(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Command list type is not Graphics or Compute.");
-
-    //    if (_type == CommandListType::Graphics)
-    //    {
-    //        _commandList->SetGraphicsRootUnorderedAccessView(index, bufferLocation);
-    //    }
-    //    else if (_type == CommandListType::Compute)
-    //    {
-    //        _commandList->SetComputeRootUnorderedAccessView(index, bufferLocation);
-    //    }
-    //}
-
-    //void D3D12CommandList::SetDescriptorTable(std::uint32_t index, D3D12_GPU_DESCRIPTOR_HANDLE descriptor)
-    //{
-    //    FAIL(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Command list type is not Graphics or Compute.");
-
-    //    if (_type == CommandListType::Graphics)
-    //    {
-    //        _commandList->SetGraphicsRootDescriptorTable(index, descriptor);
-    //    }
-    //    else if (_type == CommandListType::Compute)
-    //    {
-    //        _commandList->SetComputeRootDescriptorTable(index, descriptor);
-    //    }
-    //}
-
-    //void D3D12CommandList::Reset(ID3D12CommandAllocator* commandAllocator, ID3D12PipelineState* pipelineState)
-    //{
-    //    FAIL(commandAllocator, "Command allocator is null.");
-
-    //    HRESULT result = _commandList->Reset(commandAllocator, pipelineState);
-    //    CHECK(result, "Failed to reset command list.");
-    //}
-
-    //void D3D12CommandList::Close()
-    //{
-    //    HRESULT result = _commandList->Close();
-    //    CHECK(result, "Failed to close command list.");
-    //}
-
-    //void D3D12CommandList::SetName(const std::string& name)
-    //{
-    //    _name = name;
-
-    //    if (_commandList)
-    //    {
-    //        std::wstring tmp(_name.begin(), _name.end());
-    //        _commandList->SetName(tmp.c_str());
-    //    }
-    //}
-
-    //std::string D3D12CommandList::GetName() const
-    //{
-    //    return _name;
-    //}
 } // namespace rhi::d3d12

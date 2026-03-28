@@ -1,13 +1,6 @@
 #pragma once
 
 #include "DescriptorHeap.h"
-#include "D3D12Device.h"
-
-namespace rhi
-{
-    class Device;
-    struct DescriptorHeapDescription;
-}
 
 namespace rhi::d3d12
 {
@@ -71,7 +64,5 @@ namespace rhi::d3d12
 #if ENABLE_DEBUG_NAMES
         std::string _name;
 #endif // ENABLE_DEBUG_NAMES
-
-        friend class D3D12Device;
     };
 } // namespace rhi::d3d12

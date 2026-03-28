@@ -6,12 +6,13 @@
 namespace rhi::d3d12
 {
     D3D12Fence::D3D12Fence(rhi::Device* device, std::uint64_t initialValue)
-        : _fence(nullptr)
-        , _eventOnCompletion(nullptr)
+        : _eventOnCompletion(nullptr)
         , _fenceValue(initialValue)
         , _cpuCallback()
         , _isFree(true)
     {
+        ID3D12Device* d3d12NativeDevice = static_cast<ID3D12Device*>(device->GetNative());
+        d3d12NativeDevice->CreateFence(initialValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&_fence));
     }
 
     D3D12Fence::D3D12Fence(D3D12Fence&& other) noexcept
@@ -25,7 +26,6 @@ namespace rhi::d3d12
 
     D3D12Fence::~D3D12Fence()
     {
-        NOT_IMPLEMENTED();
     }
 
     D3D12Fence& D3D12Fence::operator=(D3D12Fence&& other) noexcept

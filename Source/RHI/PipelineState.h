@@ -24,5 +24,6 @@ namespace rhi
         virtual DepthStencilState ParseDepthStencilDescription(const std::string& filepath) = 0;
 
         virtual void* GetNative() const = 0;
+        virtual void* GetNativeRootSignature() const = 0;
     };
 } // namespace rhi

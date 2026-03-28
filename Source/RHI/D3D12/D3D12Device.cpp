@@ -3,9 +3,12 @@
 
 #include "D3D12Device.h"
 
+#include "ResourceCommon.h"
+
 #include "D3D12Buffer.h"
 #include "D3D12CommandList.h"
 #include "D3D12CommandQueue.h"
+#include "D3D12CommandSignature.h"
 #include "D3D12DescriptorHeap.h"
 #include "D3D12Descriptor.h"
 #include "D3D12Fence.h"
@@ -38,14 +41,14 @@ namespace rhi::d3d12
 
             LOG_INFO("DirectX 12 debug layer enabled.");
         }
-    } // namespace
+    } // namespace unnamed
 
     D3D12Device::D3D12Device()
         : _crashTracker(tracking::IGPUCrashTracker::Create())
     {
-#if defined(_DEBUG)
+#if ENABLE_DEVICE_DEBUG
         EnableDXDebugLayer();
-#endif
+#endif // ENABLE_DEVICE_DEBUG
 
         CreateAdapter();
         CreateDevice();
@@ -71,6 +74,7 @@ namespace rhi::d3d12
         , _queueCompute(std::move(other._queueCompute))
         , _queueCopy(std::move(other._queueCopy))
         , _swapChain(std::move(other._swapChain))
+        , _enhancedBarriersSupported(other._enhancedBarriersSupported)
     {
     }
 
@@ -84,6 +88,7 @@ namespace rhi::d3d12
             _queueCompute = std::move(other._queueCompute);
             _queueCopy = std::move(other._queueCopy);
             _swapChain = std::move(other._swapChain);
+            _enhancedBarriersSupported = other._enhancedBarriersSupported;
         }
 
         return *this;
@@ -119,113 +124,244 @@ namespace rhi::d3d12
         _swapChain->OnResize(width, height);
     }
 
-    //std::shared_ptr<rhi::Resource> D3D12Device::GetBackBuffer()
-    //{
-    //    return _swapChain->GetBackBuffer();
-    //}
+    std::shared_ptr<rhi::Texture> D3D12Device::GetBackBuffer()
+    {
+        return _swapChain->GetBackBuffer();
+    }
 
     void D3D12Device::Present()
     {
         _swapChain->Present();
     }
 
-    std::unique_ptr<CommandList> D3D12Device::CreateCommandList(CommandListType type)
+    std::shared_ptr<rhi::Buffer> D3D12Device::CreateBuffer(const rhi::BufferDescription& description, ResourceState initialState)
     {
-        return std::unique_ptr<D3D12CommandList>(new D3D12CommandList(this, type));
+        return std::unique_ptr<D3D12Buffer>(new D3D12Buffer(this, description, initialState));
     }
 
-    std::unique_ptr<DescriptorHeap> D3D12Device::CreateDescriptorHeap(const DescriptorHeapDescription& description)
+    std::shared_ptr<rhi::Buffer> D3D12Device::CreateBuffer(const rhi::BufferDescription& description, rhi::Heap* heap, std::uint64_t offset, ResourceState initialState)
     {
-        return std::unique_ptr<D3D12DescriptorHeap>(new D3D12DescriptorHeap(this, description));
+        return std::unique_ptr<D3D12Buffer>(new D3D12Buffer(this, description, heap, offset, initialState));
     }
 
-    std::shared_ptr<Buffer> D3D12Device::CreateBuffer(const BufferDescription& description, const void* initialData)
-    {
-        return std::unique_ptr<D3D12Buffer>(new D3D12Buffer(this, description, initialData));
-    }
-
-    std::shared_ptr<Buffer> D3D12Device::CreateBuffer(void* nativePtr)
+    std::shared_ptr<rhi::Buffer> D3D12Device::CreateBuffer(void* nativePtr)
     {
         return std::unique_ptr<D3D12Buffer>(new D3D12Buffer(this, D3D12Cast<ID3D12Resource>(nativePtr)));
     }
 
-    std::shared_ptr<Texture> D3D12Device::CreateTexture(const TextureDescription& description, const void* initialData)
+    std::shared_ptr<rhi::Texture> D3D12Device::CreateTexture(const rhi::TextureDescription& description, ResourceState initialState)
     {
-        return std::unique_ptr<D3D12Texture>(new D3D12Texture(this, description, initialData));
+        return std::unique_ptr<D3D12Texture>(new D3D12Texture(this, description, initialState));
     }
 
-    std::shared_ptr<Texture> D3D12Device::CreateTexture(void* nativePtr)
+    std::shared_ptr<rhi::Texture> D3D12Device::CreateTexture(const rhi::TextureDescription& description, rhi::Heap* heap, std::uint64_t offset, ResourceState initialState)
+    {
+        return std::unique_ptr<D3D12Texture>(new D3D12Texture(this, description, heap, offset, initialState));
+    }
+
+    std::shared_ptr<rhi::Texture> D3D12Device::CreateTexture(void* nativePtr)
     {
         return std::unique_ptr<D3D12Texture>(new D3D12Texture(this, D3D12Cast<ID3D12Resource>(nativePtr)));
     }
 
-    std::unique_ptr<QueryHeap> D3D12Device::CreateQueryHeap(const QueryHeapDescription& description)
+    std::unique_ptr<rhi::CommandList> D3D12Device::CreateCommandList(rhi::CommandListType type)
+    {
+        return std::unique_ptr<D3D12CommandList>(new D3D12CommandList(this, type));
+    }
+
+    std::unique_ptr<rhi::DescriptorHeap> D3D12Device::CreateDescriptorHeap(const rhi::DescriptorHeapDescription& description)
+    {
+        return std::unique_ptr<D3D12DescriptorHeap>(new D3D12DescriptorHeap(this, description));
+    }
+
+    std::unique_ptr<rhi::QueryHeap> D3D12Device::CreateQueryHeap(const rhi::QueryHeapDescription& description)
     {
         return std::unique_ptr<D3D12QueryHeap>(new D3D12QueryHeap(this, description));
     }
 
-    std::unique_ptr<Fence> D3D12Device::CreateFence(std::uint64_t initialValue)
+    std::unique_ptr<rhi::Fence> D3D12Device::CreateFence(std::uint64_t initialValue)
     {
         return std::unique_ptr<D3D12Fence>(new D3D12Fence(this, initialValue));
     }
 
-    std::unique_ptr<Heap> D3D12Device::CreateHeap(const HeapDescription& description)
+    std::unique_ptr<rhi::Heap> D3D12Device::CreateHeap(const rhi::HeapDescription& description)
     {
         return std::unique_ptr<D3D12Heap>(new D3D12Heap(this, description));
     }
 
-    std::unique_ptr<StatisticsQuery> D3D12Device::CreateStatisticsQuery()
+    std::unique_ptr<rhi::StatisticsQuery> D3D12Device::CreateStatisticsQuery()
     {
         return std::unique_ptr<D3D12StatisticsQuery>(new D3D12StatisticsQuery(this));
     }
 
-    std::unique_ptr<TimestampQuery> D3D12Device::CreateTimestampQuery(std::uint32_t timestampsCount)
+    std::unique_ptr<rhi::TimestampQuery> D3D12Device::CreateTimestampQuery(std::uint32_t timestampsCount)
     {
         return std::unique_ptr<D3D12TimestampQuery>(new D3D12TimestampQuery(this, timestampsCount));
     }
 
-    void D3D12Device::CreateBufferSRV(std::shared_ptr<Buffer> resource, CPUDescriptor& descriptor)
+    std::unique_ptr<rhi::CommandSignature> D3D12Device::CreateCommandSignature(const std::vector<rhi::IndirectArgumentDescription>& arguments, rhi::PipelineState* pipelineState)
     {
+        return std::unique_ptr<D3D12CommandSignature>(new D3D12CommandSignature(this, arguments, pipelineState));
     }
 
-    void D3D12Device::CreateBufferCBV(std::shared_ptr<Buffer> resource, CPUDescriptor& descriptor)
+    void D3D12Device::CreateBufferSRV(std::shared_ptr<Buffer> buffer, CPUDescriptor& descriptor)
     {
+        D3D12_SHADER_RESOURCE_VIEW_DESC view = 
+        {
+            .Format = DXGI_FORMAT_UNKNOWN,
+            .ViewDimension = D3D12_SRV_DIMENSION_BUFFER,
+            .Buffer = 
+                {
+                    .FirstElement = 0,
+                    .NumElements = buffer->GetElementCount(),
+                    .StructureByteStride = buffer->GetStride(),
+                    .Flags = D3D12_BUFFER_SRV_FLAG_NONE
+                }
+        };
+
+        _device->CreateShaderResourceView(D3D12Cast<ID3D12Resource>(buffer->GetNative()), &view, ToD3D12Handle(descriptor));
     }
 
-    void D3D12Device::CreateBufferUAV(std::shared_ptr<Buffer> resource, CPUDescriptor& descriptor, std::shared_ptr<Buffer> counterResource)
+    void D3D12Device::CreateBufferCBV(std::shared_ptr<Buffer> buffer, CPUDescriptor& descriptor)
     {
+        D3D12_CONSTANT_BUFFER_VIEW_DESC view =
+        {
+            .BufferLocation = buffer->GetVirtualAddress(),
+            .SizeInBytes = buffer->GetSize()
+        };
+
+        _device->CreateConstantBufferView(&view, ToD3D12Handle(descriptor));
+    }
+
+    void D3D12Device::CreateBufferUAV(std::shared_ptr<Buffer> buffer, CPUDescriptor& descriptor, std::shared_ptr<Buffer> counterResource)
+    {
+        D3D12_UNORDERED_ACCESS_VIEW_DESC view =
+        {
+            .Format = DXGI_FORMAT_UNKNOWN,
+            .ViewDimension = D3D12_UAV_DIMENSION_BUFFER,
+            .Buffer = 
+                {
+                    .NumElements = buffer->GetElementCount(),
+                    .StructureByteStride = buffer->GetStride(),
+                    .CounterOffsetInBytes = 0
+                }
+        };
+
+        std::uint32_t counterOffset = buffer->GetUAVCounterOffset();
+        ID3D12Resource* nativeResource = D3D12Cast<ID3D12Resource>(buffer->GetNative());
+        if (counterOffset != -1)
+        {
+            view.Buffer.CounterOffsetInBytes = counterOffset;
+
+            ID3D12Resource* nativeCounterResource = D3D12Cast<ID3D12Resource>(counterResource->GetNative());
+            _device->CreateUnorderedAccessView(nativeResource, nativeCounterResource, &view, ToD3D12Handle(descriptor));
+        }
+        else
+        {
+            _device->CreateUnorderedAccessView(nativeResource, nullptr, &view, ToD3D12Handle(descriptor));
+        }
+
     }
 
     void D3D12Device::CreateTextureRTV(std::shared_ptr<Texture> texture, CPUDescriptor& descriptor)
     {
-        D3D12_RENDER_TARGET_VIEW_DESC desc =
+        D3D12_RENDER_TARGET_VIEW_DESC view =
         {
             .Format = GetDXGIFormat(texture->GetFormat()),
             .ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D,
             .Texture2D = {}
         };
 
-        _device->CreateRenderTargetView(D3D12Cast<ID3D12Resource>(texture->GetNative()), &desc, ToD3D12Handle(descriptor));
+        _device->CreateRenderTargetView(D3D12Cast<ID3D12Resource>(texture->GetNative()), &view, ToD3D12Handle(descriptor));
     }
 
     void D3D12Device::CreateTextureDSV(std::shared_ptr<Texture> texture, CPUDescriptor& descriptor)
     {
-        NOT_IMPLEMENTED();
+        D3D12_DEPTH_STENCIL_VIEW_DESC view = {};
+
+        std::uint32_t arraySize = texture->GetDepthOrArraySize();
+        if (arraySize > 1)
+        {
+            view.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DARRAY;
+            view.Texture2DArray.ArraySize = arraySize;
+        }
+        else
+        {
+            view.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+        }
+        view.Texture2D.MipSlice = 0;
+
+        _device->CreateDepthStencilView(D3D12Cast<ID3D12Resource>(texture->GetNative()), &view, ToD3D12Handle(descriptor));
     }
 
     void D3D12Device::CreateTextureSRV(std::shared_ptr<Texture> texture, CPUDescriptor& descriptor)
     {
-        NOT_IMPLEMENTED();
+        D3D12_SHADER_RESOURCE_VIEW_DESC view = {};
+        view.Format = GetDXGIFormat(texture->GetFormat());
+
+        std::uint32_t arraySize = texture->GetDepthOrArraySize();
+        if (arraySize == 6)
+        {
+            view.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+            view.TextureCube.MipLevels = texture->GetMipLevels();
+            view.TextureCube.MostDetailedMip = 0;
+            view.TextureCube.ResourceMinLODClamp = 0.0f;
+        }
+        else if (arraySize > 1)
+        {
+            view.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
+            view.Texture2DArray.ArraySize = arraySize;
+            view.Texture2DArray.MipLevels = texture->GetMipLevels();
+            view.Texture2DArray.FirstArraySlice = 0;
+            view.Texture2DArray.MostDetailedMip = 0;
+            view.Texture2DArray.PlaneSlice = 0;
+            view.Texture2DArray.ResourceMinLODClamp = 0.0f;
+        }
+        else
+        {
+            view.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+            view.Texture2D.MipLevels = texture->GetMipLevels();
+            view.Texture2D.MostDetailedMip = 0;
+            view.Texture2D.PlaneSlice = 0;
+            view.Texture2D.ResourceMinLODClamp = 0.0f;
+        }
+
+        _device->CreateShaderResourceView(D3D12Cast<ID3D12Resource>(texture->GetNative()), &view, ToD3D12Handle(descriptor));
     }
 
     void D3D12Device::CreateTextureCBV(std::shared_ptr<Texture> texture, CPUDescriptor& descriptor)
     {
-        NOT_IMPLEMENTED();
+        D3D12_CONSTANT_BUFFER_VIEW_DESC view =
+        {
+            .BufferLocation = texture->GetVirtualAddress(),
+            .SizeInBytes = texture->GetWidth() * texture->GetHeight()
+        };
+
+        _device->CreateConstantBufferView(&view, ToD3D12Handle(descriptor));
     }
 
-    void D3D12Device::CreateTextureUAV(std::shared_ptr<Texture> texture, CPUDescriptor& descriptor, std::shared_ptr<Buffer> counterResource)
+    void D3D12Device::CreateTextureUAV(std::shared_ptr<Texture> texture, CPUDescriptor& descriptor)
     {
-        NOT_IMPLEMENTED();
+        D3D12_UNORDERED_ACCESS_VIEW_DESC view = {};
+        view.Format = GetDXGIFormat(texture->GetFormat());
+
+        std::uint32_t arraySize = texture->GetDepthOrArraySize();
+        if (arraySize == 1)
+        {
+            view.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+            view.Texture2D.MipSlice = 0;
+            view.Texture2D.PlaneSlice = 0;
+        }
+        else
+        {
+            view.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
+            view.Texture2DArray.ArraySize = arraySize;
+            view.Texture2DArray.FirstArraySlice = 0;
+            view.Texture2DArray.MipSlice = 0;
+            view.Texture2DArray.PlaneSlice = 0;
+        }
+
+        _device->CreateUnorderedAccessView(D3D12Cast<ID3D12Resource>(texture->GetNative()), nullptr, &view, ToD3D12Handle(descriptor));
     }
 
     std::uint32_t D3D12Device::GetDescriptorHandleIncrementSize(rhi::DescriptorHeapType type) const
@@ -244,62 +380,31 @@ namespace rhi::d3d12
         }
     }
 
-    //void D3D12Device::CreateRenderTargetView(const rhi::RenderTargetView& view, rhi::DescriptorHeap& descriptorHeap)
-    //{
-    //    D3D12_CPU_DESCRIPTOR_HANDLE heapHandle = descriptorHeap.GetCPUHandleWithOffset(descriptorHeap.Offset());
-    //    _device->CreateRenderTargetView(view.Owner->GetDXResource().Get(), &view, heapHandle);
-    //}
+    rhi::AllocationInfo D3D12Device::GetAllocationInfo(const BufferDescription& description) const
+    {
+        D3D12_RESOURCE_DESC desc = GetD3D12ResourceDesc(description);
+        D3D12_RESOURCE_ALLOCATION_INFO allocation = _device->GetResourceAllocationInfo(0, 1, &desc);
 
-    //void D3D12Device::CreateDepthStencilView(const rhi::DepthStencilView& view, rhi::DescriptorHeap& descriptorHeap)
-    //{
-    //    D3D12_CPU_DESCRIPTOR_HANDLE heapHandle = descriptorHeap.GetCPUHandleWithOffset(descriptorHeap.Offset());
-    //    _device->CreateDepthStencilView(view.Owner->GetDXResource().Get(), &view, heapHandle);
-    //}
+        rhi::AllocationInfo allocationInfo =
+        {
+            .SizeInBytes = allocation.SizeInBytes,
+            .Alignment = allocation.Alignment
+        };
+        return allocationInfo;
+    }
 
-    //void D3D12Device::CreateConstantBufferView(const rhi::ConstantBufferView& view, rhi::DescriptorHeap& descriptorHeap)
-    //{
-    //    D3D12_CPU_DESCRIPTOR_HANDLE heapHandle = descriptorHeap.GetCPUHandleWithOffset(descriptorHeap.Offset());
-    //    _device->CreateConstantBufferView(&view, heapHandle);
-    //}
+    rhi::AllocationInfo D3D12Device::GetAllocationInfo(const rhi::TextureDescription& description) const
+    {
+        D3D12_RESOURCE_DESC desc = GetD3D12ResourceDesc(description);
+        D3D12_RESOURCE_ALLOCATION_INFO allocation = _device->GetResourceAllocationInfo(0, 1, &desc);
 
-    //void D3D12Device::CreateShaderResourceView(const rhi::ShaderResourceView& view, rhi::DescriptorHeap& descriptorHeap)
-    //{
-    //    D3D12_CPU_DESCRIPTOR_HANDLE heapHandle = descriptorHeap.GetCPUHandleWithOffset(descriptorHeap.Offset());
-    //    _device->CreateShaderResourceView(view.Owner->GetDXResource().Get(), &view, heapHandle);
-    //}
-
-    //void D3D12Device::CreateUnorderedAccessView(const rhi::UnorderedAccessView& view, rhi::DescriptorHeap& descriptorHeap, std::shared_ptr<rhi::Resource> counterResource)
-    //{
-    //    ID3D12Resource* counter = counterResource ? counterResource->GetDXResource().Get() : nullptr;
-    //    D3D12_CPU_DESCRIPTOR_HANDLE heapHandle = descriptorHeap.GetCPUHandleWithOffset(descriptorHeap.Offset());
-    //    _device->CreateUnorderedAccessView(view.Owner->GetDXResource().Get(), counter, &view, heapHandle);
-    //}
-
-    //void D3D12Device::CreateRenderTargetView(const rhi::RenderTargetView& view, rhi::Descriptor descriptor)
-    //{
-    //    _device->CreateRenderTargetView(view.Owner->GetDXResource().Get(), &view, descriptor);
-    //}
-
-    //void D3D12Device::CreateDepthStencilView(const rhi::DepthStencilView& view, rhi::Descriptor descriptor)
-    //{
-    //    _device->CreateDepthStencilView(view.Owner->GetDXResource().Get(), &view, descriptor);
-    //}
-
-    //void D3D12Device::CreateConstantBufferView(const rhi::ConstantBufferView& view, rhi::Descriptor descriptor)
-    //{
-    //    _device->CreateConstantBufferView(&view, descriptor);
-    //}
-
-    //void D3D12Device::CreateShaderResourceView(const rhi::ShaderResourceView& view, rhi::Descriptor descriptor)
-    //{
-    //    _device->CreateShaderResourceView(view.Owner->GetDXResource().Get(), &view, descriptor);
-    //}
-
-    //void D3D12Device::CreateUnorderedAccessView(const rhi::UnorderedAccessView& view, rhi::Descriptor descriptor, std::shared_ptr<rhi::Resource> counterResource)
-    //{
-    //    ID3D12Resource* counter = view.Owner->GetResourceDescription().GetUAVCounterOffset() != std::uint32_t(-1) ? view.Owner->GetDXResource().Get() : nullptr; // TODO: Use counterResource if provided
-    //    _device->CreateUnorderedAccessView(view.Owner->GetDXResource().Get(), counter, &view, descriptor);
-    //}
+        rhi::AllocationInfo allocationInfo =
+        {
+            .SizeInBytes = allocation.SizeInBytes,
+            .Alignment = allocation.Alignment
+        };
+        return allocationInfo;
+    }
 
     tracking::IGPUCrashTracker* D3D12Device::GetCrashTracker()
     {
@@ -315,9 +420,9 @@ namespace rhi::d3d12
     {
         ComPtr<IDXGIFactory4> dxgiFactory;
         UINT createFactoryFlags = 0;
-#if defined(_DEBUG)
+#if ENABLE_DEVICE_DEBUG
         createFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
-#endif
+#endif // ENABLE_DEVICE_DEBUG
 
         HRESULT createDXGIFactoryResult = CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&dxgiFactory));
         CHECK(createDXGIFactoryResult, "Failed to create DXGI factory.");
@@ -372,7 +477,7 @@ namespace rhi::d3d12
         _crashTracker->Initialize(_device.Get());
 
         // Enable debug messages in debug mode.
-#if defined(_DEBUG)
+#if ENABLE_DEVICE_DEBUG
         ComPtr<ID3D12InfoQueue> infoQueue;
         if (SUCCEEDED(_device.As(&infoQueue)))
         {
@@ -409,7 +514,7 @@ namespace rhi::d3d12
             HRESULT result = infoQueue->PushStorageFilter(&NewFilter);
             CHECK(result, "Failed to set D3D12 info queue filter.");
         }
-#endif
+#endif // ENABLE_DEVICE_DEBUG
     }
 
     void D3D12Device::CreateQueues()

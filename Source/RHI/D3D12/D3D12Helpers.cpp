@@ -1,10 +1,9 @@
-#include "D3D12Helpers.h"
-#include "D3D12Helpers.h"
-#include "D3D12Helpers.h"
-#include "D3D12Helpers.h"
-#include "D3D12Helpers.h"
 
 #include "RHI_PCH.h"
+
+#include "Buffer.h"
+#include "Texture.h"
+#include "CommandSignature.h"
 
 #include "D3D12Helpers.h"
 
@@ -563,6 +562,9 @@ namespace rhi::d3d12
             case rhi::StencilOp::Invert: return D3D12_STENCIL_OP_INVERT;
             case rhi::StencilOp::Incr: return D3D12_STENCIL_OP_INCR;
             case rhi::StencilOp::Decr: return D3D12_STENCIL_OP_DECR;
+            default:
+                UNREACHABLE("Unsupported stencil op.");
+                return D3D12_STENCIL_OP_ZERO;
         }
     }
 
@@ -594,5 +596,162 @@ namespace rhi::d3d12
         };
 
         return desc;
+    }
+
+    D3D12_CLEAR_FLAGS GetD3D12ClearFlags(rhi::ClearFlags clearFlags)
+    {
+        switch (clearFlags)
+        {
+        case rhi::ClearFlags::DepthStencil: return D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL;
+        case rhi::ClearFlags::Depth: return D3D12_CLEAR_FLAG_DEPTH;
+        case rhi::ClearFlags::Stencil: return D3D12_CLEAR_FLAG_STENCIL;
+        default:
+            UNREACHABLE("Unsupported clear flag.");
+            return D3D12_CLEAR_FLAG_DEPTH;
+        }
+    }
+
+    D3D12_HEAP_TYPE GetD3D12HeapType(rhi::HeapType type)
+    {
+        switch (type)
+        {
+        case rhi::HeapType::Default: return D3D12_HEAP_TYPE_DEFAULT;
+        case rhi::HeapType::Upload: return D3D12_HEAP_TYPE_UPLOAD;
+        case rhi::HeapType::GPUUpload: return D3D12_HEAP_TYPE_GPU_UPLOAD;
+        case rhi::HeapType::Readback: return D3D12_HEAP_TYPE_READBACK;
+        case rhi::HeapType::Custom: return D3D12_HEAP_TYPE_CUSTOM;
+        default:
+            UNREACHABLE("Unsupported heap type.");
+            return D3D12_HEAP_TYPE_DEFAULT;
+        }
+    }
+
+    D3D12_CPU_PAGE_PROPERTY GetD3D12CPUPageProperty(rhi::CPUPageProperty property)
+    {
+        switch (property)
+        {
+        case rhi::CPUPageProperty::Unknown: return D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+        case rhi::CPUPageProperty::NotAvailable: return D3D12_CPU_PAGE_PROPERTY_NOT_AVAILABLE;
+        case rhi::CPUPageProperty::WriteCombine: return D3D12_CPU_PAGE_PROPERTY_WRITE_COMBINE;
+        case rhi::CPUPageProperty::Writeback: return D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;
+        default:
+            UNREACHABLE("Unsupported CPU page property.");
+            return D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+        }
+    }
+
+    D3D12_MEMORY_POOL GetD3D12MemoryPool(rhi::MemoryPool memoryPool)
+    {
+        switch (memoryPool)
+        {
+        case rhi::MemoryPool::Unknown: return D3D12_MEMORY_POOL_UNKNOWN;
+        case rhi::MemoryPool::L0: return D3D12_MEMORY_POOL_L0;
+        case rhi::MemoryPool::L1: return D3D12_MEMORY_POOL_L1;
+        default:
+            UNREACHABLE("Unsupported memory pool.");
+            return D3D12_MEMORY_POOL_UNKNOWN;
+        }
+    }
+
+    D3D12_HEAP_PROPERTIES GetD3D12HeapProperties(rhi::HeapProperties properties)
+    {
+        D3D12_HEAP_PROPERTIES result =
+        {
+            .Type = GetD3D12HeapType(properties.Type),
+            .CPUPageProperty = GetD3D12CPUPageProperty(properties.CPUPageProperty),
+            .MemoryPoolPreference = GetD3D12MemoryPool(properties.MemoryPoolPreference),
+            .CreationNodeMask = properties.CreationNodeMask,
+            .VisibleNodeMask = properties.VisibleNodeMask
+        };
+
+        return result;
+    }
+
+    D3D12_RESOURCE_DESC GetD3D12ResourceDesc(const rhi::BufferDescription& description)
+    {
+        D3D12_RESOURCE_DESC resourceDesc =
+        {
+            .Dimension = D3D12_RESOURCE_DIMENSION_BUFFER,
+            .Alignment = 0,
+            .Width = description.Size,
+            .Height = 1,
+            .DepthOrArraySize = 1,
+            .MipLevels = 1,
+            .Format = GetDXGIFormat(description.Format),
+            .SampleDesc = { 1, 0 },
+            .Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR,
+            .Flags = GetD3D12ResourceFlags(description.Flags)
+        };
+
+        return resourceDesc;
+    }
+
+    D3D12_RESOURCE_DESC GetD3D12ResourceDesc(const rhi::TextureDescription& description)
+    {
+        D3D12_RESOURCE_DESC resourceDesc =
+        {
+            .Dimension = GetD3D12ResourceDimension(description.Dimension),
+            .Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT,
+            .Width = description.Width,
+            .Height = description.Height,
+            .DepthOrArraySize = description.DepthOrArraySize,
+            .MipLevels = description.MipLevels,
+            .Format = GetDXGIFormat(description.Format),
+            .SampleDesc = { 1, 0 },
+            .Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR,
+            .Flags = GetD3D12ResourceFlags(description.Flags)
+        };
+
+        return resourceDesc;
+    }
+    D3D12_INDIRECT_ARGUMENT_DESC GetD3D12IndirectArgumentDesc(const rhi::IndirectArgumentDescription argumentDesc)
+    {
+        D3D12_INDIRECT_ARGUMENT_DESC argument = {};
+
+        switch (argumentDesc.Type)
+        {
+        case rhi::IndirectArgumentType::Draw:
+            argument.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW;
+            break;
+        case rhi::IndirectArgumentType::DrawIndexed:
+            argument.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED;
+            break;
+        case rhi::IndirectArgumentType::Dispatch:
+            argument.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH;
+            break;
+        case rhi::IndirectArgumentType::VertexBufferView:
+            argument.Type = D3D12_INDIRECT_ARGUMENT_TYPE_VERTEX_BUFFER_VIEW;
+            argument.VertexBuffer.Slot = argumentDesc.VertexBuffer.Slot;
+            break;
+        case rhi::IndirectArgumentType::IndexBufferView:
+            argument.Type = D3D12_INDIRECT_ARGUMENT_TYPE_INDEX_BUFFER_VIEW;
+            break;
+        case rhi::IndirectArgumentType::Constant:
+            argument.Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT;
+            argument.Constant =
+            {
+                .RootParameterIndex = argumentDesc.Constant.RootParameterIndex,
+                .DestOffsetIn32BitValues = argumentDesc.Constant.DestOffsetIn32BitValues,
+                .Num32BitValuesToSet = argumentDesc.Constant.Num32BitValuesToSet
+            };
+            break;
+        case rhi::IndirectArgumentType::ConstantBufferView:
+            argument.Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT_BUFFER_VIEW;
+            argument.ConstantBufferView.RootParameterIndex = argumentDesc.ConstantBufferView.RootParameterIndex;
+            break;
+        case rhi::IndirectArgumentType::ShaderResourceView:
+            argument.Type = D3D12_INDIRECT_ARGUMENT_TYPE_SHADER_RESOURCE_VIEW;
+            argument.ShaderResourceView.RootParameterIndex = argumentDesc.ShaderResourceView.RootParameterIndex;
+            break;
+        case rhi::IndirectArgumentType::UnorderedResourceView:
+            argument.Type = D3D12_INDIRECT_ARGUMENT_TYPE_UNORDERED_ACCESS_VIEW;
+            argument.UnorderedAccessView.RootParameterIndex = argumentDesc.UnorderedAccessView.RootParameterIndex;
+            break;
+        default:
+            UNREACHABLE("Unsupported indirect argument type.");
+            break;
+        }
+
+        return argument;
     }
 } // namespace rhi::d3d12

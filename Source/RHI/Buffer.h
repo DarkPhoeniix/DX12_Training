@@ -7,7 +7,7 @@ namespace rhi
 {
     struct BufferDescription
     {
-        std::uint64_t Size      = 0;
+        std::uint32_t Size      = 0;
         std::uint32_t Stride    = 0;
         Format Format           = Format::UNKNOWN;
         ResourceUsage Usage     = ResourceUsage::Default;
@@ -33,16 +33,17 @@ namespace rhi
         [[nodiscard]] virtual std::uint64_t GetVirtualAddress() = 0;
         [[nodiscard]] virtual ResourceState GetInitialState() const = 0;
         [[nodiscard]] virtual ResourceState GetCurrentState() const = 0;
-        [[nodiscard]] virtual const AllocationInfo& GetAllocationInfo() const = 0;
+        virtual void SetCurrentState(ResourceState state) = 0;
 
         const BufferDescription& GetDescription() const { return _description; }
-        std::uint64_t GetSize() const { return _description.Size; }
+        std::uint32_t GetSize() const { return _description.Size; }
         std::uint32_t GetStride() const { return _description.Stride; }
         std::uint32_t GetElementCount() const 
-        { 
-            ASSERT(_description.Stride > 0, "Stride must be greater than zero to calculate element count.");
-            return static_cast<std::uint32_t>(_description.Size / _description.Stride); 
+        {
+            return (_description.Stride > 0) ? 0 : static_cast<std::uint32_t>(_description.Size / _description.Stride);
         }
+
+        virtual std::uint32_t GetUAVCounterOffset() const = 0;
 
         virtual void* GetNative() const = 0;
 

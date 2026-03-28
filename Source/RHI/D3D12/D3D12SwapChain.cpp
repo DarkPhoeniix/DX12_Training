@@ -9,7 +9,7 @@
 
 namespace rhi::d3d12
 {
-    D3D12SwapChain::D3D12SwapChain(rhi::Device* device)
+    D3D12SwapChain::D3D12SwapChain(rhi::Device* device, HWND windowHandle, std::uint32_t width, std::uint32_t height, bool vSync)
         : _dxgiSwapChain{}
         , _device(device)
         , _RTVDescriptorSize(device->GetDescriptorHandleIncrementSize(rhi::DescriptorHeapType::RTV))
@@ -29,11 +29,21 @@ namespace rhi::d3d12
         };
 
         _RTVDescriptorHeap = device->CreateDescriptorHeap(desc);
+
+        _windowHandle = windowHandle;
+        _width = width;
+        _height = height;
+        _vSync = vSync;
+
+        _dxgiSwapChain = CreateSwapChain();
+        _currentBackBufferIndex = _dxgiSwapChain->GetCurrentBackBufferIndex();
+
+        UpdateRenderTargetViews();
     }
 
     D3D12SwapChain::D3D12SwapChain(D3D12SwapChain&& other) noexcept
         : _dxgiSwapChain(std::move(other._dxgiSwapChain))
-        , _device(other._device)
+        , _device(std::move(other._device))
         , _RTVDescriptorSize(other._RTVDescriptorSize)
         , _currentBackBufferIndex(other._currentBackBufferIndex)
         , _windowHandle(std::move(other._windowHandle))
@@ -42,21 +52,18 @@ namespace rhi::d3d12
         , _vSync(other._vSync)
         , _tearingSupport(other._tearingSupport)
     {
-        NOT_IMPLEMENTED();
     }
 
     D3D12SwapChain::~D3D12SwapChain()
     {
-        NOT_IMPLEMENTED();
     }
 
     D3D12SwapChain& D3D12SwapChain::operator=(D3D12SwapChain&& other) noexcept
     {
-        NOT_IMPLEMENTED();
         if (this != &other)
         {
             _dxgiSwapChain = std::move(other._dxgiSwapChain);
-            _device = other._device;
+            _device = std::move(other._device);
             _RTVDescriptorSize = other._RTVDescriptorSize;
             _currentBackBufferIndex = other._currentBackBufferIndex;
             _windowHandle = std::move(other._windowHandle);
@@ -67,19 +74,6 @@ namespace rhi::d3d12
         }
 
         return *this;
-    }
-
-    void D3D12SwapChain::Init(HWND windowHandle, std::uint32_t width, std::uint32_t height, bool vSync)
-    {
-        _windowHandle = windowHandle;
-        _width = width;
-        _height = height;
-        _vSync = vSync;
-
-        _dxgiSwapChain = CreateSwapChain();
-        _currentBackBufferIndex = _dxgiSwapChain->GetCurrentBackBufferIndex();
-
-        UpdateRenderTargetViews();
     }
 
     std::shared_ptr<rhi::Texture> D3D12SwapChain::GetBuffer(std::uint32_t index)
@@ -109,7 +103,7 @@ namespace rhi::d3d12
         }
     }
 
-    UINT D3D12SwapChain::Present()
+    std::uint32_t D3D12SwapChain::Present()
     {
         UINT syncInterval = _vSync ? 1 : 0;
         UINT presentFlags = (_tearingSupport && !_vSync) ? DXGI_PRESENT_ALLOW_TEARING : 0;
@@ -124,17 +118,17 @@ namespace rhi::d3d12
             exit(-1);
         }
 
-        _currentBackBufferIndex = _dxgiSwapChain->GetCurrentBackBufferIndex();
+        _currentBackBufferIndex = static_cast<std::uint32_t>(_dxgiSwapChain->GetCurrentBackBufferIndex());
 
         return _currentBackBufferIndex;
     }
 
-    void D3D12SwapChain::OnResize(const DirectX::XMUINT2& size)
+    void D3D12SwapChain::OnResize(std::uint32_t width, std::uint32_t height)
     {
-        if (_width != size.x || _height != size.y)
+        if (_width != width || _height != height)
         {
-            _width = std::max(1, (int)size.x);
-            _height = std::max(1, (int)size.y);
+            _width = std::max((std::uint32_t)1, width);
+            _height = std::max((std::uint32_t)1, height);
 
             for (int i = 0; i < BACK_BUFFER_COUNT; ++i)
             {
@@ -154,14 +148,19 @@ namespace rhi::d3d12
         }
     }
 
+    void* D3D12SwapChain::GetNative() const
+    {
+        return static_cast<void*>(_dxgiSwapChain.Get());
+    }
+
     ComPtr<IDXGISwapChain4> D3D12SwapChain::CreateSwapChain()
     {
         ComPtr<IDXGISwapChain4> dxgiSwapChain4;
         ComPtr<IDXGIFactory4> dxgiFactory4;
         UINT createFactoryFlags = 0;
-#if defined(_DEBUG)
+#if defined(ENABLE_DEVICE_DEBUG)
         createFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
-#endif
+#endif // ENABLE_DEVICE_DEBUG
 
         HRESULT createDXGIFactoryResult = CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&dxgiFactory4));
         CHECK(createDXGIFactoryResult, "Failed to create DXGI factory.");
@@ -224,14 +223,5 @@ namespace rhi::d3d12
         }
 
         return allowTearing == TRUE;
-    }
-
-    ComPtr<IDXGIOutput> D3D12SwapChain::GetContainingOutput()
-    {
-        ComPtr<IDXGIOutput> output;
-        HRESULT result = _dxgiSwapChain->GetContainingOutput(&output);
-        CHECK(result, "Failed to get containing output for swap chain.");
-
-        return output;
     }
 } // namespace rhi::d3d12

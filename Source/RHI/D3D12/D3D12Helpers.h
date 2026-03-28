@@ -4,8 +4,14 @@
 #include "ResourceCommon.h"
 #include "CommandList.h"
 #include "QueryHeap.h"
+#include "Heap.h"
 
 #include <concepts>
+
+namespace rhi
+{
+    struct IndirectArgumentDescription;
+}
 
 namespace rhi::d3d12
 {
@@ -63,4 +69,16 @@ namespace rhi::d3d12
     D3D12_STENCIL_OP GetD3D12StencilOp(rhi::StencilOp stencilOp);
     D3D12_DEPTH_STENCILOP_DESC GetD3D12StencilOpDesc(const rhi::DepthStencilOpDesc& depthStencilOpDesc);
     D3D12_DEPTH_STENCIL_DESC GetD3D12DepthStencilDesc(const rhi::DepthStencilState depthStencilState);
+
+    D3D12_CLEAR_FLAGS GetD3D12ClearFlags(rhi::ClearFlags clearFlags);
+
+    D3D12_HEAP_TYPE GetD3D12HeapType(rhi::HeapType type);
+    D3D12_CPU_PAGE_PROPERTY GetD3D12CPUPageProperty(rhi::CPUPageProperty property);
+    D3D12_MEMORY_POOL GetD3D12MemoryPool(rhi::MemoryPool memoryPool);
+    D3D12_HEAP_PROPERTIES GetD3D12HeapProperties(rhi::HeapProperties properties);
+
+    D3D12_RESOURCE_DESC GetD3D12ResourceDesc(const rhi::BufferDescription& description);
+    D3D12_RESOURCE_DESC GetD3D12ResourceDesc(const rhi::TextureDescription& description);
+
+    D3D12_INDIRECT_ARGUMENT_DESC GetD3D12IndirectArgumentDesc(const rhi::IndirectArgumentDescription argumentDesc);
 } // namespace rhi::d3d12

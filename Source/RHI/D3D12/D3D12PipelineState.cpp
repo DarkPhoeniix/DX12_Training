@@ -12,6 +12,24 @@ namespace rhi::d3d12
 {
     namespace
     {
+        const std::map<std::string, rhi::PipelineStateType> PIPELINE_TYPE =
+        {
+            { "Graphics", rhi::PipelineStateType::Graphics },
+            { "Compute", rhi::PipelineStateType::Compute }
+        };
+
+        rhi::PipelineStateType ParsePipelineType(const std::string& typeName)
+        {
+            auto it = PIPELINE_TYPE.find(typeName);
+            if (it != PIPELINE_TYPE.end())
+            {
+                return it->second;
+            }
+
+            LOG_WARNING("Failed to parse {} from the pipeline type description", typeName);
+            return PIPELINE_TYPE.begin()->second;
+        }
+
         Json::Value ParseJson(const std::string& filepath)
         {
             ASSERT(std::filesystem::exists(filepath), "Failed to load {}" + filepath);
@@ -291,7 +309,7 @@ namespace rhi::d3d12
     D3D12PipelineState::D3D12PipelineState(rhi::Device* device)
         : _rootSignature(nullptr)
         , _pipelineState(nullptr)
-        , _isGraphicsPipeline(false)
+        , _type(rhi::PipelineStateType::Graphics)
         , _device(device)
     {
     }
@@ -299,7 +317,7 @@ namespace rhi::d3d12
     D3D12PipelineState::D3D12PipelineState(D3D12PipelineState&& other) noexcept
         : _rootSignature(std::move(other._rootSignature))
         , _pipelineState(std::move(other._pipelineState))
-        , _isGraphicsPipeline(other._isGraphicsPipeline)
+        , _type(other._type)
         , _device(other._device)
     {
     }
@@ -316,7 +334,7 @@ namespace rhi::d3d12
         {
             _rootSignature = std::move(other._rootSignature);
             _pipelineState = std::move(other._pipelineState);
-            _isGraphicsPipeline = other._isGraphicsPipeline;
+            _type = other._type;
             _device = other._device;
         }
 
@@ -338,15 +356,19 @@ namespace rhi::d3d12
         Json::Value jsonRoot = ParseJson(filepath);
         ASSERT(!jsonRoot.isNull() || jsonRoot.empty(), "Failed to parse JSON from file: " + filepath);
 
-        _isGraphicsPipeline = jsonRoot["IsGraphicsPipeline"].asBool();
+        _type = ParsePipelineType(jsonRoot["IsGraphicsPipeline"].asString());
 
-        if (_isGraphicsPipeline)
+        switch (_type)
         {
+        case rhi::PipelineStateType::Graphics:
             ParseGraphicsPipeline(jsonRoot);
-        }
-        else
-        {
+            break;
+        case rhi::PipelineStateType::Compute:
             ParseComputePipeline(jsonRoot);
+            break;
+        default:
+            UNREACHABLE("Unsupported pipeline state type!");
+            return;
         }
     }
 
@@ -516,10 +538,9 @@ namespace rhi::d3d12
         }
     }
 
-    PipelineStateType D3D12PipelineState::GetType() const
+    rhi::PipelineStateType D3D12PipelineState::GetType() const
     {
-        NOT_IMPLEMENTED();
-        return PipelineStateType();
+        return _type;
     }
 
     rhi::BlendState D3D12PipelineState::ParseBlendDescription(const std::string& filepath)

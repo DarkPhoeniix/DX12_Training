@@ -4,6 +4,7 @@
 #include "D3D12DescriptorHeap.h"
 
 #include "D3D12Device.h"
+#include "D3D12Descriptor.h"
 
 namespace rhi::d3d12
 {
@@ -21,14 +22,15 @@ namespace rhi::d3d12
                 return D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
             default:
                 UNREACHABLE("Invalid descriptor heap type!");
-                return D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV; // Default to CBV_SRV_UAV to avoid uninitialized variable
+                return D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
             }
         }
-    }
+    } // namespace unnamed
 
     D3D12DescriptorHeap::D3D12DescriptorHeap(rhi::Device* device, const rhi::DescriptorHeapDescription& description, const std::string& name)
         : _description(description)
         , _device(device)
+        , _currentOffset(0)
 #if ENABLE_DEBUG_NAMES
         , _name(name)
 #endif // ENABLE_DEBUG_NAMES
@@ -44,7 +46,7 @@ namespace rhi::d3d12
         ID3D12Device* d3d12DeviceNative = D3D12Cast<ID3D12Device>(device->GetNative());
 
         HRESULT result = d3d12DeviceNative->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&_descriptorHeap));
-        CHECK(result, "Failed to create D3D12 descriptor heap.");
+        CHECK(result, "Failed to create D3D12DescriptorHeap.");
 
         _heapIncrementSize = d3d12DeviceNative->GetDescriptorHandleIncrementSize(ToD3D12DescriptorHeapType(description.Type));
 
@@ -59,6 +61,9 @@ namespace rhi::d3d12
         , _heapIncrementSize(other._heapIncrementSize)
         , _currentOffset(other._currentOffset)
         , _device(other._device)
+#if ENABLE_DEBUG_NAMES
+        , _name(other._name)
+#endif // ENABLE_DEBUG_NAMES
     {
     }
 
@@ -75,6 +80,9 @@ namespace rhi::d3d12
             _heapIncrementSize = other._heapIncrementSize;
             _currentOffset = other._currentOffset;
             _device = std::move(other._device);
+#if ENABLE_DEBUG_NAMES
+            _name = std::move(other._name);
+#endif // ENABLE_DEBUG_NAMES
         }
 
         return *this;
@@ -94,7 +102,7 @@ namespace rhi::d3d12
 
         ID3D12Device* d3d12DeviceNative = static_cast<ID3D12Device*>(_device->GetNative());
         d3d12DeviceNative->CopyDescriptorsSimple(1, handle, 
-            (D3D12_CPU_DESCRIPTOR_HANDLE)descriptor.ptr,
+            ToD3D12Handle(descriptor),
             ToD3D12DescriptorHeapType(_description.Type));
 
         return _currentOffset++;
@@ -102,26 +110,20 @@ namespace rhi::d3d12
 
     rhi::CPUDescriptor D3D12DescriptorHeap::GetHeapStartCPUHandle()
     {
-        rhi::CPUDescriptor descriptor;
-        descriptor.ptr = _descriptorHeap->GetCPUDescriptorHandleForHeapStart().ptr;
-
-        return descriptor;
+        return ToRHIHandle(_descriptorHeap->GetCPUDescriptorHandleForHeapStart());
     }
 
     rhi::GPUDescriptor D3D12DescriptorHeap::GetHeapStartGPUHandle()
     {
-        rhi::GPUDescriptor descriptor;
-        descriptor.ptr = _descriptorHeap->GetGPUDescriptorHandleForHeapStart().ptr;
-
-        return descriptor;
+        return ToRHIHandle(_descriptorHeap->GetGPUDescriptorHandleForHeapStart());
     }
 
     rhi::CPUDescriptor D3D12DescriptorHeap::GetCPUHandleWithOffset(std::uint32_t offset)
     {
         ASSERT(offset < _description.NumDescriptors, "Offset is out of bounds for descriptor heap");
 
-        rhi::CPUDescriptor descriptor;
-        descriptor.ptr = _descriptorHeap->GetCPUDescriptorHandleForHeapStart().ptr + (offset * _heapIncrementSize);
+        rhi::CPUDescriptor descriptor = ToRHIHandle(_descriptorHeap->GetCPUDescriptorHandleForHeapStart());
+        descriptor.Offset(offset * _heapIncrementSize);
 
         return descriptor;
     }
@@ -130,8 +132,8 @@ namespace rhi::d3d12
     {
         ASSERT(offset < _description.NumDescriptors, "Offset is out of bounds for descriptor heap");
 
-        rhi::GPUDescriptor descriptor;
-        descriptor.ptr = _descriptorHeap->GetGPUDescriptorHandleForHeapStart().ptr + (offset * _heapIncrementSize);
+        rhi::GPUDescriptor descriptor = ToRHIHandle(_descriptorHeap->GetGPUDescriptorHandleForHeapStart());
+        descriptor.Offset(offset * _heapIncrementSize);
 
         return descriptor;
     }
@@ -150,6 +152,7 @@ namespace rhi::d3d12
     {
         return _currentOffset;
     }
+
     void* D3D12DescriptorHeap::GetNative() const
     {
         return static_cast<void*>(_descriptorHeap.Get());

@@ -24,11 +24,12 @@
 #include <wrl.h>
 using namespace Microsoft::WRL;
 
-//#define USE_D3D12 1 // TODO: test
+#define USE_D3D12 1 // TODO: test
 
 #if _DEBUG
 #define ENABLE_DEBUG_NAMES 1
 #define ENABLE_DEBUG_DESC 1
+#define ENABLE_DEVICE_DEBUG 1
 #endif // _DEBUG
 
 // DirectX12 specific headers

@@ -5,11 +5,6 @@
 #include "PipelineState.h"
 #include "CommandSignature.h"
 
-namespace scene
-{
-    class Viewport;
-} // namespace scene
-
 namespace rhi::d3d12
 {
     // Represents a wrapper for DirectX 12 command list that encapsulates the functionality of recording commands for the GPU.
@@ -54,8 +49,8 @@ namespace rhi::d3d12
         void TransitionBarriers(const std::vector<BufferBarrier>& barrier) override;
         void TransitionBarriers(const std::vector<TextureBarrier>& barrier) override;
         // Sets an UAV barrier for the specified resource (all UAV accesses must complete before any future UAV accesses can begin)
-        void UAVBarrier(const rhi::BufferBarrier& barrier) override;
-        void UAVBarrier(const rhi::TextureBarrier& barrier) override;
+        void UAVBarrier(std::shared_ptr<Buffer> buffer) override;
+        void UAVBarrier(std::shared_ptr<Texture> texture) override;
 
         void CopyBuffer(Buffer& sourceResource, Buffer& destinationResource) override;
         void CopyBufferRegion(Buffer& sourceResource,
@@ -76,7 +71,7 @@ namespace rhi::d3d12
         void SetIndexBuffer(const rhi::IndexBufferView& indexBufferView) override;
 
         void SetRenderTarget(rhi::CPUDescriptor* renderTargetDescriptor, rhi::CPUDescriptor* depthStencilDescriptor) override;
-        void SetRenderTargets(const std::vector<rhi::CPUDescriptor> renderTargetDescriptors, rhi::CPUDescriptor* depthStencilDescriptor) override;
+        void SetRenderTargets(const std::vector<rhi::CPUDescriptor>& renderTargetDescriptors, rhi::CPUDescriptor* depthStencilDescriptor) override;
         void SetViewport(const Viewport& viewport, const ScissorRect& scissorRectangle) override;
 
         void ClearRTV(rhi::CPUDescriptor renderTargetView, const float color[4], ScissorRect* rectangle = nullptr) override;
@@ -105,7 +100,7 @@ namespace rhi::d3d12
                              std::uint32_t argumentBufferOffset = 0,
                              std::uint32_t countBufferOffset = 0) override;
 
-        void SetDescriptorHeaps(const std::vector<rhi::DescriptorHeap>& descriptorHeaps) override;
+        void SetDescriptorHeaps(const std::vector<rhi::DescriptorHeap*>& descriptorHeaps) override;
         void SetConstant(std::uint32_t index, std::uint32_t data, std::uint32_t offset = 0) override;
         void SetConstants(std::uint32_t index, std::uint32_t numValues, const void* data, std::uint32_t offset = 0) override;
         void SetCBV(std::uint32_t index, std::uint64_t bufferLocation) override;
@@ -113,7 +108,7 @@ namespace rhi::d3d12
         void SetUAV(std::uint32_t index, std::uint64_t bufferLocation) override;
         void SetDescriptorTable(std::uint32_t index, rhi::GPUDescriptor descriptor) override;
 
-        void Reset(CommandAllocator& commandAllocator, rhi::PipelineState* pipelineState) override;
+        void Reset(rhi::PipelineState* pipelineState) override;
 
         void Close() override;
 

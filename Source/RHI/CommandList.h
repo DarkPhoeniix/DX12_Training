@@ -104,8 +104,8 @@ namespace rhi
 
         virtual void TransitionBarriers(const std::vector<BufferBarrier>& barriers) = 0;
         virtual void TransitionBarriers(const std::vector<TextureBarrier>& barriers) = 0;
-        virtual void UAVBarrier(const BufferBarrier& barrier) = 0;
-        virtual void UAVBarrier(const TextureBarrier& barrier) = 0;
+        virtual void UAVBarrier(std::shared_ptr<Buffer> buffer) = 0;
+        virtual void UAVBarrier(std::shared_ptr<Texture> texture) = 0;
 
         virtual void CopyBuffer(Buffer& sourceResource, Buffer& destinationResource) = 0;
         virtual void CopyBufferRegion(Buffer& sourceResource, 
@@ -126,7 +126,7 @@ namespace rhi
         virtual void SetIndexBuffer(const IndexBufferView& indexBufferView) = 0;
 
         virtual void SetRenderTarget(CPUDescriptor* renderTargetDescriptor, CPUDescriptor* depthStencilDescriptor) = 0;
-        virtual void SetRenderTargets(const std::vector<CPUDescriptor> renderTargetDescriptors, CPUDescriptor* depthStencilDescriptor) = 0;
+        virtual void SetRenderTargets(const std::vector<CPUDescriptor>& renderTargetDescriptors, CPUDescriptor* depthStencilDescriptor) = 0;
         virtual void SetViewport(const Viewport& viewport, const ScissorRect& scissorRectangle) = 0;
 
         virtual void ClearRTV(CPUDescriptor renderTargetView, const float color[4], ScissorRect* rectangle = nullptr) = 0;
@@ -155,7 +155,7 @@ namespace rhi
                                      std::uint32_t argumentBufferOffset = 0, 
                                      std::uint32_t countBufferOffset = 0) = 0;
 
-        virtual void SetDescriptorHeaps(const std::vector<DescriptorHeap>& descriptorHeaps) = 0;
+        virtual void SetDescriptorHeaps(const std::vector<DescriptorHeap*>& descriptorHeaps) = 0;
         virtual void SetConstant(std::uint32_t index, std::uint32_t data, std::uint32_t offset = 0) = 0;
         virtual void SetConstants(std::uint32_t index, std::uint32_t numValues, const void* data, std::uint32_t offset = 0) = 0;
         virtual void SetCBV(std::uint32_t index, std::uint64_t bufferLocation) = 0;
@@ -163,7 +163,7 @@ namespace rhi
         virtual void SetUAV(std::uint32_t index, std::uint64_t bufferLocation) = 0;
         virtual void SetDescriptorTable(std::uint32_t index, GPUDescriptor descriptor) = 0;
 
-        virtual void Reset(CommandAllocator& commandAllocator, PipelineState* pipelineState) = 0;
+        virtual void Reset(PipelineState* pipelineState) = 0;
 
         virtual void Close() = 0;
 

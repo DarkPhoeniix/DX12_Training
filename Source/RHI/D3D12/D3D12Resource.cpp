@@ -9,8 +9,6 @@
 #include "Buffer.h"
 #include "Texture.h"
 
-// TODO: allocation info
-
 namespace rhi::d3d12
 {
     namespace
@@ -45,64 +43,70 @@ namespace rhi::d3d12
         }
     } // namespace unnamed
 
-    D3D12Resource::D3D12Resource(rhi::Device* device, const BufferDescription& description, const void* initialData, const std::string& name)
+    D3D12Resource::D3D12Resource(rhi::Device* device, const BufferDescription& description, ResourceState initialState, const std::string& name)
         : _device(device)
         , _ID(rhi::ResourceIdGenerator::GenerateID())
-        , _initialState(rhi::ResourceState::Common)
-        , _currentState(rhi::ResourceState::Common)
+        , _initialState(initialState)
+        , _currentState(initialState)
         , _stride(description.Stride)
-        , _uavCounterOffset(-1)
+        , _uavCounterOffset(static_cast<std::uint32_t>(-1))
 #if ENABLE_DEBUG_NAMES
         , _name(name)
 #endif // ENABLE_DEBUG_NAMES
     {
-        D3D12_RESOURCE_DESC resourceDesc =
-        {
-            .Dimension = D3D12_RESOURCE_DIMENSION_BUFFER,
-            .Alignment = 0,
-            .Width = description.Size,
-            .Height = 1,
-            .DepthOrArraySize = 1,
-            .MipLevels = 1,
-            .Format = GetDXGIFormat(description.Format),
-            .SampleDesc = { 1, 0 },
-            .Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR,
-            .Flags = GetD3D12ResourceFlags(description.Flags)
-        };
-
+        D3D12_RESOURCE_DESC resourceDesc = GetD3D12ResourceDesc(description);
         D3D12_HEAP_PROPERTIES heapDesc = CreateHeapProperties(description.Usage);
 
-        CreateResource(resourceDesc, heapDesc, initialData);
+        CreateCommitedResource(resourceDesc, heapDesc);
     }
 
-    D3D12Resource::D3D12Resource(rhi::Device* device, const TextureDescription& description, const void* initialData, const std::string& name)
+    D3D12Resource::D3D12Resource(rhi::Device* device, const TextureDescription& description, ResourceState initialState, const std::string& name)
         : _device(device)
         , _ID(rhi::ResourceIdGenerator::GenerateID())
-        , _initialState(rhi::ResourceState::Common)
-        , _currentState(rhi::ResourceState::Common)
+        , _initialState(initialState)
+        , _currentState(initialState)
         , _stride(0)
-        , _uavCounterOffset(-1)
+        , _uavCounterOffset(static_cast<std::uint32_t>(-1))
 #if ENABLE_DEBUG_NAMES
         , _name(name)
 #endif // ENABLE_DEBUG_NAMES
     {
-        D3D12_RESOURCE_DESC resourceDesc =
-        {
-            .Dimension = GetD3D12ResourceDimension(description.Dimension),
-            .Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT,
-            .Width = description.Width,
-            .Height = description.Height,
-            .DepthOrArraySize = description.DepthOrArraySize,
-            .MipLevels = description.MipLevels,
-            .Format = GetDXGIFormat(description.Format),
-            .SampleDesc = { 1, 0 },
-            .Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR,
-            .Flags = GetD3D12ResourceFlags(description.Flags)
-        };
-
+        D3D12_RESOURCE_DESC resourceDesc = GetD3D12ResourceDesc(description);
         D3D12_HEAP_PROPERTIES heapDesc = CreateHeapProperties(description.Usage);
 
-        CreateResource(resourceDesc, heapDesc, initialData);
+        CreateCommitedResource(resourceDesc, heapDesc);
+    }
+
+    D3D12Resource::D3D12Resource(rhi::Device* device, const BufferDescription& description, rhi::Heap* heap, std::uint64_t offset, ResourceState initialState, const std::string& name)
+        : _device(device)
+        , _ID(rhi::ResourceIdGenerator::GenerateID())
+        , _initialState(initialState)
+        , _currentState(initialState)
+        , _stride(0)
+        , _uavCounterOffset(static_cast<std::uint32_t>(-1))
+#if ENABLE_DEBUG_NAMES
+        , _name(name)
+#endif // ENABLE_DEBUG_NAMES
+    {
+        D3D12_RESOURCE_DESC resourceDesc = GetD3D12ResourceDesc(description);
+
+        CreatePlacedResource(resourceDesc, heap, offset);
+    }
+
+    D3D12Resource::D3D12Resource(rhi::Device* device, const TextureDescription& description, rhi::Heap* heap, std::uint64_t offset, ResourceState initialState, const std::string& name)
+        : _device(device)
+        , _ID(rhi::ResourceIdGenerator::GenerateID())
+        , _initialState(initialState)
+        , _currentState(initialState)
+        , _stride(0)
+        , _uavCounterOffset(static_cast<std::uint32_t>(-1))
+#if ENABLE_DEBUG_NAMES
+        , _name(name)
+#endif // ENABLE_DEBUG_NAMES
+    {
+        D3D12_RESOURCE_DESC resourceDesc = GetD3D12ResourceDesc(description);
+
+        CreatePlacedResource(resourceDesc, heap, offset);
     }
 
     D3D12Resource::D3D12Resource(rhi::Device* device, ID3D12Resource* resource, const std::string& name)
@@ -113,7 +117,7 @@ namespace rhi::d3d12
         , _initialState(rhi::ResourceState::Common)
         , _currentState(rhi::ResourceState::Common)
         , _stride(0)
-        , _uavCounterOffset(-1)
+        , _uavCounterOffset(static_cast<std::uint32_t>(-1))
 #if ENABLE_DEBUG_NAMES
         , _name(name)
 #endif // ENABLE_DEBUG_NAMES
@@ -121,13 +125,37 @@ namespace rhi::d3d12
     }
 
     D3D12Resource::D3D12Resource(D3D12Resource&& other) noexcept
+        : _device(std::move(other._device))
+        , _resource(std::move(other._resource))
+        , _description(std::move(other._description))
+        , _ID(std::move(other._ID))
+        , _initialState(std::move(other._initialState))
+        , _currentState(std::move(other._currentState))
+        , _stride(other._stride)
+        , _uavCounterOffset(other._uavCounterOffset)
+#if ENABLE_DEBUG_NAMES
+        , _name(other._name)
+#endif // ENABLE_DEBUG_NAMES
     {
-        NOT_IMPLEMENTED();
     }
 
     D3D12Resource& D3D12Resource::operator=(D3D12Resource&& other) noexcept
     {
-        NOT_IMPLEMENTED();
+        if (this != &other)
+        {
+            _device = std::move(other._device);
+            _resource = std::move(other._resource);
+            _description = std::move(other._description);
+            _ID = std::move(other._ID);
+            _initialState = std::move(other._initialState);
+            _currentState = std::move(other._currentState);
+            _stride = other._stride;
+            _uavCounterOffset = other._uavCounterOffset;
+#if ENABLE_DEBUG_NAMES
+            _name = std::move(other._name);
+#endif // ENABLE_DEBUG_NAMES
+        }
+
         return *this;
     }
 
@@ -172,147 +200,14 @@ namespace rhi::d3d12
         return _currentState;
     }
 
-    const AllocationInfo& D3D12Resource::GetAllocationInfo() const
+    void D3D12Resource::SetCurrentState(ResourceState state)
     {
-        return _allocationInfo;
+        _currentState = state;
     }
 
-    RenderTargetView D3D12Resource::GetAsRTV()
+    std::uint32_t D3D12Resource::GetUAVCounterOffset() const
     {
-        NOT_IMPLEMENTED();
-        RenderTargetView view = {};
-
-        view.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-        view.Texture2D.MipSlice = 0;
-        view.Owner = shared_from_this();
-
-        return view;
-    }
-
-    DepthStencilView D3D12Resource::GetAsDSV()
-    {
-        NOT_IMPLEMENTED();
-        DepthStencilView view = {};
-
-        if (_description.DepthOrArraySize == 6)
-        {
-            view.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DARRAY;
-            view.Texture2DArray.ArraySize = _description.DepthOrArraySize;
-        }
-        else
-        {
-            view.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-        }
-        view.Texture2D.MipSlice = 0;
-        view.Owner = shared_from_this();
-
-        return view;
-    }
-
-    ConstantBufferView D3D12Resource::GetAsCBV()
-    {
-        NOT_IMPLEMENTED();
-        ConstantBufferView view = {};
-
-        // TODO: add CBV to resource
-        view.Owner = shared_from_this();
-        view.BufferLocation = this->GetVirtualAddress();
-        view.SizeInBytes = _description.Width * _description.Height;
-
-        return view;
-    }
-
-    ShaderResourceView D3D12Resource::GetAsSRV()
-    {
-        NOT_IMPLEMENTED();
-        ShaderResourceView view = {};
-
-        view.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-        view.Format = _description.Format;
-        view.Owner = shared_from_this();
-
-        if (_description.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER)
-        {
-            view.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
-            view.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
-            view.Buffer.FirstElement = 0;
-            view.Buffer.StructureByteStride = _stride;
-            view.Buffer.NumElements = _description.Width / _description.Height;
-        }
-        else
-        {
-            if (_description.DepthOrArraySize == 6)
-            {
-                view.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
-                view.TextureCube.MipLevels = _description.MipLevels;
-                view.TextureCube.MostDetailedMip = 0;
-                view.TextureCube.ResourceMinLODClamp = 0.0f;
-            }
-            else if (_description.DepthOrArraySize > 1)
-            {
-                view.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
-                view.Texture2DArray.ArraySize = _description.DepthOrArraySize;
-                view.Texture2DArray.MipLevels = _description.MipLevels;
-                view.Texture2DArray.FirstArraySlice = 0;
-                view.Texture2DArray.MostDetailedMip = 0;
-                view.Texture2DArray.PlaneSlice = 0;
-                view.Texture2DArray.ResourceMinLODClamp = 0.0f;
-            }
-            else
-            {
-                view.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-                view.Texture2D.MipLevels = _description.MipLevels;
-                view.Texture2D.MostDetailedMip = 0;
-                view.Texture2D.PlaneSlice = 0;
-                view.Texture2D.ResourceMinLODClamp = 0.0f;
-            }
-        }
-
-        if (_description.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
-        {
-            view.Format = DXGI_FORMAT_R32_FLOAT;
-        }
-
-        return view;
-    }
-
-    UnorderedAccessView D3D12Resource::GetAsUAV()
-    {
-        NOT_IMPLEMENTED();
-        UnorderedAccessView view = {};
-
-        view.Format = _description.Format;
-        view.Owner = shared_from_this();
-
-        if (_description.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER)
-        {
-            view.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
-            view.Buffer.StructureByteStride = _stride;
-            view.Buffer.NumElements = _description.Width / _description.Height;
-            if (_uavCounterOffset != -1)
-            {
-                view.Buffer.CounterOffsetInBytes = _uavCounterOffset;
-            }
-        }
-        else
-        {
-            if (_description.DepthOrArraySize == 1)
-            {
-                view.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-                view.Texture2D.MipSlice = 0;
-                view.Texture2D.PlaneSlice = 0;
-            }
-            else
-            {
-                view.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
-                view.Texture2DArray.ArraySize = _description.DepthOrArraySize;
-                view.Texture2DArray.FirstArraySlice = 0;
-                view.Texture2DArray.MipSlice = 0;
-                view.Texture2DArray.PlaneSlice = 0;
-            }
-        }
-
-        return view;
+        return _uavCounterOffset;
     }
 
     void* D3D12Resource::GetNative() const
@@ -320,13 +215,9 @@ namespace rhi::d3d12
         return static_cast<void*>(_resource.Get());
     }
 
-    void D3D12Resource::CreateResource(const D3D12_RESOURCE_DESC& resourceDesc, const D3D12_HEAP_PROPERTIES& heapProperties, const void* initialData)
+    void D3D12Resource::CreateCommitedResource(const D3D12_RESOURCE_DESC& resourceDesc, const D3D12_HEAP_PROPERTIES& heapProperties)
     {
-        // TODO: initialData handling (upload heap or staging buffer)
-
-        _currentState = _initialState;
-
-        ID3D12Device* d3d12NativeDevice = static_cast<ID3D12Device*>(_device->GetNative());
+        ID3D12Device* d3d12NativeDevice = D3D12Cast<ID3D12Device>(_device->GetNative());
         d3d12NativeDevice->CreateCommittedResource(
             &heapProperties,
             D3D12_HEAP_FLAG_NONE,
@@ -335,6 +226,26 @@ namespace rhi::d3d12
             nullptr,
             IID_PPV_ARGS(&_resource));
 
+#if ENABLE_DEBUG_NAMES
         SetD3D12Name(_resource.Get(), _name);
+#endif // ENABLE_DEBUG_NAMES
+    }
+
+    void D3D12Resource::CreatePlacedResource(const D3D12_RESOURCE_DESC& resourceDesc, rhi::Heap* heap, std::uint64_t offset)
+    {
+        ID3D12Device* d3d12NativeDevice = D3D12Cast<ID3D12Device>(_device->GetNative());
+        ID3D12Heap* d3d12NativeHeap = D3D12Cast<ID3D12Heap>(heap->GetNative());
+
+        d3d12NativeDevice->CreatePlacedResource(
+            d3d12NativeHeap,
+            offset,
+            &resourceDesc,
+            GetD3D12ResourceState(_initialState),
+            nullptr,
+            IID_PPV_ARGS(&_resource));
+
+#if ENABLE_DEBUG_NAMES
+        SetD3D12Name(_resource.Get(), _name);
+#endif // ENABLE_DEBUG_NAMES
     }
 } // namespace rhi::d3d12

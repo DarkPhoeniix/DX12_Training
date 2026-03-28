@@ -5,7 +5,7 @@
 
 namespace rhi::d3d12
 {
-    D3D12_CPU_DESCRIPTOR_HANDLE ToD3D12Handle(rhi::CPUDescriptor& descriptor)
+    D3D12_CPU_DESCRIPTOR_HANDLE ToD3D12Handle(const rhi::CPUDescriptor& descriptor)
     {
         return D3D12_CPU_DESCRIPTOR_HANDLE{ descriptor.ptr };
     }
@@ -18,7 +18,7 @@ namespace rhi::d3d12
         return result;
     }
 
-    D3D12_GPU_DESCRIPTOR_HANDLE ToD3D12Handle(rhi::GPUDescriptor& descriptor)
+    D3D12_GPU_DESCRIPTOR_HANDLE ToD3D12Handle(const rhi::GPUDescriptor& descriptor)
     {
         return D3D12_GPU_DESCRIPTOR_HANDLE{ descriptor.ptr };
     }

@@ -8,9 +8,12 @@
 
 namespace rhi::d3d12
 {
-    D3D12StatisticsQuery::D3D12StatisticsQuery(rhi::Device* device)
+    D3D12StatisticsQuery::D3D12StatisticsQuery(rhi::Device* device, const std::string& name)
         : _statisticsResource(nullptr)
         , _statistics()
+#if ENABLE_DEBUG_NAMES
+        , _name(name)
+#endif // ENABLE_DEBUG_NAMES
     {
         rhi::QueryHeapDescription heapDescription =
         {
@@ -35,6 +38,9 @@ namespace rhi::d3d12
         : _queryHeap(std::move(other._queryHeap))
         , _statisticsResource(std::move(other._statisticsResource))
         , _statistics(std::move(other._statistics))
+#if ENABLE_DEBUG_NAMES
+        , _name(std::move(other._name))
+#endif // ENABLE_DEBUG_NAMES
     {
     }
 
@@ -49,6 +55,9 @@ namespace rhi::d3d12
             _queryHeap = std::move(other._queryHeap);
             _statisticsResource = std::move(other._statisticsResource);
             _statistics = std::move(other._statistics);
+#if ENABLE_DEBUG_NAMES
+            _name = std::move(other._name);
+#endif // ENABLE_DEBUG_NAMES
         }
 
         return *this;

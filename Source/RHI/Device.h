@@ -12,25 +12,22 @@ namespace tracking
 namespace rhi
 {
     class CommandQueue;
+    class CommandSignature;
     class Fence;
     class Buffer;
-    class BufferDescription;
     class Texture;
-    class TextureDescription;
     class DescriptorHeap;
-    class DescriptorHeapDescription;
     class QueryHeap;
-    class QueryHeapDescription;
     class Heap;
-    class HeapDescription;
     class SwapChain;
     class StatisticsQuery;
     class TimestampQuery;
-    class RenderTargetView;
-    class DepthStencilView;
-    class ConstantBufferView;
-    class ShaderResourceView;
-    class UnorderedAccessView;
+    struct BufferDescription;
+    struct TextureDescription;
+    struct IndirectArgumentDescription;
+    struct DescriptorHeapDescription;
+    struct QueryHeapDescription;
+    struct HeapDescription;
 
     enum class BackendAPI
     {
@@ -62,17 +59,21 @@ namespace rhi
 
         virtual void Present() = 0;
 
+        virtual std::shared_ptr<Buffer> CreateBuffer(const BufferDescription& description, ResourceState initialState = ResourceState::Common) = 0;
+        virtual std::shared_ptr<Buffer> CreateBuffer(const BufferDescription& description, rhi::Heap* heap, std::uint64_t offset, ResourceState initialState = ResourceState::Common) = 0;
+        virtual std::shared_ptr<Buffer> CreateBuffer(void* nativePtr) = 0;
+        virtual std::shared_ptr<Texture> CreateTexture(const TextureDescription& description, ResourceState initialState = ResourceState::Common) = 0;
+        virtual std::shared_ptr<Texture> CreateTexture(const TextureDescription& description, rhi::Heap* heap, std::uint64_t offset, ResourceState initialState = ResourceState::Common) = 0;
+        virtual std::shared_ptr<Texture> CreateTexture(void* nativePtr) = 0;
+
         virtual std::unique_ptr<CommandList> CreateCommandList(CommandListType type) = 0;
         virtual std::unique_ptr<DescriptorHeap> CreateDescriptorHeap(const DescriptorHeapDescription& description) = 0;
-        virtual std::shared_ptr<Buffer> CreateBuffer(const BufferDescription& description, const void* initialData = nullptr) = 0;
-        virtual std::shared_ptr<Buffer> CreateBuffer(void* nativePtr) = 0;
-        virtual std::shared_ptr<Texture> CreateTexture(const TextureDescription& description, const void* initialData = nullptr) = 0;
-        virtual std::shared_ptr<Texture> CreateTexture(void* nativePtr) = 0;
         virtual std::unique_ptr<QueryHeap> CreateQueryHeap(const QueryHeapDescription& description) = 0;
         virtual std::unique_ptr<Fence> CreateFence(std::uint64_t initialValue) = 0;
         virtual std::unique_ptr<Heap> CreateHeap(const HeapDescription& description) = 0;
         virtual std::unique_ptr<StatisticsQuery> CreateStatisticsQuery() = 0;
         virtual std::unique_ptr<TimestampQuery> CreateTimestampQuery(std::uint32_t timestampsCount) = 0;
+        virtual std::unique_ptr<CommandSignature> CreateCommandSignature(const std::vector<rhi::IndirectArgumentDescription>& arguments, rhi::PipelineState* pipelineState) = 0;
 
         virtual void CreateBufferSRV(std::shared_ptr<Buffer> resource, CPUDescriptor& descriptor) = 0;
         virtual void CreateBufferCBV(std::shared_ptr<Buffer> resource, CPUDescriptor& descriptor) = 0;
@@ -81,9 +82,12 @@ namespace rhi
         virtual void CreateTextureDSV(std::shared_ptr<Texture> texture, CPUDescriptor& descriptor) = 0;
         virtual void CreateTextureSRV(std::shared_ptr<Texture> texture, CPUDescriptor& descriptor) = 0;
         virtual void CreateTextureCBV(std::shared_ptr<Texture> texture, CPUDescriptor& descriptor) = 0;
-        virtual void CreateTextureUAV(std::shared_ptr<Texture> texture, CPUDescriptor& descriptor, std::shared_ptr<Buffer> counterResource = nullptr) = 0;
+        virtual void CreateTextureUAV(std::shared_ptr<Texture> texture, CPUDescriptor& descriptor) = 0;
 
         virtual std::uint32_t GetDescriptorHandleIncrementSize(rhi::DescriptorHeapType type) const = 0;
+
+        virtual AllocationInfo GetAllocationInfo(const BufferDescription& description) const = 0;
+        virtual AllocationInfo GetAllocationInfo(const TextureDescription& description) const = 0;
 
         virtual tracking::IGPUCrashTracker* GetCrashTracker() = 0;
 

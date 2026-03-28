@@ -31,7 +31,7 @@ namespace rhi::d3d12
         // Get a pointer to the raw D3D12 pipeline state object.
         ComPtr<ID3D12PipelineState> GetPipelineState() const;
 
-        PipelineStateType GetType() const override;
+        rhi::PipelineStateType GetType() const override;
 
         // Parse and create a graphics or compute pipeline from the given JSON file.
         void Parse(const std::string& filepath);
@@ -59,7 +59,7 @@ namespace rhi::d3d12
         ComPtr<ID3D12PipelineState> _pipelineState;
 
         // Indicates whether this is a graphics pipeline (true) or compute pipeline (false).
-        bool _isGraphicsPipeline;
+        rhi::PipelineStateType _type;
 
         rhi::Device* _device;
 

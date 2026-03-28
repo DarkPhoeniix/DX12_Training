@@ -2,27 +2,61 @@
 
 #include "PipelineState.h"
 
-namespace dx12
+namespace rhi
 {
+    enum class IndirectArgumentType : std::uint8_t
+    {
+        Draw,
+        DrawIndexed,
+        Dispatch,
+        VertexBufferView,
+        IndexBufferView,
+        Constant,
+        ConstantBufferView,
+        ShaderResourceView,
+        UnorderedResourceView
+    };
+
+    struct IndirectArgumentDescription
+    {
+        IndirectArgumentType Type;
+        union
+        {
+            struct
+            {
+                std::uint32_t Slot;
+            } 	VertexBuffer;
+            struct
+            {
+                std::uint32_t RootParameterIndex;
+                std::uint32_t DestOffsetIn32BitValues;
+                std::uint32_t Num32BitValuesToSet;
+            } 	Constant;
+            struct
+            {
+                std::uint32_t RootParameterIndex;
+            } 	ConstantBufferView;
+            struct
+            {
+                std::uint32_t RootParameterIndex;
+            } 	ShaderResourceView;
+            struct
+            {
+                std::uint32_t RootParameterIndex;
+            } 	UnorderedAccessView;
+            struct
+            {
+                std::uint32_t RootParameterIndex;
+                std::uint32_t DestOffsetIn32BitValues;
+            } 	IncrementingConstant;
+        };
+    };
+
     class CommandSignature
     {
     public:
-        CommandSignature() = default;
-        CommandSignature(const CommandSignature& other) = delete;
-        CommandSignature(CommandSignature&& other) noexcept = default;
-        ~CommandSignature() = default;
+        virtual ~CommandSignature() = default;
 
-        CommandSignature& operator=(const CommandSignature& other) = delete;
-        CommandSignature& operator=(CommandSignature&& other) noexcept = default;
-
-        void Create(std::uint32_t size, rhi::PipelineState* pipelineState = nullptr);
-
-        void AddArgument(D3D12_INDIRECT_ARGUMENT_DESC argumentDesc);
-
-        ComPtr<ID3D12CommandSignature> GetDXCommandSignature() const;
-
-    private:
-        std::vector<D3D12_INDIRECT_ARGUMENT_DESC> _arguments;
-        ComPtr<ID3D12CommandSignature> _commandSignature;
+        virtual void* GetNative() const = 0;
     };
-} // namespace dx12
+} // namespace rhi

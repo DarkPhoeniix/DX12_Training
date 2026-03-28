@@ -15,11 +15,11 @@ namespace rhi::d3d12
     {
     public:
         D3D12TimestampQuery(const D3D12TimestampQuery& other) = delete;
-        D3D12TimestampQuery(D3D12TimestampQuery&& other);
+        D3D12TimestampQuery(D3D12TimestampQuery&& other) noexcept;
         ~D3D12TimestampQuery() override = default;
 
         D3D12TimestampQuery& operator=(const D3D12TimestampQuery& other) = delete;
-        D3D12TimestampQuery& operator=(D3D12TimestampQuery&& other);
+        D3D12TimestampQuery& operator=(D3D12TimestampQuery&& other) noexcept;
 
         void Begin(rhi::CommandList& commandList, std::uint32_t index) override;
         void End(rhi::CommandList& commandList, std::uint32_t index) override;
@@ -35,5 +35,9 @@ namespace rhi::d3d12
 
         std::unique_ptr<rhi::QueryHeap> _queryHeap;
         std::uint64_t _frequency;
+
+#if ENABLE_DEBUG_NAMES
+        std::string _name;
+#endif // ENABLE_DEBUG_NAMES
     };
 } // namespace rhi::d3d12

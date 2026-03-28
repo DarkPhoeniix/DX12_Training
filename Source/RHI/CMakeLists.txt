@@ -25,5 +25,9 @@ target_include_directories(RHI PRIVATE ${EXTERNAL_DIR} ${CMAKE_SOURCE_DIR}/Sourc
 target_link_libraries(RHI PRIVATE Microsoft::DirectX-Headers Microsoft::DirectXTex JsonCpp::JsonCpp GPUCrashTracker Utility)
 target_precompile_headers(RHI PRIVATE "RHI_PCH.h")
 
+if (MSVC)
+    target_compile_options(RHI PRIVATE /W4)
+endif()
+
 include(${CMAKE_SOURCE_DIR}/Scripts/GroupSourcesByFolder.cmake)
 GroupSourcesByFolder(RHI)

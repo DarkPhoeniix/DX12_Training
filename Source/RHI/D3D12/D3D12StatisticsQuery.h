@@ -40,7 +40,7 @@ namespace rhi::d3d12
     private:
         friend class D3D12Device;
 
-        D3D12StatisticsQuery(rhi::Device* device);
+        D3D12StatisticsQuery(rhi::Device* device, const std::string& name = "");
 
         // Pointer to the DirectX 12 query heap used for statistics gathering.
         std::unique_ptr<rhi::QueryHeap> _queryHeap;
@@ -48,5 +48,7 @@ namespace rhi::d3d12
         // Resource used to store query results.
         std::shared_ptr<rhi::Buffer> _statisticsResource;
         PipelineStatistics _statistics;
+
+        std::string _name;
     };
 } // namespace rhi::d3d12

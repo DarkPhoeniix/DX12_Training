@@ -6,8 +6,9 @@
 namespace rhi::d3d12
 {
     D3D12QueryHeap::D3D12QueryHeap(rhi::Device* device, const QueryHeapDescription& description, const std::string& name)
+        : _type(description.Type)
 #if ENABLE_DEBUG_NAMES
-        : _name(name)
+        , _name(name)
 #endif // ENABLE_DEBUG_NAMES
     {
         ID3D12Device* d3d12Device = D3D12Cast<ID3D12Device>(device->GetNative());
@@ -20,10 +21,15 @@ namespace rhi::d3d12
         };
 
         d3d12Device->CreateQueryHeap(&desc, IID_PPV_ARGS(&_queryHeap));
+
+#if ENABLE_DEBUG_NAMES
+        SetD3D12Name(_queryHeap.Get(), name);
+#endif // ENABLE_DEBUG_NAMES
     }
 
     D3D12QueryHeap::D3D12QueryHeap(D3D12QueryHeap&& other) noexcept
         : rhi::QueryHeap(std::move(other))
+        , _type(other._type)
         , _queryHeap(std::move(other._queryHeap))
 #if ENABLE_DEBUG_NAMES
         , _name(other._name)
@@ -41,6 +47,7 @@ namespace rhi::d3d12
         {
             rhi::QueryHeap::operator=(std::move(other));
             _queryHeap = std::move(other._queryHeap);
+            _type = other._type;
 #if ENABLE_DEBUG_NAMES
             _name = std::move(other._name);
 #endif // ENABLE_DEBUG_NAMES
@@ -51,7 +58,7 @@ namespace rhi::d3d12
 
     QueryHeapType D3D12QueryHeap::GetType() const
     {
-        return QueryHeapType();
+        return _type;
     }
 
     void* D3D12QueryHeap::GetNative() const

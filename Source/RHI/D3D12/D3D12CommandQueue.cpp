@@ -13,12 +13,14 @@ namespace rhi::d3d12
         , _timestampFrequency(0)
 #if ENABLE_DEBUG_NAMES
         , _name(name)
-#endif
+#endif // ENABLE_DEBUG_NAMES
     {
-        D3D12_COMMAND_QUEUE_DESC desc = {};
-        desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-        desc.NodeMask = 0;
-        desc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
+        D3D12_COMMAND_QUEUE_DESC desc =
+        {
+            .Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL,
+            .Flags = D3D12_COMMAND_QUEUE_FLAG_NONE,
+            .NodeMask = 0
+        };
 
         switch (type)
         {
@@ -33,15 +35,18 @@ namespace rhi::d3d12
             break;
         default:
             UNREACHABLE("Unsupported command list type!");
+            desc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
             break;
         }
 
         ID3D12Device2* d3d12Device = D3D12Cast<ID3D12Device2>(device->GetNative());
 
         HRESULT result = d3d12Device->CreateCommandQueue(&desc, IID_PPV_ARGS(&_commandQueue));
-        CHECK(result, "Failed to create D3D12 command queue.");
+        CHECK(result, "Failed to create D3D12CommandQueue.");
 
+#if ENABLE_DEBUG_NAMES
         SetD3D12Name(_commandQueue.Get(), name);
+#endif // ENABLE_DEBUG_NAMES
     }
 
     D3D12CommandQueue::D3D12CommandQueue(D3D12CommandQueue&& other) noexcept
@@ -50,7 +55,7 @@ namespace rhi::d3d12
         , _timestampFrequency(other._timestampFrequency)
 #if ENABLE_DEBUG_NAMES
         , _name(std::move(other._name))
-#endif
+#endif // ENABLE_DEBUG_NAMES
     {
     }
 
@@ -63,7 +68,7 @@ namespace rhi::d3d12
             _timestampFrequency = other._timestampFrequency;
 #if ENABLE_DEBUG_NAMES
             _name = std::move(other._name);
-#endif
+#endif // ENABLE_DEBUG_NAMES
         }
 
         return *this;
@@ -77,7 +82,7 @@ namespace rhi::d3d12
         {
             d3d12CommandLists.push_back(D3D12Cast<ID3D12CommandList>(commandList->GetNative()));
         }
-        _commandQueue->ExecuteCommandLists(d3d12CommandLists.size(), d3d12CommandLists.data());
+        _commandQueue->ExecuteCommandLists(static_cast<UINT>(d3d12CommandLists.size()), d3d12CommandLists.data());
     }
 
     void D3D12CommandQueue::Signal(rhi::Fence& fence, std::uint64_t value)

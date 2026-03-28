@@ -60,15 +60,14 @@ namespace rhi
         [[nodiscard]] virtual std::uint64_t GetVirtualAddress() = 0;
         [[nodiscard]] virtual ResourceState GetInitialState() const = 0;
         [[nodiscard]] virtual ResourceState GetCurrentState() const = 0;
-        [[nodiscard]] virtual const AllocationInfo& GetAllocationInfo() const = 0;
+        virtual void SetCurrentState(ResourceState state) = 0;
 
         const TextureDescription& GetDescription() const { return _description; }
 
         std::uint32_t GetWidth() const { return _description.Width; }
         std::uint32_t GetHeight() const { return _description.Height; }
-        std::uint32_t GetDepth() const { return _description.DepthOrArraySize; }
         std::uint32_t GetMipLevels() const { return _description.MipLevels; }
-        std::uint32_t GetArraySize() const { return _description.DepthOrArraySize; }
+        std::uint32_t GetDepthOrArraySize() const { return _description.DepthOrArraySize; }
         Format GetFormat() const { return _description.Format; }
 
         virtual void* GetNative() const = 0;

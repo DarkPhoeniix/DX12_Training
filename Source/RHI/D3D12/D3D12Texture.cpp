@@ -1,11 +1,20 @@
 
 #include "RHI_PCH.h"
+
 #include "D3D12Texture.h"
 
 namespace rhi::d3d12
 {
-    D3D12Texture::D3D12Texture(rhi::Device* device, const TextureDescription& description, const void* initialData, const std::string& name)
-        : _resource(device, description, initialData, name)
+    D3D12Texture::D3D12Texture(rhi::Device* device, const TextureDescription& description, ResourceState initialState, const std::string& name)
+        : _resource(device, description, initialState, name)
+#if ENABLE_DEBUG_NAMES
+        , _name(name)
+#endif // ENABLE_DEBUG_NAMES
+    {
+    }
+
+    D3D12Texture::D3D12Texture(rhi::Device* device, const TextureDescription& description, rhi::Heap* heap, std::uint64_t offset, ResourceState initialState, const std::string& name)
+        : _resource(device, description, heap, offset, initialState, name)
 #if ENABLE_DEBUG_NAMES
         , _name(name)
 #endif // ENABLE_DEBUG_NAMES
@@ -20,7 +29,7 @@ namespace rhi::d3d12
     {
     }
 
-    D3D12Texture::D3D12Texture(D3D12Texture&& other)
+    D3D12Texture::D3D12Texture(D3D12Texture&& other) noexcept
         : rhi::Texture(std::move(other))
         , _resource(std::move(other._resource))
 #if ENABLE_DEBUG_NAMES
@@ -68,9 +77,9 @@ namespace rhi::d3d12
         return _resource.GetCurrentState();
     }
 
-    const AllocationInfo& D3D12Texture::GetAllocationInfo() const
+    void D3D12Texture::SetCurrentState(ResourceState state)
     {
-        return _resource.GetAllocationInfo();
+        _resource.SetCurrentState(state);
     }
 
     void* D3D12Texture::GetNative() const

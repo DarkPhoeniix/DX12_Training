@@ -2,6 +2,11 @@
 
 #include "QueryHeap.h"
 
+namespace rhi
+{
+    class Device;
+} // namespace rhi
+
 namespace rhi::d3d12
 {
     class D3D12QueryHeap final : public rhi::QueryHeap
@@ -23,6 +28,7 @@ namespace rhi::d3d12
 
         D3D12QueryHeap(rhi::Device* device, const QueryHeapDescription& description, const std::string& name = "");
 
+        rhi::QueryHeapType _type;
         ComPtr<ID3D12QueryHeap> _queryHeap;
 #if ENABLE_DEBUG_NAMES
         std::string _name;

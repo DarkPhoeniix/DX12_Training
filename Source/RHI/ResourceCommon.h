@@ -68,6 +68,5 @@ namespace rhi
     {
         std::uint64_t SizeInBytes; // Size of the allocated resource in bytes.
         std::uint64_t Alignment;   // Alignment requirement for the resource.
-        std::uint64_t Offset;      // Offset within the heap where the resource is placed (if applicable).
     };
 } // namespace rhi

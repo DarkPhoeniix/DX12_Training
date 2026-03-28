@@ -10,6 +10,9 @@ namespace rhi::d3d12
 {
     D3D12TimestampQuery::D3D12TimestampQuery(rhi::Device* device, std::uint32_t timestampsCount, const std::string& name)
         : _frequency(device->GetStreamQueue()->GetTimestampFrequency())
+#if ENABLE_DEBUG_NAMES
+        , _name(name)
+#endif // ENABLE_DEBUG_NAMES
     {
         QueryHeapDescription description =
         {
@@ -18,6 +21,29 @@ namespace rhi::d3d12
             .NodeMask = 0
         };
         _queryHeap = device->CreateQueryHeap(description);
+    }
+
+    D3D12TimestampQuery::D3D12TimestampQuery(D3D12TimestampQuery&& other) noexcept
+        : rhi::TimestampQuery(std::move(other))
+        , _frequency(other._frequency)
+#if ENABLE_DEBUG_NAMES
+        , _name(std::move(other._name))
+#endif // ENABLE_DEBUG_NAMES
+    {
+    }
+
+    D3D12TimestampQuery& D3D12TimestampQuery::operator=(D3D12TimestampQuery&& other) noexcept
+    {
+        if (this != &other)
+        {
+            rhi::TimestampQuery::operator=(std::move(other));
+            _frequency = other._frequency;
+#if ENABLE_DEBUG_NAMES
+            _name = std::move(other._name);
+#endif // ENABLE_DEBUG_NAMES
+        }
+
+        return *this;
     }
 
     void D3D12TimestampQuery::Begin(CommandList& commandList, std::uint32_t index)

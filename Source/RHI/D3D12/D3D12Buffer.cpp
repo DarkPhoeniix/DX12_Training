@@ -5,8 +5,16 @@
 
 namespace rhi::d3d12
 {
-    D3D12Buffer::D3D12Buffer(rhi::Device* device, const rhi::BufferDescription& description, const void* initialData, const std::string& name)
-        : _resource(device, description, initialData, name)
+    D3D12Buffer::D3D12Buffer(rhi::Device* device, const rhi::BufferDescription& description, ResourceState initialState, const std::string& name)
+        : _resource(device, description, initialState, name)
+#if ENABLE_DEBUG_NAMES
+        , _name(name)
+#endif // ENABLE_DEBUG_NAMES
+    {
+    }
+
+    D3D12Buffer::D3D12Buffer(rhi::Device* device, const rhi::BufferDescription& description, rhi::Heap* heap, std::uint64_t offset, ResourceState initialState, const std::string& name)
+        : _resource(device, description, heap, offset, initialState, name)
 #if ENABLE_DEBUG_NAMES
         , _name(name)
 #endif // ENABLE_DEBUG_NAMES
@@ -73,9 +81,14 @@ namespace rhi::d3d12
         return _resource.GetCurrentState();
     }
 
-    const AllocationInfo& D3D12Buffer::GetAllocationInfo() const
+    void D3D12Buffer::SetCurrentState(ResourceState state)
     {
-        return _resource.GetAllocationInfo();
+        _resource.SetCurrentState(state);
+    }
+
+    std::uint32_t D3D12Buffer::GetUAVCounterOffset() const
+    {
+        return _resource.GetUAVCounterOffset();
     }
 
     void* D3D12Buffer::GetNative() const

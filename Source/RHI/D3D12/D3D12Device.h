@@ -6,7 +6,7 @@
 namespace tracking
 {
     class IGPUCrashTracker;
-}
+} // namespace tracking
 
 namespace rhi::d3d12
 {
@@ -47,28 +47,35 @@ namespace rhi::d3d12
         // Presents the rendered frame to the screen.
         void Present() override;
 
-        std::unique_ptr<CommandList> CreateCommandList(CommandListType type) override;
-        std::shared_ptr<Buffer> CreateBuffer(const BufferDescription& description, const void* initialData) override;
-        std::shared_ptr<Buffer> CreateBuffer(void* nativePtr) override;
-        std::shared_ptr<Texture> CreateTexture(const TextureDescription& description, const void* initialData) override;
-        std::shared_ptr<Texture> CreateTexture(void* nativePtr) override;
-        std::unique_ptr<DescriptorHeap> CreateDescriptorHeap(const DescriptorHeapDescription& description) override;
-        std::unique_ptr<Fence> CreateFence(std::uint64_t initialValue) override;
-        std::unique_ptr<QueryHeap> CreateQueryHeap(const QueryHeapDescription& description) override;
-        std::unique_ptr<Heap> CreateHeap(const HeapDescription& description) override;
-        std::unique_ptr<StatisticsQuery> CreateStatisticsQuery() override;
-        std::unique_ptr<TimestampQuery> CreateTimestampQuery(std::uint32_t timestampsCount) override;
+        std::shared_ptr<rhi::Buffer> CreateBuffer(const rhi::BufferDescription& description, ResourceState initialState) override;
+        std::shared_ptr<rhi::Buffer> CreateBuffer(const rhi::BufferDescription& description, rhi::Heap* heap, std::uint64_t offset, ResourceState initialState) override;
+        std::shared_ptr<rhi::Buffer> CreateBuffer(void* nativePtr) override;
+        std::shared_ptr<rhi::Texture> CreateTexture(const rhi::TextureDescription& description, ResourceState initialState) override;
+        std::shared_ptr<rhi::Texture> CreateTexture(const rhi::TextureDescription& description, rhi::Heap* heap, std::uint64_t offset, ResourceState initialState) override;
+        std::shared_ptr<rhi::Texture> CreateTexture(void* nativePtr) override;
 
-        void CreateBufferSRV(std::shared_ptr<Buffer> resource, CPUDescriptor& descriptor) override;
-        void CreateBufferCBV(std::shared_ptr<Buffer> resource, CPUDescriptor& descriptor) override;
-        void CreateBufferUAV(std::shared_ptr<Buffer> resource, CPUDescriptor& descriptor, std::shared_ptr<Buffer> counterResource) override;
-        void CreateTextureRTV(std::shared_ptr<Texture> texture, CPUDescriptor& descriptor) override;
-        void CreateTextureDSV(std::shared_ptr<Texture> texture, CPUDescriptor& descriptor) override;
-        void CreateTextureSRV(std::shared_ptr<Texture> texture, CPUDescriptor& descriptor) override;
-        void CreateTextureCBV(std::shared_ptr<Texture> texture, CPUDescriptor& descriptor) override;
-        void CreateTextureUAV(std::shared_ptr<Texture> texture, CPUDescriptor& descriptor, std::shared_ptr<Buffer> counterResource) override;
+        std::unique_ptr<rhi::CommandList> CreateCommandList(CommandListType type) override;
+        std::unique_ptr<rhi::DescriptorHeap> CreateDescriptorHeap(const DescriptorHeapDescription& description) override;
+        std::unique_ptr<rhi::Fence> CreateFence(std::uint64_t initialValue) override;
+        std::unique_ptr<rhi::QueryHeap> CreateQueryHeap(const QueryHeapDescription& description) override;
+        std::unique_ptr<rhi::Heap> CreateHeap(const HeapDescription& description) override;
+        std::unique_ptr<rhi::StatisticsQuery> CreateStatisticsQuery() override;
+        std::unique_ptr<rhi::TimestampQuery> CreateTimestampQuery(std::uint32_t timestampsCount) override;
+        std::unique_ptr<rhi::CommandSignature> CreateCommandSignature(const std::vector<rhi::IndirectArgumentDescription>& arguments, rhi::PipelineState* pipelineState) override;
+
+        void CreateBufferSRV(std::shared_ptr<rhi::Buffer> resource, rhi::CPUDescriptor& descriptor) override;
+        void CreateBufferCBV(std::shared_ptr<rhi::Buffer> resource, rhi::CPUDescriptor& descriptor) override;
+        void CreateBufferUAV(std::shared_ptr<rhi::Buffer> resource, rhi::CPUDescriptor& descriptor, std::shared_ptr<rhi::Buffer> counterResource) override;
+        void CreateTextureRTV(std::shared_ptr<rhi::Texture> texture, rhi::CPUDescriptor& descriptor) override;
+        void CreateTextureDSV(std::shared_ptr<rhi::Texture> texture, rhi::CPUDescriptor& descriptor) override;
+        void CreateTextureSRV(std::shared_ptr<rhi::Texture> texture, rhi::CPUDescriptor& descriptor) override;
+        void CreateTextureCBV(std::shared_ptr<rhi::Texture> texture, rhi::CPUDescriptor& descriptor) override;
+        void CreateTextureUAV(std::shared_ptr<rhi::Texture> texture, rhi::CPUDescriptor& descriptor) override;
 
         std::uint32_t GetDescriptorHandleIncrementSize(rhi::DescriptorHeapType type) const override;
+
+        rhi::AllocationInfo GetAllocationInfo(const rhi::BufferDescription& description) const override;
+        rhi::AllocationInfo GetAllocationInfo(const rhi::TextureDescription& description) const override;
 
         tracking::IGPUCrashTracker* GetCrashTracker() override;
 
