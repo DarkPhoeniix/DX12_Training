@@ -5,7 +5,10 @@
 #include <string>
 #include <map>
 
-struct ID3D12Device2;
+namespace rhi
+{
+    class Device;
+}
 
 namespace tracking
 {
@@ -29,7 +32,7 @@ namespace tracking
         virtual void Enable() = 0;
 
         // Initializes crash tracking with the given GPU Device.
-        virtual void Initialize(ID3D12Device2* device) = 0;
+        virtual void Initialize(rhi::Device* device) = 0;
 
         // Waits until any ongoing crash dump operation is finished.
         virtual void WaitUntilCrashDumpFinished() = 0;

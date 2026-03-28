@@ -5,6 +5,7 @@
 
 #include "D3D12Device.h"
 #include "D3D12Descriptor.h"
+#include "D3D12Helpers.h"
 
 namespace rhi::d3d12
 {

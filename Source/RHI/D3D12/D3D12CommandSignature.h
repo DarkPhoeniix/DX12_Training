@@ -2,7 +2,10 @@
 
 #include "CommandSignature.h"
 
-#include "PipelineState.h"
+namespace rhi
+{
+    class PipelineState;
+} // namespace rhi
 
 namespace rhi::d3d12
 {

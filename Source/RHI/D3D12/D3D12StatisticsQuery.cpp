@@ -3,6 +3,8 @@
 
 #include "D3D12StatisticsQuery.h"
 
+#include "D3D12Helpers.h"
+
 #include "Buffer.h"
 #include "QueryHeap.h"
 

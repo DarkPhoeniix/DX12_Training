@@ -70,6 +70,8 @@ namespace rhi
         std::uint32_t GetDepthOrArraySize() const { return _description.DepthOrArraySize; }
         Format GetFormat() const { return _description.Format; }
 
+        virtual const ResourceID& GetID() const = 0;
+
         virtual void* GetNative() const = 0;
 
     protected:

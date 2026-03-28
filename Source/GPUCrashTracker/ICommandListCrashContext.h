@@ -3,7 +3,10 @@
 #include <string>
 #include <memory>
 
-struct ID3D12GraphicsCommandList;
+namespace rhi
+{
+    class CommandList;
+}
 
 namespace tracking
 {
@@ -20,7 +23,7 @@ namespace tracking
         virtual ~ICommandListCrashContext() = default;
 
         // Initializes the command list crash context.
-        virtual void Initialize(ID3D12GraphicsCommandList* commandList) = 0;
+        virtual void Initialize(rhi::CommandList* commandList) = 0;
         // Sets a marker for the command list crash context.
         virtual void SetMarker(const char* marker) = 0;
         // Converts a string marker to a char pointer and calls SetMarker(const char*).

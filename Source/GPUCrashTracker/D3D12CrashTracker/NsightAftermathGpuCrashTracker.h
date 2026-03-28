@@ -32,6 +32,11 @@
 #include "NsightAftermathHelpers.h"
 #include "NsightAftermathShaderDatabase.h"
 
+namespace rhi
+{
+    class Device;
+} // namespace rhi
+
 namespace tracking
 {
     //*********************************************************
@@ -46,7 +51,7 @@ namespace tracking
 
         // Initialize the GPU crash dump tracker.
         void Enable() override;
-        void Initialize(ID3D12Device2* device) override;
+        void Initialize(rhi::Device* device) override;
 
         void WaitUntilCrashDumpFinished() override;
 

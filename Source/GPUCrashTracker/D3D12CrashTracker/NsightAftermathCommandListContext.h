@@ -12,7 +12,7 @@ namespace tracking
         ~NsightAftermathCommandListContext() = default;
 
         // Inherited via ICommandListCrashContext
-        void Initialize(ID3D12GraphicsCommandList* commandList) override;
+        void Initialize(rhi::CommandList* commandList) override;
         void SetMarker(const char* marker) override;
 
     private:

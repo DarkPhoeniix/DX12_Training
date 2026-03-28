@@ -3,6 +3,8 @@
 
 #include "../IGPUCrashTracker.h"
 
+#include "RHI/CommandList.h"
+
 #include "GFSDK_Aftermath.h"
 
 #include <cassert>
@@ -17,12 +19,12 @@ namespace tracking
     {
     }
 
-    void NsightAftermathCommandListContext::Initialize(ID3D12GraphicsCommandList* commandList)
+    void NsightAftermathCommandListContext::Initialize(rhi::CommandList* commandList)
     {
         assert(commandList);
         if (commandList)
         {
-            _commandList = commandList;
+            _commandList = static_cast<ID3D12GraphicsCommandList*>(commandList->GetNative());
             // Create an Nsight Aftermath context handle for setting Aftermath event markers in this command list.
             AFTERMATH_CHECK_ERROR(GFSDK_Aftermath_DX12_CreateContextHandle(_commandList, &_commandListCrashContext));
         }

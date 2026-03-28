@@ -7,7 +7,7 @@
 namespace rhi
 {
     using ResourceID = std::uint64_t;
-    static ResourceID InvalidResourceID = std::numeric_limits<ResourceID>::max();
+    static ResourceID InvalidResourceID = std::uint64_t(-1);
 
     enum class ResourceUsage : std::uint8_t
     {
@@ -62,6 +62,15 @@ namespace rhi
         Texture1D = 1,
         Texture2D = 2,
         Texture3D = 3
+    };
+
+    enum class ResourceViewType
+    {
+        RTV,
+        DSV,
+        CBV,
+        SRV,
+        UAV
     };
 
     struct AllocationInfo

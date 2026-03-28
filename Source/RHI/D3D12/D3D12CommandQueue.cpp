@@ -3,6 +3,8 @@
 
 #include "D3D12CommandQueue.h"
 
+#include "D3D12Helpers.h"
+
 #include "CommandList.h"
 #include "Fence.h"
 

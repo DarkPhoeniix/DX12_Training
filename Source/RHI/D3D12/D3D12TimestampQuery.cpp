@@ -5,6 +5,7 @@
 
 #include "CommandList.h"
 #include "CommandQueue.h"
+#include "QueryHeap.h"
 
 namespace rhi::d3d12
 {

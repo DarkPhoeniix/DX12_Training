@@ -33,15 +33,13 @@ using namespace Microsoft::WRL;
 #endif // _DEBUG
 
 // DirectX12 specific headers
-//#if USE_D3D12
+#if USE_D3D12
 #include <directx/d3dx12.h>     // D3D12 extension library
 #include <dxgi1_6.h>            // Microsoft DirectX Graphics Infrastructure
 #include <d3dcompiler.h>        // Contains functions to compile HLSL code at runtime
 #include <DirectXTex.h>
 #include <DirectXMath.h>
-
-#include "D3D12/D3D12Helpers.h"
-//#endif
+#endif // USE_D3D12
 
 #include "Device.h"
 
@@ -49,6 +47,9 @@ using namespace Microsoft::WRL;
 
 #include "Utility/Helpers.h"
 
+#include <algorithm>
+#include <concepts>
+#include <functional>
 #include <memory>
 #include <string>
 #include <map>

@@ -2,11 +2,9 @@
 
 #include "Format.h"
 #include "ResourceCommon.h"
-#include "CommandList.h"
 #include "QueryHeap.h"
 #include "Heap.h"
-
-#include <concepts>
+#include "CommandList.h"
 
 namespace rhi
 {

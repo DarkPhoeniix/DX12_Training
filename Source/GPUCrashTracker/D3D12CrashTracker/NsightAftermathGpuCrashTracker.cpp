@@ -31,6 +31,8 @@
 
 #include "NsightAftermathHelpers.h"
 
+#include "RHI/Device.h"
+
 //*********************************************************
 // NsightAftermathGpuCrashTracker implementation
 //*********************************************************
@@ -79,7 +81,7 @@ namespace tracking
         m_initialized = true;
     }
 
-    void NsightAftermathGpuCrashTracker::Initialize(ID3D12Device2* device)
+    void NsightAftermathGpuCrashTracker::Initialize(rhi::Device* device)
     {
         const uint32_t aftermathFlags =
             GFSDK_Aftermath_FeatureFlags_EnableMarkers |             // Enable event marker tracking.
@@ -87,7 +89,8 @@ namespace tracking
             GFSDK_Aftermath_FeatureFlags_CallStackCapturing |        // Capture call stacks for all draw calls, compute dispatches, and resource copies.
             GFSDK_Aftermath_FeatureFlags_GenerateShaderDebugInfo;    // Generate debug information for shaders.
 
-        AFTERMATH_CHECK_ERROR(GFSDK_Aftermath_DX12_Initialize(GFSDK_Aftermath_Version_API, aftermathFlags, device));
+        ID3D12Device2* nativeDevice = static_cast<ID3D12Device2*>(device->GetNative());
+        AFTERMATH_CHECK_ERROR(GFSDK_Aftermath_DX12_Initialize(GFSDK_Aftermath_Version_API, aftermathFlags, nativeDevice));
     }
 
     void NsightAftermathGpuCrashTracker::WaitUntilCrashDumpFinished()

@@ -3,6 +3,8 @@
 
 #include "D3D12PipelineState.h"
 
+#include "D3D12Helpers.h"
+
 #include <json/json.h>
 
 #include <filesystem>

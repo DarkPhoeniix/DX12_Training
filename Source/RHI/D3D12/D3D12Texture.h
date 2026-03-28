@@ -24,6 +24,8 @@ namespace rhi::d3d12
         ResourceState GetCurrentState() const override;
         void SetCurrentState(ResourceState state) override;
 
+        const ResourceID& GetID() const override;
+
         void* GetNative() const override;
 
     private:

@@ -3,9 +3,13 @@
 
 #include "D3D12SwapChain.h"
 
-#include "IGPUCrashTracker.h"
+#include "D3D12Helpers.h"
+
 #include "CommandQueue.h"
+#include "DescriptorHeap.h"
 #include "Texture.h"
+
+#include "GPUCrashTracker/IGPUCrashTracker.h"
 
 namespace rhi::d3d12
 {

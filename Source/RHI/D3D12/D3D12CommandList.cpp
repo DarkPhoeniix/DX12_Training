@@ -4,13 +4,15 @@
 #include "D3D12CommandList.h"
 
 #include "D3D12Descriptor.h"
+#include "D3D12Helpers.h"
 
 #include "Buffer.h"
 #include "Texture.h"
+#include "CommandSignature.h"
+#include "DescriptorHeap.h"
 #include "QueryHeap.h"
 #include "PipelineState.h"
-
-#include <algorithm>
+#include "ResourceBarrier.h"
 
 namespace rhi::d3d12
 {
@@ -440,6 +442,12 @@ namespace rhi::d3d12
     void D3D12CommandList::ExecuteIndirect(const rhi::CommandSignature& commandSignature, std::uint32_t maxCommandCount, std::shared_ptr<Buffer> argumentBuffer, std::shared_ptr<Buffer> countBuffer, std::uint32_t argumentBufferOffset, std::uint32_t countBufferOffset)
     {
         _commandList->ExecuteIndirect(D3D12Cast<ID3D12CommandSignature>(commandSignature.GetNative()), maxCommandCount, D3D12Cast<ID3D12Resource>(argumentBuffer->GetNative()), argumentBufferOffset, D3D12Cast<ID3D12Resource>(countBuffer->GetNative()), countBufferOffset);
+    }
+
+    void D3D12CommandList::SetDescriptorHeaps(const rhi::DescriptorHeap* descriptorHeap)
+    {
+        ID3D12DescriptorHeap* nativeHeap = D3D12Cast<ID3D12DescriptorHeap>(descriptorHeap->GetNative());
+        _commandList->SetDescriptorHeaps(1, &nativeHeap);
     }
 
     void D3D12CommandList::SetDescriptorHeaps(const std::vector<rhi::DescriptorHeap*>& descriptorHeaps)

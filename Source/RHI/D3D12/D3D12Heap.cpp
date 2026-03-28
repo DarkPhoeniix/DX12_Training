@@ -3,6 +3,8 @@
 
 #include "D3D12Heap.h"
 
+#include "D3D12Helpers.h"
+
 namespace rhi::d3d12
 {
     D3D12Heap::D3D12Heap(rhi::Device* device, const rhi::HeapDescription& description, const std::string& name)

@@ -1,14 +1,31 @@
 
-add_library(GPUCrashTracker STATIC ${GPUCrashTracker_SOURCES})
+if (USE_D3D12)
+    add_library(GPUCrashTracker STATIC ${GPUCrashTracker_COMMON_SOURCES} ${GPUCrashTracker_D3D12_SOURCES})
+else()
+    add_library(GPUCrashTracker STATIC ${GPUCrashTracker_COMMON_SOURCES})
+endif()
 
-file(GLOB_RECURSE GPUCrashTracker_SOURCES CONFIGURE_DEPENDS
-    ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/*.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/*.hpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/*.inl
+
+file(GLOB_RECURSE GPUCrashTracker_COMMON_SOURCES CONFIGURE_DEPENDS
+    ${CMAKE_CURRENT_SOURCE_DIR}/ICommandListCrashContext.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ICommandListCrashContext.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/IGPUCrashTracker.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/IGPUCrashTracker.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/NullCrashTracker/NullCommandListCrashContext.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/NullCrashTracker/NullCrashTracker.h
 )
 
-target_sources(GPUCrashTracker PRIVATE ${GPUCrashTracker_SOURCES})
+file(GLOB_RECURSE GPUCrashTracker_D3D12_SOURCES CONFIGURE_DEPENDS
+    ${CMAKE_CURRENT_SOURCE_DIR}/D3D12CrashTracker/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/D3D12CrashTracker/*.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/D3D12CrashTracker/*.inl
+)
+
+if (USE_D3D12)
+    target_sources(GPUCrashTracker PRIVATE ${GPUCrashTracker_COMMON_SOURCES} ${GPUCrashTracker_D3D12_SOURCES})
+else()
+    target_sources(GPUCrashTracker PRIVATE ${GPUCrashTracker_COMMON_SOURCES})
+endif()
 
 foreach(config IN ITEMS DEBUG RELWITHDEBINFO RELEASE)
     set_property(TARGET GPUCrashTracker PROPERTY LIBRARY_OUTPUT_DIRECTORY_${config} "${EXE_OUTPUT_DIR}/Libs")

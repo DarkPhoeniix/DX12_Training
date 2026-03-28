@@ -3,14 +3,13 @@
 
 #include "D3D12Device.h"
 
-#include "ResourceCommon.h"
-
 #include "D3D12Buffer.h"
 #include "D3D12CommandList.h"
 #include "D3D12CommandQueue.h"
 #include "D3D12CommandSignature.h"
 #include "D3D12DescriptorHeap.h"
 #include "D3D12Descriptor.h"
+#include "D3D12Helpers.h"
 #include "D3D12Fence.h"
 #include "D3D12Heap.h"
 #include "D3D12QueryHeap.h"
@@ -20,6 +19,10 @@
 #include "IGPUCrashTracker.h"
 #include "D3D12StatisticsQuery.h"
 #include "D3D12TimestampQuery.h"
+
+#include "ResourceCommon.h"
+#include "DescriptorHeap.h"
+#include "SwapChain.h"
 
 namespace rhi::d3d12
 {
@@ -474,7 +477,7 @@ namespace rhi::d3d12
         CHECK(createDeviceResult, "Failed to create D3D12 device.");
         _device->SetName(L"D3D12  Device");
 
-        _crashTracker->Initialize(_device.Get());
+        _crashTracker->Initialize(this);
 
         // Enable debug messages in debug mode.
 #if ENABLE_DEVICE_DEBUG

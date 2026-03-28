@@ -2,8 +2,6 @@
 
 #include "Fence.h"
 
-#include <functional>
-
 namespace rhi::d3d12
 {
     // Wrapper for an ID3D12Fence object to synchronize the CPU and GPU.

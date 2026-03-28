@@ -91,6 +91,11 @@ namespace rhi::d3d12
         return _resource.GetUAVCounterOffset();
     }
 
+    const ResourceID& D3D12Buffer::GetID() const
+    {
+        return _resource.GetID();
+    }
+
     void* D3D12Buffer::GetNative() const
     {
         return _resource.GetNative();

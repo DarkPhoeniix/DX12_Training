@@ -45,6 +45,8 @@ namespace rhi
 
         virtual std::uint32_t GetUAVCounterOffset() const = 0;
 
+        virtual const ResourceID& GetID() const = 0;
+
         virtual void* GetNative() const = 0;
 
     protected:

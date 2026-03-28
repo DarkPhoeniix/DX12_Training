@@ -3,18 +3,20 @@
 #include "Descriptor.h"
 #include "Format.h"
 #include "PipelineStates.h"
-#include "ResourceBarrier.h"
+
+#include <vector>
+#include <memory>
 
 namespace rhi
 {
     class Buffer;
     class CommandSignature;
-    class CommandAllocator;
     class DescriptorHeap;
     class PipelineState;
-    class ResourceBarrier;
     class Texture;
     class QueryHeap;
+    class BufferBarrier;
+    class TextureBarrier;
 
     enum class CommandListType : uint8_t
     {
@@ -155,6 +157,7 @@ namespace rhi
                                      std::uint32_t argumentBufferOffset = 0, 
                                      std::uint32_t countBufferOffset = 0) = 0;
 
+        virtual void SetDescriptorHeaps(const rhi::DescriptorHeap* descriptorHeap) = 0;
         virtual void SetDescriptorHeaps(const std::vector<DescriptorHeap*>& descriptorHeaps) = 0;
         virtual void SetConstant(std::uint32_t index, std::uint32_t data, std::uint32_t offset = 0) = 0;
         virtual void SetConstants(std::uint32_t index, std::uint32_t numValues, const void* data, std::uint32_t offset = 0) = 0;

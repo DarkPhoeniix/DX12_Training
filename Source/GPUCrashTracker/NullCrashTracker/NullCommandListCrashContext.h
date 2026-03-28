@@ -11,9 +11,9 @@ namespace tracking
             : ICommandListCrashContext(crashTracker)
         {   }
 
-        // Inherited via ICommandListCrashContext
-        void Initialize(ID3D12GraphicsCommandList*) override
+        void Initialize([[maybe_unused]] rhi::CommandList* commandList) override
         {   }
+
         void SetMarker(const char*) override
         {   }
     };

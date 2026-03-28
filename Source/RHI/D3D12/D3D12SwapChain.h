@@ -1,7 +1,11 @@
 #pragma once
 
 #include "SwapChain.h"
-#include "DescriptorHeap.h"
+
+namespace rhi
+{
+    class DescriptorHeap;
+} // namespace rhi
 
 namespace rhi::d3d12
 {

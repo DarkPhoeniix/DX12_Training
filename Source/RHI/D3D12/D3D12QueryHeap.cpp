@@ -3,6 +3,8 @@
 
 #include "D3D12QueryHeap.h"
 
+#include "D3D12Helpers.h"
+
 namespace rhi::d3d12
 {
     D3D12QueryHeap::D3D12QueryHeap(rhi::Device* device, const QueryHeapDescription& description, const std::string& name)

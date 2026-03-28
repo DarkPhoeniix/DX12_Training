@@ -3,6 +3,10 @@
 
 #include "D3D12CommandSignature.h"
 
+#include "D3D12Helpers.h"
+
+#include "PipelineState.h"
+
 namespace rhi::d3d12
 {
     namespace

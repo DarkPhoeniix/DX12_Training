@@ -82,6 +82,11 @@ namespace rhi::d3d12
         _resource.SetCurrentState(state);
     }
 
+    const ResourceID& D3D12Texture::GetID() const
+    {
+        return _resource.GetID();
+    }
+
     void* D3D12Texture::GetNative() const
     {
         return _resource.GetNative();

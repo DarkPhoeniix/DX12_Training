@@ -2,8 +2,11 @@
 
 #include "CommandList.h"
 
-#include "PipelineState.h"
-#include "CommandSignature.h"
+namespace rhi
+{
+    class CommandSignature;
+    class PipelineState;
+} // namespace rhi
 
 namespace rhi::d3d12
 {
@@ -100,6 +103,7 @@ namespace rhi::d3d12
                              std::uint32_t argumentBufferOffset = 0,
                              std::uint32_t countBufferOffset = 0) override;
 
+        void SetDescriptorHeaps(const rhi::DescriptorHeap* descriptorHeap) override;
         void SetDescriptorHeaps(const std::vector<rhi::DescriptorHeap*>& descriptorHeaps) override;
         void SetConstant(std::uint32_t index, std::uint32_t data, std::uint32_t offset = 0) override;
         void SetConstants(std::uint32_t index, std::uint32_t numValues, const void* data, std::uint32_t offset = 0) override;

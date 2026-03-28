@@ -3,8 +3,6 @@
 #include "Buffer.h"
 #include "D3D12Resource.h"
 
-#include <string>
-
 namespace rhi
 {
     class Device;
@@ -32,6 +30,8 @@ namespace rhi::d3d12
         void SetCurrentState(ResourceState state) override;
 
         std::uint32_t GetUAVCounterOffset() const override;
+
+        const ResourceID& GetID() const override;
 
         void* GetNative() const override;
 
