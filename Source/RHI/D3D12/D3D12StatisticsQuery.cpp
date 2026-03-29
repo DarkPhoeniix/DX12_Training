@@ -65,19 +65,19 @@ namespace rhi::d3d12
         return *this;
     }
 
-    void D3D12StatisticsQuery::BeginQuery(CommandList& commandList)
+    void D3D12StatisticsQuery::BeginQuery(rhi::CommandList* commandList)
     {
-        commandList.BeginQuery(*_queryHeap, rhi::QueryType::PipelineStatistics, 0);
+        commandList->BeginQuery(_queryHeap.get(), rhi::QueryType::PipelineStatistics, 0);
     }
 
-    void D3D12StatisticsQuery::EndQuery(CommandList& commandList)
+    void D3D12StatisticsQuery::EndQuery(rhi::CommandList* commandList)
     {
-        commandList.EndQuery(*_queryHeap, rhi::QueryType::PipelineStatistics, 0);
+        commandList->EndQuery(_queryHeap.get(), rhi::QueryType::PipelineStatistics, 0);
     }
 
-    void D3D12StatisticsQuery::ResolveQueryData(CommandList& commandList)
+    void D3D12StatisticsQuery::ResolveQueryData(rhi::CommandList* commandList)
     {
-        commandList.ResolveQueryData(*_queryHeap, rhi::QueryType::PipelineStatistics, 0, _statisticsResource, 0);
+        commandList->ResolveQueryData(_queryHeap.get(), rhi::QueryType::PipelineStatistics, 0, _statisticsResource, 0);
     }
 
     const rhi::PipelineStatistics& D3D12StatisticsQuery::GetStatistics()

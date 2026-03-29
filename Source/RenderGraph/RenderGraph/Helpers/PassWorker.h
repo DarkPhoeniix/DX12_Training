@@ -1,9 +1,8 @@
 #pragma once
 
+#include "RenderGraph/Interfaces.h"
 #include "RenderGraph/RenderContext.h"
 #include "RenderGraph/RenderPass.h"
-
-#include "Renderer/Render/Frame/TaskGPU.h"
 
 namespace rg::mt
 {
@@ -11,15 +10,15 @@ namespace rg::mt
     {
         IRenderPass* RenderPass = nullptr;
         RenderContext* Context = nullptr;
-        TaskGPU* PreExecuteTask = nullptr;
-        TaskGPU* ExecuteTask = nullptr;
-        TaskGPU* PostExecuteTask = nullptr;
+        ITask* PreExecuteTask = nullptr;
+        ITask* ExecuteTask = nullptr;
+        ITask* PostExecuteTask = nullptr;
     };
 
     class PassWorker
     {
     public:
-        using WorkFunc = std::function<void(RenderContext&, TaskGPU&)>;
+        using WorkFunc = std::function<void(RenderContext&, ITask*)>;
         using CallbackFunc = std::function<void()>;
 
         PassWorker();

@@ -1,10 +1,8 @@
 #pragma once
 
+#include "Interfaces.h"
 #include "RenderGraphResourceId.h"
 
-#include "Renderer/Core/ResourceTable.h"
-#include "Renderer/Core/TextureManager.h"
-#include "Renderer/Render/Frame/Frame.h"
 #include "Renderer/Helpers/Profiler.h"
 
 namespace rg
@@ -15,30 +13,15 @@ namespace rg
     class RenderContext
     {
     public:
-        RenderContext();
+        RenderContext(rhi::Device* device, IDescriptorProvider* descriptorProvider);
 
-        void Init(ResourceTable& resourceTable, TextureManager& textureManager);
+        std::shared_ptr<rhi::Buffer> GetBuffer(RGBufferId id) const;
+        std::shared_ptr<rhi::Texture> GetTexture(RGTextureId id) const;
 
-        const Frame* GetFrame() const;
-        std::uint32_t GetFrameIndex() const;
-
-		TextureManager& GetTextureManager();
-
-        void BindBindlessTable(dx12::CommandList& commandList) const;
-
-        std::shared_ptr<dx12::Resource> GetResource(RGResourceId id);
-
-        DescriptorHandle GetStaticResourceHandle(const dx12::RenderTargetView& rtv) const;
-        DescriptorHandle GetStaticResourceHandle(const dx12::DepthStencilView& dsv) const;
-        DescriptorHandle GetStaticResourceHandle(const dx12::ShaderResourceView& srv) const;
-        DescriptorHandle GetStaticResourceHandle(const dx12::UnorderedAccessView& uav) const;
-        DescriptorHandle GetStaticResourceHandle(const dx12::ConstantBufferView& cbv) const;
-
-        DescriptorHandle GetTransientResourceHandle(const dx12::RenderTargetView& rtv) const;
-        DescriptorHandle GetTransientResourceHandle(const dx12::DepthStencilView& dsv) const;
-        DescriptorHandle GetTransientResourceHandle(const dx12::ShaderResourceView& srv) const;
-        DescriptorHandle GetTransientResourceHandle(const dx12::UnorderedAccessView& uav) const;
-        DescriptorHandle GetTransientResourceHandle(const dx12::ConstantBufferView& cbv) const;
+        rhi::CPUDescriptor GetCPUDescriptor(RGBufferId id, rhi::ResourceViewType viewType) const;
+        rhi::GPUDescriptor GetGPUDescriptor(RGBufferId id, rhi::ResourceViewType viewType) const;
+        rhi::CPUDescriptor GetCPUDescriptor(RGTextureId id, rhi::ResourceViewType viewType) const;
+        rhi::GPUDescriptor GetGPUDescriptor(RGTextureId id, rhi::ResourceViewType viewType) const;
 
         void SetGPUProfiler(Profiler* gpuProfiler);
         Profiler* GetGPUProfiler() const;
@@ -47,13 +30,8 @@ namespace rg
         friend class RenderGraph;
         friend class RenderPassBuilder;
 
-        RGResourceId CreateResourceVirtual(const std::string& name);
-        RGResourceId CreateResource(const std::string& name, dx12::ResourceDescription desc, void* data = nullptr, size_t dataSize = 0);
-        RGResourceId ReadResource(const std::string& name);
-        RGResourceId WriteResource(const std::string& name);
-
-        RGResourceId DeclareBuffer(const std::string& name, const dx12::ResourceDescription& desc, void* data = nullptr, size_t dataSize = 0);
-        RGResourceId DeclareTexture(const std::string& name, const dx12::ResourceDescription& desc, void* data = nullptr, size_t dataSize = 0);
+        [[nodiscard]] RGBufferId DeclareBuffer(const std::string& name, const rhi::BufferDescription& desc, void* data = nullptr, size_t dataSize = 0);
+        [[nodiscard]] RGTextureId DeclareTexture(const std::string& name, const rhi::TextureDescription& desc, void* data = nullptr, size_t dataSize = 0);
 
         [[nodiscard]] RGBufferReadId ReadBuffer(const std::string& name);
         [[nodiscard]] RGBufferWriteId WriteBuffer(const std::string& name);
@@ -73,16 +51,16 @@ namespace rg
         [[nodiscard]] RGVirtualResourceReadId ReadVirtualResource(const std::string& name);
         [[nodiscard]] RGVirtualResourceWriteId WriteVirtualResource(const std::string& name);
 
-        void FillBuffer(std::shared_ptr<dx12::Resource> resource, void* data, size_t dataSize = 0);
-        void FillTexture(std::shared_ptr<dx12::Resource> resource, void* data, size_t dataSize = 0);
+        void FillBuffer(std::shared_ptr<rhi::Buffer> resource, void* data, size_t dataSize = 0);
+        void FillTexture(std::shared_ptr<rhi::Texture> resource, void* data, size_t dataSize = 0);
 
-        std::unordered_map<std::string, RGResourceId> _mapNameToId;
-        std::unordered_map<RGResourceId, std::shared_ptr<dx12::Resource>> _mapIdToResource;
+        std::unordered_map<std::string, RGBufferId> _mapNameToBufferId;
+        std::unordered_map<std::string, RGTextureId> _mapNameToTextureId;
+        std::unordered_map<RGBufferId, std::shared_ptr<rhi::Buffer>> _mapIdToBuffer;
+        std::unordered_map<RGTextureId, std::shared_ptr<rhi::Texture>> _mapIdToTexture;
 
-        Frame* _frame;
-
-        ResourceTable* _resourceTable;
-		TextureManager* _textureManager;
+        IDescriptorProvider* _descriptorProvider;
+        rhi::Device* _device;
 
         Profiler* _gpuProfiler;
     };

@@ -61,21 +61,21 @@ namespace rhi
 
         virtual void Present() = 0;
 
-        virtual std::shared_ptr<Buffer> CreateBuffer(const BufferDescription& description, ResourceState initialState = ResourceState::Common) = 0;
-        virtual std::shared_ptr<Buffer> CreateBuffer(const BufferDescription& description, Heap* heap, std::uint64_t offset, ResourceState initialState = ResourceState::Common) = 0;
-        virtual std::shared_ptr<Buffer> CreateBuffer(void* nativePtr) = 0;
-        virtual std::shared_ptr<Texture> CreateTexture(const TextureDescription& description, ResourceState initialState = ResourceState::Common) = 0;
-        virtual std::shared_ptr<Texture> CreateTexture(const TextureDescription& description, Heap* heap, std::uint64_t offset, ResourceState initialState = ResourceState::Common) = 0;
-        virtual std::shared_ptr<Texture> CreateTexture(void* nativePtr) = 0;
+        virtual std::shared_ptr<Buffer> CreateBuffer(const BufferDescription& description, ResourceState initialState = ResourceState::Common, const std::string& name = "") = 0;
+        virtual std::shared_ptr<Buffer> CreateBuffer(const BufferDescription& description, Heap* heap, std::uint64_t offset, ResourceState initialState = ResourceState::Common, const std::string& name = "") = 0;
+        virtual std::shared_ptr<Buffer> CreateBuffer(void* nativePtr, const std::string& name = "") = 0;
+        virtual std::shared_ptr<Texture> CreateTexture(const TextureDescription& description, ResourceState initialState = ResourceState::Common, const std::string& name = "") = 0;
+        virtual std::shared_ptr<Texture> CreateTexture(const TextureDescription& description, Heap* heap, std::uint64_t offset, ResourceState initialState = ResourceState::Common, const std::string& name = "") = 0;
+        virtual std::shared_ptr<Texture> CreateTexture(void* nativePtr, const std::string& name = "") = 0;
 
-        virtual std::unique_ptr<CommandList> CreateCommandList(CommandListType type) = 0;
-        virtual std::unique_ptr<DescriptorHeap> CreateDescriptorHeap(const DescriptorHeapDescription& description) = 0;
-        virtual std::unique_ptr<QueryHeap> CreateQueryHeap(const QueryHeapDescription& description) = 0;
+        virtual std::unique_ptr<CommandList> CreateCommandList(CommandListType type, const std::string& name = "") = 0;
+        virtual std::unique_ptr<DescriptorHeap> CreateDescriptorHeap(const DescriptorHeapDescription& description, const std::string& name = "") = 0;
+        virtual std::unique_ptr<QueryHeap> CreateQueryHeap(const QueryHeapDescription& description, const std::string& name = "") = 0;
         virtual std::unique_ptr<Fence> CreateFence(std::uint64_t initialValue) = 0;
-        virtual std::unique_ptr<Heap> CreateHeap(const HeapDescription& description) = 0;
-        virtual std::unique_ptr<StatisticsQuery> CreateStatisticsQuery() = 0;
-        virtual std::unique_ptr<TimestampQuery> CreateTimestampQuery(std::uint32_t timestampsCount) = 0;
-        virtual std::unique_ptr<CommandSignature> CreateCommandSignature(const std::vector<IndirectArgumentDescription>& arguments, PipelineState* pipelineState) = 0;
+        virtual std::unique_ptr<Heap> CreateHeap(const HeapDescription& description, const std::string& name = "") = 0;
+        virtual std::unique_ptr<StatisticsQuery> CreateStatisticsQuery(const std::string& name = "") = 0;
+        virtual std::unique_ptr<TimestampQuery> CreateTimestampQuery(std::uint32_t timestampsCount, const std::string& name = "") = 0;
+        virtual std::unique_ptr<CommandSignature> CreateCommandSignature(const std::vector<IndirectArgumentDescription>& arguments, PipelineState* pipelineState, const std::string& name = "") = 0;
 
         virtual void CreateBufferSRV(std::shared_ptr<Buffer> resource, CPUDescriptor& descriptor) = 0;
         virtual void CreateBufferCBV(std::shared_ptr<Buffer> resource, CPUDescriptor& descriptor) = 0;

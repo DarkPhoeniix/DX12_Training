@@ -137,49 +137,49 @@ namespace rhi::d3d12
         _swapChain->Present();
     }
 
-    std::shared_ptr<rhi::Buffer> D3D12Device::CreateBuffer(const rhi::BufferDescription& description, ResourceState initialState)
+    std::shared_ptr<rhi::Buffer> D3D12Device::CreateBuffer(const rhi::BufferDescription& description, ResourceState initialState, const std::string& name)
     {
-        return std::unique_ptr<D3D12Buffer>(new D3D12Buffer(this, description, initialState));
+        return std::unique_ptr<D3D12Buffer>(new D3D12Buffer(this, description, initialState, name));
     }
 
-    std::shared_ptr<rhi::Buffer> D3D12Device::CreateBuffer(const rhi::BufferDescription& description, rhi::Heap* heap, std::uint64_t offset, ResourceState initialState)
+    std::shared_ptr<rhi::Buffer> D3D12Device::CreateBuffer(const rhi::BufferDescription& description, rhi::Heap* heap, std::uint64_t offset, ResourceState initialState, const std::string& name)
     {
-        return std::unique_ptr<D3D12Buffer>(new D3D12Buffer(this, description, heap, offset, initialState));
+        return std::unique_ptr<D3D12Buffer>(new D3D12Buffer(this, description, heap, offset, initialState, name));
     }
 
-    std::shared_ptr<rhi::Buffer> D3D12Device::CreateBuffer(void* nativePtr)
+    std::shared_ptr<rhi::Buffer> D3D12Device::CreateBuffer(void* nativePtr, const std::string& name)
     {
-        return std::unique_ptr<D3D12Buffer>(new D3D12Buffer(this, D3D12Cast<ID3D12Resource>(nativePtr)));
+        return std::unique_ptr<D3D12Buffer>(new D3D12Buffer(this, D3D12Cast<ID3D12Resource>(nativePtr), name));
     }
 
-    std::shared_ptr<rhi::Texture> D3D12Device::CreateTexture(const rhi::TextureDescription& description, ResourceState initialState)
+    std::shared_ptr<rhi::Texture> D3D12Device::CreateTexture(const rhi::TextureDescription& description, ResourceState initialState, const std::string& name)
     {
-        return std::unique_ptr<D3D12Texture>(new D3D12Texture(this, description, initialState));
+        return std::unique_ptr<D3D12Texture>(new D3D12Texture(this, description, initialState, name));
     }
 
-    std::shared_ptr<rhi::Texture> D3D12Device::CreateTexture(const rhi::TextureDescription& description, rhi::Heap* heap, std::uint64_t offset, ResourceState initialState)
+    std::shared_ptr<rhi::Texture> D3D12Device::CreateTexture(const rhi::TextureDescription& description, rhi::Heap* heap, std::uint64_t offset, ResourceState initialState, const std::string& name)
     {
-        return std::unique_ptr<D3D12Texture>(new D3D12Texture(this, description, heap, offset, initialState));
+        return std::unique_ptr<D3D12Texture>(new D3D12Texture(this, description, heap, offset, initialState, name));
     }
 
-    std::shared_ptr<rhi::Texture> D3D12Device::CreateTexture(void* nativePtr)
+    std::shared_ptr<rhi::Texture> D3D12Device::CreateTexture(void* nativePtr, const std::string& name)
     {
-        return std::unique_ptr<D3D12Texture>(new D3D12Texture(this, D3D12Cast<ID3D12Resource>(nativePtr)));
+        return std::unique_ptr<D3D12Texture>(new D3D12Texture(this, D3D12Cast<ID3D12Resource>(nativePtr), name));
     }
 
-    std::unique_ptr<rhi::CommandList> D3D12Device::CreateCommandList(rhi::CommandListType type)
+    std::unique_ptr<rhi::CommandList> D3D12Device::CreateCommandList(rhi::CommandListType type, const std::string& name)
     {
-        return std::unique_ptr<D3D12CommandList>(new D3D12CommandList(this, type));
+        return std::unique_ptr<D3D12CommandList>(new D3D12CommandList(this, type, name));
     }
 
-    std::unique_ptr<rhi::DescriptorHeap> D3D12Device::CreateDescriptorHeap(const rhi::DescriptorHeapDescription& description)
+    std::unique_ptr<rhi::DescriptorHeap> D3D12Device::CreateDescriptorHeap(const rhi::DescriptorHeapDescription& description, const std::string& name)
     {
-        return std::unique_ptr<D3D12DescriptorHeap>(new D3D12DescriptorHeap(this, description));
+        return std::unique_ptr<D3D12DescriptorHeap>(new D3D12DescriptorHeap(this, description, name));
     }
 
-    std::unique_ptr<rhi::QueryHeap> D3D12Device::CreateQueryHeap(const rhi::QueryHeapDescription& description)
+    std::unique_ptr<rhi::QueryHeap> D3D12Device::CreateQueryHeap(const rhi::QueryHeapDescription& description, const std::string& name)
     {
-        return std::unique_ptr<D3D12QueryHeap>(new D3D12QueryHeap(this, description));
+        return std::unique_ptr<D3D12QueryHeap>(new D3D12QueryHeap(this, description, name));
     }
 
     std::unique_ptr<rhi::Fence> D3D12Device::CreateFence(std::uint64_t initialValue)
@@ -187,24 +187,24 @@ namespace rhi::d3d12
         return std::unique_ptr<D3D12Fence>(new D3D12Fence(this, initialValue));
     }
 
-    std::unique_ptr<rhi::Heap> D3D12Device::CreateHeap(const rhi::HeapDescription& description)
+    std::unique_ptr<rhi::Heap> D3D12Device::CreateHeap(const rhi::HeapDescription& description, const std::string& name)
     {
-        return std::unique_ptr<D3D12Heap>(new D3D12Heap(this, description));
+        return std::unique_ptr<D3D12Heap>(new D3D12Heap(this, description, name));
     }
 
-    std::unique_ptr<rhi::StatisticsQuery> D3D12Device::CreateStatisticsQuery()
+    std::unique_ptr<rhi::StatisticsQuery> D3D12Device::CreateStatisticsQuery(const std::string& name)
     {
-        return std::unique_ptr<D3D12StatisticsQuery>(new D3D12StatisticsQuery(this));
+        return std::unique_ptr<D3D12StatisticsQuery>(new D3D12StatisticsQuery(this, name));
     }
 
-    std::unique_ptr<rhi::TimestampQuery> D3D12Device::CreateTimestampQuery(std::uint32_t timestampsCount)
+    std::unique_ptr<rhi::TimestampQuery> D3D12Device::CreateTimestampQuery(std::uint32_t timestampsCount, const std::string& name)
     {
-        return std::unique_ptr<D3D12TimestampQuery>(new D3D12TimestampQuery(this, timestampsCount));
+        return std::unique_ptr<D3D12TimestampQuery>(new D3D12TimestampQuery(this, timestampsCount, name));
     }
 
-    std::unique_ptr<rhi::CommandSignature> D3D12Device::CreateCommandSignature(const std::vector<rhi::IndirectArgumentDescription>& arguments, rhi::PipelineState* pipelineState)
+    std::unique_ptr<rhi::CommandSignature> D3D12Device::CreateCommandSignature(const std::vector<rhi::IndirectArgumentDescription>& arguments, rhi::PipelineState* pipelineState, const std::string& name)
     {
-        return std::unique_ptr<D3D12CommandSignature>(new D3D12CommandSignature(this, arguments, pipelineState));
+        return std::unique_ptr<D3D12CommandSignature>(new D3D12CommandSignature(this, arguments, pipelineState, name));
     }
 
     void D3D12Device::CreateBufferSRV(std::shared_ptr<Buffer> buffer, CPUDescriptor& descriptor)

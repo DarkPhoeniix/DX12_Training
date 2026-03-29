@@ -30,10 +30,10 @@ namespace rhi
         StatisticsQuery& operator=(const StatisticsQuery&) = delete;
         StatisticsQuery& operator=(StatisticsQuery&&) noexcept = default;
 
-        virtual void BeginQuery(CommandList& commandList) = 0;
-        virtual void EndQuery(CommandList& commandList) = 0;
+        virtual void BeginQuery(CommandList* commandList) = 0;
+        virtual void EndQuery(CommandList* commandList) = 0;
 
-        virtual void ResolveQueryData(CommandList& commandList) = 0;
+        virtual void ResolveQueryData(CommandList* commandList) = 0;
         virtual const PipelineStatistics& GetStatistics() = 0;
     };
 } // namespace rhi

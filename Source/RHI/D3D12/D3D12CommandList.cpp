@@ -77,39 +77,39 @@ namespace rhi::d3d12
         return _type;
     }
 
-    void D3D12CommandList::SetPredication(Buffer& buffer, std::uint64_t offset, PredicationOperation operation)
+    void D3D12CommandList::SetPredication(std::shared_ptr<Buffer> buffer, std::uint64_t offset, PredicationOperation operation)
     {
-        ID3D12Resource* nativeResource = D3D12Cast<ID3D12Resource>(buffer.GetNative());
+        ID3D12Resource* nativeResource = D3D12Cast<ID3D12Resource>(buffer->GetNative());
 
         _commandList->SetPredication(nativeResource, offset, GetD3D12PredicationOp(operation));
     }
 
-    void D3D12CommandList::BeginQuery(QueryHeap& queryHeap, QueryType type, std::uint32_t index)
+    void D3D12CommandList::BeginQuery(QueryHeap* queryHeap, QueryType type, std::uint32_t index)
     {
-        ID3D12QueryHeap* nativeQueryHeap = D3D12Cast<ID3D12QueryHeap>(queryHeap.GetNative());
+        ID3D12QueryHeap* nativeQueryHeap = D3D12Cast<ID3D12QueryHeap>(queryHeap->GetNative());
 
         _commandList->BeginQuery(nativeQueryHeap, GetD3D12QueryType(type), index);
     }
 
-    void D3D12CommandList::ResolveQueryData(QueryHeap& queryHeap, QueryType type, std::uint32_t index, std::shared_ptr<Buffer> destination, std::uint64_t offset)
+    void D3D12CommandList::ResolveQueryData(QueryHeap* queryHeap, QueryType type, std::uint32_t index, std::shared_ptr<Buffer> destination, std::uint64_t offset)
     {
-        ID3D12QueryHeap* nativeQueryHeap = D3D12Cast<ID3D12QueryHeap>(queryHeap.GetNative());
+        ID3D12QueryHeap* nativeQueryHeap = D3D12Cast<ID3D12QueryHeap>(queryHeap->GetNative());
         ID3D12Resource* nativeDestination = D3D12Cast<ID3D12Resource>(destination->GetNative());
 
         _commandList->ResolveQueryData(nativeQueryHeap, GetD3D12QueryType(type), index, 1, nativeDestination, offset);
     }
 
-    void D3D12CommandList::ResolveQueryData(QueryHeap& queryHeap, QueryType type, std::uint32_t index, std::uint32_t numQueries, std::shared_ptr<Buffer> destination, std::uint64_t offset)
+    void D3D12CommandList::ResolveQueryData(QueryHeap* queryHeap, QueryType type, std::uint32_t index, std::uint32_t numQueries, std::shared_ptr<Buffer> destination, std::uint64_t offset)
     {
-        ID3D12QueryHeap* nativeQueryHeap = D3D12Cast<ID3D12QueryHeap>(queryHeap.GetNative());
+        ID3D12QueryHeap* nativeQueryHeap = D3D12Cast<ID3D12QueryHeap>(queryHeap->GetNative());
         ID3D12Resource* nativeDestination = D3D12Cast<ID3D12Resource>(destination->GetNative());
 
         _commandList->ResolveQueryData(nativeQueryHeap, GetD3D12QueryType(type), index, numQueries, nativeDestination, offset);
     }
 
-    void D3D12CommandList::EndQuery(QueryHeap& queryHeap, QueryType type, std::uint32_t index)
+    void D3D12CommandList::EndQuery(QueryHeap* queryHeap, QueryType type, std::uint32_t index)
     {
-        ID3D12QueryHeap* nativeQueryHeap = D3D12Cast<ID3D12QueryHeap>(queryHeap.GetNative());
+        ID3D12QueryHeap* nativeQueryHeap = D3D12Cast<ID3D12QueryHeap>(queryHeap->GetNative());
 
         _commandList->EndQuery(nativeQueryHeap, GetD3D12QueryType(type), index);
     }
@@ -251,47 +251,47 @@ namespace rhi::d3d12
         _commandList->ResourceBarrier(1, &barrier);
     }
 
-    void D3D12CommandList::CopyBuffer(Buffer& sourceResource, Buffer& destinationResource)
+    void D3D12CommandList::CopyBuffer(std::shared_ptr<Buffer> sourceResource, std::shared_ptr<Buffer> destinationResource)
     {
-        ID3D12Resource* nativeSource = D3D12Cast<ID3D12Resource>(sourceResource.GetNative());
-        ID3D12Resource* nativeDestination = D3D12Cast<ID3D12Resource>(destinationResource.GetNative());
+        ID3D12Resource* nativeSource = D3D12Cast<ID3D12Resource>(sourceResource->GetNative());
+        ID3D12Resource* nativeDestination = D3D12Cast<ID3D12Resource>(destinationResource->GetNative());
 
         _commandList->CopyResource(nativeDestination, nativeSource);
     }
 
-    void D3D12CommandList::CopyBufferRegion(Buffer& sourceResource, Buffer& destinationResource, uint32_t numBytes, uint32_t sourceOffset, uint32_t destinationOffset)
+    void D3D12CommandList::CopyBufferRegion(std::shared_ptr<Buffer> sourceResource, std::shared_ptr<Buffer> destinationResource, uint32_t numBytes, uint32_t sourceOffset, uint32_t destinationOffset)
     {
-        ID3D12Resource* nativeSource = D3D12Cast<ID3D12Resource>(sourceResource.GetNative());
-        ID3D12Resource* nativeDestination = D3D12Cast<ID3D12Resource>(destinationResource.GetNative());
+        ID3D12Resource* nativeSource = D3D12Cast<ID3D12Resource>(sourceResource->GetNative());
+        ID3D12Resource* nativeDestination = D3D12Cast<ID3D12Resource>(destinationResource->GetNative());
 
         _commandList->CopyBufferRegion(nativeDestination, destinationOffset, nativeSource, sourceOffset, numBytes);
     }
 
-    void D3D12CommandList::CopyTexture(Texture& sourceResource, Texture& destinationResource)
+    void D3D12CommandList::CopyTexture(std::shared_ptr<Texture> sourceResource, std::shared_ptr<Texture> destinationResource)
     {
-        ID3D12Resource* nativeSource = D3D12Cast<ID3D12Resource>(sourceResource.GetNative());
-        ID3D12Resource* nativeDestination = D3D12Cast<ID3D12Resource>(destinationResource.GetNative());
+        ID3D12Resource* nativeSource = D3D12Cast<ID3D12Resource>(sourceResource->GetNative());
+        ID3D12Resource* nativeDestination = D3D12Cast<ID3D12Resource>(destinationResource->GetNative());
 
         _commandList->CopyResource(nativeDestination, nativeSource);
     }
 
-    void D3D12CommandList::CopyTextureRegion(Texture& sourceResource, Texture& destinationResource, uint32_t numBytes, uint32_t sourceOffset, uint32_t destinationOffset)
+    void D3D12CommandList::CopyTextureRegion(std::shared_ptr<Texture> sourceResource, std::shared_ptr<Texture> destinationResource, uint32_t numBytes, uint32_t sourceOffset, uint32_t destinationOffset)
     {
-        ID3D12Resource* nativeSource = D3D12Cast<ID3D12Resource>(sourceResource.GetNative());
-        ID3D12Resource* nativeDestination = D3D12Cast<ID3D12Resource>(destinationResource.GetNative());
+        ID3D12Resource* nativeSource = D3D12Cast<ID3D12Resource>(sourceResource->GetNative());
+        ID3D12Resource* nativeDestination = D3D12Cast<ID3D12Resource>(destinationResource->GetNative());
 
         _commandList->CopyBufferRegion(nativeDestination, destinationOffset, nativeSource, sourceOffset, numBytes);
     }
 
-    void D3D12CommandList::SetPipelineState(const rhi::PipelineState& pipelineState)
+    void D3D12CommandList::SetPipelineState(rhi::PipelineState* pipelineState)
     {
         FAIL((_type == CommandListType::Graphics) || (_type == CommandListType::Compute), "Command list type is not Graphics or Compute.");
 
-        ID3D12PipelineState* nativePipelineState = D3D12Cast<ID3D12PipelineState>(pipelineState.GetNative());
+        ID3D12PipelineState* nativePipelineState = D3D12Cast<ID3D12PipelineState>(pipelineState->GetNative());
 
         _commandList->SetPipelineState(nativePipelineState);
 
-        ID3D12RootSignature* signature = D3D12Cast<ID3D12RootSignature>(pipelineState.GetNativeRootSignature());
+        ID3D12RootSignature* signature = D3D12Cast<ID3D12RootSignature>(pipelineState->GetNativeRootSignature());
         switch (_type)
         {
         case rhi::CommandListType::Graphics:
@@ -439,12 +439,12 @@ namespace rhi::d3d12
         _commandList->Dispatch(xThreadGroupsCount, yThreadGroupsCount, zThreadGroupsCount);
     }
 
-    void D3D12CommandList::ExecuteIndirect(const rhi::CommandSignature& commandSignature, std::uint32_t maxCommandCount, std::shared_ptr<Buffer> argumentBuffer, std::shared_ptr<Buffer> countBuffer, std::uint32_t argumentBufferOffset, std::uint32_t countBufferOffset)
+    void D3D12CommandList::ExecuteIndirect(rhi::CommandSignature* commandSignature, std::uint32_t maxCommandCount, std::shared_ptr<Buffer> argumentBuffer, std::shared_ptr<Buffer> countBuffer, std::uint32_t argumentBufferOffset, std::uint32_t countBufferOffset)
     {
-        _commandList->ExecuteIndirect(D3D12Cast<ID3D12CommandSignature>(commandSignature.GetNative()), maxCommandCount, D3D12Cast<ID3D12Resource>(argumentBuffer->GetNative()), argumentBufferOffset, D3D12Cast<ID3D12Resource>(countBuffer->GetNative()), countBufferOffset);
+        _commandList->ExecuteIndirect(D3D12Cast<ID3D12CommandSignature>(commandSignature->GetNative()), maxCommandCount, D3D12Cast<ID3D12Resource>(argumentBuffer->GetNative()), argumentBufferOffset, D3D12Cast<ID3D12Resource>(countBuffer->GetNative()), countBufferOffset);
     }
 
-    void D3D12CommandList::SetDescriptorHeaps(const rhi::DescriptorHeap* descriptorHeap)
+    void D3D12CommandList::SetDescriptorHeaps(rhi::DescriptorHeap* descriptorHeap)
     {
         ID3D12DescriptorHeap* nativeHeap = D3D12Cast<ID3D12DescriptorHeap>(descriptorHeap->GetNative());
         _commandList->SetDescriptorHeaps(1, &nativeHeap);

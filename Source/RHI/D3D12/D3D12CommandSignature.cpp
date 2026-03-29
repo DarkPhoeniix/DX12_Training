@@ -53,7 +53,7 @@ namespace rhi::d3d12
         }
     } // namespace unnamed
 
-    D3D12CommandSignature::D3D12CommandSignature(rhi::Device* device, const std::vector<rhi::IndirectArgumentDescription>& arguments, rhi::PipelineState* pipelineState)
+    D3D12CommandSignature::D3D12CommandSignature(rhi::Device* device, const std::vector<rhi::IndirectArgumentDescription>& arguments, rhi::PipelineState* pipelineState, const std::string& name)
 #if ENABLE_DEBUG_DESC
         : _arguments(arguments)
 #endif // ENABLE_DEBUG_DESC
@@ -78,6 +78,10 @@ namespace rhi::d3d12
         ID3D12RootSignature* nativeRootSignature = D3D12Cast<ID3D12RootSignature>(pipelineState->GetNativeRootSignature());
 
         nativeDevice->CreateCommandSignature(&desc, nativeRootSignature, IID_PPV_ARGS(&_commandSignature));
+
+#if ENABLE_DEBUG_NAMES
+        SetD3D12Name(_commandSignature.Get(), name);
+#endif // ENABLE_DEBUG_NAMES
     }
 
     D3D12CommandSignature::D3D12CommandSignature(D3D12CommandSignature&& other) noexcept

@@ -46,21 +46,21 @@ namespace rhi::d3d12
         // Presents the rendered frame to the screen.
         void Present() override;
 
-        std::shared_ptr<rhi::Buffer> CreateBuffer(const rhi::BufferDescription& description, ResourceState initialState) override;
-        std::shared_ptr<rhi::Buffer> CreateBuffer(const rhi::BufferDescription& description, rhi::Heap* heap, std::uint64_t offset, ResourceState initialState) override;
-        std::shared_ptr<rhi::Buffer> CreateBuffer(void* nativePtr) override;
-        std::shared_ptr<rhi::Texture> CreateTexture(const rhi::TextureDescription& description, ResourceState initialState) override;
-        std::shared_ptr<rhi::Texture> CreateTexture(const rhi::TextureDescription& description, rhi::Heap* heap, std::uint64_t offset, ResourceState initialState) override;
-        std::shared_ptr<rhi::Texture> CreateTexture(void* nativePtr) override;
+        std::shared_ptr<rhi::Buffer> CreateBuffer(const rhi::BufferDescription& description, ResourceState initialState, const std::string& name) override;
+        std::shared_ptr<rhi::Buffer> CreateBuffer(const rhi::BufferDescription& description, rhi::Heap* heap, std::uint64_t offset, ResourceState initialState, const std::string& name) override;
+        std::shared_ptr<rhi::Buffer> CreateBuffer(void* nativePtr, const std::string& name) override;
+        std::shared_ptr<rhi::Texture> CreateTexture(const rhi::TextureDescription& description, ResourceState initialState, const std::string& name) override;
+        std::shared_ptr<rhi::Texture> CreateTexture(const rhi::TextureDescription& description, rhi::Heap* heap, std::uint64_t offset, ResourceState initialState, const std::string& name) override;
+        std::shared_ptr<rhi::Texture> CreateTexture(void* nativePtr, const std::string& name) override;
 
-        std::unique_ptr<rhi::CommandList> CreateCommandList(CommandListType type) override;
-        std::unique_ptr<rhi::DescriptorHeap> CreateDescriptorHeap(const DescriptorHeapDescription& description) override;
+        std::unique_ptr<rhi::CommandList> CreateCommandList(CommandListType type, const std::string& name) override;
+        std::unique_ptr<rhi::DescriptorHeap> CreateDescriptorHeap(const DescriptorHeapDescription& description, const std::string& name) override;
         std::unique_ptr<rhi::Fence> CreateFence(std::uint64_t initialValue) override;
-        std::unique_ptr<rhi::QueryHeap> CreateQueryHeap(const QueryHeapDescription& description) override;
-        std::unique_ptr<rhi::Heap> CreateHeap(const HeapDescription& description) override;
-        std::unique_ptr<rhi::StatisticsQuery> CreateStatisticsQuery() override;
-        std::unique_ptr<rhi::TimestampQuery> CreateTimestampQuery(std::uint32_t timestampsCount) override;
-        std::unique_ptr<rhi::CommandSignature> CreateCommandSignature(const std::vector<rhi::IndirectArgumentDescription>& arguments, rhi::PipelineState* pipelineState) override;
+        std::unique_ptr<rhi::QueryHeap> CreateQueryHeap(const QueryHeapDescription& description, const std::string& name) override;
+        std::unique_ptr<rhi::Heap> CreateHeap(const HeapDescription& description, const std::string& name) override;
+        std::unique_ptr<rhi::StatisticsQuery> CreateStatisticsQuery(const std::string& name) override;
+        std::unique_ptr<rhi::TimestampQuery> CreateTimestampQuery(std::uint32_t timestampsCount, const std::string& name) override;
+        std::unique_ptr<rhi::CommandSignature> CreateCommandSignature(const std::vector<rhi::IndirectArgumentDescription>& arguments, rhi::PipelineState* pipelineState, const std::string& name) override;
 
         void CreateBufferSRV(std::shared_ptr<rhi::Buffer> resource, rhi::CPUDescriptor& descriptor) override;
         void CreateBufferCBV(std::shared_ptr<rhi::Buffer> resource, rhi::CPUDescriptor& descriptor) override;

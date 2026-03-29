@@ -2,15 +2,6 @@
 #ifndef RENDER_GRAPH_PCH_H
 #define RENDER_GRAPH_PCH_H
 
-// Windows Runtime Library. Needed for ComPtr<> template class
-#include <wrl.h>
-using namespace Microsoft::WRL;
-
-// DirectX12 specific headers
-#include <directx/d3dx12.h>     // D3D12 extension library
-#include <dxgi1_6.h>            // Microsoft DirectX Graphics Infrastructure
-#include <DirectXMath.h>        // SIMD-friendly C++ types and functions
-
 #include <string>
 #include <mutex>
 #include <thread>
@@ -18,11 +9,12 @@ using namespace Microsoft::WRL;
 #include <vector>
 #include <functional>
 
-#include "Logger.h"
+#include "RHI/Device.h"
+#include "RHI/Buffer.h"
+#include "RHI/Texture.h"
 
-#include "Helpers.h"
-#include "ResourceFactory.h"
-#include "Resource.h"
-#include "Device.h"
+#include "Logger/Logger.h"
+
+#include "Utility/Helpers.h"
 
 #endif // RENDER_GRAPH_PCH_H

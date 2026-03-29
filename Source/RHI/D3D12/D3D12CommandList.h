@@ -29,25 +29,25 @@ namespace rhi::d3d12
         rhi::CommandListType GetCommandListType() const override;
 
         // Sets the predication (conditional execution) for the command list using a buffer and offset.
-        void SetPredication(Buffer& buffer, std::uint64_t offset, PredicationOperation operation) override;
+        void SetPredication(std::shared_ptr<Buffer> buffer, std::uint64_t offset, PredicationOperation operation) override;
 
         // Begins recording a query for GPU information).
-        void BeginQuery(QueryHeap& queryHeap, QueryType type, std::uint32_t index) override;
+        void BeginQuery(QueryHeap* queryHeap, QueryType type, std::uint32_t index) override;
         // Resolves query data into a destination buffer.
-        void ResolveQueryData(QueryHeap& queryHeap, 
+        void ResolveQueryData(QueryHeap* queryHeap, 
                               QueryType type,
                               std::uint32_t index,
                               std::shared_ptr<Buffer> destination,
                               std::uint64_t offset) override;
         // Resolves multiple query data into a destination buffer.
-        void ResolveQueryData(QueryHeap& queryHeap,
+        void ResolveQueryData(QueryHeap* queryHeap,
                               QueryType type,
                               std::uint32_t index,
                               std::uint32_t numQueries,
                               std::shared_ptr<Buffer> destination,
                               std::uint64_t offset) override;
         // Ends a previously started query.
-        void EndQuery(QueryHeap& queryHeap, QueryType type, std::uint32_t index) override;
+        void EndQuery(QueryHeap* queryHeap, QueryType type, std::uint32_t index) override;
 
         void TransitionBarriers(const std::vector<BufferBarrier>& barrier) override;
         void TransitionBarriers(const std::vector<TextureBarrier>& barrier) override;
@@ -55,20 +55,20 @@ namespace rhi::d3d12
         void UAVBarrier(std::shared_ptr<Buffer> buffer) override;
         void UAVBarrier(std::shared_ptr<Texture> texture) override;
 
-        void CopyBuffer(Buffer& sourceResource, Buffer& destinationResource) override;
-        void CopyBufferRegion(Buffer& sourceResource,
-                              Buffer& destinationResource,
+        void CopyBuffer(std::shared_ptr<Buffer> sourceResource, std::shared_ptr<Buffer> destinationResource) override;
+        void CopyBufferRegion(std::shared_ptr<Buffer> sourceResource,
+                              std::shared_ptr<Buffer> destinationResource,
                               uint32_t numBytes,
                               uint32_t sourceOffset = 0,
                               uint32_t destinationOffset = 0) override;
-        void CopyTexture(Texture& sourceResource, Texture& destinationResource) override;
-        void CopyTextureRegion(Texture& sourceResource,
-                               Texture& destinationResource,
+        void CopyTexture(std::shared_ptr<Texture> sourceResource, std::shared_ptr<Texture> destinationResource) override;
+        void CopyTextureRegion(std::shared_ptr<Texture> sourceResource,
+                               std::shared_ptr<Texture> destinationResource,
                                uint32_t numBytes,
                                uint32_t sourceOffset = 0,
                                uint32_t destinationOffset = 0) override;
 
-        void SetPipelineState(const rhi::PipelineState& pipelineState) override;
+        void SetPipelineState(rhi::PipelineState* pipelineState) override;
         void SetPrimitiveTopology(rhi::PrimitiveTopology primitiveTopology) override;
         void SetVertexBuffer(std::uint32_t slot, const rhi::VertexBufferView& vertexBufferView) override;
         void SetIndexBuffer(const rhi::IndexBufferView& indexBufferView) override;
@@ -96,14 +96,14 @@ namespace rhi::d3d12
         void Dispatch(std::uint32_t xThreadGroupsCount = 1,
                       std::uint32_t yThreadGroupsCount = 1,
                       std::uint32_t zThreadGroupsCount = 1) override;
-        void ExecuteIndirect(const rhi::CommandSignature& commandSignature,
+        void ExecuteIndirect(rhi::CommandSignature* commandSignature,
                              std::uint32_t maxCommandCount,
                              std::shared_ptr<Buffer> argumentBuffer,
                              std::shared_ptr<Buffer> countBuffer,
                              std::uint32_t argumentBufferOffset = 0,
                              std::uint32_t countBufferOffset = 0) override;
 
-        void SetDescriptorHeaps(const rhi::DescriptorHeap* descriptorHeap) override;
+        void SetDescriptorHeaps(rhi::DescriptorHeap* descriptorHeap) override;
         void SetDescriptorHeaps(const std::vector<rhi::DescriptorHeap*>& descriptorHeaps) override;
         void SetConstant(std::uint32_t index, std::uint32_t data, std::uint32_t offset = 0) override;
         void SetConstants(std::uint32_t index, std::uint32_t numValues, const void* data, std::uint32_t offset = 0) override;

@@ -27,7 +27,8 @@ option(USE_VULKAN "Enable Vulkan backend" ON)
 option(USE_AFTERMATH "Enable Nvidia Aftermath SDK usage for crash tracking (Profile only)" ON)
 
 set(ENABLE_PROFILING 
-    $<$<config:Debug,RelWithDebInfo>:TRUE>
+    $<$<config:Debug>:FALSE>
+    $<$<config:RelWithDebInfo>:FALSE>
     $<$<config:Release>:FALSE>
 )
 

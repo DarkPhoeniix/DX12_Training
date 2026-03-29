@@ -21,10 +21,10 @@ namespace rhi::d3d12
         D3D12TimestampQuery& operator=(const D3D12TimestampQuery& other) = delete;
         D3D12TimestampQuery& operator=(D3D12TimestampQuery&& other) noexcept;
 
-        void Begin(rhi::CommandList& commandList, std::uint32_t index) override;
-        void End(rhi::CommandList& commandList, std::uint32_t index) override;
+        void Begin(rhi::CommandList* commandList, std::uint32_t index) override;
+        void End(rhi::CommandList* commandList, std::uint32_t index) override;
 
-        void Resolve(CommandList& commandList, std::uint32_t numTimestamps, std::shared_ptr<rhi::Buffer> destinationBuffer, std::uint64_t destinationOffset) override;
+        void Resolve(CommandList* commandList, std::uint32_t numTimestamps, std::shared_ptr<rhi::Buffer> destinationBuffer, std::uint64_t destinationOffset) override;
 
         std::uint64_t GetFrequency() const override;
 

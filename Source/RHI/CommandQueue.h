@@ -17,10 +17,10 @@ namespace rhi
         CommandQueue& operator=(const CommandQueue&) = delete;
         CommandQueue& operator=(CommandQueue&&) noexcept = default;
 
-        virtual void ExecuteCommandLists(std::vector<std::shared_ptr<CommandList>> commandLists) = 0;
+        virtual void ExecuteCommandLists(std::vector<CommandList*> commandLists) = 0;
 
-        virtual void Signal(Fence& fence, uint64_t value) = 0;
-        virtual void Wait(Fence& fence, uint64_t value) = 0;
+        virtual void Signal(Fence* fence, uint64_t value) = 0;
+        virtual void Wait(Fence* fence, uint64_t value) = 0;
 
         virtual std::uint64_t GetTimestampFrequency() const = 0;
 

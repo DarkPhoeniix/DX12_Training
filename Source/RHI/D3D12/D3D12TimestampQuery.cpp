@@ -47,19 +47,19 @@ namespace rhi::d3d12
         return *this;
     }
 
-    void D3D12TimestampQuery::Begin(CommandList& commandList, std::uint32_t index)
+    void D3D12TimestampQuery::Begin(rhi::CommandList* commandList, std::uint32_t index)
     {
-        commandList.EndQuery(*_queryHeap, rhi::QueryType::Timestamp, index);
+        commandList->EndQuery(_queryHeap.get(), rhi::QueryType::Timestamp, index);
     }
 
-    void D3D12TimestampQuery::End(CommandList& commandList, std::uint32_t index)
+    void D3D12TimestampQuery::End(rhi::CommandList* commandList, std::uint32_t index)
     {
-        commandList.EndQuery(*_queryHeap, rhi::QueryType::Timestamp, index);
+        commandList->EndQuery(_queryHeap.get(), rhi::QueryType::Timestamp, index);
     }
 
-    void D3D12TimestampQuery::Resolve(CommandList& commandList, std::uint32_t numTimestamps, std::shared_ptr<rhi::Buffer> destinationBuffer, std::uint64_t destinationOffset)
+    void D3D12TimestampQuery::Resolve(rhi::CommandList* commandList, std::uint32_t numTimestamps, std::shared_ptr<rhi::Buffer> destinationBuffer, std::uint64_t destinationOffset)
     {
-        commandList.ResolveQueryData(*_queryHeap, rhi::QueryType::Timestamp, 0, numTimestamps, destinationBuffer, destinationOffset);
+        commandList->ResolveQueryData(_queryHeap.get(), rhi::QueryType::Timestamp, 0, numTimestamps, destinationBuffer, destinationOffset);
     }
 
     std::uint64_t D3D12TimestampQuery::GetFrequency() const

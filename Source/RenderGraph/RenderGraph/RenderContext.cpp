@@ -2,49 +2,23 @@
 
 #include "RenderContext.h"
 
-#include <format>
 #include "RenderPassBuilder.h"
+
+#include <format>
 
 namespace rg
 {
-    RenderContext::RenderContext()
-        : _frame(nullptr)
-        , _resourceTable(nullptr)
-        , _textureManager(nullptr)
+    RenderContext::RenderContext(rhi::Device* device, IDescriptorProvider* descriptorProvider)
+        : _descriptorProvider(descriptorProvider)
+        , _device(device)
         , _gpuProfiler(nullptr)
     {
     }
 
-    void RenderContext::Init(ResourceTable& resourceTable, TextureManager& textureManager)
+    std::shared_ptr<rhi::Buffer> RenderContext::GetBuffer(RGBufferId id) const
     {
-        _resourceTable = &resourceTable;
-        _textureManager = &textureManager;
-    }
-
-    const Frame* RenderContext::GetFrame() const
-    {
-        return _frame;
-    }
-
-    std::uint32_t RenderContext::GetFrameIndex() const
-    {
-        return _frame->Index;
-    }
-
-    TextureManager& RenderContext::GetTextureManager()
-    {
-        return *_textureManager;
-    }
-
-    void RenderContext::BindBindlessTable(dx12::CommandList& commandList) const
-    {
-        commandList.SetDescriptorHeaps({ _resourceTable->GetShaderResourcesDescriptorHeap().GetDXDescriptorHeap().Get() });
-    }
-
-    std::shared_ptr<dx12::Resource> RenderContext::GetResource(RGResourceId id)
-    {
-        auto resourceIt = _mapIdToResource.find(id);
-        if (resourceIt == _mapIdToResource.end())
+        auto resourceIt = _mapIdToBuffer.find(id);
+        if (resourceIt == _mapIdToBuffer.end())
         {
             LOG_WARNING("Resource with id {} not found in render context.", id.ID);
             return nullptr;
@@ -53,54 +27,36 @@ namespace rg
         return resourceIt->second;
     }
 
-    DescriptorHandle RenderContext::GetStaticResourceHandle(const dx12::RenderTargetView& rtv) const
+    std::shared_ptr<rhi::Texture> RenderContext::GetTexture(RGTextureId id) const
     {
-        return _resourceTable->GetStaticResourceHandle(rtv);
+        auto resourceIt = _mapIdToTexture.find(id);
+        if (resourceIt == _mapIdToTexture.end())
+        {
+            LOG_WARNING("Resource with id {} not found in render context.", id.ID);
+            return nullptr;
+        }
+
+        return resourceIt->second;
     }
 
-    DescriptorHandle RenderContext::GetStaticResourceHandle(const dx12::DepthStencilView& dsv) const
+    rhi::CPUDescriptor RenderContext::GetCPUDescriptor(RGBufferId id, rhi::ResourceViewType viewType) const
     {
-        return _resourceTable->GetStaticResourceHandle(dsv);
+        return _descriptorProvider->GetCPUDescriptor(id.ID, viewType);
     }
 
-    DescriptorHandle RenderContext::GetStaticResourceHandle(const dx12::ShaderResourceView& srv) const
+    rhi::GPUDescriptor RenderContext::GetGPUDescriptor(RGBufferId id, rhi::ResourceViewType viewType) const
     {
-        return _resourceTable->GetStaticResourceHandle(srv);
+        return _descriptorProvider->GetGPUDescriptor(id.ID, viewType);
     }
 
-    DescriptorHandle RenderContext::GetStaticResourceHandle(const dx12::UnorderedAccessView& uav) const
+    rhi::CPUDescriptor RenderContext::GetCPUDescriptor(RGTextureId id, rhi::ResourceViewType viewType) const
     {
-        return _resourceTable->GetStaticResourceHandle(uav);
+        return _descriptorProvider->GetCPUDescriptor(id.ID, viewType);
     }
 
-    DescriptorHandle RenderContext::GetStaticResourceHandle(const dx12::ConstantBufferView& cbv) const
+    rhi::GPUDescriptor RenderContext::GetGPUDescriptor(RGTextureId id, rhi::ResourceViewType viewType) const
     {
-        return _resourceTable->GetStaticResourceHandle(cbv);
-    }
-
-    DescriptorHandle RenderContext::GetTransientResourceHandle(const dx12::RenderTargetView& rtv) const
-    {
-        return _resourceTable->GetTransientResourceHandle(rtv);
-    }
-
-    DescriptorHandle RenderContext::GetTransientResourceHandle(const dx12::DepthStencilView& dsv) const
-    {
-        return _resourceTable->GetTransientResourceHandle(dsv);
-    }
-
-    DescriptorHandle RenderContext::GetTransientResourceHandle(const dx12::ShaderResourceView& srv) const
-    {
-        return _resourceTable->GetTransientResourceHandle(srv);
-    }
-
-    DescriptorHandle RenderContext::GetTransientResourceHandle(const dx12::UnorderedAccessView& uav) const
-    {
-        return _resourceTable->GetTransientResourceHandle(uav);
-    }
-
-    DescriptorHandle RenderContext::GetTransientResourceHandle(const dx12::ConstantBufferView& cbv) const
-    {
-        return _resourceTable->GetTransientResourceHandle(cbv);
+        return _descriptorProvider->GetGPUDescriptor(id.ID, viewType);
     }
 
     void RenderContext::SetGPUProfiler(Profiler* gpuProfiler)
@@ -113,304 +69,240 @@ namespace rg
         return _gpuProfiler;
     }
 
-    RGResourceId RenderContext::CreateResourceVirtual(const std::string& name)
-    {
-        ASSERT(!name.empty(), "Resource name cannot be empty.");
-
-        std::shared_ptr<dx12::Resource> resource = ResourceFactory::Create(name);
-        _mapNameToId[name] = resource->GetID();
-        return resource->GetID();
-    }
-
-    RGResourceId RenderContext::CreateResource(const std::string& name, dx12::ResourceDescription desc, void* data /*= nullptr*/, size_t dataSize /*= 0*/)
-    {
-        ASSERT(!name.empty(), "Resource name cannot be empty.");
-
-        std::shared_ptr<dx12::Resource> resource = ResourceFactory::Create(name, desc);
-        resource->CreateCommitedResource();
-
-        FillBuffer(resource, data, dataSize);
-
-        _mapIdToResource[resource->GetID()] = resource;
-        {
-            if (desc.GetFlags() & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)
-            {
-                _resourceTable->AddStaticResourceView(resource->GetAsRTV());
-            }
-            if (desc.GetFlags() & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
-            {
-                _resourceTable->AddStaticResourceView(resource->GetAsDSV());
-            }
-            if (desc.GetFlags() & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS)
-            {
-                _resourceTable->AddStaticResourceView(resource->GetAsUAV());
-            }
-            _resourceTable->AddStaticResourceView(resource->GetAsSRV());
-        }
-        _mapNameToId[name] = resource->GetID();
-
-        return resource->GetID();
-    }
-
-    RGResourceId RenderContext::ReadResource(const std::string& name)
-    {
-        auto IdIt = _mapNameToId.find(name);
-        if (IdIt == _mapNameToId.end())
-        {
-            LOG_CRITICAL("Texture is not exist in render graph context: {}", name);
-            return RGResourceId(-1);
-        }
-
-        return IdIt->second;
-    }
-
-    RGResourceId RenderContext::WriteResource(const std::string& name)
-    {
-        auto IdIt = _mapNameToId.find(name);
-        if (IdIt == _mapNameToId.end())
-        {
-            LOG_CRITICAL("Texture is not exist in render graph context: {}", name);
-            return RGResourceId(-1);
-        }
-
-        return IdIt->second;
-    }
-
-    RGResourceId RenderContext::DeclareBuffer(const std::string& name, const dx12::ResourceDescription& desc, void* data, size_t dataSize)
+    RGBufferId RenderContext::DeclareBuffer(const std::string& name, const rhi::BufferDescription& desc, void* data, size_t dataSize)
     {
         ASSERT(!name.empty(), "Buffer name cannot be empty.");
 
-        std::shared_ptr<dx12::Resource> resource = ResourceFactory::Create(name, desc);
-        resource->CreateCommitedResource();
+        std::shared_ptr<rhi::Buffer> buffer = _device->CreateBuffer(desc);
 
-        FillBuffer(resource, data, dataSize);
+        FillBuffer(buffer, data, dataSize);
 
-        _mapIdToResource[resource->GetID()] = resource;
-        _mapNameToId[name] = resource->GetID();
+        _mapIdToBuffer[buffer->GetID()] = buffer;
+        _mapNameToBufferId[name] = buffer->GetID();
 
-        if (desc.GetFlags() & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS)
+        if (HasFlag(desc.Flags, rhi::ResourceFlags::AllowUnorderedAccess))
         {
-            _resourceTable->AddStaticResourceView(resource->GetAsUAV());
+            _descriptorProvider->CreateResourceView(buffer->GetID(), rhi::ResourceViewType::UAV);
         }
-        _resourceTable->AddStaticResourceView(resource->GetAsSRV());
+        _descriptorProvider->CreateResourceView(buffer->GetID(), rhi::ResourceViewType::SRV);
 
-        return resource->GetID();
+        return buffer->GetID();
     }
 
-    RGResourceId RenderContext::DeclareTexture(const std::string& name, const dx12::ResourceDescription& desc, void* data, size_t dataSize)
+    RGTextureId RenderContext::DeclareTexture(const std::string& name, const rhi::TextureDescription& desc, void* data, size_t dataSize)
     {
         ASSERT(!name.empty(), "Texture name cannot be empty.");
 
-        std::shared_ptr<dx12::Resource> resource = ResourceFactory::Create(name, desc);
-        resource->CreateCommitedResource();
+        std::shared_ptr<rhi::Texture> texture = _device->CreateTexture(desc);
 
-        FillTexture(resource, data, dataSize);
+        FillTexture(texture, data, dataSize);
 
-        _mapIdToResource[resource->GetID()] = resource;
-        _mapNameToId[name] = resource->GetID();
+        _mapIdToTexture[texture->GetID()] = texture;
+        _mapNameToTextureId[name] = texture->GetID();
 
-        if (desc.GetFlags() & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)
+        if (HasFlag(desc.Flags, rhi::ResourceFlags::AllowRenderTarget))
         {
-            _resourceTable->AddStaticResourceView(resource->GetAsRTV());
+            _descriptorProvider->CreateResourceView(texture->GetID(), rhi::ResourceViewType::RTV);
         }
-        if (desc.GetFlags() & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
+        if (HasFlag(desc.Flags, rhi::ResourceFlags::AllowDepthStencil))
         {
-            _resourceTable->AddStaticResourceView(resource->GetAsDSV());
+            _descriptorProvider->CreateResourceView(texture->GetID(), rhi::ResourceViewType::DSV);
         }
-        if (desc.GetFlags() & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS)
+        if (HasFlag(desc.Flags, rhi::ResourceFlags::AllowUnorderedAccess))
         {
-            _resourceTable->AddStaticResourceView(resource->GetAsUAV());
+            _descriptorProvider->CreateResourceView(texture->GetID(), rhi::ResourceViewType::UAV);
         }
-        _resourceTable->AddStaticResourceView(resource->GetAsSRV());
+        _descriptorProvider->CreateResourceView(texture->GetID(), rhi::ResourceViewType::SRV);
 
-        return resource->GetID();
+        return texture->GetID();
     }
 
     RGBufferReadId RenderContext::ReadBuffer(const std::string& name)
     {
-        auto IdIt = _mapNameToId.find(name);
-        if (IdIt == _mapNameToId.end())
+        auto it = _mapNameToBufferId.find(name);
+        if (it == _mapNameToBufferId.end())
         {
             LOG_CRITICAL("Buffer is not exist in render graph context: {}", name);
-            return RGResourceId::InvalidID;
+            return RGBufferId::InvalidID;
         }
-        return RGBufferReadId(IdIt->second);
+        return RGBufferReadId(it->second);
     }
 
     RGBufferWriteId RenderContext::WriteBuffer(const std::string& name)
     {
-        auto IdIt = _mapNameToId.find(name);
-        if (IdIt == _mapNameToId.end())
+        auto it = _mapNameToBufferId.find(name);
+        if (it == _mapNameToBufferId.end())
         {
             LOG_CRITICAL("Buffer is not exist in render graph context: {}", name);
-            return RGResourceId::InvalidID;
+            return RGBufferId::InvalidID;
         }
-        return RGBufferWriteId(IdIt->second);
+        return RGBufferWriteId(it->second);
     }
 
     RGBufferUploadId RenderContext::UploadBuffer(const std::string& name)
     {
-        auto IdIt = _mapNameToId.find(name);
-        if (IdIt == _mapNameToId.end())
+        auto it = _mapNameToBufferId.find(name);
+        if (it == _mapNameToBufferId.end())
         {
             LOG_CRITICAL("Buffer is not exist in render graph context: {}", name);
-            return RGResourceId::InvalidID;
+            return RGBufferId::InvalidID;
         }
-        return RGBufferUploadId(IdIt->second);
+        return RGBufferUploadId(it->second);
     }
 
     RGBufferCopySrcId RenderContext::CopySrcBuffer(const std::string& name)
     {
-        auto IdIt = _mapNameToId.find(name);
-        if (IdIt == _mapNameToId.end())
+        auto it = _mapNameToBufferId.find(name);
+        if (it == _mapNameToBufferId.end())
         {
             LOG_CRITICAL("Buffer is not exist in render graph context: {}", name);
-            return RGResourceId::InvalidID;
+            return RGBufferId::InvalidID;
         }
-        return RGBufferCopySrcId(IdIt->second);
+        return RGBufferCopySrcId(it->second);
     }
     
     RGBufferCopyDstId RenderContext::CopyDstBuffer(const std::string& name)
     {
-        auto IdIt = _mapNameToId.find(name);
-        if (IdIt == _mapNameToId.end())
+        auto it = _mapNameToBufferId.find(name);
+        if (it == _mapNameToBufferId.end())
         {
             LOG_CRITICAL("Buffer is not exist in render graph context: {}", name);
-            return RGResourceId::InvalidID;
+            return RGBufferId::InvalidID;
         }
-        return RGBufferCopyDstId(IdIt->second);
+        return RGBufferCopyDstId(it->second);
     }
     
     RGBufferIndirectArgsId RenderContext::IndirectArgBuffer(const std::string& name)
     {
-        auto IdIt = _mapNameToId.find(name);
-        if (IdIt == _mapNameToId.end())
+        auto it = _mapNameToBufferId.find(name);
+        if (it == _mapNameToBufferId.end())
         {
             LOG_CRITICAL("Buffer is not exist in render graph context: {}", name);
-            return RGResourceId::InvalidID;
+            return RGBufferId::InvalidID;
         }
-        return RGBufferIndirectArgsId(IdIt->second);
+        return RGBufferIndirectArgsId(it->second);
     }
 
     RGTextureReadId RenderContext::ReadTexture(const std::string& name)
     {
-        auto IdIt = _mapNameToId.find(name);
-        if (IdIt == _mapNameToId.end())
+        auto it = _mapNameToTextureId.find(name);
+        if (it == _mapNameToTextureId.end())
         {
             LOG_CRITICAL("Texture is not exist in render graph context: {}", name);
-            return RGResourceId::InvalidID;
+            return RGTextureId::InvalidID;
         }
-        return RGTextureReadId(IdIt->second);
+        return RGTextureReadId(it->second);
     }
     
     RGTextureWriteId RenderContext::WriteTexture(const std::string& name)
     {
-        auto IdIt = _mapNameToId.find(name);
-        if (IdIt == _mapNameToId.end())
+        auto it = _mapNameToTextureId.find(name);
+        if (it == _mapNameToTextureId.end())
         {
             LOG_CRITICAL("Texture is not exist in render graph context: {}", name);
-            return RGResourceId::InvalidID;
+            return RGTextureId::InvalidID;
         }
-        return RGTextureWriteId(IdIt->second);
+        return RGTextureWriteId(it->second);
     }
     
     RGTextureCopySrcId RenderContext::CopySrcTexture(const std::string& name)
     {
-        auto IdIt = _mapNameToId.find(name);
-        if (IdIt == _mapNameToId.end())
+        auto it = _mapNameToTextureId.find(name);
+        if (it == _mapNameToTextureId.end())
         {
             LOG_CRITICAL("Texture is not exist in render graph context: {}", name);
-            return RGResourceId::InvalidID;
+            return RGTextureId::InvalidID;
         }
-        return RGTextureCopySrcId(IdIt->second);
+        return RGTextureCopySrcId(it->second);
     }
     
     RGTextureCopyDstId RenderContext::CopyDstTexture(const std::string& name)
     {
-        auto IdIt = _mapNameToId.find(name);
-        if (IdIt == _mapNameToId.end())
+        auto it = _mapNameToTextureId.find(name);
+        if (it == _mapNameToTextureId.end())
         {
             LOG_CRITICAL("Texture is not exist in render graph context: {}", name);
-            return RGResourceId::InvalidID;
+            return RGTextureId::InvalidID;
         }
-        return RGTextureCopyDstId(IdIt->second);
+        return RGTextureCopyDstId(it->second);
     }
     
     RGTextureRenderTargetId RenderContext::RenderTarget(const std::string& name)
     {
-        auto IdIt = _mapNameToId.find(name);
-        if (IdIt == _mapNameToId.end())
+        auto it = _mapNameToTextureId.find(name);
+        if (it == _mapNameToTextureId.end())
         {
             LOG_CRITICAL("Texture is not exist in render graph context: {}", name);
-            return RGResourceId::InvalidID;
+            return RGTextureId::InvalidID;
         }
-        return RGTextureRenderTargetId(IdIt->second);
+        return RGTextureRenderTargetId(it->second);
     }
     
     RGTextureDepthStencilReadId RenderContext::DepthStencilRead(const std::string& name)
     {
-        auto IdIt = _mapNameToId.find(name);
-        if (IdIt == _mapNameToId.end())
+        auto it = _mapNameToTextureId.find(name);
+        if (it == _mapNameToTextureId.end())
         {
             LOG_CRITICAL("Texture is not exist in render graph context: {}", name);
-            return RGResourceId::InvalidID;
+            return RGTextureId::InvalidID;
         }
-        return RGTextureDepthStencilReadId(IdIt->second);
+        return RGTextureDepthStencilReadId(it->second);
     }
 
     RGTextureDepthStencilWriteId RenderContext::DepthStencilWrite(const std::string& name)
     {
-        auto IdIt = _mapNameToId.find(name);
-        if (IdIt == _mapNameToId.end())
+        auto it = _mapNameToTextureId.find(name);
+        if (it == _mapNameToTextureId.end())
         {
             LOG_CRITICAL("Texture is not exist in render graph context: {}", name);
-            return RGResourceId::InvalidID;
+            return RGTextureId::InvalidID;
         }
-        return RGTextureDepthStencilWriteId(IdIt->second);
+        return RGTextureDepthStencilWriteId(it->second);
     }
 
     RGVirtualResourceReadId RenderContext::ReadVirtualResource(const std::string& name)
     {
-        auto IdIt = _mapNameToId.find(name);
-        if (IdIt == _mapNameToId.end())
+        auto it = _mapNameToBufferId.find(name);
+        if (it == _mapNameToBufferId.end())
         {
             LOG_CRITICAL("Resource is not exist in render graph context: {}", name);
-            return RGResourceId::InvalidID;
+            return RGBufferId::InvalidID;
         }
-        return RGVirtualResourceReadId(IdIt->second);
+        return RGVirtualResourceReadId(it->second.ID);
     }
 
     RGVirtualResourceWriteId RenderContext::WriteVirtualResource(const std::string& name)
     {
-        auto IdIt = _mapNameToId.find(name);
-        if (IdIt == _mapNameToId.end())
+        auto it = _mapNameToBufferId.find(name);
+        if (it == _mapNameToBufferId.end())
         {
             LOG_CRITICAL("Resource is not exist in render graph context: {}", name);
-            return RGResourceId::InvalidID;
+            return RGBufferId::InvalidID;
         }
-        return RGVirtualResourceWriteId(IdIt->second);
+        return RGVirtualResourceWriteId(it->second.ID);
     }
 
-    void RenderContext::FillBuffer(std::shared_ptr<dx12::Resource> resource, void* data, size_t dataSize)
+    void RenderContext::FillBuffer(std::shared_ptr<rhi::Buffer> buffer, void* data, size_t dataSize)
     {
         if (!data)
         {
             return;
         }
 
-        void* mappedData = resource->Map<void>();
+        void* mappedData = buffer->Map<void>();
         memcpy(mappedData, data, dataSize);
 
-        resource->Unmap();
+        buffer->Unmap();
     }
 
-    void RenderContext::FillTexture(std::shared_ptr<dx12::Resource> resource, void* data, size_t dataSize)
+    void RenderContext::FillTexture(std::shared_ptr<rhi::Texture> texture, void* data, size_t dataSize)
     {
         if (!data)
         {
             return;
         }
 
+        NOT_IMPLEMENTED();
         // TODO: implement RenderContext::FillTexture
     }
 } // namespace rg

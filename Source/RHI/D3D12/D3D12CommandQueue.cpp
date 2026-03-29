@@ -76,7 +76,7 @@ namespace rhi::d3d12
         return *this;
     }
 
-    void D3D12CommandQueue::ExecuteCommandLists(std::vector<std::shared_ptr<rhi::CommandList>> commandLists)
+    void D3D12CommandQueue::ExecuteCommandLists(std::vector<rhi::CommandList*> commandLists)
     {
         std::vector<ID3D12CommandList*> d3d12CommandLists;
         //std::transform(commandLists.begin(), commandLists.end(), d3d12CommandLists.begin(), [](const std::shared_ptr<rhi::CommandList>& elem) { return elem.get(); });
@@ -87,15 +87,15 @@ namespace rhi::d3d12
         _commandQueue->ExecuteCommandLists(static_cast<UINT>(d3d12CommandLists.size()), d3d12CommandLists.data());
     }
 
-    void D3D12CommandQueue::Signal(rhi::Fence& fence, std::uint64_t value)
+    void D3D12CommandQueue::Signal(rhi::Fence* fence, std::uint64_t value)
     {
-        ID3D12Fence* d3d12Fence = D3D12Cast<ID3D12Fence>(fence.GetNative());
+        ID3D12Fence* d3d12Fence = D3D12Cast<ID3D12Fence>(fence->GetNative());
         _commandQueue->Signal(d3d12Fence, value);
     }
 
-    void D3D12CommandQueue::Wait(rhi::Fence& fence, std::uint64_t value)
+    void D3D12CommandQueue::Wait(rhi::Fence* fence, std::uint64_t value)
     {
-        ID3D12Fence* d3d12Fence = D3D12Cast<ID3D12Fence>(fence.GetNative());
+        ID3D12Fence* d3d12Fence = D3D12Cast<ID3D12Fence>(fence->GetNative());
         _commandQueue->Wait(d3d12Fence, value);
     }
 

@@ -6,6 +6,9 @@ namespace rg
     template<typename PassData>
     RenderPass<PassData>::RenderPass(const std::string& name, RenderPassType type)
         : IRenderPass(name, type)
+        , _setupFunc(nullptr)
+        , _executeFunc(nullptr)
+        , _data{}
     {
     }
 
@@ -14,6 +17,7 @@ namespace rg
         : IRenderPass(name, type)
         , _setupFunc(std::move(setup))
         , _executeFunc(std::move(execute))
+        , _data{}
     {
     }
 
@@ -33,7 +37,7 @@ namespace rg
     }
 
     template<typename PassData>
-    void RenderPass<PassData>::Execute(RenderContext& context, TaskGPU& task)
+    void RenderPass<PassData>::Execute(RenderContext& context, ITask* task)
     {
         if (_executeFunc)
         {

@@ -28,12 +28,12 @@ namespace rhi::d3d12
         D3D12StatisticsQuery& operator=(D3D12StatisticsQuery&& other) noexcept;
 
         // Start collecting rendering statistics.
-        void BeginQuery(rhi::CommandList& commandList) override;
+        void BeginQuery(rhi::CommandList* commandList) override;
         // Stop collecting rendering statistics.
-        void EndQuery(rhi::CommandList& commandList) override;
+        void EndQuery(rhi::CommandList* commandList) override;
 
         // Resolve the statistics data gathered between BeginQuery and EndQuery calls.
-        void ResolveQueryData(rhi::CommandList& commandList) override;
+        void ResolveQueryData(rhi::CommandList* commandList) override;
         // Retrieve the resolved rendering statistics.
         const rhi::PipelineStatistics& GetStatistics() override;
 

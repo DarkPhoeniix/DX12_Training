@@ -91,38 +91,38 @@ namespace rhi
 
         virtual CommandListType GetCommandListType() const = 0;
 
-        virtual void SetPredication(Buffer& buffer, std::uint64_t offset, PredicationOperation operation) = 0;
+        virtual void SetPredication(std::shared_ptr<Buffer> buffer, std::uint64_t offset, PredicationOperation operation) = 0;
 
-        virtual void BeginQuery(QueryHeap& queryHeap, QueryType type, std::uint32_t index) = 0;
-        virtual void ResolveQueryData(QueryHeap& queryHeap,
+        virtual void BeginQuery(QueryHeap* queryHeap, QueryType type, std::uint32_t index) = 0;
+        virtual void ResolveQueryData(QueryHeap* queryHeap,
                                       QueryType type, std::uint32_t index, 
                                       std::shared_ptr<Buffer> destination, 
                                       std::uint64_t offset) = 0;
-        virtual void ResolveQueryData(QueryHeap& queryHeap,
+        virtual void ResolveQueryData(QueryHeap* queryHeap,
                                       QueryType type, std::uint32_t index, 
                                       std::uint32_t numQueries, std::shared_ptr<Buffer> destination, 
                                       std::uint64_t offset) = 0;
-        virtual void EndQuery(QueryHeap& queryHeap, QueryType type, std::uint32_t index) = 0;
+        virtual void EndQuery(QueryHeap* queryHeap, QueryType type, std::uint32_t index) = 0;
 
         virtual void TransitionBarriers(const std::vector<BufferBarrier>& barriers) = 0;
         virtual void TransitionBarriers(const std::vector<TextureBarrier>& barriers) = 0;
         virtual void UAVBarrier(std::shared_ptr<Buffer> buffer) = 0;
         virtual void UAVBarrier(std::shared_ptr<Texture> texture) = 0;
 
-        virtual void CopyBuffer(Buffer& sourceResource, Buffer& destinationResource) = 0;
-        virtual void CopyBufferRegion(Buffer& sourceResource, 
-                                      Buffer& destinationResource, 
+        virtual void CopyBuffer(std::shared_ptr<Buffer> sourceResource, std::shared_ptr<Buffer> destinationResource) = 0;
+        virtual void CopyBufferRegion(std::shared_ptr<Buffer> sourceResource, 
+                                      std::shared_ptr<Buffer> destinationResource, 
                                       uint32_t numBytes, 
                                       uint32_t sourceOffset = 0, 
                                       uint32_t destinationOffset = 0) = 0;
-        virtual void CopyTexture(Texture& sourceResource, Texture& destinationResource) = 0;
-        virtual void CopyTextureRegion(Texture& sourceResource, 
-                                       Texture& destinationResource, 
+        virtual void CopyTexture(std::shared_ptr<Texture> sourceResource, std::shared_ptr<Texture> destinationResource) = 0;
+        virtual void CopyTextureRegion(std::shared_ptr<Texture> sourceResource, 
+                                       std::shared_ptr<Texture> destinationResource, 
                                        uint32_t numBytes,
                                        uint32_t sourceOffset = 0, 
                                        uint32_t destinationOffset = 0) = 0;
 
-        virtual void SetPipelineState(const PipelineState& pipelineState) = 0;
+        virtual void SetPipelineState(PipelineState* pipelineState) = 0;
         virtual void SetPrimitiveTopology(PrimitiveTopology primitiveTopology) = 0;
         virtual void SetVertexBuffer(std::uint32_t slot, const VertexBufferView& vertexBufferView) = 0;
         virtual void SetIndexBuffer(const IndexBufferView& indexBufferView) = 0;
@@ -150,14 +150,14 @@ namespace rhi
         virtual void Dispatch(std::uint32_t xThreadGroupsCount = 1, 
                               std::uint32_t yThreadGroupsCount = 1, 
                               std::uint32_t zThreadGroupsCount = 1) = 0;
-        virtual void ExecuteIndirect(const CommandSignature& commandSignature, 
+        virtual void ExecuteIndirect(CommandSignature* commandSignature, 
                                      std::uint32_t maxCommandCount, 
                                      std::shared_ptr<Buffer> argumentBuffer,
                                      std::shared_ptr<Buffer> countBuffer, 
                                      std::uint32_t argumentBufferOffset = 0, 
                                      std::uint32_t countBufferOffset = 0) = 0;
 
-        virtual void SetDescriptorHeaps(const rhi::DescriptorHeap* descriptorHeap) = 0;
+        virtual void SetDescriptorHeaps(rhi::DescriptorHeap* descriptorHeap) = 0;
         virtual void SetDescriptorHeaps(const std::vector<DescriptorHeap*>& descriptorHeaps) = 0;
         virtual void SetConstant(std::uint32_t index, std::uint32_t data, std::uint32_t offset = 0) = 0;
         virtual void SetConstants(std::uint32_t index, std::uint32_t numValues, const void* data, std::uint32_t offset = 0) = 0;

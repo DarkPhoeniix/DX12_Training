@@ -24,7 +24,7 @@ namespace rhi::d3d12
     private:
         friend class D3D12Device;
 
-        D3D12CommandSignature(rhi::Device* device, const std::vector<rhi::IndirectArgumentDescription>& arguments, rhi::PipelineState* pipelineState);
+        D3D12CommandSignature(rhi::Device* device, const std::vector<rhi::IndirectArgumentDescription>& arguments, rhi::PipelineState* pipelineState, const std::string& name = "");
 
         ComPtr<ID3D12CommandSignature> _commandSignature;
 
