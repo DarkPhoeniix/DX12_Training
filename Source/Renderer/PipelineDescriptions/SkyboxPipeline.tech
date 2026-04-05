@@ -1,7 +1,7 @@
 {
 	"Type": "SkyboxTechnique",
 
-	"IsGraphicsPipeline": false,
+	"PipelineType": "Compute",
 
 	"CS": "Shaders\\Skybox_cs.cso"
 }

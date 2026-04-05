@@ -698,7 +698,7 @@ namespace rhi::d3d12
             .MipLevels = description.MipLevels,
             .Format = GetDXGIFormat(description.Format),
             .SampleDesc = { 1, 0 },
-            .Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR,
+            .Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN,
             .Flags = GetD3D12ResourceFlags(description.Flags)
         };
 

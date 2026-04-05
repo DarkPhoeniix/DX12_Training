@@ -12,26 +12,26 @@ namespace render
 {
 	struct ShadowDrawPassData
 	{
-		std::vector<rg::RGResourceId> LightCommandBuffers;
+		std::vector<rg::RGBufferIndirectArgsId> LightCommandBuffers;
 	};
 
 	class ShadowDrawPass : public rg::RenderPass<ShadowDrawPassData>
 	{
 	public:
-		ShadowDrawPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
+		ShadowDrawPass(rhi::Device* device, std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
 
 		// Inherited via RenderPass
 		void Setup(rg::RenderPassBuilder& builder) override;
-		void Execute(rg::RenderContext& context, TaskGPU& task) override;
+		void Execute(rg::RenderContext& context, rg::ITask* task) override;
 
 	private:
-		void DrawSpotLightShadows(rg::RenderContext& context, TaskGPU& task);
-		void DrawPointLightShadows(rg::RenderContext& context, TaskGPU& task);
+		void DrawSpotLightShadows(rg::RenderContext& context, rg::ITask* task);
+		void DrawPointLightShadows(rg::RenderContext& context, rg::ITask* task);
 
-		dx12::PipelineState _spotLightShadowsPipeline;
-		dx12::PipelineState _pointLightShadowsPipeline;
+		std::unique_ptr<rhi::PipelineState> _spotLightShadowsPipeline;
+		std::unique_ptr<rhi::PipelineState> _pointLightShadowsPipeline;
 
-        dx12::CommandSignature _cmdSignature;
+        std::unique_ptr<rhi::CommandSignature> _cmdSignature;
 
 		std::shared_ptr<scene::Scene> _scene;
 		scene::Camera* _camera;

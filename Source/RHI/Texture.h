@@ -8,6 +8,7 @@ namespace rhi
 {
     struct ClearValue
     {
+        Format Format;
         union
         {
             struct
@@ -29,7 +30,7 @@ namespace rhi
     {
         std::uint32_t Width = 0;
         std::uint32_t Height = 0;
-        std::uint16_t DepthOrArraySize = 0;
+        std::uint16_t DepthOrArraySize = 1;
         std::uint16_t MipLevels = 1;
 
         ClearValue ClearValue = {};

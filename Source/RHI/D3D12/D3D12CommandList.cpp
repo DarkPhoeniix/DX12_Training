@@ -14,6 +14,8 @@
 #include "PipelineState.h"
 #include "ResourceBarrier.h"
 
+#include <pix3.h>
+
 namespace rhi::d3d12
 {
     D3D12CommandList::D3D12CommandList(rhi::Device* device, rhi::CommandListType type, const std::string& name)
@@ -283,27 +285,26 @@ namespace rhi::d3d12
         _commandList->CopyBufferRegion(nativeDestination, destinationOffset, nativeSource, sourceOffset, numBytes);
     }
 
-    void D3D12CommandList::SetPipelineState(rhi::PipelineState* pipelineState)
+    void D3D12CommandList::SetGraphicsPipelineState(rhi::PipelineState* pipelineState)
+    {
+        FAIL(_type == CommandListType::Graphics, "Command list type is not Graphics.");
+
+        ID3D12PipelineState* nativePipelineState = D3D12Cast<ID3D12PipelineState>(pipelineState->GetNative());
+        ID3D12RootSignature* signature = D3D12Cast<ID3D12RootSignature>(pipelineState->GetNativeRootSignature());
+
+        _commandList->SetPipelineState(nativePipelineState);
+        _commandList->SetGraphicsRootSignature(signature);
+    }
+
+    void D3D12CommandList::SetComputePipelineState(rhi::PipelineState* pipelineState)
     {
         FAIL((_type == CommandListType::Graphics) || (_type == CommandListType::Compute), "Command list type is not Graphics or Compute.");
 
         ID3D12PipelineState* nativePipelineState = D3D12Cast<ID3D12PipelineState>(pipelineState->GetNative());
+        ID3D12RootSignature* signature = D3D12Cast<ID3D12RootSignature>(pipelineState->GetNativeRootSignature());
 
         _commandList->SetPipelineState(nativePipelineState);
-
-        ID3D12RootSignature* signature = D3D12Cast<ID3D12RootSignature>(pipelineState->GetNativeRootSignature());
-        switch (_type)
-        {
-        case rhi::CommandListType::Graphics:
-            _commandList->SetGraphicsRootSignature(signature);
-            break;
-        case rhi::CommandListType::Compute:
-            _commandList->SetComputeRootSignature(signature);
-            break;
-        default:
-            UNREACHABLE("Unsupported command list type.");
-            return;
-        }
+        _commandList->SetComputeRootSignature(signature);
     }
 
     void D3D12CommandList::SetPrimitiveTopology(PrimitiveTopology primitiveTopology)
@@ -464,100 +465,88 @@ namespace rhi::d3d12
         _commandList->SetDescriptorHeaps(heapCount, nativeHeaps);
     }
 
-    void D3D12CommandList::SetConstant(std::uint32_t index, std::uint32_t data, std::uint32_t offset)
+    void D3D12CommandList::SetGraphicsConstant(std::uint32_t index, std::uint32_t data, std::uint32_t offset)
     {
-        switch (_type)
-        {
-        case rhi::CommandListType::Graphics:
-            _commandList->SetGraphicsRoot32BitConstant(index, data, offset);
-            break;
-        case rhi::CommandListType::Compute:
-            _commandList->SetComputeRoot32BitConstant(index, data, offset);
-            break;
-        default:
-            UNREACHABLE("Unsupported command list type.");
-            break;
-        }
+        FAIL(_type == CommandListType::Graphics, "Command list type is not Graphics.");
+
+        _commandList->SetGraphicsRoot32BitConstant(index, data, offset);
     }
 
-    void D3D12CommandList::SetConstants(std::uint32_t index, std::uint32_t numValues, const void* data, std::uint32_t offset)
+    void D3D12CommandList::SetComputeConstant(std::uint32_t index, std::uint32_t data, std::uint32_t offset)
     {
-        switch (_type)
-        {
-        case rhi::CommandListType::Graphics:
-            _commandList->SetGraphicsRoot32BitConstants(index, numValues, data, offset);
-            break;
-        case rhi::CommandListType::Compute:
-            _commandList->SetComputeRoot32BitConstants(index, numValues, data, offset);
-            break;
-        default:
-            UNREACHABLE("Unsupported command list type.");
-            break;
-        }
+        FAIL((_type == CommandListType::Graphics) || (_type == CommandListType::Compute), "Command list type is not Graphics or Compute.");
+
+        _commandList->SetComputeRoot32BitConstant(index, data, offset);
     }
 
-    void D3D12CommandList::SetCBV(std::uint32_t index, std::uint64_t bufferLocation)
+    void D3D12CommandList::SetGraphicsConstants(std::uint32_t index, std::uint32_t numValues, const void* data, std::uint32_t offset)
     {
-        switch (_type)
-        {
-        case rhi::CommandListType::Graphics:
-            _commandList->SetGraphicsRootConstantBufferView(index, bufferLocation);
-            break;
-        case rhi::CommandListType::Compute:
-            _commandList->SetComputeRootConstantBufferView(index, bufferLocation);
-            break;
-        default:
-            UNREACHABLE("Unsupported command list type.");
-            break;
-        }
+        FAIL(_type == CommandListType::Graphics, "Command list type is not Graphics.");
+
+        _commandList->SetGraphicsRoot32BitConstants(index, numValues, data, offset);
     }
 
-    void D3D12CommandList::SetSRV(std::uint32_t index, std::uint64_t bufferLocation)
+    void D3D12CommandList::SetComputeConstants(std::uint32_t index, std::uint32_t numValues, const void* data, std::uint32_t offset)
     {
-        switch (_type)
-        {
-        case rhi::CommandListType::Graphics:
-            _commandList->SetGraphicsRootShaderResourceView(index, bufferLocation);
-            break;
-        case rhi::CommandListType::Compute:
-            _commandList->SetComputeRootShaderResourceView(index, bufferLocation);
-            break;
-        default:
-            UNREACHABLE("Unsupported command list type.");
-            break;
-        }
+        FAIL((_type == CommandListType::Graphics) || (_type == CommandListType::Compute), "Command list type is not Graphics or Compute.");
+
+        _commandList->SetComputeRoot32BitConstants(index, numValues, data, offset);
     }
 
-    void D3D12CommandList::SetUAV(std::uint32_t index, std::uint64_t bufferLocation)
+    void D3D12CommandList::SetGraphicsCBV(std::uint32_t index, std::uint64_t bufferLocation)
     {
-        switch (_type)
-        {
-        case rhi::CommandListType::Graphics:
-            _commandList->SetGraphicsRootUnorderedAccessView(index, bufferLocation);
-            break;
-        case rhi::CommandListType::Compute:
-            _commandList->SetComputeRootUnorderedAccessView(index, bufferLocation);
-            break;
-        default:
-            UNREACHABLE("Unsupported command list type.");
-            break;
-        }
+        FAIL(_type == CommandListType::Graphics, "Command list type is not Graphics.");
+
+        _commandList->SetGraphicsRootConstantBufferView(index, bufferLocation);
     }
 
-    void D3D12CommandList::SetDescriptorTable(std::uint32_t index, rhi::GPUDescriptor descriptor)
+    void D3D12CommandList::SetComputeCBV(std::uint32_t index, std::uint64_t bufferLocation)
     {
-        switch (_type)
-        {
-        case rhi::CommandListType::Graphics:
-            _commandList->SetGraphicsRootDescriptorTable(index, ToD3D12Handle(descriptor));
-            break;
-        case rhi::CommandListType::Compute:
-            _commandList->SetComputeRootDescriptorTable(index, ToD3D12Handle(descriptor));
-            break;
-        default:
-            UNREACHABLE("Unsupported command list type.");
-            break;
-        }
+        FAIL((_type == CommandListType::Graphics) || (_type == CommandListType::Compute), "Command list type is not Graphics or Compute.");
+
+        _commandList->SetComputeRootConstantBufferView(index, bufferLocation);
+    }
+
+    void D3D12CommandList::SetGraphicsSRV(std::uint32_t index, std::uint64_t bufferLocation)
+    {
+        FAIL(_type == CommandListType::Graphics, "Command list type is not Graphics.");
+
+        _commandList->SetGraphicsRootShaderResourceView(index, bufferLocation);
+    }
+
+    void D3D12CommandList::SetComputeSRV(std::uint32_t index, std::uint64_t bufferLocation)
+    {
+        FAIL((_type == CommandListType::Graphics) || (_type == CommandListType::Compute), "Command list type is not Graphics or Compute.");
+
+        _commandList->SetComputeRootShaderResourceView(index, bufferLocation);
+    }
+
+    void D3D12CommandList::SetGraphicsUAV(std::uint32_t index, std::uint64_t bufferLocation)
+    {
+        FAIL(_type == CommandListType::Graphics, "Command list type is not Graphics.");
+
+        _commandList->SetGraphicsRootUnorderedAccessView(index, bufferLocation);
+    }
+
+    void D3D12CommandList::SetComputeUAV(std::uint32_t index, std::uint64_t bufferLocation)
+    {
+        FAIL((_type == CommandListType::Graphics) || (_type == CommandListType::Compute), "Command list type is not Graphics or Compute.");
+
+        _commandList->SetComputeRootUnorderedAccessView(index, bufferLocation);
+    }
+
+    void D3D12CommandList::SetGraphicsDescriptorTable(std::uint32_t index, rhi::GPUDescriptor descriptor)
+    {
+        FAIL(_type == CommandListType::Graphics, "Command list type is not Graphics.");
+
+        _commandList->SetGraphicsRootDescriptorTable(index, ToD3D12Handle(descriptor));
+    }
+
+    void D3D12CommandList::SetComputeDescriptorTable(std::uint32_t index, rhi::GPUDescriptor descriptor)
+    {
+        FAIL((_type == CommandListType::Graphics) || (_type == CommandListType::Compute), "Command list type is not Graphics or Compute.");
+
+        _commandList->SetComputeRootDescriptorTable(index, ToD3D12Handle(descriptor));
     }
 
     void D3D12CommandList::Reset(rhi::PipelineState* pipelineState)
@@ -569,6 +558,21 @@ namespace rhi::d3d12
     {
         HRESULT result = _commandList->Close();
         CHECK(result, "Failed to close command list.");
+    }
+
+    void D3D12CommandList::BeginEvent(const char* name, std::uint8_t color)
+    {
+        PIXBeginEvent(_commandList.Get(), color, name);
+    }
+
+    void D3D12CommandList::EndEvent()
+    {
+        PIXEndEvent(_commandList.Get());
+    }
+
+    void D3D12CommandList::SetMarker(const char* name, std::uint8_t color)
+    {
+        PIXSetMarker(color, name);
     }
 
     void* D3D12CommandList::GetNative() const

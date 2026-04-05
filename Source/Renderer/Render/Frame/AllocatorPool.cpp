@@ -2,27 +2,32 @@
 
 #include "AllocatorPool.h"
 
-void AllocatorPool::Init()
+void AllocatorPool::Init(rhi::Device* device)
 {
-    Make(streams, 128, D3D12_COMMAND_LIST_TYPE_DIRECT);
-    Make(computes, 128, D3D12_COMMAND_LIST_TYPE_COMPUTE);
-    Make(copies, 4, D3D12_COMMAND_LIST_TYPE_COPY);
+    // TODO: refactor
+    Make(device, streams, 128, rhi::CommandListType::Graphics);
+    Make(device, computes, 128, rhi::CommandListType::Compute);
+    Make(device, copies, 4, rhi::CommandListType::Copy);
 }
 
-Executor* AllocatorPool::Obtain(D3D12_COMMAND_LIST_TYPE type)
+Executor* AllocatorPool::Obtain(rhi::CommandListType type)
 {
     std::vector<Executor>* res;
-    if (type == D3D12_COMMAND_LIST_TYPE_DIRECT)
+    switch (type)
     {
+    case rhi::CommandListType::Graphics:
         res = &streams;
-    }
-    else if (type == D3D12_COMMAND_LIST_TYPE_COMPUTE)
-    {
+        break;
+    case rhi::CommandListType::Compute:
         res = &computes;
-    }
-    else // type == D3D12_COMMAND_LIST_TYPE_COPY
-    {
+        break;
+    case rhi::CommandListType::Copy:
         res = &copies;
+        break;
+    default:
+        UNREACHABLE("Unsupported command list type.");
+        res = &streams;
+        break;
     }
 
     for (auto& exec : *res)
@@ -33,13 +38,16 @@ Executor* AllocatorPool::Obtain(D3D12_COMMAND_LIST_TYPE type)
         }
     }
 
-    LOG_CRITICAL("No free executors available for command list.");
+    LOG_CRITICAL("No free executors available for the command list type.");
     return nullptr;
 }
 
-void AllocatorPool::Make(std::vector<Executor>& vecExec, unsigned int size, D3D12_COMMAND_LIST_TYPE type)
+void AllocatorPool::Make(rhi::Device* device, std::vector<Executor>& vecExec, unsigned int size, rhi::CommandListType type)
 {
-    vecExec.resize(size);
+    for (size_t i = 0; i < size; ++i)
+    {
+        vecExec.emplace_back(device);
+    }
 
     for (auto& exec : vecExec)
     {

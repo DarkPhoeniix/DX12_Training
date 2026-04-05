@@ -4,20 +4,22 @@
 namespace rg
 {
     template<typename PassData>
-    RenderPass<PassData>::RenderPass(const std::string& name, RenderPassType type)
+    RenderPass<PassData>::RenderPass(rhi::Device* device, const std::string& name, RenderPassType type)
         : IRenderPass(name, type)
         , _setupFunc(nullptr)
         , _executeFunc(nullptr)
         , _data{}
+        , _device(device)
     {
     }
 
     template<typename PassData>
-    RenderPass<PassData>::RenderPass(const std::string& name, SetupFunc&& setup, ExecuteFunc&& execute, RenderPassType type)
+    RenderPass<PassData>::RenderPass(rhi::Device* device, const std::string& name, SetupFunc&& setup, ExecuteFunc&& execute, RenderPassType type)
         : IRenderPass(name, type)
         , _setupFunc(std::move(setup))
         , _executeFunc(std::move(execute))
         , _data{}
+        , _device(device)
     {
     }
 

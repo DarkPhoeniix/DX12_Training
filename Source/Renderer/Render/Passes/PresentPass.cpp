@@ -9,7 +9,7 @@
 
 namespace render
 {
-	PresentPass::PresentPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
+	PresentPass::PresentPass(rhi::Device* device, std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
 		: RenderPass<PresentPassData>("present_pass", rg::RenderPassType::Graphics)
 		, _scene(scene)
 		, _camera(camera)
@@ -21,22 +21,21 @@ namespace render
 		_data.RenderTarget = builder.CopySrcTexture("render_target");
 	}
 
-	void PresentPass::Execute(rg::RenderContext& context, TaskGPU& task)
+	void PresentPass::Execute(rg::RenderContext& context, rg::ITask* task)
 	{
-		dx12::CommandList& commandList = *task.GetCommandLists().front();
-		commandList.SetName("present_pass_cmd_list");
+		rhi::CommandList* commandList = task->GetCommandList();
 
 		{
-			PIXScopedEvent(commandList.GetDXCommandList().Get(), 2, "Present Pass");
+			GPU_SCOPED_EVENT(commandList, "Present Pass", 2);
 
-            std::shared_ptr<dx12::Resource> target = context.GetResource(_data.RenderTarget);
-            std::shared_ptr<dx12::Resource> swapChainTexture = dx12::Device::GetBackBuffer();
+            std::shared_ptr<rhi::Texture> target = context.GetTexture(_data.RenderTarget);
+            std::shared_ptr<rhi::Texture> swapChainTexture = rhi::Device::GetBackBuffer();
 
-            commandList.TransitionBarrier(*swapChainTexture, dx12::ResourceState::CopyDest);
-            commandList.CopyResource(*target, *swapChainTexture);
-            commandList.TransitionBarrier(*swapChainTexture, dx12::ResourceState::Present);
+            commandList->TransitionBarrier(swapChainTexture, rhi::ResourceState::CopyDest);
+            commandList->CopyTexture(target, swapChainTexture);
+            commandList->TransitionBarrier(swapChainTexture, rhi::ResourceState::Present);
 		}
 
-		commandList.Close();
+		commandList->Close();
 	}
 } // namespace render

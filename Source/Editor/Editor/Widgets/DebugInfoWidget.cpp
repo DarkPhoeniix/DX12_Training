@@ -96,7 +96,7 @@ namespace gui
         
             if (ImGui::CollapsingHeader("Pipeline statistics"))
             {
-                D3D12_QUERY_DATA_PIPELINE_STATISTICS stats = DebugInfo::GetPipelineStatisctics();
+                const rhi::PipelineStatistics& stats = DebugInfo::GetPipelineStatisctics();
                 ImGui::Text("* Geometry pass only");
                 ImGui::Text("Primitives: %i", stats.IAPrimitives);
                 ImGui::Text("VS invocations: %i", stats.VSInvocations);
@@ -226,16 +226,16 @@ namespace gui
 
             if (ImGui::CollapsingHeader("Adapter"))
             {
-                DXGI_ADAPTER_DESC desc;
-                dx12::Device::GetDXAdapter()->GetDesc(&desc);
-                std::string a = ConvertWCharToString(desc.Description);
-                ImGui::Text("Adapter: %s", a.c_str());
-
-                DXGI_QUERY_VIDEO_MEMORY_INFO memoryInfo = {};
-                dx12::Device::GetDXAdapter()->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &memoryInfo);
-
-                ImGui::Text("Memory usage:  %i MB", memoryInfo.CurrentUsage / (1024 * 1024));
-                ImGui::Text("Memory budget: %i MB", memoryInfo.Budget / (1024 * 1024));
+                //DXGI_ADAPTER_DESC desc;
+                //dx12::Device::GetDXAdapter()->GetDesc(&desc);
+                //std::string a = ConvertWCharToString(desc.Description);
+                //ImGui::Text("Adapter: %s", a.c_str());
+                //
+                //DXGI_QUERY_VIDEO_MEMORY_INFO memoryInfo = {};
+                //dx12::Device::GetDXAdapter()->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &memoryInfo);
+                //
+                //ImGui::Text("Memory usage:  %i MB", memoryInfo.CurrentUsage / (1024 * 1024));
+                //ImGui::Text("Memory budget: %i MB", memoryInfo.Budget / (1024 * 1024));
             }
         }
         ImGui::EndChild();

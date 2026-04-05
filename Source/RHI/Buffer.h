@@ -30,7 +30,7 @@ namespace rhi
         virtual void* Map(std::uint32_t begin = 0, std::uint32_t end = 0) = 0;
         virtual void Unmap() = 0;
 
-        [[nodiscard]] virtual std::uint64_t GetVirtualAddress() = 0;
+        [[nodiscard]] virtual std::uint64_t GetVirtualAddress(std::uint64_t offset = 0) = 0;
         [[nodiscard]] virtual ResourceState GetInitialState() const = 0;
         [[nodiscard]] virtual ResourceState GetCurrentState() const = 0;
         virtual void SetCurrentState(ResourceState state) = 0;

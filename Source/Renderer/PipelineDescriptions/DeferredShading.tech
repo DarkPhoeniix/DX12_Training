@@ -1,7 +1,7 @@
 {
 	"Type": "DeferredShadingTechnique",
 
-	"IsGraphicsPipeline": false,
+	"PipelineType": "Graphics",
 
 	"CS": "Shaders\\DeferredShading_cs.cso"
 }

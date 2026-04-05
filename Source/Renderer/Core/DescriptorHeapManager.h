@@ -1,6 +1,7 @@
 #pragma once
 
 #include "RHI/CommandList.h"
+#include "RHI/DescriptorHeap.h"
 
 using HeapIndex = std::uint32_t;
 constexpr HeapIndex InvalidHeapIndex = HeapIndex(-1);
@@ -9,8 +10,8 @@ constexpr HeapIndex InvalidHeapIndex = HeapIndex(-1);
 struct DescriptorHandle
 {
     HeapIndex Index = InvalidHeapIndex;
-    D3D12_CPU_DESCRIPTOR_HANDLE CpuHandle = {};
-    D3D12_GPU_DESCRIPTOR_HANDLE GpuHandle = {};
+    rhi::CPUDescriptor CpuHandle = {};
+    rhi::GPUDescriptor GpuHandle = {};
 };
 
 enum class DescriptorHeapType
@@ -26,7 +27,7 @@ class DescriptorHeapManager
 public:
     ~DescriptorHeapManager() = default;
 
-    static void Create(std::uint32_t maxRTVDescriptors, std::uint32_t maxDSVDescriptors, std::uint32_t maxStaticDescriptors, std::uint32_t maxDynamicDescriptors);
+    static void Create(rhi::Device* device, std::uint32_t maxRTVDescriptors, std::uint32_t maxDSVDescriptors, std::uint32_t maxStaticDescriptors, std::uint32_t maxDynamicDescriptors);
     static void Destroy();
 
     [[nodiscard]] static DescriptorHeapManager& Get();
@@ -37,14 +38,12 @@ public:
     void ResetTransient();
     void Reset();
 
-    void Bind(dx12::CommandList& commandList);
-
     void AdvanceFrameIndex();
 
-    const dx12::DescriptorHeap& GetShaderResourcesDescriptorHeap() const;
+    rhi::DescriptorHeap* GetShaderResourcesDescriptorHeap() const;
 
 private:
-    DescriptorHeapManager(std::uint32_t maxRTVDescriptors, std::uint32_t maxDSVDescriptors, std::uint32_t maxStaticDescriptors, std::uint32_t maxDynamicDescriptors);
+    DescriptorHeapManager(rhi::Device* device, std::uint32_t maxRTVDescriptors, std::uint32_t maxDSVDescriptors, std::uint32_t maxStaticDescriptors, std::uint32_t maxDynamicDescriptors);
 
     struct DescriptorAllocator
     {
@@ -63,14 +62,16 @@ private:
     std::uint32_t _frameIndex;
 
     // Descriptor heaps for different types of resources: RTV, DSV, and CBV/SRV/UAV.
-    dx12::DescriptorHeap _RTVDescriptorHeap;
-    dx12::DescriptorHeap _DSVDescriptorHeap;
-    dx12::DescriptorHeap _shaderResourcesDescriptorHeap;
+    std::unique_ptr<rhi::DescriptorHeap> _RTVDescriptorHeap;
+    std::unique_ptr<rhi::DescriptorHeap> _DSVDescriptorHeap;
+    std::unique_ptr<rhi::DescriptorHeap> _shaderResourcesDescriptorHeap;
 
     DescriptorAllocator _RTVAllocator;
     DescriptorAllocator _DSVAllocator;
     DescriptorAllocator _staticAllocator;
     std::vector<DescriptorAllocator> _dynamicAllocator;
+
+    rhi::Device* _device;
 
     static std::unique_ptr<DescriptorHeapManager> _instance;
 };

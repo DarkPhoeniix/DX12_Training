@@ -1,9 +1,11 @@
 #pragma once
 
-#include "RHI/Resource.h"
+#include "RHI/Buffer.h"
+#include "RHI/Texture.h"
 #include "Renderer/Core/DescriptorHeapManager.h"
+#include "RenderGraph/Interfaces.h"
 
-class ResourceTable
+class ResourceTable : public rg::IDescriptorProvider
 {
 public:
     ResourceTable(const ResourceTable&) = delete;
@@ -13,7 +15,7 @@ public:
     ResourceTable& operator=(const ResourceTable&) = delete;
     ResourceTable& operator=(ResourceTable&&) noexcept = default;
 
-    static void Create();
+    static void Create(rhi::Device* device);
     static void Destroy();
 
     static ResourceTable& Get();
@@ -21,34 +23,37 @@ public:
     void Reset();
     void ResetTransientResources();
 
-    const dx12::DescriptorHeap& GetShaderResourcesDescriptorHeap() const;
+    rhi::DescriptorHeap* GetShaderResourcesDescriptorHeap() const;
 
-    template<typename T> requires (dx12::ResourceViewConcept<T>)
-        DescriptorHandle AddStaticResourceView(const T& view);
-    template<typename T> requires (dx12::ResourceViewConcept<T>)
-        DescriptorHandle AddTransientResourceView(const T& view);
+    void CreateStaticResourceView(rhi::ResourceID resourceID, rhi::ResourceViewType viewType) override;
+    void CreateTransientResourceView(rhi::ResourceID resourceID, rhi::ResourceViewType viewType);
 
-    template<typename T> requires (dx12::ResourceViewConcept<T>)
-        constexpr DescriptorHandle GetStaticResourceHandle(const T& desc);
-    template<typename T> requires (dx12::ResourceViewConcept<T>)
-        constexpr DescriptorHandle GetTransientResourceHandle(const T& desc);
+    std::uint32_t GetBindlessIndex(rhi::ResourceID resourceID, rhi::ResourceViewType viewType) override;
+
+    rhi::CPUDescriptor GetDescriptor(rhi::ResourceID resourceID, rhi::ResourceViewType viewType) override;
 
 private:
-    ResourceTable() = default;
+    ResourceTable(rhi::Device* device);
 
-    std::unordered_map<dx12::ResourceID, DescriptorHandle> _staticRTVs;
-    std::unordered_map<dx12::ResourceID, DescriptorHandle> _staticDSVs;
-    std::unordered_map<dx12::ResourceID, DescriptorHandle> _staticCBVs;
-    std::unordered_map<dx12::ResourceID, DescriptorHandle> _staticSRVs;
-    std::unordered_map<dx12::ResourceID, DescriptorHandle> _staticUAVs;
+    std::unordered_map<rhi::ResourceID, DescriptorHandle> _staticBufferCBVs;
+    std::unordered_map<rhi::ResourceID, DescriptorHandle> _staticBufferSRVs;
+    std::unordered_map<rhi::ResourceID, DescriptorHandle> _staticBufferUAVs;
 
-    std::unordered_map<dx12::ResourceID, DescriptorHandle> _transientRTVs;
-    std::unordered_map<dx12::ResourceID, DescriptorHandle> _transientDSVs;
-    std::unordered_map<dx12::ResourceID, DescriptorHandle> _transientCBVs;
-    std::unordered_map<dx12::ResourceID, DescriptorHandle> _transientSRVs;
-    std::unordered_map<dx12::ResourceID, DescriptorHandle> _transientUAVs;
+    std::unordered_map<rhi::ResourceID, DescriptorHandle> _staticTextureRTVs;
+    std::unordered_map<rhi::ResourceID, DescriptorHandle> _staticTextureDSVs;
+    std::unordered_map<rhi::ResourceID, DescriptorHandle> _staticTextureSRVs;
+    std::unordered_map<rhi::ResourceID, DescriptorHandle> _staticTextureUAVs;
+
+    std::unordered_map<rhi::ResourceID, DescriptorHandle> _transientBufferCBVs;
+    std::unordered_map<rhi::ResourceID, DescriptorHandle> _transientBufferSRVs;
+    std::unordered_map<rhi::ResourceID, DescriptorHandle> _transientBufferUAVs;
+
+    std::unordered_map<rhi::ResourceID, DescriptorHandle> _transientTextureRTVs;
+    std::unordered_map<rhi::ResourceID, DescriptorHandle> _transientTextureDSVs;
+    std::unordered_map<rhi::ResourceID, DescriptorHandle> _transientTextureSRVs;
+    std::unordered_map<rhi::ResourceID, DescriptorHandle> _transientTextureUAVs;
+
+    rhi::Device* _device;
 
     static std::unique_ptr<ResourceTable> _instance;
 };
-
-#include "ResourceTable.inl"

@@ -19,12 +19,12 @@ namespace
 
 namespace render
 {
-	DebugArmaturePass::DebugArmaturePass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-		: RenderPass<DebugArmaturePassData>("debug_armature_pass", rg::RenderPassType::Graphics)
+	DebugArmaturePass::DebugArmaturePass(rhi::Device* device, std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
+		: RenderPass<DebugArmaturePassData>(device, "debug_armature_pass", rg::RenderPassType::Graphics)
 		, _scene(scene)
 		, _camera(camera)
 	{
-		_debugArmaturePipeline.Parse("PipelineDescriptions\\ArmatureDebugPipeline.tech");
+		_debugArmaturePipeline = _device->CreatePipelineState("PipelineDescriptions\\ArmatureDebugPipeline.tech");
 	}
 
 	void DebugArmaturePass::Setup(rg::RenderPassBuilder& builder)
@@ -33,28 +33,22 @@ namespace render
 		_data.Depth = builder.DepthStencilWrite("depth_target");
 	}
 
-	void DebugArmaturePass::Execute(rg::RenderContext& context, TaskGPU& task)
+	void DebugArmaturePass::Execute(rg::RenderContext& context, rg::ITask* task)
 	{
-		dx12::CommandList& commandList = *task.GetCommandLists().front();
-		commandList.SetName("debug_armature_cmd_list");
+		rhi::CommandList* commandList = task->GetCommandList();
 
 		{
-            PIXScopedEvent(commandList.GetDXCommandList().Get(), 9, "Debug View Pass - Armature");
+            GPU_SCOPED_EVENT(commandList, "Debug View Pass - Armature", 9);
+			\
+			commandList->SetGraphicsPipelineState(_debugArmaturePipeline.get());
 
-			std::shared_ptr<dx12::Resource> target = context.GetResource(_data.Target);
-			std::shared_ptr<dx12::Resource> depth = context.GetResource(_data.Depth);
+			rhi::CPUDescriptor targetHandle = context.GetDescriptor(_data.Target, rhi::ResourceViewType::RTV);
+			rhi::CPUDescriptor depthHandle = context.GetDescriptor(_data.Depth, rhi::ResourceViewType::DSV);
 
-			DescriptorHandle rtv = context.GetStaticResourceHandle(target->GetAsRTV());
-			DescriptorHandle dsv = context.GetStaticResourceHandle(depth->GetAsDSV());
+			commandList->SetViewport(_camera->GetViewport().GetDXViewport(), _camera->GetViewport().GetScissorRectangle());
+			commandList->SetRenderTarget(&targetHandle, &depthHandle);
 
-			commandList.SetPipelineState(_debugArmaturePipeline);
-
-			commandList.SetViewport(_camera->GetViewport().GetDXViewport(), _camera->GetViewport().GetScissorRectangle());
-			commandList.SetRenderTarget(&rtv.CpuHandle, &dsv.CpuHandle);
-
-			commandList.SetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
-
-			commandList.SetCBV(0, context.GetFrame()->GetBuffer()->OffsetGPU());
+			commandList->SetPrimitiveTopology(rhi::PrimitiveTopology::PointList);
 
 			auto meshes = _scene->FilterNodesByComponent("Mesh");
 			for (size_t i = 0; i < meshes.size(); ++i)
@@ -74,15 +68,15 @@ namespace render
 								.BoneStart = DirectX::XMVector4Transform(bone->GlobalTransform.r[3], transform->Transform),
 								.BoneEnd = DirectX::XMVector4Transform(child->GlobalTransform.r[3], transform->Transform)
 							};
-							commandList.SetConstants(1, 8, &passCB);
+							commandList->SetGraphicsConstants(1, 8, &passCB);
 
-							commandList.Draw(1);
+							commandList->Draw(1);
 						}
 					}
 				}
 			}
 		}
 
-		commandList.Close();
+		commandList->Close();
 	}
 } // namespace render

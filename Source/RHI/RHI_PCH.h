@@ -30,6 +30,7 @@ using namespace Microsoft::WRL;
 #define ENABLE_DEBUG_NAMES 1
 #define ENABLE_DEBUG_DESC 1
 #define ENABLE_DEVICE_DEBUG 1
+#define ENABLE_GPU_EVENTS 1
 #endif // _DEBUG
 
 // DirectX12 specific headers

@@ -2,14 +2,14 @@
 
 #include "CacheGPU.h"
 
-void CacheGPU::SetResource(std::shared_ptr<dx12::Resource> memoryBlock)
+void CacheGPU::SetResource(std::shared_ptr<rhi::Buffer> memoryBlock)
 {
     std::unique_lock<std::shared_mutex> lock(_mutex);
 
     ASSERT(memoryBlock, "Trying to set a null memory block in GPU cache");
 
     _cache = memoryBlock;
-    _size = memoryBlock->GetResourceDescription().GetSize().x * memoryBlock->GetResourceDescription().GetSize().y;
+    _size = memoryBlock->GetSize();
     _currentOffset = 0;
 }
 
@@ -32,7 +32,7 @@ CacheGPU::DataHandle CacheGPU::RequestPlacement(const std::string& name, std::ui
 
     DataHandle handle;
     handle.DataCPU = _cache->Map<char>() + _currentOffset;
-    handle.DataGPU = _cache->OffsetGPU(_currentOffset);
+    handle.DataGPU = _cache->GetVirtualAddress(_currentOffset);
     handle.Offset = _currentOffset;
 
     _placedResources.emplace(name, handle);
@@ -67,7 +67,7 @@ CacheGPU::DataHandle CacheGPU::GetResourcePlacement(const std::string& name)
     return it->second;
 }
 
-std::shared_ptr<dx12::Resource> CacheGPU::GetCache()
+std::shared_ptr<rhi::Buffer> CacheGPU::GetCache()
 {
     return _cache;
 }

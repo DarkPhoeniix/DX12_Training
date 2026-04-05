@@ -164,22 +164,22 @@ namespace rg
             RGTextureId SourceId;
         } data;
 
+        NOT_IMPLEMENTED();
+        //AddPass<ExportPassData>("Export Pass",
+        //    [&](RenderPassBuilder& builder)
+        //    {
+        //        data.SourceId = builder.CopySrcTexture(name);
+        //    },
+        //    [&](RenderContext& context, ITask* task)
+        //    {
+        //        task->SetName("Export Pass");
+        //        rhi::CommandList* commandList = task->GetCommandList();
 
-        AddPass<ExportPassData>("Export Pass",
-            [&](RenderPassBuilder& builder)
-            {
-                data.SourceId = builder.CopySrcTexture(name);
-            },
-            [&](RenderContext& context, ITask* task)
-            {
-                task->SetName("Export Pass");
-                rhi::CommandList* commandList = task->GetCommandList();
-
-                std::shared_ptr<rhi::Texture> source = context.GetTexture(data.SourceId);
-                commandList->CopyTexture(destination, source);
-                commandList->Close();
-            }, 
-            RenderPassType::Copy);
+        //        std::shared_ptr<rhi::Texture> source = context.GetTexture(data.SourceId);
+        //        commandList->CopyTexture(destination, source);
+        //        commandList->Close();
+        //    }, 
+        //    RenderPassType::Copy);
     }
 
 #if ENABLE_PROFILING
@@ -199,7 +199,7 @@ namespace rg
             _beginFrameTask->SetName("Begin Frame Task");
             rhi::CommandList* commandList = _beginFrameTask->GetCommandList();
 
-            _gpuProfiler->BeginEvent(*commandList, _frameTimerID);
+            _gpuProfiler->BeginEvent(commandList, _frameTimerID);
 
             commandList->Close();
         }
@@ -221,8 +221,8 @@ namespace rg
             _endFrameTask->SetName("End Frame Task");
             rhi::CommandList* commandList = _endFrameTask->GetCommandList();
 
-            _gpuProfiler->EndEvent(*commandList, _frameTimerID);
-            _gpuProfiler->ResolveTimestamps(*commandList);
+            _gpuProfiler->EndEvent(commandList, _frameTimerID);
+            _gpuProfiler->ResolveTimestamps(commandList);
 
             commandList->Close();
         }

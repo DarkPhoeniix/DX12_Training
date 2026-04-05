@@ -5,10 +5,11 @@ namespace rg
     class IDescriptorProvider
     {
     public:
-        virtual void CreateResourceView(rhi::ResourceID resourceID, rhi::ResourceViewType viewType) = 0;
+        virtual void CreateStaticResourceView(rhi::ResourceID resourceID, rhi::ResourceViewType viewType) = 0;
 
-        virtual rhi::CPUDescriptor GetCPUDescriptor(rhi::ResourceID resourceID, rhi::ResourceViewType viewType) = 0;
-        virtual rhi::GPUDescriptor GetGPUDescriptor(rhi::ResourceID resourceID, rhi::ResourceViewType viewType) = 0;
+        virtual std::uint32_t GetBindlessIndex(rhi::ResourceID, rhi::ResourceViewType viewType) = 0;
+
+        virtual rhi::CPUDescriptor GetDescriptor(rhi::ResourceID resourceID, rhi::ResourceViewType viewType) = 0;
     };
 
     class ITask
@@ -18,7 +19,7 @@ namespace rg
 
         virtual rhi::CommandList* GetCommandList() = 0;
 
-        virtual std::string GetName() const = 0;
+        virtual const std::string& GetName() const = 0;
         virtual void SetName(const std::string& name) = 0;
     };
 

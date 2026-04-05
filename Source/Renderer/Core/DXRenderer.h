@@ -18,7 +18,7 @@ namespace render
     class DXRenderer : public core::events::IWindowEventListener
     {
     public:
-        DXRenderer(HWND windowHandle);
+        DXRenderer(rhi::Device* device, HWND windowHandle);
         ~DXRenderer();
 
         virtual bool LoadContent(TaskGPU* loadTask, const std::string& filepath);
@@ -26,7 +26,7 @@ namespace render
 
         virtual void SetFrame(Frame& frame);
 
-        rg::RenderGraph& GetRenderGraph();
+        rg::RenderGraph* GetRenderGraph();
 
         std::shared_ptr<scene::Scene> GetCurrentScene();
 
@@ -62,16 +62,18 @@ namespace render
         Profiler _gpuProfiler;
         Profiler::TimerID _frameTimeTimerID;
 
-        rg::RenderGraph _renderGraph;
+        std::unique_ptr<rg::RenderGraph> _renderGraph;
 
         scene::helpers::SceneLoader _sceneLoader;
 
         std::shared_ptr<scene::Scene> _scene;
         std::shared_ptr<scene::Camera> _cameraComponent;
 
-        std::shared_ptr<dx12::Resource> _diffuseIrradianceMap;
-        std::shared_ptr<dx12::Resource> _preFilteredEnvironmentMap;
-        std::shared_ptr<dx12::Resource> _brdfLUT;
+        std::shared_ptr<rhi::Texture> _diffuseIrradianceMap;
+        std::shared_ptr<rhi::Texture> _preFilteredEnvironmentMap;
+        std::shared_ptr<rhi::Texture> _brdfLUT;
+
+        rhi::Device* _device;
 
         bool _isMinimized;
         bool _isCameraMoving;
@@ -87,6 +89,6 @@ namespace render
             Light,
             Count
         };
-        std::array<std::shared_ptr<dx12::Resource>, static_cast<size_t>(SceneBufferType::Count)> _sceneBuffers;
+        std::array<std::shared_ptr<rhi::Buffer>, static_cast<size_t>(SceneBufferType::Count)> _sceneBuffers;
     };
 } // namespace render

@@ -4,12 +4,12 @@
 
 struct AllocatorPool
 {
-    void Init();
+    void Init(rhi::Device* device);
 
-    Executor* Obtain(D3D12_COMMAND_LIST_TYPE type);
+    Executor* Obtain(rhi::CommandListType type);
 
 protected:
-    void Make(std::vector<Executor>& vecExec, unsigned int size, D3D12_COMMAND_LIST_TYPE type);
+    void Make(rhi::Device* device, std::vector<Executor>& vecExec, unsigned int size, rhi::CommandListType type);
 
     std::vector<Executor> streams;
     std::vector<Executor> computes;

@@ -2,25 +2,29 @@
 
 #include "FencePool.h"
 
+FencePool::FencePool(rhi::Device* device)
+    : _device(device)
+{
+}
+
 void FencePool::Init()
 {
     // TODO: that sucks
-    fences.resize(128 + 128 + 4); // Direct + Compute + Copy
+    _fences.resize(128 + 128 + 4); // Direct + Compute + Copy
 
-    for (dx12::Fence& fence : fences)
+    for (auto& fence : _fences)
     {
-        fence.Init();
-        fence.SetFree(true);
+        fence = _device->CreateFence(0);
     }
 }
 
-dx12::Fence* FencePool::Obtain()
+rhi::Fence* FencePool::Obtain()
 {
-    for (dx12::Fence& fence : fences)
+    for (auto& fence : _fences)
     {
-        if (fence.IsFree())
+        if (fence->IsFree())
         {
-            return &fence;
+            return fence.get();
         }
     }
 

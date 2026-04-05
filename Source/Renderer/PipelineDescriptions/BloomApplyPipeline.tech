@@ -1,7 +1,7 @@
 {
 	"Type": "BloomApplyTechnique",
 
-	"IsGraphicsPipeline": false,
+	"PipelineType": "Compute",
 
 	"CS": "Shaders\\BloomApply_cs.cso"
 }

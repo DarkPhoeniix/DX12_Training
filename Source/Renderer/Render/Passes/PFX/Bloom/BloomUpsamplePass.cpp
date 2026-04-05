@@ -7,19 +7,27 @@
 #include "RenderGraph/RenderContext.h"
 #include "RenderGraph/RenderPassBuilder.h"
 
-namespace
-{
-    static constexpr std::uint32_t MAX_MIP_LEVELS = 6;
-}
-
 namespace render
 {
-    BloomUpsamplePass::BloomUpsamplePass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
+    namespace
+    {
+        static constexpr std::uint32_t MAX_MIP_LEVELS = 6;
+
+        struct PassConstants
+        {
+            std::uint32_t InputTextureIndex;
+            std::uint32_t OutputTextureIndex;
+            float FilterRadius;
+            float Intensity;
+        };
+    } // namespace unnamed
+
+    BloomUpsamplePass::BloomUpsamplePass(rhi::Device* device, std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
         : RenderPass<BloomUpsamplePassData>("bloom_upsample_pass", rg::RenderPassType::Compute)
         , _scene(scene)
         , _camera(camera)
     {
-        _bloomUpsamplePipeline.Parse("PipelineDescriptions\\BloomUpsamplePipeline.tech");
+        _bloomUpsamplePipeline = _device->CreatePipelineState("PipelineDescriptions\\BloomUpsamplePipeline.tech");
     }
 
     void BloomUpsamplePass::Setup(rg::RenderPassBuilder& builder)
@@ -34,41 +42,34 @@ namespace render
         }
     }
 
-    void BloomUpsamplePass::Execute(rg::RenderContext& context, TaskGPU& task)
+    void BloomUpsamplePass::Execute(rg::RenderContext& context, rg::ITask* task)
     {
-        dx12::CommandList& commandList = *task.GetCommandLists().front();
-        commandList.SetName("bloom_upsample_pass_cmd_list");
+        rhi::CommandList* commandList = task->GetCommandList();
 
         {
-            PIXScopedEvent(commandList.GetDXCommandList().Get(), 8, "Bloom Upsample Pass");
+            GPU_SCOPED_EVENT(commandList, "Bloom Upsample Pass", 8);
 
-            context.BindBindlessTable(commandList);
-            commandList.SetPipelineState(_bloomUpsamplePipeline);
+            commandList->SetComputePipelineState(_bloomUpsamplePipeline.get());
 
             for (std::uint32_t mip = _mipCount - 1; mip > 0; --mip)
             {
-                std::shared_ptr<dx12::Resource> bloomATarget = context.GetResource(_data.BloomMips[mip]);
-                std::shared_ptr<dx12::Resource> bloomBTarget = context.GetResource(_data.BloomMips[mip - 1]);
-                DescriptorHandle bloomATargetHandle = context.GetStaticResourceHandle(bloomATarget->GetAsSRV());
-                DescriptorHandle bloomBTargetHandle = context.GetStaticResourceHandle(bloomBTarget->GetAsUAV());
-
-                struct PassConstants
-                {
-                    std::uint32_t InputTextureIndex;
-                    std::uint32_t OutputTextureIndex;
-                    float FilterRadius;
-                    float Intensity;
-                } passCB{ .InputTextureIndex = bloomATargetHandle.Index, .OutputTextureIndex = bloomBTargetHandle.Index, .FilterRadius = RenderSettings::Bloom().Radius, .Intensity = RenderSettings::Bloom().Intensity1 };
-                commandList.SetConstants(1, 4, &passCB);
+                PassConstants passCB =
+                { 
+                    .InputTextureIndex = context.GetBindlessIndex(_data.BloomMips[mip], rhi::ResourceViewType::SRV),
+                    .OutputTextureIndex = context.GetBindlessIndex(_data.BloomMips[mip - 1], rhi::ResourceViewType::UAV),
+                    .FilterRadius = RenderSettings::Bloom().Radius, 
+                    .Intensity = RenderSettings::Bloom().Intensity1 
+                };
+                commandList->SetComputeConstants(1, 4, &passCB);
 
                 std::uint32_t xThreadGroups = (std::uint32_t)std::ceilf(bloomBTarget->GetResourceDescription().GetSize().x / 16.0f);
                 std::uint32_t yThreadGroups = (std::uint32_t)std::ceilf(bloomBTarget->GetResourceDescription().GetSize().y / 16.0f);
-                commandList.Dispatch(xThreadGroups, yThreadGroups, 1);
+                commandList->Dispatch(xThreadGroups, yThreadGroups, 1);
 
-                commandList.UAVBarrier(bloomBTarget);
+                commandList->UAVBarrier(bloomBTarget);
             }
         }
 
-        commandList.Close();
+        commandList->Close();
     }
 } // namespace render

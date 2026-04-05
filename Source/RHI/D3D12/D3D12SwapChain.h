@@ -30,6 +30,8 @@ namespace rhi::d3d12
 
         void OnResize(std::uint32_t width, std::uint32_t height) override;
 
+        rhi::ScissorRect GetDesktopCoordinates() override;
+
         void* GetNative() const override;
 
     private:

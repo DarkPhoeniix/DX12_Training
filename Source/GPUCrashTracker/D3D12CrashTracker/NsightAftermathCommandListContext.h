@@ -8,7 +8,7 @@ namespace tracking
     class NsightAftermathCommandListContext final : public ICommandListCrashContext
     {
     public:
-        NsightAftermathCommandListContext(std::shared_ptr<IGPUCrashTracker> crashTracker);
+        NsightAftermathCommandListContext(IGPUCrashTracker* crashTracker);
         ~NsightAftermathCommandListContext() = default;
 
         // Inherited via ICommandListCrashContext
@@ -18,5 +18,7 @@ namespace tracking
     private:
         ID3D12GraphicsCommandList* _commandList;
         GFSDK_Aftermath_ContextHandle _commandListCrashContext;
+
+        IGPUCrashTracker* _crashTracker;
     };
 } // namespace tracking

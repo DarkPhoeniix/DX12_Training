@@ -18,8 +18,6 @@ namespace rhi
         SwapChain& operator=(const SwapChain&) = delete;
         SwapChain& operator=(SwapChain&&) noexcept = default;
 
-        virtual void Init(HWND windowHandle, std::uint32_t width, std::uint32_t height, bool vSync = false) = 0;
-
         virtual std::shared_ptr<Texture> GetBuffer(std::uint32_t index) = 0;
         virtual std::shared_ptr<Texture> GetBackBuffer() = 0;
 
@@ -27,6 +25,8 @@ namespace rhi
         virtual std::uint32_t Present() = 0;
 
         virtual void OnResize(std::uint32_t width, std::uint32_t height) = 0;
+
+        virtual rhi::ScissorRect GetDesktopCoordinates() = 0;
 
         virtual void* GetNative() const = 0;
     };

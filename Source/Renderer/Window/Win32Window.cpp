@@ -74,7 +74,7 @@ namespace core
         }
     }
 
-    void Win32Window::SetSwapChain(dx12::SwapChain* swapChain)
+    void Win32Window::SetSwapChain(rhi::SwapChain* swapChain)
     {
         FAIL(swapChain, "Trying to set a null swap chain to the window.");
         _swapChain = swapChain;
@@ -197,15 +197,11 @@ namespace core
             // Make the window borderless so that the client area can fill the screen
             SetWindowLong(_windowHandle, GWL_STYLE, _windowStyle & ~(WS_CAPTION | WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_SYSMENU | WS_THICKFRAME));
 
-            RECT fullscreenWindowRect;
+            rhi::ScissorRect fullscreenWindowRect;
             if (_swapChain)
             {
                 // Get the settings of the display on which the app's window is currently displayed
-                ComPtr<IDXGIOutput> pOutput = _swapChain->GetContainingOutput();
-                DXGI_OUTPUT_DESC Desc;
-                HRESULT result = pOutput->GetDesc(&Desc);
-                CHECK(result, "Failed to get swap chain description.");
-                fullscreenWindowRect = Desc.DesktopCoordinates;
+                fullscreenWindowRect = _swapChain->GetDesktopCoordinates();
             }
             else
             {
@@ -225,10 +221,10 @@ namespace core
             SetWindowPos(
                 _windowHandle,
                 HWND_TOPMOST,
-                fullscreenWindowRect.left,
-                fullscreenWindowRect.top,
-                fullscreenWindowRect.right,
-                fullscreenWindowRect.bottom,
+                fullscreenWindowRect.Left,
+                fullscreenWindowRect.Top,
+                fullscreenWindowRect.Right,
+                fullscreenWindowRect.Bottom,
                 SWP_FRAMECHANGED | SWP_NOACTIVATE);
 
             ShowWindow(_windowHandle, SW_MAXIMIZE);

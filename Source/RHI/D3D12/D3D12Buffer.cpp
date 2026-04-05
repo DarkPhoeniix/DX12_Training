@@ -66,9 +66,9 @@ namespace rhi::d3d12
         _resource.Unmap();
     }
 
-    std::uint64_t D3D12Buffer::GetVirtualAddress()
+    std::uint64_t D3D12Buffer::GetVirtualAddress(std::uint64_t offset)
     {
-        return static_cast<std::uint64_t>(_resource.GetVirtualAddress());
+        return static_cast<std::uint64_t>(_resource.GetVirtualAddress()) + offset;
     }
 
     ResourceState D3D12Buffer::GetInitialState() const

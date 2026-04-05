@@ -5,10 +5,14 @@
 class FencePool
 {
 public:
+    FencePool(rhi::Device* device);
+
     void Init();
 
-    dx12::Fence* Obtain();
+    rhi::Fence* Obtain();
 
 private:
-    std::vector<dx12::Fence> fences;
+    std::vector<std::unique_ptr<rhi::Fence>> _fences;
+
+    rhi::Device* _device;
 };

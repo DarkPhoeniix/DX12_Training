@@ -23,21 +23,21 @@ namespace render
 	class FXAAPass : public rg::RenderPass<FXAAPassData>
 	{
 	public:
-		FXAAPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
+		FXAAPass(rhi::Device* device, std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
 
 		// Inherited via RenderPass
 		void Setup(rg::RenderPassBuilder& builder) override;
-		void Execute(rg::RenderContext& context, TaskGPU& task) override;
+		void Execute(rg::RenderContext& context, rg::ITask* task) override;
 
 	private:
-		dx12::PipelineState _FXAA_Pass1_Pipeline;
-		dx12::PipelineState _FXAA_ResolveWork_Pipeline;
-		dx12::PipelineState _FXAA_Pass2H_Pipeline;
-		dx12::PipelineState _FXAA_Pass2V_Pipeline;
+		std::unique_ptr<rhi::PipelineState> _FXAA_Pass1_Pipeline;
+		std::unique_ptr<rhi::PipelineState> _FXAA_ResolveWork_Pipeline;
+		std::unique_ptr<rhi::PipelineState> _FXAA_Pass2H_Pipeline;
+		std::unique_ptr<rhi::PipelineState> _FXAA_Pass2V_Pipeline;
 
-		dx12::CommandSignature _cmdSignature;
+		std::unique_ptr<rhi::CommandSignature> _cmdSignature;
 
-		std::shared_ptr<dx12::Resource> _paramsReset;
+		std::shared_ptr<rhi::Buffer> _paramsReset;
 
 		std::shared_ptr<scene::Scene> _scene;
 		scene::Camera* _camera;

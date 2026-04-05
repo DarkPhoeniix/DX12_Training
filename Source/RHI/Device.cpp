@@ -13,7 +13,7 @@
 
 namespace rhi
 {
-    static std::unique_ptr<Device> CreateDevice(BackendAPI backend)
+    std::unique_ptr<Device> CreateDevice(BackendAPI backend)
     {
         std::unique_ptr<Device> device = nullptr;
 

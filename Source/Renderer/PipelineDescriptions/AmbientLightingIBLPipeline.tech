@@ -1,7 +1,7 @@
 {
 	"Type": "AmbientLightingIBLTechnique",
 
-	"IsGraphicsPipeline": false,
+	"PipelineType": "Compute",
 
 	"CS": "Shaders\\AmbientLighting_IBL_cs.cso"
 }

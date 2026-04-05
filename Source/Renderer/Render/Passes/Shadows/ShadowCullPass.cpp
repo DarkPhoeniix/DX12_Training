@@ -52,22 +52,22 @@ namespace
 
 namespace render
 {
-	ShadowCullPass::ShadowCullPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
+	ShadowCullPass::ShadowCullPass(rhi::Device* device, std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
 		: RenderPass<ShadowCullPassData>("shadow_culling_pass", rg::RenderPassType::Compute)
 		, _scene(scene)
 		, _camera(camera)
 	{
-		_cullShadowsPipeline.Parse("PipelineDescriptions\\LightCulling_PointLight.tech");
+		_cullShadowsPipeline = _device->CreatePipelineState("PipelineDescriptions\\LightCulling_PointLight.tech");
 	}
 
 	void ShadowCullPass::Setup(rg::RenderPassBuilder& builder)
 	{
-		dx12::ResourceDescription counterResetBuffer;
+		rhi::ResourceDescription counterResetBuffer;
 		{
 			counterResetBuffer.SetSize({ sizeof(UINT), 1 });
 			counterResetBuffer.SetStride(sizeof(UINT));
 			counterResetBuffer.SetLayout(D3D12_TEXTURE_LAYOUT_ROW_MAJOR);
-			counterResetBuffer.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
+			counterResetBuffer.SetResourceType(rhi::ResourceType::Buffer | rhi::ResourceType::Dynamic);
 		}
 		std::uint32_t value = 0;
         builder.DeclareBuffer("shadow_counter_reset_buffer", counterResetBuffer, &value, sizeof(std::uint32_t));
@@ -77,11 +77,11 @@ namespace render
 		size_t lightsNum = lightEntities.size();
 		size_t meshesNum = meshes.size();
 
-		dx12::ResourceDescription aabbBufferDescription;
+		rhi::ResourceDescription aabbBufferDescription;
 		{
 			aabbBufferDescription.SetSize({ (AlignToUAVCounterOffset(MAX_INSTANCES_NUM * sizeof(scene::AABBVolume))), 1 });
 			aabbBufferDescription.SetStride(sizeof(scene::AABBVolume));
-			aabbBufferDescription.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
+			aabbBufferDescription.SetResourceType(rhi::ResourceType::Buffer | rhi::ResourceType::Dynamic);
 		}
 		builder.DeclareBuffer("aabb_buffer", aabbBufferDescription);
 
@@ -89,11 +89,11 @@ namespace render
 		std::uint32_t alignedBufferSize = AlignToUAVCounterOffset(MAX_INSTANCES_NUM * commandSize);
 		std::uint32_t counterSize = static_cast<std::uint32_t>(sizeof(UINT));
 
-		dx12::ResourceDescription candidateBufferDescription;
+		rhi::ResourceDescription candidateBufferDescription;
 		{
 			candidateBufferDescription.SetSize({ alignedBufferSize, 1 });
 			candidateBufferDescription.SetStride(commandSize);
-			candidateBufferDescription.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
+			candidateBufferDescription.SetResourceType(rhi::ResourceType::Buffer | rhi::ResourceType::Dynamic);
 		}
 		_data.CandidateInstancesBuffer.resize(lightsNum);
 		for (size_t i = 0; i < lightsNum; ++i)
@@ -102,12 +102,12 @@ namespace render
 			_data.CandidateInstancesBuffer[i] = builder.UploadBuffer(std::format("shadow_candidate_instances_buffer_{}", i));
 		}
 
-		dx12::ResourceDescription commandsBufferDescription;
+		rhi::ResourceDescription commandsBufferDescription;
 		{
 			commandsBufferDescription.SetSize({ alignedBufferSize + counterSize, 1 });
 			commandsBufferDescription.SetStride(commandSize);
 			commandsBufferDescription.SetUAVCounterOffset(alignedBufferSize);
-			commandsBufferDescription.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Unordered);
+			commandsBufferDescription.SetResourceType(rhi::ResourceType::Buffer | rhi::ResourceType::Unordered);
 		}
 		{
 			_data.LightCommandBuffers.resize(lightsNum);
@@ -122,17 +122,16 @@ namespace render
         _data.AABBBuffer = builder.UploadBuffer("aabb_buffer");
 	}
 
-	void ShadowCullPass::Execute(rg::RenderContext& context, TaskGPU& task)
+	void ShadowCullPass::Execute(rg::RenderContext& context, rg::ITask* task)
 	{
-		dx12::CommandList& commandList = *task.GetCommandLists().front();
-		commandList.SetName("shadow_culling_pass_cmd_list");
+		rhi::CommandList* commandList = task->GetCommandList();
 
 		{
-			PIXScopedEvent(commandList.GetDXCommandList().Get(), 1, "Shadow Culling Pass");
+			GPU_SCOPED_EVENT(commandList, "Shadow Culling Pass", 1);
 
-			std::shared_ptr<dx12::Resource> frameBuffer = context.GetFrame()->GetBuffer();
-			std::shared_ptr<dx12::Resource> aabbBuffer = context.GetResource(_data.AABBBuffer);
-			std::shared_ptr<dx12::Resource> counterResetBuffer = context.GetResource(_data.CounterResetBuffer);
+			std::shared_ptr<rhi::Resource> frameBuffer = context.GetFrame()->GetBuffer();
+			std::shared_ptr<rhi::Resource> aabbBuffer = context.GetResource(_data.AABBBuffer);
+			std::shared_ptr<rhi::Resource> counterResetBuffer = context.GetResource(_data.CounterResetBuffer);
 
 			DescriptorHandle aabbBufferHandle = context.GetStaticResourceHandle(aabbBuffer->GetAsSRV());
 
@@ -141,17 +140,16 @@ namespace render
 			size_t objectsNum = meshes.size();
 
 			// Setup pipeline
-			context.BindBindlessTable(commandList);
-			commandList.SetPipelineState(_cullShadowsPipeline);
+			commandList->SetPipelineState(_cullShadowsPipeline.get());
 
 			for (uint32_t lightIndex = 0; lightIndex < lightEntities.size(); ++lightIndex)
 			{
-				PIXScopedEvent(commandList.GetDXCommandList().Get(), 1, lightEntities[lightIndex]->GetName().c_str());
+				GPU_SCOPED_EVENT(commandList, lightEntities[lightIndex]->GetName().c_str(), 1);
 
 				std::shared_ptr<scene::Light> light = lightEntities[lightIndex]->GetComponentAs<scene::Light>("Light");
 
-				std::shared_ptr<dx12::Resource> candidateInstancesBuffer = context.GetResource(_data.CandidateInstancesBuffer[lightIndex]);
-				std::shared_ptr<dx12::Resource> outputCommandBuffer = context.GetResource(_data.LightCommandBuffers[lightIndex]);
+				std::shared_ptr<rhi::Resource> candidateInstancesBuffer = context.GetResource(_data.CandidateInstancesBuffer[lightIndex]);
+				std::shared_ptr<rhi::Resource> outputCommandBuffer = context.GetResource(_data.LightCommandBuffers[lightIndex]);
 
 				DescriptorHandle inputCommandsHandle = context.GetStaticResourceHandle(candidateInstancesBuffer->GetAsSRV());
 				DescriptorHandle outputCommandBufferHandle = context.GetStaticResourceHandle(outputCommandBuffer->GetAsUAV());
@@ -217,14 +215,14 @@ namespace render
 				}
 
 				// Transition resources
-				commandList.TransitionBarrier({ outputCommandBuffer, dx12::ResourceState::UnorderedAccess, dx12::ResourceState::CopyDest });
+				commandList->TransitionBarrier({ outputCommandBuffer, rhi::ResourceState::UnorderedAccess, rhi::ResourceState::CopyDest });
 
 				// Reset commands counter
 				std::uint32_t counterBufferOffset = outputCommandBuffer->GetResourceDescription().GetSize().x - sizeof(UINT);
-				commandList.CopyBufferRegion(*counterResetBuffer, *outputCommandBuffer, sizeof(UINT), 0, counterBufferOffset);
+				commandList->CopyBufferRegion(counterResetBuffer, outputCommandBuffer, sizeof(UINT), 0, counterBufferOffset);
 
 				// Transition resources
-				commandList.TransitionBarrier({ outputCommandBuffer, dx12::ResourceState::CopyDest, dx12::ResourceState::UnorderedAccess });
+				commandList->TransitionBarrier({ outputCommandBuffer, rhi::ResourceState::CopyDest, rhi::ResourceState::UnorderedAccess });
 
 				PassConstants passConstants =
 				{
@@ -236,15 +234,14 @@ namespace render
 				};
 
 				// Setup root signature
-				commandList.SetCBV(0, context.GetFrame()->GetBuffer()->OffsetGPU());
-				commandList.SetConstants(1, 5, &passConstants);
+				commandList->SetConstants(1, 5, &passConstants);
 
 				// Dispatch culling compute shader
 				std::uint32_t xThreadGroups = (std::uint32_t)std::ceilf(objectsNum / (float)CULLING_PASS_THREADS_NUM);
-				commandList.Dispatch(xThreadGroups);
+				commandList->Dispatch(xThreadGroups);
 			}
 		}
 
-		commandList.Close();
+		commandList->Close();
 	}
 } // namespace render

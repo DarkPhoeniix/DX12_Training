@@ -12,11 +12,11 @@ namespace
 
 DebugInfo* DebugInfo::_instance = nullptr;
 
-void DebugInfo::Init()
+void DebugInfo::Init(rhi::Device* device)
 {
     if (!_instance)
     {
-        _instance = new DebugInfo;
+        _instance = new DebugInfo(device);
     }
     else
     {
@@ -79,20 +79,20 @@ void DebugInfo::EndRender()
     }
 }
 
-void DebugInfo::StartStatCollecting(dx12::CommandList& commandList)
+void DebugInfo::StartStatCollecting(rhi::CommandList* commandList)
 {
-    Instance()._statisticsQuery.BeginQuery(commandList);
+    Instance()._statisticsQuery->BeginQuery(commandList);
 }
 
-void DebugInfo::EndStatCollecting(dx12::CommandList& commandList)
+void DebugInfo::EndStatCollecting(rhi::CommandList* commandList)
 {
-    Instance()._statisticsQuery.EndQuery(commandList);
-    Instance()._statisticsQuery.ResolveQueryData(commandList);
+    Instance()._statisticsQuery->EndQuery(commandList);
+    Instance()._statisticsQuery->ResolveQueryData(commandList);
 }
 
-const D3D12_QUERY_DATA_PIPELINE_STATISTICS& DebugInfo::GetPipelineStatisctics()
+const rhi::PipelineStatistics& DebugInfo::GetPipelineStatisctics()
 {
-    return Instance()._statisticsQuery.GetStatistics();
+    return Instance()._statisticsQuery->GetStatistics();
 }
 
 UINT DebugInfo::GetFPS()
@@ -115,7 +115,7 @@ double DebugInfo::GetRenderCPUTime()
     return Instance()._renderTime;
 }
 
-DebugInfo::DebugInfo()
+DebugInfo::DebugInfo(rhi::Device* device)
     : _fps(0)
     , _msPerFrame(0)
     , _totalRenderFrames(0)
@@ -123,7 +123,7 @@ DebugInfo::DebugInfo()
     , _totalUpdateFrames(0)
     , _totalUpdateTime(0.0)
 {
-    _statisticsQuery.Create();
+    _statisticsQuery = device->CreateStatisticsQuery("Debug Info");
 }
 
 DebugInfo::~DebugInfo()

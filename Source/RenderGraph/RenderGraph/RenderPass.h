@@ -73,8 +73,8 @@ namespace rg
         using SetupFunc = std::function<void(RenderPassBuilder&)>;
         using ExecuteFunc = std::function<void(RenderContext&, ITask*)>;
 
-        RenderPass(const std::string& name, RenderPassType type = RenderPassType::Graphics);
-        RenderPass(const std::string& name, SetupFunc&& setup, ExecuteFunc&& execute, RenderPassType type = RenderPassType::Graphics);
+        RenderPass(rhi::Device* device, const std::string& name, RenderPassType type = RenderPassType::Graphics);
+        RenderPass(rhi::Device* device, const std::string& name, SetupFunc&& setup, ExecuteFunc&& execute, RenderPassType type = RenderPassType::Graphics);
         RenderPass(const RenderPass&) = delete;
         RenderPass(RenderPass&&) = default;
         ~RenderPass() = default;
@@ -93,6 +93,8 @@ namespace rg
 
         std::function<void(RenderPassBuilder&)> _setupFunc;
         std::function<void(RenderContext&, ITask*)> _executeFunc;
+
+        rhi::Device* _device;
     };
 } // namespace rg
 

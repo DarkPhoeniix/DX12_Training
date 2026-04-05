@@ -12,8 +12,8 @@
 
 namespace render
 {
-	DebugBoundingVolumePass::DebugBoundingVolumePass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-		: RenderPass<DebugBoundingVolumePassData>("debug_volumes_pass", rg::RenderPassType::Graphics)
+	DebugBoundingVolumePass::DebugBoundingVolumePass(rhi::Device* device, std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
+		: RenderPass<DebugBoundingVolumePassData>(device, "debug_volumes_pass", rg::RenderPassType::Graphics)
 		, _scene(scene)
 		, _camera(camera)
 	{
@@ -25,24 +25,18 @@ namespace render
 		_data.Depth = builder.DepthStencilWrite("depth_target");
 	}
 
-	void DebugBoundingVolumePass::Execute(rg::RenderContext& context, TaskGPU& task)
+	void DebugBoundingVolumePass::Execute(rg::RenderContext& context, rg::ITask* task)
 	{
-		dx12::CommandList& commandList = *task.GetCommandLists().front();
-		commandList.SetName("debug_volumes_cmd_list");
+		rhi::CommandList* commandList = task->GetCommandList();
 
 		{
-            PIXScopedEvent(commandList.GetDXCommandList().Get(), 9, "Debug View Pass - Bounding Volumes");
+            GPU_SCOPED_EVENT(commandList, "Debug View Pass - Bounding Volumes", 9);
 
-			std::shared_ptr<dx12::Resource> target = context.GetResource(_data.Target);
-			std::shared_ptr<dx12::Resource> depth = context.GetResource(_data.Depth);
+			rhi::CPUDescriptor targetHandle = context.GetDescriptor(_data.Target, rhi::ResourceViewType::RTV);
+			rhi::CPUDescriptor depthHandle = context.GetDescriptor(_data.Depth, rhi::ResourceViewType::DSV);
 
-			DescriptorHandle rtv = context.GetStaticResourceHandle(target->GetAsRTV());
-			DescriptorHandle dsv = context.GetStaticResourceHandle(depth->GetAsDSV());
-
-			context.BindBindlessTable(commandList);
-
-			commandList.SetViewport(_camera->GetViewport().GetDXViewport(), _camera->GetViewport().GetScissorRectangle());
-			commandList.SetRenderTarget(&rtv.CpuHandle, &dsv.CpuHandle);
+			commandList->SetViewport(_camera->GetViewport().GetDXViewport(), _camera->GetViewport().GetScissorRectangle());
+			commandList->SetRenderTarget(&targetHandle, &depthHandle);
 
 			auto lights = _scene->FilterNodesByComponent("Light");
 			for (auto& entity : lights)
@@ -53,10 +47,10 @@ namespace render
 				switch (light->Type)
 				{
 				case scene::LightType::Point:
-					DrawHelper::DrawSphere(commandList, *context.GetFrame(), light->Range, t->Transform.r[3], light->Color);
+					DrawHelper::DrawSphere(commandList, light->Range, t->Transform.r[3], light->Color);
 					break;
 				case scene::LightType::Spot:
-					DrawHelper::DrawCone(commandList, *context.GetFrame(), light->OuterAngle, light->Range, t->Transform.r[3], light->Direction, light->Color);
+					DrawHelper::DrawCone(commandList, light->OuterAngle, light->Range, t->Transform.r[3], light->Direction, light->Color);
 					break;
 				}
 			}
@@ -67,10 +61,10 @@ namespace render
 				std::shared_ptr<scene::Mesh> mesh = entity->GetComponentAs<scene::Mesh>("Mesh");
 				scene::AABBVolume aabb = mesh->GlobalAABB;
 
-				DrawHelper::DrawBox(commandList, *context.GetFrame(), aabb.Min, aabb.Max, DirectX::XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f));
+				DrawHelper::DrawBox(commandList, aabb.Min, aabb.Max, DirectX::XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f));
 			}
 		}
 
-		commandList.Close();
+		commandList->Close();
 	}
 } // namespace render

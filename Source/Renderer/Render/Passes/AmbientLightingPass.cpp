@@ -23,8 +23,8 @@ namespace
 
 namespace render
 {
-	AmbientLightingPass::AmbientLightingPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-		: RenderPass<AmbientLightingPassData>("ambient_lighting_pass", rg::RenderPassType::Compute)
+	AmbientLightingPass::AmbientLightingPass(rhi::Device* device, std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
+		: RenderPass<AmbientLightingPassData>(device, "ambient_lighting_pass", rg::RenderPassType::Compute)
 		, _scene(scene)
 		, _camera(camera)
         , _useIBL(RenderSettings::UseIBL())
@@ -32,93 +32,63 @@ namespace render
         bool hasSkybox = _scene->FindNodeByComponentName("Skybox") != nullptr;
 		if (_useIBL && hasSkybox)
 		{
-			_ambientLightingPipeline.Parse("PipelineDescriptions\\AmbientLightingIBLPipeline.tech");
+			_ambientLightingPipeline = _device->CreatePipelineState("PipelineDescriptions\\AmbientLightingIBLPipeline.tech");
 		}
 		else
 		{
-			_ambientLightingPipeline.Parse("PipelineDescriptions\\AmbientLightingPipeline.tech");
+			_ambientLightingPipeline = _device->CreatePipelineState("PipelineDescriptions\\AmbientLightingPipeline.tech");
 		}
 	}
 
 	void AmbientLightingPass::Setup(rg::RenderPassBuilder& builder)
 	{
-		dx12::ResourceDescription targetDesc;
+		rhi::TextureDescription targetDesc =
 		{
-			targetDesc.SetSize(_camera->GetViewport().GetSize());
-			targetDesc.SetFormat(DXGI_FORMAT_R16G16B16A16_FLOAT);
-			targetDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::Unordered);
-		}
+			.Width = _camera->GetViewport().GetSize().x,
+			.Height = _camera->GetViewport().GetSize().y,
+			.Format = rhi::Format::R16G16B16A16_FLOAT,
+			.Flags = rhi::ResourceFlags::AllowUnorderedAccess
+		};
         builder.DeclareTexture("hdr_target", targetDesc);
 
         _data.HDRTarget				= builder.WriteTexture("hdr_target");
         _data.AlbedoMetallic		= builder.ReadTexture("albedo_metallic_target");
         _data.NormalRoughness		= builder.ReadTexture("normal_roughness_target");
         _data.Depth					= builder.DepthStencilRead("depth_target");
-        _data.DiffuseIrradianceMap	= _useIBL ? builder.ReadTexture("diffuse_irradiance_map")		: rg::RGResourceId::InvalidID;
-        _data.PreFilteredMap		= _useIBL ? builder.ReadTexture("prefiltered_environment_map")	: rg::RGResourceId::InvalidID;
-        _data.BRDF_LUT				= _useIBL ? builder.ReadTexture("brdf_lut")						: rg::RGResourceId::InvalidID;
+        _data.DiffuseIrradianceMap	= _useIBL ? builder.ReadTexture("diffuse_irradiance_map")		: rg::RGTextureId::InvalidID;
+        _data.PreFilteredMap		= _useIBL ? builder.ReadTexture("prefiltered_environment_map")	: rg::RGTextureId::InvalidID;
+        _data.BRDF_LUT				= _useIBL ? builder.ReadTexture("brdf_lut")						: rg::RGTextureId::InvalidID;
 	}
 
-	void AmbientLightingPass::Execute(rg::RenderContext& context, TaskGPU& task)
+	void AmbientLightingPass::Execute(rg::RenderContext& context, rg::ITask* task)
 	{
-		dx12::CommandList& commandList = *task.GetCommandLists().front();
-		commandList.SetName("ambient_pass_cmd_list");
+		rhi::CommandList* commandList = task->GetCommandList();
 
 		{
-			PIXScopedEvent(commandList.GetDXCommandList().Get(), 3, "Ambient Lighting Pass");
+			GPU_SCOPED_EVENT(commandList, "Ambient Lighting Pass", 3);
 
-			std::shared_ptr<dx12::Resource> hdrTarget = context.GetResource(_data.HDRTarget);
-			std::shared_ptr<dx12::Resource> albedoMetallic = context.GetResource(_data.AlbedoMetallic);
-			std::shared_ptr<dx12::Resource> normalRoughness = context.GetResource(_data.NormalRoughness);
-			std::shared_ptr<dx12::Resource> depth = context.GetResource(_data.Depth);
-			std::shared_ptr<dx12::Resource> diffuseIrradianceMap = context.GetResource(_data.DiffuseIrradianceMap);
-			std::shared_ptr<dx12::Resource> preFilteredEnv = context.GetResource(_data.PreFilteredMap);
-			std::shared_ptr<dx12::Resource> brdfLUT = context.GetResource(_data.BRDF_LUT);
-
-			DescriptorHandle hdrTargetHandle			= context.GetStaticResourceHandle(hdrTarget->GetAsUAV());
-			DescriptorHandle albedoMetallicHandle		= context.GetStaticResourceHandle(albedoMetallic->GetAsSRV());
-			DescriptorHandle normalSpecularHandle		= context.GetStaticResourceHandle(normalRoughness->GetAsSRV());
-			DescriptorHandle depthHandle				= context.GetStaticResourceHandle(depth->GetAsSRV());
-			DescriptorHandle diffuseIrradianceMapHandle = {};
-			if (diffuseIrradianceMap)
-			{
-				diffuseIrradianceMapHandle = context.GetStaticResourceHandle(diffuseIrradianceMap->GetAsSRV());
-			}
-			DescriptorHandle preFilteredEnvHandle = {};
-			if (preFilteredEnv)
-			{
-				preFilteredEnvHandle = context.GetStaticResourceHandle(preFilteredEnv->GetAsSRV());
-			}
-			DescriptorHandle brdfLUTHandle = {};
-			if (brdfLUT)
-			{
-				brdfLUTHandle = context.GetStaticResourceHandle(brdfLUT->GetAsSRV());
-			}
-
-			context.BindBindlessTable(commandList);
-			commandList.SetPipelineState(_ambientLightingPipeline);
+			commandList->SetComputePipelineState(_ambientLightingPipeline.get());
 
 			PassConstants passCB =
 			{
-				.DepthTextureIndex = depthHandle.Index,
-				.AlbedoMetallicTextureIndex = albedoMetallicHandle.Index,
-				.NormalRoughnessTextureIndex = normalSpecularHandle.Index,
-				.DiffuseIrradianceCubemapIndex = diffuseIrradianceMapHandle.Index,
-				.PreFilteredEnvironmentCubemapIndex = preFilteredEnvHandle.Index,
-				.BRDFLUTTextureIndex = brdfLUTHandle.Index,
-				.TargetTextureIndex = hdrTargetHandle.Index
+				.DepthTextureIndex = context.GetBindlessIndex(_data.Depth, rhi::ResourceViewType::SRV),
+				.AlbedoMetallicTextureIndex = context.GetBindlessIndex(_data.AlbedoMetallic, rhi::ResourceViewType::SRV),
+				.NormalRoughnessTextureIndex = context.GetBindlessIndex(_data.NormalRoughness, rhi::ResourceViewType::SRV),
+				.DiffuseIrradianceCubemapIndex = context.GetBindlessIndex(_data.DiffuseIrradianceMap, rhi::ResourceViewType::SRV),
+				.PreFilteredEnvironmentCubemapIndex = context.GetBindlessIndex(_data.PreFilteredMap, rhi::ResourceViewType::SRV),
+				.BRDFLUTTextureIndex = context.GetBindlessIndex(_data.BRDF_LUT, rhi::ResourceViewType::SRV),
+				.TargetTextureIndex = context.GetBindlessIndex(_data.HDRTarget, rhi::ResourceViewType::UAV),
 			};
 
-			commandList.SetCBV(0, context.GetFrame()->GetBuffer()->OffsetGPU());
-			commandList.SetConstants(1, 7, &passCB);
+			commandList->SetComputeConstants(1, 7, &passCB);
 
 			DirectX::XMUINT2 viewportSize = _camera->GetViewport().GetSize();
 			int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 8.0f);
 			int yThreadGroups = (uint32_t)std::ceilf(viewportSize.y / 8.0f);
 
-			commandList.Dispatch(xThreadGroups, yThreadGroups);
+			commandList->Dispatch(xThreadGroups, yThreadGroups);
 		}
 
-		commandList.Close();
+		commandList->Close();
 	}
 } // namespace render

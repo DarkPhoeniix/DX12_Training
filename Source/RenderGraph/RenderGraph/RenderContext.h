@@ -18,10 +18,11 @@ namespace rg
         std::shared_ptr<rhi::Buffer> GetBuffer(RGBufferId id) const;
         std::shared_ptr<rhi::Texture> GetTexture(RGTextureId id) const;
 
-        rhi::CPUDescriptor GetCPUDescriptor(RGBufferId id, rhi::ResourceViewType viewType) const;
-        rhi::GPUDescriptor GetGPUDescriptor(RGBufferId id, rhi::ResourceViewType viewType) const;
-        rhi::CPUDescriptor GetCPUDescriptor(RGTextureId id, rhi::ResourceViewType viewType) const;
-        rhi::GPUDescriptor GetGPUDescriptor(RGTextureId id, rhi::ResourceViewType viewType) const;
+        std::uint32_t GetBindlessIndex(RGBufferId id, rhi::ResourceViewType viewType) const;
+        std::uint32_t GetBindlessIndex(RGTextureId id, rhi::ResourceViewType viewType) const;
+
+        rhi::CPUDescriptor GetDescriptor(RGBufferId id, rhi::ResourceViewType viewType) const;
+        rhi::CPUDescriptor GetDescriptor(RGTextureId id, rhi::ResourceViewType viewType) const;
 
         void SetGPUProfiler(Profiler* gpuProfiler);
         Profiler* GetGPUProfiler() const;

@@ -1,7 +1,7 @@
 {
 	"Type": "FXAA_ResolveWork",
 
-	"IsGraphicsPipeline": false,
+	"PipelineType": "Compute",
 
 	"CS": "Shaders\\FXAA_Resolve_cs.cso"
 }

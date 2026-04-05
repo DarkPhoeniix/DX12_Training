@@ -1,45 +1,42 @@
 #pragma once
 
 #include "GPUCrashTracker/ICommandListCrashContext.h"
+#include "RenderGraph/Interfaces.h"
 
-namespace dx12
+namespace rhi
 {
     class CommandList;
     class Fence;
-} // namespace dx12
+} // namespace rhi
 
-class TaskGPU
+class TaskGPU : public rg::ITask
 {
 public:
-    TaskGPU();
+    TaskGPU(rhi::Device* device);
     ~TaskGPU();
 
-    void AddCommandList(dx12::CommandList* commandList);
-    std::vector<dx12::CommandList*> GetCommandLists() const;
-    dx12::CommandList& GetCommandList();
+    void AddCommandList(rhi::CommandList* commandList);
+    rhi::CommandList* GetCommandList() override;
 
-    void SetCommandQueue(ComPtr<ID3D12CommandQueue> commandQueue);
-    ComPtr<ID3D12CommandQueue> GetCommandQueue() const;
-
-    void SetFence(dx12::Fence* fence);
-    dx12::Fence* GetFence() const;
-    ID3D12Fence* GetDXFence() const;
+    void SetFence(rhi::Fence* fence);
+    rhi::Fence* GetFence() const;
     UINT64 GetFenceValue() const;
 
     void AddDependency(const std::string& taskName);
     std::vector<std::string> GetDependencies() const;
 
-    void SetName(const std::string& name);
-    const std::string& GetName() const;
+    rhi::CommandListType GetType() const;
+
+    void SetName(const std::string& name) override;
+    const std::string& GetName() const override;
 
     std::shared_ptr<tracking::ICommandListCrashContext> GetCrashContext();
 
 private:
-    std::vector<dx12::CommandList*> _commandLists;
-    ComPtr<ID3D12CommandQueue> _commandQueue;
+    std::vector<rhi::CommandList*> _commandLists;
     std::shared_ptr<tracking::ICommandListCrashContext> _commandListCrashContext;
 
-    dx12::Fence* _fence = nullptr;
+    rhi::Fence* _fence = nullptr;
     std::vector<std::string> _dependencies;
 
     std::string _name;

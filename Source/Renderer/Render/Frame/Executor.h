@@ -2,28 +2,34 @@
 
 #include "RHI/CommandList.h"
 
-namespace dx12
+namespace rhi
 {
     class PipelineState;
-} // namespace core
+} // namespace rhi
 
 class Executor
 {
 public:
-    Executor();
+    Executor(rhi::Device* device);
+    Executor(const Executor&) = delete;
+    Executor(Executor&&) = default;
     ~Executor();
 
-    void Allocate(D3D12_COMMAND_LIST_TYPE type);
-    void Reset(dx12::PipelineState* rootSignature = nullptr);
+    Executor& operator=(const Executor&) = delete;
+    Executor& operator=(Executor&&) = default;
+
+    void Allocate(rhi::CommandListType type);
+    void Reset(rhi::PipelineState* pipelineState = nullptr);
 
     void SetFree(bool isFree);
     bool IsFree() const;
 
-    dx12::CommandList* GetCommandList();
+    rhi::CommandList* GetCommandList();
 
 private:
-    ComPtr<ID3D12CommandAllocator> _allocator;
-    dx12::CommandList _commandList;
+    std::unique_ptr<rhi::CommandList> _commandList;
 
     bool _isFree;
+
+    rhi::Device* _device;
 };

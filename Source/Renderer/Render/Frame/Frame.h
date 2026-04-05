@@ -15,31 +15,31 @@ namespace dx12
 class Frame
 {
 public:
-    Frame();
+    Frame(rhi::Device* device);
     ~Frame();
 
-    void Init(const DirectX::XMUINT2& size);
+    void Init(std::uint32_t width, std::uint32_t height);
 
-    TaskGPU* CreateTask(D3D12_COMMAND_LIST_TYPE type, dx12::PipelineState* rootSignature = nullptr);
+    TaskGPU* CreateTask(rhi::CommandListType type, rhi::PipelineState* rootSignature = nullptr);
 
     void WaitCPU();
     void ResetGPU();
 
-    void Resize(const DirectX::XMUINT2& size);
+    void Resize(std::uint32_t width, std::uint32_t height);
 
     void SetAllocatorPool(AllocatorPool* allocatorPool);
     void SetFencePool(FencePool* fencePool);
 
-    void SetSyncPoint(dx12::Fence* syncPoint);
-    dx12::Fence* GetSyncPoint() const;
+    void SetSyncPoint(rhi::Fence* syncPoint);
+    rhi::Fence* GetSyncPoint() const;
 
     TaskGPU* GetTask(const std::string& name);
     std::vector<TaskGPU> GetTasks() const;
 
-    std::shared_ptr<dx12::Resource> GetTargetTexture();
+    std::shared_ptr<rhi::Texture> GetTargetTexture();
 
-    void SetBuffer(std::shared_ptr<dx12::Resource> buffer);
-    std::shared_ptr<dx12::Resource> GetBuffer() const;
+    void SetBuffer(std::shared_ptr<rhi::Buffer> buffer);
+    std::shared_ptr<rhi::Buffer> GetBuffer() const;
 
     unsigned int Index;
     Frame* Prev;
@@ -51,8 +51,10 @@ private:
 
     AllocatorPool* _allocatorPool;
     FencePool* _fencePool;
-    dx12::Fence* _syncPoint;
+    rhi::Fence* _syncPoint;
 
-    std::shared_ptr<dx12::Resource> _targetTexture;
-    std::shared_ptr<dx12::Resource> _frameBuffer;
+    std::shared_ptr<rhi::Texture> _targetTexture;
+    std::shared_ptr<rhi::Buffer> _frameBuffer;
+
+    rhi::Device* _device;
 };

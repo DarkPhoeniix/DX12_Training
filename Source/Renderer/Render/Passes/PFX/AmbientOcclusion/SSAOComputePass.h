@@ -20,17 +20,17 @@ namespace render
 	class SSAOComputePass : public rg::RenderPass<SSAOComputePassData>
 	{
 	public:
-		SSAOComputePass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
+		SSAOComputePass(rhi::Device* device, std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
 
 		// Inherited via RenderPass
 		void Setup(rg::RenderPassBuilder& builder) override;
-		void Execute(rg::RenderContext& context, TaskGPU& task) override;
+		void Execute(rg::RenderContext& context, rg::ITask* task) override;
 
 	private:
-		dx12::PipelineState _SSAOPipeline;
+		std::unique_ptr<rhi::PipelineState> _SSAOPipeline;
 
-		std::shared_ptr<dx12::Resource> _noise;
-		std::shared_ptr<dx12::Resource> _kernels;
+		std::shared_ptr<rhi::Buffer> _noise;
+		std::shared_ptr<rhi::Buffer> _kernels;
 
 		std::shared_ptr<scene::Scene> _scene;
 		scene::Camera* _camera;

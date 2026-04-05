@@ -107,6 +107,11 @@ namespace rhi::d3d12
         return texture;
     }
 
+    void D3D12Heap::Reset()
+    {
+        NOT_IMPLEMENTED();
+    }
+
     void* D3D12Heap::GetNative() const
     {
         return static_cast<void*>(_heap.Get());

@@ -21,31 +21,40 @@ public:
     TextureManager& operator=(const TextureManager& other) = delete;
     TextureManager& operator=(TextureManager&& other) noexcept = default;
 
-	static void Create();
+	static void Create(rhi::Device* device);
 	static void Destroy();
 	static TextureManager& Get();
 
 	[[nodiscard]] TextureHandle EnqueueTexture(const std::string& filepath);
-	void UploadTextures(dx12::CommandList& commandList);
+	void UploadTextures(rhi::CommandList* commandList);
 
     bool AreTexturesPendingUpload() const;
 
     void ClearIntermediates();
     void Clear();
 
-    [[nodiscard]] TextureHandle AddTexture(std::shared_ptr<dx12::Resource> texture);
-    [[nodiscard]] std::shared_ptr<dx12::Resource> GetTexture(TextureHandle handle) const;
+    [[nodiscard]] TextureHandle AddTexture(std::shared_ptr<rhi::Texture> texture);
+    [[nodiscard]] std::shared_ptr<rhi::Texture> GetTexture(TextureHandle handle) const;
 
 private:
-	TextureManager();
+	TextureManager(rhi::Device* device);
 
-	std::unordered_map<TextureHandle, std::shared_ptr<dx12::Resource>> _handleToTexture;
+	struct UploadInfo
+	{
+		TextureHandle Handle;
+		std::string Name;
+		rhi::TextureDescription Description;
+	};
+
+	std::unordered_map<TextureHandle, std::shared_ptr<rhi::Texture>> _handleToTexture;
 	TextureHandle _nextTextureHandle;
 
-    std::unordered_map<std::string, TextureHandle> _uploadQueue; // TODO: use set to remove duplicates
+    std::unordered_map<std::string, UploadInfo> _uploadQueue; // TODO: use set to remove duplicates
 
-    dx12::Heap _texturesHeap;	// TODO: this heap should be bigger and reused for multiple texture uploads
-	std::unordered_map<TextureHandle, std::shared_ptr<dx12::Resource>> _intermediateResources;
+    std::unique_ptr<rhi::Heap> _texturesHeap;	// TODO: this heap should be bigger and reused for multiple texture uploads
+	std::unordered_map<TextureHandle, std::shared_ptr<rhi::Buffer>> _intermediateResources;
+
+	rhi::Device* _device;
 
 	mutable std::mutex _queueMutex;
 	mutable std::shared_mutex _textureMutex;

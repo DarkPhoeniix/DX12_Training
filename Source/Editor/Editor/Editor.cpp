@@ -2,9 +2,6 @@
 
 #include "Editor.h"
 
-#include "CommandList.h"
-#include "SwapChain.h"
-
 #include "Core/DescriptorHeapManager.h"
 #include "Scene/Scene.h"
 #include "Scene/Entity/Components/Camera.h"
@@ -15,6 +12,9 @@
 #include "Editor/Render/GUIPass.h"
 
 #include "RenderGraph/RenderGraph.h"
+
+#include "RHI/CommandList.h"
+#include "RHI/SwapChain.h"
 
 #include <commdlg.h>
 
@@ -32,18 +32,21 @@ LRESULT GUI_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 namespace gui
 {
-    Editor::Editor(HWND windowHandle)
+    Editor::Editor(rhi::Device* device, HWND windowHandle)
         : _windowHandle(windowHandle)
         , _scene(nullptr)
         , _selectedEntity(nullptr)
+        , _device(device)
     {
         {
-            dx12::DescriptorHeapDescription desc;
-            desc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-            desc.SetNumDescriptors(1);
-            desc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
+            rhi::DescriptorHeapDescription desc =
+            {
+                .Type = rhi::DescriptorHeapType::CBV_SRV_UAV,
+                .NumDescriptors = 1,
+                .ShaderVisible = true
+            };
 
-            _descriptorHeap.Create(desc);
+            _descriptorHeap = _device->CreateDescriptorHeap(desc);
         }
 
         // Setup Dear ImGui context
@@ -54,14 +57,19 @@ namespace gui
 
         DescriptorHandle handle = DescriptorHeapManager::Get().AllocateStatic(DescriptorHeapType::Static);
 
+        ID3D12Device* d3d12Device = static_cast<ID3D12Device*>(_device->GetNative());
+        ID3D12DescriptorHeap* d3d12DescriptorHeap = static_cast<ID3D12DescriptorHeap*>(_descriptorHeap->GetNative());
+        D3D12_CPU_DESCRIPTOR_HANDLE heapStartCPUHandle = { _descriptorHeap->GetHeapStartCPUHandle().ptr };
+        D3D12_GPU_DESCRIPTOR_HANDLE heapStartGPUHandle = { _descriptorHeap->GetHeapStartGPUHandle().ptr };
+
         // Setup Platform/Renderer backends
         ImGui_ImplWin32_Init(windowHandle);
-        ImGui_ImplDX12_Init(dx12::Device::GetDXDevice().Get(),
-            dx12::BACK_BUFFER_COUNT,
+        ImGui_ImplDX12_Init(d3d12Device,
+            rhi::BACK_BUFFER_COUNT,
             DXGI_FORMAT_R8G8B8A8_UNORM,
-            _descriptorHeap.GetDXDescriptorHeap().Get(),
-            _descriptorHeap.GetHeapStartCPUHandle(),
-            _descriptorHeap.GetHeapStartGPUHandle());
+            d3d12DescriptorHeap,
+            heapStartCPUHandle,
+            heapStartGPUHandle);
 
         ImGuiStyle& style = ImGui::GetStyle();
 
@@ -186,7 +194,7 @@ namespace gui
 
     void Editor::AddGUIRenderPass()
     {
-        _renderGraph->AddPass(std::make_shared<render::GUIPass>(GetPtr()));
+        _renderGraph->AddPass(std::make_shared<render::GUIPass>(_device, GetPtr()));
         _renderGraph->Compile();
     }
 
@@ -269,11 +277,13 @@ namespace gui
         ImGui::End();
     }
 
-    void Editor::Render(dx12::CommandList& commandList)
+    void Editor::Render(rhi::CommandList* commandList)
     {
         ImGui::Render();
-        commandList.SetDescriptorHeaps({ _descriptorHeap.GetDXDescriptorHeap().Get()});
-        ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList.GetDXCommandList().Get());
+        commandList->SetDescriptorHeaps(_descriptorHeap.get());
+
+        ID3D12GraphicsCommandList* d3d12CommandList = static_cast<ID3D12GraphicsCommandList*>(commandList->GetNative());
+        ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), d3d12CommandList);
     }
 
     void Editor::SetScene(std::shared_ptr<scene::Scene> scene)

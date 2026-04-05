@@ -1,7 +1,7 @@
 {
 	"Type": "IBL_PreFilterEnvironmentMap",
 
-	"IsGraphicsPipeline": false,
+	"PipelineType": "Compute",
 
 	"CS": "Shaders\\IBL_PreFilterEnvironmentMap_cs.cso"
 }

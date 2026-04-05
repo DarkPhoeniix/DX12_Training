@@ -7,12 +7,12 @@
 
 namespace render
 {
-	DebugEmissiveViewPass::DebugEmissiveViewPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-		: RenderPass<DebugEmissiveViewPassData>("debug_emissive_pass", rg::RenderPassType::Graphics)
+	DebugEmissiveViewPass::DebugEmissiveViewPass(rhi::Device* device, std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
+		: RenderPass<DebugEmissiveViewPassData>(device, "debug_emissive_pass", rg::RenderPassType::Graphics)
 		, _scene(scene)
 		, _camera(camera)
 	{
-		_debugEmissiveViewPipeline.Parse("PipelineDescriptions\\DebugEmissiveView.tech");
+		_debugEmissiveViewPipeline = _device->CreatePipelineState("PipelineDescriptions\\DebugEmissiveView.tech");
 	}
 
 	void DebugEmissiveViewPass::Setup(rg::RenderPassBuilder& builder)
@@ -21,39 +21,31 @@ namespace render
 		_data.Target = builder.RenderTarget("render_target");
 	}
 
-	void DebugEmissiveViewPass::Execute(rg::RenderContext& context, TaskGPU& task)
+	void DebugEmissiveViewPass::Execute(rg::RenderContext& context, rg::ITask* task)
 	{
-		dx12::CommandList& commandList = *task.GetCommandLists().front();
-		commandList.SetName("debug_emissive_cmd_list");
+		rhi::CommandList* commandList = task->GetCommandList();
 
 		{
-			PIXScopedEvent(commandList.GetDXCommandList().Get(), 9, "Debug View Pass - Emissive");
+			GPU_SCOPED_EVENT(commandList, "Debug View Pass - Emissive", 9);
 
-			std::shared_ptr<dx12::Resource> emission = context.GetResource(_data.Emission);
-			std::shared_ptr<dx12::Resource> target = context.GetResource(_data.Target);
+			rhi::CPUDescriptor targetHandle = context.GetDescriptor(_data.Emission, rhi::ResourceViewType::RTV);
 
-			DescriptorHandle emissionHandle = context.GetStaticResourceHandle(emission->GetAsSRV());
-			DescriptorHandle renderTargetHandle = context.GetStaticResourceHandle(target->GetAsRTV());
+			commandList->SetGraphicsPipelineState(_debugEmissiveViewPipeline.get());
 
-			context.BindBindlessTable(commandList);
+			commandList->SetViewport(_camera->GetViewport().GetDXViewport(), _camera->GetViewport().GetScissorRectangle());
+			commandList->SetRenderTarget(&targetHandle, nullptr);
 
-			commandList.SetPipelineState(_debugEmissiveViewPipeline);
+			commandList->SetPrimitiveTopology(rhi::PrimitiveTopology::TriangleList);
 
-			commandList.SetViewport(_camera->GetViewport().GetDXViewport(), _camera->GetViewport().GetScissorRectangle());
-			commandList.SetRenderTarget(&renderTargetHandle.CpuHandle, nullptr);
-
-			commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-			commandList.SetCBV(0, context.GetFrame()->GetBuffer()->OffsetGPU());
 			struct
 			{
 				std::uint32_t SourceTextureIndex;
-			} PassConstants = { .SourceTextureIndex = emissionHandle.Index };
-			commandList.SetConstants(1, 1, &PassConstants);
+			} PassConstants = { .SourceTextureIndex = context.GetBindlessIndex(_data.Emission, rhi::ResourceViewType::SRV) };
+			commandList->SetGraphicsConstants(1, 1, &PassConstants);
 
-			commandList.Draw(3);
+			commandList->Draw(3);
 		}
 
-		commandList.Close();
+		commandList->Close();
 	}
 } // namespace render

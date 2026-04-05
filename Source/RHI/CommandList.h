@@ -122,7 +122,8 @@ namespace rhi
                                        uint32_t sourceOffset = 0, 
                                        uint32_t destinationOffset = 0) = 0;
 
-        virtual void SetPipelineState(PipelineState* pipelineState) = 0;
+        virtual void SetGraphicsPipelineState(PipelineState* pipelineState) = 0;
+        virtual void SetComputePipelineState(PipelineState* pipelineState) = 0;
         virtual void SetPrimitiveTopology(PrimitiveTopology primitiveTopology) = 0;
         virtual void SetVertexBuffer(std::uint32_t slot, const VertexBufferView& vertexBufferView) = 0;
         virtual void SetIndexBuffer(const IndexBufferView& indexBufferView) = 0;
@@ -159,16 +160,27 @@ namespace rhi
 
         virtual void SetDescriptorHeaps(rhi::DescriptorHeap* descriptorHeap) = 0;
         virtual void SetDescriptorHeaps(const std::vector<DescriptorHeap*>& descriptorHeaps) = 0;
-        virtual void SetConstant(std::uint32_t index, std::uint32_t data, std::uint32_t offset = 0) = 0;
-        virtual void SetConstants(std::uint32_t index, std::uint32_t numValues, const void* data, std::uint32_t offset = 0) = 0;
-        virtual void SetCBV(std::uint32_t index, std::uint64_t bufferLocation) = 0;
-        virtual void SetSRV(std::uint32_t index, std::uint64_t bufferLocation) = 0;
-        virtual void SetUAV(std::uint32_t index, std::uint64_t bufferLocation) = 0;
-        virtual void SetDescriptorTable(std::uint32_t index, GPUDescriptor descriptor) = 0;
+        virtual void SetGraphicsConstant(std::uint32_t index, std::uint32_t data, std::uint32_t offset = 0) = 0;
+        virtual void SetComputeConstant(std::uint32_t index, std::uint32_t data, std::uint32_t offset = 0) = 0;
+        virtual void SetGraphicsConstants(std::uint32_t index, std::uint32_t numValues, const void* data, std::uint32_t offset = 0) = 0;
+        virtual void SetComputeConstants(std::uint32_t index, std::uint32_t numValues, const void* data, std::uint32_t offset = 0) = 0;
+        virtual void SetGraphicsCBV(std::uint32_t index, std::uint64_t bufferLocation) = 0;
+        virtual void SetComputeCBV(std::uint32_t index, std::uint64_t bufferLocation) = 0;
+        virtual void SetGraphicsSRV(std::uint32_t index, std::uint64_t bufferLocation) = 0;
+        virtual void SetComputeSRV(std::uint32_t index, std::uint64_t bufferLocation) = 0;
+        virtual void SetGraphicsUAV(std::uint32_t index, std::uint64_t bufferLocation) = 0;
+        virtual void SetComputeUAV(std::uint32_t index, std::uint64_t bufferLocation) = 0;
+        virtual void SetGraphicsDescriptorTable(std::uint32_t index, GPUDescriptor descriptor) = 0;
+        virtual void SetComputeDescriptorTable(std::uint32_t index, GPUDescriptor descriptor) = 0;
 
         virtual void Reset(PipelineState* pipelineState) = 0;
 
         virtual void Close() = 0;
+
+        virtual void BeginEvent(const char* name, std::uint8_t color = 0) = 0;
+        virtual void EndEvent() = 0;
+
+        virtual void SetMarker(const char* name, std::uint8_t color = 0) = 0;
 
         virtual void* GetNative() const = 0;
     };

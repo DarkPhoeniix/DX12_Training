@@ -68,7 +68,8 @@ namespace rhi::d3d12
                                uint32_t sourceOffset = 0,
                                uint32_t destinationOffset = 0) override;
 
-        void SetPipelineState(rhi::PipelineState* pipelineState) override;
+        void SetGraphicsPipelineState(rhi::PipelineState* pipelineState) override;
+        void SetComputePipelineState(rhi::PipelineState* pipelineState) override;
         void SetPrimitiveTopology(rhi::PrimitiveTopology primitiveTopology) override;
         void SetVertexBuffer(std::uint32_t slot, const rhi::VertexBufferView& vertexBufferView) override;
         void SetIndexBuffer(const rhi::IndexBufferView& indexBufferView) override;
@@ -105,16 +106,27 @@ namespace rhi::d3d12
 
         void SetDescriptorHeaps(rhi::DescriptorHeap* descriptorHeap) override;
         void SetDescriptorHeaps(const std::vector<rhi::DescriptorHeap*>& descriptorHeaps) override;
-        void SetConstant(std::uint32_t index, std::uint32_t data, std::uint32_t offset = 0) override;
-        void SetConstants(std::uint32_t index, std::uint32_t numValues, const void* data, std::uint32_t offset = 0) override;
-        void SetCBV(std::uint32_t index, std::uint64_t bufferLocation) override;
-        void SetSRV(std::uint32_t index, std::uint64_t bufferLocation) override;
-        void SetUAV(std::uint32_t index, std::uint64_t bufferLocation) override;
-        void SetDescriptorTable(std::uint32_t index, rhi::GPUDescriptor descriptor) override;
+        void SetGraphicsConstant(std::uint32_t index, std::uint32_t data, std::uint32_t offset = 0) override;
+        void SetComputeConstant(std::uint32_t index, std::uint32_t data, std::uint32_t offset = 0) override;
+        void SetGraphicsConstants(std::uint32_t index, std::uint32_t numValues, const void* data, std::uint32_t offset = 0) override;
+        void SetComputeConstants(std::uint32_t index, std::uint32_t numValues, const void* data, std::uint32_t offset = 0) override;
+        void SetGraphicsCBV(std::uint32_t index, std::uint64_t bufferLocation) override;
+        void SetComputeCBV(std::uint32_t index, std::uint64_t bufferLocation) override;
+        void SetGraphicsSRV(std::uint32_t index, std::uint64_t bufferLocation) override;
+        void SetComputeSRV(std::uint32_t index, std::uint64_t bufferLocation) override;
+        void SetGraphicsUAV(std::uint32_t index, std::uint64_t bufferLocation) override;
+        void SetComputeUAV(std::uint32_t index, std::uint64_t bufferLocation) override;
+        void SetGraphicsDescriptorTable(std::uint32_t index, rhi::GPUDescriptor descriptor) override;
+        void SetComputeDescriptorTable(std::uint32_t index, rhi::GPUDescriptor descriptor) override;
 
         void Reset(rhi::PipelineState* pipelineState) override;
 
         void Close() override;
+
+        void BeginEvent(const char* name, std::uint8_t color) override;
+        void EndEvent() override;
+
+        void SetMarker(const char* name, std::uint8_t color) override;
 
         void* GetNative() const override;
 

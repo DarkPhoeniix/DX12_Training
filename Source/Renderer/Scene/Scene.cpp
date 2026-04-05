@@ -2,8 +2,6 @@
 
 #include "Scene.h"
 
-#include <queue>
-
 namespace
 {
     struct SceneDesc

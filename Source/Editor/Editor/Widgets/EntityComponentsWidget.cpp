@@ -240,18 +240,18 @@ namespace gui
     {
         if (ImGui::CollapsingHeader(material->ComponentName.c_str()))
         {
-			std::shared_ptr<dx12::Resource> albedoTexture = TextureManager::Get().GetTexture(material->AlbedoTextureHandle);
-			std::shared_ptr<dx12::Resource> normalMapTexture = TextureManager::Get().GetTexture(material->NormalMapTextureHandle);
-			std::shared_ptr<dx12::Resource> metalnessTexture = TextureManager::Get().GetTexture(material->MetalnessTextureHandle);
-			std::shared_ptr<dx12::Resource> roughnessTexture = TextureManager::Get().GetTexture(material->RoughnessTextureHandle);
-            std::shared_ptr<dx12::Resource> emissionTexture = TextureManager::Get().GetTexture(material->EmissionTextureHandle);
+			std::shared_ptr<rhi::Texture> albedoTexture = TextureManager::Get().GetTexture(material->AlbedoTextureHandle);
+			std::shared_ptr<rhi::Texture> normalMapTexture = TextureManager::Get().GetTexture(material->NormalMapTextureHandle);
+			std::shared_ptr<rhi::Texture> metalnessTexture = TextureManager::Get().GetTexture(material->MetalnessTextureHandle);
+			std::shared_ptr<rhi::Texture> roughnessTexture = TextureManager::Get().GetTexture(material->RoughnessTextureHandle);
+            std::shared_ptr<rhi::Texture> emissionTexture = TextureManager::Get().GetTexture(material->EmissionTextureHandle);
 
             ImVec2 menuSize = ImGui::GetWindowSize();
             float imageSize = menuSize.x * 0.9f;
 
             if (albedoTexture)
             {
-                ImGui::Text("Albedo: %s (ID: %i)", albedoTexture->GetName().c_str(), albedoTexture->GetID());
+                //ImGui::Text("Albedo: %s (ID: %i)", albedoTexture->GetName().c_str(), albedoTexture->GetID());
                 //ImGui::Image((ImTextureID)ResourceTable::Get().GetStaticResourceHandle(albedoTexture->GetAsSRV()).GpuHandle.ptr, { imageSize, imageSize });
             }
             else
@@ -261,13 +261,13 @@ namespace gui
 
             if (normalMapTexture)
             {
-                ImGui::Text("Normal map: %s (ID: %i)", normalMapTexture->GetName().c_str(), normalMapTexture->GetID());
+                //ImGui::Text("Normal map: %s (ID: %i)", normalMapTexture->GetName().c_str(), normalMapTexture->GetID());
                 //ImGui::Image((ImTextureID)ResourceTable::Get().GetStaticResourceHandle(normalMapTexture->GetAsSRV()).GpuHandle.ptr, { imageSize, imageSize });
             }
 
             if (metalnessTexture)
             {
-                ImGui::Text("Metalness: %s (ID: %i)", metalnessTexture->GetName().c_str(), metalnessTexture->GetID());
+                //ImGui::Text("Metalness: %s (ID: %i)", metalnessTexture->GetName().c_str(), metalnessTexture->GetID());
                 //ImGui::Image((ImTextureID)ResourceTable::Get().GetStaticResourceHandle(metalnessTexture->GetAsSRV()).GpuHandle.ptr, { imageSize, imageSize });
             }
             else
@@ -277,7 +277,7 @@ namespace gui
 
             if (roughnessTexture)
             {
-                ImGui::Text("Roughness: %s (ID: %i)", roughnessTexture->GetName().c_str(), roughnessTexture->GetID());
+                //ImGui::Text("Roughness: %s (ID: %i)", roughnessTexture->GetName().c_str(), roughnessTexture->GetID());
                 //ImGui::Image((ImTextureID)ResourceTable::Get().GetStaticResourceHandle(roughnessTexture->GetAsSRV()).GpuHandle.ptr, { imageSize, imageSize });
             }
             else
@@ -287,7 +287,7 @@ namespace gui
 
             if (emissionTexture)
             {
-                ImGui::Text("Emission: %s (ID: %i)", emissionTexture->GetName().c_str(), emissionTexture->GetID());
+                //ImGui::Text("Emission: %s (ID: %i)", emissionTexture->GetName().c_str(), emissionTexture->GetID());
                 //ImGui::Image((ImTextureID)ResourceTable::Get().GetStaticResourceHandle(emissionTexture->GetAsSRV()).GpuHandle.ptr, { imageSize, imageSize });
             }
             else
@@ -310,8 +310,8 @@ namespace gui
     {
         if (ImGui::CollapsingHeader(skybox->ComponentName.c_str()))
         {
-            std::shared_ptr<dx12::Resource> skyboxTexture = TextureManager::Get().GetTexture(skybox->SkydomeTextureHandle);
-            ImGui::Text("Texture: %s (ID: %i)", skyboxTexture->GetName().c_str(), skyboxTexture->GetID());
+            std::shared_ptr<rhi::Texture> skyboxTexture = TextureManager::Get().GetTexture(skybox->SkydomeTextureHandle);
+            //ImGui::Text("Texture: %s (ID: %i)", skyboxTexture->GetName().c_str(), skyboxTexture->GetID());
         }
     }
 

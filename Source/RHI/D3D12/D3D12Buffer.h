@@ -23,7 +23,7 @@ namespace rhi::d3d12
         void* Map(std::uint32_t begin, std::uint32_t end) override;
         void Unmap() override;
 
-        std::uint64_t GetVirtualAddress() override;
+        std::uint64_t GetVirtualAddress(std::uint64_t offset) override;
 
         ResourceState GetInitialState() const override;
         ResourceState GetCurrentState() const override;

@@ -32,22 +32,22 @@ namespace render
 		};
 	} // namespace unnamed
 
-	SSAOComputePass::SSAOComputePass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-		: RenderPass<SSAOComputePassData>("ssao_compute_pass", rg::RenderPassType::Compute)
+	SSAOComputePass::SSAOComputePass(rhi::Device* device, std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
+		: RenderPass<SSAOComputePassData>(device, "ssao_compute_pass", rg::RenderPassType::Compute)
 		, _scene(scene)
 		, _camera(camera)
 	{
-		_SSAOPipeline.Parse("PipelineDescriptions\\SSAOComputePipeline.tech");
+		_SSAOPipeline = _device->CreatePipelineState("PipelineDescriptions\\SSAOComputePipeline.tech");
 	}
 
 	void SSAOComputePass::Setup(rg::RenderPassBuilder& builder)
 	{
-		dx12::ResourceDescription noiseDesc;
+		rhi::BufferDescription noiseDesc =
 		{
-			noiseDesc.SetSize({ 64 * sizeof(XMVECTOR), 1 });
-			noiseDesc.SetStride(sizeof(XMVECTOR));
-			noiseDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
-		}
+			.Size = 64 * sizeof(XMVECTOR),
+			.Stride = sizeof(XMVECTOR),
+			.Usage = rhi::ResourceUsage::Upload
+		};
 		std::random_device rd;
 		std::mt19937 gen(rd());
 		std::uniform_real_distribution<> dis(0.0, 1.0);
@@ -66,12 +66,12 @@ namespace render
 		}
         builder.DeclareBuffer("ssao_noise", noiseDesc, noiseData.data(), sizeof(XMVECTOR) * noiseData.size());
 
-		dx12::ResourceDescription kernelsDesc;
+		rhi::BufferDescription kernelsDesc
 		{
-			kernelsDesc.SetSize({ kKernelSize * sizeof(XMVECTOR), 1 });
-			kernelsDesc.SetStride(sizeof(XMVECTOR));
-			kernelsDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
-		}
+			.Size = kKernelSize * sizeof(XMVECTOR),
+			.Stride = sizeof(XMVECTOR),
+			.Usage = rhi::ResourceUsage::Upload
+		};
 		std::vector<XMVECTOR> kernelsData(kKernelSize);
 		for (size_t i = 0; i < kKernelSize; ++i)
 		{
@@ -88,12 +88,13 @@ namespace render
 		}
 		builder.DeclareBuffer("ssao_kernels", kernelsDesc, kernelsData.data(), sizeof(XMVECTOR) * kernelsData.size());
 
-		dx12::ResourceDescription aoDesc;
+		rhi::TextureDescription aoDesc =
 		{
-			aoDesc.SetSize(_camera->GetViewport().GetSize());
-			aoDesc.SetFormat(DXGI_FORMAT_R32_FLOAT);
-			aoDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::Unordered);
-		}
+			.Width = _camera->GetViewport().GetSize().x,
+			.Height = _camera->GetViewport().GetSize().y,
+			.Format = rhi::Format::R32_FLOAT,
+			.Flags = rhi::ResourceFlags::AllowUnorderedAccess
+		};
 		builder.DeclareTexture("ao_target", aoDesc);
 
 		_data.NormalRoughness = builder.ReadTexture("normal_roughness_target");
@@ -103,50 +104,35 @@ namespace render
 		_data.Kernels = builder.UploadBuffer("ssao_kernels");
 	}
 
-	void SSAOComputePass::Execute(rg::RenderContext& context, TaskGPU& task)
+	void SSAOComputePass::Execute(rg::RenderContext& context, rg::ITask* task)
 	{
-		dx12::CommandList& commandList = *task.GetCommandLists().front();
-		commandList.SetName("ssao_compute_pass_cmd_pass");
+		rhi::CommandList* commandList = task->GetCommandList();
 
 		{
-            PIXScopedEvent(commandList.GetDXCommandList().Get(), 3, "SSAO Compute Pass");
+            GPU_SCOPED_EVENT(commandList, "SSAO Compute Pass", 3);
 
-			std::shared_ptr<dx12::Resource> noise = context.GetResource(_data.Noise);
-			std::shared_ptr<dx12::Resource> kernels = context.GetResource(_data.Kernels);
-			std::shared_ptr<dx12::Resource> normalRoughness = context.GetResource(_data.NormalRoughness);
-			std::shared_ptr<dx12::Resource> depth = context.GetResource(_data.Depth);
-			std::shared_ptr<dx12::Resource> aoTarget = context.GetResource(_data.AOTarget);
-
-			DescriptorHandle noiseHandle = context.GetStaticResourceHandle(noise->GetAsSRV());
-			DescriptorHandle kernelsHandle = context.GetStaticResourceHandle(kernels->GetAsSRV());
-			DescriptorHandle normalSpecularHandle = context.GetStaticResourceHandle(normalRoughness->GetAsSRV());
-			DescriptorHandle depthHandle = context.GetStaticResourceHandle(depth->GetAsSRV());
-			DescriptorHandle aoTargetHandle = context.GetStaticResourceHandle(aoTarget->GetAsUAV());
-
-			context.BindBindlessTable(commandList);
-			commandList.SetPipelineState(_SSAOPipeline);
+			commandList->SetComputePipelineState(_SSAOPipeline.get());
 
 			PassConstants passCB =
 			{
 				.KernelSize = kKernelSize,
 				.Radius = RenderSettings::SSAO().Radius,
 				.Bias = RenderSettings::SSAO().Bias,
-				.KernelBufferIndex = kernelsHandle.Index,
-				.NoiseBufferIndex = noiseHandle.Index,
-				.DepthTextureIndex = depthHandle.Index,
-				.NormalMapTextureIndex = normalSpecularHandle.Index,
-				.AmbientOcclusionTextureIndex = aoTargetHandle.Index
+				.KernelBufferIndex = context.GetBindlessIndex(_data.Kernels, rhi::ResourceViewType::SRV),
+				.NoiseBufferIndex = context.GetBindlessIndex(_data.Noise, rhi::ResourceViewType::SRV),
+				.DepthTextureIndex = context.GetBindlessIndex(_data.Depth, rhi::ResourceViewType::SRV),
+				.NormalMapTextureIndex = context.GetBindlessIndex(_data.NormalRoughness, rhi::ResourceViewType::SRV),
+				.AmbientOcclusionTextureIndex = context.GetBindlessIndex(_data.AOTarget, rhi::ResourceViewType::UAV)
 			};
-			commandList.SetCBV(0, context.GetFrame()->GetBuffer()->OffsetGPU());
-			commandList.SetConstants(1, 8, &passCB);
+			commandList->SetComputeConstants(1, 8, &passCB);
 
 			XMUINT2 viewportSize = _camera->GetViewport().GetSize();
 			int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 16.0f);
 			int yThreadGroups = (uint32_t)std::ceilf(viewportSize.y / 16.0f);
 
-			commandList.Dispatch(xThreadGroups, yThreadGroups);
+			commandList->Dispatch(xThreadGroups, yThreadGroups);
 		}
 
-		commandList.Close();
+		commandList->Close();
 	}
 } // namespace render

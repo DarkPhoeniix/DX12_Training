@@ -41,20 +41,24 @@
 #include "Render/Passes/AmbientLightingPass.h"
 #include "Render/Passes/GeometryPass.h"
 #include "Render/Passes/LightingPass.h"
-#include "Render/Passes/PFX/AntiAliasing/FXAAPass.h"
-#include "Render/Passes/PFX/Bloom/BloomApplyPass.h"
-#include "Render/Passes/PFX/Bloom/BloomDownsamplePass.h"
-#include "Render/Passes/PFX/Bloom/BloomUpsamplePass.h"
+//#include "Render/Passes/PFX/AntiAliasing/FXAAPass.h"
+//#include "Render/Passes/PFX/Bloom/BloomApplyPass.h"
+//#include "Render/Passes/PFX/Bloom/BloomDownsamplePass.h"
+//#include "Render/Passes/PFX/Bloom/BloomUpsamplePass.h"
 #include "Render/Passes/PFX/ToneMapping/AverageLuminancePass.h"
 #include "Render/Passes/PFX/ToneMapping/LuminanceHistogramPass.h"
 #include "Render/Passes/PFX/ToneMapping/ToneMappingPass.h"
-#include "Render/Passes/Shadows/ShadowCullPass.h"
-#include "Render/Passes/Shadows/ShadowDrawPass.h"
+//#include "Render/Passes/Shadows/ShadowCullPass.h"
+//#include "Render/Passes/Shadows/ShadowDrawPass.h"
 #include "Render/Passes/SkyboxPass.h"
-#include "Render/Passes/PresentPass.h"
+//#include "Render/Passes/PresentPass.h"
 #include "Render/Helpers/DrawHelpers.h"
 
 #include "RenderGraph/RenderPassBuilder.h"
+
+#include "RHI/CommandQueue.h"
+#include "RHI/SwapChain.h"
+#include "RHI/ResourceBarrier.h"
 
 using namespace DirectX;
 using namespace core;
@@ -153,27 +157,30 @@ namespace
 
 namespace render
 {
-    DXRenderer::DXRenderer(HWND windowHandle)
+    DXRenderer::DXRenderer(rhi::Device* device, HWND windowHandle)
         : _windowHandle(windowHandle)
         , _currentFrame(nullptr)
+        , _device(device)
         , _contentLoaded(false)
         , _isMinimized(false)
         , _isCameraMoving(false)
         , _enableAbsoluteMovement(false)
         , _deltaTime(0.0f)
         , _scene(std::make_shared<scene::Scene>())
-        , _gpuProfiler()
+        , _gpuProfiler(device)
+        , _sceneLoader(device)
     {
-        DescriptorHeapManager::Create(2048, 128, 4096, 1024);
-        ResourceTable::Create();
-		TextureManager::Create();
+        DescriptorHeapManager::Create(_device, 2048, 128, 4096, 1024);
+        ResourceTable::Create(_device);
+		TextureManager::Create(_device);
         GeometryCacheManager::Create();
 
-		_renderGraph.Init(ResourceTable::Get(), TextureManager::Get());
+        _renderGraph = std::make_unique<rg::RenderGraph>(_device, &ResourceTable::Get());
+
 		_sceneLoader.Init(ResourceTable::Get(), TextureManager::Get());
 
 #if ENABLE_PROFILING
-        _renderGraph.SetGPUProfiler(&_gpuProfiler);
+        _renderGraph->SetGPUProfiler(&_gpuProfiler);
 #endif
     }
 
@@ -181,9 +188,9 @@ namespace render
     {
     }
 
-    rg::RenderGraph& DXRenderer::GetRenderGraph()
+    rg::RenderGraph* DXRenderer::GetRenderGraph()
     {
-        return _renderGraph;
+        return _renderGraph.get();
     }
 
     std::shared_ptr<scene::Scene> DXRenderer::GetCurrentScene()
@@ -193,10 +200,10 @@ namespace render
 
     bool DXRenderer::LoadContent(TaskGPU* uploadTask, const std::string& filepath)
     {
-        render::DrawHelper::Init();
+        render::DrawHelper::Init(_device);
 
         uploadTask->SetName("Upload Data");
-        dx12::CommandList& commandList = *uploadTask->GetCommandLists().front();
+        rhi::CommandList* commandList = uploadTask->GetCommandList();
 
         {
             TextureManager::Get().Clear();
@@ -241,15 +248,14 @@ namespace render
             _cameraComponent = camera->GetComponentAs<scene::Camera>("Camera");
             _cameraComponent->SetViewport(scene::Viewport({ windowWidth, windowHeight }));
 
-            dx12::ResourceDescription frameBufferDesc;
+            rhi::BufferDescription frameBufferDesc =
             {
-                frameBufferDesc.SetSize({ static_cast<std::uint32_t>(sizeof(GPUFrameDesc)), 1 });
-                frameBufferDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
-            }
-            for (size_t i = 0; i < dx12::BACK_BUFFER_COUNT; ++i)
+                .Size = sizeof(GPUFrameDesc),
+                .Usage = rhi::ResourceUsage::Upload
+            };
+            for (size_t i = 0; i < rhi::BACK_BUFFER_COUNT; ++i)
             {
-                std::shared_ptr<dx12::Resource> frameBuffer = ResourceFactory::Create(std::format("frame_buffer_{}", i), frameBufferDesc);
-                frameBuffer->CreateCommitedResource(dx12::ResourceState::CopyDest);
+                std::shared_ptr<rhi::Buffer> frameBuffer = _device->CreateBuffer(frameBufferDesc, rhi::ResourceState::GenericRead, std::format("frame_buffer_{}", i));
 
                 _currentFrame->SetBuffer(frameBuffer);
 
@@ -262,7 +268,7 @@ namespace render
             _preFilteredEnvironmentMap = _sceneLoader.GeneratePreFilteredEnvironmentMap(commandList, _scene);
         }
 
-        commandList.Close();
+        commandList->Close();
 
         CreateShadowMaps();
         SetupRenderPipeline();
@@ -297,7 +303,7 @@ namespace render
         ResourceTable::Get().ResetTransientResources();
 
         // Clear marker map for current frame before execution
-        std::shared_ptr<tracking::IGPUCrashTracker> crashTracker = dx12::Device::GetCrashTracker();
+        tracking::IGPUCrashTracker* crashTracker = _device->GetCrashTracker();
         crashTracker->AdvanceFrame();
         crashTracker->ResetMarkerMapForCurrentFrame();
 
@@ -323,8 +329,8 @@ namespace render
             return;
         }
 
-        _renderGraph.SetFrame(*_currentFrame);
-        _renderGraph.Execute();
+        //_renderGraph->SetFrame(*_currentFrame);
+        _renderGraph->Execute();
 
         DebugInfo::EndRender();
     }
@@ -428,17 +434,15 @@ namespace render
 
         WaitAllFrames();
 
-        DirectX::XMUINT2 windowSize = { (uint32_t)e.width, (uint32_t)e.height };
-
         Frame* current = _currentFrame;
         do
         {
-            current->Resize(windowSize);
+            current->Resize((uint32_t)e.width, (uint32_t)e.height);
             current = current->Next;
         } while (current != _currentFrame);
 
-        dx12::Device::OnResize(windowSize);
-        _cameraComponent->GetViewport().SetSize(windowSize);
+        _device->OnResize((uint32_t)e.width, (uint32_t)e.height);
+        _cameraComponent->GetViewport().SetSize((uint32_t)e.width, (uint32_t)e.height);
         _cameraComponent->Update();
 
         CreateShadowMaps();
@@ -458,47 +462,48 @@ namespace render
     {
         WaitAllFrames();
 
-        TaskGPU* uploadTask = _currentFrame->CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE, nullptr);
+        TaskGPU* uploadTask = _currentFrame->CreateTask(rhi::CommandListType::Graphics, nullptr);
         LoadContent(uploadTask, filepath);
 
-        dx12::CommandList& commandList = *uploadTask->GetCommandLists().front();
-        _currentFrame->SetSyncPoint(uploadTask->GetFence());
+        rhi::CommandList* commandList = uploadTask->GetCommandList();
+        rhi::Fence* fence = uploadTask->GetFence();
 
-        std::vector<ID3D12CommandList*> frameCommandLists = { commandList.GetDXCommandList().Get() };
-        uploadTask->GetCommandQueue()->ExecuteCommandLists(1, frameCommandLists.data());
-        uploadTask->GetCommandQueue()->Signal(uploadTask->GetDXFence(), uploadTask->GetFenceValue());
+        _currentFrame->SetSyncPoint(fence);
+
+        _device->GetStreamQueue()->ExecuteCommandLists({ commandList });
+        _device->GetStreamQueue()->Signal(fence, fence->GetValue());
     }
 
     void DXRenderer::UpdateSceneBuffers()
     {
-        std::shared_ptr<dx12::Resource> modelBuffer = _sceneBuffers[static_cast<size_t>(SceneBufferType::Model)];
-        std::shared_ptr<dx12::Resource> lightBuffer = _sceneBuffers[static_cast<size_t>(SceneBufferType::Light)];
+        std::shared_ptr<rhi::Buffer> modelBuffer = _sceneBuffers[static_cast<size_t>(SceneBufferType::Model)];
+        std::shared_ptr<rhi::Buffer> lightBuffer = _sceneBuffers[static_cast<size_t>(SceneBufferType::Light)];
 
         std::vector<std::shared_ptr<scene::Entity>> lightEntities = _scene->FilterNodesByComponent("Light");
         std::vector<std::shared_ptr<scene::Entity>> meshEntities = _scene->FilterNodesByComponent("Mesh");
         std::vector<std::shared_ptr<scene::Entity>> animatedEntities = _scene->FilterNodesByComponent("Armature");
 
-        {
-            if (!modelBuffer || (meshEntities.size() > (modelBuffer->GetResourceDescription().GetSize().x / sizeof(GPUModelDesc))))
+            if (!modelBuffer || (meshEntities.size() > (modelBuffer->GetSize() / sizeof(GPUModelDesc))))
             {
-                dx12::ResourceDescription modelBufferDesc;
-                modelBufferDesc.SetSize({ static_cast<uint32_t>(meshEntities.size() * sizeof(GPUModelDesc)), 1 });
-                modelBufferDesc.SetStride(sizeof(GPUModelDesc));
-                modelBufferDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
-                modelBuffer = _sceneBuffers[static_cast<size_t>(SceneBufferType::Model)] = ResourceFactory::Create("Scene models buffer", modelBufferDesc);
-                modelBuffer->CreateCommitedResource(dx12::ResourceState::CopyDest);
+                rhi::BufferDescription modelBufferDesc =
+                {
+                    .Size = static_cast<uint32_t>(meshEntities.size() * sizeof(GPUModelDesc)),
+                    .Stride = sizeof(GPUModelDesc),
+                    .Usage = rhi::ResourceUsage::Upload
+                };
+                modelBuffer = _sceneBuffers[static_cast<size_t>(SceneBufferType::Model)] = _device->CreateBuffer(modelBufferDesc, rhi::ResourceState::CopyDest, "scene_models_buffer");
             }
 
-            if (!lightBuffer || (lightEntities.size() > (lightBuffer->GetResourceDescription().GetSize().x / sizeof(GPULightDesc))))
+            if (!lightBuffer || (lightEntities.size() > (lightBuffer->GetSize() / sizeof(GPULightDesc))))
             {
-                dx12::ResourceDescription lightBufferDesc;
-                lightBufferDesc.SetSize({ static_cast<uint32_t>(lightEntities.size() * sizeof(GPULightDesc)), 1 });
-                lightBufferDesc.SetStride(sizeof(GPULightDesc));
-                lightBufferDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
-                lightBuffer = _sceneBuffers[static_cast<size_t>(SceneBufferType::Light)] = ResourceFactory::Create("Scene lights buffer", lightBufferDesc);
-                lightBuffer->CreateCommitedResource(dx12::ResourceState::CopyDest);
+                rhi::BufferDescription lightBufferDesc =
+                {
+                    .Size = static_cast<uint32_t>(lightEntities.size() * sizeof(GPULightDesc)),
+                    .Stride = sizeof(GPULightDesc),
+                    .Usage = rhi::ResourceUsage::Upload
+                };
+                lightBuffer = _sceneBuffers[static_cast<size_t>(SceneBufferType::Light)] = _device->CreateBuffer(lightBufferDesc, rhi::ResourceState::CopyDest, "scene_lights_buffer");
             }
-        }
 
         GPULightDesc* lights = lightBuffer->Map<GPULightDesc>();
 
@@ -517,9 +522,8 @@ namespace render
                     CreateShadowMap(lightEntity);
                 }
 
-                std::shared_ptr<dx12::Resource> shadowMap = TextureManager::Get().GetTexture(lightComponent->ShadowMapHandle);
-                DescriptorHandle shadowMapHandle = ResourceTable::Get().GetStaticResourceHandle(shadowMap->GetAsSRV());
-                shadowMapIndex = shadowMapHandle.Index;
+                std::shared_ptr<rhi::Texture> shadowMap = TextureManager::Get().GetTexture(lightComponent->ShadowMapHandle);
+                shadowMapIndex = ResourceTable::Get().GetBindlessIndex(shadowMap->GetID(), rhi::ResourceViewType::SRV);
             }
 
             auto views = GetLightViews(lightEntity);
@@ -583,17 +587,18 @@ namespace render
 
                 if (armatureComponent->GetBoneBufferHandle() == InvalidGeometryHandle)
                 {
-                    dx12::ResourceDescription bonesBufferDesc;
-                    bonesBufferDesc.SetSize({ static_cast<std::uint32_t>(sizeof(DirectX::XMMATRIX) * bones.size()), 1 });
-                    bonesBufferDesc.SetStride(sizeof(DirectX::XMMATRIX));
-                    bonesBufferDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Dynamic);
-                    std::shared_ptr<dx12::Resource> bonesBuffer = ResourceFactory::Create(entity->GetName() + "_bones_buffer", bonesBufferDesc);
-                    bonesBuffer->CreateCommitedResource(dx12::ResourceState::CopyDest);
+                    rhi::BufferDescription bonesBufferDesc =
+                    {
+                        .Size = static_cast<std::uint32_t>(sizeof(DirectX::XMMATRIX) * bones.size()),
+                        .Stride = sizeof(DirectX::XMMATRIX),
+                        .Usage = rhi::ResourceUsage::Upload
+                    };
+                    std::shared_ptr<rhi::Buffer> bonesBuffer = _device->CreateBuffer(bonesBufferDesc, rhi::ResourceState::CopyDest, entity->GetName() + "_bones_buffer");
 
                     armatureComponent->SetBoneBufferHandle(GeometryCacheManager::Get().CacheGeometry(bonesBuffer));
                 }
 
-                std::shared_ptr<dx12::Resource> bonesBuffer = GeometryCacheManager::Get().GetGeometry(armatureComponent->GetBoneBufferHandle());
+                std::shared_ptr<rhi::Buffer> bonesBuffer = GeometryCacheManager::Get().GetGeometry(armatureComponent->GetBoneBufferHandle());
                 DirectX::XMMATRIX* data = bonesBuffer->Map<DirectX::XMMATRIX>();
 
                 for (int i = 0; i < bones.size(); ++i)
@@ -601,8 +606,8 @@ namespace render
                     data[i] = bones[i]->Offset * bones[i]->GlobalTransform;
                 }
 
-                DescriptorHandle bonesBufferHandle = ResourceTable::Get().AddTransientResourceView(bonesBuffer->GetAsSRV());
-                bonesBufferIndex = bonesBufferHandle.Index;
+                ResourceTable::Get().CreateTransientResourceView(bonesBuffer->GetID(), rhi::ResourceViewType::SRV);
+                bonesBufferIndex = ResourceTable::Get().GetBindlessIndex(bonesBuffer->GetID(), rhi::ResourceViewType::SRV);;
             }
 
             std::uint32_t albedoTextureIndex = -1;
@@ -613,31 +618,36 @@ namespace render
 
             if (materialComponent)
             {
-                std::shared_ptr<dx12::Resource> albedoTexture = TextureManager::Get().GetTexture(materialComponent->AlbedoTextureHandle);
-                std::shared_ptr<dx12::Resource> emissionTexture = TextureManager::Get().GetTexture(materialComponent->EmissionTextureHandle);
-                std::shared_ptr<dx12::Resource> normalMapTexture = TextureManager::Get().GetTexture(materialComponent->NormalMapTextureHandle);
-                std::shared_ptr<dx12::Resource> metalnessTexture = TextureManager::Get().GetTexture(materialComponent->MetalnessTextureHandle);
-                std::shared_ptr<dx12::Resource> roughnessTexture = TextureManager::Get().GetTexture(materialComponent->RoughnessTextureHandle);
+                std::shared_ptr<rhi::Texture> albedoTexture = TextureManager::Get().GetTexture(materialComponent->AlbedoTextureHandle);
+                std::shared_ptr<rhi::Texture> emissionTexture = TextureManager::Get().GetTexture(materialComponent->EmissionTextureHandle);
+                std::shared_ptr<rhi::Texture> normalMapTexture = TextureManager::Get().GetTexture(materialComponent->NormalMapTextureHandle);
+                std::shared_ptr<rhi::Texture> metalnessTexture = TextureManager::Get().GetTexture(materialComponent->MetalnessTextureHandle);
+                std::shared_ptr<rhi::Texture> roughnessTexture = TextureManager::Get().GetTexture(materialComponent->RoughnessTextureHandle);
 
                 if (albedoTexture)
                 {
-                    albedoTextureIndex = ResourceTable::Get().GetStaticResourceHandle(albedoTexture->GetAsSRV()).Index;
+                    ResourceTable::Get().CreateStaticResourceView(albedoTexture->GetID(), rhi::ResourceViewType::SRV);
+                    albedoTextureIndex = ResourceTable::Get().GetBindlessIndex(albedoTexture->GetID(), rhi::ResourceViewType::SRV);
                 }
                 if (emissionTexture)
                 {
-                    emissionTextureIndex = ResourceTable::Get().GetStaticResourceHandle(emissionTexture->GetAsSRV()).Index;
+                    ResourceTable::Get().CreateStaticResourceView(emissionTexture->GetID(), rhi::ResourceViewType::SRV);
+                    emissionTextureIndex = ResourceTable::Get().GetBindlessIndex(emissionTexture->GetID(), rhi::ResourceViewType::SRV);
                 }
                 if (normalMapTexture)
                 {
-                    normalMapIndex = ResourceTable::Get().GetStaticResourceHandle(normalMapTexture->GetAsSRV()).Index;
+                    ResourceTable::Get().CreateStaticResourceView(normalMapTexture->GetID(), rhi::ResourceViewType::SRV);
+                    normalMapIndex = ResourceTable::Get().GetBindlessIndex(normalMapTexture->GetID(), rhi::ResourceViewType::SRV);
                 }
                 if (metalnessTexture)
                 {
-                    metalnessTextureIndex = ResourceTable::Get().GetStaticResourceHandle(metalnessTexture->GetAsSRV()).Index;
+                    ResourceTable::Get().CreateStaticResourceView(metalnessTexture->GetID(), rhi::ResourceViewType::SRV);
+                    metalnessTextureIndex = ResourceTable::Get().GetBindlessIndex(metalnessTexture->GetID(), rhi::ResourceViewType::SRV);
                 }
                 if (roughnessTexture)
                 {
-                    roughnessTextureIndex = ResourceTable::Get().GetStaticResourceHandle(roughnessTexture->GetAsSRV()).Index;
+                    ResourceTable::Get().CreateStaticResourceView(roughnessTexture->GetID(), rhi::ResourceViewType::SRV);
+                    roughnessTextureIndex = ResourceTable::Get().GetBindlessIndex(roughnessTexture->GetID(), rhi::ResourceViewType::SRV);
                 }
             }
 
@@ -662,8 +672,8 @@ namespace render
             };
         }
 
-        DescriptorHandle modelBufferHandle = ResourceTable::Get().AddTransientResourceView(modelBuffer->GetAsSRV());
-        DescriptorHandle lightBufferHandle = ResourceTable::Get().AddTransientResourceView(lightBuffer->GetAsSRV());
+        ResourceTable::Get().CreateTransientResourceView(modelBuffer->GetID(), rhi::ResourceViewType::SRV);
+        ResourceTable::Get().CreateTransientResourceView(lightBuffer->GetID(), rhi::ResourceViewType::SRV);
 
         {
             GPUFrameDesc* frameBufferData = _currentFrame->GetBuffer()->Map<GPUFrameDesc>();
@@ -686,8 +696,8 @@ namespace render
                 .ReciprocalWindowSize = { 1.0f / windowSize.x, 1.0f / windowSize.y },
                 .NearFar = { _cameraComponent->NearZ, _cameraComponent->FarZ },
 
-                .InstancesBufferIndex = modelBufferHandle.Index,
-                .LightsBufferIndex = lightBufferHandle.Index,
+                .InstancesBufferIndex = ResourceTable::Get().GetBindlessIndex(modelBuffer->GetID(), rhi::ResourceViewType::SRV),
+                .LightsBufferIndex = ResourceTable::Get().GetBindlessIndex(lightBuffer->GetID(), rhi::ResourceViewType::SRV),
                 .LightsNum = static_cast<std::uint32_t>(lightEntities.size()),
 
                 .DeltaTime = _deltaTime
@@ -703,33 +713,18 @@ namespace render
         {
             auto viewportSize = _cameraComponent->GetViewport().GetSize();
 
-            dx12::ResourceDescription shadowMapDesc;
+            std::uint32_t size = std::max(viewportSize.x, viewportSize.y) / 2.0f;
+            rhi::TextureDescription shadowMapDesc =
             {
-                std::uint32_t size = std::max(viewportSize.x, viewportSize.y) / 2.0f;
+                .Width = size,
+                .Height = size,
+                .DepthOrArraySize = (lightComponent->Type == scene::LightType::Point) ? uint16_t(6) : uint16_t(1),
+                .ClearValue = { .DepthStencil = { 1.0f, 0 } },
+                .Format = rhi::Format::D32_FLOAT,
+                .Flags = rhi::ResourceFlags::AllowDepthStencil
+            };
 
-                D3D12_CLEAR_VALUE clearValue;
-                clearValue.Format = DXGI_FORMAT_D32_FLOAT;
-                clearValue.DepthStencil.Depth = 1;
-                clearValue.DepthStencil.Stencil = 0;
-
-                shadowMapDesc.SetSize({ size, size });
-                shadowMapDesc.SetFormat(DXGI_FORMAT_D32_FLOAT);
-                shadowMapDesc.SetClearValue(clearValue);
-                switch (lightComponent->Type)
-                {
-                case scene::LightType::Spot:
-                    shadowMapDesc.SetDepthOrArraySize(1);
-                    break;
-                case scene::LightType::Point:
-                    shadowMapDesc.SetDepthOrArraySize(6);
-                    break;
-                }
-                shadowMapDesc.SetResourceType(dx12::ResourceType::DepthStencil | dx12::ResourceType::Texture);
-            }
-
-            std::shared_ptr<dx12::Resource> shadowMap = ResourceFactory::Create(light->GetName() + "_shadow_map", shadowMapDesc);
-            shadowMap->CreateCommitedResource();
-
+            std::shared_ptr<rhi::Texture> shadowMap = _device->CreateTexture(shadowMapDesc, rhi::ResourceState::Common, light->GetName() + "_shadow_map");
             lightComponent->ShadowMapHandle = TextureManager::Get().AddTexture(shadowMap);
         }
     }
@@ -821,90 +816,122 @@ namespace render
 
         // Render Graph setup
         {
-            _renderGraph.Reset();
+            _renderGraph->Reset();
 
-            _renderGraph.SetFrame(*_currentFrame);
+            //_renderGraph->SetFrame(*_currentFrame);
 
             // Import IBL textures to render graph
 
             if (_diffuseIrradianceMap)
             {
-                _renderGraph.ImportResource(_diffuseIrradianceMap);
+                _renderGraph->ImportResource(_diffuseIrradianceMap, "diffuse_irradiance_map");
             }
             if (_preFilteredEnvironmentMap)
             {
-                _renderGraph.ImportResource(_preFilteredEnvironmentMap);
+                _renderGraph->ImportResource(_preFilteredEnvironmentMap, "prefiltered_environment_map");
             }
             if (_brdfLUT)
             {
-                _renderGraph.ImportResource(_brdfLUT);
+                _renderGraph->ImportResource(_brdfLUT, "brdf_lut");
             }
 
             // Add passes to render graph
 
-            _renderGraph.AddPass(std::make_shared<GeometryPass>(_scene, _cameraComponent.get()));
-            _renderGraph.AddPass(std::make_shared<ShadowCullPass>(_scene, _cameraComponent.get()));
-            _renderGraph.AddPass(std::make_shared<ShadowDrawPass>(_scene, _cameraComponent.get()));
-            _renderGraph.AddPass(std::make_shared<AmbientLightingPass>(_scene, _cameraComponent.get()));
-            if (RenderSettings::UseSSAO())
-            {
-                _renderGraph.AddPass(std::make_shared<SSAOComputePass>(_scene, _cameraComponent.get()));
-                _renderGraph.AddPass(std::make_shared<SSAOBlurPass>(_scene, _cameraComponent.get()));
-                _renderGraph.AddPass(std::make_shared<SSAOApplyPass>(_scene, _cameraComponent.get()));
-            }
-            _renderGraph.AddPass(std::make_shared<LightingPass>(_scene, _cameraComponent.get()));
-            if (_scene->FindNodeByComponentName("Skybox"))
-            {
-                _renderGraph.AddPass(std::make_shared<SkyboxPass>(_scene, _cameraComponent.get()));
-            }
-            if (RenderSettings::UseBloom())
-            {
-                _renderGraph.AddPass(std::make_shared<BloomDownsamplePass>(_scene, _cameraComponent.get()));
-                _renderGraph.AddPass(std::make_shared<BloomUpsamplePass>(_scene, _cameraComponent.get()));
-                _renderGraph.AddPass(std::make_shared<BloomApplyPass>(_scene, _cameraComponent.get()));
-            }
-            if (RenderSettings::UseFXAA())
-            {
-                _renderGraph.AddPass(std::make_shared<FXAAPass>(_scene, _cameraComponent.get()));
-            }
-            _renderGraph.AddPass(std::make_shared<LuminanceHistogramPass>(_scene, _cameraComponent.get()));
-            _renderGraph.AddPass(std::make_shared<AverageLuminancePass>(_scene, _cameraComponent.get()));
-            _renderGraph.AddPass(std::make_shared<ToneMappingPass>(_scene, _cameraComponent.get()));
-            if (RenderSettings::RenderDebugVolumes())
-            {
-                _renderGraph.AddPass(std::make_shared<DebugBoundingVolumePass>(_scene, _cameraComponent.get()));
-            }
-            if (RenderSettings::RenderDebugArmature())
-            {
-                _renderGraph.AddPass(std::make_shared<DebugArmaturePass>(_scene, _cameraComponent.get()));
-            }
-            if (RenderSettings::DebugView().ShowAlbedo)
-            {
-                _renderGraph.AddPass(std::make_shared<DebugAlbedoViewPass>(_scene, _cameraComponent.get()));
-            }
-            else if (RenderSettings::DebugView().ShowMetalness)
-            {
-                _renderGraph.AddPass(std::make_shared<DebugMetallicViewPass>(_scene, _cameraComponent.get()));
-            }
-            else if (RenderSettings::DebugView().ShowRoughness)
-            {
-                _renderGraph.AddPass(std::make_shared<DebugRoughnessViewPass>(_scene, _cameraComponent.get()));
-            }
-            else if (RenderSettings::DebugView().ShowNormals)
-            {
-                _renderGraph.AddPass(std::make_shared<DebugNormalViewPass>(_scene, _cameraComponent.get()));
-            }
-            else if (RenderSettings::DebugView().ShowSSAO)
-            {
-                _renderGraph.AddPass(std::make_shared<DebugSSAOViewPass>(_scene, _cameraComponent.get()));
-            }
-            else if (RenderSettings::DebugView().ShowEmission)
-            {
-                _renderGraph.AddPass(std::make_shared<DebugEmissiveViewPass>(_scene, _cameraComponent.get()));
-            }
-            _renderGraph.AddPass(std::make_shared<PresentPass>(_scene, _cameraComponent.get()));
+            _renderGraph->AddPass(std::make_shared<GeometryPass>(_device, _scene, _cameraComponent.get()));
+            //_renderGraph->AddPass(std::make_shared<ShadowCullPass>(_device, _scene, _cameraComponent.get()));
+            //_renderGraph->AddPass(std::make_shared<ShadowDrawPass>(_device, _scene, _cameraComponent.get()));
+            //_renderGraph->AddPass(std::make_shared<AmbientLightingPass>(_device, _scene, _cameraComponent.get()));
+            //if (RenderSettings::UseSSAO())
+            //{
+            //    _renderGraph->AddPass(std::make_shared<SSAOComputePass>(_device, _scene, _cameraComponent.get()));
+            //    _renderGraph->AddPass(std::make_shared<SSAOBlurPass>(_device, _scene, _cameraComponent.get()));
+            //    _renderGraph->AddPass(std::make_shared<SSAOApplyPass>(_device, _scene, _cameraComponent.get()));
+            //}
+            //_renderGraph->AddPass(std::make_shared<LightingPass>(_device, _scene, _cameraComponent.get()));
+            //if (_device, _scene->FindNodeByComponentName("Skybox"))
+            //{
+            //    _renderGraph->AddPass(std::make_shared<SkyboxPass>(_device, _scene, _cameraComponent.get()));
+            //}
+            //if (RenderSettings::UseBloom())
+            //{
+            //    _renderGraph->AddPass(std::make_shared<BloomDownsamplePass>(_device, _scene, _cameraComponent.get()));
+            //    _renderGraph->AddPass(std::make_shared<BloomUpsamplePass>(_device, _scene, _cameraComponent.get()));
+            //    _renderGraph->AddPass(std::make_shared<BloomApplyPass>(_device, _scene, _cameraComponent.get()));
+            //}
+            //if (RenderSettings::UseFXAA())
+            //{
+            //    _renderGraph->AddPass(std::make_shared<FXAAPass>(_device, _scene, _cameraComponent.get()));
+            //}
+            //_renderGraph->AddPass(std::make_shared<LuminanceHistogramPass>(_device, _scene, _cameraComponent.get()));
+            //_renderGraph->AddPass(std::make_shared<AverageLuminancePass>(_device, _scene, _cameraComponent.get()));
+            //_renderGraph->AddPass(std::make_shared<ToneMappingPass>(_device, _scene, _cameraComponent.get()));
+            //if (RenderSettings::RenderDebugVolumes())
+            //{
+            //    _renderGraph->AddPass(std::make_shared<DebugBoundingVolumePass>(_device, _scene, _cameraComponent.get()));
+            //}
+            //if (RenderSettings::RenderDebugArmature())
+            //{
+            //    _renderGraph->AddPass(std::make_shared<DebugArmaturePass>(_device, _scene, _cameraComponent.get()));
+            //}
+            //if (RenderSettings::DebugView().ShowAlbedo)
+            //{
+                _renderGraph->AddPass(std::make_shared<DebugAlbedoViewPass>(_device, _scene, _cameraComponent.get()));
+            //}
+            //else if (RenderSettings::DebugView().ShowMetalness)
+            //{
+            //    _renderGraph->AddPass(std::make_shared<DebugMetallicViewPass>(_device, _scene, _cameraComponent.get()));
+            //}
+            //else if (RenderSettings::DebugView().ShowRoughness)
+            //{
+            //    _renderGraph->AddPass(std::make_shared<DebugRoughnessViewPass>(_device, _scene, _cameraComponent.get()));
+            //}
+            //else if (RenderSettings::DebugView().ShowNormals)
+            //{
+            //    _renderGraph->AddPass(std::make_shared<DebugNormalViewPass>(_device, _scene, _cameraComponent.get()));
+            //}
+            //else if (RenderSettings::DebugView().ShowSSAO)
+            //{
+            //    _renderGraph->AddPass(std::make_shared<DebugSSAOViewPass>(_device, _scene, _cameraComponent.get()));
+            //}
+            //else if (RenderSettings::DebugView().ShowEmission)
+            //{
+            //    _renderGraph->AddPass(std::make_shared<DebugEmissiveViewPass>(_device, _scene, _cameraComponent.get()));
+            //}
+            //_renderGraph->AddPass(std::make_shared<PresentPass>(_device, _scene, _cameraComponent.get()));
 
-            _renderGraph.Compile();
+            struct PresentPassData
+            {
+                rg::RGTextureCopySrcId RenderTarget;
+            } presentPassData;
+
+            _renderGraph->AddPass<PresentPassData>(_device, "Present Pass",
+                [&](rg::RenderPassBuilder& builder)
+                {
+                    presentPassData.RenderTarget = builder.CopySrcTexture("render_target");
+                },
+                [&](rg::RenderContext& context, rg::ITask* task)
+                {
+                    rhi::CommandList* commandList = task->GetCommandList();
+
+                    {
+                        GPU_SCOPED_EVENT(commandList, "Present Pass", 2);
+
+                        std::shared_ptr<rhi::Texture> target = context.GetTexture(presentPassData.RenderTarget);
+                        std::shared_ptr<rhi::Texture> swapChainTexture = this->_device->GetBackBuffer();
+
+                        rhi::TextureBarrier beginBarrier = { swapChainTexture, rhi::ResourceState::Present, rhi::ResourceState::CopyDest };
+                        rhi::TextureBarrier endBarrier = { swapChainTexture, rhi::ResourceState::CopyDest, rhi::ResourceState::Present };
+
+                        commandList->TransitionBarriers({ beginBarrier });
+                        commandList->CopyTexture(target, swapChainTexture);
+                        commandList->TransitionBarriers({ endBarrier });
+                    }
+
+                    commandList->Close();
+                },
+                rg::RenderPassType::Copy);
+
+            _renderGraph->Compile();
         }
     }
 } // namespace render

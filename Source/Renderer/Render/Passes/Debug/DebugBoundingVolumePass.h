@@ -16,11 +16,11 @@ namespace render
 	class DebugBoundingVolumePass : public rg::RenderPass<DebugBoundingVolumePassData>
 	{
 	public:
-		DebugBoundingVolumePass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
+		DebugBoundingVolumePass(rhi::Device* device, std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
 
 		// Inherited via RenderPass
 		void Setup(rg::RenderPassBuilder& builder) override;
-		void Execute(rg::RenderContext& context, TaskGPU& task) override;
+		void Execute(rg::RenderContext& context, rg::ITask* task) override;
 
 	private:
 		std::shared_ptr<scene::Scene> _scene;

@@ -8,63 +8,40 @@
 #include "GPUCrashTracker/IGPUCrashTracker.h"
 #include "GPUCrashTracker/ICommandListCrashContext.h"
 
-TaskGPU::TaskGPU()
-    : _commandQueue(nullptr)
-    , _fence(nullptr)
-    , _commandListCrashContext(dx12::Device::GetCrashTracker()->CreateCommandListCrashContext())
+TaskGPU::TaskGPU(rhi::Device* device)
+    : _fence(nullptr)
+    , _commandListCrashContext(device->GetCrashTracker()->CreateCommandListCrashContext())
 {
 }
 
 TaskGPU::~TaskGPU()
 {
-    _commandQueue = nullptr;
     _fence = nullptr;
 }
 
-void TaskGPU::SetCommandQueue(ComPtr<ID3D12CommandQueue> commandQueue)
-{
-    ASSERT(commandQueue, "Trying to set a nullptr command queue to the task.");
-    _commandQueue = commandQueue;
-}
-
-ComPtr<ID3D12CommandQueue> TaskGPU::GetCommandQueue() const
-{
-    return _commandQueue;
-}
-
-void TaskGPU::AddCommandList(dx12::CommandList* commandList)
+void TaskGPU::AddCommandList(rhi::CommandList* commandList)
 {
     ASSERT(commandList, "Trying to add a nullptr command list to the task.");
 
     _commandLists.push_back(commandList);
-    _commandListCrashContext->Initialize(commandList->GetDXCommandList().Get());
+    _commandListCrashContext->Initialize(commandList);
 }
 
-std::vector<dx12::CommandList*> TaskGPU::GetCommandLists() const
+rhi::CommandList* TaskGPU::GetCommandList()
 {
-    return _commandLists;
+    return _commandLists.front();
 }
 
-dx12::CommandList& TaskGPU::GetCommandList()
-{
-    return *_commandLists.front();
-}
-
-void TaskGPU::SetFence(dx12::Fence* fence)
+void TaskGPU::SetFence(rhi::Fence* fence)
 {
     ASSERT(fence, "Trying to set a nullptr fence to the task.");
     _fence = fence;
 }
 
-dx12::Fence* TaskGPU::GetFence() const
+rhi::Fence* TaskGPU::GetFence() const
 {
     ASSERT(_fence, "Trying to get a nullptr fence from the task.");
     return _fence;
-}
-
-ID3D12Fence* TaskGPU::GetDXFence() const
-{
-    return _fence->GetDXFence().Get();
 }
 
 UINT64 TaskGPU::GetFenceValue() const
@@ -80,6 +57,11 @@ void TaskGPU::AddDependency(const std::string& taskName)
 std::vector<std::string> TaskGPU::GetDependencies() const
 {
     return _dependencies;
+}
+
+rhi::CommandListType TaskGPU::GetType() const
+{
+    return _commandLists.front()->GetCommandListType();
 }
 
 void TaskGPU::SetName(const std::string& name)

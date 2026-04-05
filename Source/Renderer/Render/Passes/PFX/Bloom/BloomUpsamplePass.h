@@ -16,14 +16,14 @@ namespace render
 	class BloomUpsamplePass : public rg::RenderPass<BloomUpsamplePassData>
 	{
 	public:
-		BloomUpsamplePass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
+		BloomUpsamplePass(rhi::Device* device, std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
 
 		// Inherited via RenderPass
 		void Setup(rg::RenderPassBuilder& builder) override;
-		void Execute(rg::RenderContext& context, TaskGPU& task) override;
+		void Execute(rg::RenderContext& context, rg::ITask* task) override;
 
 	private:
-		dx12::PipelineState _bloomUpsamplePipeline;
+		std::unique_ptr<rhi::PipelineState> _bloomUpsamplePipeline;
 
 		std::uint32_t _mipCount;
 

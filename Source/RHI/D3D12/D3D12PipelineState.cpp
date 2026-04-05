@@ -308,12 +308,13 @@ namespace rhi::d3d12
         }
     } // namespace unnamed
 
-    D3D12PipelineState::D3D12PipelineState(rhi::Device* device)
+    D3D12PipelineState::D3D12PipelineState(rhi::Device* device, const std::string& filepath)
         : _rootSignature(nullptr)
         , _pipelineState(nullptr)
         , _type(rhi::PipelineStateType::Graphics)
         , _device(device)
     {
+        Parse(filepath);
     }
 
     D3D12PipelineState::D3D12PipelineState(D3D12PipelineState&& other) noexcept
@@ -358,7 +359,8 @@ namespace rhi::d3d12
         Json::Value jsonRoot = ParseJson(filepath);
         ASSERT(!jsonRoot.isNull() || jsonRoot.empty(), "Failed to parse JSON from file: " + filepath);
 
-        _type = ParsePipelineType(jsonRoot["IsGraphicsPipeline"].asString());
+        std::string pipelineType = jsonRoot["PipelineType"].asCString();
+        _type = ParsePipelineType(pipelineType);
 
         switch (_type)
         {
@@ -604,5 +606,10 @@ namespace rhi::d3d12
     void* D3D12PipelineState::GetNative() const
     {
         return static_cast<void*>(_pipelineState.Get());
+    }
+
+    void* D3D12PipelineState::GetNativeRootSignature() const
+    {
+        return static_cast<void*>(_rootSignature.Get());
     }
 } // namespace rhi::d3d12

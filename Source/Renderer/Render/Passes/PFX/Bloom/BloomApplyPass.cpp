@@ -9,12 +9,22 @@
 
 namespace render
 {
-    BloomApplyPass::BloomApplyPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
+    namespace
+    {
+        struct PassConstants
+        {
+            std::uint32_t BloomTextureIndex;
+            std::uint32_t HDRTextureIndex;
+            float BloomIntensity;
+        };
+    }
+
+    BloomApplyPass::BloomApplyPass(rhi::Device* device, std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
         : RenderPass<BloomApplyPassData>("bloom_apply_pass", rg::RenderPassType::Compute)
         , _scene(scene)
         , _camera(camera)
     {
-        _bloomApplyPipeline.Parse("PipelineDescriptions\\BloomApplyPipeline.tech");
+        _bloomApplyPipeline = _device->CreatePipelineState("PipelineDescriptions\\BloomApplyPipeline.tech");
     }
 
     void BloomApplyPass::Setup(rg::RenderPassBuilder& builder)
@@ -23,36 +33,29 @@ namespace render
         _data.Bloom = builder.ReadTexture("bloom_mip_1");
     }
 
-    void BloomApplyPass::Execute(rg::RenderContext& context, TaskGPU& task)
+    void BloomApplyPass::Execute(rg::RenderContext& context, rg::ITask* task)
     {
-        dx12::CommandList& commandList = *task.GetCommandLists().front();
-        commandList.SetName("bloom_apply_pass_cmd_list");
+        rhi::CommandList* commandList = task->GetCommandList();
 
         {
-            PIXScopedEvent(commandList.GetDXCommandList().Get(), 9, "Bloom Apply Pass");
+            GPU_SCOPED_EVENT(commandList, "Bloom Apply Pass", 9);
 
-            std::shared_ptr<dx12::Resource> hdrTarget = context.GetResource(_data.HDRTarget);
-            std::shared_ptr<dx12::Resource> bloomTarget = context.GetResource(_data.Bloom);
+            commandList->SetComputePipelineState(_bloomApplyPipeline.get());
 
-            DescriptorHandle hdrTargetHandle = context.GetStaticResourceHandle(hdrTarget->GetAsUAV());
-            DescriptorHandle bloomTargetHandle = context.GetStaticResourceHandle(bloomTarget->GetAsSRV());
+            PassConstants passCB =
+            { 
+                .BloomTextureIndex = context.GetBindlessIndex(_data.Bloom, rhi::ResourceViewType::SRV),
+                .HDRTextureIndex = context.GetBindlessIndex(_data.HDRTarget, rhi::ResourceViewType::UAV),
+                .BloomIntensity = RenderSettings::Bloom().Intensity 
+            };
+            commandList->SetComputeConstants(1, 3, &passCB);
 
-            context.BindBindlessTable(commandList);
-            commandList.SetPipelineState(_bloomApplyPipeline);
-
-            struct PassConstants
-            {
-                std::uint32_t BloomTextureIndex;
-                std::uint32_t HDRTextureIndex;
-                float BloomIntensity;
-            } passCB{ .BloomTextureIndex = bloomTargetHandle.Index, .HDRTextureIndex = hdrTargetHandle.Index, .BloomIntensity = RenderSettings::Bloom().Intensity };
-            commandList.SetConstants(1, 3, &passCB);
-
-            std::uint32_t xThreadGroups = (std::uint32_t)std::ceilf(hdrTarget->GetResourceDescription().GetSize().x / 16.0f);
-            std::uint32_t yThreadGroups = (std::uint32_t)std::ceilf(hdrTarget->GetResourceDescription().GetSize().y / 16.0f);
-            commandList.Dispatch(xThreadGroups, yThreadGroups, 1);
+            DirectX::XMUINT2 viewportSize = _camera->GetViewport().GetSize();
+            int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 16.0f);
+            int yThreadGroups = (uint32_t)std::ceilf(viewportSize.y / 16.0f);
+            commandList->Dispatch(xThreadGroups, yThreadGroups, 1);
         }
 
-        commandList.Close();
+        commandList->Close();
     }
 } // namespace render

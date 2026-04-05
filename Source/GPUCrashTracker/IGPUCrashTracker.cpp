@@ -38,7 +38,7 @@ namespace tracking
 #ifdef USE_NSIGHT_AFTERMATH
         return std::make_shared<NsightAftermathCommandListContext>(shared_from_this());
 #else
-        return std::make_shared<NullCommandListCrashContext>(shared_from_this());
+        return std::make_shared<NullCommandListCrashContext>();
 #endif
     }
 

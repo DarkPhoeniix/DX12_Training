@@ -3,11 +3,6 @@
 #include "RHI/TimestampQuery.h"
 #include "Utility/Timer.h"
 
-namespace dx12
-{
-    class CommandList;
-}
-
 class Profiler
 {
 public:
@@ -28,16 +23,16 @@ public:
         std::vector<TimerResult> TimerResults = {};
     };
 
-    Profiler();
+    Profiler(rhi::Device* device);
     ~Profiler() = default;
 
-    void BeginEvent(dx12::CommandList& commandList, TimerID id);
-    void EndEvent(dx12::CommandList& commandList, TimerID id);
+    void BeginEvent(rhi::CommandList* commandList, TimerID id);
+    void EndEvent(rhi::CommandList* commandList, TimerID id);
 
     TimerID RegisterTimer(const std::string& name);
     void UnregisterAllTimers();
 
-    void ResolveTimestamps(dx12::CommandList& commandList);
+    void ResolveTimestamps(rhi::CommandList* commandList);
 
     const Stats& GetCPUStats() const;
     const Stats& GetGPUStats() const;
@@ -60,6 +55,6 @@ private:
     // GPU statistics
     Stats _gpuStats;
 
-    dx12::TimestampQuery _timestampQuery;
-    std::shared_ptr<dx12::Resource> _timestampResultBuffer;
+    std::unique_ptr<rhi::TimestampQuery> _timestampQuery;
+    std::shared_ptr<rhi::Buffer> _timestampResultBuffer;
 };

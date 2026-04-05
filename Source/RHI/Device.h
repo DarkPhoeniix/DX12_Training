@@ -50,8 +50,9 @@ namespace rhi
 
         virtual bool IsEnhancedBarriersSupported() = 0;
 
-        virtual void BindSwapChain(SwapChain& swapChain) = 0;
+        virtual void BindSwapChain(SwapChain* swapChain) = 0;
 
+        virtual CommandQueue* GetQueue(rhi::CommandListType type) = 0;
         virtual CommandQueue* GetComputeQueue() = 0;
         virtual CommandQueue* GetStreamQueue() = 0;
         virtual CommandQueue* GetCopyQueue() = 0;
@@ -76,6 +77,8 @@ namespace rhi
         virtual std::unique_ptr<StatisticsQuery> CreateStatisticsQuery(const std::string& name = "") = 0;
         virtual std::unique_ptr<TimestampQuery> CreateTimestampQuery(std::uint32_t timestampsCount, const std::string& name = "") = 0;
         virtual std::unique_ptr<CommandSignature> CreateCommandSignature(const std::vector<IndirectArgumentDescription>& arguments, PipelineState* pipelineState, const std::string& name = "") = 0;
+        virtual std::unique_ptr<SwapChain> CreateSwapChain(void* windowHandle, std::uint32_t width, std::uint32_t height, bool vSync) = 0;
+        virtual std::unique_ptr<PipelineState> CreatePipelineState(const std::string& filepath) = 0;
 
         virtual void CreateBufferSRV(std::shared_ptr<Buffer> resource, CPUDescriptor& descriptor) = 0;
         virtual void CreateBufferCBV(std::shared_ptr<Buffer> resource, CPUDescriptor& descriptor) = 0;
@@ -96,5 +99,5 @@ namespace rhi
         virtual void* GetNative() const = 0;
     };
 
-    static std::unique_ptr<Device> CreateDevice(BackendAPI backend);
+    std::unique_ptr<Device> CreateDevice(BackendAPI backend);
 } // namespace rhi

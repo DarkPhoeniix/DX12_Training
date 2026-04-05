@@ -18,21 +18,21 @@ namespace scene
     {
     }
 
-    Viewport::Viewport(const DirectX::XMUINT2& size)
-        : _viewport(0.0f, 0.0f, (FLOAT)size.x, (FLOAT)size.y)
+    Viewport::Viewport(std::uint32_t width, std::uint32_t height)
+        : _viewport(0.0f, 0.0f, width, height)
         , _scissorRectangle(0, 0, LONG_MAX, LONG_MAX)
-        , _aspectRatio(size.x / (FLOAT)size.y)
+        , _aspectRatio(width / (float)height)
     {
     }
 
-    Viewport::Viewport(const CD3DX12_VIEWPORT& DXViewport)
+    Viewport::Viewport(const rhi::Viewport& DXViewport)
         : _viewport(DXViewport)
         , _scissorRectangle(0, 0, LONG_MAX, LONG_MAX)
         , _aspectRatio(DXViewport.Width / DXViewport.Height)
     {
     }
 
-    CD3DX12_VIEWPORT Viewport::GetDXViewport() const
+    rhi::Viewport Viewport::GetDXViewport() const
     {
         return _viewport;
     }
@@ -42,11 +42,11 @@ namespace scene
         return _aspectRatio;
     }
 
-    void Viewport::SetSize(const DirectX::XMUINT2& size)
+    void Viewport::SetSize(std::uint32_t width, std::uint32_t height)
     {
-        _viewport.Width = (FLOAT)size.x;
-        _viewport.Height = (FLOAT)size.y;
-        _aspectRatio = (size.x / (FLOAT)size.y);
+        _viewport.Width = (float)width;
+        _viewport.Height = (float)height;
+        _aspectRatio = (width / (float)height);
     }
 
     DirectX::XMUINT2 Viewport::GetSize() const
@@ -65,17 +65,17 @@ namespace scene
         return { _viewport.MinDepth, _viewport.MaxDepth };
     }
 
-    void Viewport::SetScissorRectangle(const CD3DX12_RECT& rect)
+    void Viewport::SetScissorRectangle(const rhi::ScissorRect& rect)
     {
         _scissorRectangle = rect;
     }
 
-    CD3DX12_RECT& Viewport::GetScissorRectangle()
+    rhi::ScissorRect& Viewport::GetScissorRectangle()
     {
         return _scissorRectangle;
     }
 
-    const CD3DX12_RECT& Viewport::GetScissorRectangle() const
+    const rhi::ScissorRect& Viewport::GetScissorRectangle() const
     {
         return _scissorRectangle;
     }
@@ -87,7 +87,7 @@ namespace scene
         , _viewProjection(XMMatrixIdentity())
         , _position(XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f))
         , _up(XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f))
-        , _viewport({ 1, 1 })
+        , _viewport(1, 1)
         , Speed(100.0f)
     {
         _UpdateFrustum();

@@ -9,26 +9,26 @@ namespace scene
     {
     public:
         Viewport();
-        Viewport(const DirectX::XMUINT2& size);
-        Viewport(const CD3DX12_VIEWPORT& DXViewport);
+        Viewport(std::uint32_t width, std::uint32_t height);
+        Viewport(const rhi::Viewport& DXViewport);
         ~Viewport() = default;
 
-        CD3DX12_VIEWPORT GetDXViewport() const;
+        rhi::Viewport GetDXViewport() const;
         float GetAspectRatio() const;
 
-        void SetSize(const DirectX::XMUINT2& size);
+        void SetSize(std::uint32_t width, std::uint32_t height);
         DirectX::XMUINT2 GetSize() const;
 
         void SetDepth(const DirectX::XMFLOAT2& depth);
         DirectX::XMFLOAT2 GetDepth() const;
 
-        void SetScissorRectangle(const CD3DX12_RECT& rect);
-        CD3DX12_RECT& GetScissorRectangle();
-        const CD3DX12_RECT& GetScissorRectangle() const;
+        void SetScissorRectangle(const rhi::ScissorRect& rect);
+        rhi::ScissorRect& GetScissorRectangle();
+        const rhi::ScissorRect& GetScissorRectangle() const;
 
     private:
-        CD3DX12_VIEWPORT _viewport;
-        CD3DX12_RECT _scissorRectangle;
+        rhi::Viewport _viewport;
+        rhi::ScissorRect _scissorRectangle;
         float _aspectRatio;
     };
 

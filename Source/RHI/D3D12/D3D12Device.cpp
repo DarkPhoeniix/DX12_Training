@@ -19,6 +19,7 @@
 #include "IGPUCrashTracker.h"
 #include "D3D12StatisticsQuery.h"
 #include "D3D12TimestampQuery.h"
+#include "D3D12PipelineState.h"
 
 #include "ResourceCommon.h"
 #include "DescriptorHeap.h"
@@ -102,9 +103,25 @@ namespace rhi::d3d12
         return _enhancedBarriersSupported;
     }
 
-    void D3D12Device::BindSwapChain(rhi::SwapChain& swapChain)
+    void D3D12Device::BindSwapChain(rhi::SwapChain* swapChain)
     {
-        _swapChain = &swapChain;
+        _swapChain = swapChain;
+    }
+
+    CommandQueue* D3D12Device::GetQueue(rhi::CommandListType type)
+    {
+        switch (type)
+        {
+        case rhi::CommandListType::Graphics:
+            return GetStreamQueue();
+        case rhi::CommandListType::Compute:
+            return GetComputeQueue();
+        case rhi::CommandListType::Copy:
+            return GetCopyQueue();
+        default:
+            UNREACHABLE("Unsupported command queue type.");
+            return GetStreamQueue();
+        }
     }
 
     rhi::CommandQueue* D3D12Device::GetStreamQueue()
@@ -205,6 +222,16 @@ namespace rhi::d3d12
     std::unique_ptr<rhi::CommandSignature> D3D12Device::CreateCommandSignature(const std::vector<rhi::IndirectArgumentDescription>& arguments, rhi::PipelineState* pipelineState, const std::string& name)
     {
         return std::unique_ptr<D3D12CommandSignature>(new D3D12CommandSignature(this, arguments, pipelineState, name));
+    }
+
+    std::unique_ptr<rhi::SwapChain> D3D12Device::CreateSwapChain(void* windowHandle, std::uint32_t width, std::uint32_t height, bool vSync)
+    {
+        return std::unique_ptr<D3D12SwapChain>(new D3D12SwapChain(this, (HWND)windowHandle, width, height, vSync));
+    }
+
+    std::unique_ptr<rhi::PipelineState> D3D12Device::CreatePipelineState(const std::string& filepath)
+    {
+        return std::unique_ptr<D3D12PipelineState>(new D3D12PipelineState(this, filepath));
     }
 
     void D3D12Device::CreateBufferSRV(std::shared_ptr<Buffer> buffer, CPUDescriptor& descriptor)

@@ -29,8 +29,9 @@ namespace rhi::d3d12
         bool IsEnhancedBarriersSupported() override;
 
         // Binds a swap chain to the device for rendering output.
-        void BindSwapChain(rhi::SwapChain& swapChain) override; 
+        void BindSwapChain(rhi::SwapChain* swapChain) override; 
 
+        CommandQueue* GetQueue(rhi::CommandListType type) override;
         // Retrieves the compute command queue for GPU compute operations.
         rhi::CommandQueue* GetComputeQueue() override;
         // Retrieves the stream command queue for resource streaming.
@@ -61,6 +62,8 @@ namespace rhi::d3d12
         std::unique_ptr<rhi::StatisticsQuery> CreateStatisticsQuery(const std::string& name) override;
         std::unique_ptr<rhi::TimestampQuery> CreateTimestampQuery(std::uint32_t timestampsCount, const std::string& name) override;
         std::unique_ptr<rhi::CommandSignature> CreateCommandSignature(const std::vector<rhi::IndirectArgumentDescription>& arguments, rhi::PipelineState* pipelineState, const std::string& name) override;
+        std::unique_ptr<rhi::SwapChain> CreateSwapChain(void* windowHandle, std::uint32_t width, std::uint32_t height, bool vSync) override;
+        std::unique_ptr<rhi::PipelineState> CreatePipelineState(const std::string& filepath) override;
 
         void CreateBufferSRV(std::shared_ptr<rhi::Buffer> resource, rhi::CPUDescriptor& descriptor) override;
         void CreateBufferCBV(std::shared_ptr<rhi::Buffer> resource, rhi::CPUDescriptor& descriptor) override;

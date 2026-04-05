@@ -14,6 +14,7 @@ namespace rhi::d3d12
     class D3D12PipelineState final : public rhi::PipelineState
     {
     public:
+        D3D12PipelineState(rhi::Device* device, const std::string& filepath);
         // Copy constructor.
         D3D12PipelineState(const D3D12PipelineState& other) = delete;
         // Move constructor.
@@ -33,14 +34,8 @@ namespace rhi::d3d12
 
         rhi::PipelineStateType GetType() const override;
 
-        // Parse and create a graphics or compute pipeline from the given JSON file.
-        void Parse(const std::string& filepath);
-
-        rhi::BlendState ParseBlendDescription(const std::string& filepath) override;
-        rhi::RasterizerState ParseRasterizerDescription(const std::string& filepath) override;
-        rhi::DepthStencilState ParseDepthStencilDescription(const std::string& filepath) override;
-
         void* GetNative() const override;
+        void* GetNativeRootSignature() const override;
 
     private:
         friend class D3D12Device;
@@ -48,10 +43,15 @@ namespace rhi::d3d12
         // Default null initialization.
         D3D12PipelineState(rhi::Device* device);
 
+        void Parse(const std::string& filepath);
         // Parse the graphics pipeline settings from the JSON file.
         void ParseGraphicsPipeline(const Json::Value& fileRoot);
         // Parse the compute pipeline settings from the JSON file.
         void ParseComputePipeline(const Json::Value& fileRoot);
+
+        rhi::BlendState ParseBlendDescription(const std::string& filepath) override;
+        rhi::RasterizerState ParseRasterizerDescription(const std::string& filepath) override;
+        rhi::DepthStencilState ParseDepthStencilDescription(const std::string& filepath) override;
 
         // Pointer to the raw D3D12 root signature object.
         ComPtr<ID3D12RootSignature> _rootSignature;

@@ -39,24 +39,24 @@ namespace rg
         return resourceIt->second;
     }
 
-    rhi::CPUDescriptor RenderContext::GetCPUDescriptor(RGBufferId id, rhi::ResourceViewType viewType) const
+    std::uint32_t RenderContext::GetBindlessIndex(RGBufferId id, rhi::ResourceViewType viewType) const
     {
-        return _descriptorProvider->GetCPUDescriptor(id.ID, viewType);
+        return _descriptorProvider->GetBindlessIndex(rhi::ResourceID(id.ID), viewType);
     }
 
-    rhi::GPUDescriptor RenderContext::GetGPUDescriptor(RGBufferId id, rhi::ResourceViewType viewType) const
+    std::uint32_t RenderContext::GetBindlessIndex(RGTextureId id, rhi::ResourceViewType viewType) const
     {
-        return _descriptorProvider->GetGPUDescriptor(id.ID, viewType);
+        return _descriptorProvider->GetBindlessIndex(rhi::ResourceID(id.ID), viewType);
     }
 
-    rhi::CPUDescriptor RenderContext::GetCPUDescriptor(RGTextureId id, rhi::ResourceViewType viewType) const
+    rhi::CPUDescriptor RenderContext::GetDescriptor(RGBufferId id, rhi::ResourceViewType viewType) const
     {
-        return _descriptorProvider->GetCPUDescriptor(id.ID, viewType);
+        return _descriptorProvider->GetDescriptor(rhi::ResourceID(id.ID), viewType);
     }
 
-    rhi::GPUDescriptor RenderContext::GetGPUDescriptor(RGTextureId id, rhi::ResourceViewType viewType) const
+    rhi::CPUDescriptor RenderContext::GetDescriptor(RGTextureId id, rhi::ResourceViewType viewType) const
     {
-        return _descriptorProvider->GetGPUDescriptor(id.ID, viewType);
+        return _descriptorProvider->GetDescriptor(rhi::ResourceID(id.ID), viewType);
     }
 
     void RenderContext::SetGPUProfiler(Profiler* gpuProfiler)
@@ -82,9 +82,9 @@ namespace rg
 
         if (HasFlag(desc.Flags, rhi::ResourceFlags::AllowUnorderedAccess))
         {
-            _descriptorProvider->CreateResourceView(buffer->GetID(), rhi::ResourceViewType::UAV);
+            _descriptorProvider->CreateStaticResourceView(buffer->GetID(), rhi::ResourceViewType::UAV);
         }
-        _descriptorProvider->CreateResourceView(buffer->GetID(), rhi::ResourceViewType::SRV);
+        _descriptorProvider->CreateStaticResourceView(buffer->GetID(), rhi::ResourceViewType::SRV);
 
         return buffer->GetID();
     }
@@ -102,17 +102,17 @@ namespace rg
 
         if (HasFlag(desc.Flags, rhi::ResourceFlags::AllowRenderTarget))
         {
-            _descriptorProvider->CreateResourceView(texture->GetID(), rhi::ResourceViewType::RTV);
+            _descriptorProvider->CreateStaticResourceView(texture->GetID(), rhi::ResourceViewType::RTV);
         }
         if (HasFlag(desc.Flags, rhi::ResourceFlags::AllowDepthStencil))
         {
-            _descriptorProvider->CreateResourceView(texture->GetID(), rhi::ResourceViewType::DSV);
+            _descriptorProvider->CreateStaticResourceView(texture->GetID(), rhi::ResourceViewType::DSV);
         }
         if (HasFlag(desc.Flags, rhi::ResourceFlags::AllowUnorderedAccess))
         {
-            _descriptorProvider->CreateResourceView(texture->GetID(), rhi::ResourceViewType::UAV);
+            _descriptorProvider->CreateStaticResourceView(texture->GetID(), rhi::ResourceViewType::UAV);
         }
-        _descriptorProvider->CreateResourceView(texture->GetID(), rhi::ResourceViewType::SRV);
+        _descriptorProvider->CreateStaticResourceView(texture->GetID(), rhi::ResourceViewType::SRV);
 
         return texture->GetID();
     }

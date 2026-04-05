@@ -152,6 +152,26 @@ namespace rhi::d3d12
         }
     }
 
+    rhi::ScissorRect D3D12SwapChain::GetDesktopCoordinates()
+    {
+        ComPtr<IDXGIOutput> containingOutput;
+        _dxgiSwapChain->GetContainingOutput(&containingOutput);
+
+        DXGI_OUTPUT_DESC outputDescription;
+        HRESULT result = containingOutput->GetDesc(&outputDescription);
+        CHECK(result, "Failed to get swap chain description.");
+
+        rhi::ScissorRect rect =
+        {
+            .Left = outputDescription.DesktopCoordinates.left,
+            .Top = outputDescription.DesktopCoordinates.top,
+            .Right = outputDescription.DesktopCoordinates.right,
+            .Bottom = outputDescription.DesktopCoordinates.bottom,
+        };
+
+        return rect;
+    }
+
     void* D3D12SwapChain::GetNative() const
     {
         return static_cast<void*>(_dxgiSwapChain.Get());

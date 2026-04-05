@@ -7,12 +7,12 @@
 
 namespace render
 {
-	DebugNormalViewPass::DebugNormalViewPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-		: RenderPass<DebugNormalViewPassData>("debug_normal_pass", rg::RenderPassType::Graphics)
+	DebugNormalViewPass::DebugNormalViewPass(rhi::Device* device, std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
+		: RenderPass<DebugNormalViewPassData>(device, "debug_normal_pass", rg::RenderPassType::Graphics)
 		, _scene(scene)
 		, _camera(camera)
 	{
-		_debugNormalViewPipeline.Parse("PipelineDescriptions\\DebugNormalView.tech");
+		_debugNormalViewPipeline = _device->CreatePipelineState("PipelineDescriptions\\DebugNormalView.tech");
 	}
 
 	void DebugNormalViewPass::Setup(rg::RenderPassBuilder& builder)
@@ -21,39 +21,31 @@ namespace render
 		_data.Target = builder.RenderTarget("render_target");
 	}
 
-	void DebugNormalViewPass::Execute(rg::RenderContext& context, TaskGPU& task)
+	void DebugNormalViewPass::Execute(rg::RenderContext& context, rg::ITask* task)
 	{
-		dx12::CommandList& commandList = *task.GetCommandLists().front();
-		commandList.SetName("debug_normal_cmd_list");
+		rhi::CommandList* commandList = task->GetCommandList();
 
 		{
-            PIXScopedEvent(commandList.GetDXCommandList().Get(), 9, "Debug View Pass - Normal");
+            GPU_SCOPED_EVENT(commandList, "Debug View Pass - Normal", 9);
 
-			std::shared_ptr<dx12::Resource> normalRoughness = context.GetResource(_data.NormalRoughness);
-			std::shared_ptr<dx12::Resource> target = context.GetResource(_data.Target);
+			rhi::CPUDescriptor targetHandle = context.GetDescriptor(_data.NormalRoughness, rhi::ResourceViewType::RTV);
 
-			DescriptorHandle normalRoughnessHandle = context.GetStaticResourceHandle(normalRoughness->GetAsSRV());
-			DescriptorHandle renderTargetHandle = context.GetStaticResourceHandle(target->GetAsRTV());
+			commandList->SetGraphicsPipelineState(_debugNormalViewPipeline.get());
 
-			context.BindBindlessTable(commandList);
+			commandList->SetViewport(_camera->GetViewport().GetDXViewport(), _camera->GetViewport().GetScissorRectangle());
+			commandList->SetRenderTarget(&targetHandle, nullptr);
 
-			commandList.SetPipelineState(_debugNormalViewPipeline);
+			commandList->SetPrimitiveTopology(rhi::PrimitiveTopology::TriangleList);
 
-			commandList.SetViewport(_camera->GetViewport().GetDXViewport(), _camera->GetViewport().GetScissorRectangle());
-			commandList.SetRenderTarget(&renderTargetHandle.CpuHandle, nullptr);
-
-			commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-			commandList.SetCBV(0, context.GetFrame()->GetBuffer()->OffsetGPU());
 			struct
 			{
 				std::uint32_t SourceTextureIndex;
-			} PassConstants = { .SourceTextureIndex = normalRoughnessHandle.Index };
-			commandList.SetConstants(1, 1, &PassConstants);
+			} PassConstants = { .SourceTextureIndex = context.GetBindlessIndex(_data.NormalRoughness, rhi::ResourceViewType::SRV) };
+			commandList->SetGraphicsConstants(1, 1, &PassConstants);
 
-			commandList.Draw(3);
+			commandList->Draw(3);
 		}
 
-		commandList.Close();
+		commandList->Close();
 	}
 } // namespace render

@@ -41,13 +41,13 @@ namespace
 
 namespace render
 {
-    ShadowDrawPass::ShadowDrawPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
+    ShadowDrawPass::ShadowDrawPass(rhi::Device* device, std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
         : RenderPass<ShadowDrawPassData>("shadow_draw_pass", rg::RenderPassType::Graphics)
         , _scene(scene)
         , _camera(camera)
     {
-        _spotLightShadowsPipeline.Parse("PipelineDescriptions\\Shadow_SpotLight.tech");
-        _pointLightShadowsPipeline.Parse("PipelineDescriptions\\Shadow_PointLight.tech");
+        _spotLightShadowsPipeline = _device->CreatePipelineState("PipelineDescriptions\\Shadow_SpotLight.tech");
+        _pointLightShadowsPipeline = _device->CreatePipelineState("PipelineDescriptions\\Shadow_PointLight.tech");
 
         {
             // https://microsoft.github.io/DirectX-Specs/d3d/IndirectDrawing.html#root-constants--vertex-buffers
@@ -92,32 +92,31 @@ namespace render
         }
     }
 
-    void ShadowDrawPass::Execute(rg::RenderContext& context, TaskGPU& task)
+    void ShadowDrawPass::Execute(rg::RenderContext& context, rg::ITask* task)
     {
         DrawSpotLightShadows(context, task);
         DrawPointLightShadows(context, task);
     }
 
-    void ShadowDrawPass::DrawSpotLightShadows(rg::RenderContext& context, TaskGPU& task)
+    void ShadowDrawPass::DrawSpotLightShadows(rg::RenderContext& context, rg::ITask* task)
     {
-        dx12::CommandList& commandList = *task.GetCommandLists().front();
-        commandList.SetName("shadow_draw_pass_cmd_list");
+        rhi::CommandList* commandList = task->GetCommandList();
 
-        std::shared_ptr<dx12::Resource> frameBuffer = context.GetFrame()->GetBuffer();
+        std::shared_ptr<rhi::Buffer> frameBuffer = context.GetFrame()->GetBuffer();
 
         std::vector<std::shared_ptr<scene::Entity>> lightEntities = _scene->FilterNodesByComponent("Light");
         std::vector<std::shared_ptr<scene::Entity>> meshes = _scene->FilterNodesByComponent("Mesh");
         size_t objectsNum = meshes.size();
 
         {
-            PIXScopedEvent(commandList.GetDXCommandList().Get(), 1, "Shadow Draw Pass (spot lights)");
+            GPU_SCOPED_EVENT(commandList, "Shadow Draw Pass (spot lights)", 1);
 
             context.BindBindlessTable(commandList);
-            commandList.SetPipelineState(_spotLightShadowsPipeline);
+            commandList->SetPipelineState(_spotLightShadowsPipeline.get());
 
             for (uint32_t lightIndex = 0; lightIndex < lightEntities.size(); ++lightIndex)
             {
-                PIXScopedEvent(commandList.GetDXCommandList().Get(), 1, lightEntities[lightIndex]->GetName().c_str());
+                GPU_SCOPED_EVENT(commandList, lightEntities[lightIndex]->GetName().c_str(), 1);
 
                 std::shared_ptr<scene::Light> light = lightEntities[lightIndex]->GetComponentAs<scene::Light>("Light");
                 if (light->Type != scene::LightType::Spot)
@@ -130,48 +129,48 @@ namespace render
                     continue;
                 }
 
-                std::shared_ptr<dx12::Resource> shadowMap = context.GetTextureManager().GetTexture(light->ShadowMapHandle);
-                std::shared_ptr<dx12::Resource> commandBuffer = context.GetResource(_data.LightCommandBuffers[lightIndex]);
+                std::shared_ptr<rhi::Texture> shadowMap = context.GetTextureManager().GetTexture(light->ShadowMapHandle);
+                std::shared_ptr<rhi::Buffer> commandBuffer = context.GetBuffer(_data.LightCommandBuffers[lightIndex]);
 
                 // Transition resources
-                commandList.TransitionBarrier({ shadowMap, dx12::ResourceState::Common, dx12::ResourceState::DepthWrite });
+                commandList->TransitionBarrier({ shadowMap, rhi::ResourceState::Common, rhi::ResourceState::DepthWrite });
 
                 DescriptorHandle depthHandle = context.GetStaticResourceHandle(shadowMap->GetAsDSV());
-                commandList.ClearDSV(depthHandle.CpuHandle, D3D12_CLEAR_FLAG_DEPTH);
+                commandList->ClearDSV(depthHandle.CpuHandle);
 
                 CD3DX12_VIEWPORT viewport(0.0f, 0.0f,
-                    static_cast<float>(shadowMap->GetResourceDescription().GetSize().x),
-                    static_cast<float>(shadowMap->GetResourceDescription().GetSize().y));
+                    static_cast<float>(shadowMap->GetWidth()),
+                    static_cast<float>(shadowMap->GetHeight()));
                 CD3DX12_RECT scissorRect(0, 0, LONG_MAX, LONG_MAX);
-                commandList.SetViewport(viewport, scissorRect);
-                commandList.SetRenderTargets({ }, &depthHandle.CpuHandle);
+                commandList->SetViewport(viewport, scissorRect);
+                commandList->SetRenderTargets({ }, &depthHandle.CpuHandle);
 
-                commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+                commandList->SetPrimitiveTopology(rhi::PrimitiveTopology::TriangleList);
 
-                std::uint32_t counterBufferOffset = commandBuffer->GetResourceDescription().GetSize().x - sizeof(UINT);
-                commandList.ExecuteIndirect(_cmdSignature, objectsNum, *commandBuffer, commandBuffer, 0, counterBufferOffset);
+                std::uint32_t counterBufferOffset = commandBuffer->GetSize() - sizeof(UINT);
+                commandList->ExecuteIndirect(_cmdSignature, objectsNum, *commandBuffer, commandBuffer, 0, counterBufferOffset);
 
-                commandList.TransitionBarrier({ shadowMap, dx12::ResourceState::DepthWrite, dx12::ResourceState::Common });
+                commandList->TransitionBarrier({ shadowMap, rhi::ResourceState::DepthWrite, rhi::ResourceState::Common });
             }
         }
     }
 
-    void ShadowDrawPass::DrawPointLightShadows(rg::RenderContext& context, TaskGPU& task)
+    void ShadowDrawPass::DrawPointLightShadows(rg::RenderContext& context, rg::ITask* task)
     {
-        dx12::CommandList& commandList = *task.GetCommandLists().front();
+        rhi::CommandList* commandList = task->GetCommandList();
 
         {
-            PIXScopedEvent(commandList.GetDXCommandList().Get(), 1, "Shadow Draw Pass (point lights)");
+            GPU_SCOPED_EVENT(commandList, "Shadow Draw Pass (point lights)", 1);
 
             std::vector<std::shared_ptr<scene::Entity>> lightEntities = _scene->FilterNodesByComponent("Light");
             std::vector<std::shared_ptr<scene::Entity>> meshes = _scene->FilterNodesByComponent("Mesh");
             size_t objectsNum = meshes.size();
 
-            commandList.SetPipelineState(_pointLightShadowsPipeline);
+            commandList->SetPipelineState(_pointLightShadowsPipeline.get());
 
             for (uint32_t lightIndex = 0; lightIndex < lightEntities.size(); ++lightIndex)
             {
-                PIXScopedEvent(commandList.GetDXCommandList().Get(), 1, lightEntities[lightIndex]->GetName().c_str());
+                GPU_SCOPED_EVENT(commandList, lightEntities[lightIndex]->GetName().c_str(), 1);
 
                 std::shared_ptr<scene::Light> light = lightEntities[lightIndex]->GetComponentAs<scene::Light>("Light");
                 if (light->Type != scene::LightType::Point)
@@ -184,31 +183,31 @@ namespace render
                     continue;
                 }
 
-                std::shared_ptr<dx12::Resource> shadowMap = context.GetTextureManager().GetTexture(light->ShadowMapHandle);
-                std::shared_ptr<dx12::Resource> commandBuffer = context.GetResource(_data.LightCommandBuffers[lightIndex]);
+                std::shared_ptr<rhi::Texture> shadowMap = context.GetTextureManager().GetTexture(light->ShadowMapHandle);
+                std::shared_ptr<rhi::Buffer> commandBuffer = context.GetResource(_data.LightCommandBuffers[lightIndex]);
 
                 // Transition resources
-                commandList.TransitionBarrier({ shadowMap, dx12::ResourceState::Common, dx12::ResourceState::DepthWrite });
+                commandList->TransitionBarrier({ shadowMap, rhi::ResourceState::Common, rhi::ResourceState::DepthWrite });
 
                 DescriptorHandle depthHandle = context.GetStaticResourceHandle(shadowMap->GetAsDSV());
-                commandList.ClearDSV(depthHandle.CpuHandle, D3D12_CLEAR_FLAG_DEPTH);
+                commandList->ClearDSV(depthHandle.CpuHandle, D3D12_CLEAR_FLAG_DEPTH);
 
                 CD3DX12_VIEWPORT viewport(0.0f, 0.0f,
                     static_cast<float>(shadowMap->GetResourceDescription().GetSize().x),
                     static_cast<float>(shadowMap->GetResourceDescription().GetSize().y));
                 CD3DX12_RECT scissorRect(0, 0, LONG_MAX, LONG_MAX);
-                commandList.SetViewport(viewport, scissorRect);
-                commandList.SetRenderTargets({ }, &depthHandle.CpuHandle);
+                commandList->SetViewport(viewport, scissorRect);
+                commandList->SetRenderTargets({ }, &depthHandle.CpuHandle);
 
-                commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+                commandList->SetPrimitiveTopology(rhi::PrimitiveTopology::TriangleList);
 
-                std::uint32_t counterBufferOffset = commandBuffer->GetResourceDescription().GetSize().x - sizeof(UINT);
-                commandList.ExecuteIndirect(_cmdSignature, objectsNum, *commandBuffer, commandBuffer, 0, counterBufferOffset);
+                std::uint32_t counterBufferOffset = commandBuffer->GetSize() - sizeof(UINT);
+                commandList->ExecuteIndirect(_cmdSignature, objectsNum, *commandBuffer, commandBuffer, 0, counterBufferOffset);
 
-                commandList.TransitionBarrier({ shadowMap, dx12::ResourceState::DepthWrite, dx12::ResourceState::Common });
+                commandList->TransitionBarrier({ shadowMap, rhi::ResourceState::DepthWrite, rhi::ResourceState::Common });
             }
         }
 
-        commandList.Close();
+        commandList->Close();
     }
 } // namespace render

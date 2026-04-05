@@ -7,20 +7,28 @@
 #include "RenderGraph/RenderContext.h"
 #include "RenderGraph/RenderPassBuilder.h"
 
-namespace
-{
-    static constexpr std::uint32_t MAX_MIP_LEVELS = 6;
-}
-
 namespace render
 {
-    BloomDownsamplePass::BloomDownsamplePass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
+    namespace
+    {
+        static constexpr std::uint32_t MAX_MIP_LEVELS = 6;
+
+        struct PassConstants
+        {
+            std::uint32_t InputTextureIndex;
+            std::uint32_t OutputTextureIndex;
+
+            float Gamma;
+        };
+    } // namespace unnamed
+
+    BloomDownsamplePass::BloomDownsamplePass(rhi::Device* device, std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
         : RenderPass<BloomDownsamplePassData>("bloom_downsample_pass", rg::RenderPassType::Compute)
         , _scene(scene)
         , _camera(camera)
     {
-        _bloomDownsamplePass1Pipeline.Parse("PipelineDescriptions\\BloomDownsamplePass1Pipeline.tech");
-        _bloomDownsamplePipeline.Parse("PipelineDescriptions\\BloomDownsamplePipeline.tech");
+        _bloomDownsamplePass1Pipeline = _device->CreatePipelineState("PipelineDescriptions\\BloomDownsamplePass1Pipeline.tech");
+        _bloomDownsamplePipeline = _device->CreatePipelineState("PipelineDescriptions\\BloomDownsamplePipeline.tech");
     }
 
     void BloomDownsamplePass::Setup(rg::RenderPassBuilder& builder)
@@ -30,10 +38,10 @@ namespace render
         std::uint32_t size = std::max(viewportSize.x, viewportSize.y) / 2;
         std::uint32_t maxMipCount = std::floor(std::log2(size));
         _mipCount = std::min(maxMipCount - 1, MAX_MIP_LEVELS);
-        dx12::ResourceDescription brightnessDesc;
+        rhi::ResourceDescription brightnessDesc;
         {
             brightnessDesc.SetFormat(DXGI_FORMAT_R16G16B16A16_FLOAT);
-            brightnessDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::Unordered);
+            brightnessDesc.SetResourceType(rhi::ResourceType::Texture | rhi::ResourceType::Unordered);
         }
         for (std::uint32_t i = 1; i < (_mipCount + 1); ++i)
         {
@@ -48,66 +56,47 @@ namespace render
         _data.HDRTarget = builder.ReadTexture("hdr_target");
     }
 
-    void BloomDownsamplePass::Execute(rg::RenderContext& context, TaskGPU& task)
+    void BloomDownsamplePass::Execute(rg::RenderContext& context, rg::ITask* task)
     {
-        dx12::CommandList& commandList = *task.GetCommandLists().front();
-        commandList.SetName("bloom_downsample_pass_cmd_list");
+        rhi::CommandList* commandList = task->GetCommandList();
 
         {
-            PIXScopedEvent(commandList.GetDXCommandList().Get(), 8, "Bloom Downsample Pass");
+            GPU_SCOPED_EVENT(commandList, "Bloom Downsample Pass", 8);
 
-            std::shared_ptr<dx12::Resource> hdrTarget = context.GetResource(_data.HDRTarget);
-
-            DescriptorHandle hdrTargetHandle = context.GetStaticResourceHandle(hdrTarget->GetAsSRV());
-
-            context.BindBindlessTable(commandList);
-            commandList.SetPipelineState(_bloomDownsamplePass1Pipeline);
+            commandList->SetComputePipelineState(_bloomDownsamplePass1Pipeline.get());
 
             {
-                std::shared_ptr<dx12::Resource> bloomTarget = context.GetResource(_data.BloomMips[0]);
-
-                DescriptorHandle bloomTargetHandle = context.GetStaticResourceHandle(bloomTarget->GetAsUAV());
-
-                struct PassConstants
-                {
-                    std::uint32_t InputTextureIndex;
-                    std::uint32_t OutputTextureIndex;
-
-                    float Gamma;
-                } passCB{ .InputTextureIndex = hdrTargetHandle.Index, .OutputTextureIndex = bloomTargetHandle.Index, .Gamma = RenderSettings::ToneMapping().Gamma };
-                commandList.SetConstants(1, 3, &passCB);
+                PassConstants passCB =
+                { 
+                    .InputTextureIndex = context.GetBindlessIndex(_data.HDRTarget, rhi::ResourceViewType::SRV),
+                    .OutputTextureIndex = context.GetBindlessIndex(_data.BloomMips[0], rhi::ResourceViewType::UAV),
+                    .Gamma = RenderSettings::ToneMapping().Gamma 
+                };
+                commandList->SetComputeConstants(1, 3, &passCB);
 
                 std::uint32_t xThreadGroups = (std::uint32_t)std::ceilf(bloomTarget->GetResourceDescription().GetSize().x / 16.0f);
                 std::uint32_t yThreadGroups = (std::uint32_t)std::ceilf(bloomTarget->GetResourceDescription().GetSize().y / 16.0f);
-                commandList.Dispatch(xThreadGroups, yThreadGroups, 1);
+                commandList->Dispatch(xThreadGroups, yThreadGroups, 1);
             }
 
-            context.BindBindlessTable(commandList);
-            commandList.SetPipelineState(_bloomDownsamplePipeline);
+            commandList->SetComputePipelineState(_bloomDownsamplePipeline.get());
 
             for (std::uint32_t mip = 0; mip < _mipCount - 1; ++mip)
             {
-                std::shared_ptr<dx12::Resource> bloomATarget = context.GetResource(_data.BloomMips[mip]);
-                std::shared_ptr<dx12::Resource> bloomBTarget = context.GetResource(_data.BloomMips[mip + 1]);
-
-                DescriptorHandle bloomATargetHandle = context.GetStaticResourceHandle(bloomATarget->GetAsSRV());
-                DescriptorHandle bloomBTargetHandle = context.GetStaticResourceHandle(bloomBTarget->GetAsUAV());
-
-                struct PassConstants
-                {
-                    std::uint32_t InputTextureIndex;
-                    std::uint32_t OutputTextureIndex;
-
-                    float Gamma;
-                } passCB{ .InputTextureIndex = bloomATargetHandle.Index, .OutputTextureIndex = bloomBTargetHandle.Index, .Gamma = RenderSettings::ToneMapping().Gamma };
-                commandList.SetConstants(1, 3, &passCB);
+                PassConstants passCB =
+                { 
+                    .InputTextureIndex = context.GetBindlessIndex(_data.BloomMips[mip], rhi::ResourceViewType::SRV),
+                    .OutputTextureIndex = context.GetBindlessIndex(_data.BloomMips[mip + 1], rhi::ResourceViewType::UAV),
+                    .Gamma = RenderSettings::ToneMapping().Gamma 
+                };
+                commandList->SetComputeConstants(1, 3, &passCB);
 
                 std::uint32_t xThreadGroups = (std::uint32_t)std::ceilf(bloomBTarget->GetResourceDescription().GetSize().x / 16.0f);
                 std::uint32_t yThreadGroups = (std::uint32_t)std::ceilf(bloomBTarget->GetResourceDescription().GetSize().y / 16.0f);
-                commandList.Dispatch(xThreadGroups, yThreadGroups, 1);
+                commandList->Dispatch(xThreadGroups, yThreadGroups, 1);
             }
         }
 
-        commandList.Close();
+        commandList->Close();
     }
 } // namespace render

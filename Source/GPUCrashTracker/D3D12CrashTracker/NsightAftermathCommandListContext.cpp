@@ -12,8 +12,8 @@
 
 namespace tracking
 {
-    NsightAftermathCommandListContext::NsightAftermathCommandListContext(std::shared_ptr<IGPUCrashTracker> crashTracker)
-        : ICommandListCrashContext(crashTracker)
+    NsightAftermathCommandListContext::NsightAftermathCommandListContext(IGPUCrashTracker* crashTracker)
+        : _crashTracker(crashTracker)
         , _commandList(nullptr)
         , _commandListCrashContext(nullptr)
     {

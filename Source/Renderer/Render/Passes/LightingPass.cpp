@@ -19,12 +19,12 @@ namespace
 
 namespace render
 {
-    LightingPass::LightingPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-        : RenderPass<LightingPassData>("lighting_pass", rg::RenderPassType::Compute)
+    LightingPass::LightingPass(rhi::Device* device, std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
+        : RenderPass<LightingPassData>(device, "lighting_pass", rg::RenderPassType::Compute)
         , _scene(scene)
         , _camera(camera)
     {
-        _deferredPipeline.Parse("PipelineDescriptions\\DeferredShading.tech");
+        _deferredPipeline = _device->CreatePipelineState("PipelineDescriptions\\DeferredShading.tech");
     }
 
     void LightingPass::Setup(rg::RenderPassBuilder& builder)
@@ -37,48 +37,33 @@ namespace render
         _data.HDRTarget = builder.WriteTexture("hdr_target");
     }
 
-    void LightingPass::Execute(rg::RenderContext& context, TaskGPU& task)
+    void LightingPass::Execute(rg::RenderContext& context, rg::ITask* task)
     {
-        dx12::CommandList& commandList = *task.GetCommandLists().front();
-        commandList.SetName("lighting_pass_cmd_list");
+        rhi::CommandList* commandList = task->GetCommandList();
 
         {
-            PIXScopedEvent(commandList.GetDXCommandList().Get(), 4, "Deferred Shading Pass");
+            GPU_SCOPED_EVENT(commandList, "Deferred Shading Pass", 4);
 
-            std::shared_ptr<dx12::Resource> hdrTarget = context.GetResource(_data.HDRTarget);
-            std::shared_ptr<dx12::Resource> albedoMetallic = context.GetResource(_data.AlbedoMetallic);
-            std::shared_ptr<dx12::Resource> normalRoughness = context.GetResource(_data.NormalRoughness);
-            std::shared_ptr<dx12::Resource> emission = context.GetResource(_data.Emission);
-            std::shared_ptr<dx12::Resource> depth = context.GetResource(_data.Depth);
-
-            DescriptorHandle hdrTargetHandle = context.GetStaticResourceHandle(hdrTarget->GetAsUAV());
-            DescriptorHandle albedoMetallicHandle = context.GetStaticResourceHandle(albedoMetallic->GetAsSRV());
-            DescriptorHandle normalSpecularHandle = context.GetStaticResourceHandle(normalRoughness->GetAsSRV());
-            DescriptorHandle emissionHandle = context.GetStaticResourceHandle(emission->GetAsSRV());
-            DescriptorHandle depthHandle = context.GetStaticResourceHandle(depth->GetAsSRV());
-
-            context.BindBindlessTable(commandList);
-            commandList.SetPipelineState(_deferredPipeline);
+            commandList->SetComputePipelineState(_deferredPipeline.get());
 
             PassConstants passCB =
             {
-                .AlbedoMetallicTextureIndex = albedoMetallicHandle.Index,
-                .NormalRoughnessTextureIndex = normalSpecularHandle.Index,
-                .EmissionTextureIndex = emissionHandle.Index,
-                .DepthTextureIndex = depthHandle.Index,
-                .TargetTextureIndex = hdrTargetHandle.Index
+                .AlbedoMetallicTextureIndex = context.GetBindlessIndex(_data.AlbedoMetallic, rhi::ResourceViewType::SRV),
+                .NormalRoughnessTextureIndex = context.GetBindlessIndex(_data.AlbedoMetallic, rhi::ResourceViewType::SRV),
+                .EmissionTextureIndex = context.GetBindlessIndex(_data.AlbedoMetallic, rhi::ResourceViewType::SRV),
+                .DepthTextureIndex = context.GetBindlessIndex(_data.AlbedoMetallic, rhi::ResourceViewType::SRV),
+                .TargetTextureIndex = context.GetBindlessIndex(_data.AlbedoMetallic, rhi::ResourceViewType::UAV)
             };
 
-            commandList.SetCBV(0, context.GetFrame()->GetBuffer()->OffsetGPU());
-            commandList.SetConstants(1, 5, &passCB);
+            commandList->SetComputeConstants(1, 5, &passCB);
 
             DirectX::XMUINT2 viewportSize = _camera->GetViewport().GetSize();
             int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 8.0f);
             int yThreadGroups = (uint32_t)std::ceilf(viewportSize.y / 8.0f);
 
-            commandList.Dispatch(xThreadGroups, yThreadGroups);
+            commandList->Dispatch(xThreadGroups, yThreadGroups);
         }
 
-        commandList.Close();
+        commandList->Close();
     }
 } // namespace render
