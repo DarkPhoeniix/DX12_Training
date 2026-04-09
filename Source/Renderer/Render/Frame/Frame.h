@@ -5,6 +5,8 @@
 #include "Renderer/Render/Frame/TaskGPU.h"
 #include "Renderer/Render/Frame/FencePool.h"
 
+#include "RenderGraph/Interfaces.h"
+
 // TODO: refactor the Frame class
 
 namespace dx12
@@ -12,29 +14,33 @@ namespace dx12
     class PipelineState;
 } // namespace core
 
-class Frame
+class Frame : public rg::ITaskAllocator
 {
 public:
     Frame(rhi::Device* device);
+    Frame(const Frame& other) = default;
+    Frame(Frame&& other) = default;
     ~Frame();
+
+    Frame& operator=(const Frame& other) = default;
+    Frame& operator=(Frame&& other) = default;
 
     void Init(std::uint32_t width, std::uint32_t height);
 
-    TaskGPU* CreateTask(rhi::CommandListType type, rhi::PipelineState* rootSignature = nullptr);
+    rg::ITask* AllocateTask(rhi::CommandListType type, rhi::PipelineState* rootSignature) override;
 
     void WaitCPU();
     void ResetGPU();
 
     void Resize(std::uint32_t width, std::uint32_t height);
 
-    void SetAllocatorPool(AllocatorPool* allocatorPool);
     void SetFencePool(FencePool* fencePool);
 
     void SetSyncPoint(rhi::Fence* syncPoint);
     rhi::Fence* GetSyncPoint() const;
 
     TaskGPU* GetTask(const std::string& name);
-    std::vector<TaskGPU> GetTasks() const;
+    std::vector<std::unique_ptr<TaskGPU>>& GetTasks();
 
     std::shared_ptr<rhi::Texture> GetTargetTexture();
 
@@ -46,10 +52,8 @@ public:
     Frame* Next;
 
 private:
-    std::vector<Executor*> _currentTasks;
-    std::vector<TaskGPU> _tasks;
+    std::vector<std::unique_ptr<TaskGPU>> _tasks;
 
-    AllocatorPool* _allocatorPool;
     FencePool* _fencePool;
     rhi::Fence* _syncPoint;
 

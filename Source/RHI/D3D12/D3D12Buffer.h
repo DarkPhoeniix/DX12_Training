@@ -29,6 +29,11 @@ namespace rhi::d3d12
         ResourceState GetCurrentState() const override;
         void SetCurrentState(ResourceState state) override;
 
+        const BufferDescription& GetDescription() const override;
+        std::uint32_t GetSize() const override;
+        std::uint32_t GetStride() const override;
+        std::uint32_t GetElementCount() const override;
+
         std::uint32_t GetUAVCounterOffset() const override;
 
         const ResourceID& GetID() const override;
@@ -41,6 +46,8 @@ namespace rhi::d3d12
         D3D12Buffer(rhi::Device* device, const rhi::BufferDescription& description, ResourceState initialState = ResourceState::Common, [[maybe_unused]] const std::string& name = "");
         D3D12Buffer(rhi::Device* device, const rhi::BufferDescription& description, rhi::Heap* heap, std::uint64_t offset, ResourceState initialState = ResourceState::Common, [[maybe_unused]] const std::string& name = "");
         D3D12Buffer(rhi::Device* device, ID3D12Resource* nativeTexturePtr, const std::string& name = "");
+
+        BufferDescription _description;
 
         D3D12Resource _resource;
 

@@ -2,6 +2,7 @@
 
 #include "GeometryPass.h"
 
+#include "Core/DescriptorHeapManager.h"
 #include "Core/RenderSettings.h"
 #include "Scene/Entity/Components/Mesh.h"
 #include "Helpers/DebugInfo.h"
@@ -35,6 +36,7 @@ namespace render
 			.Height = _camera->GetViewport().GetSize().y,
 			.ClearValue = { .DepthStencil = { 1.0f, 0 } },
 			.Format = rhi::Format::D32_FLOAT,
+			.Dimension = rhi::TextureDimension::Texture2D,
 			.Flags = rhi::ResourceFlags::AllowDepthStencil
 		};
         builder.DeclareTexture("depth_target", depthDesc);
@@ -45,6 +47,7 @@ namespace render
 			.Height = _camera->GetViewport().GetSize().y,
 			.ClearValue = { .Color = { 0.0f, 0.0f, 0.0f, 1.0f } },
 			.Format = rhi::Format::R8G8B8A8_UNORM,
+			.Dimension = rhi::TextureDimension::Texture2D,
 			.Flags = rhi::ResourceFlags::AllowRenderTarget
 		};
         builder.DeclareTexture("albedo_metallic_target", albedoMetallicDesc);
@@ -54,6 +57,7 @@ namespace render
 			.Width = _camera->GetViewport().GetSize().x,
 			.Height = _camera->GetViewport().GetSize().y,
 			.Format = rhi::Format::R32G32B32A32_FLOAT,
+			.Dimension = rhi::TextureDimension::Texture2D,
 			.Flags = rhi::ResourceFlags::AllowRenderTarget
 		};
         builder.DeclareTexture("normal_roughness_target", normalRoughnessDesc);
@@ -64,6 +68,7 @@ namespace render
 			.Height = _camera->GetViewport().GetSize().y,
 			.ClearValue = { .Color = { 0.0f, 0.0f, 0.0f, 1.0f } },
 			.Format = rhi::Format::R11G11B10_FLOAT,
+			.Dimension = rhi::TextureDimension::Texture2D,
 			.Flags = rhi::ResourceFlags::AllowRenderTarget
 		};
         builder.DeclareTexture("emission_target", emissionDesc);
@@ -80,6 +85,8 @@ namespace render
 
 		{
 			GPU_SCOPED_EVENT(commandList, "Geometry Pass", 0);
+
+			commandList->SetDescriptorHeaps(DescriptorHeapManager::Get().GetShaderResourcesDescriptorHeap()); // TODO: temp workaround
 
             // Prepare all targets and pipeline state
             _SetupPipelineState(context, commandList);
@@ -124,6 +131,8 @@ namespace render
 
 		commandList->SetViewport(_camera->GetViewport().GetDXViewport(), _camera->GetViewport().GetScissorRectangle());
 		commandList->SetRenderTargets({ albedoMetallicHandle, normalRoughnessHandle, emissionHandle }, &depthHandle);
+
+		commandList->SetGraphicsCBV(0, context.GetFrameBuffer()->GetVirtualAddress());
 	}
 
 	void GeometryPass::_CullPassEntities(std::vector<std::shared_ptr<scene::Entity>>& entities)
@@ -155,7 +164,6 @@ namespace render
 					{
 						.InstanceIndex = entity->GetInstanceID()
 					};
-
 					commandList->SetGraphicsConstants(1, sizeof(PassConstants), &passConstants);
 
 					commandList->SetPrimitiveTopology(rhi::PrimitiveTopology::TriangleList);

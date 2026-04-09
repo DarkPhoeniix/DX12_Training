@@ -8,9 +8,7 @@ Frame::Frame(rhi::Device* device)
     : Index(0)
     , Prev(nullptr)
     , Next(nullptr)
-    , _currentTasks{}
     , _tasks{}
-    , _allocatorPool(nullptr)
     , _fencePool(nullptr)
     , _syncPoint(nullptr)
     , _targetTexture(nullptr)
@@ -24,7 +22,6 @@ Frame::~Frame()
     Prev = nullptr;
     Next = nullptr;
 
-    _allocatorPool = nullptr;
     _fencePool = nullptr;
     _syncPoint = nullptr;
 }
@@ -56,19 +53,12 @@ void Frame::Init(std::uint32_t width, std::uint32_t height)
     _tasks.reserve(256);
 }
 
-TaskGPU* Frame::CreateTask(rhi::CommandListType type, rhi::PipelineState* rootSignature)
+rg::ITask* Frame::AllocateTask(rhi::CommandListType type, rhi::PipelineState* rootSignature)
 {
-    Executor* executor = _allocatorPool->Obtain(type);
-    ASSERT(executor, "Failed to obtain executor from allocator pool.");
-    _currentTasks.push_back(executor);
+    _tasks.push_back(std::make_unique<TaskGPU>(_device, type));
+    TaskGPU* task = _tasks.back().get();
 
-    executor->Reset(rootSignature);
-    executor->SetFree(false);
-
-    _tasks.push_back(TaskGPU(_device));
-    TaskGPU* task = &_tasks.back();
-
-    task->AddCommandList(executor->GetCommandList());
+    task->Reset(rootSignature);
 
     rhi::Fence* taskFence = _fencePool->Obtain();
     ASSERT(taskFence, "Failed to obtain fence from fence pool.");
@@ -95,18 +85,12 @@ void Frame::WaitCPU()
 
 void Frame::ResetGPU()
 {
-    for (auto& task : _currentTasks)
-    {
-        task->SetFree(true);
-    }
-
     for (auto& task : _tasks)
     {
-        task.GetFence()->SetFree(true);
+        task->GetFence()->SetFree(true);
     }
 
     _tasks.clear();
-    _currentTasks.clear();
 }
 
 void Frame::Resize(std::uint32_t width, std::uint32_t height)
@@ -114,12 +98,6 @@ void Frame::Resize(std::uint32_t width, std::uint32_t height)
     //_targetTexture->Reset();
 
     Init(width, height);
-}
-
-void Frame::SetAllocatorPool(AllocatorPool* allocatorPool)
-{
-    ASSERT(allocatorPool, "Allocator pool is nullptr when trying to set it in the frame.");
-    _allocatorPool = allocatorPool;
 }
 
 void Frame::SetFencePool(FencePool* fencePool)
@@ -132,9 +110,9 @@ TaskGPU* Frame::GetTask(const std::string& name)
 {
     for (auto& task : _tasks)
     {
-        if (task.GetName() == name)
+        if (task->GetName() == name)
         {
-            return &task;
+            return task.get();
         }
     }
 
@@ -142,7 +120,7 @@ TaskGPU* Frame::GetTask(const std::string& name)
     return nullptr;
 }
 
-std::vector<TaskGPU> Frame::GetTasks() const
+std::vector<std::unique_ptr<TaskGPU>>& Frame::GetTasks()
 {
     return _tasks;
 }

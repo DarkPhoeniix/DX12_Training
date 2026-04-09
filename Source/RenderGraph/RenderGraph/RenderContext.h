@@ -24,8 +24,7 @@ namespace rg
         rhi::CPUDescriptor GetDescriptor(RGBufferId id, rhi::ResourceViewType viewType) const;
         rhi::CPUDescriptor GetDescriptor(RGTextureId id, rhi::ResourceViewType viewType) const;
 
-        void SetGPUProfiler(Profiler* gpuProfiler);
-        Profiler* GetGPUProfiler() const;
+        rhi::Buffer* GetFrameBuffer() const;
 
     private:
         friend class RenderGraph;
@@ -55,6 +54,11 @@ namespace rg
         void FillBuffer(std::shared_ptr<rhi::Buffer> resource, void* data, size_t dataSize = 0);
         void FillTexture(std::shared_ptr<rhi::Texture> resource, void* data, size_t dataSize = 0);
 
+        void SetFrameBuffer(rhi::Buffer* buffer);
+
+        void SetGPUProfiler(Profiler* gpuProfiler);
+        Profiler* GetGPUProfiler() const;
+
         std::unordered_map<std::string, RGBufferId> _mapNameToBufferId;
         std::unordered_map<std::string, RGTextureId> _mapNameToTextureId;
         std::unordered_map<RGBufferId, std::shared_ptr<rhi::Buffer>> _mapIdToBuffer;
@@ -62,6 +66,8 @@ namespace rg
 
         IDescriptorProvider* _descriptorProvider;
         rhi::Device* _device;
+
+        rhi::Buffer* _frameBuffer;
 
         Profiler* _gpuProfiler;
     };

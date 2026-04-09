@@ -43,6 +43,7 @@ namespace render
 			.Width = _camera->GetViewport().GetSize().x,
 			.Height = _camera->GetViewport().GetSize().y,
 			.Format = rhi::Format::R8G8B8A8_UNORM,
+			.Dimension = rhi::TextureDimension::Texture2D,
 			.Flags = rhi::ResourceFlags::AllowRenderTarget | rhi::ResourceFlags::AllowUnorderedAccess
 		};
 		builder.DeclareTexture("render_target", targetDesc);

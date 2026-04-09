@@ -2,15 +2,15 @@
 
 #include "GUIPass.h"
 
-#include "CommandList.h"
-#include "ResourceBarrier.h"
-
-#include "Scene/Entity/Components/Camera.h"
+#include "Renderer/Core/DescriptorHeapManager.h"
+#include "Renderer/Scene/Entity/Components/Camera.h"
 
 #include "RenderGraph/RenderPassBuilder.h"
 #include "RenderGraph/RenderContext.h"
 
+#include "RHI/CommandList.h"
 #include "RHI/GPUEvent.h"
+#include "RHI/ResourceBarrier.h"
 
 namespace render
 {
@@ -32,6 +32,8 @@ namespace render
 
         {
             GPU_SCOPED_EVENT(commandList.GetDXCommandList().Get(), "GUI", 5);
+
+            commandList->SetDescriptorHeaps(DescriptorHeapManager::Get().GetShaderResourcesDescriptorHeap()); // TODO: temp workaround
 
             rhi::CPUDescriptor target = context.GetDescriptor(_data.Target, rhi::ResourceViewType::RTV);
             rhi::CPUDescriptor depth = context.GetDescriptor(_data.Depth, rhi::ResourceViewType::DSV);

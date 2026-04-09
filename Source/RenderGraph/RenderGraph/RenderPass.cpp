@@ -132,11 +132,8 @@ namespace rg
 
         rhi::CommandList* commandList = task->GetCommandList();
 
-        if (!bufferBarriers.empty())
-        {
-            commandList->TransitionBarriers(bufferBarriers);
-            commandList->TransitionBarriers(textureBarriers);
-        }
+        commandList->TransitionBarriers(bufferBarriers);
+        commandList->TransitionBarriers(textureBarriers);
 
 #if ENABLE_PROFILING
         context.GetGPUProfiler()->BeginEvent(commandList, _gpuTimerID);

@@ -5,7 +5,10 @@ namespace rg
     class IDescriptorProvider
     {
     public:
-        virtual void CreateStaticResourceView(rhi::ResourceID resourceID, rhi::ResourceViewType viewType) = 0;
+        virtual ~IDescriptorProvider() = default;
+
+        virtual void CreateStaticResourceView(std::shared_ptr<rhi::Buffer> buffer, rhi::ResourceViewType viewType) = 0;
+        virtual void CreateStaticResourceView(std::shared_ptr<rhi::Texture> texture, rhi::ResourceViewType viewType) = 0;
 
         virtual std::uint32_t GetBindlessIndex(rhi::ResourceID, rhi::ResourceViewType viewType) = 0;
 
@@ -15,6 +18,8 @@ namespace rg
     class ITask
     {
     public:
+        virtual ~ITask() = default;
+
         virtual void AddDependency(const std::string& dependency) = 0; // TODO: refactor this to manage dependencies better/more effectively
 
         virtual rhi::CommandList* GetCommandList() = 0;
@@ -26,6 +31,8 @@ namespace rg
     class ITaskAllocator
     {
     public:
-        virtual ITask* AllocateTask(rhi::CommandListType type) = 0;
+        virtual ~ITaskAllocator() = default;
+
+        virtual ITask* AllocateTask(rhi::CommandListType type, rhi::PipelineState* rootSignature = nullptr) = 0;
     };
 } // namespace rg

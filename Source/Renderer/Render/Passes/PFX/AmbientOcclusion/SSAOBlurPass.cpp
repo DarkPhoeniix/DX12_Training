@@ -66,6 +66,7 @@ namespace render
 			.Width = _camera->GetViewport().GetSize().x,
 			.Height = _camera->GetViewport().GetSize().y,
 			.Format = rhi::Format::R32_FLOAT,
+			.Dimension = rhi::TextureDimension::Texture2D,
 			.Flags = rhi::ResourceFlags::AllowUnorderedAccess
 		};
         builder.DeclareTexture("ao_blur_target", aoBlurDesc);

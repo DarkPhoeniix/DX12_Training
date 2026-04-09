@@ -56,8 +56,9 @@ namespace rhi::d3d12
     {
         D3D12_RESOURCE_DESC resourceDesc = GetD3D12ResourceDesc(description);
         D3D12_HEAP_PROPERTIES heapDesc = CreateHeapProperties(description.Usage);
+        D3D12_CLEAR_VALUE* pClearValue = nullptr;
 
-        CreateCommitedResource(resourceDesc, heapDesc);
+        CreateCommitedResource(resourceDesc, heapDesc, pClearValue);
     }
 
     D3D12Resource::D3D12Resource(rhi::Device* device, const TextureDescription& description, ResourceState initialState, const std::string& name)
@@ -73,8 +74,29 @@ namespace rhi::d3d12
     {
         D3D12_RESOURCE_DESC resourceDesc = GetD3D12ResourceDesc(description);
         D3D12_HEAP_PROPERTIES heapDesc = CreateHeapProperties(description.Usage);
+        D3D12_CLEAR_VALUE* pClearValue = nullptr;
+        D3D12_CLEAR_VALUE clearValue;
 
-        CreateCommitedResource(resourceDesc, heapDesc);
+        if (resourceDesc.Flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)
+        {
+            clearValue.Format = GetDXGIFormat(description.Format);
+            clearValue.Color[0] = description.ClearValue.Color.R;
+            clearValue.Color[1] = description.ClearValue.Color.G;
+            clearValue.Color[2] = description.ClearValue.Color.B;
+            clearValue.Color[3] = description.ClearValue.Color.A;
+
+            pClearValue = &clearValue;
+        }
+        else if (resourceDesc.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
+        {
+            clearValue.Format = GetDXGIFormat(description.Format);
+            clearValue.DepthStencil.Depth = description.ClearValue.DepthStencil.Depth;
+            clearValue.DepthStencil.Stencil = description.ClearValue.DepthStencil.Stencil;
+
+            pClearValue = &clearValue;
+        }
+
+        CreateCommitedResource(resourceDesc, heapDesc, pClearValue);
     }
 
     D3D12Resource::D3D12Resource(rhi::Device* device, const BufferDescription& description, rhi::Heap* heap, std::uint64_t offset, ResourceState initialState, const std::string& name)
@@ -89,8 +111,9 @@ namespace rhi::d3d12
 #endif // ENABLE_DEBUG_NAMES
     {
         D3D12_RESOURCE_DESC resourceDesc = GetD3D12ResourceDesc(description);
+        D3D12_CLEAR_VALUE* pClearValue = nullptr;
 
-        CreatePlacedResource(resourceDesc, heap, offset);
+        CreatePlacedResource(resourceDesc, heap, offset, pClearValue);
     }
 
     D3D12Resource::D3D12Resource(rhi::Device* device, const TextureDescription& description, rhi::Heap* heap, std::uint64_t offset, ResourceState initialState, const std::string& name)
@@ -105,8 +128,29 @@ namespace rhi::d3d12
 #endif // ENABLE_DEBUG_NAMES
     {
         D3D12_RESOURCE_DESC resourceDesc = GetD3D12ResourceDesc(description);
+        D3D12_CLEAR_VALUE* pClearValue = nullptr;
+        D3D12_CLEAR_VALUE clearValue;
 
-        CreatePlacedResource(resourceDesc, heap, offset);
+        if (resourceDesc.Flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)
+        {
+            clearValue.Format = GetDXGIFormat(description.Format);
+            clearValue.Color[0] = description.ClearValue.Color.R;
+            clearValue.Color[1] = description.ClearValue.Color.G;
+            clearValue.Color[2] = description.ClearValue.Color.B;
+            clearValue.Color[3] = description.ClearValue.Color.A;
+
+            pClearValue = &clearValue;
+        }
+        else if (resourceDesc.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
+        {
+            clearValue.Format = GetDXGIFormat(description.Format);
+            clearValue.DepthStencil.Depth = description.ClearValue.DepthStencil.Depth;
+            clearValue.DepthStencil.Stencil = description.ClearValue.DepthStencil.Stencil;
+
+            pClearValue = &clearValue;
+        }
+
+        CreatePlacedResource(resourceDesc, heap, offset, pClearValue);
     }
 
     D3D12Resource::D3D12Resource(rhi::Device* device, ID3D12Resource* resource, const std::string& name)
@@ -215,15 +259,17 @@ namespace rhi::d3d12
         return static_cast<void*>(_resource.Get());
     }
 
-    void D3D12Resource::CreateCommitedResource(const D3D12_RESOURCE_DESC& resourceDesc, const D3D12_HEAP_PROPERTIES& heapProperties)
+    void D3D12Resource::CreateCommitedResource(const D3D12_RESOURCE_DESC& resourceDesc, const D3D12_HEAP_PROPERTIES& heapProperties, D3D12_CLEAR_VALUE* clearValue)
     {
+        bool useClearValue = resourceDesc.Flags & (D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
+
         ID3D12Device* d3d12NativeDevice = D3D12Cast<ID3D12Device>(_device->GetNative());
         d3d12NativeDevice->CreateCommittedResource(
             &heapProperties,
             D3D12_HEAP_FLAG_NONE,
             &resourceDesc,
             GetD3D12ResourceState(_initialState),
-            nullptr,
+            clearValue,
             IID_PPV_ARGS(&_resource));
 
 #if ENABLE_DEBUG_NAMES
@@ -231,7 +277,7 @@ namespace rhi::d3d12
 #endif // ENABLE_DEBUG_NAMES
     }
 
-    void D3D12Resource::CreatePlacedResource(const D3D12_RESOURCE_DESC& resourceDesc, rhi::Heap* heap, std::uint64_t offset)
+    void D3D12Resource::CreatePlacedResource(const D3D12_RESOURCE_DESC& resourceDesc, rhi::Heap* heap, std::uint64_t offset, D3D12_CLEAR_VALUE* clearValue)
     {
         ID3D12Device* d3d12NativeDevice = D3D12Cast<ID3D12Device>(_device->GetNative());
         ID3D12Heap* d3d12NativeHeap = D3D12Cast<ID3D12Heap>(heap->GetNative());
@@ -241,7 +287,7 @@ namespace rhi::d3d12
             offset,
             &resourceDesc,
             GetD3D12ResourceState(_initialState),
-            nullptr,
+            clearValue,
             IID_PPV_ARGS(&_resource));
 
 #if ENABLE_DEBUG_NAMES

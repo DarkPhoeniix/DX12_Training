@@ -47,6 +47,7 @@ namespace render
 			.Width = _camera->GetViewport().GetSize().x,
 			.Height = _camera->GetViewport().GetSize().y,
 			.Format = rhi::Format::R16G16B16A16_FLOAT,
+			.Dimension = rhi::TextureDimension::Texture2D,
 			.Flags = rhi::ResourceFlags::AllowUnorderedAccess
 		};
         builder.DeclareTexture("hdr_target", targetDesc);

@@ -7,6 +7,7 @@
 #include "RHI/CommandList.h"
 #include "RHI/ResourceBarrier.h"
 
+// TODO: remove d3d12 dependecy here
 #include <directx/d3dx12.h>     // D3D12 extension library
 
 namespace
@@ -257,8 +258,11 @@ namespace
             0, 0, static_cast<std::uint32_t>(subresources.size()),
             subresources.data());
 
-        rhi::TextureBarrier barrier = { texture, rhi::ResourceState::Common, rhi::ResourceState::Common };
-        commandList->TransitionBarriers({ barrier });
+        //rhi::TextureBarrier barrier = { texture, rhi::ResourceState::CopyDest, rhi::ResourceState::Common };
+
+        // TODO: need to fallback to legacy barriers here due to magic in UpdateSubresources
+        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(d3d12TargetResource, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_COMMON);
+        d3d12CommandList->ResourceBarrier(1, &barrier);
 	}
 } // namespace unnamed
 
@@ -305,15 +309,23 @@ TextureManager& TextureManager::Get()
 
 TextureHandle TextureManager::EnqueueTexture(const std::string& filepath)
 {
-    TextureHandle handle = InvalidTextureHandle;
-
     std::filesystem::path path(filepath);
+
+    {
+        std::lock_guard lock(_queueMutex);
+
+        if (auto it = _uploadQueue.find(filepath); it != _uploadQueue.end())
+        {
+            return it->second.Handle;
+        }
+    }
 
     DirectX::TexMetadata metadata = GetTextureMetadata(path);
     rhi::TextureDescription description = GetTextureDescription(metadata);
 
     UploadInfo info =
     {
+        .Handle = InvalidTextureHandle,
         .Name = path.filename().string(),
         .Description = description
     };
@@ -325,7 +337,7 @@ TextureHandle TextureManager::EnqueueTexture(const std::string& filepath)
         auto it = _uploadQueue.try_emplace(filepath, info);
     }
 
-    return handle;
+    return info.Handle;
 }
 
 void TextureManager::UploadTextures(rhi::CommandList* commandList)

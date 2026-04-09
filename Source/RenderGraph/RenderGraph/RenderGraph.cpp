@@ -28,9 +28,14 @@ namespace rg
     {
     }
 
-    void RenderGraph::SetTaskAllocator(ITaskAllocator& allocator)
+    void RenderGraph::SetTaskAllocator(ITaskAllocator* allocator)
     {
-        _taskAllocator = &allocator;
+        _taskAllocator = allocator;
+    }
+
+    void RenderGraph::SetFrameBuffer(rhi::Buffer* buffer)
+    {
+        _context.SetFrameBuffer(buffer);
     }
 
     void RenderGraph::Reset()
@@ -136,6 +141,23 @@ namespace rg
 
         RenderPassBuilder builder(*this, pass.get());
         _passes.back()->Setup(builder);
+    }
+
+    void RenderGraph::ImportResource(std::shared_ptr<rhi::Buffer> resource, const std::string& name)
+    {
+        ASSERT(resource, "Trying to import a null resource into the render graph.");
+
+        auto it = _context._mapNameToBufferId.find(name);
+        if (it != _context._mapNameToBufferId.end())
+        {
+            _context._mapIdToBuffer[it->second] = resource;
+        }
+        else
+        {
+            const RGBufferId& id = resource->GetID();
+            _context._mapNameToBufferId[name] = id;
+            _context._mapIdToBuffer[id] = resource;
+        }
     }
 
     void RenderGraph::ImportResource(std::shared_ptr<rhi::Texture> resource, const std::string& name)

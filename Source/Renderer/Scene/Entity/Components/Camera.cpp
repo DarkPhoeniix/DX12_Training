@@ -12,7 +12,7 @@ namespace
 namespace scene
 {
     Viewport::Viewport()
-        : _viewport(0.0f, 0.0f, 0.0f, 0.0f)
+        : _viewport()
         , _scissorRectangle(0, 0, LONG_MAX, LONG_MAX)
         , _aspectRatio(0.0f)
     {

@@ -24,6 +24,14 @@ namespace rhi::d3d12
         ResourceState GetCurrentState() const override;
         void SetCurrentState(ResourceState state) override;
 
+        const TextureDescription& GetDescription() const override;
+
+        std::uint32_t GetWidth() const override;
+        std::uint32_t GetHeight() const override;
+        std::uint32_t GetMipLevels() const override;
+        std::uint32_t GetDepthOrArraySize() override;
+        Format GetFormat() const override;
+
         const ResourceID& GetID() const override;
 
         void* GetNative() const override;
@@ -34,6 +42,8 @@ namespace rhi::d3d12
         D3D12Texture(rhi::Device* device, const TextureDescription& description, ResourceState initialState = ResourceState::Common, const std::string& name = "");
         D3D12Texture(rhi::Device* device, const TextureDescription& description, rhi::Heap* heap, std::uint64_t offset, ResourceState initialState = ResourceState::Common, const std::string& name = "");
         D3D12Texture(rhi::Device* device, ID3D12Resource* nativeTexturePtr, const std::string& name = "");
+
+        TextureDescription _description;
 
         D3D12Resource _resource;
 

@@ -70,12 +70,12 @@ namespace rhi
 
     struct Viewport
     {
-        float TopLeftX;
-        float TopLeftY;
-        float Width;
-        float Height;
-        float MinDepth;
-        float MaxDepth;
+        float TopLeftX = 0.0f;
+        float TopLeftY = 0.0f;
+        float Width = 0.0f;
+        float Height = 0.0f;
+        float MinDepth = 0.0f;
+        float MaxDepth = 1.0f;
     };
 
     class CommandList
@@ -181,6 +181,8 @@ namespace rhi
         virtual void EndEvent() = 0;
 
         virtual void SetMarker(const char* name, std::uint8_t color = 0) = 0;
+
+        virtual void SetName(const std::string& name) = 0;
 
         virtual void* GetNative() const = 0;
     };

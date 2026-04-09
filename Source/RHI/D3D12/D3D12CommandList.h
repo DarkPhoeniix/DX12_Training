@@ -128,6 +128,8 @@ namespace rhi::d3d12
 
         void SetMarker(const char* name, std::uint8_t color) override;
 
+        void SetName(const std::string& name) override;
+
         void* GetNative() const override;
 
     private:

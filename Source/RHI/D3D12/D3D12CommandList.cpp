@@ -118,9 +118,11 @@ namespace rhi::d3d12
 
     void D3D12CommandList::TransitionBarriers(const std::vector<BufferBarrier>& barriers)
     {
-        ASSERT(!barriers.empty(), "Barriers vector is empty.");
-
         std::uint32_t numBarriers = static_cast<std::uint32_t>(barriers.size());
+        if (numBarriers == 0)
+        {
+            return;
+        }
 
         if (_device->IsEnhancedBarriersSupported())
         {
@@ -175,9 +177,11 @@ namespace rhi::d3d12
 
     void D3D12CommandList::TransitionBarriers(const std::vector<TextureBarrier>& barriers)
     {
-        ASSERT(!barriers.empty(), "Barriers vector is empty.");
-
         std::uint32_t numBarriers = static_cast<std::uint32_t>(barriers.size());
+        if (numBarriers == 0)
+        {
+            return;
+        }
 
         if (_device->IsEnhancedBarriersSupported())
         {
@@ -338,24 +342,42 @@ namespace rhi::d3d12
     {
         std::uint32_t numTargets = renderTargetDescriptor ? 1 : 0;
 
-        D3D12_CPU_DESCRIPTOR_HANDLE* RTHandle = renderTargetDescriptor ? new D3D12_CPU_DESCRIPTOR_HANDLE(ToD3D12Handle(*renderTargetDescriptor)) : nullptr;
-        D3D12_CPU_DESCRIPTOR_HANDLE* DSHandle = depthStencilDescriptor ? new D3D12_CPU_DESCRIPTOR_HANDLE(ToD3D12Handle(*depthStencilDescriptor)) : nullptr;
+        D3D12_CPU_DESCRIPTOR_HANDLE* pRTHandle = nullptr;
+        D3D12_CPU_DESCRIPTOR_HANDLE RTHandle;
+        if (renderTargetDescriptor)
+        {
+            RTHandle = ToD3D12Handle(*renderTargetDescriptor);
+            pRTHandle = &RTHandle;
+        }
+        D3D12_CPU_DESCRIPTOR_HANDLE* pDSHandle = nullptr;
+        D3D12_CPU_DESCRIPTOR_HANDLE DSHandle;
+        if (depthStencilDescriptor)
+        {
+            DSHandle = ToD3D12Handle(*depthStencilDescriptor);
+            pDSHandle = &DSHandle;
+        }
 
-        _commandList->OMSetRenderTargets(numTargets, RTHandle, FALSE, DSHandle);
+        _commandList->OMSetRenderTargets(numTargets, pRTHandle, FALSE, pDSHandle);
     }
 
     void D3D12CommandList::SetRenderTargets(const std::vector<rhi::CPUDescriptor>& renderTargetDescriptors, rhi::CPUDescriptor* depthStencilDescriptor)
     {
         std::uint32_t numTargets = static_cast<std::uint32_t>(renderTargetDescriptors.size());
 
-        D3D12_CPU_DESCRIPTOR_HANDLE* RTHandles = new D3D12_CPU_DESCRIPTOR_HANDLE[numTargets];
+        D3D12_CPU_DESCRIPTOR_HANDLE RTHandles[16]; // TODO: temp workaround
         for (size_t i = 0; i < numTargets; ++i)
         {
             RTHandles[i] = ToD3D12Handle(renderTargetDescriptors[i]);
         }
-        D3D12_CPU_DESCRIPTOR_HANDLE* DSHandle = depthStencilDescriptor ? new D3D12_CPU_DESCRIPTOR_HANDLE(ToD3D12Handle(*depthStencilDescriptor)) : nullptr;
+        D3D12_CPU_DESCRIPTOR_HANDLE* pDSHandle = nullptr;
+        D3D12_CPU_DESCRIPTOR_HANDLE DSHandle;
+        if (depthStencilDescriptor)
+        {
+            DSHandle = ToD3D12Handle(*depthStencilDescriptor);
+            pDSHandle = &DSHandle;
+        }
 
-        _commandList->OMSetRenderTargets(numTargets, RTHandles, FALSE, DSHandle);
+        _commandList->OMSetRenderTargets(numTargets, RTHandles, FALSE, pDSHandle);
     }
 
     void D3D12CommandList::SetViewport(const Viewport& viewport, const ScissorRect& scissorRectangle)
@@ -573,6 +595,11 @@ namespace rhi::d3d12
     void D3D12CommandList::SetMarker(const char* name, std::uint8_t color)
     {
         PIXSetMarker(color, name);
+    }
+
+    void D3D12CommandList::SetName(const std::string& name)
+    {
+        SetD3D12Name(_commandList.Get(), name);
     }
 
     void* D3D12CommandList::GetNative() const

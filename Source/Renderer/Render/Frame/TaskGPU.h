@@ -12,15 +12,20 @@ namespace rhi
 class TaskGPU : public rg::ITask
 {
 public:
-    TaskGPU(rhi::Device* device);
-    ~TaskGPU();
+    TaskGPU(rhi::Device* device, rhi::CommandListType type);
+    TaskGPU(const TaskGPU& other) = delete;
+    TaskGPU(TaskGPU&& other) noexcept = default;
+    ~TaskGPU() override;
 
-    void AddCommandList(rhi::CommandList* commandList);
+    TaskGPU& operator=(const TaskGPU& other) = delete;
+    TaskGPU& operator=(TaskGPU&& other) noexcept = default;
+
+    void Reset(rhi::PipelineState* pipelineState = nullptr);
+
     rhi::CommandList* GetCommandList() override;
 
     void SetFence(rhi::Fence* fence);
     rhi::Fence* GetFence() const;
-    UINT64 GetFenceValue() const;
 
     void AddDependency(const std::string& taskName);
     std::vector<std::string> GetDependencies() const;
@@ -30,15 +35,16 @@ public:
     void SetName(const std::string& name) override;
     const std::string& GetName() const override;
 
-    std::shared_ptr<tracking::ICommandListCrashContext> GetCrashContext();
+    tracking::ICommandListCrashContext* GetCrashContext();
 
 private:
-    std::vector<rhi::CommandList*> _commandLists;
-    std::shared_ptr<tracking::ICommandListCrashContext> _commandListCrashContext;
+    std::unique_ptr<rhi::CommandList> _commandList;
+    std::unique_ptr<tracking::ICommandListCrashContext> _commandListCrashContext;
 
     rhi::Fence* _fence = nullptr;
     std::vector<std::string> _dependencies;
 
+    rhi::CommandListType _type;
     std::string _name;
 };
 

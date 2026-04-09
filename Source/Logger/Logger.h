@@ -35,7 +35,7 @@
     } while (0)
 #define NOT_IMPLEMENTED() \
     do { \
-        logging::Logger::Instance().Log(logging::Level::Error, "[%s (%u)] NOT IMPLEMENTED!", __func__, __LINE__); \
+        logging::Logger::Instance().Log(logging::Level::Critical, "[%s (%u)] NOT IMPLEMENTED!", __func__, __LINE__); \
         __debugbreak(); \
     } while (0)
 #else

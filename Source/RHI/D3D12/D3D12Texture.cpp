@@ -6,7 +6,8 @@
 namespace rhi::d3d12
 {
     D3D12Texture::D3D12Texture(rhi::Device* device, const TextureDescription& description, ResourceState initialState, const std::string& name)
-        : _resource(device, description, initialState, name)
+        : _description(description)
+        , _resource(device, description, initialState, name)
 #if ENABLE_DEBUG_NAMES
         , _name(name)
 #endif // ENABLE_DEBUG_NAMES
@@ -14,7 +15,8 @@ namespace rhi::d3d12
     }
 
     D3D12Texture::D3D12Texture(rhi::Device* device, const TextureDescription& description, rhi::Heap* heap, std::uint64_t offset, ResourceState initialState, const std::string& name)
-        : _resource(device, description, heap, offset, initialState, name)
+        : _description(description)
+        , _resource(device, description, heap, offset, initialState, name)
 #if ENABLE_DEBUG_NAMES
         , _name(name)
 #endif // ENABLE_DEBUG_NAMES
@@ -31,6 +33,7 @@ namespace rhi::d3d12
 
     D3D12Texture::D3D12Texture(D3D12Texture&& other) noexcept
         : rhi::Texture(std::move(other))
+        , _description(std::move(other._description))
         , _resource(std::move(other._resource))
 #if ENABLE_DEBUG_NAMES
         , _name(std::move(other._name))
@@ -43,6 +46,7 @@ namespace rhi::d3d12
         if (this != &other)
         {
             rhi::Texture::operator=(std::move(other));
+            _description = std::move(other._description);
             _resource = std::move(other._resource);
 #if ENABLE_DEBUG_NAMES
             _name = std::move(other._name);
@@ -80,6 +84,36 @@ namespace rhi::d3d12
     void D3D12Texture::SetCurrentState(ResourceState state)
     {
         _resource.SetCurrentState(state);
+    }
+
+    const TextureDescription& D3D12Texture::GetDescription() const
+    {
+        return _description;
+    }
+
+    std::uint32_t D3D12Texture::GetWidth() const
+    {
+        return _description.Width;
+    }
+
+    std::uint32_t D3D12Texture::GetHeight() const
+    {
+        return _description.Height;
+    }
+
+    std::uint32_t D3D12Texture::GetMipLevels() const
+    {
+        return _description.MipLevels;
+    }
+
+    std::uint32_t D3D12Texture::GetDepthOrArraySize()
+    {
+        return _description.DepthOrArraySize;
+    }
+
+    Format D3D12Texture::GetFormat() const
+    {
+        return _description.Format;
     }
 
     const ResourceID& D3D12Texture::GetID() const

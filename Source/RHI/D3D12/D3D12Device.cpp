@@ -240,6 +240,7 @@ namespace rhi::d3d12
         {
             .Format = DXGI_FORMAT_UNKNOWN,
             .ViewDimension = D3D12_SRV_DIMENSION_BUFFER,
+            .Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
             .Buffer = 
                 {
                     .FirstElement = 0,
@@ -328,6 +329,12 @@ namespace rhi::d3d12
     {
         D3D12_SHADER_RESOURCE_VIEW_DESC view = {};
         view.Format = GetDXGIFormat(texture->GetFormat());
+        view.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+        if (view.Format == DXGI_FORMAT_D32_FLOAT)
+        {
+            view.Format = DXGI_FORMAT_R32_FLOAT;
+        }
 
         std::uint32_t arraySize = texture->GetDepthOrArraySize();
         if (arraySize == 6)

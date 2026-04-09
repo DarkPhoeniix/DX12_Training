@@ -48,7 +48,7 @@ namespace tracking
         void ResetMarkerMapForCurrentFrame();
 
         // Creates a crash context for a command list.
-        std::shared_ptr<ICommandListCrashContext> CreateCommandListCrashContext();
+        std::unique_ptr<ICommandListCrashContext> CreateCommandListCrashContext();
 
         // Factory method to create a GPU crash tracker instance.
         static std::unique_ptr<IGPUCrashTracker> Create();

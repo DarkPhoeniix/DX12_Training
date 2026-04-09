@@ -15,6 +15,11 @@ namespace rg
     {
     }
 
+    void RenderContext::SetFrameBuffer(rhi::Buffer* buffer)
+    {
+        _frameBuffer = buffer;
+    }
+
     std::shared_ptr<rhi::Buffer> RenderContext::GetBuffer(RGBufferId id) const
     {
         auto resourceIt = _mapIdToBuffer.find(id);
@@ -59,6 +64,11 @@ namespace rg
         return _descriptorProvider->GetDescriptor(rhi::ResourceID(id.ID), viewType);
     }
 
+    rhi::Buffer* RenderContext::GetFrameBuffer() const
+    {
+        return _frameBuffer;
+    }
+
     void RenderContext::SetGPUProfiler(Profiler* gpuProfiler)
     {
         _gpuProfiler = gpuProfiler;
@@ -73,7 +83,7 @@ namespace rg
     {
         ASSERT(!name.empty(), "Buffer name cannot be empty.");
 
-        std::shared_ptr<rhi::Buffer> buffer = _device->CreateBuffer(desc);
+        std::shared_ptr<rhi::Buffer> buffer = _device->CreateBuffer(desc, rhi::ResourceState::Common, name);
 
         FillBuffer(buffer, data, dataSize);
 
@@ -82,9 +92,9 @@ namespace rg
 
         if (HasFlag(desc.Flags, rhi::ResourceFlags::AllowUnorderedAccess))
         {
-            _descriptorProvider->CreateStaticResourceView(buffer->GetID(), rhi::ResourceViewType::UAV);
+            _descriptorProvider->CreateStaticResourceView(buffer, rhi::ResourceViewType::UAV);
         }
-        _descriptorProvider->CreateStaticResourceView(buffer->GetID(), rhi::ResourceViewType::SRV);
+        _descriptorProvider->CreateStaticResourceView(buffer, rhi::ResourceViewType::SRV);
 
         return buffer->GetID();
     }
@@ -93,7 +103,7 @@ namespace rg
     {
         ASSERT(!name.empty(), "Texture name cannot be empty.");
 
-        std::shared_ptr<rhi::Texture> texture = _device->CreateTexture(desc);
+        std::shared_ptr<rhi::Texture> texture = _device->CreateTexture(desc, rhi::ResourceState::Common, name);
 
         FillTexture(texture, data, dataSize);
 
@@ -102,17 +112,17 @@ namespace rg
 
         if (HasFlag(desc.Flags, rhi::ResourceFlags::AllowRenderTarget))
         {
-            _descriptorProvider->CreateStaticResourceView(texture->GetID(), rhi::ResourceViewType::RTV);
+            _descriptorProvider->CreateStaticResourceView(texture, rhi::ResourceViewType::RTV);
         }
         if (HasFlag(desc.Flags, rhi::ResourceFlags::AllowDepthStencil))
         {
-            _descriptorProvider->CreateStaticResourceView(texture->GetID(), rhi::ResourceViewType::DSV);
+            _descriptorProvider->CreateStaticResourceView(texture, rhi::ResourceViewType::DSV);
         }
         if (HasFlag(desc.Flags, rhi::ResourceFlags::AllowUnorderedAccess))
         {
-            _descriptorProvider->CreateStaticResourceView(texture->GetID(), rhi::ResourceViewType::UAV);
+            _descriptorProvider->CreateStaticResourceView(texture, rhi::ResourceViewType::UAV);
         }
-        _descriptorProvider->CreateStaticResourceView(texture->GetID(), rhi::ResourceViewType::SRV);
+        _descriptorProvider->CreateStaticResourceView(texture, rhi::ResourceViewType::SRV);
 
         return texture->GetID();
     }

@@ -64,7 +64,11 @@ Application::Application(HINSTANCE hInstance)
     , _currentFrame(nullptr)
     , _device(rhi::CreateDevice(rhi::BackendAPI::D3D12))
 {
-    _frames.resize(rhi::BACK_BUFFER_COUNT, _device.get());
+    _frames.resize(rhi::BACK_BUFFER_COUNT);
+    for (size_t i = 0; i < rhi::BACK_BUFFER_COUNT; ++i)
+    {
+        _frames[i] = std::make_unique<Frame>(_device.get());
+    }
     _fencePool = std::make_unique<FencePool>(_device.get());
 
     DebugInfo::Init(_device.get());
@@ -94,7 +98,6 @@ int Application::Run(const WindowParams& windowParams, std::string cmdLine)
         _win32Window->SetSwapChain(_swapChain.get());
         _device->BindSwapChain(_swapChain.get());
 
-        _allocs.Init(_device.get());
         _fencePool->Init();
 
         for (int i = 0; i < rhi::BACK_BUFFER_COUNT; ++i)
@@ -102,19 +105,18 @@ int Application::Run(const WindowParams& windowParams, std::string cmdLine)
             int nextIndex = (i + 1) % rhi::BACK_BUFFER_COUNT;
             int prevIndex = (i == 0) ? (rhi::BACK_BUFFER_COUNT - 1) : (i - 1);
 
-            Frame& frame = _frames[i];
-            frame.Index = i;
-            frame.Next = &_frames[nextIndex];
-            frame.Prev = &_frames[prevIndex];
+            Frame* frame = _frames[i].get();
+            frame->Index = i;
+            frame->Next = _frames[nextIndex].get();
+            frame->Prev = _frames[prevIndex].get();
 
-            frame.SetSyncPoint(nullptr);
-            frame.SetAllocatorPool(&_allocs);
-            frame.SetFencePool(_fencePool.get());
+            frame->SetSyncPoint(nullptr);
+            frame->SetFencePool(_fencePool.get());
 
-            frame.Init((uint32_t)_win32Window->GetWidth(), (uint32_t)_win32Window->GetHeight());
+            frame->Init((uint32_t)_win32Window->GetWidth(), (uint32_t)_win32Window->GetHeight());
         }
 
-        _currentFrame = &_frames[0];
+        _currentFrame = _frames[0].get();
 
         _renderer->SetFrame(*_currentFrame);
     }
@@ -123,7 +125,10 @@ int Application::Run(const WindowParams& windowParams, std::string cmdLine)
 
     events::InputDevice::Instance().AddInputObserver(_renderer.get());
 
-    TaskGPU* uploadTask = _currentFrame->CreateTask(rhi::CommandListType::Graphics, nullptr);
+    rg::ITask* task = _currentFrame->AllocateTask(rhi::CommandListType::Graphics, nullptr);
+    task->SetName("LoadContent");
+
+    TaskGPU* uploadTask = _currentFrame->GetTask("LoadContent");
     if (!_renderer->LoadContent(uploadTask, cmdLine))
     {
         return 1;
@@ -157,9 +162,9 @@ int Application::Run(const WindowParams& windowParams, std::string cmdLine)
         _currentFrame = _currentFrame->Next;
     }
 
-    for (Frame& frame : _frames)
+    for (const auto& frame : _frames)
     {
-        frame.WaitCPU();
+        frame->WaitCPU();
     }
 
     _renderer->UnloadContent();
@@ -239,12 +244,12 @@ void Application::_RenderCall()
 
 void Application::_ExecuteFrameTasks()
 {
-    for (TaskGPU& task : _currentFrame->GetTasks())
+    for (auto& task : _currentFrame->GetTasks())
     {
         std::vector<TaskGPU*> dependencies;
 
         // wait
-        for (const std::string& dependency : task.GetDependencies())
+        for (const std::string& dependency : task->GetDependencies())
         {
             if (TaskGPU* dependentTask = _currentFrame->GetTask(dependency))
             {
@@ -252,8 +257,8 @@ void Application::_ExecuteFrameTasks()
             }
         }
 
-        rhi::CommandQueue* queue = _device->GetQueue(task.GetType());
-        rhi::Fence* fence = task.GetFence();
+        rhi::CommandQueue* queue = _device->GetQueue(task->GetType());
+        rhi::Fence* fence = task->GetFence();
 
         for (TaskGPU* d : dependencies)
         {
@@ -263,14 +268,14 @@ void Application::_ExecuteFrameTasks()
             dQueue->Wait(dFence, dFence->GetValue());
         }
 
-        std::vector<rhi::CommandList*> frameCommandLists = { task.GetCommandList() };
+        std::vector<rhi::CommandList*> frameCommandLists = { task->GetCommandList() };
 
         queue->ExecuteCommandLists(frameCommandLists);
 
-        if (task.GetName() == "present_pass")
+        if (task->GetName() == "present_pass")
         {
             _device->Present();
-            _currentFrame->SetSyncPoint(task.GetFence());
+            _currentFrame->SetSyncPoint(task->GetFence());
         }
         queue->Signal(fence, fence->GetValue());
     }

@@ -6,7 +6,8 @@
 namespace rhi::d3d12
 {
     D3D12Buffer::D3D12Buffer(rhi::Device* device, const rhi::BufferDescription& description, ResourceState initialState, const std::string& name)
-        : _resource(device, description, initialState, name)
+        : _description(description)
+        , _resource(device, description, initialState, name)
 #if ENABLE_DEBUG_NAMES
         , _name(name)
 #endif // ENABLE_DEBUG_NAMES
@@ -14,7 +15,8 @@ namespace rhi::d3d12
     }
 
     D3D12Buffer::D3D12Buffer(rhi::Device* device, const rhi::BufferDescription& description, rhi::Heap* heap, std::uint64_t offset, ResourceState initialState, const std::string& name)
-        : _resource(device, description, heap, offset, initialState, name)
+        : _description(description)
+        , _resource(device, description, heap, offset, initialState, name)
 #if ENABLE_DEBUG_NAMES
         , _name(name)
 #endif // ENABLE_DEBUG_NAMES
@@ -31,6 +33,7 @@ namespace rhi::d3d12
 
     D3D12Buffer::D3D12Buffer(D3D12Buffer&& other) noexcept
         : rhi::Buffer(std::move(other))
+        , _description(std::move(other._description))
         , _resource(std::move(other._resource))
 #if ENABLE_DEBUG_NAMES
         , _name(std::move(other._name))
@@ -47,6 +50,7 @@ namespace rhi::d3d12
         if (this != &other)
         {
             rhi::Buffer::operator=(std::move(other));
+            _description = std::move(other._description);
             _resource = std::move(_resource);
 #if ENABLE_DEBUG_NAMES
             _name = std::move(other._name);
@@ -84,6 +88,26 @@ namespace rhi::d3d12
     void D3D12Buffer::SetCurrentState(ResourceState state)
     {
         _resource.SetCurrentState(state);
+    }
+
+    const BufferDescription& D3D12Buffer::GetDescription() const
+    {
+        return _description;
+    }
+
+    std::uint32_t D3D12Buffer::GetSize() const
+    {
+        return _description.Size;
+    }
+
+    std::uint32_t D3D12Buffer::GetStride() const
+    {
+        return _description.Stride;
+    }
+
+    std::uint32_t D3D12Buffer::GetElementCount() const
+    {
+        return (_description.Stride > 0) ? static_cast<std::uint32_t>(_description.Size / _description.Stride) : 0;
     }
 
     std::uint32_t D3D12Buffer::GetUAVCounterOffset() const

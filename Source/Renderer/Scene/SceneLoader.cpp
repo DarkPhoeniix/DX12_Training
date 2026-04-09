@@ -200,14 +200,15 @@ namespace scene::helpers
                 .Height = 128,
                 .DepthOrArraySize = 6,
                 .Format = rhi::Format::R16G16B16A16_FLOAT,
+                .Dimension = rhi::TextureDimension::Texture2D,
                 .Flags = rhi::ResourceFlags::AllowUnorderedAccess
             };
             diffuseIrradianceMap = _device->CreateTexture(diffuseIrradianceTextureDesc, rhi::ResourceState::Common, "diffuse_irradiance_map");
 
             // Create SRV/UAV for the textures
 
-            _resourceTable->CreateStaticResourceView(skyboxTexture->GetID(), rhi::ResourceViewType::SRV);
-            _resourceTable->CreateStaticResourceView(diffuseIrradianceMap->GetID(), rhi::ResourceViewType::UAV);
+            _resourceTable->CreateStaticResourceView(skyboxTexture, rhi::ResourceViewType::SRV);
+            _resourceTable->CreateStaticResourceView(diffuseIrradianceMap, rhi::ResourceViewType::UAV);
 
             // Transition resources
 
@@ -278,6 +279,7 @@ namespace scene::helpers
                 .DepthOrArraySize = 6,
                 .MipLevels = 6,
                 .Format = rhi::Format::R16G16B16A16_FLOAT,
+                .Dimension = rhi::TextureDimension::Texture2D,
                 .Flags = rhi::ResourceFlags::AllowUnorderedAccess
             };
             preFilteredEnvMap = _device->CreateTexture(preFilteredEnvTextureDesc, rhi::ResourceState::Common, "prefiltered_environment_map");
@@ -311,7 +313,7 @@ namespace scene::helpers
                 //    uav.Texture2DArray.PlaneSlice = 0;
                 //    uav.Texture2DArray.FirstArraySlice = 0;
                 //}
-                _resourceTable->CreateStaticResourceView(preFilteredEnvMap->GetID(), rhi::ResourceViewType::UAV);
+                _resourceTable->CreateStaticResourceView(preFilteredEnvMap, rhi::ResourceViewType::UAV);
 
                 float roughness = float(i) / float(preFilteredEnvTextureDesc.MipLevels - 1);
 
@@ -374,13 +376,14 @@ namespace scene::helpers
                 .Width = 512,
                 .Height = 512,
                 .Format = rhi::Format::R16G16_FLOAT,
+                .Dimension = rhi::TextureDimension::Texture2D,
                 .Flags = rhi::ResourceFlags::AllowUnorderedAccess
             };
             brdfLUT = _device->CreateTexture(brdfLUTDesc, rhi::ResourceState::Common, "brdf_lut");
 
             // Create SRV/UAV for the textures
 
-            _resourceTable->CreateStaticResourceView(brdfLUT->GetID(), rhi::ResourceViewType::UAV);
+            _resourceTable->CreateStaticResourceView(brdfLUT, rhi::ResourceViewType::UAV);
 
             // Transition resources
 

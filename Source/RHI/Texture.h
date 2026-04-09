@@ -63,19 +63,16 @@ namespace rhi
         [[nodiscard]] virtual ResourceState GetCurrentState() const = 0;
         virtual void SetCurrentState(ResourceState state) = 0;
 
-        const TextureDescription& GetDescription() const { return _description; }
+        virtual const TextureDescription& GetDescription() const = 0;
 
-        std::uint32_t GetWidth() const { return _description.Width; }
-        std::uint32_t GetHeight() const { return _description.Height; }
-        std::uint32_t GetMipLevels() const { return _description.MipLevels; }
-        std::uint32_t GetDepthOrArraySize() const { return _description.DepthOrArraySize; }
-        Format GetFormat() const { return _description.Format; }
+        virtual std::uint32_t GetWidth() const = 0;
+        virtual std::uint32_t GetHeight() const = 0;
+        virtual std::uint32_t GetMipLevels() const = 0;
+        virtual std::uint32_t GetDepthOrArraySize() = 0;
+        virtual Format GetFormat() const = 0;
 
         virtual const ResourceID& GetID() const = 0;
 
         virtual void* GetNative() const = 0;
-
-    protected:
-        TextureDescription _description;
     };
 } // namespace rhi

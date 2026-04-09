@@ -2,6 +2,8 @@
 
 #include "DebugAlbedoViewPass.h"
 
+#include "Core/DescriptorHeapManager.h"
+
 #include "RenderGraph/RenderContext.h"
 #include "RenderGraph/RenderPassBuilder.h"
 
@@ -17,7 +19,18 @@ namespace render
 
 	void DebugAlbedoViewPass::Setup(rg::RenderPassBuilder& builder)
 	{
-        _data.AlbedoMetallic = builder.ReadTexture("albedo_metallic_target");
+		// TODO: remove it later
+		rhi::TextureDescription targetDesc =
+		{
+			.Width = _camera->GetViewport().GetSize().x,
+			.Height = _camera->GetViewport().GetSize().y,
+			.Format = rhi::Format::R8G8B8A8_UNORM,
+			.Dimension = rhi::TextureDimension::Texture2D,
+			.Flags = rhi::ResourceFlags::AllowRenderTarget | rhi::ResourceFlags::AllowUnorderedAccess
+		};
+		builder.DeclareTexture("render_target", targetDesc);
+
+		_data.AlbedoMetallic = builder.ReadTexture("albedo_metallic_target");
 		_data.Target = builder.RenderTarget("render_target");
 	}
 
@@ -28,7 +41,9 @@ namespace render
 		{
 			GPU_SCOPED_EVENT(commandList, "Debug View Pass - Albedo", 9);
 
-			rhi::CPUDescriptor targetHandle = context.GetDescriptor(_data.AlbedoMetallic, rhi::ResourceViewType::RTV);
+			commandList->SetDescriptorHeaps(DescriptorHeapManager::Get().GetShaderResourcesDescriptorHeap()); // TODO: temp workaround
+
+			rhi::CPUDescriptor targetHandle = context.GetDescriptor(_data.Target, rhi::ResourceViewType::RTV);
 
 			commandList->SetGraphicsPipelineState(_debugAlbedoViewPipeline.get());
 
@@ -41,6 +56,7 @@ namespace render
 			{
                 std::uint32_t SourceTextureIndex;
 			} PassConstants = { .SourceTextureIndex = context.GetBindlessIndex(_data.AlbedoMetallic, rhi::ResourceViewType::SRV) };
+			commandList->SetGraphicsCBV(0, context.GetFrameBuffer()->GetVirtualAddress());
             commandList->SetGraphicsConstants(1, 1, &PassConstants);
 
 			commandList->Draw(3);

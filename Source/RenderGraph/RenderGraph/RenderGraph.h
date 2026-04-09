@@ -23,7 +23,8 @@ namespace rg
         RenderGraph& operator=(const RenderGraph&) = delete;
         RenderGraph& operator=(RenderGraph&&) = default;
 
-        void SetTaskAllocator(ITaskAllocator& allocator);
+        void SetTaskAllocator(ITaskAllocator* allocator);
+        void SetFrameBuffer(rhi::Buffer* buffer);
 
         void Reset();
         void Compile();
@@ -37,8 +38,10 @@ namespace rg
         }
         void AddPass(std::shared_ptr<IRenderPass> pass);
 
+        void ImportResource(std::shared_ptr<rhi::Buffer> resource, const std::string& name);
         void ImportResource(std::shared_ptr<rhi::Texture> resource, const std::string& name);
         void ExportResource(const std::string& name, std::shared_ptr<rhi::Texture> desctination);
+        void ExportResource(const std::string& name, std::shared_ptr<rhi::Buffer> desctination);
 
 #if ENABLE_PROFILING
         void SetGPUProfiler(Profiler* gpuProfiler);

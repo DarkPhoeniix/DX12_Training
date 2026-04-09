@@ -194,6 +194,7 @@ namespace gui
 
     void Editor::AddGUIRenderPass()
     {
+        // TODO: return it back later
         _renderGraph->AddPass(std::make_shared<render::GUIPass>(_device, GetPtr()));
         _renderGraph->Compile();
     }

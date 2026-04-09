@@ -262,6 +262,8 @@ namespace render
                 _currentFrame = _currentFrame->Next;
             }
 
+            commandList->SetDescriptorHeaps(DescriptorHeapManager::Get().GetShaderResourcesDescriptorHeap());
+
             // Generate textures for IBL
             _diffuseIrradianceMap = _sceneLoader.GenerateEnvironmentDiffuseIrradianceMap(commandList, _scene);
             _brdfLUT = _sceneLoader.GenerateEnvironmentBRDFLookUpTexture(commandList, _scene);
@@ -322,6 +324,9 @@ namespace render
 
         DebugInfo::BeginRender(renderEvent);
 
+        _renderGraph->SetTaskAllocator(_currentFrame);
+        _renderGraph->SetFrameBuffer(_currentFrame->GetBuffer().get());
+
         UpdateSceneBuffers();
 
         if (_isMinimized)
@@ -329,7 +334,6 @@ namespace render
             return;
         }
 
-        //_renderGraph->SetFrame(*_currentFrame);
         _renderGraph->Execute();
 
         DebugInfo::EndRender();
@@ -462,7 +466,10 @@ namespace render
     {
         WaitAllFrames();
 
-        TaskGPU* uploadTask = _currentFrame->CreateTask(rhi::CommandListType::Graphics, nullptr);
+        rg::ITask* task = _currentFrame->AllocateTask(rhi::CommandListType::Graphics, nullptr);
+        task->SetName("SceneLoad");
+
+        TaskGPU* uploadTask = _currentFrame->GetTask("SceneLoad");
         LoadContent(uploadTask, filepath);
 
         rhi::CommandList* commandList = uploadTask->GetCommandList();
@@ -491,7 +498,7 @@ namespace render
                     .Stride = sizeof(GPUModelDesc),
                     .Usage = rhi::ResourceUsage::Upload
                 };
-                modelBuffer = _sceneBuffers[static_cast<size_t>(SceneBufferType::Model)] = _device->CreateBuffer(modelBufferDesc, rhi::ResourceState::CopyDest, "scene_models_buffer");
+                modelBuffer = _sceneBuffers[static_cast<size_t>(SceneBufferType::Model)] = _device->CreateBuffer(modelBufferDesc, rhi::ResourceState::GenericRead, "scene_models_buffer");
             }
 
             if (!lightBuffer || (lightEntities.size() > (lightBuffer->GetSize() / sizeof(GPULightDesc))))
@@ -502,7 +509,7 @@ namespace render
                     .Stride = sizeof(GPULightDesc),
                     .Usage = rhi::ResourceUsage::Upload
                 };
-                lightBuffer = _sceneBuffers[static_cast<size_t>(SceneBufferType::Light)] = _device->CreateBuffer(lightBufferDesc, rhi::ResourceState::CopyDest, "scene_lights_buffer");
+                lightBuffer = _sceneBuffers[static_cast<size_t>(SceneBufferType::Light)] = _device->CreateBuffer(lightBufferDesc, rhi::ResourceState::GenericRead, "scene_lights_buffer");
             }
 
         GPULightDesc* lights = lightBuffer->Map<GPULightDesc>();
@@ -606,7 +613,7 @@ namespace render
                     data[i] = bones[i]->Offset * bones[i]->GlobalTransform;
                 }
 
-                ResourceTable::Get().CreateTransientResourceView(bonesBuffer->GetID(), rhi::ResourceViewType::SRV);
+                ResourceTable::Get().CreateTransientResourceView(bonesBuffer, rhi::ResourceViewType::SRV);
                 bonesBufferIndex = ResourceTable::Get().GetBindlessIndex(bonesBuffer->GetID(), rhi::ResourceViewType::SRV);;
             }
 
@@ -626,27 +633,27 @@ namespace render
 
                 if (albedoTexture)
                 {
-                    ResourceTable::Get().CreateStaticResourceView(albedoTexture->GetID(), rhi::ResourceViewType::SRV);
+                    ResourceTable::Get().CreateStaticResourceView(albedoTexture, rhi::ResourceViewType::SRV);
                     albedoTextureIndex = ResourceTable::Get().GetBindlessIndex(albedoTexture->GetID(), rhi::ResourceViewType::SRV);
                 }
                 if (emissionTexture)
                 {
-                    ResourceTable::Get().CreateStaticResourceView(emissionTexture->GetID(), rhi::ResourceViewType::SRV);
+                    ResourceTable::Get().CreateStaticResourceView(emissionTexture, rhi::ResourceViewType::SRV);
                     emissionTextureIndex = ResourceTable::Get().GetBindlessIndex(emissionTexture->GetID(), rhi::ResourceViewType::SRV);
                 }
                 if (normalMapTexture)
                 {
-                    ResourceTable::Get().CreateStaticResourceView(normalMapTexture->GetID(), rhi::ResourceViewType::SRV);
+                    ResourceTable::Get().CreateStaticResourceView(normalMapTexture, rhi::ResourceViewType::SRV);
                     normalMapIndex = ResourceTable::Get().GetBindlessIndex(normalMapTexture->GetID(), rhi::ResourceViewType::SRV);
                 }
                 if (metalnessTexture)
                 {
-                    ResourceTable::Get().CreateStaticResourceView(metalnessTexture->GetID(), rhi::ResourceViewType::SRV);
+                    ResourceTable::Get().CreateStaticResourceView(metalnessTexture, rhi::ResourceViewType::SRV);
                     metalnessTextureIndex = ResourceTable::Get().GetBindlessIndex(metalnessTexture->GetID(), rhi::ResourceViewType::SRV);
                 }
                 if (roughnessTexture)
                 {
-                    ResourceTable::Get().CreateStaticResourceView(roughnessTexture->GetID(), rhi::ResourceViewType::SRV);
+                    ResourceTable::Get().CreateStaticResourceView(roughnessTexture, rhi::ResourceViewType::SRV);
                     roughnessTextureIndex = ResourceTable::Get().GetBindlessIndex(roughnessTexture->GetID(), rhi::ResourceViewType::SRV);
                 }
             }
@@ -672,8 +679,8 @@ namespace render
             };
         }
 
-        ResourceTable::Get().CreateTransientResourceView(modelBuffer->GetID(), rhi::ResourceViewType::SRV);
-        ResourceTable::Get().CreateTransientResourceView(lightBuffer->GetID(), rhi::ResourceViewType::SRV);
+        ResourceTable::Get().CreateTransientResourceView(modelBuffer, rhi::ResourceViewType::SRV);
+        ResourceTable::Get().CreateTransientResourceView(lightBuffer, rhi::ResourceViewType::SRV);
 
         {
             GPUFrameDesc* frameBufferData = _currentFrame->GetBuffer()->Map<GPUFrameDesc>();
@@ -721,6 +728,7 @@ namespace render
                 .DepthOrArraySize = (lightComponent->Type == scene::LightType::Point) ? uint16_t(6) : uint16_t(1),
                 .ClearValue = { .DepthStencil = { 1.0f, 0 } },
                 .Format = rhi::Format::D32_FLOAT,
+                .Dimension = rhi::TextureDimension::Texture2D,
                 .Flags = rhi::ResourceFlags::AllowDepthStencil
             };
 
@@ -899,12 +907,13 @@ namespace render
             //}
             //_renderGraph->AddPass(std::make_shared<PresentPass>(_device, _scene, _cameraComponent.get()));
 
-            struct PresentPassData
-            {
-                rg::RGTextureCopySrcId RenderTarget;
-            } presentPassData;
+                struct PresentPassData
+                {
+                    rg::RGTextureCopySrcId RenderTarget;
+                };
+            static PresentPassData presentPassData;
 
-            _renderGraph->AddPass<PresentPassData>(_device, "Present Pass",
+            _renderGraph->AddPass<PresentPassData>(_device, "present_pass",
                 [&](rg::RenderPassBuilder& builder)
                 {
                     presentPassData.RenderTarget = builder.CopySrcTexture("render_target");
@@ -929,7 +938,7 @@ namespace render
 
                     commandList->Close();
                 },
-                rg::RenderPassType::Copy);
+                rg::RenderPassType::Graphics);
 
             _renderGraph->Compile();
         }

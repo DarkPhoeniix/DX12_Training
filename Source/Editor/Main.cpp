@@ -21,7 +21,7 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstan
         Application::Init(hInstance);
 
         std::wstring temp(lpCmdLine);
-        WindowParams params = { 1280, 720, L"Equinox Engine", true };
+        WindowParams params = { 1280, 720, L"Equinox Engine", false };
 
         retCode = Application::Instance()->Run(params, std::string(temp.cbegin(), temp.cend()));
 

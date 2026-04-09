@@ -35,22 +35,16 @@ namespace rhi
         [[nodiscard]] virtual ResourceState GetCurrentState() const = 0;
         virtual void SetCurrentState(ResourceState state) = 0;
 
-        const BufferDescription& GetDescription() const { return _description; }
-        std::uint32_t GetSize() const { return _description.Size; }
-        std::uint32_t GetStride() const { return _description.Stride; }
-        std::uint32_t GetElementCount() const 
-        {
-            return (_description.Stride > 0) ? 0 : static_cast<std::uint32_t>(_description.Size / _description.Stride);
-        }
+        virtual const BufferDescription& GetDescription() const = 0;
+        virtual std::uint32_t GetSize() const = 0;
+        virtual std::uint32_t GetStride() const = 0;
+        virtual std::uint32_t GetElementCount() const = 0;
 
         virtual std::uint32_t GetUAVCounterOffset() const = 0;
 
         virtual const ResourceID& GetID() const = 0;
 
         virtual void* GetNative() const = 0;
-
-    protected:
-        BufferDescription _description;
     };
 
     template<typename Type>

@@ -79,6 +79,8 @@ namespace rhi::d3d12
 
         nativeDevice->CreateCommandSignature(&desc, nativeRootSignature, IID_PPV_ARGS(&_commandSignature));
 
+        delete[] args;
+
 #if ENABLE_DEBUG_NAMES
         SetD3D12Name(_commandSignature.Get(), name);
 #endif // ENABLE_DEBUG_NAMES

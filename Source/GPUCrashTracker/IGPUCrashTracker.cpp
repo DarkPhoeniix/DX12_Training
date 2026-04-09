@@ -33,12 +33,12 @@ namespace tracking
         m_markerMap[m_markerFrameIndex].clear();
     }
 
-    std::shared_ptr<ICommandListCrashContext> IGPUCrashTracker::CreateCommandListCrashContext()
+    std::unique_ptr<ICommandListCrashContext> IGPUCrashTracker::CreateCommandListCrashContext()
     {
 #ifdef USE_NSIGHT_AFTERMATH
-        return std::make_shared<NsightAftermathCommandListContext>(shared_from_this());
+        return std::make_unique<NsightAftermathCommandListContext>(shared_from_this());
 #else
-        return std::make_shared<NullCommandListCrashContext>();
+        return std::make_unique<NullCommandListCrashContext>();
 #endif
     }
 

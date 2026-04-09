@@ -57,12 +57,11 @@ private:
     std::unique_ptr<core::Win32Window> _win32Window;
     std::unique_ptr<rhi::SwapChain> _swapChain;
 
-    std::vector<Frame> _frames;
+    std::vector<std::unique_ptr<Frame>> _frames;
     Frame* _currentFrame;
 
     std::unique_ptr<rhi::Device> _device;
 
-    AllocatorPool _allocs;
     std::unique_ptr<FencePool> _fencePool;
 
     HighResolutionClock _updateClock;

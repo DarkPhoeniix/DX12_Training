@@ -31,201 +31,153 @@ ResourceTable& ResourceTable::Get()
     ASSERT(_instance, "ResourceTable instance is not created. Call Create() first.");
     return *_instance;
 }
-//
-//rhi::DescriptorHeap* ResourceTable::GetShaderResourcesDescriptorHeap() const
-//{
-//    return DescriptorHeapManager::Get().GetShaderResourcesDescriptorHeap();
-//}
-//
-//DescriptorHandle ResourceTable::AddStaticBufferView(std::shared_ptr<rhi::Buffer> buffer, rhi::ResourceViewType viewType)
-//{
-//    if (viewType == rhi::ResourceViewType::CBV)
-//    {
-//        DescriptorHandle handle = DescriptorHeapManager::Get().AllocateStatic(DescriptorHeapType::Static);
-//        _device->CreateBufferCBV(buffer, handle.CpuHandle);
-//        _staticBufferCBVs[buffer->GetID()] = handle;
-//
-//        return handle;
-//    }
-//    else if (viewType == rhi::ResourceViewType::SRV)
-//    {
-//        DescriptorHandle handle = DescriptorHeapManager::Get().AllocateStatic(DescriptorHeapType::Static);
-//        _device->CreateBufferSRV(buffer, handle.CpuHandle);
-//        _staticBufferSRVs[buffer->GetID()] = handle;
-//
-//        return handle;
-//    }
-//    else if (viewType == rhi::ResourceViewType::UAV)
-//    {
-//        DescriptorHandle handle = DescriptorHeapManager::Get().AllocateStatic(DescriptorHeapType::Static);
-//        _device->CreateBufferUAV(buffer, handle.CpuHandle);
-//        _staticBufferUAVs[buffer->GetID()] = handle;
-//
-//        return handle;
-//    }
-//    else
-//    {
-//        LOG_CRITICAL("Unsupported resource view type.");
-//        return {};
-//    }
-//}
-//
-//DescriptorHandle ResourceTable::AddTransientTextureView(std::shared_ptr<rhi::Texture> texture, rhi::ResourceViewType viewType)
-//{
-//    if (viewType == rhi::ResourceViewType::RTV)
-//    {
-//        DescriptorHandle handle = DescriptorHeapManager::Get().AllocateStatic(DescriptorHeapType::Static);
-//        _device->CreateTextureRTV(texture, handle.CpuHandle);
-//        _staticTextureRTVs[texture->GetID()] = handle;
-//
-//        return handle;
-//    }
-//    else if (viewType == rhi::ResourceViewType::DSV)
-//    {
-//        DescriptorHandle handle = DescriptorHeapManager::Get().AllocateStatic(DescriptorHeapType::Static);
-//        _device->CreateTextureDSV(texture, handle.CpuHandle);
-//        _staticTextureDSVs[texture->GetID()] = handle;
-//
-//        return handle;
-//    }
-//    else if (viewType == rhi::ResourceViewType::SRV)
-//    {
-//        DescriptorHandle handle = DescriptorHeapManager::Get().AllocateStatic(DescriptorHeapType::Static);
-//        _device->CreateTextureSRV(texture, handle.CpuHandle);
-//        _staticTextureSRVs[texture->GetID()] = handle;
-//
-//        return handle;
-//    }
-//    else if (viewType == rhi::ResourceViewType::UAV)
-//    {
-//        DescriptorHandle handle = DescriptorHeapManager::Get().AllocateStatic(DescriptorHeapType::Static);
-//        _device->CreateTextureUAV(texture, handle.CpuHandle);
-//        _staticTextureUAVs[texture->GetID()] = handle;
-//
-//        return handle;
-//    }
-//    else
-//    {
-//        LOG_CRITICAL("Unsupported resource view type.");
-//        return {};
-//    }
-//}
-//
-//DescriptorHandle ResourceTable::GetStaticBufferHandle(std::shared_ptr<rhi::Buffer> buffer, rhi::ResourceViewType viewType)
-//{
-//    if (viewType == rhi::ResourceViewType::CBV)
-//    {
-//        auto it = _staticBufferCBVs.find(buffer->GetID());
-//        if (it != _staticBufferCBVs.end())
-//        {
-//            return it->second;
-//        }
-//        LOG_WARNING("Render Target View not found in Resource Table.");
-//    }
-//    else if (viewType == rhi::ResourceViewType::SRV)
-//    {
-//        auto it = _staticBufferSRVs.find(buffer->GetID());
-//        if (it != _staticBufferSRVs.end())
-//        {
-//            return it->second;
-//        }
-//        LOG_WARNING("Depth Stencil View not found in Resource Table.");
-//    }
-//    else if (viewType == rhi::ResourceViewType::UAV)
-//    {
-//        auto it = _staticBufferUAVs.find(buffer->GetID());
-//        if (it != _staticBufferUAVs.end())
-//        {
-//            return it->second;
-//        }
-//        LOG_WARNING("Constant Buffer View not found in Resource Table.");
-//    }
-//
-//    return AddStaticBufferView(buffer, viewType);
-//}
-//
-//constexpr DescriptorHandle ResourceTable::GetTransientTextureHandle(std::shared_ptr<rhi::Texture> texture, rhi::ResourceViewType viewType)
-//{
-//    if (viewType == rhi::ResourceViewType::RTV)
-//    {
-//        auto it = _staticTextureRTVs.find(texture->GetID());
-//        if (it != _staticTextureRTVs.end())
-//        {
-//            return it->second;
-//        }
-//        LOG_WARNING("Render Target View not found in Resource Table.");
-//    }
-//    else if (viewType == rhi::ResourceViewType::DSV)
-//    {
-//        auto it = _staticTextureDSVs.find(texture->GetID());
-//        if (it != _staticTextureDSVs.end())
-//        {
-//            return it->second;
-//        }
-//        LOG_WARNING("Depth Stencil View not found in Resource Table.");
-//    }
-//    else if (viewType == rhi::ResourceViewType::SRV)
-//    {
-//        auto it = _staticTextureSRVs.find(texture->GetID());
-//        if (it != _staticTextureSRVs.end())
-//        {
-//            return it->second;
-//        }
-//        LOG_WARNING("Depth Stencil View not found in Resource Table.");
-//    }
-//    else if (viewType == rhi::ResourceViewType::UAV)
-//    {
-//        auto it = _staticTextureUAVs.find(texture->GetID());
-//        if (it != _staticTextureUAVs.end())
-//        {
-//            return it->second;
-//        }
-//        LOG_WARNING("Constant Buffer View not found in Resource Table.");
-//    }
-//
-//    return AddStaticTextureView(texture, viewType);
-//}
 
 ResourceTable::ResourceTable(rhi::Device* device)
     : _device(device)
 {
 }
 
-void ResourceTable::CreateStaticResourceView(rhi::ResourceID resourceID, rhi::ResourceViewType viewType)
+void ResourceTable::CreateStaticResourceView(std::shared_ptr<rhi::Buffer> buffer, rhi::ResourceViewType viewType)
 {
-    NOT_IMPLEMENTED();
+    if (FindHandle(buffer->GetID(), viewType).Index != InvalidHeapIndex)
+    {
+        return;
+    }
+
+    DescriptorHandle handle = DescriptorHeapManager::Get().AllocateStatic(DescriptorHeapType::Static);
+
+    switch (viewType)
+    {
+    case rhi::ResourceViewType::CBV:
+        _device->CreateBufferCBV(buffer, handle.CpuHandle);
+        break;
+    case rhi::ResourceViewType::SRV:
+        _device->CreateBufferSRV(buffer, handle.CpuHandle);
+        break;
+    case rhi::ResourceViewType::UAV:
+        _device->CreateBufferUAV(buffer, handle.CpuHandle);
+        break;
+    default:
+        UNREACHABLE("Unsupported buffer view type.");
+        break;
+    }
+
+    std::unordered_map<rhi::ResourceID, DescriptorHandle>& bufferMap = GetStaticResourceMap(viewType);
+    bufferMap[buffer->GetID()] = handle;
 }
 
-void ResourceTable::CreateTransientResourceView(rhi::ResourceID resourceID, rhi::ResourceViewType viewType)
+void ResourceTable::CreateStaticResourceView(std::shared_ptr<rhi::Texture> texture, rhi::ResourceViewType viewType)
 {
-    NOT_IMPLEMENTED();
+    if (FindHandle(texture->GetID(), viewType).Index != InvalidHeapIndex)
+    {
+        return;
+    }
+
+    DescriptorHandle handle;
+
+    switch (viewType)
+    {
+    case rhi::ResourceViewType::RTV:
+        handle = DescriptorHeapManager::Get().AllocateStatic(DescriptorHeapType::RTV);
+        _device->CreateTextureRTV(texture, handle.CpuHandle);
+        break;
+    case rhi::ResourceViewType::DSV:
+        handle = DescriptorHeapManager::Get().AllocateStatic(DescriptorHeapType::DSV);
+        _device->CreateTextureDSV(texture, handle.CpuHandle);
+        break;
+    case rhi::ResourceViewType::SRV:
+        handle = DescriptorHeapManager::Get().AllocateStatic(DescriptorHeapType::Static);
+        _device->CreateTextureSRV(texture, handle.CpuHandle);
+        break;
+    case rhi::ResourceViewType::UAV:
+        handle = DescriptorHeapManager::Get().AllocateStatic(DescriptorHeapType::Static);
+        _device->CreateTextureUAV(texture, handle.CpuHandle);
+        break;
+    default:
+        UNREACHABLE("Unsupported texture view type.");
+        break;
+    }
+
+    std::unordered_map<rhi::ResourceID, DescriptorHandle>& textureMap = GetStaticResourceMap(viewType);
+    textureMap[texture->GetID()] = handle;
+}
+
+void ResourceTable::CreateTransientResourceView(std::shared_ptr<rhi::Buffer> buffer, rhi::ResourceViewType viewType)
+{
+    DescriptorHandle handle = DescriptorHeapManager::Get().AllocateStatic(DescriptorHeapType::Dynamic);
+
+    switch (viewType)
+    {
+    case rhi::ResourceViewType::CBV:
+        _device->CreateBufferCBV(buffer, handle.CpuHandle);
+        break;
+    case rhi::ResourceViewType::SRV:
+        _device->CreateBufferSRV(buffer, handle.CpuHandle);
+        break;
+    case rhi::ResourceViewType::UAV:
+        _device->CreateBufferUAV(buffer, handle.CpuHandle);
+        break;
+    default:
+        UNREACHABLE("Unsupported buffer view type.");
+        break;
+    }
+
+    std::unordered_map<rhi::ResourceID, DescriptorHandle>& bufferMap = GetTransientResourceMap(viewType);
+    bufferMap[buffer->GetID()] = handle;
+}
+
+void ResourceTable::CreateTransientResourceView(std::shared_ptr<rhi::Texture> texture, rhi::ResourceViewType viewType)
+{
+    DescriptorHandle handle;
+
+    switch (viewType)
+    {
+    case rhi::ResourceViewType::RTV:
+        handle = DescriptorHeapManager::Get().AllocateStatic(DescriptorHeapType::RTV);
+        _device->CreateTextureRTV(texture, handle.CpuHandle);
+        break;
+    case rhi::ResourceViewType::DSV:
+        handle = DescriptorHeapManager::Get().AllocateStatic(DescriptorHeapType::DSV);
+        _device->CreateTextureDSV(texture, handle.CpuHandle);
+        break;
+    case rhi::ResourceViewType::SRV:
+        handle = DescriptorHeapManager::Get().AllocateStatic(DescriptorHeapType::Dynamic);
+        _device->CreateTextureSRV(texture, handle.CpuHandle);
+        break;
+    case rhi::ResourceViewType::UAV:
+        handle = DescriptorHeapManager::Get().AllocateStatic(DescriptorHeapType::Dynamic);
+        _device->CreateTextureUAV(texture, handle.CpuHandle);
+        break;
+    default:
+        UNREACHABLE("Unsupported texture view type.");
+        break;
+    }
+
+    std::unordered_map<rhi::ResourceID, DescriptorHandle>& textureMap = GetTransientResourceMap(viewType);
+    textureMap[texture->GetID()] = handle;
 }
 
 std::uint32_t ResourceTable::GetBindlessIndex(rhi::ResourceID resourceID, rhi::ResourceViewType viewType)
 {
-    NOT_IMPLEMENTED();
-
-    return std::uint32_t();
+    std::uint32_t index = FindHandle(resourceID, viewType).Index;
+    return index;
 }
 
 rhi::CPUDescriptor ResourceTable::GetDescriptor(rhi::ResourceID resourceID, rhi::ResourceViewType viewType)
 {
-    NOT_IMPLEMENTED();
-    return rhi::CPUDescriptor();
+    rhi::CPUDescriptor descriptor = FindHandle(resourceID, viewType).CpuHandle;
+    return descriptor;
 }
 
 void ResourceTable::Reset()
 {
     DescriptorHeapManager::Get().Reset();
 
-    _staticBufferCBVs.clear();
-    _staticBufferSRVs.clear();
-    _staticBufferUAVs.clear();
-
-    _staticTextureRTVs.clear();
-    _staticTextureDSVs.clear();
-    _staticTextureSRVs.clear();
-    _staticTextureUAVs.clear();
+    _staticResourceRTVs.clear();
+    _staticResourceDSVs.clear();
+    _staticResourceCBVs.clear();
+    _staticResourceSRVs.clear();
+    _staticResourceUAVs.clear();
 
     ResetTransientResources();
 }
@@ -234,13 +186,67 @@ void ResourceTable::ResetTransientResources()
 {
     DescriptorHeapManager::Get().ResetTransient();
 
-    _transientBufferCBVs.clear();
-    _transientBufferSRVs.clear();
-    _transientBufferUAVs.clear();
+    _transientResourceRTVs.clear();
+    _transientResourceDSVs.clear();
+    _transientResourceCBVs.clear();
+    _transientResourceSRVs.clear();
+    _transientResourceUAVs.clear();
+}
 
-    _transientTextureRTVs.clear();
-    _transientTextureDSVs.clear();
-    _transientTextureSRVs.clear();
-    _transientTextureUAVs.clear();
+std::unordered_map<rhi::ResourceID, DescriptorHandle>& ResourceTable::GetStaticResourceMap(rhi::ResourceViewType viewType)
+{
+    switch (viewType)
+    {
+    case rhi::ResourceViewType::RTV:
+        return _staticResourceRTVs;
+    case rhi::ResourceViewType::DSV:
+        return _staticResourceDSVs;
+    case rhi::ResourceViewType::CBV:
+        return _staticResourceCBVs;
+    case rhi::ResourceViewType::SRV:
+        return _staticResourceSRVs;
+    case rhi::ResourceViewType::UAV:
+        return _staticResourceUAVs;
+    default:
+        UNREACHABLE("Unsupported resource view type.");
+        return _staticResourceRTVs;
+    }
+}
 
+std::unordered_map<rhi::ResourceID, DescriptorHandle>& ResourceTable::GetTransientResourceMap(rhi::ResourceViewType viewType)
+{
+    switch (viewType)
+    {
+    case rhi::ResourceViewType::RTV:
+        return _transientResourceRTVs;
+    case rhi::ResourceViewType::DSV:
+        return _transientResourceDSVs;
+    case rhi::ResourceViewType::CBV:
+        return _transientResourceCBVs;
+    case rhi::ResourceViewType::SRV:
+        return _transientResourceSRVs;
+    case rhi::ResourceViewType::UAV:
+        return _transientResourceUAVs;
+    default:
+        UNREACHABLE("Unsupported resource view type.");
+        return _transientResourceRTVs;
+    }
+}
+
+DescriptorHandle ResourceTable::FindHandle(rhi::ResourceID resourceID, rhi::ResourceViewType viewType)
+{
+    std::unordered_map<rhi::ResourceID, DescriptorHandle>& transientMap = GetTransientResourceMap(viewType);
+    if (auto it = transientMap.find(resourceID); it != transientMap.end())
+    {
+        return it->second;
+    }
+
+    std::unordered_map<rhi::ResourceID, DescriptorHandle>& staticMap = GetStaticResourceMap(viewType);
+    if (auto it = staticMap.find(resourceID); it != staticMap.end())
+    {
+        return it->second;
+    }
+
+    //LOG_ERROR(std::format("Failed to find resource handle in the ResourceTable (ID: {} viewType: {})", resourceID, viewType).c_str());
+    return DescriptorHandle{};
 }
