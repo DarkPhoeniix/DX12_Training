@@ -477,8 +477,8 @@ namespace render
 
         _currentFrame->SetSyncPoint(fence);
 
-        _device->GetStreamQueue()->ExecuteCommandLists({ commandList });
-        _device->GetStreamQueue()->Signal(fence, fence->GetValue());
+        _device->GetGraphicsQueue()->ExecuteCommandLists({ commandList });
+        _device->GetGraphicsQueue()->Signal(fence, fence->GetValue());
     }
 
     void DXRenderer::UpdateSceneBuffers()

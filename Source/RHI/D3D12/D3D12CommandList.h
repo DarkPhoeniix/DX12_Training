@@ -10,48 +10,36 @@ namespace rhi
 
 namespace rhi::d3d12
 {
-    // Represents a wrapper for DirectX 12 command list that encapsulates the functionality of recording commands for the GPU.
     class D3D12CommandList final : public rhi::CommandList
     {
     public:
-        // Copy constructor.
         D3D12CommandList(const D3D12CommandList& other) = delete;
-        // Move constructor.
         D3D12CommandList(D3D12CommandList&& other) noexcept;
-        // Destructor for cleaning up the command list resources.
         virtual ~D3D12CommandList();
 
-        // Copy assignment operator.
         D3D12CommandList& operator=(const D3D12CommandList& other) = delete;
-        // Move assignment operator.
         D3D12CommandList& operator=(D3D12CommandList&& other) noexcept;
 
         rhi::CommandListType GetCommandListType() const override;
 
-        // Sets the predication (conditional execution) for the command list using a buffer and offset.
         void SetPredication(std::shared_ptr<Buffer> buffer, std::uint64_t offset, PredicationOperation operation) override;
 
-        // Begins recording a query for GPU information).
         void BeginQuery(QueryHeap* queryHeap, QueryType type, std::uint32_t index) override;
-        // Resolves query data into a destination buffer.
         void ResolveQueryData(QueryHeap* queryHeap, 
                               QueryType type,
                               std::uint32_t index,
                               std::shared_ptr<Buffer> destination,
                               std::uint64_t offset) override;
-        // Resolves multiple query data into a destination buffer.
         void ResolveQueryData(QueryHeap* queryHeap,
                               QueryType type,
                               std::uint32_t index,
                               std::uint32_t numQueries,
                               std::shared_ptr<Buffer> destination,
                               std::uint64_t offset) override;
-        // Ends a previously started query.
         void EndQuery(QueryHeap* queryHeap, QueryType type, std::uint32_t index) override;
 
         void TransitionBarriers(const std::vector<BufferBarrier>& barrier) override;
         void TransitionBarriers(const std::vector<TextureBarrier>& barrier) override;
-        // Sets an UAV barrier for the specified resource (all UAV accesses must complete before any future UAV accesses can begin)
         void UAVBarrier(std::shared_ptr<Buffer> buffer) override;
         void UAVBarrier(std::shared_ptr<Texture> texture) override;
 
@@ -135,10 +123,8 @@ namespace rhi::d3d12
     private:
         friend class D3D12Device;
 
-        // Default constructor initializes a CommandList object.
         D3D12CommandList(rhi::Device* device, rhi::CommandListType type, [[maybe_unused]] const std::string& name = "");
 
-        // Raw DirectX 12 command list.
         ComPtr<ID3D12GraphicsCommandList7> _commandList;
         ComPtr<ID3D12CommandAllocator> _commandAllocator;
 

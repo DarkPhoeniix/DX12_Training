@@ -17,10 +17,8 @@ namespace rhi::d3d12
         std::shared_ptr<rhi::Buffer> PlaceResource(const rhi::BufferDescription& bufferDesc, rhi::ResourceState state = rhi::ResourceState::Common, std::uint64_t offset = (std::uint64_t)-1) override;
         std::shared_ptr<rhi::Texture> PlaceResource(const rhi::TextureDescription& textureDesc, rhi::ResourceState state = rhi::ResourceState::Common, std::uint64_t offset = (std::uint64_t)-1) override;
 
-        // Reset the heap, releasing resources.
         void Reset();
 
-        // Inherited via Heap
         void* GetNative() const override;
 
     private:

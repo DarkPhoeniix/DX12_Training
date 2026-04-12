@@ -90,23 +90,6 @@ namespace rhi::d3d12
         return _backBuffers[_currentBackBufferIndex];
     }
 
-    void D3D12SwapChain::UpdateRenderTargetViews()
-    {
-        rhi::CPUDescriptor heapStart = _RTVDescriptorHeap->GetHeapStartCPUHandle();
-
-        for (int i = 0; i < BACK_BUFFER_COUNT; ++i)
-        {
-            ComPtr<ID3D12Resource> backBuffer;
-            HRESULT result = _dxgiSwapChain->GetBuffer(i, IID_PPV_ARGS(&backBuffer));
-            CHECK(result, "Failed to get back buffer from swap chain.");
-
-            _backBuffers[i] = _device->CreateTexture(backBuffer.Get());
-            _device->CreateTextureRTV(_backBuffers[i], heapStart);
-
-            heapStart.Offset(_RTVDescriptorSize);
-        }
-    }
-
     std::uint32_t D3D12SwapChain::Present()
     {
         UINT syncInterval = _vSync ? 1 : 0;
@@ -203,7 +186,7 @@ namespace rhi::d3d12
         // It is recommended to always allow tearing if tearing support is available.
         swapChainDesc.Flags = _tearingSupport ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
 
-        ID3D12CommandQueue* queue = D3D12Cast<ID3D12CommandQueue>(_device->GetStreamQueue()->GetNative());
+        ID3D12CommandQueue* queue = D3D12Cast<ID3D12CommandQueue>(_device->GetGraphicsQueue()->GetNative());
 
         ComPtr<IDXGISwapChain1> swapChain1;
         HRESULT createSwapChainResult = dxgiFactory4->CreateSwapChainForHwnd(
@@ -247,5 +230,22 @@ namespace rhi::d3d12
         }
 
         return allowTearing == TRUE;
+    }
+
+    void D3D12SwapChain::UpdateRenderTargetViews()
+    {
+        rhi::CPUDescriptor heapStart = _RTVDescriptorHeap->GetHeapStartCPUHandle();
+
+        for (int i = 0; i < BACK_BUFFER_COUNT; ++i)
+        {
+            ComPtr<ID3D12Resource> backBuffer;
+            HRESULT result = _dxgiSwapChain->GetBuffer(i, IID_PPV_ARGS(&backBuffer));
+            CHECK(result, "Failed to get back buffer from swap chain.");
+
+            _backBuffers[i] = _device->CreateTexture(backBuffer.Get());
+            _device->CreateTextureRTV(_backBuffers[i], heapStart);
+
+            heapStart.Offset(_RTVDescriptorSize);
+        }
     }
 } // namespace rhi::d3d12

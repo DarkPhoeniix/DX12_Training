@@ -32,7 +32,6 @@ void Frame::Init(std::uint32_t width, std::uint32_t height)
     {
         rhi::ClearValue targetClearValue =
         {
-            .Format = rhi::Format::R8G8B8A8_UNORM,
             .Color = { 0.0f, 0.0f, 0.0f, 1.0f }
         };
 

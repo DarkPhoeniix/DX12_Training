@@ -9,42 +9,29 @@ namespace tracking
 
 namespace rhi::d3d12
 {
-    // The D3D12Device class encapsulates the DirectX 12 device, adapters, command queues, and swap chain.
     class D3D12Device final : public rhi::Device
     {
     public:
         D3D12Device();
         ~D3D12Device() override;
-        // Delete copy constructor to enforce singleton pattern.
         D3D12Device(const D3D12Device& other) = delete;
-        // Move constructor.
         D3D12Device(D3D12Device&& other) noexcept;
 
-        // Delete copy assignment to enforce singleton pattern.
         D3D12Device& operator=(const D3D12Device& other) = delete;
-        // Move assignment operator.
         D3D12Device& operator=(D3D12Device&& other) noexcept;
 
-        // Checks if enhanced barriers are supported by the device.
         bool IsEnhancedBarriersSupported() override;
 
-        // Binds a swap chain to the device for rendering output.
         void BindSwapChain(rhi::SwapChain* swapChain) override; 
 
         CommandQueue* GetQueue(rhi::CommandListType type) override;
-        // Retrieves the compute command queue for GPU compute operations.
+        rhi::CommandQueue* GetGraphicsQueue() override;
         rhi::CommandQueue* GetComputeQueue() override;
-        // Retrieves the stream command queue for resource streaming.
-        rhi::CommandQueue* GetStreamQueue() override;
-        // Retrieves the copy command queue for efficient resource copying.
         rhi::CommandQueue* GetCopyQueue() override;
 
-        // Handles resizing events by updating necessary resources.
         void OnResize(std::uint32_t width, std::uint32_t height) override;
-        // Gets the current back buffer resource from the swap chain.
         std::shared_ptr<rhi::Texture> GetBackBuffer() override;
 
-        // Presents the rendered frame to the screen.
         void Present() override;
 
         std::shared_ptr<rhi::Buffer> CreateBuffer(const rhi::BufferDescription& description, ResourceState initialState, const std::string& name) override;
@@ -84,13 +71,9 @@ namespace rhi::d3d12
         void* GetNative() const override;
 
     private:
-        // Creates a DXGI adapter, optionally using WARP (software rasterizer).
         void CreateAdapter(bool userWarp = false);
-        // Initializes the DirectX 12 device.
         void CreateDevice();
-        // Creates the command queues.
         void CreateQueues();
-        // Check features that are not supported on all hardware.
         void CheckFeatureSupport();
 
         ComPtr<ID3D12Device2> _device;
@@ -102,7 +85,6 @@ namespace rhi::d3d12
         std::unique_ptr<rhi::CommandQueue> _queueCompute;
         std::unique_ptr<rhi::CommandQueue> _queueCopy;
 
-        // Pointer to the swap chain bound to the device.
         rhi::SwapChain* _swapChain;
 
         std::unique_ptr<tracking::IGPUCrashTracker> _crashTracker;

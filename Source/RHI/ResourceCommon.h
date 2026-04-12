@@ -6,9 +6,13 @@
 
 namespace rhi
 {
+    // ResourceID is a unique identifier for GPU resources, used to track and manage resources within the rendering system. 
+    // It allows the application to reference and manipulate resources without directly exposing the underlying resource objects, 
+    // providing a level of abstraction and flexibility in resource management.
     using ResourceID = std::uint64_t;
     static ResourceID InvalidResourceID = std::uint64_t(-1);
 
+    // ResourceUsage represents the intended usage pattern of a GPU resource, which can influence how the resource is allocated and optimized by the graphics API
     enum class ResourceUsage : std::uint8_t
     {
         Default,
@@ -17,6 +21,8 @@ namespace rhi
         Readback
     };
 
+    // ResourceFlags represents additional flags that can be applied to a GPU resource.
+    // Provides more specific information about how the resource will be used and allowing for further optimization by the graphics API
     enum class ResourceFlags : std::uint8_t
     {
         None                            = 0,
@@ -29,6 +35,7 @@ namespace rhi
     };
     DEFINE_ENUM_FLAG_OPERATORS(ResourceFlags);
 
+    // ResourceState represents the current state of a GPU resource, which is used to manage resource state transitions and ensure proper synchronization and usage of resources in rendering operations
     enum class ResourceState : std::uint16_t
     {
         Common                          = 0,
@@ -56,6 +63,7 @@ namespace rhi
     };
     DEFINE_ENUM_FLAG_OPERATORS(ResourceState);
 
+    // TextureDimension represents the dimensionality of a texture resource, which can be used to specify the type of texture being created or accessed
     enum class TextureDimension : std::uint8_t
     {
         Unknown = 0,
@@ -64,6 +72,8 @@ namespace rhi
         Texture3D = 3
     };
 
+    // ResourceViewType represents the type of view that can be created for a GPU resource, 
+    // which determines how the resource can be accessed and used in shaders and rendering operations
     enum class ResourceViewType
     {
         RTV,
@@ -73,9 +83,10 @@ namespace rhi
         UAV
     };
 
+    // AllocationInfo encapsulates information about a memory allocation for a GPU resource
     struct AllocationInfo
     {
-        std::uint64_t SizeInBytes; // Size of the allocated resource in bytes.
-        std::uint64_t Alignment;   // Alignment requirement for the resource.
+        std::uint64_t SizeInBytes; // Size of the allocated resource in bytes
+        std::uint64_t Alignment;   // Alignment requirement for the resource
     };
 } // namespace rhi

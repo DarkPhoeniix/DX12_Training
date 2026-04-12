@@ -5,6 +5,8 @@ namespace rhi
     class Buffer;
     class Texture;
 
+    // BufferBarrier represents a resource barrier for a buffer resource, which is used to synchronize access to the buffer and ensure proper resource state transitions. 
+    // It can be used in command lists to specify the necessary synchronization and state transitions for buffer resources during GPU execution
     class BufferBarrier
     {
     public:
@@ -17,6 +19,8 @@ namespace rhi
         ResourceState AfterState;
     };
 
+    // TextureBarrier represents a resource barrier for a texture resource, which is used to synchronize access to the texture and ensure proper resource state transitions.
+    // It can be used in command lists to specify the necessary synchronization and state transitions for texture resources during GPU execution
     class TextureBarrier
     {
     public:

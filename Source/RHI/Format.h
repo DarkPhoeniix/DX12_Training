@@ -2,6 +2,8 @@
 
 namespace rhi
 {
+    // Format represents the format of a resource, such as a texture or buffer. 
+    // It specifies how the data is organized and interpreted by the GPU, including the number of components, data type, and any special encoding or compression used for the resource
     enum class Format : std::uint16_t
     {
         UNKNOWN,

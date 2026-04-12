@@ -1,6 +1,5 @@
-// DX12LibPCH.h: This is a precompiled header file.
+// RHI_PCH.h: This is a precompiled header file.
 // Files listed below are compiled only once, improving build performance for future builds.
-// This also affects IntelliSense performance, including code completion and many code browsing features.
 // However, files listed here are ALL re-compiled if any one of them is updated between builds.
 // Do not add files here that you will be updating frequently as this negates the performance advantage.
 
@@ -24,13 +23,10 @@
 #include <wrl.h>
 using namespace Microsoft::WRL;
 
-#define USE_D3D12 1 // TODO: test
-
 #if _DEBUG
 #define ENABLE_DEBUG_NAMES 1
 #define ENABLE_DEBUG_DESC 1
 #define ENABLE_DEVICE_DEBUG 1
-#define ENABLE_GPU_EVENTS 1
 #endif // _DEBUG
 
 // DirectX12 specific headers
@@ -53,6 +49,7 @@ using namespace Microsoft::WRL;
 #include <functional>
 #include <memory>
 #include <string>
+#include <vector>
 #include <map>
 
 #endif // DX12LIB_PCH_H

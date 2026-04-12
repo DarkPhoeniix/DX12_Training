@@ -25,6 +25,14 @@ target_include_directories(RHI PRIVATE ${EXTERNAL_DIR} ${CMAKE_SOURCE_DIR}/Sourc
 target_link_libraries(RHI PRIVATE Microsoft::DirectX-Headers Microsoft::DirectXTex JsonCpp::JsonCpp GPUCrashTracker Utility)
 target_precompile_headers(RHI PRIVATE "RHI_PCH.h")
 
+if (USE_D3D12)
+    target_compile_definitions(RHI PRIVATE USE_D3D12=1)
+endif()
+
+if (ENABLE_GPU_PROFILING EQUAL TRUE)
+    target_compile_definitions(RHI PUBLIC ENABLE_GPU_EVENTS=1)
+endif()
+
 if (MSVC)
     target_compile_options(RHI PRIVATE /W4)
 endif()

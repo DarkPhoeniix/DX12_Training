@@ -10,7 +10,7 @@
 namespace rhi::d3d12
 {
     D3D12TimestampQuery::D3D12TimestampQuery(rhi::Device* device, std::uint32_t timestampsCount, const std::string& name)
-        : _frequency(device->GetStreamQueue()->GetTimestampFrequency())
+        : _frequency(device->GetGraphicsQueue()->GetTimestampFrequency())
 #if ENABLE_DEBUG_NAMES
         , _name(name)
 #endif // ENABLE_DEBUG_NAMES

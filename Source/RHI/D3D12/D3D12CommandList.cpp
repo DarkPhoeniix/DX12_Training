@@ -246,6 +246,8 @@ namespace rhi::d3d12
 
         _commandList->ResourceBarrier(1, &barrier);
 
+        // TODO: Make UAV barrier work with enhanced barriers
+
         //CD3DX12_BUFFER_BARRIER barrier(
         //    D3D12_BARRIER_SYNC_ALL_SHADING,
         //    D3D12_BARRIER_SYNC_ALL_SHADING,
@@ -270,6 +272,8 @@ namespace rhi::d3d12
         CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::UAV(nativeResource);
 
         _commandList->ResourceBarrier(1, &barrier);
+
+        // TODO: Make UAV barrier work with enhanced barriers
 
         //CD3DX12_TEXTURE_BARRIER barrier(
         //    GetD3D12SyncFlags(texture->GetCurrentState()),
@@ -398,7 +402,7 @@ namespace rhi::d3d12
     {
         std::uint32_t numTargets = static_cast<std::uint32_t>(renderTargetDescriptors.size());
 
-        D3D12_CPU_DESCRIPTOR_HANDLE RTHandles[16]; // TODO: temp workaround
+        D3D12_CPU_DESCRIPTOR_HANDLE RTHandles[8]; // TODO: temp workaround
         for (size_t i = 0; i < numTargets; ++i)
         {
             RTHandles[i] = ToD3D12Handle(renderTargetDescriptors[i]);
@@ -517,7 +521,7 @@ namespace rhi::d3d12
     void D3D12CommandList::SetDescriptorHeaps(const std::vector<rhi::DescriptorHeap*>& descriptorHeaps)
     {
         const std::uint32_t heapCount = static_cast<std::uint32_t>(descriptorHeaps.size());
-        ASSERT(heapCount <= 2, "Too many decriptor heaps.");
+        FAIL(heapCount <= 2, "Too many decriptor heaps.");
 
         ID3D12DescriptorHeap* nativeHeaps[2];
         for (size_t i = 0; i < heapCount; ++i)
@@ -614,7 +618,13 @@ namespace rhi::d3d12
 
     void D3D12CommandList::Reset(rhi::PipelineState* pipelineState)
     {
-        _commandList->Reset(_commandAllocator.Get(), pipelineState ? D3D12Cast<ID3D12PipelineState>(pipelineState->GetNative()) : nullptr);
+        ID3D12PipelineState* d3d12PipelineState = nullptr;
+        if (pipelineState)
+        {
+            d3d12PipelineState = D3D12Cast<ID3D12PipelineState>(pipelineState->GetNative());
+        }
+
+        _commandList->Reset(_commandAllocator.Get(), d3d12PipelineState);
     }
 
     void D3D12CommandList::Close()

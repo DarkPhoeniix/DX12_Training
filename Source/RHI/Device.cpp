@@ -5,11 +5,11 @@
 
 #if USE_D3D12
 #include "D3D12/D3D12Device.h"
-#endif
+#endif // USE_D3D12
 
 #if USE_VULKAN
 #include "Vulkan/VkDevice.h"
-#endif
+#endif // USE_VULKAN
 
 namespace rhi
 {

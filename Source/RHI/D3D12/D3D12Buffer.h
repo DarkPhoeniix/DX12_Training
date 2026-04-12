@@ -6,7 +6,7 @@
 namespace rhi
 {
     class Device;
-}
+} // namespace rhi
 
 namespace rhi::d3d12
 {
@@ -55,4 +55,4 @@ namespace rhi::d3d12
         std::string _name;
 #endif // ENABLE_DEBUG_NAMES
     };
-}
+} // namespace rhi::d3d12

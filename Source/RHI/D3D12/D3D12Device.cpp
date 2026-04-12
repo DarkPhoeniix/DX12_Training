@@ -113,18 +113,18 @@ namespace rhi::d3d12
         switch (type)
         {
         case rhi::CommandListType::Graphics:
-            return GetStreamQueue();
+            return GetGraphicsQueue();
         case rhi::CommandListType::Compute:
             return GetComputeQueue();
         case rhi::CommandListType::Copy:
             return GetCopyQueue();
         default:
             UNREACHABLE("Unsupported command queue type.");
-            return GetStreamQueue();
+            return GetGraphicsQueue();
         }
     }
 
-    rhi::CommandQueue* D3D12Device::GetStreamQueue()
+    rhi::CommandQueue* D3D12Device::GetGraphicsQueue()
     {
         return _queueGraphics.get();
     }

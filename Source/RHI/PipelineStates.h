@@ -5,12 +5,16 @@
 
 namespace rhi
 {
+    // PipelineStateType represents the type of pipeline state. 
+    // It is used to specify the intended usage of a pipeline state object and determine the appropriate stages of the pipeline
     enum class PipelineStateType : std::uint8_t
     {
         Graphics,
         Compute
     };
 
+    // PrimitiveTopologyType represents the type of primitive topology. 
+    // It is used to specify how vertex data should be interpreted and assembled into geometric primitives for rendering
     enum class PrimitiveTopologyType : std::uint8_t
     {
         PointList,
@@ -20,6 +24,7 @@ namespace rhi
         TriangleStrip
     };
 
+    // PrimitiveTopology represents the specific primitive topology configuration, including both basic topologies and patch list topologies for tessellation
     enum class PrimitiveTopology : std::uint8_t
     {
         Undefined,
@@ -62,12 +67,14 @@ namespace rhi
         PatchList32
     };
 
+    // FillMode represents the mode used for rasterization, specifying whether to render primitives as solid shapes or as wireframes
     enum class FillMode : std::uint8_t
     {
         Solid,
         Wireframe
     };
 
+    // CullMode represents the mode used for culling, specifying which faces of primitives should be culled (not rendered) based on their orientation
     enum class CullMode : std::uint8_t
     {
         None,
@@ -75,6 +82,7 @@ namespace rhi
         Back
     };
 
+    // ComparisonFunc represents the function used for depth and stencil comparisons, specifying how the GPU should compare values for operations
     enum class ComparisonFunc : std::uint8_t
     {
         None,
@@ -88,12 +96,14 @@ namespace rhi
         Always
     };
 
+    // DepthWriteMask represents the mask used for depth writing, specifying whether depth values should be written to the depth buffer or not
     enum class DepthWriteMask : std::uint8_t
     {
         Zero,
         All
     };
 
+    // StencilOp represents the operation used for stencil testing, specifying how the GPU should modify stencil values based on the results of stencil tests
     enum class StencilOp : std::uint8_t
     {
         Keep,
@@ -106,6 +116,7 @@ namespace rhi
         Decr
     };
 
+    // RasterizerState represents the configuration of the rasterizer stage of the graphics pipeline, specifying how primitives should be rasterized and culled
     struct RasterizerState
     {
         FillMode FillMode = FillMode::Solid;
@@ -121,6 +132,8 @@ namespace rhi
         bool ConservativeRaster = false;
     };
 
+    // Blend represents the blending factors used for blending operations in the output merger stage of the graphics pipeline, 
+    // specifying how source and destination colors should be combined
     enum class Blend
     {
         Zero = 1,
@@ -144,6 +157,8 @@ namespace rhi
         InvAlphaFactor
     };
 
+    // BlendOpType represents the blending operation used for blending operations in the output merger stage of the graphics pipeline, 
+    // specifying how source and destination colors should be combined based on the specified blending factors
     enum class BlendOpType
     {
         Add = 1,
@@ -153,6 +168,8 @@ namespace rhi
         Max
     };
 
+    // LogicOp represents the logical operation used for blending operations in the output merger stage of the graphics pipeline,
+    // specifying how source and destination colors should be combined based on a logical operation when logic operations are enabled
     enum class LogicOp
     {
         Clear,
@@ -173,6 +190,8 @@ namespace rhi
         OrInverted
     };
 
+    // ColorWriteEnable represents the color channels that are enabled for writing in the output merger stage of the graphics pipeline,
+    // allowing the application to specify which color components should be written to the render target during rendering operations
     enum class ColorWriteEnable
     {
         DisableAll = 0,
@@ -183,6 +202,8 @@ namespace rhi
         All = Red | Green | Blue | Alpha
     };
 
+    // RTBlendState represents the blending state for a single render target in the output merger stage of the graphics pipeline,
+    // allowing the application to specify blending factors, operations, and write masks for each render target independently
     struct RTBlendState
     {
         bool BlendEnable = false;
@@ -197,6 +218,7 @@ namespace rhi
         ColorWriteEnable RenderTargetWriteMask = ColorWriteEnable::All;
     };
 
+    // BlendState represents the overall blending state for the output merger stage of the graphics pipeline
     struct BlendState
     {
         bool AlphaToCoverageEnable;
@@ -204,6 +226,8 @@ namespace rhi
         std::array<RTBlendState, 8> RenderTargets;
     };
 
+    // DepthStencilOpDesc represents the operations and comparison function used for stencil testing in the depth-stencil stage of the graphics pipeline,
+    // allowing the application to specify how stencil values should be modified based on the results of stencil tests for both front and back faces of primitives
     struct DepthStencilOpDesc
     {
         StencilOp StencilFailOp;
@@ -212,6 +236,8 @@ namespace rhi
         ComparisonFunc StencilFunc;
     };
 
+    // DepthStencilState represents the overall depth-stencil state for the depth-stencil stage of the graphics pipeline,
+    // allowing the application to specify depth testing and stencil testing configurations
     struct DepthStencilState
     {
         bool DepthEnable;

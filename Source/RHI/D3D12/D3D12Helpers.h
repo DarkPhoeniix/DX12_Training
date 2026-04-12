@@ -21,7 +21,8 @@ namespace rhi::d3d12
     template<D3D12Type T>
     inline T* D3D12Cast(void* ptr)
     {
-        return static_cast<T*>(ptr);
+        ASSERT(ptr != nullptr, "Trying to cast a null pointer.");
+        return reinterpret_cast<T*>(ptr);
     }
 
     template<D3D12Object T>
