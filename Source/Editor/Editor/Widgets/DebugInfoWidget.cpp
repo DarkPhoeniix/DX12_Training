@@ -48,9 +48,9 @@ namespace gui
 
         if (ImGui::BeginChild("Debug Info", {0,0}, ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY))
         {
+            int id = 0;
 #if ENABLE_PROFILING
             ImGui::Text("FPS: %i", DebugInfo::GetFPS());
-            int id = 0;
             if (ImGui::TreeNode((void*)id++, "Frame Time: %.03f ms", DebugInfo::GetMsPerFrame()))
             {
                 if (Profiler* profiler = _editor->GetRenderGraph()->GetGPUProfiler())
