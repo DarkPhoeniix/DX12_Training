@@ -49,7 +49,7 @@ namespace rhi::d3d12
         , _initialState(initialState)
         , _currentState(initialState)
         , _stride(description.Stride)
-        , _uavCounterOffset(static_cast<std::uint32_t>(-1))
+        , _uavCounterOffset(description.UAVCounterOffset)
 #if ENABLE_DEBUG_NAMES
         , _name(name)
 #endif // ENABLE_DEBUG_NAMES
@@ -105,7 +105,7 @@ namespace rhi::d3d12
         , _initialState(initialState)
         , _currentState(initialState)
         , _stride(0)
-        , _uavCounterOffset(static_cast<std::uint32_t>(-1))
+        , _uavCounterOffset(description.UAVCounterOffset)
 #if ENABLE_DEBUG_NAMES
         , _name(name)
 #endif // ENABLE_DEBUG_NAMES

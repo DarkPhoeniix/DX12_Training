@@ -24,9 +24,9 @@ namespace rhi::d3d12
             case rhi::IndirectArgumentType::VertexBufferView:
                 return 16; // VirtualSddress(8) + Stride(4) + Size(4)
             case rhi::IndirectArgumentType::IndexBufferView:
-                return 12; // VirtualSddress(8) + Size(4) + Format(4)
+                return 16; // VirtualSddress(8) + Size(4) + Format(4)
             case rhi::IndirectArgumentType::Constant:
-                return 4; // Data(4)
+                return 4 * argument.Constant.Num32BitValuesToSet; // Data(4) * numValues
             case rhi::IndirectArgumentType::ConstantBufferView:
                 return 8; // VirtualSddress(8)
             case rhi::IndirectArgumentType::ShaderResourceView:
@@ -75,7 +75,7 @@ namespace rhi::d3d12
         };
 
         ID3D12Device2* nativeDevice = D3D12Cast<ID3D12Device2>(device->GetNative());
-        ID3D12RootSignature* nativeRootSignature = D3D12Cast<ID3D12RootSignature>(pipelineState->GetNativeRootSignature());
+        ID3D12RootSignature* nativeRootSignature = pipelineState ? D3D12Cast<ID3D12RootSignature>(pipelineState->GetNativeRootSignature()) : nullptr;
 
         nativeDevice->CreateCommandSignature(&desc, nativeRootSignature, IID_PPV_ARGS(&_commandSignature));
 

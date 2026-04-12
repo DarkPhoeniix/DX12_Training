@@ -31,7 +31,7 @@ namespace render
         rhi::CommandList* commandList = task->GetCommandList();
 
         {
-            GPU_SCOPED_EVENT(commandList.GetDXCommandList().Get(), "GUI", 5);
+            GPU_SCOPED_EVENT(commandList, "GUI", 5);
 
             commandList->SetDescriptorHeaps(DescriptorHeapManager::Get().GetShaderResourcesDescriptorHeap()); // TODO: temp workaround
 

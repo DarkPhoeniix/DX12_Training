@@ -19,17 +19,6 @@ namespace render
 
 	void DebugAlbedoViewPass::Setup(rg::RenderPassBuilder& builder)
 	{
-		// TODO: remove it later
-		rhi::TextureDescription targetDesc =
-		{
-			.Width = _camera->GetViewport().GetSize().x,
-			.Height = _camera->GetViewport().GetSize().y,
-			.Format = rhi::Format::R8G8B8A8_UNORM,
-			.Dimension = rhi::TextureDimension::Texture2D,
-			.Flags = rhi::ResourceFlags::AllowRenderTarget | rhi::ResourceFlags::AllowUnorderedAccess
-		};
-		builder.DeclareTexture("render_target", targetDesc);
-
 		_data.AlbedoMetallic = builder.ReadTexture("albedo_metallic_target");
 		_data.Target = builder.RenderTarget("render_target");
 	}
@@ -40,8 +29,6 @@ namespace render
 
 		{
 			GPU_SCOPED_EVENT(commandList, "Debug View Pass - Albedo", 9);
-
-			commandList->SetDescriptorHeaps(DescriptorHeapManager::Get().GetShaderResourcesDescriptorHeap()); // TODO: temp workaround
 
 			rhi::CPUDescriptor targetHandle = context.GetDescriptor(_data.Target, rhi::ResourceViewType::RTV);
 

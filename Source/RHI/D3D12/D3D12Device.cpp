@@ -284,7 +284,7 @@ namespace rhi::d3d12
         {
             view.Buffer.CounterOffsetInBytes = counterOffset;
 
-            ID3D12Resource* nativeCounterResource = D3D12Cast<ID3D12Resource>(counterResource->GetNative());
+            ID3D12Resource* nativeCounterResource = counterResource ? D3D12Cast<ID3D12Resource>(counterResource->GetNative()) : nativeResource;
             _device->CreateUnorderedAccessView(nativeResource, nativeCounterResource, &view, ToD3D12Handle(descriptor));
         }
         else
@@ -557,8 +557,8 @@ namespace rhi::d3d12
     void D3D12Device::CreateQueues()
     {
         _queueGraphics = std::unique_ptr<D3D12CommandQueue>(new D3D12CommandQueue(this, rhi::CommandListType::Graphics, "D3D12 Direct Queue"));
-        _queueCompute = std::unique_ptr<D3D12CommandQueue>(new D3D12CommandQueue(this, rhi::CommandListType::Graphics, "D3D12 Compute Queue"));
-        _queueCopy = std::unique_ptr<D3D12CommandQueue>(new D3D12CommandQueue(this, rhi::CommandListType::Graphics, "D3D12 Copy Queue"));
+        _queueCompute = std::unique_ptr<D3D12CommandQueue>(new D3D12CommandQueue(this, rhi::CommandListType::Compute, "D3D12 Compute Queue"));
+        _queueCopy = std::unique_ptr<D3D12CommandQueue>(new D3D12CommandQueue(this, rhi::CommandListType::Copy, "D3D12 Copy Queue"));
 
         LOG_INFO("DX12 Command Queues created.");
     }

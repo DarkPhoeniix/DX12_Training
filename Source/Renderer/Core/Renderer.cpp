@@ -1,7 +1,7 @@
 
 #include "RendererPCH.h"
 
-#include "DXRenderer.h"
+#include "Renderer.h"
 
 #include "RHI/CommandList.h"
 
@@ -18,6 +18,7 @@
 #include "Scene/Entity/Components/Armature.h"
 #include "Scene/Entity/Components/Camera.h"
 #include "Scene/Entity/Components/Light.h"
+#include "Scene/Entity/Components/Skybox.h"
 #include "Scene/Entity/Components/Material.h"
 #include "Scene/Entity/Components/Mesh.h"
 #include "Scene/Entity/Entity.h"
@@ -41,17 +42,16 @@
 #include "Render/Passes/AmbientLightingPass.h"
 #include "Render/Passes/GeometryPass.h"
 #include "Render/Passes/LightingPass.h"
-//#include "Render/Passes/PFX/AntiAliasing/FXAAPass.h"
-//#include "Render/Passes/PFX/Bloom/BloomApplyPass.h"
-//#include "Render/Passes/PFX/Bloom/BloomDownsamplePass.h"
-//#include "Render/Passes/PFX/Bloom/BloomUpsamplePass.h"
+#include "Render/Passes/PFX/AntiAliasing/FXAAPass.h"
+#include "Render/Passes/PFX/Bloom/BloomApplyPass.h"
+#include "Render/Passes/PFX/Bloom/BloomDownsamplePass.h"
+#include "Render/Passes/PFX/Bloom/BloomUpsamplePass.h"
 #include "Render/Passes/PFX/ToneMapping/AverageLuminancePass.h"
 #include "Render/Passes/PFX/ToneMapping/LuminanceHistogramPass.h"
 #include "Render/Passes/PFX/ToneMapping/ToneMappingPass.h"
-//#include "Render/Passes/Shadows/ShadowCullPass.h"
-//#include "Render/Passes/Shadows/ShadowDrawPass.h"
+#include "Render/Passes/Shadows/ShadowCullPass.h"
+#include "Render/Passes/Shadows/ShadowDrawPass.h"
 #include "Render/Passes/SkyboxPass.h"
-//#include "Render/Passes/PresentPass.h"
 #include "Render/Helpers/DrawHelpers.h"
 
 #include "RenderGraph/RenderPassBuilder.h"
@@ -734,14 +734,16 @@ namespace render
 
             std::shared_ptr<rhi::Texture> shadowMap = _device->CreateTexture(shadowMapDesc, rhi::ResourceState::Common, light->GetName() + "_shadow_map");
             lightComponent->ShadowMapHandle = TextureManager::Get().AddTexture(shadowMap);
+            lightComponent->ShadowMapId = shadowMap->GetID();
+
+            ResourceTable::Get().CreateStaticResourceView(shadowMap, rhi::ResourceViewType::DSV);
+            ResourceTable::Get().CreateStaticResourceView(shadowMap, rhi::ResourceViewType::SRV);
         }
     }
 
     void DXRenderer::CreateShadowMaps()
     {
         std::vector<std::shared_ptr<scene::Entity>> lightEntities = _scene->FilterNodesByComponent("Light");
-
-        auto viewportSize = _cameraComponent->GetViewport().GetSize();
 
         for (const auto& lightEntity : lightEntities)
         {
@@ -843,69 +845,87 @@ namespace render
                 _renderGraph->ImportResource(_brdfLUT, "brdf_lut");
             }
 
+            std::vector<std::shared_ptr<scene::Entity>> lightEntities = _scene->FilterNodesByComponent("Light");
+
+            for (const auto& lightEntity : lightEntities)
+            {
+                std::shared_ptr<scene::Light> lightComponent = lightEntity->GetComponentAs<scene::Light>("Light");
+
+                if (lightComponent && lightComponent->CastShadows)
+                {
+                    _renderGraph->ImportResource(TextureManager::Get().GetTexture(lightComponent->ShadowMapHandle), lightEntity->GetName() + "_shadow_map");
+                }
+            }
+
             // Add passes to render graph
 
             _renderGraph->AddPass(std::make_shared<GeometryPass>(_device, _scene, _cameraComponent.get()));
-            //_renderGraph->AddPass(std::make_shared<ShadowCullPass>(_device, _scene, _cameraComponent.get()));
-            //_renderGraph->AddPass(std::make_shared<ShadowDrawPass>(_device, _scene, _cameraComponent.get()));
-            //_renderGraph->AddPass(std::make_shared<AmbientLightingPass>(_device, _scene, _cameraComponent.get()));
-            //if (RenderSettings::UseSSAO())
-            //{
-            //    _renderGraph->AddPass(std::make_shared<SSAOComputePass>(_device, _scene, _cameraComponent.get()));
-            //    _renderGraph->AddPass(std::make_shared<SSAOBlurPass>(_device, _scene, _cameraComponent.get()));
-            //    _renderGraph->AddPass(std::make_shared<SSAOApplyPass>(_device, _scene, _cameraComponent.get()));
-            //}
-            //_renderGraph->AddPass(std::make_shared<LightingPass>(_device, _scene, _cameraComponent.get()));
-            //if (_device, _scene->FindNodeByComponentName("Skybox"))
-            //{
-            //    _renderGraph->AddPass(std::make_shared<SkyboxPass>(_device, _scene, _cameraComponent.get()));
-            //}
-            //if (RenderSettings::UseBloom())
-            //{
-            //    _renderGraph->AddPass(std::make_shared<BloomDownsamplePass>(_device, _scene, _cameraComponent.get()));
-            //    _renderGraph->AddPass(std::make_shared<BloomUpsamplePass>(_device, _scene, _cameraComponent.get()));
-            //    _renderGraph->AddPass(std::make_shared<BloomApplyPass>(_device, _scene, _cameraComponent.get()));
-            //}
-            //if (RenderSettings::UseFXAA())
-            //{
-            //    _renderGraph->AddPass(std::make_shared<FXAAPass>(_device, _scene, _cameraComponent.get()));
-            //}
-            //_renderGraph->AddPass(std::make_shared<LuminanceHistogramPass>(_device, _scene, _cameraComponent.get()));
-            //_renderGraph->AddPass(std::make_shared<AverageLuminancePass>(_device, _scene, _cameraComponent.get()));
-            //_renderGraph->AddPass(std::make_shared<ToneMappingPass>(_device, _scene, _cameraComponent.get()));
-            //if (RenderSettings::RenderDebugVolumes())
-            //{
-            //    _renderGraph->AddPass(std::make_shared<DebugBoundingVolumePass>(_device, _scene, _cameraComponent.get()));
-            //}
-            //if (RenderSettings::RenderDebugArmature())
-            //{
-            //    _renderGraph->AddPass(std::make_shared<DebugArmaturePass>(_device, _scene, _cameraComponent.get()));
-            //}
-            //if (RenderSettings::DebugView().ShowAlbedo)
-            //{
+            _renderGraph->AddPass(std::make_shared<ShadowCullPass>(_device, _scene, _cameraComponent.get()));
+            _renderGraph->AddPass(std::make_shared<ShadowDrawPass>(_device, _scene, _cameraComponent.get()));
+            _renderGraph->AddPass(std::make_shared<AmbientLightingPass>(_device, _scene, _cameraComponent.get()));
+            if (RenderSettings::UseSSAO())
+            {
+                _renderGraph->AddPass(std::make_shared<SSAOComputePass>(_device, _scene, _cameraComponent.get()));
+                _renderGraph->AddPass(std::make_shared<SSAOBlurPass>(_device, _scene, _cameraComponent.get()));
+                _renderGraph->AddPass(std::make_shared<SSAOApplyPass>(_device, _scene, _cameraComponent.get()));
+            }
+            _renderGraph->AddPass(std::make_shared<LightingPass>(_device, _scene, _cameraComponent.get()));
+            if (auto skyboxNode = _scene->FindNodeByComponentName("Skybox"))
+            {
+                std::shared_ptr<scene::Skybox> skybox = skyboxNode->GetComponentAs<scene::Skybox>("Skybox");
+                std::shared_ptr<rhi::Texture> skyboxTexture = TextureManager::Get().GetTexture(skybox->SkydomeTextureHandle);
+
+                if (skyboxTexture)
+                {
+                    _renderGraph->ImportResource(skyboxTexture, "skybox");
+                    _renderGraph->AddPass(std::make_shared<SkyboxPass>(_device, _scene, _cameraComponent.get()));
+                }
+            }
+            if (RenderSettings::UseBloom())
+            {
+                _renderGraph->AddPass(std::make_shared<BloomDownsamplePass>(_device, _scene, _cameraComponent.get()));
+                _renderGraph->AddPass(std::make_shared<BloomUpsamplePass>(_device, _scene, _cameraComponent.get()));
+                _renderGraph->AddPass(std::make_shared<BloomApplyPass>(_device, _scene, _cameraComponent.get()));
+            }
+            if (RenderSettings::UseFXAA())
+            {
+                _renderGraph->AddPass(std::make_shared<FXAAPass>(_device, _scene, _cameraComponent.get()));
+            }
+            _renderGraph->AddPass(std::make_shared<LuminanceHistogramPass>(_device, _scene, _cameraComponent.get()));
+            _renderGraph->AddPass(std::make_shared<AverageLuminancePass>(_device, _scene, _cameraComponent.get()));
+            _renderGraph->AddPass(std::make_shared<ToneMappingPass>(_device, _scene, _cameraComponent.get()));
+            if (RenderSettings::RenderDebugVolumes())
+            {
+                _renderGraph->AddPass(std::make_shared<DebugBoundingVolumePass>(_device, _scene, _cameraComponent.get()));
+            }
+            if (RenderSettings::RenderDebugArmature())
+            {
+                _renderGraph->AddPass(std::make_shared<DebugArmaturePass>(_device, _scene, _cameraComponent.get()));
+            }
+            if (RenderSettings::DebugView().ShowAlbedo)
+            {
                 _renderGraph->AddPass(std::make_shared<DebugAlbedoViewPass>(_device, _scene, _cameraComponent.get()));
-            //}
-            //else if (RenderSettings::DebugView().ShowMetalness)
-            //{
-            //    _renderGraph->AddPass(std::make_shared<DebugMetallicViewPass>(_device, _scene, _cameraComponent.get()));
-            //}
-            //else if (RenderSettings::DebugView().ShowRoughness)
-            //{
-            //    _renderGraph->AddPass(std::make_shared<DebugRoughnessViewPass>(_device, _scene, _cameraComponent.get()));
-            //}
-            //else if (RenderSettings::DebugView().ShowNormals)
-            //{
-            //    _renderGraph->AddPass(std::make_shared<DebugNormalViewPass>(_device, _scene, _cameraComponent.get()));
-            //}
-            //else if (RenderSettings::DebugView().ShowSSAO)
-            //{
-            //    _renderGraph->AddPass(std::make_shared<DebugSSAOViewPass>(_device, _scene, _cameraComponent.get()));
-            //}
-            //else if (RenderSettings::DebugView().ShowEmission)
-            //{
-            //    _renderGraph->AddPass(std::make_shared<DebugEmissiveViewPass>(_device, _scene, _cameraComponent.get()));
-            //}
-            //_renderGraph->AddPass(std::make_shared<PresentPass>(_device, _scene, _cameraComponent.get()));
+            }
+            else if (RenderSettings::DebugView().ShowMetalness)
+            {
+                _renderGraph->AddPass(std::make_shared<DebugMetallicViewPass>(_device, _scene, _cameraComponent.get()));
+            }
+            else if (RenderSettings::DebugView().ShowRoughness)
+            {
+                _renderGraph->AddPass(std::make_shared<DebugRoughnessViewPass>(_device, _scene, _cameraComponent.get()));
+            }
+            else if (RenderSettings::DebugView().ShowNormals)
+            {
+                _renderGraph->AddPass(std::make_shared<DebugNormalViewPass>(_device, _scene, _cameraComponent.get()));
+            }
+            else if (RenderSettings::DebugView().ShowSSAO)
+            {
+                _renderGraph->AddPass(std::make_shared<DebugSSAOViewPass>(_device, _scene, _cameraComponent.get()));
+            }
+            else if (RenderSettings::DebugView().ShowEmission)
+            {
+                _renderGraph->AddPass(std::make_shared<DebugEmissiveViewPass>(_device, _scene, _cameraComponent.get()));
+            }
 
                 struct PresentPassData
                 {

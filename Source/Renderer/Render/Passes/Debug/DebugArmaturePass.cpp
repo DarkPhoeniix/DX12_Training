@@ -68,6 +68,7 @@ namespace render
 								.BoneStart = DirectX::XMVector4Transform(bone->GlobalTransform.r[3], transform->Transform),
 								.BoneEnd = DirectX::XMVector4Transform(child->GlobalTransform.r[3], transform->Transform)
 							};
+							commandList->SetGraphicsCBV(0, context.GetFrameBuffer()->GetVirtualAddress());
 							commandList->SetGraphicsConstants(1, 8, &passCB);
 
 							commandList->Draw(1);

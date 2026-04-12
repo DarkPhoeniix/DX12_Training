@@ -10,12 +10,12 @@ namespace render
 {
 	struct LightingPassData
 	{
+		std::vector<rg::RGVirtualResourceReadId> ShadowMaps;
+
 		rg::RGTextureReadId AlbedoMetallic;
 		rg::RGTextureReadId NormalRoughness;
 		rg::RGTextureReadId Emission;
 		rg::RGTextureDepthStencilReadId Depth;
-
-		rg::RGVirtualResourceReadId ShadowMaps;
 
 		rg::RGTextureWriteId HDRTarget;
 	};

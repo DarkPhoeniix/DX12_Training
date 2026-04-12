@@ -20,7 +20,7 @@ namespace
 namespace render
 {
     LightingPass::LightingPass(rhi::Device* device, std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-        : RenderPass<LightingPassData>(device, "lighting_pass", rg::RenderPassType::Compute)
+        : RenderPass<LightingPassData>(device, "lighting_pass", rg::RenderPassType::Graphics)
         , _scene(scene)
         , _camera(camera)
     {
@@ -29,6 +29,15 @@ namespace render
 
     void LightingPass::Setup(rg::RenderPassBuilder& builder)
     {
+        std::vector<std::shared_ptr<scene::Entity>> lightEntities = _scene->FilterNodesByComponent("Light");
+        size_t lightsNum = lightEntities.size();
+
+        _data.ShadowMaps.resize(lightsNum);
+        for (size_t i = 0; i < lightsNum; ++i)
+        {
+            _data.ShadowMaps[i] = builder.ReadVirtualResource(lightEntities[i]->GetName() + "_shadow_map");
+        }
+
         _data.AlbedoMetallic = builder.ReadTexture("albedo_metallic_target");
         _data.NormalRoughness = builder.ReadTexture("normal_roughness_target");
         _data.Emission = builder.ReadTexture("emission_target");
@@ -49,12 +58,13 @@ namespace render
             PassConstants passCB =
             {
                 .AlbedoMetallicTextureIndex = context.GetBindlessIndex(_data.AlbedoMetallic, rhi::ResourceViewType::SRV),
-                .NormalRoughnessTextureIndex = context.GetBindlessIndex(_data.AlbedoMetallic, rhi::ResourceViewType::SRV),
-                .EmissionTextureIndex = context.GetBindlessIndex(_data.AlbedoMetallic, rhi::ResourceViewType::SRV),
-                .DepthTextureIndex = context.GetBindlessIndex(_data.AlbedoMetallic, rhi::ResourceViewType::SRV),
-                .TargetTextureIndex = context.GetBindlessIndex(_data.AlbedoMetallic, rhi::ResourceViewType::UAV)
+                .NormalRoughnessTextureIndex = context.GetBindlessIndex(_data.NormalRoughness, rhi::ResourceViewType::SRV),
+                .EmissionTextureIndex = context.GetBindlessIndex(_data.Emission, rhi::ResourceViewType::SRV),
+                .DepthTextureIndex = context.GetBindlessIndex(_data.Depth, rhi::ResourceViewType::SRV),
+                .TargetTextureIndex = context.GetBindlessIndex(_data.HDRTarget, rhi::ResourceViewType::UAV)
             };
 
+            commandList->SetComputeCBV(0, context.GetFrameBuffer()->GetVirtualAddress());
             commandList->SetComputeConstants(1, 5, &passCB);
 
             DirectX::XMUINT2 viewportSize = _camera->GetViewport().GetSize();

@@ -2,7 +2,7 @@
 
 namespace rhi
 {
-    enum class Format : uint16_t
+    enum class Format : std::uint16_t
     {
         UNKNOWN,
         R32G32B32A32_TYPELESS,

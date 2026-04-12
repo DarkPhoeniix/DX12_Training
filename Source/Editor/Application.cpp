@@ -8,7 +8,7 @@
 #include "Events/UpdateEvent.h"
 #include "Input/InputDevice.h"
 
-#include "Core/DXRenderer.h"
+#include "Core/Renderer.h"
 #include "Helpers/DebugInfo.h"
 #include "Window/Win32Window.h"
 
@@ -262,10 +262,8 @@ void Application::_ExecuteFrameTasks()
 
         for (TaskGPU* d : dependencies)
         {
-            rhi::CommandQueue* dQueue = _device->GetQueue(d->GetType());
             rhi::Fence* dFence = d->GetFence();
-
-            dQueue->Wait(dFence, dFence->GetValue());
+            queue->Wait(dFence, dFence->GetValue());
         }
 
         std::vector<rhi::CommandList*> frameCommandLists = { task->GetCommandList() };

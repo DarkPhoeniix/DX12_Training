@@ -24,7 +24,7 @@ namespace
 namespace render
 {
 	AmbientLightingPass::AmbientLightingPass(rhi::Device* device, std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-		: RenderPass<AmbientLightingPassData>(device, "ambient_lighting_pass", rg::RenderPassType::Compute)
+		: RenderPass<AmbientLightingPassData>(device, "ambient_lighting_pass", rg::RenderPassType::Graphics)
 		, _scene(scene)
 		, _camera(camera)
         , _useIBL(RenderSettings::UseIBL())
@@ -81,6 +81,7 @@ namespace render
 				.TargetTextureIndex = context.GetBindlessIndex(_data.HDRTarget, rhi::ResourceViewType::UAV),
 			};
 
+			commandList->SetComputeCBV(0, context.GetFrameBuffer()->GetVirtualAddress());
 			commandList->SetComputeConstants(1, 7, &passCB);
 
 			DirectX::XMUINT2 viewportSize = _camera->GetViewport().GetSize();

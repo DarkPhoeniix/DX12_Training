@@ -26,7 +26,7 @@ namespace render
 	} // namespace unnamed
 
 	LuminanceHistogramPass::LuminanceHistogramPass(rhi::Device* device, std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-		: RenderPass<LuminanceHistogramPassData>(device, "luminance_histogram_pass", rg::RenderPassType::Compute)
+		: RenderPass<LuminanceHistogramPassData>(device, "luminance_histogram_pass", rg::RenderPassType::Graphics)
 		, _scene(scene)
 		, _camera(camera)
 	{
@@ -67,6 +67,7 @@ namespace render
 				.HDRTextureIndex = context.GetBindlessIndex(_data.HDRTarget, rhi::ResourceViewType::SRV),
 				.LuminanceHistogramBufferIndex = context.GetBindlessIndex(_data.LuminanceHistogram, rhi::ResourceViewType::UAV),
 			};
+			commandList->SetComputeCBV(0, context.GetFrameBuffer()->GetVirtualAddress());
 			commandList->SetComputeConstants(1, 4, &constants);
 
 			// Execute

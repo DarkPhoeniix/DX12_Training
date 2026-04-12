@@ -41,6 +41,7 @@ namespace render
 			{
 				std::uint32_t SourceTextureIndex;
 			} PassConstants = { .SourceTextureIndex = context.GetBindlessIndex(_data.AlbedoMetallic, rhi::ResourceViewType::SRV) };
+			commandList->SetGraphicsCBV(0, context.GetFrameBuffer()->GetVirtualAddress());
 			commandList->SetGraphicsConstants(1, 1, &PassConstants);
 
 			commandList->Draw(3);

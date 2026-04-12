@@ -201,7 +201,14 @@ namespace rg
             LOG_CRITICAL("Texture is not exist in render graph context: {}", name);
             return RGTextureId::InvalidID;
         }
-        return RGTextureReadId(it->second);
+
+        RGTextureId id = it->second;
+        if (_descriptorProvider->GetBindlessIndex(id.ID, rhi::ResourceViewType::SRV) == std::uint32_t(-1))
+        {
+            _descriptorProvider->CreateStaticResourceView(_mapIdToTexture[id.ID], rhi::ResourceViewType::SRV);
+        }
+
+        return RGTextureReadId(id);
     }
     
     RGTextureWriteId RenderContext::WriteTexture(const std::string& name)

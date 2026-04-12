@@ -2,7 +2,7 @@
 #include "EditorPCH.h"
 
 #include "Application.h"
-#include "Core/DXRenderer.h"
+#include "Core/Renderer.h"
 #include "Window/Win32Window.h"
 
 #include <dxgidebug.h>

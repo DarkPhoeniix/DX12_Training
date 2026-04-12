@@ -11,10 +11,10 @@ namespace render
 {
 	struct ShadowCullPassData
 	{
-		rg::RGResourceId CounterResetBuffer;
-		rg::RGResourceId AABBBuffer;
-		std::vector<rg::RGResourceId> CandidateInstancesBuffer;
-		std::vector<rg::RGResourceId> LightCommandBuffers;
+		rg::RGBufferId CounterResetBuffer;
+		rg::RGBufferId AABBBuffer;
+		std::vector<rg::RGBufferId> CandidateInstancesBuffer;
+		std::vector<rg::RGBufferId> LightCommandBuffers;
 	};
 
 	class ShadowCullPass : public rg::RenderPass<ShadowCullPassData>
@@ -29,7 +29,7 @@ namespace render
 	private:
 		std::unique_ptr<rhi::PipelineState> _cullShadowsPipeline;
 
-		ComPtr<ID3D12CommandSignature> _cmdSignature;
+		std::unique_ptr<rhi::CommandSignature> _cmdSignature;
 
 		std::shared_ptr<scene::Scene> _scene;
 		scene::Camera* _camera;

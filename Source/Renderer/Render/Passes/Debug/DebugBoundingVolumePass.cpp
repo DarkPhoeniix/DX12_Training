@@ -47,10 +47,10 @@ namespace render
 				switch (light->Type)
 				{
 				case scene::LightType::Point:
-					DrawHelper::DrawSphere(commandList, light->Range, t->Transform.r[3], light->Color);
+					DrawHelper::DrawSphere(commandList, context.GetFrameBuffer()->GetVirtualAddress(), light->Range, t->Transform.r[3], light->Color);
 					break;
 				case scene::LightType::Spot:
-					DrawHelper::DrawCone(commandList, light->OuterAngle, light->Range, t->Transform.r[3], light->Direction, light->Color);
+					DrawHelper::DrawCone(commandList, context.GetFrameBuffer()->GetVirtualAddress(), light->OuterAngle, light->Range, t->Transform.r[3], light->Direction, light->Color);
 					break;
 				}
 			}
@@ -61,7 +61,7 @@ namespace render
 				std::shared_ptr<scene::Mesh> mesh = entity->GetComponentAs<scene::Mesh>("Mesh");
 				scene::AABBVolume aabb = mesh->GlobalAABB;
 
-				DrawHelper::DrawBox(commandList, aabb.Min, aabb.Max, DirectX::XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f));
+				DrawHelper::DrawBox(commandList, context.GetFrameBuffer()->GetVirtualAddress(), aabb.Min, aabb.Max, DirectX::XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f));
 			}
 		}
 

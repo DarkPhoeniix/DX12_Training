@@ -23,7 +23,7 @@ namespace render
     } // namespace unnamed
 
     BloomUpsamplePass::BloomUpsamplePass(rhi::Device* device, std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-        : RenderPass<BloomUpsamplePassData>("bloom_upsample_pass", rg::RenderPassType::Compute)
+        : RenderPass<BloomUpsamplePassData>(device, "bloom_upsample_pass", rg::RenderPassType::Graphics)
         , _scene(scene)
         , _camera(camera)
     {
@@ -53,6 +53,8 @@ namespace render
 
             for (std::uint32_t mip = _mipCount - 1; mip > 0; --mip)
             {
+                std::shared_ptr<rhi::Texture> bloomBTarget = context.GetTexture(_data.BloomMips[mip - 1]);
+
                 PassConstants passCB =
                 { 
                     .InputTextureIndex = context.GetBindlessIndex(_data.BloomMips[mip], rhi::ResourceViewType::SRV),
@@ -60,10 +62,11 @@ namespace render
                     .FilterRadius = RenderSettings::Bloom().Radius, 
                     .Intensity = RenderSettings::Bloom().Intensity1 
                 };
+                commandList->SetComputeCBV(0, context.GetFrameBuffer()->GetVirtualAddress());
                 commandList->SetComputeConstants(1, 4, &passCB);
 
-                std::uint32_t xThreadGroups = (std::uint32_t)std::ceilf(bloomBTarget->GetResourceDescription().GetSize().x / 16.0f);
-                std::uint32_t yThreadGroups = (std::uint32_t)std::ceilf(bloomBTarget->GetResourceDescription().GetSize().y / 16.0f);
+                std::uint32_t xThreadGroups = (std::uint32_t)std::ceilf(bloomBTarget->GetWidth() / 16.0f);
+                std::uint32_t yThreadGroups = (std::uint32_t)std::ceilf(bloomBTarget->GetHeight() / 16.0f);
                 commandList->Dispatch(xThreadGroups, yThreadGroups, 1);
 
                 commandList->UAVBarrier(bloomBTarget);

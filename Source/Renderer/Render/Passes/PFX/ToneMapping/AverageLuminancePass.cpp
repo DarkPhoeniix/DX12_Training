@@ -32,7 +32,7 @@ namespace render
 	} // namespace unnamed
 
 	AverageLuminancePass::AverageLuminancePass(rhi::Device* device, std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-		: RenderPass<AverageLuminancePassData>(device, "average_luminance_pass", rg::RenderPassType::Compute)
+		: RenderPass<AverageLuminancePassData>(device, "average_luminance_pass", rg::RenderPassType::Graphics)
 		, _scene(scene)
 		, _camera(camera)
 	{
@@ -78,12 +78,11 @@ namespace render
 				.LuminanceHistogramIndex = context.GetBindlessIndex(_data.LuminanceHistogram, rhi::ResourceViewType::UAV),
 				.AverageLuminanceBufferIndex = context.GetBindlessIndex(_data.AverageLuminance, rhi::ResourceViewType::UAV),
 			};
+			commandList->SetComputeCBV(0, context.GetFrameBuffer()->GetVirtualAddress());
 			commandList->SetComputeConstants(1, 5, &passConstants);
 
 			// Execute
 
-			std::uint32_t xThreadGroups = (std::uint32_t)std::ceilf(viewportSize.x / float(LUM_HISTOGRAM_THREADS_NUM));
-			std::uint32_t yThreadGroups = (std::uint32_t)std::ceilf(viewportSize.y / float(LUM_HISTOGRAM_THREADS_NUM));
 			commandList->Dispatch();
 		}
 

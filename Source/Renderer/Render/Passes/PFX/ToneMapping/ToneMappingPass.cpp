@@ -29,7 +29,7 @@ namespace render
 	} // namespace unnamed
 
 	ToneMappingPass::ToneMappingPass(rhi::Device* device, std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-		: RenderPass<ToneMappingPassData>(device, "tone_mapping_pass", rg::RenderPassType::Compute)
+		: RenderPass<ToneMappingPassData>(device, "tone_mapping_pass", rg::RenderPassType::Graphics)
 		, _scene(scene)
 		, _camera(camera)
 	{
@@ -76,6 +76,7 @@ namespace render
 				.AverageLuminanceBufferIndex = context.GetBindlessIndex(_data.AverageLuminance, rhi::ResourceViewType::SRV),
 				.TargetTextureIndex = context.GetBindlessIndex(_data.Target, rhi::ResourceViewType::UAV),
 			};
+			commandList->SetComputeCBV(0, context.GetFrameBuffer()->GetVirtualAddress());
 			commandList->SetComputeConstants(1, 6, &constants);
 
 			// Execute

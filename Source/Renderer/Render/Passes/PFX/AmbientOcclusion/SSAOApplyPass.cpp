@@ -19,7 +19,7 @@ namespace render
 	using namespace DirectX;
 
 	SSAOApplyPass::SSAOApplyPass(rhi::Device* device, std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-		: RenderPass<SSAOApplyPassData>(device, "ssao_apply_pass", rg::RenderPassType::Compute)
+		: RenderPass<SSAOApplyPassData>(device, "ssao_apply_pass", rg::RenderPassType::Graphics)
 		, _scene(scene)
 		, _camera(camera)
 	{
@@ -46,6 +46,7 @@ namespace render
 				.AOTargetIndex = context.GetBindlessIndex(_data.AOTarget, rhi::ResourceViewType::SRV),
 				.HDRTargetIndex = context.GetBindlessIndex(_data.HDRTarget, rhi::ResourceViewType::UAV)
 			};
+			commandList->SetComputeCBV(0, context.GetFrameBuffer()->GetVirtualAddress());
 			commandList->SetComputeConstants(1, 2, &passCB);
 
 			XMUINT2 viewportSize = _camera->GetViewport().GetSize();

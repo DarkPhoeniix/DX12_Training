@@ -26,6 +26,8 @@ namespace rg
 
         rhi::Buffer* GetFrameBuffer() const;
 
+        Profiler* GetGPUProfiler() const;
+
     private:
         friend class RenderGraph;
         friend class RenderPassBuilder;
@@ -57,7 +59,6 @@ namespace rg
         void SetFrameBuffer(rhi::Buffer* buffer);
 
         void SetGPUProfiler(Profiler* gpuProfiler);
-        Profiler* GetGPUProfiler() const;
 
         std::unordered_map<std::string, RGBufferId> _mapNameToBufferId;
         std::unordered_map<std::string, RGTextureId> _mapNameToTextureId;

@@ -20,7 +20,7 @@ namespace render
     }
 
     BloomApplyPass::BloomApplyPass(rhi::Device* device, std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-        : RenderPass<BloomApplyPassData>("bloom_apply_pass", rg::RenderPassType::Compute)
+        : RenderPass<BloomApplyPassData>(device, "bloom_apply_pass", rg::RenderPassType::Graphics)
         , _scene(scene)
         , _camera(camera)
     {
@@ -48,6 +48,7 @@ namespace render
                 .HDRTextureIndex = context.GetBindlessIndex(_data.HDRTarget, rhi::ResourceViewType::UAV),
                 .BloomIntensity = RenderSettings::Bloom().Intensity 
             };
+            commandList->SetComputeCBV(0, context.GetFrameBuffer()->GetVirtualAddress());
             commandList->SetComputeConstants(1, 3, &passCB);
 
             DirectX::XMUINT2 viewportSize = _camera->GetViewport().GetSize();

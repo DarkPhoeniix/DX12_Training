@@ -33,7 +33,7 @@ namespace render
 	} // namespace unnamed
 
 	SSAOComputePass::SSAOComputePass(rhi::Device* device, std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-		: RenderPass<SSAOComputePassData>(device, "ssao_compute_pass", rg::RenderPassType::Compute)
+		: RenderPass<SSAOComputePassData>(device, "ssao_compute_pass", rg::RenderPassType::Graphics)
 		, _scene(scene)
 		, _camera(camera)
 	{
@@ -116,7 +116,7 @@ namespace render
 
 			PassConstants passCB =
 			{
-				.KernelSize = kKernelSize,
+				.KernelSize	= kKernelSize,
 				.Radius = RenderSettings::SSAO().Radius,
 				.Bias = RenderSettings::SSAO().Bias,
 				.KernelBufferIndex = context.GetBindlessIndex(_data.Kernels, rhi::ResourceViewType::SRV),
@@ -125,6 +125,7 @@ namespace render
 				.NormalMapTextureIndex = context.GetBindlessIndex(_data.NormalRoughness, rhi::ResourceViewType::SRV),
 				.AmbientOcclusionTextureIndex = context.GetBindlessIndex(_data.AOTarget, rhi::ResourceViewType::UAV)
 			};
+			commandList->SetComputeCBV(0, context.GetFrameBuffer()->GetVirtualAddress());
 			commandList->SetComputeConstants(1, 8, &passCB);
 
 			XMUINT2 viewportSize = _camera->GetViewport().GetSize();

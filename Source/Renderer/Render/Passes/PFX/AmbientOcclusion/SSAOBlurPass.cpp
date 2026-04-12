@@ -27,7 +27,7 @@ namespace render
 	} // namespace unnamed
 
 	SSAOBlurPass::SSAOBlurPass(rhi::Device* device, std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-		: RenderPass<SSAOBlurPassData>(device, "ssao_blur_pass", rg::RenderPassType::Compute)
+		: RenderPass<SSAOBlurPassData>(device, "ssao_blur_pass", rg::RenderPassType::Graphics)
 		, _scene(scene)
 		, _camera(camera)
 	{
@@ -96,6 +96,7 @@ namespace render
 				.InputTextureIndex = context.GetBindlessIndex(_data.AOTarget, rhi::ResourceViewType::SRV),
 				.OutputTextureIndex = context.GetBindlessIndex(_data.TempBlurTarget, rhi::ResourceViewType::UAV)
 			};
+			commandList->SetComputeCBV(0, context.GetFrameBuffer()->GetVirtualAddress());
 			commandList->SetComputeConstants(1, 7, &passCB);
 
 			XMUINT2 viewportSize = _camera->GetViewport().GetSize();
@@ -108,6 +109,7 @@ namespace render
 
 			passCB.InputTextureIndex = context.GetBindlessIndex(_data.TempBlurTarget, rhi::ResourceViewType::SRV);
 			passCB.OutputTextureIndex = context.GetBindlessIndex(_data.AOTarget, rhi::ResourceViewType::UAV);
+			commandList->SetComputeCBV(0, context.GetFrameBuffer()->GetVirtualAddress());
 			commandList->SetComputeConstants(1, 7, &passCB);
 
 			commandList->Dispatch(xThreadGroups, yThreadGroups);

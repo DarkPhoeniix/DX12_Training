@@ -21,7 +21,7 @@ namespace render
 	}
 
 	SkyboxPass::SkyboxPass(rhi::Device* device, std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-		: RenderPass<SkyboxPassData>(device, "skybox_pass", rg::RenderPassType::Compute)
+		: RenderPass<SkyboxPassData>(device, "skybox_pass", rg::RenderPassType::Graphics)
 		, _scene(scene)
 		, _camera(camera)
 	{
@@ -51,6 +51,7 @@ namespace render
 				.SkyboxTextureIndex = context.GetBindlessIndex(_data.Skybox, rhi::ResourceViewType::SRV),
 				.TargetTextureIndex = context.GetBindlessIndex(_data.HDRTarget, rhi::ResourceViewType::UAV)
 			};
+			commandList->SetComputeCBV(0, context.GetFrameBuffer()->GetVirtualAddress());
 			commandList->SetComputeConstants(1, 3, &passCB);
 
 			DirectX::XMUINT2 viewportSize = _camera->GetViewport().GetSize();

@@ -86,8 +86,6 @@ namespace render
 		{
 			GPU_SCOPED_EVENT(commandList, "Geometry Pass", 0);
 
-			commandList->SetDescriptorHeaps(DescriptorHeapManager::Get().GetShaderResourcesDescriptorHeap()); // TODO: temp workaround
-
             // Prepare all targets and pipeline state
             _SetupPipelineState(context, commandList);
 

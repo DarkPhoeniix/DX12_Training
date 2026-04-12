@@ -24,16 +24,19 @@ namespace render
         static void DrawFullscreenTriangle(rhi::CommandList* commandList);
 
         static void DrawBox(rhi::CommandList* commandList,
+            std::uint64_t frameBufferAddress,
             const DirectX::XMVECTOR& min,
             const DirectX::XMVECTOR& max,
             const DirectX::XMVECTOR& color = DirectX::XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f));
 
         static void DrawSphere(rhi::CommandList* commandList,
+            std::uint64_t frameBufferAddress,
             float radius = 1.0f,
             const DirectX::XMVECTOR& position = DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f),
             const DirectX::XMVECTOR& color = DirectX::XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f));
 
         static void DrawCone(rhi::CommandList* commandList,
+            std::uint64_t frameBufferAddress,
             float radius = 1.0f,
             float height = 1.0f,
             const DirectX::XMVECTOR& position = DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f),

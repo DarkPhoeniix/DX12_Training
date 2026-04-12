@@ -2,6 +2,8 @@
 
 #include "TaskGPU.h"
 
+#include "Core/DescriptorHeapManager.h"
+
 #include "GPUCrashTracker/IGPUCrashTracker.h"
 #include "GPUCrashTracker/ICommandListCrashContext.h"
 
@@ -25,6 +27,7 @@ TaskGPU::~TaskGPU()
 void TaskGPU::Reset(rhi::PipelineState* pipelineState)
 {
     _commandList->Reset(pipelineState);
+    _commandList->SetDescriptorHeaps(DescriptorHeapManager::Get().GetShaderResourcesDescriptorHeap());
 }
 
 rhi::CommandList* TaskGPU::GetCommandList()

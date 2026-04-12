@@ -8,6 +8,8 @@
 #include "RenderGraph/RenderPassBuilder.h"
 #include "RenderGraph/RenderContext.h"
 
+#include "RHI/ResourceBarrier.h"
+
 namespace
 {
 	struct Pass1Constants
@@ -60,7 +62,7 @@ namespace
 namespace render
 {
 	FXAAPass::FXAAPass(rhi::Device* device, std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-		: RenderPass<FXAAPassData>("fxaa_pass", rg::RenderPassType::Compute)
+		: RenderPass<FXAAPassData>(device, "fxaa_pass", rg::RenderPassType::Graphics)
 		, _scene(scene)
 		, _camera(camera)
 	{
@@ -79,27 +81,17 @@ namespace render
 
 		{
 			// https://microsoft.github.io/DirectX-Specs/d3d/IndirectDrawing.html#root-constants--vertex-buffers
-			rhi::IndirectArgumentDescription argsDesc =
-			{
-				.Type = rhi::IndirectArgumentType::Dispatch
-			};
-
-			D3D12_INDIRECT_ARGUMENT_DESC argsDesc;
-			argsDesc.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH;
-
-            _cmdSignature.AddArgument(argsDesc);
-
-			_cmdSignature.Create(sizeof(D3D12_DISPATCH_ARGUMENTS), nullptr);
+			rhi::IndirectArgumentDescription argsDesc = { .Type = rhi::IndirectArgumentType::Dispatch };
+			_cmdSignature = device->CreateCommandSignature({ argsDesc }, nullptr, "fxaa_command_signature");
 		}
 
 		{
-			rhi::ResourceDescription counterResetBuffer;
-			counterResetBuffer.SetSize({ sizeof(std::uint32_t) * 6, 1 });
-			counterResetBuffer.SetLayout(D3D12_TEXTURE_LAYOUT_ROW_MAJOR);
-			counterResetBuffer.SetResourceType(rhi::ResourceType::Buffer | rhi::ResourceType::Dynamic);
-
-			_paramsReset = ResourceFactory::Create("fxaa_reset_buffer", counterResetBuffer);
-			_paramsReset->CreateCommitedResource(rhi::ResourceState::CopySource);
+			rhi::BufferDescription counterResetBuffer =
+			{
+				.Size = sizeof(std::uint32_t) * 6,
+				.Usage = rhi::ResourceUsage::Upload
+			};
+			_paramsReset = device->CreateBuffer(counterResetBuffer, rhi::ResourceState::GenericRead, "fxaa_reset_buffer");
       
 			std::uint32_t* val = _paramsReset->Map<std::uint32_t>();
 			val[0] = 0;
@@ -113,48 +105,42 @@ namespace render
 
 	void FXAAPass::Setup(rg::RenderPassBuilder& builder)
 	{
-		rhi::ResourceDescription workCountersDesc;
+		rhi::BufferDescription workCountersDesc =
 		{
-			workCountersDesc.SetSize({ sizeof(std::uint32_t) * 2, 1 });
-			workCountersDesc.SetStride(sizeof(std::uint32_t));
-			workCountersDesc.SetResourceType(rhi::ResourceType::Buffer | rhi::ResourceType::Unordered);
-		}
+			.Size = sizeof(std::uint32_t) * 2,
+			.Stride = sizeof(std::uint32_t),
+			.Flags = rhi::ResourceFlags::AllowUnorderedAccess
+		};
         builder.DeclareBuffer("fxaa_work_counter", workCountersDesc);
 
-		rhi::ResourceDescription workQueueDesc;
+		DirectX::XMUINT2 size = _camera->GetViewport().GetSize();
+		std::uint32_t bufferSize = (size.x * size.y) + 128;
+		rhi::BufferDescription queueDesc =
 		{
-			DirectX::XMUINT2 size = _camera->GetViewport().GetSize();
-			std::uint32_t bufferSize = (size.x * size.y) + 128;
-			workQueueDesc.SetSize({ bufferSize, 1 });
-			workQueueDesc.SetStride(sizeof(std::uint32_t));
-			workQueueDesc.SetResourceType(rhi::ResourceType::Buffer | rhi::ResourceType::Unordered);
-		}
-		builder.DeclareBuffer("fxaa_work_queue", workQueueDesc);
-        builder.DeclareBuffer("fxaa_color_queue", workQueueDesc);
+			.Size = bufferSize,
+			.Stride = sizeof(std::uint32_t),
+			.Flags = rhi::ResourceFlags::AllowUnorderedAccess
+		};
+		builder.DeclareBuffer("fxaa_work_queue", queueDesc);
+        builder.DeclareBuffer("fxaa_color_queue", queueDesc);
 
-		rhi::ResourceDescription lumaBufferDesc;
+		rhi::TextureDescription lumaBufferDesc =
 		{
-			D3D12_CLEAR_VALUE clearValue;
-			clearValue.Format = DXGI_FORMAT_R8_UNORM;
-			clearValue.Color[0] = 0.0f;
-			clearValue.Color[1] = 0.0f;
-			clearValue.Color[2] = 0.0f;
-			clearValue.Color[3] = 0.0f;
-
-			DirectX::XMUINT2 size = _camera->GetViewport().GetSize();
-			lumaBufferDesc.SetSize({ size.x, size.y });
-			lumaBufferDesc.SetFormat(DXGI_FORMAT_R8_UNORM);
-			lumaBufferDesc.SetResourceType(rhi::ResourceType::Texture | rhi::ResourceType::Unordered);
-		}
+			.Width = size.x,
+			.Height = size.y,
+			.ClearValue = {},
+			.Format = rhi::Format::R8_UNORM,
+			.Dimension = rhi::TextureDimension::Texture2D,
+			.Flags = rhi::ResourceFlags::AllowUnorderedAccess
+		};
         builder.DeclareTexture("luma_texture", lumaBufferDesc);
 
-		rhi::ResourceDescription indirectArgsDesc;
+		rhi::BufferDescription indirectArgsDesc =
 		{
-			DirectX::XMUINT2 size = _camera->GetViewport().GetSize();
-			indirectArgsDesc.SetSize({ sizeof(D3D12_DISPATCH_ARGUMENTS) * 2, 1 });
-			indirectArgsDesc.SetStride(sizeof(D3D12_DISPATCH_ARGUMENTS));
-			indirectArgsDesc.SetResourceType(rhi::ResourceType::Buffer | rhi::ResourceType::Unordered);
-		}
+			.Size = sizeof(std::uint32_t) * 3 * 2, // sizeof(DISPATCH_ARGS) * 2
+			.Stride = sizeof(std::uint32_t) * 3,
+			.Flags = rhi::ResourceFlags::AllowUnorderedAccess
+		};
         builder.DeclareBuffer("fxaa_indirect_args", indirectArgsDesc);
 
         _data.Target = builder.WriteTexture("hdr_target");
@@ -172,11 +158,18 @@ namespace render
 		{
             GPU_SCOPED_EVENT(commandList, "FXAA Compute Pass", 6);
 
-			commandList->TransitionBarrier({ indirectArgs, rhi::ResourceState::IndirectArgument, rhi::ResourceState::CopyDest });
+			std::shared_ptr<rhi::Buffer> indirectArgs = context.GetBuffer(_data.IndirectParams);
+			std::shared_ptr<rhi::Buffer> workQueue = context.GetBuffer(_data.WorkQueue);
+			std::shared_ptr<rhi::Buffer> workCounters = context.GetBuffer(_data.WorkCounters);
+			std::shared_ptr<rhi::Texture> target = context.GetTexture(_data.Target);
+
+			rhi::BufferBarrier indirectArgsBarrier = { indirectArgs, rhi::ResourceState::IndirectArgument, rhi::ResourceState::CopyDest };
+			commandList->TransitionBarriers({ indirectArgsBarrier });
 
 			commandList->CopyBuffer(_paramsReset, indirectArgs);
 
-			commandList->TransitionBarrier({ indirectArgs, rhi::ResourceState::CopyDest, rhi::ResourceState::IndirectArgument });
+			indirectArgsBarrier = { indirectArgs, rhi::ResourceState::CopyDest, rhi::ResourceState::IndirectArgument };
+			commandList->TransitionBarriers({ indirectArgsBarrier });
 
 			for (int x = 0; x < 2; ++x)
 			{
@@ -184,16 +177,16 @@ namespace render
 				{
 					// Pass 1 begin
 
-					commandList->TransitionBarrier({ indirectArgs, rhi::ResourceState::IndirectArgument, rhi::ResourceState::UnorderedAccess });
+					indirectArgsBarrier = { indirectArgs, rhi::ResourceState::IndirectArgument, rhi::ResourceState::UnorderedAccess };
+					commandList->TransitionBarriers({ indirectArgsBarrier });
 
-					context.BindBindlessTable(commandList);
-					commandList->SetPipelineState(_FXAA_Pass1_Pipeline.get());
+					commandList->SetComputePipelineState(_FXAA_Pass1_Pipeline.get());
 
 					DirectX::XMUINT2 viewportSize = _camera->GetViewport().GetSize();
 
 					float xRcpTextureSize = 1.0f / viewportSize.x;
 					float yRcpTextureSize = 1.0f / viewportSize.y;
-					std::uint32_t lastQueueIndex = (workQueue->GetResourceDescription().GetSize().x / sizeof(std::uint32_t)) - 1;
+					std::uint32_t lastQueueIndex = (workQueue->GetSize() / sizeof(std::uint32_t)) - 1;
 					std::uint32_t xStartPixel = (uint32_t)std::ceilf(viewportSize.x / 2.0f) * x;
 					std::uint32_t yStartPixel = (uint32_t)std::ceilf(viewportSize.y / 2.0f) * y;
 
@@ -209,7 +202,8 @@ namespace render
 						.ColorQueueBufferIndex = context.GetBindlessIndex(_data.ColorQueue, rhi::ResourceViewType::SRV),
 						.LumaTextureIndex = context.GetBindlessIndex(_data.LumaBuffer, rhi::ResourceViewType::UAV)
 					};
-					commandList->SetConstants(1, 10, &pass1Constants);
+					commandList->SetComputeCBV(0, context.GetFrameBuffer()->GetVirtualAddress());
+					commandList->SetComputeConstants(1, 10, &pass1Constants);
 
 					int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 16.0f);
 					int yThreadGroups = (uint32_t)std::ceilf(viewportSize.y / 16.0f);
@@ -221,7 +215,7 @@ namespace render
 
 					// Pass ResolveWork begin
 
-					commandList->SetPipelineState(_FXAA_ResolveWork_Pipeline.get());
+					commandList->SetComputePipelineState(_FXAA_ResolveWork_Pipeline.get());
 
 					PassResolveConstants passResolveConstants =
 					{
@@ -230,7 +224,8 @@ namespace render
 						.WorkQueueBufferIndex = context.GetBindlessIndex(_data.WorkQueue, rhi::ResourceViewType::UAV),
 						.WorkCountsBufferIndex = context.GetBindlessIndex(_data.WorkCounters, rhi::ResourceViewType::UAV)
 					};
-					commandList->SetConstants(1, 4, &passResolveConstants);
+					commandList->SetComputeCBV(0, context.GetFrameBuffer()->GetVirtualAddress());
+					commandList->SetComputeConstants(1, 4, &passResolveConstants);
 
 					commandList->Dispatch();
 
@@ -240,7 +235,8 @@ namespace render
 
 					// Pass 2 begin
 
-					commandList->TransitionBarrier({ indirectArgs, rhi::ResourceState::UnorderedAccess, rhi::ResourceState::IndirectArgument });
+					indirectArgsBarrier = { indirectArgs, rhi::ResourceState::UnorderedAccess, rhi::ResourceState::IndirectArgument };
+					commandList->TransitionBarriers({ indirectArgsBarrier });
 
 					Pass2Constants pass2Constants =
 					{
@@ -252,12 +248,13 @@ namespace render
 						.ColorQueueBufferIndex = context.GetBindlessIndex(_data.ColorQueue, rhi::ResourceViewType::SRV),
 						.OutputTextureIndex = context.GetBindlessIndex(_data.Target, rhi::ResourceViewType::UAV)
 					};
-					commandList->SetConstants(1, 9, &pass2Constants);
+					commandList->SetComputeCBV(0, context.GetFrameBuffer()->GetVirtualAddress());
+					commandList->SetComputeConstants(1, 9, &pass2Constants);
 
-					commandList->SetPipelineState(_FXAA_Pass2H_Pipeline.get());
+					commandList->SetComputePipelineState(_FXAA_Pass2H_Pipeline.get());
 					commandList->ExecuteIndirect(_cmdSignature.get(), 1, indirectArgs, nullptr, 0);
 
-					commandList->SetPipelineState(_FXAA_Pass2V_Pipeline.get());
+					commandList->SetComputePipelineState(_FXAA_Pass2V_Pipeline.get());
 					commandList->ExecuteIndirect(_cmdSignature.get(), 1, indirectArgs, nullptr, 12);
 
 					// Pass 2 end

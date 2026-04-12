@@ -32,12 +32,13 @@ namespace render
         NOT_IMPLEMENTED();
     }
 
-    void DrawHelper::DrawBox(rhi::CommandList* commandList, const DirectX::XMVECTOR& min, const DirectX::XMVECTOR& max, const DirectX::XMVECTOR& color)
+    void DrawHelper::DrawBox(rhi::CommandList* commandList, std::uint64_t frameBufferAddress, const DirectX::XMVECTOR& min, const DirectX::XMVECTOR& max, const DirectX::XMVECTOR& color)
     {
         ASSERT(_instance, "DrawHelper has not been initialized");
 
         commandList->SetGraphicsPipelineState(_instance->_boxDebug.get());
 
+        commandList->SetGraphicsCBV(0, frameBufferAddress);
         commandList->SetGraphicsConstants(1, 3, &min);
         commandList->SetGraphicsConstants(1, 3, &max, 4);
         commandList->SetGraphicsConstants(1, 4, &color, 8);
@@ -47,12 +48,13 @@ namespace render
         commandList->Draw(1);
     }
 
-    void DrawHelper::DrawSphere(rhi::CommandList* commandList, float radius, const DirectX::XMVECTOR& position, const DirectX::XMVECTOR& color)
+    void DrawHelper::DrawSphere(rhi::CommandList* commandList, std::uint64_t frameBufferAddress, float radius, const DirectX::XMVECTOR& position, const DirectX::XMVECTOR& color)
     {
         ASSERT(_instance, "DrawHelper has not been initialized");
 
         commandList->SetGraphicsPipelineState(_instance->_sphereDebug.get());
 
+        commandList->SetGraphicsCBV(0, frameBufferAddress);
         commandList->SetGraphicsConstants(1, 3, &position);
         commandList->SetGraphicsConstants(1, 1, &radius, 3);
         commandList->SetGraphicsConstants(1, 4, &color, 4);
@@ -62,12 +64,13 @@ namespace render
         commandList->Draw(1);
     }
 
-    void DrawHelper::DrawCone(rhi::CommandList* commandList, float angle, float height, const DirectX::XMVECTOR& position, const DirectX::XMVECTOR& direction, const DirectX::XMVECTOR& color)
+    void DrawHelper::DrawCone(rhi::CommandList* commandList, std::uint64_t frameBufferAddress, float angle, float height, const DirectX::XMVECTOR& position, const DirectX::XMVECTOR& direction, const DirectX::XMVECTOR& color)
     {
         ASSERT(_instance, "DrawHelper has not been initialized");
 
         commandList->SetGraphicsPipelineState(_instance->_coneDebug.get());
 
+        commandList->SetGraphicsCBV(0, frameBufferAddress);
         commandList->SetGraphicsConstants(1, 3, &position);
         commandList->SetGraphicsConstants(1, 1, &angle, 3);
         commandList->SetGraphicsConstants(1, 3, &direction, 4);

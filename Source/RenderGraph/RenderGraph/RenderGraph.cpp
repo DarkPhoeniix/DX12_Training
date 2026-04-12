@@ -151,6 +151,7 @@ namespace rg
         if (it != _context._mapNameToBufferId.end())
         {
             _context._mapIdToBuffer[it->second] = resource;
+            _context._descriptorProvider->CreateStaticResourceView(resource, rhi::ResourceViewType::SRV);
         }
         else
         {

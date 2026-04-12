@@ -245,6 +245,21 @@ namespace rhi::d3d12
         CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::UAV(nativeResource);
 
         _commandList->ResourceBarrier(1, &barrier);
+
+        //CD3DX12_BUFFER_BARRIER barrier(
+        //    D3D12_BARRIER_SYNC_ALL_SHADING,
+        //    D3D12_BARRIER_SYNC_ALL_SHADING,
+        //    D3D12_BARRIER_ACCESS_UNORDERED_ACCESS,
+        //    D3D12_BARRIER_ACCESS_UNORDERED_ACCESS,
+        //    D3D12Cast<ID3D12Resource>(buffer->GetNative())
+        //);
+
+        //D3D12_BARRIER_GROUP barrierGroups[] =
+        //{
+        //    CD3DX12_BARRIER_GROUP(1, &barrier)
+        //};
+
+        //_commandList->Barrier(1, barrierGroups);
     }
 
     void D3D12CommandList::UAVBarrier(std::shared_ptr<Texture> texture)
@@ -255,6 +270,25 @@ namespace rhi::d3d12
         CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::UAV(nativeResource);
 
         _commandList->ResourceBarrier(1, &barrier);
+
+        //CD3DX12_TEXTURE_BARRIER barrier(
+        //    GetD3D12SyncFlags(texture->GetCurrentState()),
+        //    D3D12_BARRIER_SYNC_ALL_SHADING,
+        //    GetD3D12AccessFlags(texture->GetCurrentState()),
+        //    D3D12_BARRIER_ACCESS_UNORDERED_ACCESS,
+        //    GetD3D12Layout(texture->GetCurrentState()),
+        //    D3D12_BARRIER_LAYOUT_UNORDERED_ACCESS,
+        //    D3D12Cast<ID3D12Resource>(texture->GetNative()),
+        //    CD3DX12_BARRIER_SUBRESOURCE_RANGE(0xffffffff),       // All subresources
+        //    D3D12_TEXTURE_BARRIER_FLAG_NONE
+        //);
+
+        //D3D12_BARRIER_GROUP barrierGroups[] =
+        //{
+        //    CD3DX12_BARRIER_GROUP(1, &barrier)
+        //};
+
+        //_commandList->Barrier(1, barrierGroups);
     }
 
     void D3D12CommandList::CopyBuffer(std::shared_ptr<Buffer> sourceResource, std::shared_ptr<Buffer> destinationResource)
@@ -464,7 +498,14 @@ namespace rhi::d3d12
 
     void D3D12CommandList::ExecuteIndirect(rhi::CommandSignature* commandSignature, std::uint32_t maxCommandCount, std::shared_ptr<Buffer> argumentBuffer, std::shared_ptr<Buffer> countBuffer, std::uint32_t argumentBufferOffset, std::uint32_t countBufferOffset)
     {
-        _commandList->ExecuteIndirect(D3D12Cast<ID3D12CommandSignature>(commandSignature->GetNative()), maxCommandCount, D3D12Cast<ID3D12Resource>(argumentBuffer->GetNative()), argumentBufferOffset, D3D12Cast<ID3D12Resource>(countBuffer->GetNative()), countBufferOffset);
+        ID3D12CommandSignature* d3d12CommandSignature = D3D12Cast<ID3D12CommandSignature>(commandSignature->GetNative());
+        ID3D12Resource* d3d12ArgumentResource = D3D12Cast<ID3D12Resource>(argumentBuffer->GetNative());
+        ID3D12Resource* d3d12CounterResource = nullptr;
+        if (countBuffer)
+        {
+            d3d12CounterResource = D3D12Cast<ID3D12Resource>(countBuffer->GetNative());
+        }
+        _commandList->ExecuteIndirect(d3d12CommandSignature, maxCommandCount, d3d12ArgumentResource, argumentBufferOffset, d3d12CounterResource, countBufferOffset);
     }
 
     void D3D12CommandList::SetDescriptorHeaps(rhi::DescriptorHeap* descriptorHeap)

@@ -7,11 +7,12 @@ namespace rhi
 {
     struct BufferDescription
     {
-        std::uint32_t Size      = 0;
-        std::uint32_t Stride    = 0;
-        Format Format           = Format::UNKNOWN;
-        ResourceUsage Usage     = ResourceUsage::Default;
-        ResourceFlags Flags     = ResourceFlags::None;
+        std::uint32_t Size              = 0;
+        std::uint32_t Stride            = 0;
+        Format Format                   = Format::UNKNOWN;
+        ResourceUsage Usage             = ResourceUsage::Default;
+        ResourceFlags Flags             = ResourceFlags::None;
+        std::uint32_t UAVCounterOffset  = std::uint32_t(-1);
     };
 
     class Buffer
