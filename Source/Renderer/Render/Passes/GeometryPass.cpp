@@ -2,7 +2,6 @@
 
 #include "GeometryPass.h"
 
-#include "Core/DescriptorHeapManager.h"
 #include "Core/RenderSettings.h"
 #include "Scene/Entity/Components/Mesh.h"
 #include "Helpers/DebugInfo.h"
@@ -127,7 +126,7 @@ namespace render
 
 		commandList->SetGraphicsPipelineState(_geometryPipeline.get());
 
-		commandList->SetViewport(_camera->GetViewport().GetDXViewport(), _camera->GetViewport().GetScissorRectangle());
+		commandList->SetViewport(_camera->GetViewport().GetNativeViewport(), _camera->GetViewport().GetScissorRectangle());
 		commandList->SetRenderTargets({ albedoMetallicHandle, normalRoughnessHandle, emissionHandle }, &depthHandle);
 
 		commandList->SetGraphicsCBV(0, context.GetFrameBuffer()->GetVirtualAddress());

@@ -6,6 +6,8 @@
 #include "RHI/DescriptorHeap.h"
 #include "RHI/PipelineState.h"
 
+#include <json/json.h>
+
 class TaskGPU;
 
 namespace rhi

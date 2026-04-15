@@ -247,6 +247,6 @@ DescriptorHandle ResourceTable::FindHandle(rhi::ResourceID resourceID, rhi::Reso
         return it->second;
     }
 
-    //LOG_ERROR(std::format("Failed to find resource handle in the ResourceTable (ID: {} viewType: {})", resourceID, viewType).c_str());
+    LOG_ERROR("Failed to find resource handle in the ResourceTable.");
     return DescriptorHandle{};
 }

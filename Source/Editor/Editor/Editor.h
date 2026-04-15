@@ -19,7 +19,7 @@ namespace scene
 namespace rg
 {
     class RenderGraph;
-}
+} // namespace rg
 
 LRESULT GUI_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 

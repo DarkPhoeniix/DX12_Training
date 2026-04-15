@@ -8,8 +8,8 @@ namespace render
 {
     struct GUIPassData
     {
-        rg::RGTextureId Target;
-        rg::RGTextureId Depth;
+        rg::RGTextureRenderTargetId Target;
+        rg::RGTextureDepthStencilWriteId Depth;
     };
 
     class GUIPass : public rg::RenderPass<GUIPassData>

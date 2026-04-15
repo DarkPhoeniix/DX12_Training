@@ -34,8 +34,6 @@ using namespace Microsoft::WRL;
 #include <directx/d3dx12.h>     // D3D12 extension library
 #include <dxgi1_6.h>            // Microsoft DirectX Graphics Infrastructure
 #include <d3dcompiler.h>        // Contains functions to compile HLSL code at runtime
-#include <DirectXTex.h>
-#include <DirectXMath.h>
 #endif // USE_D3D12
 
 #include "Device.h"

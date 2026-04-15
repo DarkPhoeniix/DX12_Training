@@ -8,7 +8,7 @@
 namespace rhi
 {
     class Device;
-}
+} // namespace rhi
 
 namespace tracking
 {
@@ -18,13 +18,10 @@ namespace tracking
     class IGPUCrashTracker : public std::enable_shared_from_this<IGPUCrashTracker>
     {
     public:
-        // keep four frames worth of marker history
+        // Keep four frames worth of marker history
         const static std::uint32_t MarkerFrameHistory = 4;
         using MarkerMap = std::array<std::map<uint64_t, std::string>, MarkerFrameHistory>;
 
-        // Default constructor.
-        IGPUCrashTracker() = default;
-        // Virtual destructor.
         virtual ~IGPUCrashTracker() = default;
 
         // Enables GPU crash tracking.

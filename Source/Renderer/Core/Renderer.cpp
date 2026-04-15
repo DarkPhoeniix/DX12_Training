@@ -262,8 +262,6 @@ namespace render
                 _currentFrame = _currentFrame->Next;
             }
 
-            commandList->SetDescriptorHeaps(DescriptorHeapManager::Get().GetShaderResourcesDescriptorHeap());
-
             // Generate textures for IBL
             _diffuseIrradianceMap = _sceneLoader.GenerateEnvironmentDiffuseIrradianceMap(commandList, _scene);
             _brdfLUT = _sceneLoader.GenerateEnvironmentBRDFLookUpTexture(commandList, _scene);
@@ -304,11 +302,6 @@ namespace render
         DescriptorHeapManager::Get().AdvanceFrameIndex();
         ResourceTable::Get().ResetTransientResources();
 
-        // Clear marker map for current frame before execution
-        tracking::IGPUCrashTracker* crashTracker = _device->GetCrashTracker();
-        crashTracker->AdvanceFrame();
-        crashTracker->ResetMarkerMapForCurrentFrame();
-
         for (const auto& entity : _scene->GetRootNodes())
         {
             UpdateEntity(entity);
@@ -321,6 +314,11 @@ namespace render
     {
         _currentFrame->WaitCPU();
         _currentFrame->ResetGPU();
+
+        // Clear marker map for current frame before execution
+        tracking::IGPUCrashTracker* crashTracker = _device->GetCrashTracker();
+        crashTracker->AdvanceFrame();
+        crashTracker->ResetMarkerMapForCurrentFrame();
 
         DebugInfo::BeginRender(renderEvent);
 
@@ -827,8 +825,6 @@ namespace render
         // Render Graph setup
         {
             _renderGraph->Reset();
-
-            //_renderGraph->SetFrame(*_currentFrame);
 
             // Import IBL textures to render graph
 

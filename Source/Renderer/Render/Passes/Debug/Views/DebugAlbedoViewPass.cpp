@@ -2,8 +2,6 @@
 
 #include "DebugAlbedoViewPass.h"
 
-#include "Core/DescriptorHeapManager.h"
-
 #include "RenderGraph/RenderContext.h"
 #include "RenderGraph/RenderPassBuilder.h"
 
@@ -34,7 +32,7 @@ namespace render
 
 			commandList->SetGraphicsPipelineState(_debugAlbedoViewPipeline.get());
 
-			commandList->SetViewport(_camera->GetViewport().GetDXViewport(), _camera->GetViewport().GetScissorRectangle());
+			commandList->SetViewport(_camera->GetViewport().GetNativeViewport(), _camera->GetViewport().GetScissorRectangle());
 			commandList->SetRenderTarget(&targetHandle, nullptr);
 
 			commandList->SetPrimitiveTopology(rhi::PrimitiveTopology::TriangleList);

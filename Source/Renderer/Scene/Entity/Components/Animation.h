@@ -3,6 +3,8 @@
 #include "Scene/Entity/Components/IComponent.h"
 #include "Scene/Entity/Components/Armature.h"
 
+#include <map>
+
 namespace scene
 {
     struct AnimationFrame

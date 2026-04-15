@@ -20,20 +20,11 @@
 #undef max
 #endif
 
-// Windows Runtime Library. Needed for ComPtr<> template class
-#include <wrl.h>
-using namespace Microsoft::WRL;
-
-// DirectX12 specific headers
 #include <DirectXMath.h>
-
-#include <json/json.h>
 
 #include "Logger/Logger.h"
 
 #include "Renderer/Helpers/Defines.h"
-
-#include "RenderGraph/RenderGraphResourceId.h"
 
 #include "RHI/Device.h"
 

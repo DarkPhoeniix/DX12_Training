@@ -24,7 +24,7 @@ endif()
 
 option(USE_D3D12 "Enable DirectX12 backend" ON)
 option(USE_VULKAN "Enable Vulkan backend" ON)
-option(USE_AFTERMATH "Enable Nvidia Aftermath SDK usage for crash tracking (Profile only)" ON)
+option(ENABLE_NSIGHT_AFTERMATH "Enable Nvidia Aftermath SDK usage for crash tracking (Release only)" ON)
 
 set(ENABLE_GPU_PROFILING 
     $<$<config:Debug>:TRUE>
@@ -41,7 +41,7 @@ set(LIB_OUTPUT_DIR "${EXE_DIR}/Libs")
 set(EXTERNAL_DIR "${CMAKE_SOURCE_DIR}/External")
 set(FETCHCONTENT_BASE_DIR "${EXTERNAL_DIR}/Source")
 
-if (USE_AFTERMATH)
+if (ENABLE_NSIGHT_AFTERMATH)
   set(AFTERMATH_SDK_DIR "${EXTERNAL_DIR}/NsightAftermathSDK")
 
   if(NOT EXISTS "${AFTERMATH_DIR}/include")  # or check for a .lib file, etc.

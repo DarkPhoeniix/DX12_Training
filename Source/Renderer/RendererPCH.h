@@ -17,10 +17,7 @@
 #include <wrl.h>
 using namespace Microsoft::WRL;
 
-#include <DirectXTex.h>
 #include <DirectXMath.h>
-
-#include <json/json.h>
 
 #include <filesystem>
 #include <algorithm>

@@ -15,7 +15,7 @@
 namespace render
 {
     GUIPass::GUIPass(rhi::Device* device, std::shared_ptr<gui::Editor> editor)
-        : rg::RenderPass<GUIPassData>(device, "GUI Pass", rg::RenderPassType::Graphics)
+        : rg::RenderPass<GUIPassData>(device, "gui_pass", rg::RenderPassType::Graphics)
         , _editor(editor)
     {
     }
@@ -38,7 +38,7 @@ namespace render
             rhi::CPUDescriptor target = context.GetDescriptor(_data.Target, rhi::ResourceViewType::RTV);
             rhi::CPUDescriptor depth = context.GetDescriptor(_data.Depth, rhi::ResourceViewType::DSV);
 
-            commandList->SetViewport(_editor->GetViewport()->GetDXViewport(), _editor->GetViewport()->GetScissorRectangle());
+            commandList->SetViewport(_editor->GetViewport()->GetNativeViewport(), _editor->GetViewport()->GetScissorRectangle());
             commandList->SetRenderTarget(&target, &depth);
 
             _editor->Update();

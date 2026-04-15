@@ -14,7 +14,7 @@ TaskGPU::TaskGPU(rhi::Device* device, rhi::CommandListType type)
     : _fence(nullptr)
     , _commandList(device->CreateCommandList(type))
     , _type(type)
-    //, _commandListCrashContext(device->GetCrashTracker()->CreateCommandListCrashContext())
+    , _commandListCrashContext(device->GetCrashTracker()->CreateCommandListCrashContext())
 {
     _commandList->Close();
 }
@@ -69,7 +69,7 @@ void TaskGPU::SetName(const std::string& name)
     _commandList->SetName(name + "_command_list");
 
     // TODO: not the best place to set the marker, but this will definetly register all command lists
-    //_commandListCrashContext->SetMarker(name);
+    _commandListCrashContext->SetMarker(name);
 }
 
 const std::string& TaskGPU::GetName() const

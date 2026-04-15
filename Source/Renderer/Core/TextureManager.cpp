@@ -9,6 +9,7 @@
 
 // TODO: remove d3d12 dependecy here
 #include <directx/d3dx12.h>     // D3D12 extension library
+#include <DirectXTex.h>
 
 namespace
 {

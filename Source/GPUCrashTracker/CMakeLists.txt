@@ -35,10 +35,16 @@ endforeach()
 
 target_include_directories(GPUCrashTracker PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(GPUCrashTracker PRIVATE "${CMAKE_SOURCE_DIR}/External" ${CMAKE_SOURCE_DIR}/Source)
-target_link_libraries(GPUCrashTracker PRIVATE Aftermath)
 
-if (USE_AFTERMATH)
-    target_compile_definitions(GPUCrashTracker PRIVATE $<$<CONFIG:Release>:USE_AFTERMATH>)
+if (ENABLE_NSIGHT_AFTERMATH)
+    target_compile_definitions(GPUCrashTracker PRIVATE USE_NSIGHT_AFTERMATH)
+    target_link_libraries(GPUCrashTracker PRIVATE Aftermath)
+
+    add_custom_command(TARGET GPUCrashTracker POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${AFTERMATH_DIR}/lib/x64/GFSDK_Aftermath_Lib.x64.dll"
+        "${EXE_OUTPUT_DIR}"
+    )
 endif()
 
 include(${CMAKE_SOURCE_DIR}/Scripts/GroupSourcesByFolder.cmake)

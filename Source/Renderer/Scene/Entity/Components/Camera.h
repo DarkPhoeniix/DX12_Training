@@ -13,7 +13,7 @@ namespace scene
         Viewport(const rhi::Viewport& DXViewport);
         ~Viewport() = default;
 
-        rhi::Viewport GetDXViewport() const;
+        rhi::Viewport GetNativeViewport() const;
         float GetAspectRatio() const;
 
         void SetSize(std::uint32_t width, std::uint32_t height);

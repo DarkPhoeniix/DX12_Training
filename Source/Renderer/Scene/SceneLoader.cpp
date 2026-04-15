@@ -221,7 +221,6 @@ namespace scene::helpers
 
             // Diffuse irradiance convolution pipeline
 
-            //commandList->SetDescriptorHeaps(_resourceTable->GetShaderResourcesDescriptorHeap());
             commandList->SetComputePipelineState(_IBL_DiffuseIrradianceConvolution.get());
 
             struct PassConstants
@@ -295,7 +294,6 @@ namespace scene::helpers
 
             // Environment pre-filtering pipeline
 
-            //commandList->SetDescriptorHeaps(_resourceTable->GetShaderResourcesDescriptorHeap());
             commandList->SetComputePipelineState(_IBL_PreFilterEnvMap.get());
 
             // Generate each mip level
@@ -396,7 +394,6 @@ namespace scene::helpers
 
             // BRDF LUT generation pipeline
 
-            //commandList->SetDescriptorHeaps(_resourceTable->GetShaderResourcesDescriptorHeap());
             commandList->SetComputePipelineState(_IBL_BRDFGenerateLUT.get());
 
             struct PassConstants

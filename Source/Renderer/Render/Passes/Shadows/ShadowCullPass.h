@@ -11,10 +11,10 @@ namespace render
 {
 	struct ShadowCullPassData
 	{
-		rg::RGBufferId CounterResetBuffer;
-		rg::RGBufferId AABBBuffer;
-		std::vector<rg::RGBufferId> CandidateInstancesBuffer;
-		std::vector<rg::RGBufferId> LightCommandBuffers;
+		rg::RGBufferCopySrcId CounterResetBuffer;
+		rg::RGBufferUploadId AABBBuffer;
+		std::vector<rg::RGBufferUploadId> CandidateInstancesBuffer;
+		std::vector<rg::RGBufferWriteId> LightCommandBuffers;
 	};
 
 	class ShadowCullPass : public rg::RenderPass<ShadowCullPassData>

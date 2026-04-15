@@ -32,7 +32,7 @@ namespace scene
     {
     }
 
-    rhi::Viewport Viewport::GetDXViewport() const
+    rhi::Viewport Viewport::GetNativeViewport() const
     {
         return _viewport;
     }

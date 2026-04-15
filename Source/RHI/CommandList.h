@@ -74,21 +74,21 @@ namespace rhi
     // that should be affected by rendering commands, allowing for efficient rendering of specific areas of the screen
     struct ScissorRect
     {
-        std::int32_t Left;
-        std::int32_t Top;
-        std::int32_t Right;
-        std::int32_t Bottom;
+        std::int32_t Left       = 0;
+        std::int32_t Top        = 0;
+        std::int32_t Right      = LONG_MAX;
+        std::int32_t Bottom     = LONG_MAX;
     };
 
     // Viewport represents the viewport for rendering operations. It is used to specify the area of the render target that should be rendered to
     struct Viewport
     {
-        float TopLeftX = 0.0f;
-        float TopLeftY = 0.0f;
-        float Width = 0.0f;
-        float Height = 0.0f;
-        float MinDepth = 0.0f;
-        float MaxDepth = 1.0f;
+        float TopLeftX          = 0.0f;
+        float TopLeftY          = 0.0f;
+        float Width             = 0.0f;
+        float Height            = 0.0f;
+        float MinDepth          = 0.0f;
+        float MaxDepth          = 1.0f;
     };
 
     // CommandList is an abstract interface representing a command list, which is used to record GPU commands for execution

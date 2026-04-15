@@ -45,7 +45,7 @@ namespace render
 			rhi::CPUDescriptor targetHandle = context.GetDescriptor(_data.Target, rhi::ResourceViewType::RTV);
 			rhi::CPUDescriptor depthHandle = context.GetDescriptor(_data.Depth, rhi::ResourceViewType::DSV);
 
-			commandList->SetViewport(_camera->GetViewport().GetDXViewport(), _camera->GetViewport().GetScissorRectangle());
+			commandList->SetViewport(_camera->GetViewport().GetNativeViewport(), _camera->GetViewport().GetScissorRectangle());
 			commandList->SetRenderTarget(&targetHandle, &depthHandle);
 
 			commandList->SetPrimitiveTopology(rhi::PrimitiveTopology::PointList);
