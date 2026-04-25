@@ -17,7 +17,9 @@ namespace rhi
     class PipelineState;
     class Fence;
     class Buffer;
+    class BufferView;
     class Texture;
+    class TextureView;
     class DescriptorHeap;
     class QueryHeap;
     class Heap;
@@ -128,22 +130,27 @@ namespace rhi
 
         // Resource view creation methods for buffers and textures, allowing the device to create views that can be used for shader resource binding and rendering
 
-        // Creates a shader resource view (SRV) for a buffer resource, allowing it to be accessed as a read-only resource in shaders
+        // Creates a buffer view based on the provided buffer view description and CPU descriptor, allowing the application to define how a buffer resource is accessed and
+        // interpreted in shaders, with the view being stored in the specified CPU descriptor for later binding to the pipeline
+        virtual void CreateBufferView(const BufferView& view, CPUDescriptor& descriptor) = 0;
+        // Creates a default shader resource view (SRV) for a buffer resource, allowing it to be accessed as a read-only resource in shaders
         virtual void CreateBufferSRV(std::shared_ptr<Buffer> resource, CPUDescriptor& descriptor) = 0;
-        // Creates a constant buffer view (CBV) for a buffer resource, allowing it to be accessed as a constant buffer in shaders
+        // Creates a default constant buffer view (CBV) for a buffer resource, allowing it to be accessed as a constant buffer in shaders
         virtual void CreateBufferCBV(std::shared_ptr<Buffer> resource, CPUDescriptor& descriptor) = 0;
-        // Creates an unordered access view (UAV) for a buffer resource, allowing it to be accessed as a read-write resource in shaders, with an optional 
+        // Creates a default unordered access view (UAV) for a buffer resource, allowing it to be accessed as a read-write resource in shaders, with an optional 
         // counter resource for atomic operations
         virtual void CreateBufferUAV(std::shared_ptr<Buffer> resource, CPUDescriptor& descriptor, std::shared_ptr<Buffer> counterResource = nullptr) = 0;
-        // Creates a render target view (RTV) for a texture resource, allowing it to be used as a render target for rendering operations
+
+        // Creates a texture view based on the provided texture view description and CPU descriptor, allowing the application to define how a texture resource is accessed and
+        // interpreted in shaders, with the view being stored in the specified CPU descriptor for later binding to the pipeline
+        virtual void CreateTextureView(const TextureView& view, CPUDescriptor& descriptor) = 0;
+        // Creates a default render target view (RTV) for a texture resource, allowing it to be used as a render target for rendering operations
         virtual void CreateTextureRTV(std::shared_ptr<Texture> texture, CPUDescriptor& descriptor) = 0;
-        // Creates a depth stencil view (DSV) for a texture resource, allowing it to be used as a depth stencil target for rendering operations
+        // Creates a default depth stencil view (DSV) for a texture resource, allowing it to be used as a depth stencil target for rendering operations
         virtual void CreateTextureDSV(std::shared_ptr<Texture> texture, CPUDescriptor& descriptor) = 0;
-        // Creates a shader resource view (SRV) for a texture resource, allowing it to be accessed as a read-only resource in shaders
+        // Creates a default shader resource view (SRV) for a texture resource, allowing it to be accessed as a read-only resource in shaders
         virtual void CreateTextureSRV(std::shared_ptr<Texture> texture, CPUDescriptor& descriptor) = 0;
-        // Creates a constant buffer view (CBV) for a texture resource, allowing it to be accessed as a constant buffer in shaders
-        virtual void CreateTextureCBV(std::shared_ptr<Texture> texture, CPUDescriptor& descriptor) = 0;
-        // Creates an unordered access view (UAV) for a texture resource, allowing it to be accessed as a read-write resource in shaders, with an optional 
+        // Creates a default unordered access view (UAV) for a texture resource, allowing it to be accessed as a read-write resource in shaders, with an optional 
         // mip slice for array textures
         virtual void CreateTextureUAV(std::shared_ptr<Texture> texture, CPUDescriptor& descriptor) = 0;
 

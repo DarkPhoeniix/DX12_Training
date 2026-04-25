@@ -1,7 +1,9 @@
 #pragma once
 
 #include "RHI/Buffer.h"
+#include "RHI/BufferView.h"
 #include "RHI/Texture.h"
+#include "RHI/TextureView.h"
 #include "Renderer/Core/DescriptorHeapManager.h"
 #include "RenderGraph/Interfaces.h"
 
@@ -25,6 +27,8 @@ public:
 
     rhi::DescriptorHeap* GetShaderResourcesDescriptorHeap() const;
 
+    void CreateStaticResourceView(const rhi::BufferView& view);
+    void CreateStaticResourceView(const rhi::TextureView& view);
     void CreateStaticResourceView(std::shared_ptr<rhi::Buffer> buffer, rhi::ResourceViewType viewType) override;
     void CreateStaticResourceView(std::shared_ptr<rhi::Texture> texture, rhi::ResourceViewType viewType) override;
     void CreateTransientResourceView(std::shared_ptr<rhi::Buffer> buffer, rhi::ResourceViewType viewType);

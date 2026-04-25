@@ -29,6 +29,33 @@ namespace rhi::d3d12
         , _name(name)
 #endif // ENABLE_DEBUG_NAMES
     {
+        D3D12_RESOURCE_DESC d3d12desc = nativeTexturePtr->GetDesc();
+
+        _description =
+        {
+            .Width = static_cast<std::uint32_t>(d3d12desc.Width),
+            .Height = d3d12desc.Height,
+            .DepthOrArraySize = d3d12desc.DepthOrArraySize,
+            .MipLevels = d3d12desc.MipLevels,
+            .InitialState = _resource.GetInitialState()
+        };
+
+        switch (d3d12desc.Dimension)
+        {
+            case D3D12_RESOURCE_DIMENSION_TEXTURE1D:
+                _description.Dimension = TextureDimension::Texture1D;
+                break;
+            case D3D12_RESOURCE_DIMENSION_TEXTURE2D:
+                _description.Dimension = TextureDimension::Texture2D;
+                break;
+            case D3D12_RESOURCE_DIMENSION_TEXTURE3D:
+                _description.Dimension = TextureDimension::Texture3D;
+                break;
+            default:
+                UNREACHABLE("Unsupported D3D12 resource dimension.");
+                _description.Dimension = TextureDimension::Unknown;
+                break;
+        }
     }
 
     D3D12Texture::D3D12Texture(D3D12Texture&& other) noexcept
@@ -114,6 +141,11 @@ namespace rhi::d3d12
     Format D3D12Texture::GetFormat() const
     {
         return _description.Format;
+    }
+
+    TextureDimension D3D12Texture::GetDimension() const
+    {
+        return TextureDimension();
     }
 
     const ResourceID& D3D12Texture::GetID() const

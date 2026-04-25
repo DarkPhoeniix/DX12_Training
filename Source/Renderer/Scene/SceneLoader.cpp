@@ -5,6 +5,7 @@
 #include "RHI/CommandList.h"
 #include "RHI/Fence.h"
 #include "RHI/ResourceBarrier.h"
+#include "RHI/TextureView.h"
 
 #include "Render/Frame/TaskGPU.h"
 
@@ -182,6 +183,8 @@ namespace scene::helpers
 
         if (std::shared_ptr<scene::Entity> skyboxNode = scene->FindNodeByComponentName("Skybox"))
         {
+            GPU_SCOPED_EVENT(commandList, "Diffuse irradiance map generation", 0);
+
             std::shared_ptr<scene::Skybox> skyboxComponent = skyboxNode->GetComponentAs<scene::Skybox>("Skybox");
             ASSERT(skyboxComponent, "Failed to get skybox component");
 
@@ -259,6 +262,8 @@ namespace scene::helpers
 
         if (std::shared_ptr<scene::Entity> skyboxNode = scene->FindNodeByComponentName("Skybox"))
         {
+            GPU_SCOPED_EVENT(commandList, "Pre-filter environment map generation", 0);
+
             std::shared_ptr<scene::Skybox> skyboxComponent = skyboxNode->GetComponentAs<scene::Skybox>("Skybox");
             ASSERT(skyboxComponent, "Failed to get skybox component");
 
@@ -299,19 +304,11 @@ namespace scene::helpers
             // Generate each mip level
             for (std::uint32_t i = 0; i < preFilteredEnvTextureDesc.MipLevels; ++i)
             {
-                // TODO: fix it
-                //rhi::UnorderedAccessView uav;
-                //{
-                //    uav.Owner = preFilteredEnvMap;
-                //    uav.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
-                //    uav.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
-                //
-                //    uav.Texture2DArray.ArraySize = 6;
-                //    uav.Texture2DArray.MipSlice = i;
-                //    uav.Texture2DArray.PlaneSlice = 0;
-                //    uav.Texture2DArray.FirstArraySlice = 0;
-                //}
-                _resourceTable->CreateStaticResourceView(preFilteredEnvMap, rhi::ResourceViewType::UAV);
+                rhi::TextureView uav(preFilteredEnvMap.get(),
+                    rhi::ResourceViewType::UAV, 
+                    rhi::TextureDimension::Texture2D, 
+                    0, 1, i, 0, 6);
+                _resourceTable->CreateStaticResourceView(uav);
 
                 float roughness = float(i) / float(preFilteredEnvTextureDesc.MipLevels - 1);
 
@@ -354,6 +351,7 @@ namespace scene::helpers
 
         if (std::shared_ptr<scene::Entity> skyboxNode = scene->FindNodeByComponentName("Skybox"))
         {
+            GPU_SCOPED_EVENT(commandList, "BRDF look-up texture generation", 0);
 
             ASSERT(skyboxNode, "Failed to get skybox node");
 

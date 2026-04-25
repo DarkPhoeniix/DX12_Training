@@ -353,6 +353,8 @@ void TextureManager::UploadTextures(rhi::CommandList* commandList)
         uploadQueueCopy.swap(_uploadQueue);
     }
 
+    GPU_SCOPED_EVENT(commandList, "Textures upload", 0);
+
     if (uploadQueueCopy.empty())
     {
         return;

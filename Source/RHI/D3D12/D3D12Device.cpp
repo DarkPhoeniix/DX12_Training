@@ -21,6 +21,8 @@
 #include "D3D12TimestampQuery.h"
 #include "D3D12PipelineState.h"
 
+#include "BufferView.h"
+#include "TextureView.h"
 #include "ResourceCommon.h"
 #include "DescriptorHeap.h"
 #include "SwapChain.h"
@@ -53,7 +55,7 @@ namespace rhi::d3d12
             IDXGIDebug* dxgiDebug;
             HRESULT result = DXGIGetDebugInterface1(0, IID_PPV_ARGS(&dxgiDebug));
             CHECK(result, "Failed to get DXGI debug interface.");
-            
+
             if (SUCCEEDED(result))
             {
                 dxgiDebug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_FLAGS(DXGI_DEBUG_RLO_DETAIL | DXGI_DEBUG_RLO_IGNORE_INTERNAL));
@@ -254,171 +256,141 @@ namespace rhi::d3d12
         return std::unique_ptr<D3D12PipelineState>(new D3D12PipelineState(this, filepath));
     }
 
+    void D3D12Device::CreateBufferView(const rhi::BufferView& view, CPUDescriptor& descriptor)
+    {
+        switch (view.GetType())
+        {
+        case ResourceViewType::CBV:
+            CreateBufferCBV(view, descriptor);
+            break;
+        case ResourceViewType::SRV:
+            CreateBufferSRV(view, descriptor);
+            break;
+        case ResourceViewType::UAV:
+            CreateBufferUAV(view, descriptor);
+            break;
+        default:
+            UNREACHABLE("Unsupported buffer view type.");
+            break;
+        }
+    }
+
     void D3D12Device::CreateBufferSRV(std::shared_ptr<Buffer> buffer, CPUDescriptor& descriptor)
     {
-        D3D12_SHADER_RESOURCE_VIEW_DESC view = 
-        {
-            .Format = DXGI_FORMAT_UNKNOWN,
-            .ViewDimension = D3D12_SRV_DIMENSION_BUFFER,
-            .Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
-            .Buffer = 
-                {
-                    .FirstElement = 0,
-                    .NumElements = buffer->GetElementCount(),
-                    .StructureByteStride = buffer->GetStride(),
-                    .Flags = D3D12_BUFFER_SRV_FLAG_NONE
-                }
-        };
+        BufferView view(buffer.get(),
+            ResourceViewType::SRV,
+            buffer->GetSize(),
+            0,
+            0,
+            buffer->GetElementCount(),
+            buffer->GetStride());
 
-        _device->CreateShaderResourceView(D3D12Cast<ID3D12Resource>(buffer->GetNative()), &view, ToD3D12Handle(descriptor));
+        CreateBufferSRV(view, descriptor);
     }
 
     void D3D12Device::CreateBufferCBV(std::shared_ptr<Buffer> buffer, CPUDescriptor& descriptor)
     {
-        D3D12_CONSTANT_BUFFER_VIEW_DESC view =
-        {
-            .BufferLocation = buffer->GetVirtualAddress(),
-            .SizeInBytes = buffer->GetSize()
-        };
+        BufferView view(buffer.get(),
+            ResourceViewType::CBV,
+            buffer->GetSize(),
+            0,
+            0,
+            buffer->GetElementCount(),
+            buffer->GetStride());
 
-        _device->CreateConstantBufferView(&view, ToD3D12Handle(descriptor));
+        CreateBufferCBV(view, descriptor);
     }
 
     void D3D12Device::CreateBufferUAV(std::shared_ptr<Buffer> buffer, CPUDescriptor& descriptor, std::shared_ptr<Buffer> counterResource)
     {
-        D3D12_UNORDERED_ACCESS_VIEW_DESC view =
-        {
-            .Format = DXGI_FORMAT_UNKNOWN,
-            .ViewDimension = D3D12_UAV_DIMENSION_BUFFER,
-            .Buffer = 
-                {
-                    .NumElements = buffer->GetElementCount(),
-                    .StructureByteStride = buffer->GetStride(),
-                    .CounterOffsetInBytes = 0
-                }
-        };
+        BufferView view(buffer.get(),
+            ResourceViewType::UAV,
+            buffer->GetSize(),
+            0,
+            0,
+            buffer->GetElementCount(),
+            buffer->GetStride(),
+            counterResource.get());
 
-        std::uint32_t counterOffset = buffer->GetUAVCounterOffset();
-        ID3D12Resource* nativeResource = D3D12Cast<ID3D12Resource>(buffer->GetNative());
-        if (counterOffset != -1)
-        {
-            view.Buffer.CounterOffsetInBytes = counterOffset;
+        CreateBufferUAV(view, descriptor);
+    }
 
-            ID3D12Resource* nativeCounterResource = counterResource ? D3D12Cast<ID3D12Resource>(counterResource->GetNative()) : nativeResource;
-            _device->CreateUnorderedAccessView(nativeResource, nativeCounterResource, &view, ToD3D12Handle(descriptor));
+    void D3D12Device::CreateTextureView(const rhi::TextureView& view, CPUDescriptor& descriptor)
+    {
+        switch (view.GetType())
+        {
+        case ResourceViewType::RTV:
+            CreateTextureRTV(view, descriptor);
+            break;
+        case ResourceViewType::DSV:
+            CreateTextureDSV(view, descriptor);
+            break;
+        case ResourceViewType::SRV:
+            CreateTextureSRV(view, descriptor);
+            break;
+        case ResourceViewType::UAV:
+            CreateTextureUAV(view, descriptor);
+            break;
+        default:
+            UNREACHABLE("Unsupported texture view type.");
+            break;
         }
-        else
-        {
-            _device->CreateUnorderedAccessView(nativeResource, nullptr, &view, ToD3D12Handle(descriptor));
-        }
-
     }
 
     void D3D12Device::CreateTextureRTV(std::shared_ptr<Texture> texture, CPUDescriptor& descriptor)
     {
-        D3D12_RENDER_TARGET_VIEW_DESC view =
-        {
-            .Format = GetDXGIFormat(texture->GetFormat()),
-            .ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D,
-            .Texture2D = {}
-        };
+        TextureView view(texture.get(), 
+            ResourceViewType::RTV, 
+            texture->GetDescription().Dimension, 
+            0, 
+            texture->GetMipLevels(), 
+            0, 
+            0, 
+            texture->GetDepthOrArraySize());
 
-        _device->CreateRenderTargetView(D3D12Cast<ID3D12Resource>(texture->GetNative()), &view, ToD3D12Handle(descriptor));
+        CreateTextureRTV(view, descriptor);
     }
 
     void D3D12Device::CreateTextureDSV(std::shared_ptr<Texture> texture, CPUDescriptor& descriptor)
     {
-        D3D12_DEPTH_STENCIL_VIEW_DESC view = {};
+        TextureView view(texture.get(),
+            ResourceViewType::DSV,
+            texture->GetDescription().Dimension,
+            0,
+            texture->GetMipLevels(),
+            0,
+            0,
+            texture->GetDepthOrArraySize());
 
-        std::uint32_t arraySize = texture->GetDepthOrArraySize();
-        if (arraySize > 1)
-        {
-            view.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DARRAY;
-            view.Texture2DArray.ArraySize = arraySize;
-        }
-        else
-        {
-            view.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-        }
-        view.Texture2D.MipSlice = 0;
-
-        _device->CreateDepthStencilView(D3D12Cast<ID3D12Resource>(texture->GetNative()), &view, ToD3D12Handle(descriptor));
+        CreateTextureDSV(view, descriptor);
     }
 
     void D3D12Device::CreateTextureSRV(std::shared_ptr<Texture> texture, CPUDescriptor& descriptor)
     {
-        D3D12_SHADER_RESOURCE_VIEW_DESC view = {};
-        view.Format = GetDXGIFormat(texture->GetFormat());
-        view.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        TextureView view(texture.get(),
+            ResourceViewType::SRV,
+            texture->GetDescription().Dimension,
+            0,
+            texture->GetMipLevels(),
+            0,
+            0,
+            texture->GetDepthOrArraySize());
 
-        if (view.Format == DXGI_FORMAT_D32_FLOAT)
-        {
-            view.Format = DXGI_FORMAT_R32_FLOAT;
-        }
-
-        std::uint32_t arraySize = texture->GetDepthOrArraySize();
-        if (arraySize == 6)
-        {
-            view.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
-            view.TextureCube.MipLevels = texture->GetMipLevels();
-            view.TextureCube.MostDetailedMip = 0;
-            view.TextureCube.ResourceMinLODClamp = 0.0f;
-        }
-        else if (arraySize > 1)
-        {
-            view.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
-            view.Texture2DArray.ArraySize = arraySize;
-            view.Texture2DArray.MipLevels = texture->GetMipLevels();
-            view.Texture2DArray.FirstArraySlice = 0;
-            view.Texture2DArray.MostDetailedMip = 0;
-            view.Texture2DArray.PlaneSlice = 0;
-            view.Texture2DArray.ResourceMinLODClamp = 0.0f;
-        }
-        else
-        {
-            view.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-            view.Texture2D.MipLevels = texture->GetMipLevels();
-            view.Texture2D.MostDetailedMip = 0;
-            view.Texture2D.PlaneSlice = 0;
-            view.Texture2D.ResourceMinLODClamp = 0.0f;
-        }
-
-        _device->CreateShaderResourceView(D3D12Cast<ID3D12Resource>(texture->GetNative()), &view, ToD3D12Handle(descriptor));
-    }
-
-    void D3D12Device::CreateTextureCBV(std::shared_ptr<Texture> texture, CPUDescriptor& descriptor)
-    {
-        D3D12_CONSTANT_BUFFER_VIEW_DESC view =
-        {
-            .BufferLocation = texture->GetVirtualAddress(),
-            .SizeInBytes = texture->GetWidth() * texture->GetHeight()
-        };
-
-        _device->CreateConstantBufferView(&view, ToD3D12Handle(descriptor));
+        CreateTextureSRV(view, descriptor);
     }
 
     void D3D12Device::CreateTextureUAV(std::shared_ptr<Texture> texture, CPUDescriptor& descriptor)
     {
-        D3D12_UNORDERED_ACCESS_VIEW_DESC view = {};
-        view.Format = GetDXGIFormat(texture->GetFormat());
+        TextureView view(texture.get(),
+            ResourceViewType::UAV,
+            texture->GetDescription().Dimension,
+            0,
+            texture->GetMipLevels(),
+            0,
+            0,
+            texture->GetDepthOrArraySize());
 
-        std::uint32_t arraySize = texture->GetDepthOrArraySize();
-        if (arraySize == 1)
-        {
-            view.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-            view.Texture2D.MipSlice = 0;
-            view.Texture2D.PlaneSlice = 0;
-        }
-        else
-        {
-            view.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
-            view.Texture2DArray.ArraySize = arraySize;
-            view.Texture2DArray.FirstArraySlice = 0;
-            view.Texture2DArray.MipSlice = 0;
-            view.Texture2DArray.PlaneSlice = 0;
-        }
-
-        _device->CreateUnorderedAccessView(D3D12Cast<ID3D12Resource>(texture->GetNative()), nullptr, &view, ToD3D12Handle(descriptor));
+        CreateTextureUAV(view, descriptor);
     }
 
     std::uint32_t D3D12Device::GetDescriptorHandleIncrementSize(rhi::DescriptorHeapType type) const
@@ -552,12 +524,12 @@ namespace rhi::d3d12
             };
 
             // Suppress individual messages by their ID
-            D3D12_MESSAGE_ID DenyIds[] = 
+            D3D12_MESSAGE_ID DenyIds[] =
             {
                 D3D12_MESSAGE_ID_CLEARRENDERTARGETVIEW_MISMATCHINGCLEARVALUE,   // I'm really not sure how to avoid this message.
                 D3D12_MESSAGE_ID_MAP_INVALID_NULLRANGE,                         // This warning occurs when using capture frame while graphics debugging.
                 D3D12_MESSAGE_ID_UNMAP_INVALID_NULLRANGE,                       // This warning occurs when using capture frame while graphics debugging.
-                D3D12_MESSAGE_ID_NON_OPTIMAL_BARRIER_ONLY_EXECUTE_COMMAND_LISTS 
+                D3D12_MESSAGE_ID_NON_OPTIMAL_BARRIER_ONLY_EXECUTE_COMMAND_LISTS
             };
 
             D3D12_INFO_QUEUE_FILTER NewFilter = {};
@@ -591,5 +563,289 @@ namespace rhi::d3d12
         CHECK(result, "Failed to check D3D12 options 12.");
 
         _enhancedBarriersSupported = options12.EnhancedBarriersSupported;
+    }
+
+    void D3D12Device::CreateBufferSRV(const BufferView& view, CPUDescriptor& descriptor)
+    {
+        D3D12_SHADER_RESOURCE_VIEW_DESC srvView =
+        {
+            .Format = GetDXGIFormat(view.GetFormat()),
+            .ViewDimension = D3D12_SRV_DIMENSION_BUFFER,
+            .Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
+            .Buffer =
+                {
+                    .FirstElement = view.GetFirstElement(),
+                    .NumElements = view.GetNumElements(),
+                    .StructureByteStride = view.GetStride(),
+                    .Flags = D3D12_BUFFER_SRV_FLAG_NONE
+                }
+        };
+
+        _device->CreateShaderResourceView(D3D12Cast<ID3D12Resource>(view.GetBuffer()->GetNative()), &srvView, ToD3D12Handle(descriptor));
+    }
+    
+    void D3D12Device::CreateBufferCBV(const BufferView& view, CPUDescriptor& descriptor)
+    {
+        D3D12_CONSTANT_BUFFER_VIEW_DESC cbvView =
+        {
+            .BufferLocation = view.GetVirtualAddress(),
+            .SizeInBytes = view.GetSize()
+        };
+
+        _device->CreateConstantBufferView(&cbvView, ToD3D12Handle(descriptor));
+    }
+    
+    void D3D12Device::CreateBufferUAV(const BufferView& view, CPUDescriptor& descriptor)
+    {
+        D3D12_UNORDERED_ACCESS_VIEW_DESC uavView =
+        {
+            .Format = GetDXGIFormat(view.GetFormat()),
+            .ViewDimension = D3D12_UAV_DIMENSION_BUFFER,
+            .Buffer =
+                {
+                    .NumElements = view.GetNumElements(),
+                    .StructureByteStride = view.GetStride(),
+                    .CounterOffsetInBytes = view.GetUAVCounterOffset()
+                }
+        };
+
+        ID3D12Resource* nativeResource = D3D12Cast<ID3D12Resource>(view.GetBuffer()->GetNative());
+        if (view.GetCounterResource())
+        {
+            ID3D12Resource* nativeCounterResource = view.GetCounterResource() ? D3D12Cast<ID3D12Resource>(view.GetCounterResource()->GetNative()) : nativeResource;
+            _device->CreateUnorderedAccessView(nativeResource, nativeCounterResource, &uavView, ToD3D12Handle(descriptor));
+        }
+        else
+        {
+            _device->CreateUnorderedAccessView(nativeResource, nullptr, &uavView, ToD3D12Handle(descriptor));
+        }
+    }
+    
+    void D3D12Device::CreateTextureRTV(const TextureView& view, CPUDescriptor& descriptor)
+    {
+        D3D12_RENDER_TARGET_VIEW_DESC rtvView =
+        {
+            .Format = GetDXGIFormat(view.GetFormat())
+        };
+
+        if (view.GetDimension() == TextureDimension::Texture1D)
+        {
+            if (view.GetArraySize() == 0)
+            {
+                rtvView.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE1D;
+                rtvView.Texture1D.MipSlice = view.GetMipSlice();
+            }
+            else
+            {
+                rtvView.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE1DARRAY;
+                rtvView.Texture1DArray.MipSlice = view.GetMipSlice();
+                rtvView.Texture1DArray.FirstArraySlice = view.GetFirstArraySlice();
+                rtvView.Texture1DArray.ArraySize = view.GetArraySize();
+            }
+        }
+        else if (view.GetDimension() == TextureDimension::Texture2D)
+        {
+            if (view.GetArraySize() == 0)
+            {
+                rtvView.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+                rtvView.Texture2D.MipSlice = view.GetMipSlice();
+                rtvView.Texture2D.PlaneSlice = view.GetPlaneSlice();
+            }
+            else
+            {
+                rtvView.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DARRAY;
+                rtvView.Texture2DArray.MipSlice = view.GetMipSlice();
+                rtvView.Texture2DArray.FirstArraySlice = view.GetFirstArraySlice();
+                rtvView.Texture2DArray.ArraySize = view.GetArraySize();
+                rtvView.Texture2DArray.PlaneSlice = view.GetPlaneSlice();
+            }
+        }
+        else if (view.GetDimension() == TextureDimension::Texture3D)
+        {
+            rtvView.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE3D;
+            rtvView.Texture3D.MipSlice = view.GetMipSlice();
+            rtvView.Texture3D.FirstWSlice = view.GetFirstArraySlice();
+            rtvView.Texture3D.WSize = view.GetArraySize();
+        }
+        else
+        {
+            UNREACHABLE("Unsupported texture dimension.");
+        }
+
+        _device->CreateRenderTargetView(D3D12Cast<ID3D12Resource>(view.GetTexture()->GetNative()), &rtvView, ToD3D12Handle(descriptor));
+    }
+    
+    void D3D12Device::CreateTextureDSV(const TextureView& view, CPUDescriptor& descriptor)
+    {
+        D3D12_DEPTH_STENCIL_VIEW_DESC dsvView = 
+        {
+            .Format = GetDXGIFormat(view.GetFormat())
+        };
+
+        if (view.GetDimension() == TextureDimension::Texture1D)
+        {
+            if (view.GetArraySize() == 0)
+            {
+                dsvView.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE1D;
+                dsvView.Texture1D.MipSlice = view.GetMipSlice();
+            }
+            else
+            {
+                dsvView.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE1DARRAY;
+                dsvView.Texture1DArray.MipSlice = view.GetMipSlice();
+                dsvView.Texture1DArray.FirstArraySlice = view.GetFirstArraySlice();
+                dsvView.Texture1DArray.ArraySize = view.GetArraySize();
+            }
+        }
+        else if (view.GetDimension() == TextureDimension::Texture2D)
+        {
+            if (view.GetArraySize() == 0)
+            {
+                dsvView.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+                dsvView.Texture2D.MipSlice = view.GetMipSlice();
+            }
+            else
+            {
+                dsvView.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DARRAY;
+                dsvView.Texture2DArray.MipSlice = view.GetMipSlice();
+                dsvView.Texture2DArray.FirstArraySlice = view.GetFirstArraySlice();
+                dsvView.Texture2DArray.ArraySize = view.GetArraySize();
+            }
+        }
+        else
+        {
+            UNREACHABLE("Unsupported texture dimension for DSV.");
+        }
+
+        _device->CreateDepthStencilView(D3D12Cast<ID3D12Resource>(view.GetTexture()->GetNative()), &dsvView, ToD3D12Handle(descriptor));
+    }
+    
+    void D3D12Device::CreateTextureSRV(const TextureView& view, CPUDescriptor& descriptor)
+    {
+        D3D12_SHADER_RESOURCE_VIEW_DESC srvView = 
+        {
+            .Format = GetDXGIFormat(view.GetFormat()),
+            .Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING
+        };
+
+        if (view.GetFormat() == Format::D32_FLOAT)
+        {
+            srvView.Format = DXGI_FORMAT_R32_FLOAT;
+        }
+
+        if (view.GetDimension() == TextureDimension::Texture1D)
+        {
+            if (view.GetArraySize() == 0)
+            {
+                srvView.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE1D;
+                srvView.Texture1D.MipLevels = view.GetMipLevels();
+                srvView.Texture1D.MostDetailedMip = view.GetMostDetailedMip();
+                srvView.Texture1D.ResourceMinLODClamp = view.GetResourceMinLODClamp();
+            }
+            else
+            {
+                srvView.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE1DARRAY;
+                srvView.Texture1DArray.MipLevels = view.GetMipLevels();
+                srvView.Texture1DArray.MostDetailedMip = view.GetMostDetailedMip();
+                srvView.Texture1DArray.FirstArraySlice = view.GetFirstArraySlice();
+                srvView.Texture1DArray.ArraySize = view.GetArraySize();
+                srvView.Texture1DArray.ResourceMinLODClamp = view.GetResourceMinLODClamp();
+            }
+        }
+        else if (view.GetDimension() == TextureDimension::Texture2D)
+        {
+            if (view.GetArraySize() == 0)
+            {
+                srvView.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+                srvView.Texture2D.MipLevels = view.GetMipLevels();
+                srvView.Texture2D.MostDetailedMip = view.GetMostDetailedMip();
+                srvView.Texture2D.PlaneSlice = view.GetPlaneSlice();
+                srvView.Texture2D.ResourceMinLODClamp = view.GetResourceMinLODClamp();
+            }
+            else if (view.GetArraySize() == 6)
+            {
+                srvView.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+                srvView.TextureCube.MipLevels = view.GetMipLevels();
+                srvView.TextureCube.MostDetailedMip = view.GetMostDetailedMip();
+                srvView.TextureCube.ResourceMinLODClamp = view.GetResourceMinLODClamp();
+            }
+            else
+            {
+                srvView.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
+                srvView.Texture2DArray.MipLevels = view.GetMipLevels();
+                srvView.Texture2DArray.MostDetailedMip = view.GetMostDetailedMip();
+                srvView.Texture2DArray.FirstArraySlice = view.GetFirstArraySlice();
+                srvView.Texture2DArray.ArraySize = view.GetArraySize();
+                srvView.Texture2DArray.PlaneSlice = view.GetPlaneSlice();
+                srvView.Texture2DArray.ResourceMinLODClamp = view.GetResourceMinLODClamp();
+            }
+        }
+        else if (view.GetDimension() == TextureDimension::Texture3D)
+        {
+            srvView.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE3D;
+            srvView.Texture3D.MipLevels = view.GetMipLevels();
+            srvView.Texture3D.MostDetailedMip = view.GetMostDetailedMip();
+            srvView.Texture3D.ResourceMinLODClamp = view.GetResourceMinLODClamp();
+        }
+        else
+        {
+            UNREACHABLE("Unsupported texture dimension.");
+        }
+
+        _device->CreateShaderResourceView(D3D12Cast<ID3D12Resource>(view.GetTexture()->GetNative()), &srvView, ToD3D12Handle(descriptor));
+    }
+    
+    void D3D12Device::CreateTextureUAV(const TextureView& view, CPUDescriptor& descriptor)
+    {
+        D3D12_UNORDERED_ACCESS_VIEW_DESC uavView = 
+        {
+            .Format = GetDXGIFormat(view.GetFormat())
+        };
+
+        if (view.GetDimension() == TextureDimension::Texture1D)
+        {
+            if (view.GetArraySize() == 0)
+            {
+                uavView.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE1D;
+                uavView.Texture1D.MipSlice = view.GetMipSlice();
+            }
+            else
+            {
+                uavView.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE1DARRAY;
+                uavView.Texture1DArray.MipSlice = view.GetMipSlice();
+                uavView.Texture1DArray.FirstArraySlice = view.GetFirstArraySlice();
+                uavView.Texture1DArray.ArraySize = view.GetArraySize();
+            }
+        }
+        else if (view.GetDimension() == TextureDimension::Texture2D)
+        {
+            if (view.GetArraySize() == 0)
+            {
+                uavView.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+                uavView.Texture2D.MipSlice = view.GetMipSlice();
+                uavView.Texture2D.PlaneSlice = view.GetPlaneSlice();
+            }
+            else
+            {
+                uavView.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
+                uavView.Texture2DArray.MipSlice = view.GetMipSlice();
+                uavView.Texture2DArray.FirstArraySlice = view.GetFirstArraySlice();
+                uavView.Texture2DArray.ArraySize = view.GetArraySize();
+                uavView.Texture2DArray.PlaneSlice = view.GetPlaneSlice();
+            }
+        }
+        else if (view.GetDimension() == TextureDimension::Texture3D)
+        {
+            uavView.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE3D;
+            uavView.Texture3D.MipSlice = view.GetMipSlice();
+            uavView.Texture3D.FirstWSlice = view.GetFirstArraySlice();
+            uavView.Texture3D.WSize = view.GetArraySize();
+        }
+        else
+        {
+            UNREACHABLE("Unsupported texture dimension for UAV.");
+        }
+
+        _device->CreateUnorderedAccessView(D3D12Cast<ID3D12Resource>(view.GetTexture()->GetNative()), nullptr, &uavView, ToD3D12Handle(descriptor));
     }
 } // namespace rhi::d3d12

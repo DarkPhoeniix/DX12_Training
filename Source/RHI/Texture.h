@@ -88,6 +88,8 @@ namespace rhi
         virtual std::uint32_t GetDepthOrArraySize() = 0;
         // Retrieves the format of the texture, which specifies the data layout and type of each texel
         virtual Format GetFormat() const = 0;
+        // Retrieves the dimension of the texture
+        virtual TextureDimension GetDimension() const = 0;
 
         // Retrieves the unique identifier of the texture resource.
         // ID unique across all resources (both buffers and textures) created by the device

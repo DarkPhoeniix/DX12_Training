@@ -75,7 +75,7 @@ if (ENABLE_CPU_PROFILING)
 endif()
 
 if (ENABLE_GPU_PROFILING)
-    target_compile_definitions(Renderer PUBLIC ENABLE_GPU_PROFILING)
+    target_compile_definitions(Renderer PUBLIC ENABLE_GPU_PROFILING ENABLE_GPU_EVENTS)
 endif()
 
 include(${CMAKE_SOURCE_DIR}/Scripts/GroupSourcesByFolder.cmake)

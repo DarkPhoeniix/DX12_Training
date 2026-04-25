@@ -37,6 +37,26 @@ ResourceTable::ResourceTable(rhi::Device* device)
 {
 }
 
+void ResourceTable::CreateStaticResourceView(const rhi::BufferView& view)
+{
+    DescriptorHandle handle = DescriptorHeapManager::Get().AllocateStatic(DescriptorHeapType::Static);
+
+    _device->CreateBufferView(view, handle.CpuHandle);
+
+    std::unordered_map<rhi::ResourceID, DescriptorHandle>& bufferMap = GetStaticResourceMap(view.GetType());
+    bufferMap[view.GetBuffer()->GetID()] = handle;
+}
+
+void ResourceTable::CreateStaticResourceView(const rhi::TextureView& view)
+{
+    DescriptorHandle handle = DescriptorHeapManager::Get().AllocateStatic(DescriptorHeapType::Static);
+
+    _device->CreateTextureView(view, handle.CpuHandle);
+
+    std::unordered_map<rhi::ResourceID, DescriptorHandle>& textureMap = GetStaticResourceMap(view.GetType());
+    textureMap[view.GetTexture()->GetID()] = handle;
+}
+
 void ResourceTable::CreateStaticResourceView(std::shared_ptr<rhi::Buffer> buffer, rhi::ResourceViewType viewType)
 {
     if (FindHandle(buffer->GetID(), viewType).Index != InvalidHeapIndex)

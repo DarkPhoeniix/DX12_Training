@@ -31,6 +31,7 @@ namespace rhi::d3d12
         std::uint32_t GetMipLevels() const override;
         std::uint32_t GetDepthOrArraySize() override;
         Format GetFormat() const override;
+        TextureDimension GetDimension() const override;
 
         const ResourceID& GetID() const override;
 

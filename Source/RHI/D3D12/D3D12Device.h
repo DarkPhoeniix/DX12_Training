@@ -52,13 +52,15 @@ namespace rhi::d3d12
         std::unique_ptr<rhi::SwapChain> CreateSwapChain(void* windowHandle, std::uint32_t width, std::uint32_t height, bool vSync) override;
         std::unique_ptr<rhi::PipelineState> CreatePipelineState(const std::string& filepath) override;
 
+        void CreateBufferView(const rhi::BufferView& view, CPUDescriptor& descriptor) override;
         void CreateBufferSRV(std::shared_ptr<rhi::Buffer> resource, rhi::CPUDescriptor& descriptor) override;
         void CreateBufferCBV(std::shared_ptr<rhi::Buffer> resource, rhi::CPUDescriptor& descriptor) override;
         void CreateBufferUAV(std::shared_ptr<rhi::Buffer> resource, rhi::CPUDescriptor& descriptor, std::shared_ptr<rhi::Buffer> counterResource) override;
+
+        void CreateTextureView(const rhi::TextureView& view, CPUDescriptor& descriptor) override;
         void CreateTextureRTV(std::shared_ptr<rhi::Texture> texture, rhi::CPUDescriptor& descriptor) override;
         void CreateTextureDSV(std::shared_ptr<rhi::Texture> texture, rhi::CPUDescriptor& descriptor) override;
         void CreateTextureSRV(std::shared_ptr<rhi::Texture> texture, rhi::CPUDescriptor& descriptor) override;
-        void CreateTextureCBV(std::shared_ptr<rhi::Texture> texture, rhi::CPUDescriptor& descriptor) override;
         void CreateTextureUAV(std::shared_ptr<rhi::Texture> texture, rhi::CPUDescriptor& descriptor) override;
 
         std::uint32_t GetDescriptorHandleIncrementSize(rhi::DescriptorHeapType type) const override;
@@ -75,6 +77,15 @@ namespace rhi::d3d12
         void CreateDevice();
         void CreateQueues();
         void CheckFeatureSupport();
+
+        void CreateBufferSRV(const BufferView& view, CPUDescriptor& descriptor);
+        void CreateBufferCBV(const BufferView& view, CPUDescriptor& descriptor);
+        void CreateBufferUAV(const BufferView& view, CPUDescriptor& descriptor);
+
+        void CreateTextureRTV(const TextureView& view, CPUDescriptor& descriptor);
+        void CreateTextureDSV(const TextureView& view, CPUDescriptor& descriptor);
+        void CreateTextureSRV(const TextureView& view, CPUDescriptor& descriptor);
+        void CreateTextureUAV(const TextureView& view, CPUDescriptor& descriptor);
 
         ComPtr<ID3D12Device2> _device;
         ComPtr<IDXGIAdapter4> _adapter;
