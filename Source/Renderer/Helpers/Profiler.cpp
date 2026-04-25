@@ -44,7 +44,7 @@ Profiler::TimerID Profiler::RegisterTimer(const std::string& name)
 #if _DEBUG
     auto timerIt = std::find_if(_timers.begin(), _timers.end(), [&](const Profiler::TimerInfo& info) { return info.name == name; });
     ASSERT(timerIt == _timers.end(), "Profiler: Timer with name \'{}\' is already registered.", name);
-#endif
+#endif // _DEBUG
 
     Profiler::TimerID id = static_cast<Profiler::TimerID>(_timers.size());
     _timers.emplace_back(name, id);

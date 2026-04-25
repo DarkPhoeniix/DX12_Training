@@ -135,18 +135,18 @@ namespace rg
         commandList->TransitionBarriers(bufferBarriers);
         commandList->TransitionBarriers(textureBarriers);
 
-#if ENABLE_PROFILING
-        context.GetGPUProfiler()->BeginEvent(commandList, _gpuTimerID);
-#endif
+#if ENABLE_GPU_PROFILING
+        context.GetProfiler()->BeginEvent(commandList, _gpuTimerID);
+#endif // ENABLE_GPU_PROFILING
         commandList->Close();
     }
 
     void IRenderPass::PostExecute(RenderContext& context, ITask* task)
     {
         rhi::CommandList* commandList = task->GetCommandList();
-#if ENABLE_PROFILING
-        context.GetGPUProfiler()->EndEvent(commandList, _gpuTimerID);
-#endif
+#if ENABLE_GPU_PROFILING
+        context.GetProfiler()->EndEvent(commandList, _gpuTimerID);
+#endif // ENABLE_GPU_PROFILING
         commandList->Close();
     }
 

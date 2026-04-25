@@ -66,7 +66,7 @@ namespace render
 
 			// Setup root signature components
 
-			DirectX::XMUINT2 viewportSize = _camera->GetViewport().GetSize();
+			DirectX::XMUINT2 viewportSize = _camera->GetSize();
 			std::uint32_t size = viewportSize.x * viewportSize.y;
 
 			PassConstants passConstants =

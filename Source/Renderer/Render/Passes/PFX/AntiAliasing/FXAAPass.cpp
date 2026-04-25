@@ -113,7 +113,7 @@ namespace render
 		};
         builder.DeclareBuffer("fxaa_work_counter", workCountersDesc);
 
-		DirectX::XMUINT2 size = _camera->GetViewport().GetSize();
+		DirectX::XMUINT2 size = _camera->GetSize();
 		std::uint32_t bufferSize = (size.x * size.y) + 128;
 		rhi::BufferDescription queueDesc =
 		{
@@ -182,7 +182,7 @@ namespace render
 
 					commandList->SetComputePipelineState(_FXAA_Pass1_Pipeline.get());
 
-					DirectX::XMUINT2 viewportSize = _camera->GetViewport().GetSize();
+					DirectX::XMUINT2 viewportSize = _camera->GetSize();
 
 					float xRcpTextureSize = 1.0f / viewportSize.x;
 					float yRcpTextureSize = 1.0f / viewportSize.y;

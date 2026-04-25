@@ -44,8 +44,8 @@ namespace render
 	{
 		rhi::TextureDescription targetDesc =
 		{
-			.Width = _camera->GetViewport().GetSize().x,
-			.Height = _camera->GetViewport().GetSize().y,
+			.Width = _camera->GetSize().x,
+			.Height = _camera->GetSize().y,
 			.Format = rhi::Format::R16G16B16A16_FLOAT,
 			.Dimension = rhi::TextureDimension::Texture2D,
 			.Flags = rhi::ResourceFlags::AllowUnorderedAccess
@@ -84,7 +84,7 @@ namespace render
 			commandList->SetComputeCBV(0, context.GetFrameBuffer()->GetVirtualAddress());
 			commandList->SetComputeConstants(1, 7, &passCB);
 
-			DirectX::XMUINT2 viewportSize = _camera->GetViewport().GetSize();
+			DirectX::XMUINT2 viewportSize = _camera->GetSize();
 			int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 8.0f);
 			int yThreadGroups = (uint32_t)std::ceilf(viewportSize.y / 8.0f);
 

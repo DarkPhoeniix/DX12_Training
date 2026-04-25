@@ -31,8 +31,8 @@ namespace render
 	{
 		rhi::TextureDescription depthDesc =
 		{
-			.Width = _camera->GetViewport().GetSize().x,
-			.Height = _camera->GetViewport().GetSize().y,
+			.Width = _camera->GetSize().x,
+			.Height = _camera->GetSize().y,
 			.ClearValue = { .DepthStencil = { 1.0f, 0 } },
 			.Format = rhi::Format::D32_FLOAT,
 			.Dimension = rhi::TextureDimension::Texture2D,
@@ -42,8 +42,8 @@ namespace render
 
 		rhi::TextureDescription albedoMetallicDesc =
 		{
-			.Width = _camera->GetViewport().GetSize().x,
-			.Height = _camera->GetViewport().GetSize().y,
+			.Width = _camera->GetSize().x,
+			.Height = _camera->GetSize().y,
 			.ClearValue = { .Color = { 0.0f, 0.0f, 0.0f, 1.0f } },
 			.Format = rhi::Format::R8G8B8A8_UNORM,
 			.Dimension = rhi::TextureDimension::Texture2D,
@@ -53,8 +53,8 @@ namespace render
 
 		rhi::TextureDescription normalRoughnessDesc =
 		{
-			.Width = _camera->GetViewport().GetSize().x,
-			.Height = _camera->GetViewport().GetSize().y,
+			.Width = _camera->GetSize().x,
+			.Height = _camera->GetSize().y,
 			.Format = rhi::Format::R32G32B32A32_FLOAT,
 			.Dimension = rhi::TextureDimension::Texture2D,
 			.Flags = rhi::ResourceFlags::AllowRenderTarget
@@ -63,8 +63,8 @@ namespace render
 
 		rhi::TextureDescription emissionDesc =
 		{
-			.Width = _camera->GetViewport().GetSize().x,
-			.Height = _camera->GetViewport().GetSize().y,
+			.Width = _camera->GetSize().x,
+			.Height = _camera->GetSize().y,
 			.ClearValue = { .Color = { 0.0f, 0.0f, 0.0f, 1.0f } },
 			.Format = rhi::Format::R11G11B10_FLOAT,
 			.Dimension = rhi::TextureDimension::Texture2D,
@@ -88,9 +88,9 @@ namespace render
             // Prepare all targets and pipeline state
             _SetupPipelineState(context, commandList);
 
-#if ENABLE_PROFILING
+#if ENABLE_GPU_PROFILING
             DebugInfo::StartStatCollecting(commandList);	// Start collecting pipeline statistics (primitive counts, etc.)
-#endif
+#endif // ENABLE_GPU_PROFILING
 
             // Filter all mesh entities
 			std::vector<std::shared_ptr<scene::Entity>> entities = _scene->FilterNodesByComponent("Mesh");
@@ -102,9 +102,9 @@ namespace render
             // Issue draw calls for all selected entities
             _PopulateDrawCommands(commandList, entities);
 
-#if ENABLE_PROFILING
+#if ENABLE_GPU_PROFILING
 			DebugInfo::EndStatCollecting(commandList);
-#endif
+#endif // ENABLE_GPU_PROFILING
 		}
 
 		commandList->Close();
@@ -119,14 +119,14 @@ namespace render
 
 		commandList->ClearDSV(depthHandle);
 		float color[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-		commandList->ClearRTV(albedoMetallicHandle, color, &_camera->GetViewport().GetScissorRectangle());
-		commandList->ClearRTV(emissionHandle, color, &_camera->GetViewport().GetScissorRectangle());
+		commandList->ClearRTV(albedoMetallicHandle, color, &_camera->GetScissorRectangle());
+		commandList->ClearRTV(emissionHandle, color, &_camera->GetScissorRectangle());
 		color[3] = 0.0f;
-		commandList->ClearRTV(normalRoughnessHandle, color, &_camera->GetViewport().GetScissorRectangle());
+		commandList->ClearRTV(normalRoughnessHandle, color, &_camera->GetScissorRectangle());
 
 		commandList->SetGraphicsPipelineState(_geometryPipeline.get());
 
-		commandList->SetViewport(_camera->GetViewport().GetNativeViewport(), _camera->GetViewport().GetScissorRectangle());
+		commandList->SetViewport(_camera->GetViewport(), _camera->GetScissorRectangle());
 		commandList->SetRenderTargets({ albedoMetallicHandle, normalRoughnessHandle, emissionHandle }, &depthHandle);
 
 		commandList->SetGraphicsCBV(0, context.GetFrameBuffer()->GetVirtualAddress());

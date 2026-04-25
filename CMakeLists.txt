@@ -24,7 +24,13 @@ endif()
 
 option(USE_D3D12 "Enable DirectX12 backend" ON)
 option(USE_VULKAN "Enable Vulkan backend" ON)
-option(ENABLE_NSIGHT_AFTERMATH "Enable Nvidia Aftermath SDK usage for crash tracking (Release only)" ON)
+option(ENABLE_NSIGHT_AFTERMATH "Enable Nvidia Aftermath SDK usage for crash tracking (Release only)" OFF)
+
+set(ENABLE_CPU_PROFILING 
+    $<$<config:Debug>:TRUE>
+    $<$<config:RelWithDebInfo>:TRUE>
+    $<$<config:Release>:FALSE>
+)
 
 set(ENABLE_GPU_PROFILING 
     $<$<config:Debug>:TRUE>

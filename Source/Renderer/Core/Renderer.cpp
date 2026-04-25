@@ -179,13 +179,14 @@ namespace render
 
 		_sceneLoader.Init(ResourceTable::Get(), TextureManager::Get());
 
-#if ENABLE_PROFILING
-        _renderGraph->SetGPUProfiler(&_gpuProfiler);
-#endif
+#if ENABLE_GPU_PROFILING
+        _renderGraph->SetProfiler(&_gpuProfiler);
+#endif // ENABLE_GPU_PROFILING
     }
 
     DXRenderer::~DXRenderer()
     {
+        WaitAllFrames();
     }
 
     rg::RenderGraph* DXRenderer::GetRenderGraph()
@@ -236,17 +237,17 @@ namespace render
                 camera->SetName("Default camera");
 
                 std::shared_ptr<scene::Transformation> transform = std::make_shared<scene::Transformation>();
-                std::shared_ptr<scene::Camera> cameraComponent = std::make_shared<scene::Camera>();
+                std::shared_ptr<scene::Camera> cameraComponent = std::make_shared<scene::Camera>(windowWidth, windowHeight);
                 cameraComponent->LookAt(XMVectorSet(5.0f, 1.0f, 0.0f, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
                 cameraComponent->SetLens(60.0f, 0.1f, 1000.0f);
-                cameraComponent->Speed = 1.0f;
+                cameraComponent->SetSpeed(1.0f);
 
                 camera->AddComponent(transform);
                 camera->AddComponent(cameraComponent);
                 _scene->AddRootNode(camera);
             }
             _cameraComponent = camera->GetComponentAs<scene::Camera>("Camera");
-            _cameraComponent->SetViewport(scene::Viewport({ windowWidth, windowHeight }));
+            _cameraComponent->SetSize(windowWidth, windowHeight);
 
             rhi::BufferDescription frameBufferDesc =
             {
@@ -444,7 +445,7 @@ namespace render
         } while (current != _currentFrame);
 
         _device->OnResize((uint32_t)e.width, (uint32_t)e.height);
-        _cameraComponent->GetViewport().SetSize((uint32_t)e.width, (uint32_t)e.height);
+        _cameraComponent->SetSize((uint32_t)e.width, (uint32_t)e.height);
         _cameraComponent->Update();
 
         CreateShadowMaps();
@@ -683,7 +684,7 @@ namespace render
         {
             GPUFrameDesc* frameBufferData = _currentFrame->GetBuffer()->Map<GPUFrameDesc>();
 
-            DirectX::XMUINT2 windowSize = _cameraComponent->GetViewport().GetSize();
+            DirectX::XMUINT2 windowSize = _cameraComponent->GetSize();
 
             frameBufferData[0] =
             {
@@ -699,7 +700,7 @@ namespace render
 
                 .WindowSize = { windowSize.x, windowSize.y },
                 .ReciprocalWindowSize = { 1.0f / windowSize.x, 1.0f / windowSize.y },
-                .NearFar = { _cameraComponent->NearZ, _cameraComponent->FarZ },
+                .NearFar = { _cameraComponent->GetNearZ(), _cameraComponent->GetFarZ()},
 
                 .InstancesBufferIndex = ResourceTable::Get().GetBindlessIndex(modelBuffer->GetID(), rhi::ResourceViewType::SRV),
                 .LightsBufferIndex = ResourceTable::Get().GetBindlessIndex(lightBuffer->GetID(), rhi::ResourceViewType::SRV),
@@ -716,7 +717,7 @@ namespace render
 
         if (lightComponent && lightComponent->CastShadows)
         {
-            auto viewportSize = _cameraComponent->GetViewport().GetSize();
+            auto viewportSize = _cameraComponent->GetSize();
 
             std::uint32_t size = std::max(viewportSize.x, viewportSize.y) / 2.0f;
             rhi::TextureDescription shadowMapDesc =

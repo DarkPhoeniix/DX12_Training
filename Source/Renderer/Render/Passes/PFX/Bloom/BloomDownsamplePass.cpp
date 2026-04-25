@@ -33,7 +33,7 @@ namespace render
 
     void BloomDownsamplePass::Setup(rg::RenderPassBuilder& builder)
     {
-        DirectX::XMUINT2 viewportSize = _camera->GetViewport().GetSize();
+        DirectX::XMUINT2 viewportSize = _camera->GetSize();
 
         std::uint32_t size = std::max(viewportSize.x, viewportSize.y) / 2;
         std::uint32_t maxMipCount = std::floor(std::log2(size));

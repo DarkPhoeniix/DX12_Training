@@ -21,11 +21,19 @@ namespace rg
         , _workerManager(std::make_unique<mt::PassWorkerManager>(RENDER_THREADS_NUM))
 #else
         , _workerManager(nullptr)
-#endif
-#if ENABLE_PROFILING
-        , _gpuProfiler(nullptr)
-#endif
+#endif // RG_MULTITHREADED
+#if ENABLE_CPU_PROFILING || ENABLE_GPU_PROFILING
+        , _profiler(nullptr)
+#endif // ENABLE_CPU_PROFILING || ENABLE_GPU_PROFILING
     {
+    }
+
+    RenderGraph::~RenderGraph()
+    {
+        if (_workerManager)
+        {
+            _workerManager->Wait();
+        }
     }
 
     void RenderGraph::SetTaskAllocator(ITaskAllocator* allocator)
@@ -40,12 +48,12 @@ namespace rg
 
     void RenderGraph::Reset()
     {
-#if ENABLE_PROFILING
-        if (_gpuProfiler)
+#if ENABLE_CPU_PROFILING || ENABLE_GPU_PROFILING
+        if (profiler)
         {
-            _frameTimerID = _gpuProfiler->RegisterTimer("Frame");
+            _frameTimerID = _profiler->RegisterTimer("Frame");
         }
-#endif
+#endif // ENABLE_CPU_PROFILING || ENABLE_GPU_PROFILING
 
         _context._mapNameToBufferId.clear();
         _context._mapNameToTextureId.clear();
@@ -110,7 +118,7 @@ namespace rg
                 pass->PreExecute(_context, preExecutionTask);
                 pass->Execute(_context, executionTask);
                 pass->PostExecute(_context, postExecutionTask);
-#endif
+#endif // RG_MULTITHREADED
             }
 
             _GPUTasks[passIndex * TASKS_PER_PASS] = preExecutionTask;
@@ -120,7 +128,7 @@ namespace rg
 
 #ifdef RG_MULTITHREADED
         _workerManager->Wait();
-#endif
+#endif // RG_MULTITHREADED
 
         EndFrame();
     }
@@ -130,14 +138,14 @@ namespace rg
         ASSERT(pass, "Trying to add a null render pass to the render graph.");
         _passes.push_back(pass);
 
-#if ENABLE_PROFILING
+#if ENABLE_CPU_PROFILING || ENABLE_GPU_PROFILING
         Profiler::TimerID timerID = Profiler::InvalidTimerID;
-        if (_gpuProfiler)
+        if (_profiler)
         {
-            timerID = _gpuProfiler->RegisterTimer(pass->_name);
+            timerID = _profiler->RegisterTimer(pass->_name);
         }
         pass->_gpuTimerID = timerID;
-#endif
+#endif // ENABLE_CPU_PROFILING || ENABLE_GPU_PROFILING
 
         RenderPassBuilder builder(*this, pass.get());
         _passes.back()->Setup(builder);
@@ -205,18 +213,20 @@ namespace rg
         //    RenderPassType::Copy);
     }
 
-#if ENABLE_PROFILING
-    void RenderGraph::SetGPUProfiler(Profiler* gpuProfiler)
+    void RenderGraph::SetProfiler(Profiler* profiler)
     {
-        _gpuProfiler = gpuProfiler;
-        _context.SetGPUProfiler(gpuProfiler);
+#if ENABLE_CPU_PROFILING || ENABLE_GPU_PROFILING
+        _profiler = profiler;
+        _context.SetProfiler(profiler);
+#else
+        _profiler = nullptr;
+#endif // ENABLE_CPU_PROFILING || ENABLE_GPU_PROFILING
     }
-#endif
 
     void RenderGraph::BeginFrame()
     {
-#if ENABLE_PROFILING
-        if (_gpuProfiler)
+#if ENABLE_CPU_PROFILING || ENABLE_GPU_PROFILING
+        if (_profiler)
         {
             _beginFrameTask = _taskAllocator->AllocateTask(rhi::CommandListType::Graphics);
             _beginFrameTask->SetName("Begin Frame Task");
@@ -226,7 +236,7 @@ namespace rg
 
             commandList->Close();
         }
-#endif
+#endif // ENABLE_CPU_PROFILING || ENABLE_GPU_PROFILING
 
         if (!_transitionedToWorkingState)
         {
@@ -237,8 +247,8 @@ namespace rg
 
     void RenderGraph::EndFrame()
     {
-#if ENABLE_PROFILING
-        if (_gpuProfiler)
+#if ENABLE_CPU_PROFILING || ENABLE_GPU_PROFILING
+        if (_profiler)
         {
             _endFrameTask = _taskAllocator->AllocateTask(rhi::CommandListType::Graphics);
             _endFrameTask->SetName("End Frame Task");
@@ -249,7 +259,7 @@ namespace rg
 
             commandList->Close();
         }
-#endif
+#endif // ENABLE_CPU_PROFILING || ENABLE_GPU_PROFILING
 
         for (std::uint32_t passIndex : _sortedPasses)
         {
@@ -267,8 +277,8 @@ namespace rg
             currentPostTask->AddDependency(currentTask->GetName());
         }
 
-#if ENABLE_PROFILING
-        if (_gpuProfiler)
+#if ENABLE_CPU_PROFILING || ENABLE_GPU_PROFILING
+        if (_profiler)
         {
             ITask* firstTask = _GPUTasks[_sortedPasses.front() * TASKS_PER_PASS];
             ITask* preLastTask = _GPUTasks[(_sortedPasses.back() - 1) * TASKS_PER_PASS + 2];
@@ -277,7 +287,7 @@ namespace rg
             firstTask->AddDependency(_beginFrameTask->GetName());
             _endFrameTask->AddDependency(lastTask->GetName());
         }
-#endif
+#endif // ENABLE_CPU_PROFILING || ENABLE_GPU_PROFILING
     }
 
     void RenderGraph::BuildAdjacencyLists()

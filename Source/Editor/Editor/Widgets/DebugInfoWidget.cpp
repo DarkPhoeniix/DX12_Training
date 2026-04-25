@@ -49,12 +49,13 @@ namespace gui
         if (ImGui::BeginChild("Debug Info", {0,0}, ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY))
         {
             int id = 0;
-#if ENABLE_PROFILING
+#if ENABLE_CPU_PROFILING || ENABLE_GPU_PROFILING
             ImGui::Text("FPS: %i", DebugInfo::GetFPS());
             if (ImGui::TreeNode((void*)id++, "Frame Time: %.03f ms", DebugInfo::GetMsPerFrame()))
             {
-                if (Profiler* profiler = _editor->GetRenderGraph()->GetGPUProfiler())
+                if (Profiler* profiler = _editor->GetRenderGraph()->GetProfiler())
                 {
+#if ENABLE_CPU_PROFILING 
                     const Profiler::Stats& cpuStats = profiler->GetCPUStats();
                     if (ImGui::TreeNode((void*)id++, "CPU Time: %.03f ms", cpuStats.FrameTimeMs))
                     {
@@ -71,7 +72,9 @@ namespace gui
 
                         ImGui::TreePop();
                     }
+#endif // ENABLE_CPU_PROFILING
 
+#if ENABLE_GPU_PROFILING
                     const Profiler::Stats& gpuStats = profiler->GetGPUStats();
                     if (ImGui::TreeNode((void*)id++, "GPU Time: %.03f ms", gpuStats.FrameTimeMs))
                     {
@@ -88,11 +91,12 @@ namespace gui
 
                         ImGui::TreePop();
                     }
+#endif // ENABLE_GPU_PROFILING
                 }
 
                 ImGui::TreePop();
             }
-#endif
+#endif // ENABLE_CPU_PROFILING || ENABLE_GPU_PROFILING
         
             if (ImGui::CollapsingHeader("Pipeline statistics"))
             {

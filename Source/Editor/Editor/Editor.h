@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Window/IWindowEventListener.h"
+#include "Scene/Entity/Components/Camera.h"
 
 #include "RHI/DescriptorHeap.h"
 
@@ -51,9 +52,6 @@ namespace gui
         void SetScene(std::shared_ptr<scene::Scene> scene);
         std::shared_ptr<scene::Scene> GetScene();
 
-        void SetViewport(scene::Viewport* viewport);
-        scene::Viewport* GetViewport();
-
         void SetSelectedEntity(std::shared_ptr<scene::Entity> entity);
         std::shared_ptr<scene::Entity> GetSelectedEntity();
 
@@ -73,7 +71,7 @@ namespace gui
         HWND _windowHandle;
 
         std::shared_ptr<scene::Scene> _scene;
-        scene::Viewport* _activeViewport;
+        scene::Camera* _activeCamera;
         std::shared_ptr<scene::Entity> _selectedEntity;
 
         rg::RenderGraph* _renderGraph;

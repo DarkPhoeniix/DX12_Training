@@ -72,7 +72,7 @@ namespace render
 
 			// Execute
 
-			DirectX::XMUINT2 viewportSize = _camera->GetViewport().GetSize();
+			DirectX::XMUINT2 viewportSize = _camera->GetSize();
 			std::uint32_t xThreadGroups = (std::uint32_t)std::ceilf(viewportSize.x / float(LUM_HISTOGRAM_THREADS_NUM));
 			std::uint32_t yThreadGroups = (std::uint32_t)std::ceilf(viewportSize.y / float(LUM_HISTOGRAM_THREADS_NUM));
 			commandList->Dispatch(xThreadGroups, yThreadGroups);

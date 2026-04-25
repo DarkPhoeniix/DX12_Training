@@ -4,7 +4,6 @@
 
 #include "Core/DescriptorHeapManager.h"
 #include "Scene/Scene.h"
-#include "Scene/Entity/Components/Camera.h"
 #include "Widgets/DebugInfoWidget.h"
 #include "Widgets/SceneTreeWidget.h"
 #include "Widgets/EntityComponentsWidget.h"
@@ -163,8 +162,7 @@ namespace gui
     {
         _scene = scene;
         std::shared_ptr<scene::Entity> activeCamera = scene->FindNodeByComponentName("Camera");
-        std::shared_ptr<scene::Camera> cameraComponent = activeCamera->GetComponentAs<scene::Camera>("Camera");
-        _activeViewport = &cameraComponent->GetViewport();
+        _activeCamera = activeCamera->GetComponentAs<scene::Camera>("Camera").get();
 
         CreateWidgets();
     }
@@ -194,8 +192,7 @@ namespace gui
 
     void Editor::AddGUIRenderPass()
     {
-        // TODO: return it back later
-        _renderGraph->AddPass(std::make_shared<render::GUIPass>(_device, GetPtr()));
+        _renderGraph->AddPass(std::make_shared<render::GUIPass>(_device, this, _activeCamera));
         _renderGraph->Compile();
     }
 
@@ -209,11 +206,7 @@ namespace gui
 
     void Editor::Update()
     {
-        std::shared_ptr<scene::Entity> activeCamera = _scene->FindNodeByComponentName("Camera");
-        std::shared_ptr<scene::Camera> cameraComponent = activeCamera->GetComponentAs<scene::Camera>("Camera");
-        scene::Viewport viewport = cameraComponent->GetViewport();
-
-        DirectX::XMUINT2 viewportSize = viewport.GetSize();
+        DirectX::XMUINT2 viewportSize = _activeCamera->GetSize();
 
         float positionX = (float)(viewportSize.x - (viewportSize.x * 0.2f));
         float positionY = 0.0f;
@@ -295,16 +288,6 @@ namespace gui
     std::shared_ptr<scene::Scene> Editor::GetScene()
     {
         return _scene;
-    }
-
-    void Editor::SetViewport(scene::Viewport* viewport)
-    {
-        _activeViewport = viewport;
-    }
-
-    scene::Viewport* Editor::GetViewport()
-    {
-        return _activeViewport;
     }
 
     void Editor::SetSelectedEntity(std::shared_ptr<scene::Entity> entity)

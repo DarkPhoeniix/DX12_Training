@@ -35,7 +35,7 @@ namespace render
 			rhi::CPUDescriptor targetHandle = context.GetDescriptor(_data.Target, rhi::ResourceViewType::RTV);
 			rhi::CPUDescriptor depthHandle = context.GetDescriptor(_data.Depth, rhi::ResourceViewType::DSV);
 
-			commandList->SetViewport(_camera->GetViewport().GetNativeViewport(), _camera->GetViewport().GetScissorRectangle());
+			commandList->SetViewport(_camera->GetViewport(), _camera->GetScissorRectangle());
 			commandList->SetRenderTarget(&targetHandle, &depthHandle);
 
 			auto lights = _scene->FilterNodesByComponent("Light");

@@ -23,12 +23,12 @@ namespace rhi
         case BackendAPI::D3D12:
             device = std::make_unique<d3d12::D3D12Device>();
             break;
-#endif
+#endif // USE_D3D12
 #if USE_VULKAN
         case BackendAPI::Vulkan:
             device = std::make_unique<vk::VkDevice>();
             break;
-#endif
+#endif // USE_VULKAN
         default:
             LOG_CRITICAL("Unsupported backend API!");
             break;

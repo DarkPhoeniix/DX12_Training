@@ -11,75 +11,6 @@ namespace
 
 namespace scene
 {
-    Viewport::Viewport()
-        : _viewport()
-        , _scissorRectangle(0, 0, LONG_MAX, LONG_MAX)
-        , _aspectRatio(0.0f)
-    {
-    }
-
-    Viewport::Viewport(std::uint32_t width, std::uint32_t height)
-        : _viewport(0.0f, 0.0f, width, height)
-        , _scissorRectangle(0, 0, LONG_MAX, LONG_MAX)
-        , _aspectRatio(width / (float)height)
-    {
-    }
-
-    Viewport::Viewport(const rhi::Viewport& DXViewport)
-        : _viewport(DXViewport)
-        , _scissorRectangle(0, 0, LONG_MAX, LONG_MAX)
-        , _aspectRatio(DXViewport.Width / DXViewport.Height)
-    {
-    }
-
-    rhi::Viewport Viewport::GetNativeViewport() const
-    {
-        return _viewport;
-    }
-
-    float Viewport::GetAspectRatio() const
-    {
-        return _aspectRatio;
-    }
-
-    void Viewport::SetSize(std::uint32_t width, std::uint32_t height)
-    {
-        _viewport.Width = (float)width;
-        _viewport.Height = (float)height;
-        _aspectRatio = (width / (float)height);
-    }
-
-    DirectX::XMUINT2 Viewport::GetSize() const
-    {
-        return { (UINT)_viewport.Width, (UINT)_viewport.Height };
-    }
-
-    void Viewport::SetDepth(const DirectX::XMFLOAT2& depth)
-    {
-        _viewport.MinDepth = depth.x;
-        _viewport.MaxDepth = depth.y;
-    }
-
-    DirectX::XMFLOAT2 Viewport::GetDepth() const
-    {
-        return { _viewport.MinDepth, _viewport.MaxDepth };
-    }
-
-    void Viewport::SetScissorRectangle(const rhi::ScissorRect& rect)
-    {
-        _scissorRectangle = rect;
-    }
-
-    rhi::ScissorRect& Viewport::GetScissorRectangle()
-    {
-        return _scissorRectangle;
-    }
-
-    const rhi::ScissorRect& Viewport::GetScissorRectangle() const
-    {
-        return _scissorRectangle;
-    }
-
     Camera::Camera()
         : IComponent("Camera")
         , _view(XMMatrixIdentity())
@@ -87,10 +18,30 @@ namespace scene
         , _viewProjection(XMMatrixIdentity())
         , _position(XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f))
         , _up(XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f))
-        , _viewport(1, 1)
         , Speed(100.0f)
+        , NearZ(0.1f)
+        , FarZ(1.0f)
+        , FoV(1.0f)
+        , _viewport(1, 1)
+        , _scissorRectangle(0, 0, LONG_MAX, LONG_MAX)
+        , _aspectRatio(1.0f)
     {
-        _UpdateFrustum();
+        Update();
+    }
+
+    Camera::Camera(std::uint32_t width, std::uint32_t height)
+        : IComponent("Camera")
+        , _view(XMMatrixIdentity())
+        , _projection(XMMatrixIdentity())
+        , _viewProjection(XMMatrixIdentity())
+        , _position(XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f))
+        , _up(XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f))
+        , Speed(100.0f)
+        , _viewport(width, height)
+        , _scissorRectangle(0, 0, LONG_MAX, LONG_MAX)
+        , _aspectRatio(width / (float)height)
+    {
+        Update();
     }
 
     void Camera::Update()
@@ -193,16 +144,11 @@ namespace scene
         return _frustum;
     }
 
-    void Camera::SetViewport(const Viewport& viewport)
+    void Camera::SetViewport(const rhi::Viewport& viewport)
     {
         _viewport = viewport;
 
         _BuildProjection();
-    }
-
-    Viewport& Camera::GetViewport()
-    {
-        return _viewport;
     }
 
     void Camera::SetLens(float fov, float nearZ, float farZ)
@@ -214,6 +160,102 @@ namespace scene
         _BuildProjection();
     }
 
+    void Camera::SetFoV(float fov)
+    {
+        FoV = fov;
+
+        _BuildProjection();
+    }
+
+    float Camera::GetFoV() const
+    {
+        return FoV;
+    }
+
+    void Camera::SetNearZ(float nearZ)
+    {
+        NearZ = nearZ;
+
+        _BuildProjection();
+    }
+
+    float Camera::GetNearZ() const
+    {
+        return NearZ;
+    }
+
+    void Camera::SetFarZ(float farZ)
+    {
+        FarZ = farZ;
+
+        _BuildProjection();
+    }
+
+    float Camera::GetFarZ() const
+    {
+        return FarZ;
+    }
+
+    void Camera::SetSpeed(float speed)
+    {
+        Speed = speed;
+    }
+
+    float Camera::GetSpeed() const
+    {
+        return Speed;
+    }
+
+    rhi::Viewport Camera::GetViewport() const
+    {
+        return _viewport;
+    }
+
+    float Camera::GetAspectRatio() const
+    {
+        return _aspectRatio;
+    }
+
+    void Camera::SetSize(std::uint32_t width, std::uint32_t height)
+    {
+        _viewport.Width = (float)width;
+        _viewport.Height = (float)height;
+        _aspectRatio = (width / (float)height);
+
+        _BuildProjection();
+    }
+
+    DirectX::XMUINT2 Camera::GetSize() const
+    {
+        return { (UINT)_viewport.Width, (UINT)_viewport.Height };
+    }
+
+    void Camera::SetDepth(const DirectX::XMFLOAT2& depth)
+    {
+        _viewport.MinDepth = depth.x;
+        _viewport.MaxDepth = depth.y;
+    }
+
+    DirectX::XMFLOAT2 Camera::GetDepth() const
+    {
+        return { _viewport.MinDepth, _viewport.MaxDepth };
+    }
+
+    void Camera::SetScissorRectangle(const rhi::ScissorRect& rect)
+    {
+        _scissorRectangle = rect;
+    }
+
+    rhi::ScissorRect& Camera::GetScissorRectangle()
+    {
+        return _scissorRectangle;
+    }
+
+    const rhi::ScissorRect& Camera::GetScissorRectangle() const
+    {
+        return _scissorRectangle;
+    }
+
     void Camera::_BuildView()
     {
         _view = XMMatrixLookAtLH(_position, _target, _up);
@@ -223,7 +265,7 @@ namespace scene
 
     void Camera::_BuildProjection()
     {
-        _projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(FoV), _viewport.GetAspectRatio(), NearZ, FarZ);
+        _projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(FoV), _aspectRatio, NearZ, FarZ);
         _UpdateFrustum();
     }
 

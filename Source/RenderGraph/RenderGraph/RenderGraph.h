@@ -18,7 +18,7 @@ namespace rg
         RenderGraph(rhi::Device* device, IDescriptorProvider* decriptorProvider);
         RenderGraph(const RenderGraph&) = delete;
         RenderGraph(RenderGraph&&) = default;
-        ~RenderGraph() = default;
+        ~RenderGraph();
 
         RenderGraph& operator=(const RenderGraph&) = delete;
         RenderGraph& operator=(RenderGraph&&) = default;
@@ -43,10 +43,8 @@ namespace rg
         void ExportResource(const std::string& name, std::shared_ptr<rhi::Texture> desctination);
         void ExportResource(const std::string& name, std::shared_ptr<rhi::Buffer> desctination);
 
-#if ENABLE_PROFILING
-        void SetGPUProfiler(Profiler* gpuProfiler);
-        Profiler* GetGPUProfiler() const { return _gpuProfiler; }
-#endif
+        void SetProfiler(Profiler* profiler);
+        Profiler* GetProfiler() const { return _profiler; }
 
     private:
         friend class RenderPassBuilder;
@@ -63,13 +61,11 @@ namespace rg
         std::vector<std::uint32_t> _sortedPasses;
         std::vector<ITask*> _GPUTasks;
 
-#if ENABLE_PROFILING
-        Profiler* _gpuProfiler;
+        Profiler* _profiler;
 
         ITask* _beginFrameTask;
         ITask* _endFrameTask;
         Profiler::TimerID _frameTimerID;
-#endif // ENABLE_PROFILING
 
         bool _transitionedToWorkingState = false;
 

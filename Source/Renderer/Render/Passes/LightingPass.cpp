@@ -67,7 +67,7 @@ namespace render
             commandList->SetComputeCBV(0, context.GetFrameBuffer()->GetVirtualAddress());
             commandList->SetComputeConstants(1, 5, &passCB);
 
-            DirectX::XMUINT2 viewportSize = _camera->GetViewport().GetSize();
+            DirectX::XMUINT2 viewportSize = _camera->GetSize();
             int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 8.0f);
             int yThreadGroups = (uint32_t)std::ceilf(viewportSize.y / 8.0f);
 

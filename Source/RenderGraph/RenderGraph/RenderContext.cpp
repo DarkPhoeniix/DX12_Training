@@ -69,12 +69,12 @@ namespace rg
         return _frameBuffer;
     }
 
-    void RenderContext::SetGPUProfiler(Profiler* gpuProfiler)
+    void RenderContext::SetProfiler(Profiler* gpuProfiler)
     {
         _gpuProfiler = gpuProfiler;
     }
 
-    Profiler* RenderContext::GetGPUProfiler() const
+    Profiler* RenderContext::GetProfiler() const
     {
         return _gpuProfiler;
     }

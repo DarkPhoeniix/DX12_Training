@@ -32,7 +32,7 @@ namespace render
 
 			commandList->SetGraphicsPipelineState(_debugRoughnessViewPipeline.get());
 
-			commandList->SetViewport(_camera->GetViewport().GetNativeViewport(), _camera->GetViewport().GetScissorRectangle());
+			commandList->SetViewport(_camera->GetViewport(), _camera->GetScissorRectangle());
 			commandList->SetRenderTarget(&targetHandle, nullptr);
 
 			commandList->SetPrimitiveTopology(rhi::PrimitiveTopology::TriangleList);

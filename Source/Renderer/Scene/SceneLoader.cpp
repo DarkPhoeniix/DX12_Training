@@ -564,7 +564,7 @@ namespace scene::helpers
 
         component->LookAt(ParseVector(cameraData["Position"].asString()), ParseVector(cameraData["Target"].asString()), DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
         component->SetLens(cameraData["FOV"].asFloat(), cameraData["NearZ"].asFloat(), cameraData["FarZ"].asFloat());
-        component->Speed = cameraData["Speed"].asFloat();
+        component->SetSpeed(cameraData["Speed"].asFloat());
     }
 
     void SceneLoader::LoadComponent(const std::string& filepath, Json::Value& jsonValue, std::shared_ptr<Transformation> component)

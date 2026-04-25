@@ -7,7 +7,7 @@
 #else
 #include "NullCrashTracker/NullCommandListCrashContext.h"
 #include "NullCrashTracker/NullCrashTracker.h"
-#endif
+#endif // USE_NSIGHT_AFTERMATH
 
 #include <cassert>
 
@@ -39,7 +39,7 @@ namespace tracking
         return std::make_unique<NsightAftermathCommandListContext>(this);
 #else
         return std::make_unique<NullCommandListCrashContext>();
-#endif
+#endif // USE_NSIGHT_AFTERMATH
     }
 
     std::unique_ptr<IGPUCrashTracker> IGPUCrashTracker::Create()
@@ -48,6 +48,6 @@ namespace tracking
         return std::make_unique<NsightAftermathGpuCrashTracker>();
 #else
         return std::make_unique<NullCrashTracker>();
-#endif
+#endif // USE_NSIGHT_AFTERMATH
     }
 } // namespace tracking

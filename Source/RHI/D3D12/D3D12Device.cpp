@@ -25,6 +25,8 @@
 #include "DescriptorHeap.h"
 #include "SwapChain.h"
 
+#include <dxgidebug.h>
+
 namespace rhi::d3d12
 {
     namespace
@@ -45,6 +47,20 @@ namespace rhi::d3d12
 
             LOG_INFO("DirectX 12 debug layer enabled.");
         }
+
+        void ReportLiveObjects()
+        {
+            IDXGIDebug* dxgiDebug;
+            HRESULT result = DXGIGetDebugInterface1(0, IID_PPV_ARGS(&dxgiDebug));
+            CHECK(result, "Failed to get DXGI debug interface.");
+            
+            if (SUCCEEDED(result))
+            {
+                dxgiDebug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_FLAGS(DXGI_DEBUG_RLO_DETAIL | DXGI_DEBUG_RLO_IGNORE_INTERNAL));
+            }
+
+            dxgiDebug->Release();
+        }
     } // namespace unnamed
 
     D3D12Device::D3D12Device()
@@ -59,6 +75,10 @@ namespace rhi::d3d12
         CreateQueues();
 
         CheckFeatureSupport();
+
+#if ENABLE_DEVICE_DEBUG
+        std::atexit(ReportLiveObjects);
+#endif // ENABLE_DEVICE_DEBUG
 
         LOG_INFO("DX12 device initialized.");
     }

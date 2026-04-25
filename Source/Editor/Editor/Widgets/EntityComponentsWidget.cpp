@@ -176,21 +176,25 @@ namespace gui
                 camera->Update();
             }
 
-            if (ImGui::DragFloat("Field of view", &camera->FoV, 0.1f, 5.0f, 150.0f))
+            float FOV = camera->GetFoV();
+            float nearZ = camera->GetNearZ();
+            float farZ = camera->GetFarZ();
+            float speed = camera->GetSpeed();
+            if (ImGui::DragFloat("Field of view", &FOV, 0.1f, 5.0f, 150.0f))
             {
-                camera->Update();
+                camera->SetFoV(FOV);
             }
-            if (ImGui::DragFloat("Near Z", &camera->NearZ, 0.1f, 0.01f, 100.0f))
+            if (ImGui::DragFloat("Near Z", &nearZ, 0.1f, 0.01f, 100.0f))
             {
-                camera->Update();
+                camera->SetNearZ(nearZ);
             }
-            if (ImGui::DragFloat("Far Z", &camera->FarZ, 0.1f, 0.1f, 10000.0f))
+            if (ImGui::DragFloat("Far Z", &farZ, 0.1f, 0.1f, 10000.0f))
             {
-                camera->Update();
+                camera->SetFarZ(farZ);
             }
-            if (ImGui::DragFloat("Speed", &camera->Speed, 0.01f, 0.01f, 100.0f))
+            if (ImGui::DragFloat("Speed", &speed, 0.01f, 0.01f, 100.0f))
             {
-                camera->Update();
+                camera->SetSpeed(speed);
             }
         }
     }

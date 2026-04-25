@@ -21,7 +21,7 @@ file(GLOB_RECURSE GPUCrashTracker_D3D12_SOURCES CONFIGURE_DEPENDS
     ${CMAKE_CURRENT_SOURCE_DIR}/D3D12CrashTracker/*.inl
 )
 
-if (USE_D3D12)
+if (USE_D3D12 AND ENABLE_NSIGHT_AFTERMATH)
     target_sources(GPUCrashTracker PRIVATE ${GPUCrashTracker_COMMON_SOURCES} ${GPUCrashTracker_D3D12_SOURCES})
 else()
     target_sources(GPUCrashTracker PRIVATE ${GPUCrashTracker_COMMON_SOURCES})

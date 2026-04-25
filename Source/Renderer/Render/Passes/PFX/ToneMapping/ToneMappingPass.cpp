@@ -40,8 +40,8 @@ namespace render
 	{
 		rhi::TextureDescription targetDesc =
 		{
-			.Width = _camera->GetViewport().GetSize().x,
-			.Height = _camera->GetViewport().GetSize().y,
+			.Width = _camera->GetSize().x,
+			.Height = _camera->GetSize().y,
 			.Format = rhi::Format::R8G8B8A8_UNORM,
 			.Dimension = rhi::TextureDimension::Texture2D,
 			.Flags = rhi::ResourceFlags::AllowRenderTarget | rhi::ResourceFlags::AllowUnorderedAccess
@@ -81,7 +81,7 @@ namespace render
 
 			// Execute
 
-			DirectX::XMUINT2 viewportSize = _camera->GetViewport().GetSize();
+			DirectX::XMUINT2 viewportSize = _camera->GetSize();
 			std::uint32_t xThreadGroups = (std::uint32_t)std::ceilf(viewportSize.x / float(TONE_MAPPING_THREADS_NUM));
 			std::uint32_t yThreadGroups = (std::uint32_t)std::ceilf(viewportSize.y / float(TONE_MAPPING_THREADS_NUM));
 
