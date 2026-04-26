@@ -28,7 +28,7 @@ namespace render
 		{
             GPU_SCOPED_EVENT(commandList, "Debug View Pass - Normal", 9);
 
-			rhi::CPUDescriptor targetHandle = context.GetDescriptor(_data.NormalRoughness, rhi::ResourceViewType::RTV);
+			rhi::CPUDescriptor targetHandle = context.GetDescriptor(_data.Target, rhi::ResourceViewType::RTV);
 
 			commandList->SetGraphicsPipelineState(_debugNormalViewPipeline.get());
 

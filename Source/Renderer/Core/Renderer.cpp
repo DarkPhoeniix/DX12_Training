@@ -924,10 +924,10 @@ namespace render
                 _renderGraph->AddPass(std::make_shared<DebugEmissiveViewPass>(_device, _scene, _cameraComponent.get()));
             }
 
-                struct PresentPassData
-                {
-                    rg::RGTextureCopySrcId RenderTarget;
-                };
+            struct PresentPassData
+            {
+                rg::RGTextureCopySrcId RenderTarget;
+            };
             static PresentPassData presentPassData;
 
             _renderGraph->AddPass<PresentPassData>(_device, "present_pass",

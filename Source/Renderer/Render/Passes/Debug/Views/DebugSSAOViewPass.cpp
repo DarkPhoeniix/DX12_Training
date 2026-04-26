@@ -28,7 +28,7 @@ namespace render
 		{
             GPU_SCOPED_EVENT(commandList, "Debug View Pass - SSAO", 9);
 
-			rhi::CPUDescriptor targetHandle = context.GetDescriptor(_data.SSAOTexture, rhi::ResourceViewType::RTV);
+			rhi::CPUDescriptor targetHandle = context.GetDescriptor(_data.Target, rhi::ResourceViewType::RTV);
 
 			commandList->SetGraphicsPipelineState(_debugSSAOViewPipeline.get());
 

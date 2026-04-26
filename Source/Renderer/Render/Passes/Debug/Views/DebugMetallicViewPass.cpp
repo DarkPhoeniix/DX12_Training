@@ -28,7 +28,7 @@ namespace render
 		{
 			GPU_SCOPED_EVENT(commandList, "Debug View Pass - Metallic", 9);
 
-			rhi::CPUDescriptor targetHandle = context.GetDescriptor(_data.AlbedoMetallic, rhi::ResourceViewType::RTV);
+			rhi::CPUDescriptor targetHandle = context.GetDescriptor(_data.Target, rhi::ResourceViewType::RTV);
 
 			commandList->SetGraphicsPipelineState(_debugMetallicViewPipeline.get());
 
