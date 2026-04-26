@@ -1,12 +1,14 @@
 #pragma once
 
 #include "Window/IWindowEventListener.h"
-#include "DescriptorHeap.h"
+#include "Scene/Entity/Components/Camera.h"
 
-namespace dx12
+#include "RHI/DescriptorHeap.h"
+
+namespace rhi
 {
     class CommandList;
-} // namespace dx12
+} // namespace rhi
 
 namespace scene
 {
@@ -18,7 +20,7 @@ namespace scene
 namespace rg
 {
     class RenderGraph;
-}
+} // namespace rg
 
 LRESULT GUI_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -31,7 +33,7 @@ namespace gui
     class Editor : public core::events::IWindowEventListener, public std::enable_shared_from_this<Editor>
     {
     public:
-        Editor(HWND windowHandle);
+        Editor(rhi::Device* device, HWND windowHandle);
         Editor(const Editor& copy) = delete;
         Editor operator=(const Editor& copy) = delete;
         ~Editor() = default;
@@ -45,13 +47,10 @@ namespace gui
 
         void NewFrame();
         void Update();
-        void Render(dx12::CommandList& commandList);
+        void Render(rhi::CommandList* commandList);
 
         void SetScene(std::shared_ptr<scene::Scene> scene);
         std::shared_ptr<scene::Scene> GetScene();
-
-        void SetViewport(scene::Viewport* viewport);
-        scene::Viewport* GetViewport();
 
         void SetSelectedEntity(std::shared_ptr<scene::Entity> entity);
         std::shared_ptr<scene::Entity> GetSelectedEntity();
@@ -72,7 +71,7 @@ namespace gui
         HWND _windowHandle;
 
         std::shared_ptr<scene::Scene> _scene;
-        scene::Viewport* _activeViewport;
+        scene::Camera* _activeCamera;
         std::shared_ptr<scene::Entity> _selectedEntity;
 
         rg::RenderGraph* _renderGraph;
@@ -81,7 +80,9 @@ namespace gui
         std::shared_ptr<DebugInfoWidget> _debugInfoWidget;
         std::shared_ptr<EntityComponentsWidget> _entityComponentsWidget;
 
-        dx12::DescriptorHeap _descriptorHeap;
+        std::unique_ptr<rhi::DescriptorHeap> _descriptorHeap;
+
+        rhi::Device* _device;
 
         WCHAR _filepath[2048];
     };

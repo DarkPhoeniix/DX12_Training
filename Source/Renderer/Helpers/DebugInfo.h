@@ -7,12 +7,12 @@ namespace core::events
 {
     class UpdateEvent;
     class RenderEvent;
-}
+} // namespace core::events
 
 class DebugInfo
 {
 public:
-    static void Init();
+    static void Init(rhi::Device* device);
     static void Destroy();
 
     static void BeginUpdate(core::events::UpdateEvent& updateEvent);
@@ -21,22 +21,22 @@ public:
     static void BeginRender(core::events::RenderEvent& renderEvent);
     static void EndRender();
 
-    static void StartStatCollecting(dx12::CommandList& commandList);
-    static void EndStatCollecting(dx12::CommandList& commandList);
+    static void StartStatCollecting(rhi::CommandList* commandList);
+    static void EndStatCollecting(rhi::CommandList* commandList);
 
-    static const D3D12_QUERY_DATA_PIPELINE_STATISTICS& GetPipelineStatisctics();
+    static const rhi::PipelineStatistics& GetPipelineStatisctics();
     static UINT GetFPS();
     static double GetMsPerFrame();
     static double GetUpdateCPUTime();
     static double GetRenderCPUTime();
 
 private:
-    DebugInfo();
+    DebugInfo(rhi::Device* device);
     ~DebugInfo();
 
     static DebugInfo& Instance();
 
-    dx12::StatisticsQuery _statisticsQuery;
+    std::unique_ptr<rhi::StatisticsQuery> _statisticsQuery;
 
     HighResolutionClock _frameTimer;
     std::uint32_t _fps;

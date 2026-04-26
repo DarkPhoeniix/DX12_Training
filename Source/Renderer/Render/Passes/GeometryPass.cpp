@@ -19,76 +19,57 @@ namespace
 
 namespace render
 {
-	GeometryPass::GeometryPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-		: RenderPass<GeometryPassData>("geometry_pass", rg::RenderPassType::Graphics)
+	GeometryPass::GeometryPass(rhi::Device* device, std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
+		: RenderPass<GeometryPassData>(device, "geometry_pass", rg::RenderPassType::Graphics)
 		, _scene(scene)
 		, _camera(camera)
 	{
-		_geometryPipeline.Parse("PipelineDescriptions\\GPassPipeline.tech");
+		_geometryPipeline = _device->CreatePipelineState("PipelineDescriptions\\GPassPipeline.tech");
 	}
 
 	void GeometryPass::Setup(rg::RenderPassBuilder& builder)
 	{
-		dx12::ResourceDescription depthDesc;
+		rhi::TextureDescription depthDesc =
 		{
-			D3D12_CLEAR_VALUE clearValue;
-			clearValue.Format = DXGI_FORMAT_D32_FLOAT;
-			clearValue.DepthStencil.Depth = 1;
-			clearValue.DepthStencil.Stencil = 0;
-
-			depthDesc.SetSize(_camera->GetViewport().GetSize());
-			depthDesc.SetFormat(DXGI_FORMAT_D32_FLOAT);
-			depthDesc.SetClearValue(clearValue);
-			depthDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::DepthStencil);
-		}
+			.Width = _camera->GetSize().x,
+			.Height = _camera->GetSize().y,
+			.ClearValue = { .DepthStencil = { 1.0f, 0 } },
+			.Format = rhi::Format::D32_FLOAT,
+			.Dimension = rhi::TextureDimension::Texture2D,
+			.Flags = rhi::ResourceFlags::AllowDepthStencil
+		};
         builder.DeclareTexture("depth_target", depthDesc);
 
-		dx12::ResourceDescription albedoMetallicDesc;
+		rhi::TextureDescription albedoMetallicDesc =
 		{
-			D3D12_CLEAR_VALUE clearValue;
-			clearValue.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-			clearValue.Color[0] = 0.0f;
-			clearValue.Color[1] = 0.0f;
-			clearValue.Color[2] = 0.0f;
-			clearValue.Color[3] = 1.0f;
-
-			albedoMetallicDesc.SetSize(_camera->GetViewport().GetSize());
-			albedoMetallicDesc.SetFormat(DXGI_FORMAT_R8G8B8A8_UNORM);
-			albedoMetallicDesc.SetClearValue(clearValue);
-			albedoMetallicDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::RenderTarget);
-		}
+			.Width = _camera->GetSize().x,
+			.Height = _camera->GetSize().y,
+			.ClearValue = { .Color = { 0.0f, 0.0f, 0.0f, 1.0f } },
+			.Format = rhi::Format::R8G8B8A8_UNORM,
+			.Dimension = rhi::TextureDimension::Texture2D,
+			.Flags = rhi::ResourceFlags::AllowRenderTarget
+		};
         builder.DeclareTexture("albedo_metallic_target", albedoMetallicDesc);
 
-		dx12::ResourceDescription normalRoughnessDesc;
+		rhi::TextureDescription normalRoughnessDesc =
 		{
-			D3D12_CLEAR_VALUE clearValue;
-			clearValue.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-			clearValue.Color[0] = 0.0f;
-			clearValue.Color[1] = 0.0f;
-			clearValue.Color[2] = 0.0f;
-			clearValue.Color[3] = 0.0f;
-
-			normalRoughnessDesc.SetSize(_camera->GetViewport().GetSize());
-			normalRoughnessDesc.SetFormat(DXGI_FORMAT_R32G32B32A32_FLOAT);
-			normalRoughnessDesc.SetClearValue(clearValue);
-			normalRoughnessDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::RenderTarget);
-		}
+			.Width = _camera->GetSize().x,
+			.Height = _camera->GetSize().y,
+			.Format = rhi::Format::R32G32B32A32_FLOAT,
+			.Dimension = rhi::TextureDimension::Texture2D,
+			.Flags = rhi::ResourceFlags::AllowRenderTarget
+		};
         builder.DeclareTexture("normal_roughness_target", normalRoughnessDesc);
 
-		dx12::ResourceDescription emissionDesc;
+		rhi::TextureDescription emissionDesc =
 		{
-			D3D12_CLEAR_VALUE clearValue;
-			clearValue.Format = DXGI_FORMAT_R11G11B10_FLOAT;
-			clearValue.Color[0] = 0.0f;
-			clearValue.Color[1] = 0.0f;
-			clearValue.Color[2] = 0.0f;
-			clearValue.Color[3] = 1.0f;
-
-			emissionDesc.SetSize(_camera->GetViewport().GetSize());
-			emissionDesc.SetFormat(DXGI_FORMAT_R11G11B10_FLOAT);
-			emissionDesc.SetClearValue(clearValue);
-			emissionDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::RenderTarget);
-		}
+			.Width = _camera->GetSize().x,
+			.Height = _camera->GetSize().y,
+			.ClearValue = { .Color = { 0.0f, 0.0f, 0.0f, 1.0f } },
+			.Format = rhi::Format::R11G11B10_FLOAT,
+			.Dimension = rhi::TextureDimension::Texture2D,
+			.Flags = rhi::ResourceFlags::AllowRenderTarget
+		};
         builder.DeclareTexture("emission_target", emissionDesc);
 
         _data.AlbedoMetallic = builder.RenderTarget("albedo_metallic_target");
@@ -97,23 +78,19 @@ namespace render
         _data.Depth = builder.DepthStencilWrite("depth_target");
 	}
 
-	void GeometryPass::Execute(rg::RenderContext& context, TaskGPU& task)
+	void GeometryPass::Execute(rg::RenderContext& context, rg::ITask* task)
 	{
-		dx12::CommandList& commandList = *task.GetCommandLists().front();
-		commandList.SetName("geometry_pass_cmd_list");
+		rhi::CommandList* commandList = task->GetCommandList();
 
 		{
-			PIXScopedEvent(commandList.GetDXCommandList().Get(), 0, "Geometry Pass");
+			GPU_SCOPED_EVENT(commandList, "Geometry Pass", 0);
 
             // Prepare all targets and pipeline state
             _SetupPipelineState(context, commandList);
 
-#if ENABLE_PROFILING
+#if ENABLE_GPU_PROFILING
             DebugInfo::StartStatCollecting(commandList);	// Start collecting pipeline statistics (primitive counts, etc.)
-#endif
-
-            // Set frame constant buffer
-			commandList.SetCBV(0, context.GetFrame()->GetBuffer()->OffsetGPU());
+#endif // ENABLE_GPU_PROFILING
 
             // Filter all mesh entities
 			std::vector<std::shared_ptr<scene::Entity>> entities = _scene->FilterNodesByComponent("Mesh");
@@ -125,39 +102,34 @@ namespace render
             // Issue draw calls for all selected entities
             _PopulateDrawCommands(commandList, entities);
 
-#if ENABLE_PROFILING
+#if ENABLE_GPU_PROFILING
 			DebugInfo::EndStatCollecting(commandList);
-#endif
+#endif // ENABLE_GPU_PROFILING
 		}
 
-		commandList.Close();
+		commandList->Close();
 	}
 
-	void GeometryPass::_SetupPipelineState(rg::RenderContext& context, dx12::CommandList& commandList)
+	void GeometryPass::_SetupPipelineState(rg::RenderContext& context, rhi::CommandList* commandList)
 	{
-		std::shared_ptr<dx12::Resource> albedoMetallic = context.GetResource(_data.AlbedoMetallic);
-		std::shared_ptr<dx12::Resource> emission = context.GetResource(_data.Emission);
-		std::shared_ptr<dx12::Resource> normalRoughness = context.GetResource(_data.NormalRoughness);
-		std::shared_ptr<dx12::Resource> depth = context.GetResource(_data.Depth);
+		rhi::CPUDescriptor albedoMetallicHandle = context.GetDescriptor(_data.AlbedoMetallic, rhi::ResourceViewType::RTV);
+		rhi::CPUDescriptor normalRoughnessHandle = context.GetDescriptor(_data.NormalRoughness, rhi::ResourceViewType::RTV);
+		rhi::CPUDescriptor emissionHandle = context.GetDescriptor(_data.Emission, rhi::ResourceViewType::RTV);
+		rhi::CPUDescriptor depthHandle = context.GetDescriptor(_data.Depth, rhi::ResourceViewType::DSV);
 
-		DescriptorHandle albedoMetallicHandle = context.GetStaticResourceHandle(albedoMetallic->GetAsRTV());
-		DescriptorHandle emissionHandle = context.GetStaticResourceHandle(emission->GetAsRTV());
-		DescriptorHandle normalRoughnessHandle = context.GetStaticResourceHandle(normalRoughness->GetAsRTV());
-		DescriptorHandle depthHandle = context.GetStaticResourceHandle(depth->GetAsDSV());
-
-		commandList.ClearDSV(depthHandle.CpuHandle, D3D12_CLEAR_FLAG_DEPTH);
+		commandList->ClearDSV(depthHandle);
 		float color[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-		commandList.ClearRTV(albedoMetallicHandle.CpuHandle, color, &_camera->GetViewport().GetScissorRectangle());
-		commandList.ClearRTV(emissionHandle.CpuHandle, color, &_camera->GetViewport().GetScissorRectangle());
+		commandList->ClearRTV(albedoMetallicHandle, color, &_camera->GetScissorRectangle());
+		commandList->ClearRTV(emissionHandle, color, &_camera->GetScissorRectangle());
 		color[3] = 0.0f;
-		commandList.ClearRTV(normalRoughnessHandle.CpuHandle, color, &_camera->GetViewport().GetScissorRectangle());
+		commandList->ClearRTV(normalRoughnessHandle, color, &_camera->GetScissorRectangle());
 
-		context.BindBindlessTable(commandList);
+		commandList->SetGraphicsPipelineState(_geometryPipeline.get());
 
-		commandList.SetPipelineState(_geometryPipeline);
+		commandList->SetViewport(_camera->GetViewport(), _camera->GetScissorRectangle());
+		commandList->SetRenderTargets({ albedoMetallicHandle, normalRoughnessHandle, emissionHandle }, &depthHandle);
 
-		commandList.SetViewport(_camera->GetViewport().GetDXViewport(), _camera->GetViewport().GetScissorRectangle());
-		commandList.SetRenderTargets({ albedoMetallicHandle.CpuHandle, normalRoughnessHandle.CpuHandle, emissionHandle.CpuHandle }, &depthHandle.CpuHandle);
+		commandList->SetGraphicsCBV(0, context.GetFrameBuffer()->GetVirtualAddress());
 	}
 
 	void GeometryPass::_CullPassEntities(std::vector<std::shared_ptr<scene::Entity>>& entities)
@@ -178,9 +150,9 @@ namespace render
         entities.erase(it, entities.end());
 	}
 
-	void GeometryPass::_PopulateDrawCommands(dx12::CommandList& commandList, const std::vector<std::shared_ptr<scene::Entity>>& entities)
+	void GeometryPass::_PopulateDrawCommands(rhi::CommandList* commandList, const std::vector<std::shared_ptr<scene::Entity>>& entities)
 	{
-		auto DrawMeshEntity = [&](dx12::CommandList& commandList, std::uint32_t instanceIndex)
+		auto DrawMeshEntity = [&](rhi::CommandList* commandList, std::uint32_t instanceIndex)
 			{
                 std::shared_ptr<scene::Entity> entity = entities[instanceIndex];
 				if (std::shared_ptr<scene::Mesh> mesh = entity->GetComponentAs<scene::Mesh>("Mesh"))
@@ -189,28 +161,28 @@ namespace render
 					{
 						.InstanceIndex = entity->GetInstanceID()
 					};
+					commandList->SetGraphicsConstants(1, sizeof(PassConstants), &passConstants);
 
-					commandList.SetConstants(1, sizeof(PassConstants), &passConstants);
-
-					commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-					commandList.SetVertexBuffer(0, mesh->VertexBufferView);
+					commandList->SetPrimitiveTopology(rhi::PrimitiveTopology::TriangleList);
+					commandList->SetVertexBuffer(0, mesh->VertexBufferView);
 					if (!mesh->SkinningVertexData.empty())
 					{
-						commandList.SetVertexBuffer(1, mesh->SkinningVertexBufferView);
+						commandList->SetVertexBuffer(1, mesh->SkinningVertexBufferView);
 					}
 					else
 					{
-						commandList.SetVertexBuffer(1, mesh->VertexBufferView);
+						commandList->SetVertexBuffer(1, mesh->VertexBufferView);
 					}
-					commandList.SetIndexBuffer(mesh->IndexBufferView);
+					commandList->SetIndexBuffer(mesh->IndexBufferView);
 
-					commandList.DrawIndexed(mesh->IndexData.size());
+					commandList->DrawIndexed(mesh->IndexData.size());
 				}
 				else
 				{
 					LOG_CRITICAL("Entity '{}' does not have a Mesh component.", entities[instanceIndex]->GetName());
 				}
 			};
+
 		for (size_t i = 0; i < entities.size(); ++i)
 		{
 			DrawMeshEntity(commandList, i);

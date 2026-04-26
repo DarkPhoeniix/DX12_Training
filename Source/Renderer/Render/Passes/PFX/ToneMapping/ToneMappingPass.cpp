@@ -16,7 +16,7 @@ namespace render
 		constexpr std::uint32_t LUM_HISTOGRAM_THREADS_NUM = 16;
 		constexpr std::uint32_t TONE_MAPPING_THREADS_NUM = 8;
 
-		struct PassCB
+		struct PassConstants
 		{
 			float MiddleGrey;
 			float White;
@@ -28,30 +28,24 @@ namespace render
 		};
 	} // namespace unnamed
 
-	ToneMappingPass::ToneMappingPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-		: RenderPass<ToneMappingPassData>("tone_mapping_pass", rg::RenderPassType::Compute)
+	ToneMappingPass::ToneMappingPass(rhi::Device* device, std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
+		: RenderPass<ToneMappingPassData>(device, "tone_mapping_pass", rg::RenderPassType::Graphics)
 		, _scene(scene)
 		, _camera(camera)
 	{
-		_toneMappingPipeline.Parse("PipelineDescriptions\\ToneMappingPipeline.tech");
+		_toneMappingPipeline = _device->CreatePipelineState("PipelineDescriptions\\ToneMappingPipeline.tech");
 	}
 
 	void ToneMappingPass::Setup(rg::RenderPassBuilder& builder)
 	{
-		dx12::ResourceDescription targetDesc;
+		rhi::TextureDescription targetDesc =
 		{
-			D3D12_CLEAR_VALUE clearValue;
-			clearValue.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-			clearValue.Color[0] = 0.0f;
-			clearValue.Color[1] = 0.0f;
-			clearValue.Color[2] = 0.0f;
-			clearValue.Color[3] = 0.0f;
-
-			targetDesc.SetSize(_camera->GetViewport().GetSize());
-			targetDesc.SetFormat(DXGI_FORMAT_R8G8B8A8_UNORM);
-			targetDesc.SetClearValue(clearValue);
-			targetDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::RenderTarget | dx12::ResourceType::Unordered);
-		}
+			.Width = _camera->GetSize().x,
+			.Height = _camera->GetSize().y,
+			.Format = rhi::Format::R8G8B8A8_UNORM,
+			.Dimension = rhi::TextureDimension::Texture2D,
+			.Flags = rhi::ResourceFlags::AllowRenderTarget | rhi::ResourceFlags::AllowUnorderedAccess
+		};
 		builder.DeclareTexture("render_target", targetDesc);
 
 		_data.Target = builder.WriteTexture("render_target");
@@ -59,54 +53,41 @@ namespace render
 		_data.HDRTarget = builder.ReadTexture("hdr_target");
 	}
 
-	void ToneMappingPass::Execute(rg::RenderContext& context, TaskGPU& task)
+	void ToneMappingPass::Execute(rg::RenderContext& context, rg::ITask* task)
 	{
-		dx12::CommandList& commandList = *task.GetCommandLists().front();
-		commandList.SetName("tone_mapping_pass_cmd_list");
+		rhi::CommandList* commandList = task->GetCommandList();
 
 		{
-            PIXScopedEvent(commandList.GetDXCommandList().Get(), 7, "Tone Mapping Pass");
-
-			// Copy and setup needed resources
-
-			std::shared_ptr<dx12::Resource> hdrTarget = context.GetResource(_data.HDRTarget);
-			std::shared_ptr<dx12::Resource> avgLuminance = context.GetResource(_data.AverageLuminance);
-			std::shared_ptr<dx12::Resource> target = context.GetResource(_data.Target);
-
-			DescriptorHandle hdrTargetHandle = context.GetStaticResourceHandle(hdrTarget->GetAsSRV());
-			DescriptorHandle avgLuminanceHandle = context.GetStaticResourceHandle(avgLuminance->GetAsSRV());
-			DescriptorHandle targetHandle = context.GetStaticResourceHandle(target->GetAsUAV());
+            GPU_SCOPED_EVENT(commandList, "Tone Mapping Pass", 7);
 
 			// Setup pipeline state
 
-			context.BindBindlessTable(commandList);
-
-			commandList.SetPipelineState(_toneMappingPipeline);
+			commandList->SetComputePipelineState(_toneMappingPipeline.get());
 
 			// Setup root signature components
 
-			PassCB constants =
+			PassConstants constants =
 			{
 				.MiddleGrey = RenderSettings::ToneMapping().MiddleGrey,
 				.White = RenderSettings::ToneMapping().WhitePoint,
 				.Gamma = RenderSettings::ToneMapping().Gamma,
 
-				.HDRTextureIndex = hdrTargetHandle.Index,
-				.AverageLuminanceBufferIndex = avgLuminanceHandle.Index,
-				.TargetTextureIndex = targetHandle.Index
+				.HDRTextureIndex = context.GetBindlessIndex(_data.HDRTarget, rhi::ResourceViewType::SRV),
+				.AverageLuminanceBufferIndex = context.GetBindlessIndex(_data.AverageLuminance, rhi::ResourceViewType::SRV),
+				.TargetTextureIndex = context.GetBindlessIndex(_data.Target, rhi::ResourceViewType::UAV),
 			};
-			commandList.SetCBV(0, context.GetFrame()->GetBuffer()->OffsetGPU());
-			commandList.SetConstants(1, 6, &constants);
+			commandList->SetComputeCBV(0, context.GetFrameBuffer()->GetVirtualAddress());
+			commandList->SetComputeConstants(1, 6, &constants);
 
 			// Execute
 
-			DirectX::XMUINT2 viewportSize = _camera->GetViewport().GetSize();
+			DirectX::XMUINT2 viewportSize = _camera->GetSize();
 			std::uint32_t xThreadGroups = (std::uint32_t)std::ceilf(viewportSize.x / float(TONE_MAPPING_THREADS_NUM));
 			std::uint32_t yThreadGroups = (std::uint32_t)std::ceilf(viewportSize.y / float(TONE_MAPPING_THREADS_NUM));
 
-			commandList.Dispatch(xThreadGroups, yThreadGroups);
+			commandList->Dispatch(xThreadGroups, yThreadGroups);
 		}
 
-		commandList.Close();
+		commandList->Close();
 	}
 } // namespace render

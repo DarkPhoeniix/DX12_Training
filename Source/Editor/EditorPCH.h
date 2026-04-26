@@ -20,28 +20,15 @@
 #undef max
 #endif
 
-// Windows Runtime Library. Needed for ComPtr<> template class
-#include <wrl.h>
-using namespace Microsoft::WRL;
-
-// DirectX12 specific headers
-#include <directx/d3dx12.h>     // D3D12 extension library
-#include <dxgi1_6.h>            // Microsoft DirectX Graphics Infrastructure
-#include <d3dcompiler.h>        // Contains functions to compile HLSL code at runtime
-#include <DirectXTex.h>
 #include <DirectXMath.h>
-#include <pix3.h>
 
-#include <json/json.h>
+#include "Logger/Logger.h"
 
-#include "Logger.h"
+#include "Renderer/Helpers/Defines.h"
+
+#include "RHI/Device.h"
 
 #include "Utility/Helpers.h"
-#include "Helpers/Defines.h"
-#include "Resource.h"
-#include "Device.h"
-
-#include "RenderGraph/RenderGraphResourceId.h"
 
 #include <imgui.h>
 #include <imgui_impl_win32.h>

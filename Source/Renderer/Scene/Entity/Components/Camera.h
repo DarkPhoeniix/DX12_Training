@@ -5,37 +5,11 @@
 
 namespace scene
 {
-    class Viewport
-    {
-    public:
-        Viewport();
-        Viewport(const DirectX::XMUINT2& size);
-        Viewport(const CD3DX12_VIEWPORT& DXViewport);
-        ~Viewport() = default;
-
-        CD3DX12_VIEWPORT GetDXViewport() const;
-        float GetAspectRatio() const;
-
-        void SetSize(const DirectX::XMUINT2& size);
-        DirectX::XMUINT2 GetSize() const;
-
-        void SetDepth(const DirectX::XMFLOAT2& depth);
-        DirectX::XMFLOAT2 GetDepth() const;
-
-        void SetScissorRectangle(const CD3DX12_RECT& rect);
-        CD3DX12_RECT& GetScissorRectangle();
-        const CD3DX12_RECT& GetScissorRectangle() const;
-
-    private:
-        CD3DX12_VIEWPORT _viewport;
-        CD3DX12_RECT _scissorRectangle;
-        float _aspectRatio;
-    };
-
     class Camera : public IComponent
     {
     public:
         Camera();
+        Camera(std::uint32_t width, std::uint32_t height);
         ~Camera() = default;
 
         void Update();
@@ -59,18 +33,31 @@ namespace scene
 
         const FrustumVolume& GetViewFrustum() const;
 
-        void SetViewport(const Viewport& viewport);
-        Viewport& GetViewport();
-
         void SetLens(float fov, float nearZ, float farZ);
+        void SetFoV(float fov);
+        float GetFoV() const;
+        void SetNearZ(float nearZ);
+        float GetNearZ() const;
+        void SetFarZ(float farZ);
+        float GetFarZ() const;
 
-        // Lens params
-        float FoV;
-        float NearZ;
-        float FarZ;
+        void SetSpeed(float speed);
+        float GetSpeed() const;
 
-        // Camera speed
-        float Speed;
+        void SetViewport(const rhi::Viewport& viewport);
+        rhi::Viewport GetViewport() const;
+
+        void SetSize(std::uint32_t width, std::uint32_t height);
+        DirectX::XMUINT2 GetSize() const;
+
+        float GetAspectRatio() const;
+
+        void SetDepth(const DirectX::XMFLOAT2& depth);
+        DirectX::XMFLOAT2 GetDepth() const;
+
+        void SetScissorRectangle(const rhi::ScissorRect& rect);
+        rhi::ScissorRect& GetScissorRectangle();
+        const rhi::ScissorRect& GetScissorRectangle() const;
 
     private:
         // Constructs the view matrix based on the camera's basis
@@ -92,6 +79,17 @@ namespace scene
         // Frustum
         FrustumVolume _frustum;
 
-        Viewport _viewport;
+        // Viewport
+        rhi::Viewport _viewport;
+        rhi::ScissorRect _scissorRectangle;
+        float _aspectRatio;
+
+        // Lens params
+        float FoV;
+        float NearZ;
+        float FarZ;
+
+        // Camera speed
+        float Speed;
     };
 } // namespace scene

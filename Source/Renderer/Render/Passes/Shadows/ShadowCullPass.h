@@ -11,25 +11,25 @@ namespace render
 {
 	struct ShadowCullPassData
 	{
-		rg::RGResourceId CounterResetBuffer;
-		rg::RGResourceId AABBBuffer;
-		std::vector<rg::RGResourceId> CandidateInstancesBuffer;
-		std::vector<rg::RGResourceId> LightCommandBuffers;
+		rg::RGBufferCopySrcId CounterResetBuffer;
+		rg::RGBufferUploadId AABBBuffer;
+		std::vector<rg::RGBufferUploadId> CandidateInstancesBuffer;
+		std::vector<rg::RGBufferWriteId> LightCommandBuffers;
 	};
 
 	class ShadowCullPass : public rg::RenderPass<ShadowCullPassData>
 	{
 	public:
-		ShadowCullPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
+		ShadowCullPass(rhi::Device* device, std::shared_ptr<scene::Scene> scene, scene::Camera* camera);
 
 		// Inherited via RenderPass
 		void Setup(rg::RenderPassBuilder& builder) override;
-		void Execute(rg::RenderContext& context, TaskGPU& task) override;
+		void Execute(rg::RenderContext& context, rg::ITask* task) override;
 
 	private:
-		dx12::PipelineState _cullShadowsPipeline;
+		std::unique_ptr<rhi::PipelineState> _cullShadowsPipeline;
 
-		ComPtr<ID3D12CommandSignature> _cmdSignature;
+		std::unique_ptr<rhi::CommandSignature> _cmdSignature;
 
 		std::shared_ptr<scene::Scene> _scene;
 		scene::Camera* _camera;

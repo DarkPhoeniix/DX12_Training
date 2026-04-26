@@ -4,6 +4,8 @@
 #include "Scene/Entity/Components/IComponent.h"
 #include "Scene/Volumes/OBBVolume.h"
 
+#include <map>
+
 namespace scene
 {
     // TODO: change BoneId type

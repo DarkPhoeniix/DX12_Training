@@ -25,8 +25,12 @@ target_compile_definitions(RenderGraph PRIVATE $<$<CONFIG:RelWithDebInfo,Release
 target_link_libraries(RenderGraph PRIVATE Microsoft::DirectX-Headers Logger RHI Utility)
 target_precompile_headers(RenderGraph PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/RenderGraphPCH.h")
 
-if (ENABLE_PROFILING)
-    target_compile_definitions(RenderGraph PUBLIC ENABLE_PROFILING)
+if (ENABLE_CPU_PROFILING)
+    target_compile_definitions(RenderGraph PUBLIC ENABLE_CPU_PROFILING)
+endif()
+
+if (ENABLE_GPU_PROFILING)
+    target_compile_definitions(RenderGraph PUBLIC ENABLE_GPU_PROFILING)
 endif()
 
 include(${CMAKE_SOURCE_DIR}/Scripts/GroupSourcesByFolder.cmake)

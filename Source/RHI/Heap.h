@@ -1,64 +1,82 @@
 #pragma once
 
-#include "HeapDescription.h"
+#include "Buffer.h"
+#include "Texture.h"
 
-namespace dx12
+namespace rhi
 {
-    class Resource;
+    // HeapType represents the type of heap, which determines the intended usage and memory properties of the heap. 
+    // It is used to specify how the heap should be allocated and accessed by the GPU and CPU
+    enum class HeapType
+    {
+        Default,    // Resources only used by the GPU
+        Upload,     // Resources that are written to by the CPU and read by the GPU (CPU access optimized, limited bandwidth for the GPU)
+        GPUUpload,
+        Readback,   // Resources that are read by the CPU and written to by the GPU
+        Custom      // Resources with custom properties specified by the application
+    };
 
-    // Wrapper for an ID3D12Heap, representing a memory block for resource allocation.
+    // CPUPageProperty represents the properties of CPU pages for a heap, which can affect the performance and behavior of CPU access to the heap
+    enum class CPUPageProperty
+    {
+        Unknown,
+        NotAvailable,
+        WriteCombine,
+        Writeback
+    };
+
+    // MemoryPool represents the memory pool preference for a heap, which can influence the allocation and management of memory for the heap based on the underlying hardware architecture
+    enum class MemoryPool
+    {
+        Unknown,
+        L0,
+        L1
+    };
+
+    // HeapProperties encapsulates the properties and configuration of a heap
+    struct HeapProperties
+    {
+        HeapType Type = HeapType::Default;
+        CPUPageProperty CPUPageProperty = CPUPageProperty::Unknown;
+        MemoryPool MemoryPoolPreference = MemoryPool::Unknown;
+        std::uint32_t CreationNodeMask = 0;
+        std::uint32_t VisibleNodeMask = 0;
+    };
+
+    // HeapDescription encapsulates the properties and configuration of a heap. It is used to specify how the heap should be allocated and managed by the GPU and CPU
+    struct HeapDescription
+    {
+        std::uint64_t SizeInBytes = 0;
+        HeapProperties Properties = {};
+        std::uint64_t Alignment = 0;
+        std::uint32_t Flags = 0;
+    };
+
+    // Heap is an abstract interface representing a heap, which is a memory allocation that can be used to place GPU resources such as buffers and textures
     class Heap
     {
     public:
-        // Default constructor.
-        Heap();
-        // Copy constructor.
-        Heap(const Heap& other);
-        // Move constructor.
-        Heap(Heap&& other) noexcept;
-        // Destructor.
-        ~Heap();
+        Heap() = default;
+        Heap(const Heap&) = delete;
+        Heap(Heap&&) = default;
+        virtual ~Heap() = default;
 
-        // Copy assignment operator.
-        Heap& operator=(const Heap& other);
-        // Move assignment operator.
-        Heap& operator=(Heap&& other) noexcept;
+        Heap& operator=(const Heap&) = delete;
+        Heap& operator=(Heap&&) = default;
 
-        // Create the heap using the current description.
-        void Create();
-        // Create the heap with a new description.
-        void Create(const HeapDescription& description);
+        // Places a buffer in the heap based on the provided description and returns a shared pointer to the created buffer. 
+        // The state parameter specifies the initial resource state for the placed buffer, and the offset parameter allows specifying an optional offset within the heap for placing the buffer, 
+        // otherwise the buffer will be placed at the next available offset in the heap
+        virtual std::shared_ptr<Buffer> PlaceResource(const rhi::BufferDescription& bufferDesc, ResourceState state = ResourceState::Common, std::uint64_t offset = (std::uint64_t)-1) = 0;
+        // Places a texture in the heap based on the provided description and returns a shared pointer to the created texture. 
+        // The state parameter specifies the initial resource state for the placed texture, and the offset parameter allows specifying an optional offset within the heap for placing the texture, 
+        // otherwise the texture will be placed at the next available offset in the heap
+        virtual std::shared_ptr<Texture> PlaceResource(const rhi::TextureDescription& textureDesc, ResourceState state = ResourceState::Common, std::uint64_t offset = (std::uint64_t)-1) = 0;
 
-        // Place a resource in the heap at a specified offset.
-        // If offset is (UINT64)-1, the function determines the placement automatically.
-        void PlaceResource(Resource& resource, ResourceState state = ResourceState::Common, std::uint64_t offset = (std::uint64_t)-1);
+        // Resets the heap, freeing all resources placed in the heap and allowing the heap to be reused for new resource placements
+        virtual void Reset() = 0;
 
-        // Reset the heap, releasing resources.
-        void Reset();
-
-        // Set a new heap description.
-        void SetDescription(const HeapDescription& description);
-        // Get the current heap description.
-        HeapDescription GetDescription() const;
-
-        // Set a debug name for the heap.
-        void SetName(const std::string& name);
-        // Get the debug name of the heap.
-        const std::string& GetName() const;
-
-        // Get the underlying DirectX 12 heap object.
-        ComPtr<ID3D12Heap> GetDXHeap() const;
-
-    private:
-        // Raw DirectX 12 heap object.
-        ComPtr<ID3D12Heap> _heap;
-        // Description of the heap configuration.
-        HeapDescription _description;
-
-        // Offset for resource placement within the heap.
-        std::uint64_t _resourceOffset;
-
-        // Debug name of the heap.
-        std::string _name;
+        // Retrieves the native heap pointer
+        virtual void* GetNative() const = 0;
     };
-} // namespace dx12
+} // namespace rhi

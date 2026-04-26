@@ -5,8 +5,6 @@
 #include "RenderPassBuilder.h"
 
 #include "RHI/ResourceBarrier.h"
-#include "Renderer/Render/Frame/Frame.h"
-#include "Renderer/Render/Frame/TaskGPU.h"
 
 namespace
 {
@@ -16,42 +14,51 @@ namespace
 
 namespace rg
 {
-    RenderGraph::RenderGraph()
-        : _frame(nullptr)
-        , _context()
+    RenderGraph::RenderGraph(rhi::Device* device, IDescriptorProvider* decriptorProvider)
+        : _taskAllocator(nullptr)
+        , _context(device, decriptorProvider)
 #ifdef RG_MULTITHREADED
         , _workerManager(std::make_unique<mt::PassWorkerManager>(RENDER_THREADS_NUM))
 #else
         , _workerManager(nullptr)
-#endif
-#if ENABLE_PROFILING
-        , _gpuProfiler(nullptr)
-#endif
+#endif // RG_MULTITHREADED
+#if ENABLE_CPU_PROFILING || ENABLE_GPU_PROFILING
+        , _profiler(nullptr)
+#endif // ENABLE_CPU_PROFILING || ENABLE_GPU_PROFILING
     {
     }
 
-    void RenderGraph::SetFrame(Frame& frame)
+    RenderGraph::~RenderGraph()
     {
-        _frame = &frame;
-        _context._frame = &frame;
+        if (_workerManager)
+        {
+            _workerManager->Wait();
+        }
     }
 
-    void RenderGraph::Init(ResourceTable& resourceTable, TextureManager& textureManager)
+    void RenderGraph::SetTaskAllocator(ITaskAllocator* allocator)
     {
-		_context.Init(resourceTable, textureManager);
+        _taskAllocator = allocator;
+    }
+
+    void RenderGraph::SetFrameBuffer(rhi::Buffer* buffer)
+    {
+        _context.SetFrameBuffer(buffer);
     }
 
     void RenderGraph::Reset()
     {
-#if ENABLE_PROFILING
-        if (_gpuProfiler)
+#if ENABLE_CPU_PROFILING || ENABLE_GPU_PROFILING
+        if (_profiler)
         {
-            _frameTimerID = _gpuProfiler->RegisterTimer("Frame");
+            _frameTimerID = _profiler->RegisterTimer("Frame");
         }
-#endif
+#endif // ENABLE_CPU_PROFILING || ENABLE_GPU_PROFILING
 
-        _context._mapNameToId.clear();
-        _context._mapIdToResource.clear();
+        _context._mapNameToBufferId.clear();
+        _context._mapNameToTextureId.clear();
+        _context._mapIdToBuffer.clear();
+        _context._mapIdToTexture.clear();
 
         _passes.clear();
         _sortedPasses.clear();
@@ -80,25 +87,25 @@ namespace rg
         {
             std::shared_ptr<IRenderPass> pass = _passes[passIndex];
 
-            TaskGPU* preExecutionTask = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT);
+            ITask* preExecutionTask = _taskAllocator->AllocateTask(rhi::CommandListType::Graphics);
             preExecutionTask->SetName(std::format("{} - PreExecute task", pass->_name));
 
-            TaskGPU* executionTask = nullptr;
+            ITask* executionTask = nullptr;
             switch (pass->GetType())
             {
             case RenderPassType::Graphics:
-                executionTask = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT);
+                executionTask = _taskAllocator->AllocateTask(rhi::CommandListType::Graphics);
                 break;
             case RenderPassType::Compute:
-                executionTask = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE);
+                executionTask = _taskAllocator->AllocateTask(rhi::CommandListType::Compute);
                 break;
             case RenderPassType::Copy:
-                executionTask = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_COPY);
+                executionTask = _taskAllocator->AllocateTask(rhi::CommandListType::Copy);
                 break;
             }
             executionTask->SetName(std::format("{} - Execute task", pass->_name));
 
-            TaskGPU* postExecutionTask = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT);
+            ITask* postExecutionTask = _taskAllocator->AllocateTask(rhi::CommandListType::Graphics);
             postExecutionTask->SetName(std::format("{} - PostExecute task", pass->_name));
 
             if (executionTask)
@@ -108,10 +115,10 @@ namespace rg
 #ifdef RG_MULTITHREADED
                 _workerManager->Submit({ pass.get(), &_context, preExecutionTask, executionTask, postExecutionTask });
 #else
-                pass->PreExecute(_context, *preExecutionTask);
-                pass->Execute(_context, *executionTask);
-                pass->PostExecute(_context, *postExecutionTask);
-#endif
+                pass->PreExecute(_context, preExecutionTask);
+                pass->Execute(_context, executionTask);
+                pass->PostExecute(_context, postExecutionTask);
+#endif // RG_MULTITHREADED
             }
 
             _GPUTasks[passIndex * TASKS_PER_PASS] = preExecutionTask;
@@ -121,7 +128,7 @@ namespace rg
 
 #ifdef RG_MULTITHREADED
         _workerManager->Wait();
-#endif
+#endif // RG_MULTITHREADED
 
         EndFrame();
     }
@@ -131,85 +138,105 @@ namespace rg
         ASSERT(pass, "Trying to add a null render pass to the render graph.");
         _passes.push_back(pass);
 
-#if ENABLE_PROFILING
+#if ENABLE_CPU_PROFILING || ENABLE_GPU_PROFILING
         Profiler::TimerID timerID = Profiler::InvalidTimerID;
-        if (_gpuProfiler)
+        if (_profiler)
         {
-            timerID = _gpuProfiler->RegisterTimer(pass->_name);
+            timerID = _profiler->RegisterTimer(pass->_name);
         }
         pass->_gpuTimerID = timerID;
-#endif
+#endif // ENABLE_CPU_PROFILING || ENABLE_GPU_PROFILING
 
         RenderPassBuilder builder(*this, pass.get());
         _passes.back()->Setup(builder);
     }
 
-    void RenderGraph::ImportResource(std::shared_ptr<dx12::Resource> resource)
+    void RenderGraph::ImportResource(std::shared_ptr<rhi::Buffer> resource, const std::string& name)
     {
         ASSERT(resource, "Trying to import a null resource into the render graph.");
 
-        auto it = _context._mapNameToId.find(resource->GetName());
-        if (it != _context._mapNameToId.end())
+        auto it = _context._mapNameToBufferId.find(name);
+        if (it != _context._mapNameToBufferId.end())
         {
-            _context._mapIdToResource[it->second] = resource;
+            _context._mapIdToBuffer[it->second] = resource;
+            _context._descriptorProvider->CreateStaticResourceView(resource, rhi::ResourceViewType::SRV);
         }
         else
         {
-            const RGResourceId& id = resource->GetID();
-            _context._mapNameToId[resource->GetName()] = id;
-            _context._mapIdToResource[id] = resource;
+            const RGBufferId& id = resource->GetID();
+            _context._mapNameToBufferId[name] = id;
+            _context._mapIdToBuffer[id] = resource;
         }
     }
 
-    void RenderGraph::ExportResource(const std::string& name, std::shared_ptr<dx12::Resource> destination)
+    void RenderGraph::ImportResource(std::shared_ptr<rhi::Texture> resource, const std::string& name)
+    {
+        ASSERT(resource, "Trying to import a null resource into the render graph.");
+
+        auto it = _context._mapNameToTextureId.find(name);
+        if (it != _context._mapNameToTextureId.end())
+        {
+            _context._mapIdToTexture[it->second] = resource;
+        }
+        else
+        {
+            const RGTextureId& id = resource->GetID();
+            _context._mapNameToTextureId[name] = id;
+            _context._mapIdToTexture[id] = resource;
+        }
+    }
+
+    void RenderGraph::ExportResource(const std::string& name, std::shared_ptr<rhi::Texture> destination)
     {
         ASSERT(destination, "Trying to export a resource to a null destination.");
 
         struct ExportPassData
         {
-            RGResourceId SourceId;
+            RGTextureId SourceId;
         } data;
 
+        NOT_IMPLEMENTED();
+        //AddPass<ExportPassData>("Export Pass",
+        //    [&](RenderPassBuilder& builder)
+        //    {
+        //        data.SourceId = builder.CopySrcTexture(name);
+        //    },
+        //    [&](RenderContext& context, ITask* task)
+        //    {
+        //        task->SetName("Export Pass");
+        //        rhi::CommandList* commandList = task->GetCommandList();
 
-        AddPass<ExportPassData>("Export Pass",
-            [&](RenderPassBuilder& builder)
-            {
-                data.SourceId = builder.CopySrcTexture(name);
-            },
-            [&](RenderContext& context, TaskGPU& task)
-            {
-                task.SetName("Export Pass");
-                dx12::CommandList& commandList = task.GetCommandList();
-
-                std::shared_ptr<dx12::Resource> source = context.GetResource(data.SourceId);
-                commandList.CopyResource(*destination, *source);
-                commandList.Close();
-            }, 
-            RenderPassType::Copy);
+        //        std::shared_ptr<rhi::Texture> source = context.GetTexture(data.SourceId);
+        //        commandList->CopyTexture(destination, source);
+        //        commandList->Close();
+        //    }, 
+        //    RenderPassType::Copy);
     }
 
-#if ENABLE_PROFILING
-    void RenderGraph::SetGPUProfiler(Profiler* gpuProfiler)
+    void RenderGraph::SetProfiler(Profiler* profiler)
     {
-        _gpuProfiler = gpuProfiler;
-        _context.SetGPUProfiler(gpuProfiler);
+#if ENABLE_CPU_PROFILING || ENABLE_GPU_PROFILING
+        _profiler = profiler;
+        _context.SetProfiler(profiler);
+#else
+        _profiler = nullptr;
+#endif // ENABLE_CPU_PROFILING || ENABLE_GPU_PROFILING
     }
-#endif
 
     void RenderGraph::BeginFrame()
     {
-#if ENABLE_PROFILING
-        if (_gpuProfiler)
+#if ENABLE_CPU_PROFILING || ENABLE_GPU_PROFILING
+        if (_profiler)
         {
-            _beginFrameTask = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT);
+            _beginFrameTask = _taskAllocator->AllocateTask(rhi::CommandListType::Graphics);
             _beginFrameTask->SetName("Begin Frame Task");
-            dx12::CommandList& commandList = _beginFrameTask->GetCommandList();
+            rhi::CommandList* commandList = _beginFrameTask->GetCommandList();
 
-            _gpuProfiler->BeginEvent(commandList, _frameTimerID);
+            _profiler->BeginEvent(commandList, _frameTimerID);
 
-            commandList.Close();
+            commandList->Close();
         }
-#endif
+#endif // ENABLE_CPU_PROFILING || ENABLE_GPU_PROFILING
 
         if (!_transitionedToWorkingState)
         {
@@ -220,29 +247,29 @@ namespace rg
 
     void RenderGraph::EndFrame()
     {
-#if ENABLE_PROFILING
-        if (_gpuProfiler)
+#if ENABLE_CPU_PROFILING || ENABLE_GPU_PROFILING
+        if (_profiler)
         {
-            _endFrameTask = _frame->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT);
+            _endFrameTask = _taskAllocator->AllocateTask(rhi::CommandListType::Graphics);
             _endFrameTask->SetName("End Frame Task");
-            dx12::CommandList& commandList = _endFrameTask->GetCommandList();
+            rhi::CommandList* commandList = _endFrameTask->GetCommandList();
 
-            _gpuProfiler->EndEvent(commandList, _frameTimerID);
-            _gpuProfiler->ResolveTimestamps(commandList);
+            _profiler->EndEvent(commandList, _frameTimerID);
+            _profiler->ResolveTimestamps(commandList);
 
-            commandList.Close();
+            commandList->Close();
         }
-#endif
+#endif // ENABLE_CPU_PROFILING || ENABLE_GPU_PROFILING
 
         for (std::uint32_t passIndex : _sortedPasses)
         {
-            TaskGPU* currentPreTask = _GPUTasks[passIndex * TASKS_PER_PASS];
-            TaskGPU* currentTask = _GPUTasks[passIndex * TASKS_PER_PASS + 1];
-            TaskGPU* currentPostTask = _GPUTasks[passIndex * TASKS_PER_PASS + 2];
+            ITask* currentPreTask = _GPUTasks[passIndex * TASKS_PER_PASS];
+            ITask* currentTask = _GPUTasks[passIndex * TASKS_PER_PASS + 1];
+            ITask* currentPostTask = _GPUTasks[passIndex * TASKS_PER_PASS + 2];
 
             for (std::uint32_t adjacentPassIndex : _adjacencyLists[passIndex])
             {
-                TaskGPU* dependentTask = _GPUTasks[adjacentPassIndex * TASKS_PER_PASS];
+                ITask* dependentTask = _GPUTasks[adjacentPassIndex * TASKS_PER_PASS];
                 dependentTask->AddDependency(currentTask->GetName());
             }
 
@@ -250,37 +277,47 @@ namespace rg
             currentPostTask->AddDependency(currentTask->GetName());
         }
 
-#if ENABLE_PROFILING
-        if (_gpuProfiler)
+#if ENABLE_CPU_PROFILING || ENABLE_GPU_PROFILING
+        if (_profiler)
         {
-            TaskGPU* firstTask = _GPUTasks[_sortedPasses.front() * TASKS_PER_PASS];
-            TaskGPU* preLastTask = _GPUTasks[(_sortedPasses.back() - 1) * TASKS_PER_PASS + 2];
-            TaskGPU* lastTask = _GPUTasks[_sortedPasses.back() * TASKS_PER_PASS];
+            ITask* firstTask = _GPUTasks[_sortedPasses.front() * TASKS_PER_PASS];
+            ITask* preLastTask = _GPUTasks[(_sortedPasses.back() - 1) * TASKS_PER_PASS + 2];
+            ITask* lastTask = _GPUTasks[_sortedPasses.back() * TASKS_PER_PASS];
 
             firstTask->AddDependency(_beginFrameTask->GetName());
             _endFrameTask->AddDependency(lastTask->GetName());
         }
-#endif
+#endif // ENABLE_CPU_PROFILING || ENABLE_GPU_PROFILING
     }
 
     void RenderGraph::BuildAdjacencyLists()
     {
-        size_t passesCount = _passes.size();
+        std::uint32_t passesCount = static_cast<std::uint32_t>(_passes.size());
 
         _adjacencyLists.clear();
         _adjacencyLists.resize(passesCount);
 
-        for (size_t passIndex = 0; passIndex < passesCount; ++passIndex)
+        for (std::uint32_t passIndex = 0; passIndex < passesCount; ++passIndex)
         {
             std::shared_ptr<IRenderPass>& pass = _passes[passIndex];
             std::vector<std::uint32_t>& passAdjacencyList = _adjacencyLists[passIndex];
 
-            for (size_t i = passIndex + 1; i < passesCount; ++i)
+            for (std::uint32_t i = passIndex + 1; i < passesCount; ++i)
             {
                 std::shared_ptr<IRenderPass>& otherPass = _passes[i];
-                for (RGResourceId readId : otherPass->_reads)
+
+                for (RGBufferId readId : otherPass->_bufferReads)
                 {
-                    const std::vector<rg::RGResourceId>& passWriteIds = pass->_writes;
+                    const std::vector<rg::RGBufferId>& passWriteIds = pass->_bufferWrites;
+                    if (std::find(passWriteIds.cbegin(), passWriteIds.cend(), readId) != passWriteIds.cend())
+                    {
+                        passAdjacencyList.push_back(i);
+                        break;
+                    }
+                }
+                for (RGTextureId readId : otherPass->_textureReads)
+                {
+                    const std::vector<rg::RGTextureId>& passWriteIds = pass->_textureWrites;
                     if (std::find(passWriteIds.cbegin(), passWriteIds.cend(), readId) != passWriteIds.cend())
                     {
                         passAdjacencyList.push_back(i);
@@ -295,7 +332,7 @@ namespace rg
     {
         std::vector<bool> visited(_passes.size(), false);
 
-        std::function<void(size_t)> DFS = [&](std::uint32_t passIndex)
+        std::function<void(std::uint32_t)> DFS = [&](std::uint32_t passIndex)
             {
                 visited[passIndex] = true;
                 for (std::uint32_t j : _adjacencyLists[passIndex])
@@ -332,16 +369,17 @@ namespace rg
 
     void RenderGraph::TransitionResourcesToWorkingState()
     {
-        std::vector<dx12::ResourceBarrier> barriers;
+        std::vector<rhi::BufferBarrier> bufferBarriers;
+        std::vector<rhi::TextureBarrier> textureBarriers;
 
         for (std::shared_ptr<IRenderPass> renderPass : _passes)
         {
-            if (!renderPass->_creates.empty())
+            if (!renderPass->_bufferCreates.empty())
             {
-                for (auto id : renderPass->_creates)
+                for (auto id : renderPass->_bufferCreates)
                 {
-                    std::shared_ptr<dx12::Resource> resource = _context.GetResource(id);
-                    if (!resource)
+                    std::shared_ptr<rhi::Buffer> buffer = _context.GetBuffer(id);
+                    if (!buffer)
                     {
                         continue;
                     }
@@ -351,7 +389,7 @@ namespace rg
 
                     while (currentPass)
                     {
-                        if (currentPass->_resourceStateMap.find(id) != currentPass->_resourceStateMap.end())
+                        if (currentPass->_bufferStateMap.find(id) != currentPass->_bufferStateMap.end())
                         {
                             lastPass = currentPass;
                         }
@@ -359,23 +397,23 @@ namespace rg
                         currentPass = currentPass->_nextPass.lock();
                     }
 
-                    if (lastPass && lastPass->_resourceStateMap.find(id) != lastPass->_resourceStateMap.end())
+                    if (lastPass && lastPass->_bufferStateMap.find(id) != lastPass->_bufferStateMap.end())
                     {
-                        dx12::ResourceState lastState = lastPass->_resourceStateMap[id];
-                        dx12::ResourceState currState = resource->GetCurrentState();
+                        rhi::ResourceState lastState = lastPass->_bufferStateMap[id];
+                        rhi::ResourceState currState = buffer->GetCurrentState();
                         if (lastState != currState)
                         {
-                            barriers.push_back({ resource, currState, lastState });
+                            bufferBarriers.push_back({ buffer, currState, lastState });
                         }
                     }
                 }
             }
 
-            if (!renderPass->_reads.empty())
+            if (!renderPass->_bufferReads.empty())
             {
-                for (auto readId : renderPass->_reads)
+                for (auto readId : renderPass->_bufferReads)
                 {
-                    if (std::find(renderPass->_creates.cbegin(), renderPass->_creates.cend(), readId) != renderPass->_creates.cend())
+                    if (std::find(renderPass->_bufferCreates.cbegin(), renderPass->_bufferCreates.cend(), readId) != renderPass->_bufferCreates.cend())
                     {
                         continue;
                     }
@@ -384,7 +422,7 @@ namespace rg
 
                     for (std::shared_ptr<IRenderPass> p : _passes)
                     {
-                        if (p != renderPass && p->_resourceStateMap.find(readId) != p->_resourceStateMap.end())
+                        if (p != renderPass && p->_bufferStateMap.find(readId) != p->_bufferStateMap.end())
                         {
                             refCount++;
                             break;
@@ -393,15 +431,15 @@ namespace rg
 
                     if (refCount <= 1)
                     {
-                        std::shared_ptr<dx12::Resource> resource = _context.GetResource(readId);
+                        std::shared_ptr<rhi::Buffer> buffer = _context.GetBuffer(readId);
 
-                        if (resource)
+                        if (buffer)
                         {
-                            dx12::ResourceState lastState = renderPass->_resourceStateMap[readId];
-                            dx12::ResourceState currState = resource->GetCurrentState();
+                            rhi::ResourceState lastState = renderPass->_bufferStateMap[readId];
+                            rhi::ResourceState currState = buffer->GetCurrentState();
                             if (lastState != currState)
                             {
-                                barriers.push_back({ resource, currState, lastState });
+                                bufferBarriers.push_back({ buffer, currState, lastState });
                             }
                         }
                     }
@@ -409,12 +447,88 @@ namespace rg
             }
         }
 
-        TaskGPU& task = *_frame->CreateTask(D3D12_COMMAND_LIST_TYPE_DIRECT);
-        task.SetName("Resource State Transition");
+        for (std::shared_ptr<IRenderPass> renderPass : _passes)
+        {
+            if (!renderPass->_textureCreates.empty())
+            {
+                for (auto id : renderPass->_textureCreates)
+                {
+                    std::shared_ptr<rhi::Texture> texture = _context.GetTexture(id);
+                    if (!texture)
+                    {
+                        continue;
+                    }
 
-        dx12::CommandList& commandList = task.GetCommandList();
+                    std::shared_ptr<IRenderPass> lastPass = nullptr;
+                    std::shared_ptr<IRenderPass> currentPass = renderPass;
 
-        commandList.TransitionBarriers(barriers);
-        commandList.Close();
+                    while (currentPass)
+                    {
+                        if (currentPass->_textureStateMap.find(id) != currentPass->_textureStateMap.end())
+                        {
+                            lastPass = currentPass;
+                        }
+
+                        currentPass = currentPass->_nextPass.lock();
+                    }
+
+                    if (lastPass && lastPass->_textureStateMap.find(id) != lastPass->_textureStateMap.end())
+                    {
+                        rhi::ResourceState lastState = lastPass->_textureStateMap[id];
+                        rhi::ResourceState currState = texture->GetCurrentState();
+                        if (lastState != currState)
+                        {
+                            textureBarriers.push_back({ texture, currState, lastState });
+                        }
+                    }
+                }
+            }
+
+            if (!renderPass->_textureReads.empty())
+            {
+                for (auto readId : renderPass->_textureReads)
+                {
+                    if (std::find(renderPass->_textureCreates.cbegin(), renderPass->_textureCreates.cend(), readId) != renderPass->_textureCreates.cend())
+                    {
+                        continue;
+                    }
+
+                    int refCount = 1;
+
+                    for (std::shared_ptr<IRenderPass> p : _passes)
+                    {
+                        if (p != renderPass && p->_textureStateMap.find(readId) != p->_textureStateMap.end())
+                        {
+                            refCount++;
+                            break;
+                        }
+                    }
+
+                    if (refCount <= 1)
+                    {
+                        std::shared_ptr<rhi::Texture> texture = _context.GetTexture(readId);
+
+                        if (texture)
+                        {
+                            rhi::ResourceState lastState = renderPass->_textureStateMap[readId];
+                            rhi::ResourceState currState = texture->GetCurrentState();
+                            if (lastState != currState)
+                            {
+                                textureBarriers.push_back({ texture, currState, lastState });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        ITask* task = _taskAllocator->AllocateTask(rhi::CommandListType::Graphics);
+        task->SetName("Resource State Transition");
+
+        rhi::CommandList* commandList = task->GetCommandList();
+
+        commandList->TransitionBarriers(bufferBarriers);
+        commandList->TransitionBarriers(textureBarriers);
+        commandList->Close();
     }
 } // namespace rg

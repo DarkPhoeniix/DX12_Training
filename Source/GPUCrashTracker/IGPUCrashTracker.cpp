@@ -7,7 +7,7 @@
 #else
 #include "NullCrashTracker/NullCommandListCrashContext.h"
 #include "NullCrashTracker/NullCrashTracker.h"
-#endif
+#endif // USE_NSIGHT_AFTERMATH
 
 #include <cassert>
 
@@ -33,21 +33,21 @@ namespace tracking
         m_markerMap[m_markerFrameIndex].clear();
     }
 
-    std::shared_ptr<ICommandListCrashContext> IGPUCrashTracker::CreateCommandListCrashContext()
+    std::unique_ptr<ICommandListCrashContext> IGPUCrashTracker::CreateCommandListCrashContext()
     {
 #ifdef USE_NSIGHT_AFTERMATH
-        return std::make_shared<NsightAftermathCommandListContext>(shared_from_this());
+        return std::make_unique<NsightAftermathCommandListContext>(this);
 #else
-        return std::make_shared<NullCommandListCrashContext>(shared_from_this());
-#endif
+        return std::make_unique<NullCommandListCrashContext>();
+#endif // USE_NSIGHT_AFTERMATH
     }
 
-    std::shared_ptr<IGPUCrashTracker> IGPUCrashTracker::Create()
+    std::unique_ptr<IGPUCrashTracker> IGPUCrashTracker::Create()
     {
 #ifdef USE_NSIGHT_AFTERMATH
-        return std::make_shared<NsightAftermathGpuCrashTracker>();
+        return std::make_unique<NsightAftermathGpuCrashTracker>();
 #else
-        return std::make_shared<NullCrashTracker>();
-#endif
+        return std::make_unique<NullCrashTracker>();
+#endif // USE_NSIGHT_AFTERMATH
     }
 } // namespace tracking

@@ -7,8 +7,7 @@ namespace
     constexpr std::uint16_t MAX_TIMERS = 256;
 }
 
-Profiler::Profiler()
-    : _timestampQuery(MAX_TIMERS)
+Profiler::Profiler(rhi::Device* device)
 {
     _gpuStats =
     {
@@ -17,26 +16,27 @@ Profiler::Profiler()
         .TimerResults = std::vector<TimerResult>(MAX_TIMERS)
     };
 
-    _timestampQuery = dx12::TimestampQuery(MAX_TIMERS * 2);
+    _timestampQuery = device->CreateTimestampQuery(MAX_TIMERS * 2);
 
-    dx12::ResourceDescription bufferDesc;
-    bufferDesc.SetSize({ sizeof(std::uint64_t) * MAX_TIMERS * 2, 1 });
-    bufferDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::ReadBack);
+    rhi::BufferDescription bufferDesc =
+    {
+        .Size = sizeof(std::uint64_t) * MAX_TIMERS * 2,
+        .Usage = rhi::ResourceUsage::Readback
+    };
 
-    _timestampResultBuffer = ResourceFactory::Create("gpu_timestamp_result_buffer", bufferDesc);
-    _timestampResultBuffer->CreateCommitedResource(dx12::ResourceState::CopyDest);
+    _timestampResultBuffer = device->CreateBuffer(bufferDesc, rhi::ResourceState::CopyDest);
 }
 
-void Profiler::BeginEvent(dx12::CommandList& commandList, TimerID id)
+void Profiler::BeginEvent(rhi::CommandList* commandList, TimerID id)
 {
     _cpuTimers[id].Start();
-    _timestampQuery.Begin(commandList, id * 2);
+    _timestampQuery->Begin(commandList, id * 2);
 }
 
-void Profiler::EndEvent(dx12::CommandList& commandList, TimerID id)
+void Profiler::EndEvent(rhi::CommandList* commandList, TimerID id)
 {
     _cpuTimers[id].Stop();
-    _timestampQuery.End(commandList, id * 2 + 1);
+    _timestampQuery->End(commandList, id * 2 + 1);
 }
 
 Profiler::TimerID Profiler::RegisterTimer(const std::string& name)
@@ -44,7 +44,7 @@ Profiler::TimerID Profiler::RegisterTimer(const std::string& name)
 #if _DEBUG
     auto timerIt = std::find_if(_timers.begin(), _timers.end(), [&](const Profiler::TimerInfo& info) { return info.name == name; });
     ASSERT(timerIt == _timers.end(), "Profiler: Timer with name \'{}\' is already registered.", name);
-#endif
+#endif // _DEBUG
 
     Profiler::TimerID id = static_cast<Profiler::TimerID>(_timers.size());
     _timers.emplace_back(name, id);
@@ -60,7 +60,7 @@ void Profiler::UnregisterAllTimers()
     _gpuStats = {};
 }
 
-void Profiler::ResolveTimestamps(dx12::CommandList& commandList)
+void Profiler::ResolveTimestamps(rhi::CommandList* commandList)
 {
     if (_timers.size() != _gpuStats.TimerResults.size())
     {
@@ -68,7 +68,7 @@ void Profiler::ResolveTimestamps(dx12::CommandList& commandList)
         _gpuStats.TimerResults.resize(_timers.size() - 1);
     }
 
-    _timestampQuery.Resolve(commandList, _timers.size() * 2, _timestampResultBuffer, 0);
+    _timestampQuery->Resolve(commandList, _timers.size() * 2, _timestampResultBuffer, 0);
 
     _gpuStats.FrameID++;
 
@@ -79,7 +79,7 @@ void Profiler::ResolveTimestamps(dx12::CommandList& commandList)
         std::uint64_t startTimestamp = data[timer.id * 2];
         std::uint64_t endTimestamp = data[timer.id * 2 + 1];
 
-        double timeMs = double(endTimestamp - startTimestamp) * 1000.0 / static_cast<double>(_timestampQuery.GetFrequency());
+        double timeMs = double(endTimestamp - startTimestamp) * 1000.0 / static_cast<double>(_timestampQuery->GetFrequency());
         if (timer.name == "Frame")
         {
             _cpuStats.FrameTimeMs = _cpuTimers[timer.id].GetElapsedMilliseconds();

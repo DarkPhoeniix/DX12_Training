@@ -1,7 +1,7 @@
 {
 	"Type": "BloomDownsampleTechnique",
 
-	"IsGraphicsPipeline": false,
+	"PipelineType": "Compute",
 
 	"CS": "Shaders\\BloomDownsample_cs.cso"
 }

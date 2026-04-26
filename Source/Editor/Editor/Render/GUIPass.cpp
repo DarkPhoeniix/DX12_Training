@@ -2,19 +2,22 @@
 
 #include "GUIPass.h"
 
-#include "CommandList.h"
-#include "ResourceBarrier.h"
-
-#include "Scene/Entity/Components/Camera.h"
+#include "Renderer/Core/DescriptorHeapManager.h"
+#include "Renderer/Scene/Entity/Components/Camera.h"
 
 #include "RenderGraph/RenderPassBuilder.h"
 #include "RenderGraph/RenderContext.h"
 
+#include "RHI/CommandList.h"
+#include "RHI/GPUEvent.h"
+#include "RHI/ResourceBarrier.h"
+
 namespace render
 {
-    GUIPass::GUIPass(std::shared_ptr<gui::Editor> editor)
-        : rg::RenderPass<GUIPassData>("GUI Pass", rg::RenderPassType::Graphics)
+    GUIPass::GUIPass(rhi::Device* device, gui::Editor* editor, scene::Camera* camera)
+        : rg::RenderPass<GUIPassData>(device, "gui_pass", rg::RenderPassType::Graphics)
         , _editor(editor)
+        , _camera(camera)
     {
     }
 
@@ -24,27 +27,25 @@ namespace render
         _data.Depth = builder.DepthStencilWrite("depth_target");
     }
 
-    void GUIPass::Execute(rg::RenderContext& context, TaskGPU& task)
+    void GUIPass::Execute(rg::RenderContext& context, rg::ITask* task)
     {
-        dx12::CommandList& commandList = *task.GetCommandLists().front();
-        commandList.SetName("Render GUI command list");
+        rhi::CommandList* commandList = task->GetCommandList();
 
         {
-            PIXScopedEvent(commandList.GetDXCommandList().Get(), 5, "GUI");
+            GPU_SCOPED_EVENT(commandList, "GUI", 5);
 
-            std::shared_ptr<dx12::Resource> target = context.GetResource(_data.Target);
-            std::shared_ptr<dx12::Resource> depth = context.GetResource(_data.Depth);
+            commandList->SetDescriptorHeaps(DescriptorHeapManager::Get().GetShaderResourcesDescriptorHeap()); // TODO: temp workaround
 
-            DescriptorHandle rtv = context.GetStaticResourceHandle(target->GetAsRTV());
-            DescriptorHandle dsv = context.GetStaticResourceHandle(depth->GetAsDSV());
+            rhi::CPUDescriptor target = context.GetDescriptor(_data.Target, rhi::ResourceViewType::RTV);
+            rhi::CPUDescriptor depth = context.GetDescriptor(_data.Depth, rhi::ResourceViewType::DSV);
 
-            commandList.SetViewport(_editor->GetViewport()->GetDXViewport(), _editor->GetViewport()->GetScissorRectangle());
-            commandList.SetRenderTarget(&rtv.CpuHandle, &dsv.CpuHandle);
+            commandList->SetViewport(_camera->GetViewport(), _camera->GetScissorRectangle());
+            commandList->SetRenderTarget(&target, &depth);
 
             _editor->Update();
             _editor->Render(commandList);
         }
 
-        commandList.Close();
+        commandList->Close();
     }
 } // namespace render

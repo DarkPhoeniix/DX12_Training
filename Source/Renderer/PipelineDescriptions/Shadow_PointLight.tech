@@ -1,7 +1,7 @@
 {
 	"Type": "PCFShadowsTechnique",
 
-	"IsGraphicsPipeline": true,
+	"PipelineType": "Graphics",
 
 	"TopologyType": "triangle",
 

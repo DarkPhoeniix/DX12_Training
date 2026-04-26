@@ -5,7 +5,10 @@
 #include <string>
 #include <map>
 
-struct ID3D12Device2;
+namespace rhi
+{
+    class Device;
+} // namespace rhi
 
 namespace tracking
 {
@@ -15,13 +18,10 @@ namespace tracking
     class IGPUCrashTracker : public std::enable_shared_from_this<IGPUCrashTracker>
     {
     public:
-        // keep four frames worth of marker history
+        // Keep four frames worth of marker history
         const static std::uint32_t MarkerFrameHistory = 4;
         using MarkerMap = std::array<std::map<uint64_t, std::string>, MarkerFrameHistory>;
 
-        // Default constructor.
-        IGPUCrashTracker() = default;
-        // Virtual destructor.
         virtual ~IGPUCrashTracker() = default;
 
         // Enables GPU crash tracking.
@@ -29,7 +29,7 @@ namespace tracking
         virtual void Enable() = 0;
 
         // Initializes crash tracking with the given GPU Device.
-        virtual void Initialize(ID3D12Device2* device) = 0;
+        virtual void Initialize(rhi::Device* device) = 0;
 
         // Waits until any ongoing crash dump operation is finished.
         virtual void WaitUntilCrashDumpFinished() = 0;
@@ -45,10 +45,10 @@ namespace tracking
         void ResetMarkerMapForCurrentFrame();
 
         // Creates a crash context for a command list.
-        std::shared_ptr<ICommandListCrashContext> CreateCommandListCrashContext();
+        std::unique_ptr<ICommandListCrashContext> CreateCommandListCrashContext();
 
         // Factory method to create a GPU crash tracker instance.
-        static std::shared_ptr<IGPUCrashTracker> Create();
+        static std::unique_ptr<IGPUCrashTracker> Create();
 
     protected:
         // App-managed marker tracking

@@ -8,20 +8,21 @@ namespace render
 {
     struct GUIPassData
     {
-        rg::RGResourceId Target;
-        rg::RGResourceId Depth;
+        rg::RGTextureRenderTargetId Target;
+        rg::RGTextureDepthStencilWriteId Depth;
     };
 
     class GUIPass : public rg::RenderPass<GUIPassData>
     {
     public:
-        GUIPass(std::shared_ptr<gui::Editor> editor);
+        GUIPass(rhi::Device* device, gui::Editor* editor, scene::Camera* camera);
 
         // Inherited via RenderPass
         void Setup(rg::RenderPassBuilder& builder) override;
-        void Execute(rg::RenderContext& context, TaskGPU& task) override;
+        void Execute(rg::RenderContext& context, rg::ITask* task) override;
 
     private:
-        std::shared_ptr<gui::Editor> _editor;
+        gui::Editor* _editor;
+        scene::Camera* _camera;
     };
 } // namespace render

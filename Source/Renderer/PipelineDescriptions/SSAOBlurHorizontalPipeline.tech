@@ -1,7 +1,7 @@
 {
 	"Type": "SSAOBlurHorizontalTechnique",
 
-	"IsGraphicsPipeline": false,
+	"PipelineType": "Compute",
 
 	"CS": "Shaders\\SSAOBlurHorizontal_cs.cso"
 }

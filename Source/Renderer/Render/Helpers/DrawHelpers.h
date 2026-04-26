@@ -1,8 +1,12 @@
 #pragma once
 
-#include "RHI/CommandList.h"
 
 class Frame;
+namespace rhi
+{
+    class CommandList;
+    class PipelineState;
+} // namespace rhi
 
 namespace render
 {
@@ -14,25 +18,25 @@ namespace render
         DrawHelper(const DrawHelper&) = delete;
         DrawHelper& operator=(const DrawHelper&) = delete;
 
-        static void Init();
+        static void Init(rhi::Device* device);
         static void Destroy();
 
-        static void DrawFullscreenTriangle(dx12::CommandList& commandList);
+        static void DrawFullscreenTriangle(rhi::CommandList* commandList);
 
-        static void DrawBox(dx12::CommandList& commandList,
-            const Frame& frame,
+        static void DrawBox(rhi::CommandList* commandList,
+            std::uint64_t frameBufferAddress,
             const DirectX::XMVECTOR& min,
             const DirectX::XMVECTOR& max,
             const DirectX::XMVECTOR& color = DirectX::XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f));
 
-        static void DrawSphere(dx12::CommandList& commandList,
-            const Frame& frame,
+        static void DrawSphere(rhi::CommandList* commandList,
+            std::uint64_t frameBufferAddress,
             float radius = 1.0f,
             const DirectX::XMVECTOR& position = DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f),
             const DirectX::XMVECTOR& color = DirectX::XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f));
 
-        static void DrawCone(dx12::CommandList& commandList,
-            const Frame& frame,
+        static void DrawCone(rhi::CommandList* commandList,
+            std::uint64_t frameBufferAddress,
             float radius = 1.0f,
             float height = 1.0f,
             const DirectX::XMVECTOR& position = DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f),
@@ -40,11 +44,11 @@ namespace render
             const DirectX::XMVECTOR& color = DirectX::XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f));
 
     private:
-        DrawHelper();
+        DrawHelper(rhi::Device* device);
 
-        dx12::PipelineState _boxDebug;
-        dx12::PipelineState _sphereDebug;
-        dx12::PipelineState _coneDebug;
+        std::unique_ptr<rhi::PipelineState> _boxDebug;
+        std::unique_ptr<rhi::PipelineState> _sphereDebug;
+        std::unique_ptr<rhi::PipelineState> _coneDebug;
 
         static std::unique_ptr<DrawHelper> _instance;
     };

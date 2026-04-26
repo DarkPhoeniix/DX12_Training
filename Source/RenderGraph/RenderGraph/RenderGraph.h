@@ -1,17 +1,12 @@
 #pragma once
 
+#include "Interfaces.h"
 #include "RenderPass.h"
 #include "RenderContext.h"
 
 #include "Helpers/PassWorkerManager.h"
 
-#include "Renderer/Core/ResourceTable.h"
-#include "Renderer/Core/TextureManager.h"
-#include "Renderer/Scene/Scene.h"
 #include "Renderer/Helpers/Profiler.h"
-
-class Frame;
-class TaskGPU;
 
 namespace rg
 {
@@ -20,17 +15,16 @@ namespace rg
     class RenderGraph
     {
     public:
-        RenderGraph();
+        RenderGraph(rhi::Device* device, IDescriptorProvider* decriptorProvider);
         RenderGraph(const RenderGraph&) = delete;
         RenderGraph(RenderGraph&&) = default;
-        ~RenderGraph() = default;
+        ~RenderGraph();
 
         RenderGraph& operator=(const RenderGraph&) = delete;
         RenderGraph& operator=(RenderGraph&&) = default;
 
-        void SetFrame(Frame& frame);
-
-        void Init(ResourceTable& resourceTable, TextureManager& textureManager);
+        void SetTaskAllocator(ITaskAllocator* allocator);
+        void SetFrameBuffer(rhi::Buffer* buffer);
 
         void Reset();
         void Compile();
@@ -44,13 +38,13 @@ namespace rg
         }
         void AddPass(std::shared_ptr<IRenderPass> pass);
 
-        void ImportResource(std::shared_ptr<dx12::Resource> resource);
-        void ExportResource(const std::string& name, std::shared_ptr<dx12::Resource> desctination);
+        void ImportResource(std::shared_ptr<rhi::Buffer> resource, const std::string& name);
+        void ImportResource(std::shared_ptr<rhi::Texture> resource, const std::string& name);
+        void ExportResource(const std::string& name, std::shared_ptr<rhi::Texture> desctination);
+        void ExportResource(const std::string& name, std::shared_ptr<rhi::Buffer> desctination);
 
-#if ENABLE_PROFILING
-        void SetGPUProfiler(Profiler* gpuProfiler);
-        Profiler* GetGPUProfiler() const { return _gpuProfiler; }
-#endif
+        void SetProfiler(Profiler* profiler);
+        Profiler* GetProfiler() const { return _profiler; }
 
     private:
         friend class RenderPassBuilder;
@@ -65,22 +59,18 @@ namespace rg
         std::vector<std::vector<std::uint32_t>> _adjacencyLists;
         std::vector<std::shared_ptr<IRenderPass>> _passes;
         std::vector<std::uint32_t> _sortedPasses;
-        std::vector<TaskGPU*> _GPUTasks;
+        std::vector<ITask*> _GPUTasks;
 
-#if ENABLE_PROFILING
-        Profiler* _gpuProfiler;
+        Profiler* _profiler;
 
-        TaskGPU* _beginFrameTask;
-        TaskGPU* _endFrameTask;
+        ITask* _beginFrameTask;
+        ITask* _endFrameTask;
         Profiler::TimerID _frameTimerID;
-#endif
 
         bool _transitionedToWorkingState = false;
 
-        Frame* _frame;
+        ITaskAllocator* _taskAllocator;
         RenderContext _context;
-
-        std::shared_ptr<scene::Scene> _scene;
 
         std::unique_ptr<mt::PassWorkerManager> _workerManager;
     };

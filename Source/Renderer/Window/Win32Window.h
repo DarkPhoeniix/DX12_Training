@@ -2,10 +2,10 @@
 
 #include "Window/IWindowEventListener.h"
 
-namespace dx12
+namespace rhi
 {
     class SwapChain;
-} // namespace dx12
+} // namespace rhi
 
 namespace core
 {
@@ -35,7 +35,7 @@ namespace core
         void AddEventListener(events::IWindowEventListener* listener);
         void RemoveEventListener(events::IWindowEventListener* listener);
 
-        void SetSwapChain(dx12::SwapChain* swapChain);
+        void SetSwapChain(rhi::SwapChain* swapChain);
 
         LRESULT WindowProcCallback(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
@@ -46,7 +46,7 @@ namespace core
 
         std::vector<events::IWindowEventListener*> _eventListeners;
 
-        dx12::SwapChain* _swapChain;
+        rhi::SwapChain* _swapChain;
 
         std::wstring _title;
         UINT _windowStyle;

@@ -8,7 +8,7 @@ namespace gui
     class DebugInfoWidget : public IWidget
     {
     public:
-        DebugInfoWidget(std::shared_ptr<Editor> editor);
+        DebugInfoWidget(rhi::Device* device, Editor* editor);
         ~DebugInfoWidget() = default;
 
         void Init() override;
@@ -18,5 +18,7 @@ namespace gui
 
     private:
         bool _openDetailedCPUTime;
+
+        rhi::Device* _device;
     };
 } // namespace gui

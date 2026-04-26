@@ -7,11 +7,12 @@ namespace tracking
     class NullCrashTracker final : public IGPUCrashTracker
     {
     public:
-        // Inherited via IGPUCrashTracker
         void Enable() override
         {   }
-        void Initialize(ID3D12Device2*) override
+
+        void Initialize([[maybe_unused]] rhi::Device* device) override
         {   }
+
         void WaitUntilCrashDumpFinished() override
         {   }
     };

@@ -23,7 +23,7 @@ namespace gui
     class EntityComponentsWidget : public IWidget
     {
     public:
-        EntityComponentsWidget(std::shared_ptr<Editor> editor);
+        EntityComponentsWidget(Editor* editor);
         ~EntityComponentsWidget() = default;
 
         void Init() override;

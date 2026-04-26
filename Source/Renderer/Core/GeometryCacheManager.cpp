@@ -42,14 +42,14 @@ void GeometryCacheManager::Clear()
     _cachedGeometries.clear();
 }
 
-GeometryHandle GeometryCacheManager::CacheGeometry(std::shared_ptr<dx12::Resource> geometry)
+GeometryHandle GeometryCacheManager::CacheGeometry(std::shared_ptr<rhi::Buffer> geometry)
 {
     GeometryHandle handle = static_cast<GeometryHandle>(_cachedGeometries.size());
     _cachedGeometries[handle] = geometry;
     return handle;
 }
 
-std::shared_ptr<dx12::Resource> GeometryCacheManager::GetGeometry(GeometryHandle handle) const
+std::shared_ptr<rhi::Buffer> GeometryCacheManager::GetGeometry(GeometryHandle handle) const
 {
     auto it = _cachedGeometries.find(handle);
     if (it == _cachedGeometries.end())

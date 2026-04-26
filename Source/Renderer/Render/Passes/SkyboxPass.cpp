@@ -8,70 +8,59 @@
 #include "RenderGraph/RenderContext.h"
 #include "RenderGraph/RenderPassBuilder.h"
 
-namespace
-{
-	struct PassConstants
-	{
-		std::uint32_t DepthTextureIndex;
-		std::uint32_t SkyboxTextureIndex;
-		std::uint32_t TargetTextureIndex;
-	};
-}
-
 namespace render
 {
-	SkyboxPass::SkyboxPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-		: RenderPass<SkyboxPassData>("skybox_pass", rg::RenderPassType::Compute)
+	namespace
+	{
+		struct PassConstants
+		{
+			std::uint32_t DepthTextureIndex;
+			std::uint32_t SkyboxTextureIndex;
+			std::uint32_t TargetTextureIndex;
+		};
+	}
+
+	SkyboxPass::SkyboxPass(rhi::Device* device, std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
+		: RenderPass<SkyboxPassData>(device, "skybox_pass", rg::RenderPassType::Graphics)
 		, _scene(scene)
 		, _camera(camera)
 	{
-		_skyboxPipeline.Parse("PipelineDescriptions\\SkyboxPipeline.tech");
+		_skyboxPipeline = _device->CreatePipelineState("PipelineDescriptions\\SkyboxPipeline.tech");
 	}
 
 	void SkyboxPass::Setup(rg::RenderPassBuilder& builder)
 	{
 		_data.Depth = builder.DepthStencilRead("depth_target");
 		_data.HDRTarget = builder.WriteTexture("hdr_target");
+		_data.Skybox = builder.ReadTexture("skybox");
 	}
 
-	void SkyboxPass::Execute(rg::RenderContext& context, TaskGPU& task)
+	void SkyboxPass::Execute(rg::RenderContext& context, rg::ITask* task)
 	{
-		dx12::CommandList& commandList = *task.GetCommandLists().front();
-		commandList.SetName("skybox_pass_cmd_list");
+		rhi::CommandList* commandList = task->GetCommandList();
 
 		if (std::shared_ptr<scene::Entity> entity = _scene->FindNodeByComponentName("Skybox"))
 		{
-            PIXScopedEvent(commandList.GetDXCommandList().Get(), 2, "Skybox Pass");
+            GPU_SCOPED_EVENT(commandList, "Skybox Pass", 2);
 
-			std::shared_ptr<scene::Skybox> skyboxComponent = entity->GetComponentAs<scene::Skybox>("Skybox");
+			commandList->SetComputePipelineState(_skyboxPipeline.get());
 
-			std::shared_ptr<dx12::Resource> skybox = context.GetTextureManager().GetTexture(skyboxComponent->SkydomeTextureHandle);
-			std::shared_ptr<dx12::Resource> target = context.GetResource(_data.HDRTarget);
-			std::shared_ptr<dx12::Resource> depth = context.GetResource(_data.Depth);
-
-			DescriptorHandle targetHandle = context.GetStaticResourceHandle(target->GetAsUAV());
-			DescriptorHandle depthHandle = context.GetStaticResourceHandle(depth->GetAsSRV());
-			DescriptorHandle skyboxHandle = context.GetStaticResourceHandle(skybox->GetAsSRV());
-
-			context.BindBindlessTable(commandList);
-			commandList.SetPipelineState(_skyboxPipeline);
-
-			commandList.SetCBV(0, context.GetFrame()->GetBuffer()->OffsetGPU());
 			PassConstants passCB =
 			{
-				.DepthTextureIndex = depthHandle.Index,
-				.SkyboxTextureIndex = skyboxHandle.Index,
-				.TargetTextureIndex = targetHandle.Index
+				.DepthTextureIndex = context.GetBindlessIndex(_data.Depth, rhi::ResourceViewType::SRV),
+				.SkyboxTextureIndex = context.GetBindlessIndex(_data.Skybox, rhi::ResourceViewType::SRV),
+				.TargetTextureIndex = context.GetBindlessIndex(_data.HDRTarget, rhi::ResourceViewType::UAV)
 			};
-			commandList.SetConstants(1, 3, &passCB);
+			commandList->SetComputeCBV(0, context.GetFrameBuffer()->GetVirtualAddress());
+			commandList->SetComputeConstants(1, 3, &passCB);
 
-			DirectX::XMUINT2 viewportSize = _camera->GetViewport().GetSize();
+			DirectX::XMUINT2 viewportSize = _camera->GetSize();
 			int xThreadGroups = (uint32_t)std::ceilf(viewportSize.x / 8.0f);
 			int yThreadGroups = (uint32_t)std::ceilf(viewportSize.y / 8.0f);
 
-			commandList.Dispatch(xThreadGroups, yThreadGroups);
+			commandList->Dispatch(xThreadGroups, yThreadGroups);
 		}
 
-		commandList.Close();
+		commandList->Close();
 	}
 } // namespace render

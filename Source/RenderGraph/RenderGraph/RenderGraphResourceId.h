@@ -27,30 +27,25 @@ namespace rg
         UnorderedAccess
     };
 
-    struct RGResourceId
+    template<RGResourceType ResourceType>
+    struct TypedRGResourceId
     {
         using ResourceId = std::uint64_t;
         static constexpr ResourceId InvalidID = ResourceId(-1);
 
-        RGResourceId();
-        RGResourceId(std::uint64_t id);
-        RGResourceId(const RGResourceId&) = default;
-        ~RGResourceId() = default;
+        TypedRGResourceId() = default;
+        TypedRGResourceId(std::uint64_t id)
+            : ID(id)
+        {   }
+        TypedRGResourceId(const TypedRGResourceId&) = default;
+        ~TypedRGResourceId() = default;
 
-        auto operator<=>(const RGResourceId&) const = default;
+        auto operator<=>(const TypedRGResourceId&) const = default;
 
-        void Invalidate();
-        bool IsValid() const;
+        void Invalidate() { ID = InvalidID; }
+        bool IsValid() const { return ID != InvalidID; }
 
         ResourceId ID;
-    };
-
-    template<RGResourceType ResourceType>
-    struct TypedRGResourceId : public RGResourceId
-    {
-        using RGResourceId::RGResourceId;
-
-        TypedRGResourceId(RGResourceId id) : RGResourceId(id) {}
     };
 
     using RGBufferId = TypedRGResourceId<RGResourceType::Buffer>;
@@ -62,7 +57,7 @@ namespace rg
     {
         using RGBufferId::RGBufferId;
 
-        RGBufferModeId(RGResourceId id) : RGBufferId(id) {}
+        RGBufferModeId(RGBufferId id) : RGBufferId(id) {}
     };
 
     template<RGResourceMode Mode>
@@ -70,7 +65,7 @@ namespace rg
     {
         using RGTextureId::RGTextureId;
 
-        RGTextureModeId(RGResourceId id) : RGTextureId(id) {}
+        RGTextureModeId(RGTextureId id) : RGTextureId(id) {}
     };
 
     template<RGResourceMode Mode>
@@ -78,7 +73,7 @@ namespace rg
     {
         using RGVirtualResourceId::RGVirtualResourceId;
 
-        RGVirtualResourceModeId(RGResourceId id) : RGVirtualResourceId(id) {}
+        RGVirtualResourceModeId(RGTextureId id) : RGVirtualResourceId(id) {}
     };
 
     using RGBufferReadId = RGBufferModeId<RGResourceMode::Read>;
@@ -102,12 +97,12 @@ namespace rg
 
 namespace std
 {
-    template<>
-    struct hash<rg::RGResourceId>
+    template<rg::RGResourceType ResourceType>
+    struct hash<rg::TypedRGResourceId<ResourceType>>
     {
-        std::size_t operator()(const rg::RGResourceId& id) const noexcept
+        std::size_t operator()(const rg::TypedRGResourceId<ResourceType>& id) const noexcept
         {
-            return std::hash<rg::RGResourceId::ResourceId>()(id.ID);
+            return std::hash<rg::TypedRGResourceId<ResourceType>::ResourceId>()(id.ID);
         }
     };
 }

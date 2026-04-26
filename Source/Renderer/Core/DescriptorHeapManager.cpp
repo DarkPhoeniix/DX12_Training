@@ -2,10 +2,13 @@
 
 #include "DescriptorHeapManager.h"
 
+#include "RHI/SwapChain.h"
+
 std::unique_ptr<DescriptorHeapManager> DescriptorHeapManager::_instance = nullptr;
 
-DescriptorHeapManager::DescriptorHeapManager(std::uint32_t maxRTVDescriptors, std::uint32_t maxDSVDescriptors, std::uint32_t maxStaticDescriptors, std::uint32_t maxDynamicDescriptors)
+DescriptorHeapManager::DescriptorHeapManager(rhi::Device* device, std::uint32_t maxRTVDescriptors, std::uint32_t maxDSVDescriptors, std::uint32_t maxStaticDescriptors, std::uint32_t maxDynamicDescriptors)
     : _frameIndex(0)
+    , _device(device)
 {
     _RTVAllocator = DescriptorAllocator(0, maxRTVDescriptors);
 
@@ -15,40 +18,45 @@ DescriptorHeapManager::DescriptorHeapManager(std::uint32_t maxRTVDescriptors, st
     _staticAllocator = DescriptorAllocator(heapOffset, maxStaticDescriptors);
     heapOffset += maxStaticDescriptors;
 
-    for (size_t i = 0; i < dx12::BACK_BUFFER_COUNT; ++i)
+    for (size_t i = 0; i < rhi::BACK_BUFFER_COUNT; ++i)
     {
         _dynamicAllocator.emplace_back(heapOffset, maxDynamicDescriptors);
         heapOffset += maxDynamicDescriptors;
     }
 
-    dx12::DescriptorHeapDescription rtvHeapDesc;
-    rtvHeapDesc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-    rtvHeapDesc.SetNumDescriptors(maxRTVDescriptors);
-    _RTVDescriptorHeap.Create(rtvHeapDesc);
-    _RTVDescriptorHeap.SetName("RTV Descriptor Heap");
+    rhi::DescriptorHeapDescription rtvHeapDesc =
+    {
+        .Type = rhi::DescriptorHeapType::RTV,
+        .NumDescriptors = maxRTVDescriptors,
+        .ShaderVisible = false
+    };
+    _RTVDescriptorHeap = _device->CreateDescriptorHeap(rtvHeapDesc, "RTV Descriptor Heap");
 
-    dx12::DescriptorHeapDescription dsvHeapDesc;
-    dsvHeapDesc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-    dsvHeapDesc.SetNumDescriptors(maxDSVDescriptors);
-    _DSVDescriptorHeap.Create(dsvHeapDesc);
-    _DSVDescriptorHeap.SetName("DSV Descriptor Heap");
+    rhi::DescriptorHeapDescription dsvHeapDesc =
+    {
+        .Type = rhi::DescriptorHeapType::DSV,
+        .NumDescriptors = maxDSVDescriptors,
+        .ShaderVisible = false
+    };
+    _DSVDescriptorHeap = _device->CreateDescriptorHeap(dsvHeapDesc, "DSV Descriptor Heap");
 
-    dx12::DescriptorHeapDescription buffersHeapDesc;
-    buffersHeapDesc.SetType(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-    buffersHeapDesc.SetNumDescriptors(maxStaticDescriptors + maxDynamicDescriptors * dx12::BACK_BUFFER_COUNT);
-    buffersHeapDesc.SetFlags(D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
-    _shaderResourcesDescriptorHeap.Create(buffersHeapDesc);
-    _shaderResourcesDescriptorHeap.SetName("Shader Resources Descriptor Heap");
+    rhi::DescriptorHeapDescription buffersHeapDesc =
+    {
+        .Type = rhi::DescriptorHeapType::CBV_SRV_UAV,
+        .NumDescriptors = maxStaticDescriptors + maxDynamicDescriptors * rhi::BACK_BUFFER_COUNT,
+        .ShaderVisible = true
+    };
+    _shaderResourcesDescriptorHeap = _device->CreateDescriptorHeap(buffersHeapDesc, "Shader Resources Descriptor Heap");
 }
 
-void DescriptorHeapManager::Create(std::uint32_t maxRTVDescriptors, std::uint32_t maxDSVDescriptors, std::uint32_t maxStaticDescriptors, std::uint32_t maxDynamicDescriptors)
+void DescriptorHeapManager::Create(rhi::Device* device, std::uint32_t maxRTVDescriptors, std::uint32_t maxDSVDescriptors, std::uint32_t maxStaticDescriptors, std::uint32_t maxDynamicDescriptors)
 {
     if (_instance)
     {
         LOG_WARNING("DescriptorHeapManager instance already exists. Creation skipped.");
         return;
     }
-    _instance = std::unique_ptr<DescriptorHeapManager>(new DescriptorHeapManager(maxRTVDescriptors, maxDSVDescriptors, maxStaticDescriptors, maxDynamicDescriptors));
+    _instance = std::unique_ptr<DescriptorHeapManager>(new DescriptorHeapManager(device, maxRTVDescriptors, maxDSVDescriptors, maxStaticDescriptors, maxDynamicDescriptors));
 }
 
 void DescriptorHeapManager::Destroy()
@@ -81,21 +89,21 @@ DescriptorHandle DescriptorHeapManager::AllocateStatic(DescriptorHeapType type)
     {
     case DescriptorHeapType::RTV:
         handle.Index = _RTVAllocator.Allocate();
-        handle.CpuHandle = _RTVDescriptorHeap.GetCPUHandleWithOffset(handle.Index);
+        handle.CpuHandle = _RTVDescriptorHeap->GetCPUHandleWithOffset(handle.Index);
         break;
     case DescriptorHeapType::DSV:
         handle.Index = _DSVAllocator.Allocate();
-        handle.CpuHandle = _DSVDescriptorHeap.GetCPUHandleWithOffset(handle.Index);
+        handle.CpuHandle = _DSVDescriptorHeap->GetCPUHandleWithOffset(handle.Index);
         break;
     case DescriptorHeapType::Static:
         handle.Index = _staticAllocator.Allocate();
-        handle.CpuHandle = _shaderResourcesDescriptorHeap.GetCPUHandleWithOffset(handle.Index);
-        handle.GpuHandle = _shaderResourcesDescriptorHeap.GetGPUHandleWithOffset(handle.Index);
+        handle.CpuHandle = _shaderResourcesDescriptorHeap->GetCPUHandleWithOffset(handle.Index);
+        handle.GpuHandle = _shaderResourcesDescriptorHeap->GetGPUHandleWithOffset(handle.Index);
         break;
     case DescriptorHeapType::Dynamic:
         handle.Index = _dynamicAllocator[_frameIndex].Allocate();
-        handle.CpuHandle = _shaderResourcesDescriptorHeap.GetCPUHandleWithOffset(handle.Index);
-        handle.GpuHandle = _shaderResourcesDescriptorHeap.GetGPUHandleWithOffset(handle.Index);
+        handle.CpuHandle = _shaderResourcesDescriptorHeap->GetCPUHandleWithOffset(handle.Index);
+        handle.GpuHandle = _shaderResourcesDescriptorHeap->GetGPUHandleWithOffset(handle.Index);
         break;
     }
 
@@ -110,8 +118,8 @@ DescriptorHandle DescriptorHeapManager::AllocateTransient(DescriptorHeapType typ
     DescriptorHandle handle =
     {
         .Index = index,
-        .CpuHandle = _shaderResourcesDescriptorHeap.GetCPUHandleWithOffset(index),
-        .GpuHandle = _shaderResourcesDescriptorHeap.GetGPUHandleWithOffset(index)
+        .CpuHandle = _shaderResourcesDescriptorHeap->GetCPUHandleWithOffset(index),
+        .GpuHandle = _shaderResourcesDescriptorHeap->GetGPUHandleWithOffset(index)
     };
 
     return handle;
@@ -124,9 +132,9 @@ void DescriptorHeapManager::ResetTransient()
 
 void DescriptorHeapManager::Reset()
 {
-    _RTVDescriptorHeap.Reset();
-    _DSVDescriptorHeap.Reset();
-    _shaderResourcesDescriptorHeap.Reset();
+    _RTVDescriptorHeap->Reset();
+    _DSVDescriptorHeap->Reset();
+    _shaderResourcesDescriptorHeap->Reset();
 
     _RTVAllocator.Reset();
     _DSVAllocator.Reset();
@@ -137,19 +145,14 @@ void DescriptorHeapManager::Reset()
     }
 }
 
-void DescriptorHeapManager::Bind(dx12::CommandList& commandList)
-{
-    commandList.SetDescriptorHeaps({ _shaderResourcesDescriptorHeap.GetDXDescriptorHeap().Get() });
-}
-
 void DescriptorHeapManager::AdvanceFrameIndex()
 {
-    _frameIndex = (_frameIndex + 1) % dx12::BACK_BUFFER_COUNT;
+    _frameIndex = (_frameIndex + 1) % rhi::BACK_BUFFER_COUNT;
 }
 
-const dx12::DescriptorHeap& DescriptorHeapManager::GetShaderResourcesDescriptorHeap() const
+rhi::DescriptorHeap* DescriptorHeapManager::GetShaderResourcesDescriptorHeap() const
 {
-    return _shaderResourcesDescriptorHeap;
+    return _shaderResourcesDescriptorHeap.get();
 }
 
 DescriptorHeapManager::DescriptorAllocator::DescriptorAllocator(std::uint32_t start, std::uint32_t maxDescriptors)

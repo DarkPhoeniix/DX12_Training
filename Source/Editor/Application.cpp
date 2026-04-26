@@ -8,11 +8,13 @@
 #include "Events/UpdateEvent.h"
 #include "Input/InputDevice.h"
 
-#include "Core/DXRenderer.h"
+#include "Core/Renderer.h"
 #include "Helpers/DebugInfo.h"
 #include "Window/Win32Window.h"
 
 #include "Resources/resource.h"
+
+#include "RHI/CommandQueue.h"
 
 #include "Renderer/Window/Win32Window.h"
 
@@ -59,8 +61,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPara
 
 Application::Application(HINSTANCE hInstance)
     : _hInstance(hInstance)
-    , _currentFrame(&_frames[0])
+    , _currentFrame(nullptr)
+    , _device(rhi::CreateDevice(rhi::BackendAPI::D3D12))
 {
+    _frames.resize(rhi::BACK_BUFFER_COUNT);
+    for (size_t i = 0; i < rhi::BACK_BUFFER_COUNT; ++i)
+    {
+        _frames[i] = std::make_unique<Frame>(_device.get());
+    }
+    _fencePool = std::make_unique<FencePool>(_device.get());
+
+    DebugInfo::Init(_device.get());
+
     _RegisterWindowClass(hInstance);
 }
 
@@ -72,58 +84,62 @@ void Application::Init(HINSTANCE hInstance)
 {
     logging::Logger::Init("engine.log");
 
-    dx12::Device::Init();
-    DebugInfo::Init();
     _instance = new Application(hInstance);
 }
 
-int Application::Run(std::shared_ptr<DXRenderer> pApp, std::string cmdLine)
+int Application::Run(const WindowParams& windowParams, std::string cmdLine)
 {
     // Initialization
     {
-        _swapChain.Init(_win32Window->GetWindowHandle(), _win32Window->GetWidth(), _win32Window->GetHeight(), _win32Window->IsVSync());
-        _win32Window->SetSwapChain(&_swapChain);
-        dx12::Device::BindSwapChain(&_swapChain);
+        _win32Window = CreateWin32Window(windowParams.Width, windowParams.Height, windowParams.Name, windowParams.VSyns);
+        _renderer = std::make_unique<render::DXRenderer>(_device.get(), _win32Window->GetWindowHandle());
 
-        _allocs.Init();
-        _fencePool.Init();
+        _swapChain = _device->CreateSwapChain(_win32Window->GetWindowHandle(), _win32Window->GetWidth(), _win32Window->GetHeight(), _win32Window->IsVSync());
+        _win32Window->SetSwapChain(_swapChain.get());
+        _device->BindSwapChain(_swapChain.get());
 
-        for (int i = 0; i < dx12::BACK_BUFFER_COUNT; ++i)
+        _fencePool->Init();
+
+        for (int i = 0; i < rhi::BACK_BUFFER_COUNT; ++i)
         {
-            int nextIndex = (i + 1) % dx12::BACK_BUFFER_COUNT;
-            int prevIndex = (i == 0) ? (dx12::BACK_BUFFER_COUNT - 1) : (i - 1);
+            int nextIndex = (i + 1) % rhi::BACK_BUFFER_COUNT;
+            int prevIndex = (i == 0) ? (rhi::BACK_BUFFER_COUNT - 1) : (i - 1);
 
-            Frame& frame = _frames[i];
-            frame.Index = i;
-            frame.Next = &_frames[nextIndex];
-            frame.Prev = &_frames[prevIndex];
+            Frame* frame = _frames[i].get();
+            frame->Index = i;
+            frame->Next = _frames[nextIndex].get();
+            frame->Prev = _frames[prevIndex].get();
 
-            frame.SetSyncPoint(nullptr);
-            frame.SetAllocatorPool(&_allocs);
-            frame.SetFencePool(&_fencePool);
+            frame->SetSyncPoint(nullptr);
+            frame->SetFencePool(_fencePool.get());
 
-            frame.Init({ (uint32_t)_win32Window->GetWidth(), (uint32_t)_win32Window->GetHeight() });
+            frame->Init((uint32_t)_win32Window->GetWidth(), (uint32_t)_win32Window->GetHeight());
         }
 
-        pApp->SetFrame(*_currentFrame);
+        _currentFrame = _frames[0].get();
+
+        _renderer->SetFrame(*_currentFrame);
     }
 
-    _win32Window->AddEventListener(pApp.get());
+    _win32Window->AddEventListener(_renderer.get());
 
-    events::InputDevice::Instance().AddInputObserver(pApp.get());
+    events::InputDevice::Instance().AddInputObserver(_renderer.get());
 
-    TaskGPU* uploadTask = _currentFrame->CreateTask(D3D12_COMMAND_LIST_TYPE_COMPUTE, nullptr);
-    if (!pApp->LoadContent(uploadTask, cmdLine))
+    rg::ITask* task = _currentFrame->AllocateTask(rhi::CommandListType::Graphics, nullptr);
+    task->SetName("LoadContent");
+
+    TaskGPU* uploadTask = _currentFrame->GetTask("LoadContent");
+    if (!_renderer->LoadContent(uploadTask, cmdLine))
     {
         return 1;
     }
     _currentFrame->SetSyncPoint(uploadTask->GetFence());
     _ExecuteFrameTasks();
 
-    _editor = std::make_shared<gui::Editor>(_win32Window->GetWindowHandle());
-    _editor->Init(pApp->GetCurrentScene());
+    _editor = std::make_shared<gui::Editor>(_device.get(), _win32Window->GetWindowHandle());
+    _editor->Init(_renderer->GetCurrentScene());
     _win32Window->AddEventListener(_editor.get());
-    _editor->SetRenderGraph(&pApp->GetRenderGraph());
+    _editor->SetRenderGraph(_renderer->GetRenderGraph());
     _editor->AddGUIRenderPass();
 
     MSG msg = { 0 };
@@ -139,19 +155,19 @@ int Application::Run(std::shared_ptr<DXRenderer> pApp, std::string cmdLine)
 
         _editor->NewFrame();
 
-        _UpdateCall(pApp);
-        _RenderCall(pApp);
+        _UpdateCall();
+        _RenderCall();
 
         _ExecuteFrameTasks();
         _currentFrame = _currentFrame->Next;
     }
 
-    for (Frame& frame : _frames)
+    for (const auto& frame : _frames)
     {
-        frame.WaitCPU();
+        frame->WaitCPU();
     }
 
-    pApp->UnloadContent();
+    _renderer->UnloadContent();
 
     return static_cast<int>(msg.wParam);
 }
@@ -160,7 +176,6 @@ void Application::Quit(int exitCode)
 {
     Instance()->_editor->Destroy();
     DebugInfo::Destroy();
-    dx12::Device::Destroy();
 
     PostQuitMessage(exitCode);
 
@@ -178,14 +193,13 @@ Application* Application::Instance()
     return _instance;
 }
 
-std::shared_ptr<core::Win32Window> Application::CreateWin32Window(int width, int height, const std::wstring& title, bool vSync)
+std::unique_ptr<core::Win32Window> Application::CreateWin32Window(int width, int height, const std::wstring& title, bool vSync)
 {
-    std::shared_ptr<core::Win32Window> pWindow = std::make_shared<core::Win32Window>(Instance()->_hInstance, width, height, title, vSync);
-    Instance()->_win32Window = pWindow;
+    std::unique_ptr<core::Win32Window> pWindow = std::make_unique<core::Win32Window>(Instance()->_hInstance, width, height, title, vSync);
 
     pWindow->Show();
 
-    return pWindow;
+    return std::move(pWindow);
 }
 
 void Application::_RegisterWindowClass(HINSTANCE hInstance)
@@ -211,31 +225,31 @@ void Application::_RegisterWindowClass(HINSTANCE hInstance)
     }
 }
 
-void Application::_UpdateCall(std::shared_ptr<DXRenderer> pApp)
+void Application::_UpdateCall()
 {
     _updateClock.Tick();
 
     events::UpdateEvent updateEvent(_updateClock.GetDeltaSeconds(), _updateClock.GetTotalSeconds(), _currentFrame->Index);
-    pApp->OnUpdate(updateEvent);
+    _renderer->OnUpdate(updateEvent);
 }
 
-void Application::_RenderCall(std::shared_ptr<DXRenderer> pApp)
+void Application::_RenderCall()
 {
     _renderClock.Tick();
 
     events::RenderEvent renderEvent(_updateClock.GetDeltaSeconds(), _updateClock.GetTotalSeconds(), _currentFrame->Index);
-    pApp->SetFrame(*_currentFrame);
-    pApp->OnRender(renderEvent);
+    _renderer->SetFrame(*_currentFrame);
+    _renderer->OnRender(renderEvent);
 }
 
 void Application::_ExecuteFrameTasks()
 {
-    for (TaskGPU& task : _currentFrame->GetTasks())
+    for (auto& task : _currentFrame->GetTasks())
     {
         std::vector<TaskGPU*> dependencies;
 
         // wait
-        for (const std::string& dependency : task.GetDependencies())
+        for (const std::string& dependency : task->GetDependencies())
         {
             if (TaskGPU* dependentTask = _currentFrame->GetTask(dependency))
             {
@@ -243,25 +257,24 @@ void Application::_ExecuteFrameTasks()
             }
         }
 
+        rhi::CommandQueue* queue = _device->GetQueue(task->GetType());
+        rhi::Fence* fence = task->GetFence();
+
         for (TaskGPU* d : dependencies)
         {
-            task.GetCommandQueue()->Wait(d->GetFence()->GetDXFence().Get(), d->GetFenceValue());
+            rhi::Fence* dFence = d->GetFence();
+            queue->Wait(dFence, dFence->GetValue());
         }
 
-        std::vector<ID3D12CommandList*> frameCommandLists;
-        frameCommandLists.reserve(task.GetCommandLists().size());
-        for (auto cl : task.GetCommandLists())
+        std::vector<rhi::CommandList*> frameCommandLists = { task->GetCommandList() };
+
+        queue->ExecuteCommandLists(frameCommandLists);
+
+        if (task->GetName() == "present_pass")
         {
-            frameCommandLists.push_back(cl->GetDXCommandList().Get());
+            _device->Present();
+            _currentFrame->SetSyncPoint(task->GetFence());
         }
-
-        task.GetCommandQueue()->ExecuteCommandLists(frameCommandLists.size(), frameCommandLists.data());
-
-        if (task.GetName() == "present_pass")
-        {
-            dx12::Device::Present();
-            _currentFrame->SetSyncPoint(task.GetFence());
-        }
-        task.GetCommandQueue()->Signal(task.GetDXFence(), task.GetFenceValue());
+        queue->Signal(fence, fence->GetValue());
     }
 }

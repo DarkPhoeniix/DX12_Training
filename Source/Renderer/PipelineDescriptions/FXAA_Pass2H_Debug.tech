@@ -1,7 +1,7 @@
 {
 	"Type": "FXAA_Pass2H",
 
-	"IsGraphicsPipeline": false,
+	"PipelineType": "Compute",
 
 	"CS": "Shaders\\FXAA_Pass2H_Debug_cs.cso"
 }

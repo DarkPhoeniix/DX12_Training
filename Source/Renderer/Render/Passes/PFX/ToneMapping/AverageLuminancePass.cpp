@@ -20,7 +20,7 @@ namespace render
 		constexpr float LOG_LUM_RANGE = (MAX_LOG_LUM - MIN_LOG_LUM);
 		constexpr float RCP_LOG_LUM_RANGE = 1.0f / LOG_LUM_RANGE;
 
-		struct PassCB
+		struct PassConstants
 		{
 			std::uint32_t PixelCount;
 			float MinLogLuminance;
@@ -31,74 +31,61 @@ namespace render
 		};
 	} // namespace unnamed
 
-	AverageLuminancePass::AverageLuminancePass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-		: RenderPass<AverageLuminancePassData>("average_luminance_pass", rg::RenderPassType::Compute)
+	AverageLuminancePass::AverageLuminancePass(rhi::Device* device, std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
+		: RenderPass<AverageLuminancePassData>(device, "average_luminance_pass", rg::RenderPassType::Graphics)
 		, _scene(scene)
 		, _camera(camera)
 	{
-		_averageLuminancePipeline.Parse("PipelineDescriptions\\AverageLuminancePipeline.tech");
+		_averageLuminancePipeline = _device->CreatePipelineState("PipelineDescriptions\\AverageLuminancePipeline.tech");
 	}
 
 	void AverageLuminancePass::Setup(rg::RenderPassBuilder& builder)
 	{
-		dx12::ResourceDescription lumDesc;
+		rhi::BufferDescription lumDesc =
 		{
-			lumDesc.SetSize({ sizeof(float), 1 });
-			lumDesc.SetStride(sizeof(float));
-			lumDesc.SetResourceType(dx12::ResourceType::Buffer | dx12::ResourceType::Unordered);
-		}
+			.Size = sizeof(float),
+			.Stride = sizeof(float),
+			.Flags = rhi::ResourceFlags::AllowUnorderedAccess
+		};
 		builder.DeclareBuffer("average_luminance", lumDesc);
 
 		_data.AverageLuminance = builder.WriteBuffer("average_luminance");
 		_data.LuminanceHistogram = builder.WriteBuffer("luminance_histogram");
 	}
 
-	void AverageLuminancePass::Execute(rg::RenderContext& context, TaskGPU& task)
+	void AverageLuminancePass::Execute(rg::RenderContext& context, rg::ITask* task)
 	{
-		dx12::CommandList& commandList = *task.GetCommandLists().front();
-		commandList.SetName("average_luminance_pass_cmd_list");
+		rhi::CommandList* commandList = task->GetCommandList();
 
 		{
-            PIXScopedEvent(commandList.GetDXCommandList().Get(), 5, "Compute Average Luminance Pass");
-
-			// Copy and setup needed resources
-
-			std::shared_ptr<dx12::Resource> luminanceHistogram = context.GetResource(_data.LuminanceHistogram);
-			std::shared_ptr<dx12::Resource> averageLuminance = context.GetResource(_data.AverageLuminance);
-
-			DescriptorHandle luminanceHistogramHandle = context.GetStaticResourceHandle(luminanceHistogram->GetAsUAV());
-			DescriptorHandle averageLuminanceHandle = context.GetStaticResourceHandle(averageLuminance->GetAsUAV());
+            GPU_SCOPED_EVENT(commandList, "Compute Average Luminance Pass", 5);
 
 			// Setup pipeline state
 
-			context.BindBindlessTable(commandList);
-
-			commandList.SetPipelineState(_averageLuminancePipeline);
+			commandList->SetComputePipelineState(_averageLuminancePipeline.get());
 
 			// Setup root signature components
 
-			DirectX::XMUINT2 viewportSize = _camera->GetViewport().GetSize();
+			DirectX::XMUINT2 viewportSize = _camera->GetSize();
 			std::uint32_t size = viewportSize.x * viewportSize.y;
 
-			PassCB passConstants =
+			PassConstants passConstants =
 			{
 				.PixelCount = size,
 				.MinLogLuminance = MIN_LOG_LUM,
 				.LogLuminanceRange = LOG_LUM_RANGE,
 
-				.LuminanceHistogramIndex = static_cast<std::uint32_t>(luminanceHistogramHandle.Index),
-				.AverageLuminanceBufferIndex = static_cast<std::uint32_t>(averageLuminanceHandle.Index)
+				.LuminanceHistogramIndex = context.GetBindlessIndex(_data.LuminanceHistogram, rhi::ResourceViewType::UAV),
+				.AverageLuminanceBufferIndex = context.GetBindlessIndex(_data.AverageLuminance, rhi::ResourceViewType::UAV),
 			};
-			commandList.SetCBV(0, context.GetFrame()->GetBuffer()->OffsetGPU());
-			commandList.SetConstants(1, 5, &passConstants);
+			commandList->SetComputeCBV(0, context.GetFrameBuffer()->GetVirtualAddress());
+			commandList->SetComputeConstants(1, 5, &passConstants);
 
 			// Execute
 
-			std::uint32_t xThreadGroups = (std::uint32_t)std::ceilf(viewportSize.x / float(LUM_HISTOGRAM_THREADS_NUM));
-			std::uint32_t yThreadGroups = (std::uint32_t)std::ceilf(viewportSize.y / float(LUM_HISTOGRAM_THREADS_NUM));
-			commandList.Dispatch();
+			commandList->Dispatch();
 		}
 
-		commandList.Close();
+		commandList->Close();
 	}
 } // namespace render

@@ -33,5 +33,6 @@ namespace scene
 
         bool CastShadows;
         TextureHandle ShadowMapHandle = InvalidTextureHandle;
+        rhi::ResourceID ShadowMapId = rhi::InvalidResourceID; // TODO: this is used to get shadow maps in render graph
     };
 }

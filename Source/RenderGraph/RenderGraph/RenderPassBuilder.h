@@ -18,8 +18,8 @@ namespace rg
         RenderPassBuilder& operator=(const RenderPassBuilder&) = default;
         RenderPassBuilder& operator=(RenderPassBuilder&&) = default;
 
-        void DeclareBuffer(const std::string& name, const dx12::ResourceDescription& desc, void* data = nullptr, size_t dataSize = 0);
-        void DeclareTexture(const std::string& name, const dx12::ResourceDescription& desc, void* data = nullptr, size_t dataSize = 0);
+        void DeclareBuffer(const std::string& name, const rhi::BufferDescription& desc, void* data = nullptr, size_t dataSize = 0);
+        void DeclareTexture(const std::string& name, const rhi::TextureDescription& desc, void* data = nullptr, size_t dataSize = 0);
 
         [[nodiscard]] RGBufferReadId ReadBuffer(const std::string& name);
         [[nodiscard]] RGBufferWriteId WriteBuffer(const std::string& name);

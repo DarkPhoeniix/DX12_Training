@@ -1,7 +1,7 @@
 {
 	"Type": "DebugMetallicView",
 
-	"IsGraphicsPipeline": true,
+	"PipelineType": "Graphics",
 
 	"TopologyType": "triangle",
 

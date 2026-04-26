@@ -5,25 +5,46 @@
 
 #ifdef _DEBUG
 #define FAIL(statement, message) \
-    if (!(statement)) { \
+    do { \
+        if (!(statement)) \
+        { \
+            logging::Logger::Instance().Log(logging::Level::Critical, "[%s (%u)] %s", __func__, __LINE__, message); \
+            __debugbreak(); \
+        } \
+    } while (0)
+#define ASSERT(statement, message) \
+    do { \
+        if (!(statement)) \
+        { \
+            logging::Logger::Instance().Log(logging::Level::Error, "[%s (%u)] %s", __func__, __LINE__, message); \
+            __debugbreak(); \
+        } \
+    } while (0)
+#define CHECK(hResult, message) \
+    do { \
+        if (FAILED(hResult)) \
+        { \
+            logging::Logger::Instance().Log(logging::Level::Error, "[%s (%u)] %s \nError code: %u", __func__, __LINE__, hResult); \
+            __debugbreak(); \
+        } \
+    } while (0)
+#define UNREACHABLE(message) \
+    do { \
         logging::Logger::Instance().Log(logging::Level::Critical, "[%s (%u)] %s", __func__, __LINE__, message); \
         __debugbreak(); \
-    }
-#define ASSERT(statement, message) \
-    if (!(statement)) { \
-        logging::Logger::Instance().Log(logging::Level::Error, "[%s (%u)] %s", __func__, __LINE__, message); \
+    } while (0)
+#define NOT_IMPLEMENTED() \
+    do { \
+        logging::Logger::Instance().Log(logging::Level::Critical, "[%s (%u)] NOT IMPLEMENTED!", __func__, __LINE__); \
         __debugbreak(); \
-    }
-#define CHECK(hResult, message) \
-    if (FAILED(hResult)) { \
-        logging::Logger::Instance().Log(logging::Level::Error, "[%s (%u}] %s \nError code: %u", __func__, __LINE__, hResult); \
-        __debugbreak(); \
-    }
+    } while (0)
 #else
 #define FAIL(...)
 #define ASSERT(...)
 #define CHECK(...)
-#endif // DEBUG
+#define UNREACHABLE(...)
+#define NOT_IMPLEMENTED()
+#endif // _DEBUG
 
 #define LOG_DEBUG(message, ...) \
     logging::Logger::Instance().Log(logging::Level::Debug, message, __VA_ARGS__)

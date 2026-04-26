@@ -1,7 +1,7 @@
 {
 	"Type": "IBL_BRDFGenerateLUT",
 
-	"IsGraphicsPipeline": false,
+	"PipelineType": "Compute",
 
 	"CS": "Shaders\\IBL_GenerateBRDFEnvironmentLUT_cs.cso"
 }

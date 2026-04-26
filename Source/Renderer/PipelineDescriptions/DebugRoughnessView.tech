@@ -1,7 +1,7 @@
 {
 	"Type": "DebugRoughnessView",
 
-	"IsGraphicsPipeline": true,
+	"PipelineType": "Graphics",
 
 	"TopologyType": "triangle",
 

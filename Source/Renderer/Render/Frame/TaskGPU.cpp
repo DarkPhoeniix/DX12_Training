@@ -2,74 +2,49 @@
 
 #include "TaskGPU.h"
 
-#include "RHI/CommandList.h"
-#include "RHI/Fence.h"
+#include "Core/DescriptorHeapManager.h"
 
 #include "GPUCrashTracker/IGPUCrashTracker.h"
 #include "GPUCrashTracker/ICommandListCrashContext.h"
 
-TaskGPU::TaskGPU()
-    : _commandQueue(nullptr)
-    , _fence(nullptr)
-    , _commandListCrashContext(dx12::Device::GetCrashTracker()->CreateCommandListCrashContext())
+#include "RHI/CommandList.h"
+#include "RHI/Fence.h"
+
+TaskGPU::TaskGPU(rhi::Device* device, rhi::CommandListType type)
+    : _fence(nullptr)
+    , _commandList(device->CreateCommandList(type))
+    , _type(type)
+    , _commandListCrashContext(device->GetCrashTracker()->CreateCommandListCrashContext())
 {
+    _commandList->Close();
 }
 
 TaskGPU::~TaskGPU()
 {
-    _commandQueue = nullptr;
-    _fence = nullptr;
+    return;
 }
 
-void TaskGPU::SetCommandQueue(ComPtr<ID3D12CommandQueue> commandQueue)
+void TaskGPU::Reset(rhi::PipelineState* pipelineState)
 {
-    ASSERT(commandQueue, "Trying to set a nullptr command queue to the task.");
-    _commandQueue = commandQueue;
+    _commandList->Reset(pipelineState);
+    _commandList->SetDescriptorHeaps(DescriptorHeapManager::Get().GetShaderResourcesDescriptorHeap());
 }
 
-ComPtr<ID3D12CommandQueue> TaskGPU::GetCommandQueue() const
+rhi::CommandList* TaskGPU::GetCommandList()
 {
-    return _commandQueue;
+    return _commandList.get();
 }
 
-void TaskGPU::AddCommandList(dx12::CommandList* commandList)
-{
-    ASSERT(commandList, "Trying to add a nullptr command list to the task.");
-
-    _commandLists.push_back(commandList);
-    _commandListCrashContext->Initialize(commandList->GetDXCommandList().Get());
-}
-
-std::vector<dx12::CommandList*> TaskGPU::GetCommandLists() const
-{
-    return _commandLists;
-}
-
-dx12::CommandList& TaskGPU::GetCommandList()
-{
-    return *_commandLists.front();
-}
-
-void TaskGPU::SetFence(dx12::Fence* fence)
+void TaskGPU::SetFence(rhi::Fence* fence)
 {
     ASSERT(fence, "Trying to set a nullptr fence to the task.");
     _fence = fence;
 }
 
-dx12::Fence* TaskGPU::GetFence() const
+rhi::Fence* TaskGPU::GetFence() const
 {
     ASSERT(_fence, "Trying to get a nullptr fence from the task.");
     return _fence;
-}
-
-ID3D12Fence* TaskGPU::GetDXFence() const
-{
-    return _fence->GetDXFence().Get();
-}
-
-UINT64 TaskGPU::GetFenceValue() const
-{
-    return _fence->GetValue();
 }
 
 void TaskGPU::AddDependency(const std::string& taskName)
@@ -82,9 +57,16 @@ std::vector<std::string> TaskGPU::GetDependencies() const
     return _dependencies;
 }
 
+rhi::CommandListType TaskGPU::GetType() const
+{
+    return _type;
+}
+
 void TaskGPU::SetName(const std::string& name)
 {
     _name = name;
+
+    _commandList->SetName(name + "_command_list");
 
     // TODO: not the best place to set the marker, but this will definetly register all command lists
     _commandListCrashContext->SetMarker(name);
@@ -95,7 +77,7 @@ const std::string& TaskGPU::GetName() const
     return _name;
 }
 
-std::shared_ptr<tracking::ICommandListCrashContext> TaskGPU::GetCrashContext()
+tracking::ICommandListCrashContext* TaskGPU::GetCrashContext()
 {
-    return _commandListCrashContext;
+    return _commandListCrashContext.get();
 }

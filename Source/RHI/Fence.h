@@ -1,56 +1,39 @@
 #pragma once
 
-namespace dx12
+namespace rhi
 {
-    // Wrapper for an ID3D12Fence object to synchronize the CPU and GPU.
+    // Fence is an abstract interface representing a synchronization primitive used for GPU-CPU synchronization. 
+    // It allows the application to wait for specific points in the GPU command execution and to signal when certain operations have completed
     class Fence
     {
     public:
-        Fence();
-        // Copy constructor.
-        Fence(const Fence& other);
-        // Move constructor.
-        Fence(Fence&& other) noexcept;
-        // Destructor.
-        ~Fence();
+        Fence() = default;
+        Fence(const Fence&) = delete;
+        Fence(Fence&&) noexcept = default;
+        virtual ~Fence() = default;
 
-        // Copy assignment operator.
-        Fence& operator=(const Fence& other);
-        // Move assignment operator.
-        Fence& operator=(Fence&& other) noexcept;
+        Fence& operator=(const Fence&) = delete;
+        Fence& operator=(Fence&&) noexcept = default;
 
-        // Initializes the fence and marks it as free.
-        void Init();
+        // Waits for the fence to reach a specific value, blocking the CPU until the GPU has reached the specified point in the command queue
+        virtual void Wait() = 0;
 
-        // Waits until the fence reaches the current value.
-        void Wait();
+        // Sets the value of the fence, allowing the application to signal that a certain point in the command queue has been reached.
+        // The GPU will update the fence value as it executes commands, and the CPU can wait for specific values to synchronize operations
+        virtual void SetValue(std::uint64_t value) = 0;
+        // Retrieves the current value of the fence, which indicates the latest point in the command queue that has been reached by the GPU
+        virtual std::uint64_t GetValue() const = 0;
 
-        // Set the fence value.
-        void SetValue(UINT64 fenceValue);
-        // Get the current fence value.
-        UINT64 GetValue() const;
+        // Sets the free state of the fence, allowing the application to indicate whether the fence is currently free or in use for synchronization
+        virtual void SetFree(bool isFree) = 0;
+        // Indicates whether the fence is currently free, meaning that it is not being used for synchronization and can be reused for new operations
+        virtual bool IsFree() const = 0;
 
-        // Set whether the fence is free.
-        void SetFree(bool isFree);
-        // Check if the fence is free.
-        bool IsFree() const;
+        // Sets a completion callback function that will be called when the fence reaches a specific value.
+        // Allows the application to perform actions or trigger events when certain GPU operations have completed
+        virtual void SetCompletionCallback(const std::function<void()>& callback) = 0;
 
-        // Get a pointer to the raw D3D12 fence object.
-        ComPtr<ID3D12Fence> GetDXFence();
-
-        void SetCompletionCallback(const std::function<void()>& callback);
-
-    private:
-        // Raw D3D12 fence object.
-        ComPtr<ID3D12Fence> _fence = nullptr;
-        // Event triggered when _fence reaches _fenceValue.
-        HANDLE _eventOnCompletion = nullptr;
-        // Function to execute after Wait
-        std::function<void()> _cpuCallback;
-        // Current fence value.
-        UINT64 _fenceValue = 0;
-
-        // Indicates whether the fence is available for use.
-        bool _isFree = true;
+        // Retrieves the native fence object, allowing the application to access the underlying API-specific fence
+        virtual void* GetNative() const = 0;
     };
-} // namespace dx12
+} // namespace rhi

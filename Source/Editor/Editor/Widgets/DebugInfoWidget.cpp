@@ -11,24 +11,10 @@
 
 namespace gui
 {
-    namespace
-    {
-        std::string ConvertWCharToString(const WCHAR* wideStr)
-        {
-            if (!wideStr) return "";
-
-            size_t size_needed = 128;
-            std::string result(size_needed, 0);
-            size_t i;
-            wcstombs_s(&i, &result[0], size_needed, wideStr, size_needed - 1);
-
-            return result;
-        }
-    }
-
-    DebugInfoWidget::DebugInfoWidget(std::shared_ptr<Editor> editor)
+    DebugInfoWidget::DebugInfoWidget(rhi::Device* device, Editor* editor)
         : IWidget(editor)
         , _openDetailedCPUTime(false)
+        , _device(device)
     {
     }
 
@@ -48,13 +34,14 @@ namespace gui
 
         if (ImGui::BeginChild("Debug Info", {0,0}, ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY))
         {
-#if ENABLE_PROFILING
-            ImGui::Text("FPS: %i", DebugInfo::GetFPS());
             int id = 0;
+#if ENABLE_CPU_PROFILING || ENABLE_GPU_PROFILING
+            ImGui::Text("FPS: %i", DebugInfo::GetFPS());
             if (ImGui::TreeNode((void*)id++, "Frame Time: %.03f ms", DebugInfo::GetMsPerFrame()))
             {
-                if (Profiler* profiler = _editor->GetRenderGraph()->GetGPUProfiler())
+                if (Profiler* profiler = _editor->GetRenderGraph()->GetProfiler())
                 {
+#if ENABLE_CPU_PROFILING 
                     const Profiler::Stats& cpuStats = profiler->GetCPUStats();
                     if (ImGui::TreeNode((void*)id++, "CPU Time: %.03f ms", cpuStats.FrameTimeMs))
                     {
@@ -71,7 +58,9 @@ namespace gui
 
                         ImGui::TreePop();
                     }
+#endif // ENABLE_CPU_PROFILING
 
+#if ENABLE_GPU_PROFILING
                     const Profiler::Stats& gpuStats = profiler->GetGPUStats();
                     if (ImGui::TreeNode((void*)id++, "GPU Time: %.03f ms", gpuStats.FrameTimeMs))
                     {
@@ -88,15 +77,16 @@ namespace gui
 
                         ImGui::TreePop();
                     }
+#endif // ENABLE_GPU_PROFILING
                 }
 
                 ImGui::TreePop();
             }
-#endif
+#endif // ENABLE_CPU_PROFILING || ENABLE_GPU_PROFILING
         
             if (ImGui::CollapsingHeader("Pipeline statistics"))
             {
-                D3D12_QUERY_DATA_PIPELINE_STATISTICS stats = DebugInfo::GetPipelineStatisctics();
+                const rhi::PipelineStatistics& stats = DebugInfo::GetPipelineStatisctics();
                 ImGui::Text("* Geometry pass only");
                 ImGui::Text("Primitives: %i", stats.IAPrimitives);
                 ImGui::Text("VS invocations: %i", stats.VSInvocations);
@@ -226,16 +216,11 @@ namespace gui
 
             if (ImGui::CollapsingHeader("Adapter"))
             {
-                DXGI_ADAPTER_DESC desc;
-                dx12::Device::GetDXAdapter()->GetDesc(&desc);
-                std::string a = ConvertWCharToString(desc.Description);
-                ImGui::Text("Adapter: %s", a.c_str());
+                const rhi::AdapterInfo& adapterInfo = _device->QueryAdapterInfo();
+                ImGui::Text("Adapter: %s", adapterInfo.Name.c_str());
 
-                DXGI_QUERY_VIDEO_MEMORY_INFO memoryInfo = {};
-                dx12::Device::GetDXAdapter()->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &memoryInfo);
-
-                ImGui::Text("Memory usage:  %i MB", memoryInfo.CurrentUsage / (1024 * 1024));
-                ImGui::Text("Memory budget: %i MB", memoryInfo.Budget / (1024 * 1024));
+                ImGui::Text("Memory usage:  %i MB", adapterInfo.VideoMemory.CurrentUsage / (1024 * 1024));
+                ImGui::Text("Memory budget: %i MB", adapterInfo.VideoMemory.Budget / (1024 * 1024));
             }
         }
         ImGui::EndChild();

@@ -1,11 +1,9 @@
 #pragma once
 
+#include "Interfaces.h"
 #include "RenderGraphResourceId.h"
 
-#include "Renderer/Render/Frame/TaskGPU.h"
 #include "Renderer/Helpers/Profiler.h"
-
-#include <functional>
 
 namespace rg
 {
@@ -33,9 +31,9 @@ namespace rg
 
         virtual void Setup(RenderPassBuilder& builder) = 0;
 
-        virtual void PreExecute(RenderContext& context, TaskGPU& task);
-        virtual void Execute(RenderContext& context, TaskGPU& task) = 0;
-        virtual void PostExecute(RenderContext& context, TaskGPU& task);
+        virtual void PreExecute(RenderContext& context, ITask* task);
+        virtual void Execute(RenderContext& context, ITask* task) = 0;
+        virtual void PostExecute(RenderContext& context, ITask* task);
 
         RenderPassType GetType() const;
 
@@ -49,11 +47,19 @@ namespace rg
         std::weak_ptr<IRenderPass> _prevPass;
         std::weak_ptr<IRenderPass> _nextPass;
 
-        std::vector<RGResourceId> _creates;
-        std::vector<RGResourceId> _writes;
-        std::vector<RGResourceId> _reads;
+        std::vector<RGBufferId> _bufferCreates;
+        std::vector<RGBufferId> _bufferWrites;
+        std::vector<RGBufferId> _bufferReads;
 
-        std::unordered_map<RGResourceId, dx12::ResourceState> _resourceStateMap;
+        std::vector<RGTextureId> _textureCreates;
+        std::vector<RGTextureId> _textureWrites;
+        std::vector<RGTextureId> _textureReads;
+
+        std::vector<RGVirtualResourceId> _virtualWrites;
+        std::vector<RGVirtualResourceId> _virtualReads;
+
+        std::unordered_map<RGBufferId, rhi::ResourceState> _bufferStateMap;
+        std::unordered_map<RGTextureId, rhi::ResourceState> _textureStateMap;
 
         std::uint32_t _refCount;
 
@@ -65,10 +71,10 @@ namespace rg
     {
     public:
         using SetupFunc = std::function<void(RenderPassBuilder&)>;
-        using ExecuteFunc = std::function<void(RenderContext&, TaskGPU&)>;
+        using ExecuteFunc = std::function<void(RenderContext&, ITask*)>;
 
-        RenderPass(const std::string& name, RenderPassType type = RenderPassType::Graphics);
-        RenderPass(const std::string& name, SetupFunc&& setup, ExecuteFunc&& execute, RenderPassType type = RenderPassType::Graphics);
+        RenderPass(rhi::Device* device, const std::string& name, RenderPassType type = RenderPassType::Graphics);
+        RenderPass(rhi::Device* device, const std::string& name, SetupFunc&& setup, ExecuteFunc&& execute, RenderPassType type = RenderPassType::Graphics);
         RenderPass(const RenderPass&) = delete;
         RenderPass(RenderPass&&) = default;
         ~RenderPass() = default;
@@ -80,13 +86,15 @@ namespace rg
 
         // Inherited via IRenderPass
         void Setup(RenderPassBuilder& builder) override;
-        void Execute(RenderContext& context, TaskGPU& task) override;
+        void Execute(RenderContext& context, ITask* task) override;
 
     protected:
         PassData _data;
 
         std::function<void(RenderPassBuilder&)> _setupFunc;
-        std::function<void(RenderContext&, TaskGPU&)> _executeFunc;
+        std::function<void(RenderContext&, ITask*)> _executeFunc;
+
+        rhi::Device* _device;
     };
 } // namespace rg
 

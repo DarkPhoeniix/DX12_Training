@@ -1,7 +1,7 @@
 {
 	"Type": "GPassTechnique",
 
-	"IsGraphicsPipeline": true,
+	"PipelineType": "Graphics",
 
 	"TopologyType": "triangle",
 

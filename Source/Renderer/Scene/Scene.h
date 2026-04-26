@@ -2,11 +2,6 @@
 
 #include "Renderer/Scene/Entity/Entity.h"
 
-namespace dx12
-{
-    class CommandList;
-} // namespace dx12
-
 namespace scene
 {
     class Camera;

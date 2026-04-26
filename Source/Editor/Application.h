@@ -17,6 +17,14 @@ namespace render
     class DXRenderer;
 } // namespace render
 
+struct WindowParams
+{
+    std::uint32_t Width = 0;
+    std::uint32_t Height = 0;
+    std::wstring Name;
+    bool VSyns = false;
+};
+
 class Application
 {
 public:
@@ -24,21 +32,21 @@ public:
     Application& operator=(const Application& copy) = delete;
 
     static void Init(HINSTANCE hInstance);
-    int Run(std::shared_ptr<render::DXRenderer> pApp, std::string cmdLine);
+    int Run(const WindowParams& windowParams, std::string cmdLine);
     static void Quit(int exitCode = 0);
 
     static Application* Instance();
-
-    static std::shared_ptr<core::Win32Window> CreateWin32Window(int width, int height, const std::wstring& title, bool vSync = false);
 
 private:
     Application(HINSTANCE hInstance);
     ~Application();
 
+    static std::unique_ptr<core::Win32Window> CreateWin32Window(int width, int height, const std::wstring& title, bool vSync = false);
+
     void _RegisterWindowClass(HINSTANCE hInstance);
 
-    void _UpdateCall(std::shared_ptr<render::DXRenderer> pApp);
-    void _RenderCall(std::shared_ptr<render::DXRenderer> pApp);
+    void _UpdateCall();
+    void _RenderCall();
     void _ExecuteFrameTasks();
 
     friend LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
@@ -46,20 +54,23 @@ private:
     // The application instance handle that this application was created with.
     HINSTANCE _hInstance;
 
-    std::shared_ptr<core::Win32Window> _win32Window;
-    dx12::SwapChain _swapChain;
+    std::unique_ptr<core::Win32Window> _win32Window;
+    std::unique_ptr<rhi::SwapChain> _swapChain;
 
-    Frame _frames[3];
+    std::vector<std::unique_ptr<Frame>> _frames;
     Frame* _currentFrame;
 
-    AllocatorPool _allocs;
-    FencePool _fencePool;
+    std::unique_ptr<rhi::Device> _device;
+
+    std::unique_ptr<FencePool> _fencePool;
 
     HighResolutionClock _updateClock;
     HighResolutionClock _renderClock;
     uint64_t _frameCounter;
 
     std::shared_ptr<gui::Editor> _editor;
+
+    std::unique_ptr<render::DXRenderer> _renderer;
 
     static Application* _instance;
 };

@@ -12,7 +12,7 @@ namespace gui
     class IWidget
     {
     public:
-        IWidget(std::shared_ptr<Editor> editor);
+        IWidget(Editor* editor);
         virtual ~IWidget() = default;
 
         virtual void Init();
@@ -21,6 +21,6 @@ namespace gui
         virtual void Update();
 
     protected:
-        std::shared_ptr<Editor> _editor;
+        Editor* _editor;
     };
 } // namespace gui

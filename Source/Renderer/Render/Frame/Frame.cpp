@@ -3,19 +3,17 @@
 #include "Frame.h"
 
 #include "Fence.h"
-#include "RHI/PipelineState.h"
 
-Frame::Frame()
+Frame::Frame(rhi::Device* device)
     : Index(0)
     , Prev(nullptr)
     , Next(nullptr)
-    , _currentTasks{}
     , _tasks{}
-    , _allocatorPool(nullptr)
     , _fencePool(nullptr)
     , _syncPoint(nullptr)
     , _targetTexture(nullptr)
     , _frameBuffer(nullptr)
+    , _device(device)
 {
 }
 
@@ -24,74 +22,44 @@ Frame::~Frame()
     Prev = nullptr;
     Next = nullptr;
 
-    _allocatorPool = nullptr;
     _fencePool = nullptr;
     _syncPoint = nullptr;
 }
 
-void Frame::Init(const DirectX::XMUINT2& size)
+void Frame::Init(std::uint32_t width, std::uint32_t height)
 {
     // Create resource for the target texture
     {
-        D3D12_CLEAR_VALUE clearValueTexTarget;
+        rhi::ClearValue targetClearValue =
         {
-            clearValueTexTarget.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-            clearValueTexTarget.Color[0] = 0.0f;
-            clearValueTexTarget.Color[1] = 0.0f;
-            clearValueTexTarget.Color[2] = 0.0f;
-            clearValueTexTarget.Color[3] = 1.0f;
-        }
+            .Color = { 0.0f, 0.0f, 0.0f, 1.0f }
+        };
 
-        dx12::ResourceDescription textureDesc;
+        rhi::TextureDescription textureDesc =
         {
-            textureDesc.SetSize(size);
-            textureDesc.SetDimension(D3D12_RESOURCE_DIMENSION_TEXTURE2D);
-            textureDesc.SetLayout(D3D12_TEXTURE_LAYOUT_UNKNOWN);
-            textureDesc.SetMipLevels(1);
-            textureDesc.SetAlignment(D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT);
-            textureDesc.SetFormat(DXGI_FORMAT_R8G8B8A8_UNORM);
-            textureDesc.SetFlags(D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-            textureDesc.SetClearValue(clearValueTexTarget);
-            textureDesc.SetResourceType(dx12::ResourceType::Texture | dx12::ResourceType::RenderTarget);
-        }
-        _targetTexture = ResourceFactory::Create(std::format("Frame cache {}", Index), textureDesc);
-        _targetTexture->CreateCommitedResource();
+            .Width = width,
+            .Height = height,
+            .ClearValue = targetClearValue,
+            .Format = rhi::Format::R8G8B8A8_UNORM,
+            .Dimension = rhi::TextureDimension::Texture2D,
+            .Flags = rhi::ResourceFlags::AllowRenderTarget | rhi::ResourceFlags::AllowUnorderedAccess
+        };
+
+        _targetTexture = _device->CreateTexture(textureDesc, rhi::ResourceState::Common, std::format("Frame {}", Index));
     }
 
     // TODO: refactor this
     _tasks.reserve(256);
 }
 
-TaskGPU* Frame::CreateTask(D3D12_COMMAND_LIST_TYPE type, dx12::PipelineState* rootSignature)
+rg::ITask* Frame::AllocateTask(rhi::CommandListType type, rhi::PipelineState* rootSignature)
 {
-    Executor* executor = _allocatorPool->Obtain(type);
-    ASSERT(executor, "Failed to obtain executor from allocator pool.");
-    _currentTasks.push_back(executor);
+    _tasks.push_back(std::make_unique<TaskGPU>(_device, type));
+    TaskGPU* task = _tasks.back().get();
 
-    executor->Reset(rootSignature);
-    executor->SetFree(false);
+    task->Reset(rootSignature);
 
-    _tasks.push_back({});
-    TaskGPU* task = &_tasks.back();
-    switch (type)
-    {
-    case D3D12_COMMAND_LIST_TYPE_DIRECT:
-        task->SetCommandQueue(dx12::Device::GetStreamQueue());
-        break;
-    case D3D12_COMMAND_LIST_TYPE_COMPUTE:
-        task->SetCommandQueue(dx12::Device::GetComputeQueue());
-        break;
-    case D3D12_COMMAND_LIST_TYPE_COPY:
-        task->SetCommandQueue(dx12::Device::GetCopyQueue());
-        break;
-    default:
-        FAIL(false, "Unsupported command list type.");
-        return nullptr;
-    }
-
-    task->AddCommandList(executor->GetCommandList());
-
-    dx12::Fence* taskFence = _fencePool->Obtain();
+    rhi::Fence* taskFence = _fencePool->Obtain();
     ASSERT(taskFence, "Failed to obtain fence from fence pool.");
     task->SetFence(taskFence);
     taskFence->SetFree(false);
@@ -116,31 +84,19 @@ void Frame::WaitCPU()
 
 void Frame::ResetGPU()
 {
-    for (auto& task : _currentTasks)
-    {
-        task->SetFree(true);
-    }
-
     for (auto& task : _tasks)
     {
-        task.GetFence()->SetFree(true);
+        task->GetFence()->SetFree(true);
     }
 
     _tasks.clear();
-    _currentTasks.clear();
 }
 
-void Frame::Resize(const DirectX::XMUINT2& size)
+void Frame::Resize(std::uint32_t width, std::uint32_t height)
 {
-    _targetTexture->Reset();
+    //_targetTexture->Reset();
 
-    Init(size);
-}
-
-void Frame::SetAllocatorPool(AllocatorPool* allocatorPool)
-{
-    ASSERT(allocatorPool, "Allocator pool is nullptr when trying to set it in the frame.");
-    _allocatorPool = allocatorPool;
+    Init(width, height);
 }
 
 void Frame::SetFencePool(FencePool* fencePool)
@@ -153,9 +109,9 @@ TaskGPU* Frame::GetTask(const std::string& name)
 {
     for (auto& task : _tasks)
     {
-        if (task.GetName() == name)
+        if (task->GetName() == name)
         {
-            return &task;
+            return task.get();
         }
     }
 
@@ -163,32 +119,32 @@ TaskGPU* Frame::GetTask(const std::string& name)
     return nullptr;
 }
 
-std::vector<TaskGPU> Frame::GetTasks() const
+std::vector<std::unique_ptr<TaskGPU>>& Frame::GetTasks()
 {
     return _tasks;
 }
 
-std::shared_ptr<dx12::Resource> Frame::GetTargetTexture()
+std::shared_ptr<rhi::Texture> Frame::GetTargetTexture()
 {
     return _targetTexture;
 }
 
-void Frame::SetBuffer(std::shared_ptr<dx12::Resource> buffer)
+void Frame::SetBuffer(std::shared_ptr<rhi::Buffer> buffer)
 {
     _frameBuffer = buffer;
 }
 
-std::shared_ptr<dx12::Resource> Frame::GetBuffer() const
+std::shared_ptr<rhi::Buffer> Frame::GetBuffer() const
 {
     return _frameBuffer;
 }
 
-void Frame::SetSyncPoint(dx12::Fence* syncPoint)
+void Frame::SetSyncPoint(rhi::Fence* syncPoint)
 {
     _syncPoint = syncPoint;
 }
 
-dx12::Fence* Frame::GetSyncPoint() const
+rhi::Fence* Frame::GetSyncPoint() const
 {
     return _syncPoint;
 }

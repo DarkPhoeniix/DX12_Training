@@ -17,16 +17,7 @@
 #include <wrl.h>
 using namespace Microsoft::WRL;
 
-// DirectX12 specific headers
-#include <directx/d3dx12.h>     // D3D12 extension library
-#include <dxgi1_6.h>            // Microsoft DirectX Graphics Infrastructure
-#include <d3dcompiler.h>        // Contains functions to compile HLSL code at runtime
-#include <DirectXTex.h>
 #include <DirectXMath.h>
-
-#include <pix3.h>
-
-#include <json/json.h>
 
 #include <filesystem>
 #include <algorithm>
@@ -34,6 +25,7 @@ using namespace Microsoft::WRL;
 #include <cassert>
 #include <cstdint>
 #include <string>
+#include <queue>
 #include <chrono>
 #include <memory>
 #include <vector>
@@ -41,16 +33,17 @@ using namespace Microsoft::WRL;
 #include <thread>
 #include <functional>
 #include <map>
+#include <unordered_map>
 
 #include "Logger/Logger.h"
 
-#include "Helpers/Defines.h"
-#include "Utility/Helpers.h"
-
-#include "RHI/ResourceBarrier.h"
-#include "RHI/Resource.h"
-#include "RHI/ResourceFactory.h"
+#include "RHI/Buffer.h"
+#include "RHI/Texture.h"
 #include "RHI/CommandList.h"
 #include "RHI/Device.h"
+#include "RHI/GPUEvent.h"
+
+#include "Helpers/Defines.h"
+#include "Utility/Helpers.h"
 
 #include "RenderGraph/RenderGraphResourceId.h"

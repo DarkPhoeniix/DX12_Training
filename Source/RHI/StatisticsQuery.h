@@ -1,46 +1,45 @@
 #pragma once
 
-#include "CommandList.h"
-
-namespace dx12
+namespace rhi
 {
-    // Wrapper for an ID3D12QueryHeap to gather rendering statistics.
+    class CommandList;
+
+    // PipelineStatistics encapsulates various metrics related to the GPU pipeline stages
+    struct PipelineStatistics
+    {
+        std::uint64_t IAVertices;
+        std::uint64_t IAPrimitives;
+        std::uint64_t VSInvocations;
+        std::uint64_t GSInvocations;
+        std::uint64_t GSPrimitives;
+        std::uint64_t CInvocations;
+        std::uint64_t CPrimitives;
+        std::uint64_t PSInvocations;
+        std::uint64_t HSInvocations;
+        std::uint64_t DSInvocations;
+        std::uint64_t CSInvocations;
+    };
+
+    // StatisticsQuery is an abstract interface representing a statistics query, which can be used to gather statistics data and other metrics from the GPU
     class StatisticsQuery
     {
     public:
-        StatisticsQuery();
-        // Copy constructor.
-        StatisticsQuery(const StatisticsQuery& other);
-        // Move constructor.
-        StatisticsQuery(StatisticsQuery&& other) noexcept;
-        // Destructor.
-        ~StatisticsQuery();
+        StatisticsQuery() = default;
+        StatisticsQuery(const StatisticsQuery&) = delete;
+        StatisticsQuery(StatisticsQuery&&) noexcept = default;
+        virtual ~StatisticsQuery() = default;
 
-        // Copy assignment operator.
-        StatisticsQuery& operator=(const StatisticsQuery& other);
-        // Move assignment operator.
-        StatisticsQuery& operator=(StatisticsQuery&& other) noexcept;
+        StatisticsQuery& operator=(const StatisticsQuery&) = delete;
+        StatisticsQuery& operator=(StatisticsQuery&&) noexcept = default;
 
-        // Create the query heap and an associated resource to store render statistics.
-        void Create();
+        // Begins the statistics query on the GPU using the specified command list
+        virtual void BeginQuery(CommandList* commandList) = 0;
+        // Ends the statistics query on the GPU using the specified command list
+        virtual void EndQuery(CommandList* commandList) = 0;
 
-        // Start collecting rendering statistics.
-        void BeginQuery(CommandList& commandList);
-        // Stop collecting rendering statistics.
-        void EndQuery(CommandList& commandList);
-
-        // Resolve the statistics data gathered between BeginQuery and EndQuery calls.
-        void ResolveQueryData(CommandList& commandList);
-        // Retrieve the resolved rendering statistics.
-        const D3D12_QUERY_DATA_PIPELINE_STATISTICS& GetStatistics();
-
-    private:
-        // Pointer to the DirectX 12 query heap used for statistics gathering.
-        ComPtr<ID3D12QueryHeap> _statisticsQueryHeap;
-
-        // Resource used to store query results.
-        std::shared_ptr<dx12::Resource> _statisticsResource;
-        // Pointer to the resolved statistics data stored in _statisticsResource.
-        D3D12_QUERY_DATA_PIPELINE_STATISTICS* _statisticsData;
+        // Resolves the statistics query data from the GPU using the specified command list, allowing the application to retrieve the collected statistics data
+        virtual void ResolveQueryData(CommandList* commandList) = 0;
+        // Retrieves the collected statistics data from the query, allowing the application to access the various metrics related to the GPU pipeline stages
+        virtual const PipelineStatistics& GetStatistics() = 0;
     };
-} // namespace dx12
+} // namespace rhi

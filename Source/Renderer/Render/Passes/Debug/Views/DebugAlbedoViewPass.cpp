@@ -7,53 +7,46 @@
 
 namespace render
 {
-	DebugAlbedoViewPass::DebugAlbedoViewPass(std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
-		: RenderPass<DebugAlbedoViewPassData>("debug_albedo_pass", rg::RenderPassType::Graphics)
+	DebugAlbedoViewPass::DebugAlbedoViewPass(rhi::Device* device, std::shared_ptr<scene::Scene> scene, scene::Camera* camera)
+		: RenderPass<DebugAlbedoViewPassData>(device, "debug_albedo_pass", rg::RenderPassType::Graphics)
 		, _scene(scene)
 		, _camera(camera)
 	{
-		_debugAlbedoViewPipeline.Parse("PipelineDescriptions\\DebugAlbedoView.tech");
+		_debugAlbedoViewPipeline = _device->CreatePipelineState("PipelineDescriptions\\DebugAlbedoView.tech");
 	}
 
 	void DebugAlbedoViewPass::Setup(rg::RenderPassBuilder& builder)
 	{
-        _data.AlbedoMetallic = builder.ReadTexture("albedo_metallic_target");
+		_data.AlbedoMetallic = builder.ReadTexture("albedo_metallic_target");
 		_data.Target = builder.RenderTarget("render_target");
 	}
 
-	void DebugAlbedoViewPass::Execute(rg::RenderContext& context, TaskGPU& task)
+	void DebugAlbedoViewPass::Execute(rg::RenderContext& context, rg::ITask* task)
 	{
-		dx12::CommandList& commandList = *task.GetCommandLists().front();
-		commandList.SetName("debug_albedo_pass_cmd_list");
+		rhi::CommandList* commandList = task->GetCommandList();
 
 		{
-			PIXScopedEvent(commandList.GetDXCommandList().Get(), 9, "Debug View Pass - Albedo");
+			GPU_SCOPED_EVENT(commandList, "Debug View Pass - Albedo", 9);
 
-            std::shared_ptr<dx12::Resource> albedoMetallic = context.GetResource(_data.AlbedoMetallic);
-			std::shared_ptr<dx12::Resource> target = context.GetResource(_data.Target);
+			rhi::CPUDescriptor targetHandle = context.GetDescriptor(_data.Target, rhi::ResourceViewType::RTV);
 
-            DescriptorHandle albedoMetallicHandle = context.GetStaticResourceHandle(albedoMetallic->GetAsSRV());
-			DescriptorHandle renderTargetHandle = context.GetStaticResourceHandle(target->GetAsRTV());
+			commandList->SetGraphicsPipelineState(_debugAlbedoViewPipeline.get());
 
-			context.BindBindlessTable(commandList);
+			commandList->SetViewport(_camera->GetViewport(), _camera->GetScissorRectangle());
+			commandList->SetRenderTarget(&targetHandle, nullptr);
 
-			commandList.SetPipelineState(_debugAlbedoViewPipeline);
+			commandList->SetPrimitiveTopology(rhi::PrimitiveTopology::TriangleList);
 
-			commandList.SetViewport(_camera->GetViewport().GetDXViewport(), _camera->GetViewport().GetScissorRectangle());
-			commandList.SetRenderTarget(&renderTargetHandle.CpuHandle, nullptr);
-
-			commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-			commandList.SetCBV(0, context.GetFrame()->GetBuffer()->OffsetGPU());
 			struct
 			{
                 std::uint32_t SourceTextureIndex;
-			} PassConstants = { .SourceTextureIndex = albedoMetallicHandle.Index };
-            commandList.SetConstants(1, 1, &PassConstants);
+			} PassConstants = { .SourceTextureIndex = context.GetBindlessIndex(_data.AlbedoMetallic, rhi::ResourceViewType::SRV) };
+			commandList->SetGraphicsCBV(0, context.GetFrameBuffer()->GetVirtualAddress());
+            commandList->SetGraphicsConstants(1, 1, &PassConstants);
 
-			commandList.Draw(3);
+			commandList->Draw(3);
 		}
 
-		commandList.Close();
+		commandList->Close();
 	}
 } // namespace render

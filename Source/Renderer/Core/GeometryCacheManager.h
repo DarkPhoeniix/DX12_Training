@@ -20,13 +20,13 @@ public:
 
     void Clear();
 
-    [[nodiscard]] GeometryHandle CacheGeometry(std::shared_ptr<dx12::Resource> geometry);
-    [[nodiscard]] std::shared_ptr<dx12::Resource> GetGeometry(GeometryHandle handle) const;
+    [[nodiscard]] GeometryHandle CacheGeometry(std::shared_ptr<rhi::Buffer> geometry);
+    [[nodiscard]] std::shared_ptr<rhi::Buffer> GetGeometry(GeometryHandle handle) const;
 
 private:
     GeometryCacheManager()= default;
 
-    std::unordered_map<GeometryHandle, std::shared_ptr<dx12::Resource>> _cachedGeometries;
+    std::unordered_map<GeometryHandle, std::shared_ptr<rhi::Buffer>> _cachedGeometries;
 
     static std::unique_ptr<GeometryCacheManager> _instance;
 };

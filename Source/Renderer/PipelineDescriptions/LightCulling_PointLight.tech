@@ -1,7 +1,7 @@
 {
 	"Type": "LightCulling_Point",
 
-	"IsGraphicsPipeline": false,
+	"PipelineType": "Compute",
 
 	"CS": "Shaders\\LightCulling_PointLight_cs.cso"
 }

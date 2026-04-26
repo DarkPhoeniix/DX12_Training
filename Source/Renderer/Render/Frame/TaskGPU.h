@@ -1,47 +1,50 @@
 #pragma once
 
 #include "GPUCrashTracker/ICommandListCrashContext.h"
+#include "RenderGraph/Interfaces.h"
 
-namespace dx12
+namespace rhi
 {
     class CommandList;
     class Fence;
-} // namespace dx12
+} // namespace rhi
 
-class TaskGPU
+class TaskGPU : public rg::ITask
 {
 public:
-    TaskGPU();
-    ~TaskGPU();
+    TaskGPU(rhi::Device* device, rhi::CommandListType type);
+    TaskGPU(const TaskGPU& other) = delete;
+    TaskGPU(TaskGPU&& other) noexcept = default;
+    ~TaskGPU() override;
 
-    void AddCommandList(dx12::CommandList* commandList);
-    std::vector<dx12::CommandList*> GetCommandLists() const;
-    dx12::CommandList& GetCommandList();
+    TaskGPU& operator=(const TaskGPU& other) = delete;
+    TaskGPU& operator=(TaskGPU&& other) noexcept = default;
 
-    void SetCommandQueue(ComPtr<ID3D12CommandQueue> commandQueue);
-    ComPtr<ID3D12CommandQueue> GetCommandQueue() const;
+    void Reset(rhi::PipelineState* pipelineState = nullptr);
 
-    void SetFence(dx12::Fence* fence);
-    dx12::Fence* GetFence() const;
-    ID3D12Fence* GetDXFence() const;
-    UINT64 GetFenceValue() const;
+    rhi::CommandList* GetCommandList() override;
+
+    void SetFence(rhi::Fence* fence);
+    rhi::Fence* GetFence() const;
 
     void AddDependency(const std::string& taskName);
     std::vector<std::string> GetDependencies() const;
 
-    void SetName(const std::string& name);
-    const std::string& GetName() const;
+    rhi::CommandListType GetType() const;
 
-    std::shared_ptr<tracking::ICommandListCrashContext> GetCrashContext();
+    void SetName(const std::string& name) override;
+    const std::string& GetName() const override;
+
+    tracking::ICommandListCrashContext* GetCrashContext();
 
 private:
-    std::vector<dx12::CommandList*> _commandLists;
-    ComPtr<ID3D12CommandQueue> _commandQueue;
-    std::shared_ptr<tracking::ICommandListCrashContext> _commandListCrashContext;
+    std::unique_ptr<rhi::CommandList> _commandList;
+    std::unique_ptr<tracking::ICommandListCrashContext> _commandListCrashContext;
 
-    dx12::Fence* _fence = nullptr;
+    rhi::Fence* _fence = nullptr;
     std::vector<std::string> _dependencies;
 
+    rhi::CommandListType _type;
     std::string _name;
 };
 

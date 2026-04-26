@@ -15,9 +15,9 @@ namespace scene
 
     struct SkinningVertexData
     {
-        static constexpr uint8_t MAX_BONES_PER_VERTEX = 4;
+        static constexpr std::uint8_t MAX_BONES_PER_VERTEX = 4;
 
-        uint32_t BoneIds[MAX_BONES_PER_VERTEX];
+        std::uint32_t BoneIds[MAX_BONES_PER_VERTEX];
         float BoneWeights[MAX_BONES_PER_VERTEX];
     };
 
@@ -34,14 +34,14 @@ namespace scene
 
         std::vector<VertexData> VertexData;
         std::vector<SkinningVertexData> SkinningVertexData;
-        std::vector<UINT> IndexData;
+        std::vector<std::uint32_t> IndexData;
 
-        std::shared_ptr<dx12::Resource> VertexBuffer;
-        std::shared_ptr<dx12::Resource> SkinningVertexBuffer;
-        std::shared_ptr<dx12::Resource> IndexBuffer;
+        std::shared_ptr<rhi::Buffer> VertexBuffer;
+        std::shared_ptr<rhi::Buffer> SkinningVertexBuffer;
+        std::shared_ptr<rhi::Buffer> IndexBuffer;
 
-        D3D12_VERTEX_BUFFER_VIEW VertexBufferView;
-        D3D12_VERTEX_BUFFER_VIEW SkinningVertexBufferView;
-        D3D12_INDEX_BUFFER_VIEW IndexBufferView;
+        rhi::VertexBufferView VertexBufferView;
+        rhi::VertexBufferView SkinningVertexBufferView;
+        rhi::IndexBufferView IndexBufferView;
     };
 } // namespace scene
