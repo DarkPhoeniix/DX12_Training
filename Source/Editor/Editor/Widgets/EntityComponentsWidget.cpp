@@ -69,7 +69,7 @@ namespace gui
         }
     } // namespace unnamed
 
-    EntityComponentsWidget::EntityComponentsWidget(std::shared_ptr<Editor> editor)
+    EntityComponentsWidget::EntityComponentsWidget(Editor* editor)
         : IWidget(editor)
     {
     }

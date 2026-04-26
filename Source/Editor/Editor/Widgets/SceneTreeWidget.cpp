@@ -7,7 +7,7 @@
 
 namespace gui
 {
-    SceneTreeWidget::SceneTreeWidget(std::shared_ptr<Editor> editor)
+    SceneTreeWidget::SceneTreeWidget(Editor* editor)
         : IWidget(editor)
     {
     }

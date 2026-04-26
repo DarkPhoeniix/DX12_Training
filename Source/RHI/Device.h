@@ -48,6 +48,27 @@ namespace rhi
         bool EnhancedBarriers = false;
     };
 
+    struct VideoMemoryInfo
+    {
+        // The total video memory budget available to the application
+        std::uint64_t Budget = 0;
+        // The current video memory usage by the application, in bytes
+        std::uint64_t CurrentUsage = 0;
+        // The amount of video memory that the application has available for reservation
+        std::uint64_t AvailableForReservation = 0;
+        // The amount of video memory that the application has currently reserved
+        std::uint64_t CurrentReservation = 0;
+    };
+
+    struct AdapterInfo
+    {
+        std::string Name;
+        std::string Vendor;
+        std::string DeviceId;
+
+        VideoMemoryInfo VideoMemory = {};
+    };
+
     // Device is an abstract interface representing a graphics device, responsible for managing GPU resources, command queues, and swap chains. It provides 
     // methods for creating buffers, textures, command lists, descriptor heaps, fences, query heaps, heaps, statistics queries, timestamp queries, command 
     // signatures, swap chains, and pipeline states. The device also allows querying for optional features and binding a swap chain for presentation.
@@ -161,6 +182,9 @@ namespace rhi
         virtual AllocationInfo GetAllocationInfo(const BufferDescription& description) const = 0;
         // Retrieves allocation information for textures based on their descriptions, which can be used to determine the required size and alignment for resource creation
         virtual AllocationInfo GetAllocationInfo(const TextureDescription& description) const = 0;
+
+        // Queries the adapter information, including details about the GPU such as its name, vendor, device ID, driver version, and video memory statistics
+        virtual const AdapterInfo& QueryAdapterInfo() = 0;
 
         // Retrieves the GPU crash tracker interface, which can be used to track and analyze GPU crashes for debugging purposes
         virtual tracking::IGPUCrashTracker* GetCrashTracker() = 0;

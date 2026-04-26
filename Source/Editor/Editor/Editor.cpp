@@ -331,8 +331,8 @@ namespace gui
     {
         ASSERT((_scene != nullptr), "Scene is not initialized");
 
-        _sceneTreeWidget = std::make_shared<SceneTreeWidget>(GetPtr());
-        _debugInfoWidget = std::make_shared<DebugInfoWidget>(GetPtr());
-        _entityComponentsWidget = std::make_shared<EntityComponentsWidget>(GetPtr());
+        _sceneTreeWidget = std::make_shared<SceneTreeWidget>(this);
+        _debugInfoWidget = std::make_shared<DebugInfoWidget>(_device, this);
+        _entityComponentsWidget = std::make_shared<EntityComponentsWidget>(this);
     }
 } // namespace gui

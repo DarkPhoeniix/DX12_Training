@@ -11,24 +11,10 @@
 
 namespace gui
 {
-    namespace
-    {
-        std::string ConvertWCharToString(const WCHAR* wideStr)
-        {
-            if (!wideStr) return "";
-
-            size_t size_needed = 128;
-            std::string result(size_needed, 0);
-            size_t i;
-            wcstombs_s(&i, &result[0], size_needed, wideStr, size_needed - 1);
-
-            return result;
-        }
-    }
-
-    DebugInfoWidget::DebugInfoWidget(std::shared_ptr<Editor> editor)
+    DebugInfoWidget::DebugInfoWidget(rhi::Device* device, Editor* editor)
         : IWidget(editor)
         , _openDetailedCPUTime(false)
+        , _device(device)
     {
     }
 
@@ -230,16 +216,11 @@ namespace gui
 
             if (ImGui::CollapsingHeader("Adapter"))
             {
-                //DXGI_ADAPTER_DESC desc;
-                //dx12::Device::GetDXAdapter()->GetDesc(&desc);
-                //std::string a = ConvertWCharToString(desc.Description);
-                //ImGui::Text("Adapter: %s", a.c_str());
-                //
-                //DXGI_QUERY_VIDEO_MEMORY_INFO memoryInfo = {};
-                //dx12::Device::GetDXAdapter()->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &memoryInfo);
-                //
-                //ImGui::Text("Memory usage:  %i MB", memoryInfo.CurrentUsage / (1024 * 1024));
-                //ImGui::Text("Memory budget: %i MB", memoryInfo.Budget / (1024 * 1024));
+                const rhi::AdapterInfo& adapterInfo = _device->QueryAdapterInfo();
+                ImGui::Text("Adapter: %s", adapterInfo.Name.c_str());
+
+                ImGui::Text("Memory usage:  %i MB", adapterInfo.VideoMemory.CurrentUsage / (1024 * 1024));
+                ImGui::Text("Memory budget: %i MB", adapterInfo.VideoMemory.Budget / (1024 * 1024));
             }
         }
         ImGui::EndChild();

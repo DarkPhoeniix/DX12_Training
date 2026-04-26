@@ -14,7 +14,7 @@ namespace gui
     class SceneTreeWidget : public IWidget
     {
     public:
-        SceneTreeWidget(std::shared_ptr<Editor> editor);
+        SceneTreeWidget(Editor* editor);
         ~SceneTreeWidget() = default;
 
         void Init() override;

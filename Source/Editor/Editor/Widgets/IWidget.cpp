@@ -6,7 +6,7 @@
 
 namespace gui
 {
-    IWidget::IWidget(std::shared_ptr<Editor> editor)
+    IWidget::IWidget(Editor* editor)
         : _editor(editor)
     {
     }

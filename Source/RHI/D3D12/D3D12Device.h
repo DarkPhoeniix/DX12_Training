@@ -68,6 +68,8 @@ namespace rhi::d3d12
         rhi::AllocationInfo GetAllocationInfo(const rhi::BufferDescription& description) const override;
         rhi::AllocationInfo GetAllocationInfo(const rhi::TextureDescription& description) const override;
 
+        const AdapterInfo& QueryAdapterInfo() override;
+
         tracking::IGPUCrashTracker* GetCrashTracker() override;
 
         void* GetNative() const override;
@@ -91,6 +93,8 @@ namespace rhi::d3d12
         ComPtr<IDXGIAdapter4> _adapter;
 
         bool _enhancedBarriersSupported;
+
+        AdapterInfo _adapterInfo;
 
         std::unique_ptr<rhi::CommandQueue> _queueGraphics;
         std::unique_ptr<rhi::CommandQueue> _queueCompute;

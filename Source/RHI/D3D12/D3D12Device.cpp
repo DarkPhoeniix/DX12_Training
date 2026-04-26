@@ -33,6 +33,18 @@ namespace rhi::d3d12
 {
     namespace
     {
+        std::string ConvertWCharToString(const WCHAR* wideStr)
+        {
+            if (!wideStr) return "";
+
+            size_t size_needed = 128;
+            std::string result(size_needed, 0);
+            size_t i;
+            wcstombs_s(&i, &result[0], size_needed, wideStr, size_needed - 1);
+
+            return result;
+        }
+
         void EnableDXDebugLayer()
         {
             ComPtr<ID3D12Debug> debugInterface;
@@ -435,6 +447,22 @@ namespace rhi::d3d12
         return allocationInfo;
     }
 
+    const AdapterInfo& D3D12Device::QueryAdapterInfo()
+    {
+        DXGI_QUERY_VIDEO_MEMORY_INFO memoryInfo = {};
+        _adapter->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &memoryInfo);
+
+        _adapterInfo.VideoMemory =
+        {
+            .Budget = memoryInfo.Budget,
+            .CurrentUsage = memoryInfo.CurrentUsage,
+            .AvailableForReservation = memoryInfo.AvailableForReservation,
+            .CurrentReservation = memoryInfo.CurrentReservation
+        };
+
+        return _adapterInfo;
+    }
+
     tracking::IGPUCrashTracker* D3D12Device::GetCrashTracker()
     {
         return _crashTracker.get();
@@ -491,6 +519,14 @@ namespace rhi::d3d12
         }
 
         _adapter = dxgiAdapter4;
+
+        DXGI_ADAPTER_DESC adapterDesc;
+        HRESULT result = _adapter->GetDesc(&adapterDesc);
+        CHECK(result, "Failed to get adapter description.");
+
+        _adapterInfo.Name = ConvertWCharToString(adapterDesc.Description);
+        _adapterInfo.Vendor = std::to_string(adapterDesc.VendorId);
+        _adapterInfo.DeviceId = std::to_string(adapterDesc.DeviceId);
 
         LOG_INFO("D3D12 Adapter created.");
     }
