@@ -179,9 +179,9 @@ namespace render
 
 		_sceneLoader.Init(ResourceTable::Get(), TextureManager::Get());
 
-#if ENABLE_GPU_PROFILING
+#if ENABLE_CPU_PROFILING || ENABLE_GPU_PROFILING
         _renderGraph->SetProfiler(&_gpuProfiler);
-#endif // ENABLE_GPU_PROFILING
+#endif // ENABLE_CPU_PROFILING || ENABLE_GPU_PROFILING
     }
 
     DXRenderer::~DXRenderer()

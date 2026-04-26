@@ -46,6 +46,9 @@ namespace rhi::d3d12
         HRESULT result = d3d12Device->CreateCommandQueue(&desc, IID_PPV_ARGS(&_commandQueue));
         CHECK(result, "Failed to create D3D12CommandQueue.");
 
+        result = _commandQueue->GetTimestampFrequency(&_timestampFrequency);
+        CHECK(result, "Failed to get timestamp frequency.");
+
 #if ENABLE_DEBUG_NAMES
         SetD3D12Name(_commandQueue.Get(), name);
 #endif // ENABLE_DEBUG_NAMES

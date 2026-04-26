@@ -49,7 +49,7 @@ namespace rg
     void RenderGraph::Reset()
     {
 #if ENABLE_CPU_PROFILING || ENABLE_GPU_PROFILING
-        if (profiler)
+        if (_profiler)
         {
             _frameTimerID = _profiler->RegisterTimer("Frame");
         }
@@ -232,7 +232,7 @@ namespace rg
             _beginFrameTask->SetName("Begin Frame Task");
             rhi::CommandList* commandList = _beginFrameTask->GetCommandList();
 
-            _gpuProfiler->BeginEvent(commandList, _frameTimerID);
+            _profiler->BeginEvent(commandList, _frameTimerID);
 
             commandList->Close();
         }
@@ -254,8 +254,8 @@ namespace rg
             _endFrameTask->SetName("End Frame Task");
             rhi::CommandList* commandList = _endFrameTask->GetCommandList();
 
-            _gpuProfiler->EndEvent(commandList, _frameTimerID);
-            _gpuProfiler->ResolveTimestamps(commandList);
+            _profiler->EndEvent(commandList, _frameTimerID);
+            _profiler->ResolveTimestamps(commandList);
 
             commandList->Close();
         }
