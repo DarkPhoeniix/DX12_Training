@@ -2,21 +2,17 @@
 
 #include "Application.h"
 
-#include "SwapChain.h"
-
-#include "Events/RenderEvent.h"
-#include "Events/UpdateEvent.h"
-#include "Input/InputDevice.h"
-
-#include "Core/Renderer.h"
-#include "Helpers/DebugInfo.h"
-#include "Window/Win32Window.h"
-
-#include "Resources/resource.h"
+#include "Renderer/Core/Renderer.h"
+#include "Renderer/Events/RenderEvent.h"
+#include "Renderer/Events/UpdateEvent.h"
+#include "Renderer/Helpers/DebugInfo.h"
+#include "Renderer/Input/InputDevice.h"
+#include "Renderer/Window/Win32Window.h"
 
 #include "RHI/CommandQueue.h"
+#include "RHI/SwapChain.h"
 
-#include "Renderer/Window/Win32Window.h"
+#include "Resources/resource.h"
 
 using namespace core;
 using namespace render;
@@ -30,8 +26,6 @@ Application* Application::_instance = nullptr;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    //GUI_WndProc(hwnd, message, wParam, lParam);
-
     switch (message)
     {
     case WM_CREATE:

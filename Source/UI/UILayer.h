@@ -3,8 +3,6 @@
 #include "Renderer/Window/WindowEvent.h"
 
 #include <memory>
-#include <string>
-#include <cstdint>
 
 namespace rhi
 {
