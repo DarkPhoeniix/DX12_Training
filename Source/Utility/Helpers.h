@@ -1,29 +1,30 @@
 #pragma once
 
+#include <cstdint>
 #include <type_traits>
 
 #define BINARY_OPERATION_TO_ENUM(type) \
-	inline type& operator|=(type &x, const type y)\
+	type& operator|=(type &x, const type y)\
 	{\
 		x = (type)((int)x | (int)y); return x;\
 	}\
-	inline type operator|(const type x, const type y)\
+	type operator|(const type x, const type y)\
 	{\
 		return (type)((int)x | (int)y);\
 	}\
-	inline type& operator&=(type &x, const type y)\
+	type& operator&=(type &x, const type y)\
 	{\
 		x = (type)((int)x & (int)y); return x;\
 	}\
-	inline type operator&(const type x, const type y)\
+	type operator&(const type x, const type y)\
 	{\
 		return (type)((int)x & (int)y);\
 	}\
-	inline type& operator^=(type &x, const type y)\
+	type& operator^=(type &x, const type y)\
 	{\
 		x = (type)((int)x ^ (int)y); return x;\
 	}\
-	inline type operator^(const type x, const type y)\
+	type operator^(const type x, const type y)\
 	{\
 		return (type)((int)x ^ (int)y);\
 	}

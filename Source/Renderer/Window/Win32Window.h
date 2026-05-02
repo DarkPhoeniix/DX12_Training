@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Window/IWindowEventListener.h"
+#include "Window/WindowEvent.h"
 
 namespace rhi
 {
@@ -37,7 +38,7 @@ namespace core
 
         void SetSwapChain(rhi::SwapChain* swapChain);
 
-        LRESULT WindowProcCallback(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+        LRESULT WindowProcCallback(const WindowEvent& windowEvent);
 
     protected:
         void ToggleFullscreenWindow();

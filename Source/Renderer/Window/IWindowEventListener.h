@@ -7,6 +7,7 @@
 #include "events/MouseButtonEvent.h"
 #include "events/MouseScrollEvent.h"
 #include "events/ResizeEvent.h"
+#include "WindowEvent.h"
 
 #define WM_PIPELINE_CHANGED (WM_USER + 1)
 #define WM_LOAD_SCENE (WM_USER + 2)
@@ -32,6 +33,7 @@ namespace core
             virtual void OnResize([[maybe_unused]] ResizeEvent& e) {}
             virtual void OnPipelineChanged() {}
             virtual void OnLoadScene([[maybe_unused]] const std::string& filepath) {}
+            virtual void OnWindowEvent([[maybe_unused]] const core::WindowEvent& windowEvent) {}
         };
     } // namespace events
 } // namespace core

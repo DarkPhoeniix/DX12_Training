@@ -49,6 +49,7 @@ target_link_libraries(Editor PRIVATE
     Renderer 
     RHI 
     Logger 
+    UI
     Utility 
     d3d12.lib 
     dxgi.lib 

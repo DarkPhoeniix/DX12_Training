@@ -131,14 +131,19 @@ namespace core
         SetFullscreen(!_fullscreen);
     }
 
-    LRESULT Win32Window::WindowProcCallback(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+    LRESULT Win32Window::WindowProcCallback(const WindowEvent& windowEvent)
     {
-        switch (message)
+        for (events::IWindowEventListener* listener : _eventListeners)
+        {
+            listener->OnWindowEvent(windowEvent);
+        }
+
+        switch (windowEvent.Message)
         {
         case WM_SYSKEYDOWN:
         {
             // Handle ALT+ENTER:
-            if ((wParam == VK_RETURN) && (lParam & (1 << 29)))
+            if ((windowEvent.WParam == VK_RETURN) && (windowEvent.LParam & (1 << 29)))
             {
                 ToggleFullscreen();
             }
@@ -146,8 +151,8 @@ namespace core
         break;
         case WM_SIZE:
         {
-            _width = ((int)(short)LOWORD(lParam));
-            _height = ((int)(short)HIWORD(lParam));
+            _width = ((int)(short)LOWORD(windowEvent.LParam));
+            _height = ((int)(short)HIWORD(windowEvent.LParam));
 
             ResizeEvent resizeEventArgs(_width, _height);
             for (events::IWindowEventListener* listener : _eventListeners)
@@ -172,7 +177,7 @@ namespace core
         break;
         case WM_LOAD_SCENE:
         {
-            std::wstring wstr((WCHAR*)lParam);
+            std::wstring wstr((WCHAR*)windowEvent.LParam);
             for (events::IWindowEventListener* listener : _eventListeners)
             {
                 listener->OnLoadScene({ wstr.begin(), wstr.end() });
@@ -181,7 +186,10 @@ namespace core
         }
         break;
         default:
-            return DefWindowProcW(hwnd, message, wParam, lParam);
+            return DefWindowProcW(static_cast<HWND>(windowEvent.WindowHandle), 
+                static_cast<UINT>(windowEvent.Message), 
+                static_cast<WPARAM>(windowEvent.WParam), 
+                static_cast<LPARAM>(windowEvent.LParam));
         }
 
         return 0;

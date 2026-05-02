@@ -30,7 +30,7 @@ Application* Application::_instance = nullptr;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    GUI_WndProc(hwnd, message, wParam, lParam);
+    //GUI_WndProc(hwnd, message, wParam, lParam);
 
     switch (message)
     {
@@ -49,7 +49,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPara
 
     if (window)
     {
-        LRESULT result = window->WindowProcCallback(hwnd, message, wParam, lParam);
+        core::WindowEvent windowEvent = { hwnd, message, wParam, lParam };
+        LRESULT result = window->WindowProcCallback(windowEvent);
         if (result != -1)
         {
             return result;

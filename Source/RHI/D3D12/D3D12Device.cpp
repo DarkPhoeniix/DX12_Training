@@ -132,6 +132,11 @@ namespace rhi::d3d12
         return *this;
     }
 
+    BackendAPI D3D12Device::GetBackend() const
+    {
+        return BackendAPI::D3D12;
+    }
+
     bool D3D12Device::IsEnhancedBarriersSupported()
     {
         return _enhancedBarriersSupported;

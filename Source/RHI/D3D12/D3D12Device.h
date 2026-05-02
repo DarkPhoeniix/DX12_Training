@@ -20,6 +20,8 @@ namespace rhi::d3d12
         D3D12Device& operator=(const D3D12Device& other) = delete;
         D3D12Device& operator=(D3D12Device&& other) noexcept;
 
+        BackendAPI GetBackend() const override;
+
         bool IsEnhancedBarriersSupported() override;
 
         void BindSwapChain(rhi::SwapChain* swapChain) override; 

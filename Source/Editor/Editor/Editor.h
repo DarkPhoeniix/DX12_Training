@@ -5,6 +5,8 @@
 
 #include "RHI/DescriptorHeap.h"
 
+#include "UI/UILayer.h"
+
 namespace rhi
 {
     class CommandList;
@@ -61,6 +63,7 @@ namespace gui
         void OnResize(core::events::ResizeEvent& e) override;
         void OnPipelineChanged() override;
         void OnLoadScene(const std::string& filepath) override;
+        void OnWindowEvent(const core::WindowEvent& windowEvent) override;
 
     protected:
         std::shared_ptr<Editor> GetPtr();
@@ -80,7 +83,7 @@ namespace gui
         std::shared_ptr<DebugInfoWidget> _debugInfoWidget;
         std::shared_ptr<EntityComponentsWidget> _entityComponentsWidget;
 
-        std::unique_ptr<rhi::DescriptorHeap> _descriptorHeap;
+        std::unique_ptr<ui::UILayer> _uiLayer;
 
         rhi::Device* _device;
 

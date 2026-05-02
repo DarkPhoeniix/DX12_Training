@@ -2,7 +2,7 @@
 
 #include "Utility/Helpers.h"
 
-#include <stdint.h>
+#include <cstdint>
 
 namespace rhi
 {
