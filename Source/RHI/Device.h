@@ -83,6 +83,8 @@ namespace rhi
         Device& operator=(const Device&) = delete;
         Device& operator=(Device&&) noexcept = default;
 
+        virtual BackendAPI GetBackend() const = 0;
+
         // Checks if the device supports enhanced barriers, which can optimize resource state transitions
         virtual bool IsEnhancedBarriersSupported() = 0;
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <type_traits>
 
 #define BINARY_OPERATION_TO_ENUM(type) \
