@@ -67,7 +67,7 @@ endforeach()
 target_include_directories(Renderer PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(Renderer PRIVATE ${CMAKE_SOURCE_DIR}/Source)
 target_compile_options(Renderer PRIVATE /MP)
-target_link_libraries(Renderer PRIVATE Microsoft::DirectX-Headers Microsoft::WinPixEventRuntime JsonCpp::JsonCpp RenderGraph RHI Logger Utility)
+target_link_libraries(Renderer PRIVATE Microsoft::DirectX-Headers Microsoft::WinPixEventRuntime JsonCpp::JsonCpp RenderGraph RHI Logger Utility ImageLoader)
 target_precompile_headers(Renderer PRIVATE "RendererPCH.h")
 
 if (ENABLE_CPU_PROFILING)

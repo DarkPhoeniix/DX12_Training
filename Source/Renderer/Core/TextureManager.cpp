@@ -7,6 +7,8 @@
 #include "RHI/CommandList.h"
 #include "RHI/ResourceBarrier.h"
 
+#include "ImageLoader/ImageLoader.h"
+
 // TODO: remove d3d12 dependecy here
 #include <directx/d3dx12.h>     // D3D12 extension library
 #include <DirectXTex.h>
@@ -323,6 +325,9 @@ TextureHandle TextureManager::EnqueueTexture(const std::string& filepath)
 
     DirectX::TexMetadata metadata = GetTextureMetadata(path);
     rhi::TextureDescription description = GetTextureDescription(metadata);
+
+    // TODO: ImageLoader testing
+    img::Metadata meta = img::LoadMetadataFromDDS(filepath.c_str());
 
     UploadInfo info =
     {
