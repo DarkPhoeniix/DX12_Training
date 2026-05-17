@@ -12,7 +12,7 @@ namespace rhi
 class TaskGPU : public rg::ITask
 {
 public:
-    TaskGPU(rhi::Device* device, rhi::CommandListType type);
+    TaskGPU(rhi::Device* device, rhi::CommandList* commandList);
     TaskGPU(const TaskGPU& other) = delete;
     TaskGPU(TaskGPU&& other) noexcept = default;
     ~TaskGPU() override;
@@ -38,7 +38,7 @@ public:
     tracking::ICommandListCrashContext* GetCrashContext();
 
 private:
-    std::unique_ptr<rhi::CommandList> _commandList;
+    rhi::CommandList* _commandList;
     std::unique_ptr<tracking::ICommandListCrashContext> _commandListCrashContext;
 
     rhi::Fence* _fence = nullptr;
