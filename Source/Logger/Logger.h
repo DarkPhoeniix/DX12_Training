@@ -109,5 +109,4 @@ namespace logging
         std::string str = std::vformat(message.c_str(), std::make_format_args(args...));
         Log(level, str);
     }
-
 } // namespace logging
