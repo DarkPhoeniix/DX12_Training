@@ -37,6 +37,8 @@ namespace rhi::d3d12
         result = nativeDevice->CreateCommandList(0, d3d12Type, _commandAllocator.Get(), nullptr, IID_PPV_ARGS(&_commandList));
         CHECK(result, "Failed to create D3D12CommandList.");
 
+        _commandList->Close();
+
 #if ENABLE_DEBUG_NAMES
         SetD3D12Name(_commandAllocator.Get(), name);
         SetD3D12Name(_commandList.Get(), name);
@@ -624,6 +626,7 @@ namespace rhi::d3d12
             d3d12PipelineState = D3D12Cast<ID3D12PipelineState>(pipelineState->GetNative());
         }
 
+        _commandAllocator->Reset();
         _commandList->Reset(_commandAllocator.Get(), d3d12PipelineState);
     }
 
