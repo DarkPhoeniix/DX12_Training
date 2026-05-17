@@ -7,10 +7,11 @@
 
 // TODO: refactor the Frame class
 
-namespace dx12
+namespace rhi
 {
+    class CommandListPool;
     class PipelineState;
-} // namespace core
+} // namespace rhi
 
 class Frame : public rg::ITaskAllocator
 {
@@ -51,6 +52,7 @@ public:
 
 private:
     std::vector<std::unique_ptr<TaskGPU>> _tasks;
+    std::unique_ptr<rhi::CommandListPool> _commandListPool;
 
     FencePool* _fencePool;
     rhi::Fence* _syncPoint;

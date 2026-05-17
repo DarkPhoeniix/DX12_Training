@@ -44,6 +44,7 @@ namespace rhi::d3d12
         std::shared_ptr<rhi::Texture> CreateTexture(void* nativePtr, const std::string& name) override;
 
         std::unique_ptr<rhi::CommandList> CreateCommandList(CommandListType type, const std::string& name) override;
+        std::unique_ptr<CommandListPool> CreateCommandListPool() override;
         std::unique_ptr<rhi::DescriptorHeap> CreateDescriptorHeap(const DescriptorHeapDescription& description, const std::string& name) override;
         std::unique_ptr<rhi::Fence> CreateFence(std::uint64_t initialValue) override;
         std::unique_ptr<rhi::QueryHeap> CreateQueryHeap(const QueryHeapDescription& description, const std::string& name) override;

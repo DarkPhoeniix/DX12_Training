@@ -12,6 +12,7 @@ namespace tracking
 
 namespace rhi
 {
+    class CommandListPool;
     class CommandQueue;
     class CommandSignature;
     class PipelineState;
@@ -128,6 +129,8 @@ namespace rhi
 
         // Creates a command list of the specified type with an optional name for debugging purposes, allowing the application to record GPU commands for execution
         virtual std::unique_ptr<CommandList> CreateCommandList(CommandListType type, const std::string& name = "") = 0;
+        // Creates a command list pool, which can be used to manage and reuse command lists for efficient GPU command recording and execution
+        virtual std::unique_ptr<CommandListPool> CreateCommandListPool() = 0;
         // Creates a descriptor heap based on the provided description and an optional name for debugging purposes, allowing the application to manage GPU 
         // resource descriptors for shader binding and rendering operations
         virtual std::unique_ptr<DescriptorHeap> CreateDescriptorHeap(const DescriptorHeapDescription& description, const std::string& name = "") = 0;

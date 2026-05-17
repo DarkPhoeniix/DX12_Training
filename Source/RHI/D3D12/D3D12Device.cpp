@@ -5,6 +5,7 @@
 
 #include "D3D12Buffer.h"
 #include "D3D12CommandList.h"
+#include "D3D12CommandListPool.h"
 #include "D3D12CommandQueue.h"
 #include "D3D12CommandSignature.h"
 #include "D3D12DescriptorHeap.h"
@@ -226,6 +227,11 @@ namespace rhi::d3d12
     std::unique_ptr<rhi::CommandList> D3D12Device::CreateCommandList(rhi::CommandListType type, const std::string& name)
     {
         return std::unique_ptr<D3D12CommandList>(new D3D12CommandList(this, type, name));
+    }
+
+    std::unique_ptr<CommandListPool> D3D12Device::CreateCommandListPool()
+    {
+        return std::unique_ptr<D3D12CommandListPool>(new D3D12CommandListPool(this));
     }
 
     std::unique_ptr<rhi::DescriptorHeap> D3D12Device::CreateDescriptorHeap(const rhi::DescriptorHeapDescription& description, const std::string& name)

@@ -48,6 +48,7 @@ using namespace Microsoft::WRL;
 #include <memory>
 #include <string>
 #include <vector>
+#include <deque>
 #include <map>
 
 #endif // DX12LIB_PCH_H
