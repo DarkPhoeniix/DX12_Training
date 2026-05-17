@@ -17,12 +17,13 @@ namespace render
     class DXRenderer;
 } // namespace render
 
-struct WindowParams
+struct ApplicationConfig
 {
-    std::uint32_t Width = 0;
-    std::uint32_t Height = 0;
-    std::wstring Name;
-    bool VSyns = false;
+    std::uint32_t WindowWidth = 0;
+    std::uint32_t WindowHeight = 0;
+    std::wstring Name;              // TODO: currently not used
+    std::wstring ScenePath;
+    bool VSync = false;
 };
 
 class Application
@@ -32,7 +33,7 @@ public:
     Application& operator=(const Application& copy) = delete;
 
     static void Init(HINSTANCE hInstance);
-    int Run(const WindowParams& windowParams, std::string cmdLine);
+    int Run(const ApplicationConfig& config);
     static void Quit(int exitCode = 0);
 
     static Application* Instance();
