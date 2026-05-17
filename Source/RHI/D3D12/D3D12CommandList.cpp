@@ -37,7 +37,8 @@ namespace rhi::d3d12
         result = nativeDevice->CreateCommandList(0, d3d12Type, _commandAllocator.Get(), nullptr, IID_PPV_ARGS(&_commandList));
         CHECK(result, "Failed to create D3D12CommandList.");
 
-        _commandList->Close();
+        result = _commandList->Close();
+        CHECK(result, "Failed to close D3D12CommandList after creation.");
 
 #if ENABLE_DEBUG_NAMES
         SetD3D12Name(_commandAllocator.Get(), name);

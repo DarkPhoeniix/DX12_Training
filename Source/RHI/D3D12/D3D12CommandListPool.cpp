@@ -55,8 +55,6 @@ namespace rhi::d3d12
             auto& newExecutor = executors->emplace_back(newCommandList.get(), false);
 
             executor = &newExecutor;
-
-            LOG_DEBUG("Created new command list of type {}. Total command lists in pool: {}", static_cast<int>(type), executors->size());
         }
 
         return executor->CommandList;
