@@ -17,15 +17,18 @@ namespace render
     class DXRenderer;
 } // namespace render
 
+// Application start-up configuration parameters
 struct ApplicationConfig
 {
-    std::uint32_t WindowWidth = 0;
-    std::uint32_t WindowHeight = 0;
-    std::wstring Name;              // TODO: currently not used
-    std::wstring ScenePath;
-    bool VSync = false;
+    std::uint32_t WindowWidth   = 0;
+    std::uint32_t WindowHeight  = 0;
+    std::wstring Name           = L""; // TODO: currently not used
+    std::wstring ScenePath      = L"";
+    bool VSync                  = false;
 };
 
+// Entry point of the application, responsible for initializing the application, creating the main window,
+// managing the main loop, and handling application-wide resources and events
 class Application
 {
 public:
