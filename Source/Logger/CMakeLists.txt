@@ -20,6 +20,7 @@ endforeach()
 
 target_include_directories(Logger PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(Logger PRIVATE spdlog::spdlog)
+target_compile_definitions(Logger PRIVATE FILE_LOG)
 
 if (MSVC)
     target_compile_definitions(Logger PRIVATE MSVC_LOG)

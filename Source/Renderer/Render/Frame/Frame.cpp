@@ -4,11 +4,14 @@
 
 #include "Fence.h"
 
+#include "RHI/CommandListPool.h"
+
 Frame::Frame(rhi::Device* device)
     : Index(0)
     , Prev(nullptr)
     , Next(nullptr)
     , _tasks{}
+    , _commandListPool(device->CreateCommandListPool())
     , _fencePool(nullptr)
     , _syncPoint(nullptr)
     , _targetTexture(nullptr)
@@ -54,7 +57,9 @@ void Frame::Init(std::uint32_t width, std::uint32_t height)
 
 rg::ITask* Frame::AllocateTask(rhi::CommandListType type, rhi::PipelineState* rootSignature)
 {
-    _tasks.push_back(std::make_unique<TaskGPU>(_device, type));
+    rhi::CommandList* commandList = _commandListPool->AllocateCommandList(type);
+
+    _tasks.push_back(std::make_unique<TaskGPU>(_device, commandList));
     TaskGPU* task = _tasks.back().get();
 
     task->Reset(rootSignature);
@@ -87,6 +92,7 @@ void Frame::ResetGPU()
     for (auto& task : _tasks)
     {
         task->GetFence()->SetFree(true);
+        _commandListPool->FreeCommandList(task->GetCommandList());
     }
 
     _tasks.clear();

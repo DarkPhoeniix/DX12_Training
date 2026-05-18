@@ -10,13 +10,13 @@
 #include "RHI/CommandList.h"
 #include "RHI/Fence.h"
 
-TaskGPU::TaskGPU(rhi::Device* device, rhi::CommandListType type)
+TaskGPU::TaskGPU(rhi::Device* device, rhi::CommandList* commandList)
     : _fence(nullptr)
-    , _commandList(device->CreateCommandList(type))
-    , _type(type)
+    , _commandList(commandList)
+    , _type(_commandList->GetCommandListType())
+    , _dependencies{}
     , _commandListCrashContext(device->GetCrashTracker()->CreateCommandListCrashContext())
 {
-    _commandList->Close();
 }
 
 TaskGPU::~TaskGPU()
@@ -32,7 +32,7 @@ void TaskGPU::Reset(rhi::PipelineState* pipelineState)
 
 rhi::CommandList* TaskGPU::GetCommandList()
 {
-    return _commandList.get();
+    return _commandList;
 }
 
 void TaskGPU::SetFence(rhi::Fence* fence)

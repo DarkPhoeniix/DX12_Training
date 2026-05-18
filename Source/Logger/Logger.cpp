@@ -9,7 +9,13 @@
 #include <spdlog/sinks/basic_file_sink.h>
 #endif // FILE_LOG
 
-namespace logging {
+namespace logging 
+{
+    namespace
+    {
+        // Define a log pattern that includes timestamp, log level, thread id, and the log message
+        constexpr const char* LOG_PATTERN = "[%H:%M:%S] [%l] (%t) %v";
+    } // namespace unnamed
 
     struct Logger::Impl
     {
@@ -22,13 +28,13 @@ namespace logging {
         std::vector<spdlog::sink_ptr> sinks;
 #ifdef MSVC_LOG
         auto msvc = std::make_shared<spdlog::sinks::msvc_sink_mt>();
-        msvc->set_pattern("[%H:%M:%S] [%l] (%t) %v");
+        msvc->set_pattern(LOG_PATTERN);
         sinks.push_back(msvc);
 #endif // MSVC_LOG
 
 #ifdef FILE_LOG
         auto file = std::make_shared<spdlog::sinks::basic_file_sink_mt>(logFilePath, true);
-        file->set_pattern("[%H:%M:%S] [%l] (%t) %v");
+        file->set_pattern(LOG_PATTERN);
         sinks.push_back(file);
 #endif // FILE_LOG
 

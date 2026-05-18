@@ -82,11 +82,11 @@ void Application::Init(HINSTANCE hInstance)
     _instance = new Application(hInstance);
 }
 
-int Application::Run(const WindowParams& windowParams, std::string cmdLine)
+int Application::Run(const ApplicationConfig& config)
 {
     // Initialization
     {
-        _win32Window = CreateWin32Window(windowParams.Width, windowParams.Height, windowParams.Name, windowParams.VSyns);
+        _win32Window = CreateWin32Window(config.WindowWidth, config.WindowHeight, config.Name, config.VSync);
         _renderer = std::make_unique<render::DXRenderer>(_device.get(), _win32Window->GetWindowHandle());
 
         _swapChain = _device->CreateSwapChain(_win32Window->GetWindowHandle(), _win32Window->GetWidth(), _win32Window->GetHeight(), _win32Window->IsVSync());
@@ -124,7 +124,8 @@ int Application::Run(const WindowParams& windowParams, std::string cmdLine)
     task->SetName("LoadContent");
 
     TaskGPU* uploadTask = _currentFrame->GetTask("LoadContent");
-    if (!_renderer->LoadContent(uploadTask, cmdLine))
+    std::string ScenePath = std::string(config.ScenePath.begin(), config.ScenePath.end());
+    if (!_renderer->LoadContent(uploadTask, ScenePath))
     {
         return 1;
     }
