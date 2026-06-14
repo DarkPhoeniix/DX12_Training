@@ -91,6 +91,14 @@ namespace rhi
         float MaxDepth          = 1.0f;
     };
 
+    // SubresourceData describes a single subresource (mip level / array slice) of CPU-side image data to be uploaded to the GPU
+    struct SubresourceData
+    {
+        const void* Data        = nullptr;
+        std::uint64_t RowPitch  = 0;
+        std::uint64_t SlicePitch = 0;
+    };
+
     // CommandList is an abstract interface representing a command list, which is used to record GPU commands for execution
     class CommandList
     {
@@ -153,11 +161,16 @@ namespace rhi
         virtual void CopyTexture(std::shared_ptr<Texture> sourceResource, std::shared_ptr<Texture> destinationResource) = 0;
         // Copies a specific region of data between textures, allowing the application to transfer a specified number of bytes from a source texture
         // to a destination texture, with optional offsets for both the source and destination
-        virtual void CopyTextureRegion(std::shared_ptr<Texture> sourceResource, 
-                                       std::shared_ptr<Texture> destinationResource, 
+        virtual void CopyTextureRegion(std::shared_ptr<Texture> sourceResource,
+                                       std::shared_ptr<Texture> destinationResource,
                                        uint32_t numBytes,
-                                       uint32_t sourceOffset = 0, 
+                                       uint32_t sourceOffset = 0,
                                        uint32_t destinationOffset = 0) = 0;
+        // Copies CPU-side subresource data into an upload buffer and issues buffer-to-texture copies for each subresource.
+        // The destination texture must be in CopyDest state. The intermediateBuffer must be an Upload buffer large enough to hold all subresources.
+        virtual void CopyBufferToTexture(std::shared_ptr<Buffer> intermediateBuffer,
+                                         std::shared_ptr<Texture> destinationTexture,
+                                         const std::vector<SubresourceData>& subresources) = 0;
 
         // Sets the graphics pipeline state for the command list, allowing the application to specify the configuration of the graphics pipeline
         virtual void SetGraphicsPipelineState(PipelineState* pipelineState) = 0;

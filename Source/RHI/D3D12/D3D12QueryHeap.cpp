@@ -3,6 +3,7 @@
 
 #include "D3D12QueryHeap.h"
 
+#include "D3D12Device.h"
 #include "D3D12Helpers.h"
 
 namespace rhi::d3d12
@@ -13,7 +14,7 @@ namespace rhi::d3d12
         , _name(name)
 #endif // ENABLE_DEBUG_NAMES
     {
-        ID3D12Device* d3d12Device = D3D12Cast<ID3D12Device>(device->GetNative());
+        NativeDevice* d3d12Device = D3D12Cast<NativeDevice>(device->GetNative());
 
         D3D12_QUERY_HEAP_DESC desc =
         {

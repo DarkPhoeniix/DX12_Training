@@ -3,6 +3,7 @@
 
 #include "D3D12Heap.h"
 
+#include "D3D12Device.h"
 #include "D3D12Helpers.h"
 
 namespace rhi::d3d12
@@ -24,7 +25,7 @@ namespace rhi::d3d12
             .Flags = (D3D12_HEAP_FLAGS)description.Flags
         };
 
-        ID3D12Device* d3d12DeviceNative = D3D12Cast<ID3D12Device>(device->GetNative());
+        NativeDevice* d3d12DeviceNative = D3D12Cast<NativeDevice>(device->GetNative());
 
         HRESULT result = d3d12DeviceNative->CreateHeap(&desc, IID_PPV_ARGS(&_heap));
         CHECK(result, "Failed to create D3D12Heap.");
@@ -109,7 +110,7 @@ namespace rhi::d3d12
 
     void D3D12Heap::Reset()
     {
-        NOT_IMPLEMENTED();
+        _resourceOffset = 0;
     }
 
     void* D3D12Heap::GetNative() const

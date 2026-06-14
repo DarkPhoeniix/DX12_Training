@@ -9,6 +9,8 @@ namespace tracking
 
 namespace rhi::d3d12
 {
+    using NativeDevice = ID3D12Device10;
+
     class D3D12Device final : public rhi::Device
     {
     public:
@@ -92,7 +94,7 @@ namespace rhi::d3d12
         void CreateTextureSRV(const TextureView& view, CPUDescriptor& descriptor);
         void CreateTextureUAV(const TextureView& view, CPUDescriptor& descriptor);
 
-        ComPtr<ID3D12Device2> _device;
+        ComPtr<NativeDevice> _device;
         ComPtr<IDXGIAdapter4> _adapter;
 
         bool _enhancedBarriersSupported;

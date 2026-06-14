@@ -7,9 +7,8 @@
 #include "RHI/CommandList.h"
 #include "RHI/ResourceBarrier.h"
 
-// TODO: remove d3d12 dependecy here
-#include <directx/d3dx12.h>     // D3D12 extension library
-#include <DirectXTex.h>
+#include "ImageLoader/ImageLoader.h"
+
 
 namespace
 {
@@ -17,143 +16,114 @@ namespace
     const std::string HDR_EXTENSION = ".hdr";
     const std::string TGA_EXTENSION = ".tga";
 
-    DirectX::TexMetadata GetTextureMetadata(const std::filesystem::path& path)
+    static std::unordered_map<img::ImageFormat, rhi::Format> s_ImageFormatToRHIFormat
     {
-        std::filesystem::path extension = path.extension();
-
-        DirectX::TexMetadata metadata;
-        if (extension == DDS_EXTENSION)
-        {
-            HRESULT result = DirectX::GetMetadataFromDDSFile(path.c_str(), DirectX::DDS_FLAGS_NONE, metadata);
-            CHECK(result, "Failed to get metadata from DDS file: " + path.string());
-        }
-        else if (extension == HDR_EXTENSION)
-        {
-            HRESULT result = DirectX::GetMetadataFromHDRFile(path.c_str(), metadata);
-            CHECK(result, "Failed to get metadata from HDR file: " + path.string());
-        }
-        else if (extension == TGA_EXTENSION)
-        {
-            HRESULT result = DirectX::GetMetadataFromTGAFile(path.c_str(), metadata);
-            CHECK(result, "Failed to get metadata from TGA file: " + path.string());
-        }
-        else
-        {
-            HRESULT result = DirectX::GetMetadataFromWICFile(path.c_str(), DirectX::WIC_FLAGS_NONE, metadata);
-            CHECK(result, "Failed to get metadata from WIC file: " + path.string());
-        }
-
-        return metadata;
-    }
-
-    static std::unordered_map<DXGI_FORMAT, rhi::Format> s_DXGIFormatToFormat
-    {
-        { DXGI_FORMAT_R32G32B32A32_TYPELESS , rhi::Format::R32G32B32A32_TYPELESS},
-        { DXGI_FORMAT_R32G32B32A32_FLOAT , rhi::Format::R32G32B32A32_FLOAT},
-        { DXGI_FORMAT_R32G32B32A32_UINT , rhi::Format::R32G32B32A32_UINT},
-        { DXGI_FORMAT_R32G32B32A32_SINT , rhi::Format::R32G32B32A32_SINT},
-        { DXGI_FORMAT_R32G32B32_TYPELESS , rhi::Format::R32G32B32_TYPELESS},
-        { DXGI_FORMAT_R32G32B32_FLOAT , rhi::Format::R32G32B32_FLOAT},
-        { DXGI_FORMAT_R32G32B32_UINT , rhi::Format::R32G32B32_UINT},
-        { DXGI_FORMAT_R32G32B32_SINT , rhi::Format::R32G32B32_SINT},
-        { DXGI_FORMAT_R16G16B16A16_TYPELESS , rhi::Format::R16G16B16A16_TYPELESS},
-        { DXGI_FORMAT_R16G16B16A16_FLOAT , rhi::Format::R16G16B16A16_FLOAT},
-        { DXGI_FORMAT_R16G16B16A16_UNORM , rhi::Format::R16G16B16A16_UNORM},
-        { DXGI_FORMAT_R16G16B16A16_UINT , rhi::Format::R16G16B16A16_UINT},
-        { DXGI_FORMAT_R16G16B16A16_SNORM , rhi::Format::R16G16B16A16_SNORM},
-        { DXGI_FORMAT_R16G16B16A16_SINT , rhi::Format::R16G16B16A16_SINT},
-        { DXGI_FORMAT_R32G32_TYPELESS , rhi::Format::R32G32_TYPELESS},
-        { DXGI_FORMAT_R32G32_FLOAT , rhi::Format::R32G32_FLOAT},
-        { DXGI_FORMAT_R32G32_UINT , rhi::Format::R32G32_UINT},
-        { DXGI_FORMAT_R32G32_SINT , rhi::Format::R32G32_SINT},
-        { DXGI_FORMAT_R32G8X24_TYPELESS , rhi::Format::R32G8X24_TYPELESS},
-        { DXGI_FORMAT_D32_FLOAT_S8X24_UINT , rhi::Format::D32_FLOAT_S8X24_UINT},
-        { DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS , rhi::Format::R32_FLOAT_X8X24_TYPELESS},
-        { DXGI_FORMAT_X32_TYPELESS_G8X24_UINT , rhi::Format::X32_TYPELESS_G8X24_UINT},
-        { DXGI_FORMAT_R10G10B10A2_TYPELESS , rhi::Format::R10G10B10A2_TYPELESS},
-        { DXGI_FORMAT_R10G10B10A2_UNORM , rhi::Format::R10G10B10A2_UNORM},
-        { DXGI_FORMAT_R10G10B10A2_UINT , rhi::Format::R10G10B10A2_UINT},
-        { DXGI_FORMAT_R11G11B10_FLOAT , rhi::Format::R11G11B10_FLOAT},
-        { DXGI_FORMAT_R8G8B8A8_TYPELESS , rhi::Format::R8G8B8A8_TYPELESS},
-        { DXGI_FORMAT_R8G8B8A8_UNORM , rhi::Format::R8G8B8A8_UNORM},
-        { DXGI_FORMAT_R8G8B8A8_UNORM_SRGB , rhi::Format::R8G8B8A8_UNORM_SRGB},
-        { DXGI_FORMAT_R8G8B8A8_UINT , rhi::Format::R8G8B8A8_UINT},
-        { DXGI_FORMAT_R8G8B8A8_SNORM , rhi::Format::R8G8B8A8_SNORM},
-        { DXGI_FORMAT_R8G8B8A8_SINT , rhi::Format::R8G8B8A8_SINT},
-        { DXGI_FORMAT_R16G16_TYPELESS , rhi::Format::R16G16_TYPELESS},
-        { DXGI_FORMAT_R16G16_FLOAT , rhi::Format::R16G16_FLOAT},
-        { DXGI_FORMAT_R16G16_UNORM , rhi::Format::R16G16_UNORM},
-        { DXGI_FORMAT_R16G16_UINT , rhi::Format::R16G16_UINT},
-        { DXGI_FORMAT_R16G16_SNORM , rhi::Format::R16G16_SNORM},
-        { DXGI_FORMAT_R16G16_SINT , rhi::Format::R16G16_SINT},
-        { DXGI_FORMAT_R32_TYPELESS , rhi::Format::R32_TYPELESS},
-        { DXGI_FORMAT_D32_FLOAT , rhi::Format::D32_FLOAT},
-        { DXGI_FORMAT_R32_FLOAT , rhi::Format::R32_FLOAT},
-        { DXGI_FORMAT_R32_UINT , rhi::Format::R32_UINT},
-        { DXGI_FORMAT_R32_SINT , rhi::Format::R32_SINT},
-        { DXGI_FORMAT_R24G8_TYPELESS , rhi::Format::R24G8_TYPELESS},
-        { DXGI_FORMAT_D24_UNORM_S8_UINT , rhi::Format::D24_UNORM_S8_UINT},
-        { DXGI_FORMAT_R24_UNORM_X8_TYPELESS , rhi::Format::R24_UNORM_X8_TYPELESS},
-        { DXGI_FORMAT_X24_TYPELESS_G8_UINT , rhi::Format::X24_TYPELESS_G8_UINT},
-        { DXGI_FORMAT_R8G8_TYPELESS , rhi::Format::R8G8_TYPELESS},
-        { DXGI_FORMAT_R8G8_UNORM , rhi::Format::R8G8_UNORM},
-        { DXGI_FORMAT_R8G8_UINT , rhi::Format::R8G8_UINT},
-        { DXGI_FORMAT_R8G8_SNORM , rhi::Format::R8G8_SNORM},
-        { DXGI_FORMAT_R8G8_SINT , rhi::Format::R8G8_SINT},
-        { DXGI_FORMAT_R16_TYPELESS , rhi::Format::R16_TYPELESS},
-        { DXGI_FORMAT_R16_FLOAT , rhi::Format::R16_FLOAT},
-        { DXGI_FORMAT_D16_UNORM , rhi::Format::D16_UNORM},
-        { DXGI_FORMAT_R16_UNORM , rhi::Format::R16_UNORM},
-        { DXGI_FORMAT_R16_UINT , rhi::Format::R16_UINT},
-        { DXGI_FORMAT_R16_SNORM , rhi::Format::R16_SNORM},
-        { DXGI_FORMAT_R16_SINT , rhi::Format::R16_SINT},
-        { DXGI_FORMAT_R8_TYPELESS , rhi::Format::R8_TYPELESS},
-        { DXGI_FORMAT_R8_UNORM , rhi::Format::R8_UNORM},
-        { DXGI_FORMAT_R8_UINT , rhi::Format::R8_UINT},
-        { DXGI_FORMAT_R8_SNORM , rhi::Format::R8_SNORM},
-        { DXGI_FORMAT_R8_SINT , rhi::Format::R8_SINT},
-        { DXGI_FORMAT_A8_UNORM , rhi::Format::A8_UNORM},
-        { DXGI_FORMAT_R1_UNORM , rhi::Format::R1_UNORM},
-        { DXGI_FORMAT_R9G9B9E5_SHAREDEXP , rhi::Format::R9G9B9E5_SHAREDEXP},
-        { DXGI_FORMAT_R8G8_B8G8_UNORM , rhi::Format::R8G8_B8G8_UNORM},
-        { DXGI_FORMAT_G8R8_G8B8_UNORM , rhi::Format::G8R8_G8B8_UNORM},
-        { DXGI_FORMAT_BC1_TYPELESS , rhi::Format::BC1_TYPELESS},
-        { DXGI_FORMAT_BC1_UNORM , rhi::Format::BC1_UNORM},
-        { DXGI_FORMAT_BC1_UNORM_SRGB , rhi::Format::BC1_UNORM_SRGB},
-        { DXGI_FORMAT_BC2_TYPELESS , rhi::Format::BC2_TYPELESS},
-        { DXGI_FORMAT_BC2_UNORM , rhi::Format::BC2_UNORM},
-        { DXGI_FORMAT_BC2_UNORM_SRGB , rhi::Format::BC2_UNORM_SRGB},
-        { DXGI_FORMAT_BC3_TYPELESS , rhi::Format::BC3_TYPELESS},
-        { DXGI_FORMAT_BC3_UNORM , rhi::Format::BC3_UNORM},
-        { DXGI_FORMAT_BC3_UNORM_SRGB , rhi::Format::BC3_UNORM_SRGB},
-        { DXGI_FORMAT_BC4_TYPELESS , rhi::Format::BC4_TYPELESS},
-        { DXGI_FORMAT_BC4_UNORM , rhi::Format::BC4_UNORM},
-        { DXGI_FORMAT_BC4_SNORM , rhi::Format::BC4_SNORM},
-        { DXGI_FORMAT_BC5_TYPELESS , rhi::Format::BC5_TYPELESS},
-        { DXGI_FORMAT_BC5_UNORM , rhi::Format::BC5_UNORM},
-        { DXGI_FORMAT_BC5_SNORM , rhi::Format::BC5_SNORM},
-        { DXGI_FORMAT_B5G6R5_UNORM , rhi::Format::B5G6R5_UNORM},
-        { DXGI_FORMAT_B5G5R5A1_UNORM , rhi::Format::B5G5R5A1_UNORM},
-        { DXGI_FORMAT_B8G8R8A8_UNORM , rhi::Format::B8G8R8A8_UNORM},
-        { DXGI_FORMAT_B8G8R8X8_UNORM , rhi::Format::B8G8R8X8_UNORM},
-        { DXGI_FORMAT_R10G10B10_XR_BIAS_A2_UNORM , rhi::Format::R10G10B10_XR_BIAS_A2_UNORM},
-        { DXGI_FORMAT_B8G8R8A8_TYPELESS , rhi::Format::B8G8R8A8_TYPELESS},
-        { DXGI_FORMAT_B8G8R8A8_UNORM_SRGB , rhi::Format::B8G8R8A8_UNORM_SRGB},
-        { DXGI_FORMAT_B8G8R8X8_TYPELESS , rhi::Format::B8G8R8X8_TYPELESS},
-        { DXGI_FORMAT_B8G8R8X8_UNORM_SRGB , rhi::Format::B8G8R8X8_UNORM_SRGB},
-        { DXGI_FORMAT_BC6H_TYPELESS , rhi::Format::BC6H_TYPELESS},
-        { DXGI_FORMAT_BC6H_UF16 , rhi::Format::BC6H_UF16},
-        { DXGI_FORMAT_BC6H_SF16 , rhi::Format::BC6H_SF16},
-        { DXGI_FORMAT_BC7_TYPELESS , rhi::Format::BC7_TYPELESS},
-        { DXGI_FORMAT_BC7_UNORM , rhi::Format::BC7_UNORM},
-        { DXGI_FORMAT_BC7_UNORM_SRGB , rhi::Format::BC7_UNORM_SRGB}
+        //{ img::ImageFormat::R32G32B32A32_TYPELESS , rhi::Format::R32G32B32A32_TYPELESS},
+        { img::ImageFormat::R32G32B32A32_FLOAT , rhi::Format::R32G32B32A32_FLOAT},
+        //{ img::ImageFormat::R32G32B32A32_UINT , rhi::Format::R32G32B32A32_UINT},
+        //{ img::ImageFormat::R32G32B32A32_SINT , rhi::Format::R32G32B32A32_SINT},
+        //{ img::ImageFormat::R32G32B32_TYPELESS , rhi::Format::R32G32B32_TYPELESS},
+        { img::ImageFormat::R32G32B32_FLOAT , rhi::Format::R32G32B32_FLOAT},
+        //{ img::ImageFormat::R32G32B32_UINT , rhi::Format::R32G32B32_UINT},
+        //{ img::ImageFormat::R32G32B32_SINT , rhi::Format::R32G32B32_SINT},
+        //{ img::ImageFormat::R16G16B16A16_TYPELESS , rhi::Format::R16G16B16A16_TYPELESS},
+        { img::ImageFormat::R16G16B16A16_FLOAT , rhi::Format::R16G16B16A16_FLOAT},
+        { img::ImageFormat::R16G16B16A16_UNORM , rhi::Format::R16G16B16A16_UNORM},
+        { img::ImageFormat::R16G16B16A16_UINT , rhi::Format::R16G16B16A16_UINT},
+        { img::ImageFormat::R16G16B16A16_SNORM , rhi::Format::R16G16B16A16_SNORM},
+        //{ img::ImageFormat::R16G16B16A16_SINT , rhi::Format::R16G16B16A16_SINT},
+        //{ img::ImageFormat::R32G32_TYPELESS , rhi::Format::R32G32_TYPELESS},
+        { img::ImageFormat::R32G32_FLOAT , rhi::Format::R32G32_FLOAT},
+        //{ img::ImageFormat::R32G32_UINT , rhi::Format::R32G32_UINT},
+        //{ img::ImageFormat::R32G32_SINT , rhi::Format::R32G32_SINT},
+        //{ img::ImageFormat::R32G8X24_TYPELESS , rhi::Format::R32G8X24_TYPELESS},
+        //{ img::ImageFormat::D32_FLOAT_S8X24_UINT , rhi::Format::D32_FLOAT_S8X24_UINT},
+        //{ img::ImageFormat::R32_FLOAT_X8X24_TYPELESS , rhi::Format::R32_FLOAT_X8X24_TYPELESS},
+        //{ img::ImageFormat::X32_TYPELESS_G8X24_UINT , rhi::Format::X32_TYPELESS_G8X24_UINT},
+        //{ img::ImageFormat::R10G10B10A2_TYPELESS , rhi::Format::R10G10B10A2_TYPELESS},
+        //{ img::ImageFormat::R10G10B10A2_UNORM , rhi::Format::R10G10B10A2_UNORM},
+        //{ img::ImageFormat::R10G10B10A2_UINT , rhi::Format::R10G10B10A2_UINT},
+        //{ img::ImageFormat::R11G11B10_FLOAT , rhi::Format::R11G11B10_FLOAT},
+        //{ img::ImageFormat::R8G8B8A8_TYPELESS , rhi::Format::R8G8B8A8_TYPELESS},
+        { img::ImageFormat::R8G8B8A8_UNORM , rhi::Format::R8G8B8A8_UNORM},
+        { img::ImageFormat::R8G8B8A8_UNORM_SRGB , rhi::Format::R8G8B8A8_UNORM_SRGB},
+        //{ img::ImageFormat::R8G8B8A8_UINT , rhi::Format::R8G8B8A8_UINT},
+        { img::ImageFormat::R8G8B8A8_SNORM , rhi::Format::R8G8B8A8_SNORM},
+        //{ img::ImageFormat::R8G8B8A8_SINT , rhi::Format::R8G8B8A8_SINT},
+        //{ img::ImageFormat::R16G16_TYPELESS , rhi::Format::R16G16_TYPELESS},
+        { img::ImageFormat::R16G16_FLOAT , rhi::Format::R16G16_FLOAT},
+        { img::ImageFormat::R16G16_UNORM , rhi::Format::R16G16_UNORM},
+        { img::ImageFormat::R16G16_SNORM , rhi::Format::R16G16_SNORM},
+        //{ img::ImageFormat::R16G16_UINT , rhi::Format::R16G16_UINT},
+        //{ img::ImageFormat::R16G16_SINT , rhi::Format::R16G16_SINT},
+        //{ img::ImageFormat::R32_TYPELESS , rhi::Format::R32_TYPELESS},
+        //{ img::ImageFormat::D32_FLOAT , rhi::Format::D32_FLOAT},
+        { img::ImageFormat::R32_FLOAT , rhi::Format::R32_FLOAT},
+        //{ img::ImageFormat::R32_UINT , rhi::Format::R32_UINT},
+        //{ img::ImageFormat::R32_SINT , rhi::Format::R32_SINT},
+        //{ img::ImageFormat::R24G8_TYPELESS , rhi::Format::R24G8_TYPELESS},
+        //{ img::ImageFormat::D24_UNORM_S8_UINT , rhi::Format::D24_UNORM_S8_UINT},
+        //{ img::ImageFormat::R24_UNORM_X8_TYPELESS , rhi::Format::R24_UNORM_X8_TYPELESS},
+        //{ img::ImageFormat::X24_TYPELESS_G8_UINT , rhi::Format::X24_TYPELESS_G8_UINT},
+        //{ img::ImageFormat::R8G8_TYPELESS , rhi::Format::R8G8_TYPELESS},
+        { img::ImageFormat::R8G8_UNORM , rhi::Format::R8G8_UNORM},
+        //{ img::ImageFormat::R8G8_UINT , rhi::Format::R8G8_UINT},
+        { img::ImageFormat::R8G8_SNORM , rhi::Format::R8G8_SNORM},
+        //{ img::ImageFormat::R8G8_SINT , rhi::Format::R8G8_SINT},
+        //{ img::ImageFormat::R16_TYPELESS , rhi::Format::R16_TYPELESS},
+        { img::ImageFormat::R16_FLOAT , rhi::Format::R16_FLOAT},
+        //{ img::ImageFormat::D16_UNORM , rhi::Format::D16_UNORM},
+        { img::ImageFormat::R16_UNORM , rhi::Format::R16_UNORM},
+        //{ img::ImageFormat::R16_UINT , rhi::Format::R16_UINT},
+        { img::ImageFormat::R16_SNORM , rhi::Format::R16_SNORM},
+        //{ img::ImageFormat::R16_SINT , rhi::Format::R16_SINT},
+        //{ img::ImageFormat::R8_TYPELESS , rhi::Format::R8_TYPELESS},
+        { img::ImageFormat::R8_UNORM , rhi::Format::R8_UNORM},
+        //{ img::ImageFormat::R8_UINT , rhi::Format::R8_UINT},
+        //{ img::ImageFormat::R8_SNORM , rhi::Format::R8_SNORM},
+        //{ img::ImageFormat::R8_SINT , rhi::Format::R8_SINT},
+        //{ img::ImageFormat::A8_UNORM , rhi::Format::A8_UNORM},
+        //{ img::ImageFormat::R1_UNORM , rhi::Format::R1_UNORM},
+        //{ img::ImageFormat::R9G9B9E5_SHAREDEXP , rhi::Format::R9G9B9E5_SHAREDEXP},
+        //{ img::ImageFormat::R8G8_B8G8_UNORM , rhi::Format::R8G8_B8G8_UNORM},
+        //{ img::ImageFormat::G8R8_G8B8_UNORM , rhi::Format::G8R8_G8B8_UNORM},
+        { img::ImageFormat::BC1_TYPELESS , rhi::Format::BC1_TYPELESS},
+        { img::ImageFormat::BC1_UNORM , rhi::Format::BC1_UNORM},
+        { img::ImageFormat::BC1_UNORM_SRGB , rhi::Format::BC1_UNORM_SRGB},
+        { img::ImageFormat::BC2_TYPELESS , rhi::Format::BC2_TYPELESS},
+        { img::ImageFormat::BC2_UNORM , rhi::Format::BC2_UNORM},
+        { img::ImageFormat::BC2_UNORM_SRGB , rhi::Format::BC2_UNORM_SRGB},
+        { img::ImageFormat::BC3_TYPELESS , rhi::Format::BC3_TYPELESS},
+        { img::ImageFormat::BC3_UNORM , rhi::Format::BC3_UNORM},
+        { img::ImageFormat::BC3_UNORM_SRGB , rhi::Format::BC3_UNORM_SRGB},
+        { img::ImageFormat::BC4_TYPELESS , rhi::Format::BC4_TYPELESS},
+        { img::ImageFormat::BC4_UNORM , rhi::Format::BC4_UNORM},
+        { img::ImageFormat::BC4_SNORM , rhi::Format::BC4_SNORM},
+        { img::ImageFormat::BC5_TYPELESS , rhi::Format::BC5_TYPELESS},
+        { img::ImageFormat::BC5_UNORM , rhi::Format::BC5_UNORM},
+        { img::ImageFormat::BC5_SNORM , rhi::Format::BC5_SNORM},
+        //{ img::ImageFormat::B5G6R5_UNORM , rhi::Format::B5G6R5_UNORM},
+        //{ img::ImageFormat::B5G5R5A1_UNORM , rhi::Format::B5G5R5A1_UNORM},
+        //{ img::ImageFormat::B8G8R8A8_UNORM , rhi::Format::B8G8R8A8_UNORM},
+        //{ img::ImageFormat::B8G8R8X8_UNORM , rhi::Format::B8G8R8X8_UNORM},
+        //{ img::ImageFormat::R10G10B10_XR_BIAS_A2_UNORM , rhi::Format::R10G10B10_XR_BIAS_A2_UNORM},
+        //{ img::ImageFormat::B8G8R8A8_TYPELESS , rhi::Format::B8G8R8A8_TYPELESS},
+        //{ img::ImageFormat::B8G8R8A8_UNORM_SRGB , rhi::Format::B8G8R8A8_UNORM_SRGB},
+        //{ img::ImageFormat::B8G8R8X8_TYPELESS , rhi::Format::B8G8R8X8_TYPELESS},
+        //{ img::ImageFormat::B8G8R8X8_UNORM_SRGB , rhi::Format::B8G8R8X8_UNORM_SRGB},
+        { img::ImageFormat::BC6H_TYPELESS , rhi::Format::BC6H_TYPELESS},
+        { img::ImageFormat::BC6H_UF16 , rhi::Format::BC6H_UF16},
+        { img::ImageFormat::BC6H_SF16 , rhi::Format::BC6H_SF16},
+        { img::ImageFormat::BC7_TYPELESS , rhi::Format::BC7_TYPELESS},
+        { img::ImageFormat::BC7_UNORM , rhi::Format::BC7_UNORM},
+        { img::ImageFormat::BC7_UNORM_SRGB , rhi::Format::BC7_UNORM_SRGB}
     };
 
-    rhi::Format GetRHIFormat(DXGI_FORMAT format)
+    rhi::Format GetRHIFormat(img::ImageFormat format)
     {
-        auto it = s_DXGIFormatToFormat.find(format);
+        auto it = s_ImageFormatToRHIFormat.find(format);
 
-        if (it != s_DXGIFormatToFormat.end())
+        if (it != s_ImageFormatToRHIFormat.end())
         {
             return it->second;
         }
@@ -163,41 +133,42 @@ namespace
         }
     }
 
-    rhi::TextureDescription GetTextureDescription(const DirectX::TexMetadata& metadata)
+    rhi::TextureDescription GetTextureDescription(const img::Metadata& metadata)
     {
         rhi::TextureDescription description = {};
-        switch (metadata.dimension)
+
+        switch (metadata.Dimension)
         {
-        case DirectX::TEX_DIMENSION_TEXTURE1D:
+        case img::TextureDimension::Texture1D:
             description =
             {
-                .Width = static_cast<std::uint32_t>(metadata.width),
+                .Width = static_cast<std::uint32_t>(metadata.Width),
                 .Height = 1,
-                .DepthOrArraySize = static_cast<std::uint16_t>(metadata.arraySize),
-                .MipLevels = static_cast<std::uint16_t>(metadata.mipLevels),
-                .Format = GetRHIFormat(metadata.format),
+                .DepthOrArraySize = static_cast<std::uint16_t>(metadata.ArraySize),
+                .MipLevels = static_cast<std::uint16_t>(metadata.MipLevels),
+                .Format = GetRHIFormat(metadata.Format),
                 .Dimension = rhi::TextureDimension::Texture1D
             };
             break;
-        case DirectX::TEX_DIMENSION_TEXTURE2D:
+        case img::TextureDimension::Texture2D:
             description =
             {
-                .Width = static_cast<std::uint32_t>(metadata.width),
-                .Height = static_cast<std::uint32_t>(metadata.height),
-                .DepthOrArraySize = static_cast<std::uint16_t>(metadata.arraySize),
-                .MipLevels = static_cast<std::uint16_t>(metadata.mipLevels),
-                .Format = GetRHIFormat(metadata.format),
+                .Width = static_cast<std::uint32_t>(metadata.Width),
+                .Height = static_cast<std::uint32_t>(metadata.Height),
+                .DepthOrArraySize = static_cast<std::uint16_t>(metadata.ArraySize),
+                .MipLevels = static_cast<std::uint16_t>(metadata.MipLevels),
+                .Format = GetRHIFormat(metadata.Format),
                 .Dimension = rhi::TextureDimension::Texture2D
             };
             break;
-        case DirectX::TEX_DIMENSION_TEXTURE3D:
+        case img::TextureDimension::Texture3D:
             description =
             {
-                .Width = static_cast<std::uint32_t>(metadata.width),
-                .Height = static_cast<std::uint32_t>(metadata.height),
-                .DepthOrArraySize = static_cast<std::uint16_t>(metadata.arraySize),
-                .MipLevels = static_cast<std::uint16_t>(metadata.mipLevels),
-                .Format = GetRHIFormat(metadata.format),
+                .Width = static_cast<std::uint32_t>(metadata.Width),
+                .Height = static_cast<std::uint32_t>(metadata.Height),
+                .DepthOrArraySize = static_cast<std::uint16_t>(metadata.Depth),
+                .MipLevels = static_cast<std::uint16_t>(metadata.MipLevels),
+                .Format = GetRHIFormat(metadata.Format),
                 .Dimension = rhi::TextureDimension::Texture3D
             };
             break;
@@ -206,65 +177,28 @@ namespace
         return description;
     }
 
-    DirectX::ScratchImage LoadTextureImage(const std::filesystem::path& path)
-    {
-        std::filesystem::path extension = path.extension();
-
-        DirectX::ScratchImage image;
-        if (extension == DDS_EXTENSION)
-        {
-            HRESULT result = DirectX::LoadFromDDSFile(path.c_str(), DirectX::DDS_FLAGS_NONE, nullptr, image);
-            CHECK(result, "Failed to load DDS file: " + path.string());
-        }
-        else if (path.extension() == HDR_EXTENSION)
-        {
-            HRESULT result = DirectX::LoadFromHDRFile(path.c_str(), nullptr, image);
-            CHECK(result, "Failed to load HDR file: " + path.string());
-        }
-        else if (path.extension() == TGA_EXTENSION)
-        {
-            HRESULT result = DirectX::LoadFromTGAFile(path.c_str(), nullptr, image);
-            CHECK(result, "Failed to load TGA file: " + path.string());
-        }
-        else
-        {
-            HRESULT result = DirectX::LoadFromWICFile(path.c_str(), DirectX::WIC_FLAGS_NONE, nullptr, image);
-            CHECK(result, "Failed to load WIC file: " + path.string());
-        }
-
-        return image;
-    }
-
     void UploadTextureData(rhi::CommandList* commandList, const std::filesystem::path& path, std::shared_ptr<rhi::Texture> texture, std::shared_ptr<rhi::Buffer> intermediateBuffer)
     {
-        DirectX::ScratchImage image = LoadTextureImage(path);
+        img::Image image = img::LoadImageFromFile(path.string().c_str());
 
-        std::vector<D3D12_SUBRESOURCE_DATA> subresources(image.GetImageCount());
-        const DirectX::Image* pImages = image.GetImages();
-        for (int i = 0; i < image.GetImageCount(); ++i)
+        const std::uint32_t sliceCount = image.GetSliceCount();
+        std::vector<rhi::SubresourceData> subresources(sliceCount);
+        for (std::uint32_t i = 0; i < sliceCount; ++i)
         {
-            auto& subresource = subresources[i];
-            subresource.RowPitch = pImages[i].rowPitch;
-            subresource.SlicePitch = pImages[i].slicePitch;
-            subresource.pData = pImages[i].pixels;
+            const img::ImageSlice& slice = image.GetImageSlice(i);
+            subresources[i] =
+            {
+                .Data       = slice.Pixels,
+                .RowPitch   = slice.RowPitch,
+                .SlicePitch = slice.SlicePitch
+            };
         }
 
-        ID3D12GraphicsCommandList* d3d12CommandList = static_cast<ID3D12GraphicsCommandList*>(commandList->GetNative());
-        ID3D12Resource* d3d12TargetResource = static_cast<ID3D12Resource*>(texture->GetNative());
-        ID3D12Resource* d3d12IntermediateResource = static_cast<ID3D12Resource*>(intermediateBuffer->GetNative());
+        commandList->CopyBufferToTexture(intermediateBuffer, texture, subresources);
 
-        UpdateSubresources(d3d12CommandList,
-            d3d12TargetResource,
-            d3d12IntermediateResource,
-            0, 0, static_cast<std::uint32_t>(subresources.size()),
-            subresources.data());
-
-        //rhi::TextureBarrier barrier = { texture, rhi::ResourceState::CopyDest, rhi::ResourceState::Common };
-
-        // TODO: need to fallback to legacy barriers here due to magic in UpdateSubresources
-        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(d3d12TargetResource, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_COMMON);
-        d3d12CommandList->ResourceBarrier(1, &barrier);
-	}
+        rhi::TextureBarrier barrier = { texture, rhi::ResourceState::CopyDest, rhi::ResourceState::Common };
+        commandList->TransitionBarriers({ barrier });
+    }
 } // namespace unnamed
 
 std::unique_ptr<TextureManager> TextureManager::_instance = nullptr;
@@ -321,7 +255,7 @@ TextureHandle TextureManager::EnqueueTexture(const std::string& filepath)
         }
     }
 
-    DirectX::TexMetadata metadata = GetTextureMetadata(path);
+    img::Metadata metadata = img::LoadMetadataFromFile(filepath.c_str());
     rhi::TextureDescription description = GetTextureDescription(metadata);
 
     UploadInfo info =
@@ -370,7 +304,7 @@ void TextureManager::UploadTextures(rhi::CommandList* commandList)
         textureLock.unlock();
 
         rhi::AllocationInfo allocationInfo = _device->GetAllocationInfo(description);
-        std::uint32_t requiredSize = Math::AlignUp(allocationInfo.SizeInBytes, D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT);
+        std::uint32_t requiredSize = Math::AlignUp(allocationInfo.SizeInBytes, allocationInfo.Alignment);
 
         rhi::BufferDescription intermediateDesc =
         {

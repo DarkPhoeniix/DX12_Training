@@ -3,6 +3,9 @@
 
 #include "D3D12Fence.h"
 
+#include "D3D12Device.h"
+#include "D3D12Helpers.h"
+
 namespace rhi::d3d12
 {
     D3D12Fence::D3D12Fence(rhi::Device* device, std::uint64_t initialValue)
@@ -11,7 +14,7 @@ namespace rhi::d3d12
         , _cpuCallback()
         , _isFree(true)
     {
-        ID3D12Device* d3d12NativeDevice = static_cast<ID3D12Device*>(device->GetNative());
+        NativeDevice* d3d12NativeDevice = D3D12Cast<NativeDevice>(device->GetNative());
         d3d12NativeDevice->CreateFence(initialValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&_fence));
     }
 

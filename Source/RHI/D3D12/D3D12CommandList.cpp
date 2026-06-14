@@ -3,6 +3,7 @@
 
 #include "D3D12CommandList.h"
 
+#include "D3D12Device.h"
 #include "D3D12Descriptor.h"
 #include "D3D12Helpers.h"
 
@@ -27,7 +28,7 @@ namespace rhi::d3d12
 #endif // ENABLE_DEBUG_NAMES
 
     {
-        ID3D12Device* nativeDevice = D3D12Cast<ID3D12Device>(device->GetNative());
+        NativeDevice* nativeDevice = D3D12Cast<NativeDevice>(device->GetNative());
 
         D3D12_COMMAND_LIST_TYPE d3d12Type = GetD3D12CommandListType(_type);
 
@@ -328,6 +329,65 @@ namespace rhi::d3d12
         ID3D12Resource* nativeDestination = D3D12Cast<ID3D12Resource>(destinationResource->GetNative());
 
         _commandList->CopyBufferRegion(nativeDestination, destinationOffset, nativeSource, sourceOffset, numBytes);
+    }
+
+    void D3D12CommandList::CopyBufferToTexture(std::shared_ptr<Buffer> intermediateBuffer,
+                                               std::shared_ptr<Texture> destinationTexture,
+                                               const std::vector<SubresourceData>& subresources)
+    {
+        NativeDevice* nativeDevice = D3D12Cast<NativeDevice>(_device->GetNative());
+        ID3D12Resource* nativeBuffer = D3D12Cast<ID3D12Resource>(intermediateBuffer->GetNative());
+        ID3D12Resource* nativeTexture = D3D12Cast<ID3D12Resource>(destinationTexture->GetNative());
+
+        const std::uint32_t subresourceCount = static_cast<std::uint32_t>(subresources.size());
+
+        std::vector<D3D12_PLACED_SUBRESOURCE_FOOTPRINT> layouts(subresourceCount);
+        std::vector<std::uint32_t> numRows(subresourceCount);
+        std::vector<std::uint64_t> rowSizeInBytes(subresourceCount);
+
+        D3D12_RESOURCE_DESC textureDesc = nativeTexture->GetDesc();
+        nativeDevice->GetCopyableFootprints(&textureDesc, 0, subresourceCount, 0, layouts.data(), numRows.data(), rowSizeInBytes.data(), nullptr);
+
+        std::uint8_t* mappedData = intermediateBuffer->Map<std::uint8_t>();
+
+        for (std::uint32_t i = 0; i < subresourceCount; ++i)
+        {
+            const D3D12_PLACED_SUBRESOURCE_FOOTPRINT& layout = layouts[i];
+            const SubresourceData& src = subresources[i];
+
+            std::uint8_t* dstSlice = mappedData + layout.Offset;
+            const std::uint8_t* srcSlice = static_cast<const std::uint8_t*>(src.Data);
+
+            for (std::uint32_t depthSlice = 0; depthSlice < layout.Footprint.Depth; ++depthSlice)
+            {
+                std::uint8_t* dstDepth       = dstSlice  + static_cast<std::uint64_t>(layout.Footprint.RowPitch) * numRows[i] * depthSlice;
+                const std::uint8_t* srcDepth = srcSlice  + src.SlicePitch * depthSlice;
+
+                for (std::uint32_t row = 0; row < numRows[i]; ++row)
+                {
+                    memcpy(dstDepth + static_cast<std::uint64_t>(layout.Footprint.RowPitch) * row,
+                           srcDepth + src.RowPitch * row,
+                           rowSizeInBytes[i]);
+                }
+            }
+        }
+
+        intermediateBuffer->Unmap();
+
+        for (std::uint32_t i = 0; i < subresourceCount; ++i)
+        {
+            D3D12_TEXTURE_COPY_LOCATION dst = {};
+            dst.pResource        = nativeTexture;
+            dst.Type             = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+            dst.SubresourceIndex = i;
+
+            D3D12_TEXTURE_COPY_LOCATION src = {};
+            src.pResource       = nativeBuffer;
+            src.Type            = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+            src.PlacedFootprint = layouts[i];
+
+            _commandList->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
+        }
     }
 
     void D3D12CommandList::SetGraphicsPipelineState(rhi::PipelineState* pipelineState)

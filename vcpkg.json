@@ -1,6 +1,5 @@
 {
     "dependencies": [
-        "directxtex",
         "directx-headers",
         {
             "name": "imgui",
@@ -11,7 +10,8 @@
         },
         "jsoncpp",
         "spdlog",
-        "winpixevent"
+        "winpixevent",
+        "stb"
     ],
     "builtin-baseline": "d504de05dcd7b55df34976be1c824324ec6bca2b"
 }
