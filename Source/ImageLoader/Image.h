@@ -43,23 +43,27 @@ namespace img
     public:
         Image(const Metadata& metadata);
         Image(const Image&) = delete;
-        Image(Image&&) = default;
+        Image(Image&&) noexcept;
         ~Image() = default;
 
         Image& operator=(const Image&) = delete;
-        Image& operator=(Image&&) = default;
+        Image& operator=(Image&&) noexcept;
 
         const Metadata& GetMetadata() const;
 
         std::uint64_t GetWidth() const;
         std::uint64_t GetHeight() const;
         std::uint32_t GetPixelSize() const;
+        std::uint32_t GetSliceCount() const;
 
         const ImageSlice& GetImageSlice(std::uint32_t mipLevel) const;
         const std::vector<ImageSlice>& GetImageSlices() const;
 
         std::vector<std::uint8_t>& GetData();
         const std::vector<std::uint8_t>& GetData() const;
+
+    private:
+        void PatchPixelPointers();
 
     protected:
         Metadata _metadata;

@@ -167,6 +167,7 @@ namespace img
             metadata.Width          = header->Width;
             metadata.Height         = header->Height;
             metadata.Depth          = header->Depth;
+            metadata.ArraySize      = 1;
 
             switch (dxt10Header->ResourceDimension)
             {
@@ -197,7 +198,7 @@ namespace img
 
             metadata.Format = GetImageFormat(*header, header->PixelFormat);
 
-            if (header->Flags & DDSCAPS2_VOLUME)
+            if (header->Caps2 & DDSCAPS2_VOLUME)
             {
                 metadata.Dimension = TextureDimension::Texture3D;
             }
@@ -277,7 +278,8 @@ namespace img
 
         Image image(metadata);
 
-        inFile.read(reinterpret_cast<char*>(image.GetData().data()), image.GetPixelSize());
+        std::uint8_t* rawData = image.GetData().data();
+        inFile.read(reinterpret_cast<char*>(rawData), remaining);
         assert(inFile && "Failed to read DDS image data");
 
         return image;
