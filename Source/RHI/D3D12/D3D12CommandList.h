@@ -55,6 +55,9 @@ namespace rhi::d3d12
                                uint32_t numBytes,
                                uint32_t sourceOffset = 0,
                                uint32_t destinationOffset = 0) override;
+        void CopyBufferToTexture(std::shared_ptr<Buffer> intermediateBuffer,
+                                 std::shared_ptr<Texture> destinationTexture,
+                                 const std::vector<SubresourceData>& subresources) override;
 
         void SetGraphicsPipelineState(rhi::PipelineState* pipelineState) override;
         void SetComputePipelineState(rhi::PipelineState* pipelineState) override;

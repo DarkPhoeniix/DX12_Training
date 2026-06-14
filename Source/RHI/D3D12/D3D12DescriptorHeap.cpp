@@ -44,7 +44,7 @@ namespace rhi::d3d12
             .NodeMask = 0
         };
 
-        ID3D12Device* d3d12DeviceNative = D3D12Cast<ID3D12Device>(device->GetNative());
+        NativeDevice* d3d12DeviceNative = D3D12Cast<NativeDevice>(device->GetNative());
 
         HRESULT result = d3d12DeviceNative->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&_descriptorHeap));
         CHECK(result, "Failed to create D3D12DescriptorHeap.");
@@ -101,7 +101,7 @@ namespace rhi::d3d12
         D3D12_CPU_DESCRIPTOR_HANDLE handle = _descriptorHeap->GetCPUDescriptorHandleForHeapStart();
         handle.ptr += _heapIncrementSize * _currentOffset;
 
-        ID3D12Device* d3d12DeviceNative = static_cast<ID3D12Device*>(_device->GetNative());
+        NativeDevice* d3d12DeviceNative = D3D12Cast<NativeDevice>(_device->GetNative());
         d3d12DeviceNative->CopyDescriptorsSimple(1, handle, 
             ToD3D12Handle(descriptor),
             ToD3D12DescriptorHeapType(_description.Type));

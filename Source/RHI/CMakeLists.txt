@@ -1,6 +1,7 @@
 
-find_package(jsoncpp CONFIG REQUIRED)
 find_package(directx-headers CONFIG REQUIRED)
+find_package(winpixevent CONFIG REQUIRED)
+find_package(jsoncpp CONFIG REQUIRED)
 
 add_library(RHI STATIC ${RHI_SOURCES})
 
@@ -21,7 +22,7 @@ endforeach()
 
 target_include_directories(RHI PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(RHI PRIVATE ${EXTERNAL_DIR} ${CMAKE_SOURCE_DIR}/Source)
-target_link_libraries(RHI PRIVATE Microsoft::DirectX-Headers JsonCpp::JsonCpp GPUCrashTracker Utility)
+target_link_libraries(RHI PRIVATE Microsoft::DirectX-Headers Microsoft::WinPixEventRuntime JsonCpp::JsonCpp GPUCrashTracker Utility)
 target_precompile_headers(RHI PRIVATE "RHI_PCH.h")
 
 if (USE_D3D12)

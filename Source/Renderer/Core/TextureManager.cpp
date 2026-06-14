@@ -9,8 +9,6 @@
 
 #include "ImageLoader/ImageLoader.h"
 
-// TODO: remove d3d12 dependecy here
-#include <directx/d3dx12.h>     // D3D12 extension library
 
 namespace
 {
@@ -179,45 +177,28 @@ namespace
         return description;
     }
 
-    img::Image LoadTextureImage(const std::filesystem::path& path)
-    {
-        std::filesystem::path extension = path.extension();
-
-        img::Image image = img::LoadImageFromDDS(path.string().c_str());
-
-        return image;
-    }
-
     void UploadTextureData(rhi::CommandList* commandList, const std::filesystem::path& path, std::shared_ptr<rhi::Texture> texture, std::shared_ptr<rhi::Buffer> intermediateBuffer)
     {
-        img::Image image = LoadTextureImage(path);
+        img::Image image = img::LoadImageFromDDS(path.string().c_str());
 
         const std::uint32_t sliceCount = image.GetSliceCount();
-        std::vector<D3D12_SUBRESOURCE_DATA> subresources(sliceCount);
-        for (int i = 0; i < sliceCount; ++i)
+        std::vector<rhi::SubresourceData> subresources(sliceCount);
+        for (std::uint32_t i = 0; i < sliceCount; ++i)
         {
-            auto& subresource = subresources[i];
-            subresource.RowPitch = image.GetImageSlice(i).RowPitch;
-            subresource.SlicePitch = image.GetImageSlice(i).SlicePitch;
-            subresource.pData = image.GetImageSlice(i).Pixels;
+            const img::ImageSlice& slice = image.GetImageSlice(i);
+            subresources[i] =
+            {
+                .Data       = slice.Pixels,
+                .RowPitch   = slice.RowPitch,
+                .SlicePitch = slice.SlicePitch
+            };
         }
 
-        ID3D12GraphicsCommandList* d3d12CommandList = static_cast<ID3D12GraphicsCommandList*>(commandList->GetNative());
-        ID3D12Resource* d3d12TargetResource = static_cast<ID3D12Resource*>(texture->GetNative());
-        ID3D12Resource* d3d12IntermediateResource = static_cast<ID3D12Resource*>(intermediateBuffer->GetNative());
+        commandList->CopyBufferToTexture(intermediateBuffer, texture, subresources);
 
-        UpdateSubresources(d3d12CommandList,
-            d3d12TargetResource,
-            d3d12IntermediateResource,
-            0, 0, static_cast<std::uint32_t>(subresources.size()),
-            subresources.data());
-
-        //rhi::TextureBarrier barrier = { texture, rhi::ResourceState::CopyDest, rhi::ResourceState::Common };
-
-        // TODO: need to fallback to legacy barriers here due to magic in UpdateSubresources
-        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(d3d12TargetResource, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_COMMON);
-        d3d12CommandList->ResourceBarrier(1, &barrier);
-	}
+        rhi::TextureBarrier barrier = { texture, rhi::ResourceState::CopyDest, rhi::ResourceState::Common };
+        commandList->TransitionBarriers({ barrier });
+    }
 } // namespace unnamed
 
 std::unique_ptr<TextureManager> TextureManager::_instance = nullptr;
@@ -324,7 +305,7 @@ void TextureManager::UploadTextures(rhi::CommandList* commandList)
         textureLock.unlock();
 
         rhi::AllocationInfo allocationInfo = _device->GetAllocationInfo(description);
-        std::uint32_t requiredSize = Math::AlignUp(allocationInfo.SizeInBytes, D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT);
+        std::uint32_t requiredSize = Math::AlignUp(allocationInfo.SizeInBytes, allocationInfo.Alignment);
 
         rhi::BufferDescription intermediateDesc =
         {

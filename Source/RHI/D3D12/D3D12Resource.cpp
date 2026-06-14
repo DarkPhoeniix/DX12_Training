@@ -3,6 +3,7 @@
 
 #include "D3D12Resource.h"
 
+#include "D3D12Device.h"
 #include "D3D12Helpers.h"
 
 #include "ResourceIdGenerator.h"
@@ -263,7 +264,7 @@ namespace rhi::d3d12
     {
         bool useClearValue = resourceDesc.Flags & (D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
 
-        ID3D12Device* d3d12NativeDevice = D3D12Cast<ID3D12Device>(_device->GetNative());
+        NativeDevice* d3d12NativeDevice = D3D12Cast<NativeDevice>(_device->GetNative());
         d3d12NativeDevice->CreateCommittedResource(
             &heapProperties,
             D3D12_HEAP_FLAG_NONE,
@@ -279,16 +280,21 @@ namespace rhi::d3d12
 
     void D3D12Resource::CreatePlacedResource(const D3D12_RESOURCE_DESC& resourceDesc, rhi::Heap* heap, std::uint64_t offset, D3D12_CLEAR_VALUE* clearValue)
     {
-        ID3D12Device* d3d12NativeDevice = D3D12Cast<ID3D12Device>(_device->GetNative());
+        NativeDevice* d3d12NativeDevice = D3D12Cast<NativeDevice>(_device->GetNative());
         ID3D12Heap* d3d12NativeHeap = D3D12Cast<ID3D12Heap>(heap->GetNative());
 
-        d3d12NativeDevice->CreatePlacedResource(
+        CD3DX12_RESOURCE_DESC1 desc1(resourceDesc);
+        HRESULT result = d3d12NativeDevice->CreatePlacedResource2(
             d3d12NativeHeap,
             offset,
-            &resourceDesc,
-            GetD3D12ResourceState(_initialState),
+            &desc1,
+            GetD3D12Layout(_initialState),
             clearValue,
+            0,
+            nullptr,
             IID_PPV_ARGS(&_resource));
+
+        CHECK(result, "Failed to create placed resource.");
 
 #if ENABLE_DEBUG_NAMES
         SetD3D12Name(_resource.Get(), _name);

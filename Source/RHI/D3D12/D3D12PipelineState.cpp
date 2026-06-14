@@ -3,6 +3,7 @@
 
 #include "D3D12PipelineState.h"
 
+#include "D3D12Device.h"
 #include "D3D12Helpers.h"
 
 #include <json/json.h>
@@ -378,7 +379,7 @@ namespace rhi::d3d12
 
     void D3D12PipelineState::ParseGraphicsPipeline(const Json::Value& fileRoot)
     {
-        ID3D12Device* nativeDevice = D3D12Cast<ID3D12Device>(_device->GetNative());
+        NativeDevice* nativeDevice = D3D12Cast<NativeDevice>(_device->GetNative());
 
         // Load the vertex shader
         ComPtr<ID3DBlob> vertexShaderBlob = nullptr;
@@ -496,7 +497,7 @@ namespace rhi::d3d12
 
     void D3D12PipelineState::ParseComputePipeline(const Json::Value& fileRoot)
     {
-        ID3D12Device* nativeDevice = D3D12Cast<ID3D12Device>(_device->GetNative());
+        NativeDevice* nativeDevice = D3D12Cast<NativeDevice>(_device->GetNative());
 
         // Load the compute shader
         ComPtr<ID3DBlob> computeShaderBlob = nullptr;

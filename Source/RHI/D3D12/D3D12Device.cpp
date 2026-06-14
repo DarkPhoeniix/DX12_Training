@@ -519,7 +519,7 @@ namespace rhi::d3d12
                 // is favored.
                 if ((dxgiAdapterDesc1.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) == 0 &&
                     SUCCEEDED(D3D12CreateDevice(dxgiAdapter1.Get(),
-                        D3D_FEATURE_LEVEL_12_0, __uuidof(ID3D12Device), nullptr)) &&
+                        D3D_FEATURE_LEVEL_12_0, __uuidof(NativeDevice), nullptr)) &&
                     dxgiAdapterDesc1.DedicatedVideoMemory > maxDedicatedVideoMemory)
                 {
                     maxDedicatedVideoMemory = dxgiAdapterDesc1.DedicatedVideoMemory;
@@ -546,7 +546,7 @@ namespace rhi::d3d12
     {
         _crashTracker->Enable();
 
-        HRESULT createDeviceResult = D3D12CreateDevice(_adapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&_device)); // TODO: upgrade level?
+        HRESULT createDeviceResult = D3D12CreateDevice(_adapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&_device));
         CHECK(createDeviceResult, "Failed to create D3D12 device.");
         _device->SetName(L"D3D12  Device");
 
