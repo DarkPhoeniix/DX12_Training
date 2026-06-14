@@ -46,7 +46,7 @@ namespace
         //{ img::ImageFormat::R11G11B10_FLOAT , rhi::Format::R11G11B10_FLOAT},
         //{ img::ImageFormat::R8G8B8A8_TYPELESS , rhi::Format::R8G8B8A8_TYPELESS},
         { img::ImageFormat::R8G8B8A8_UNORM , rhi::Format::R8G8B8A8_UNORM},
-        //{ img::ImageFormat::R8G8B8A8_UNORM_SRGB , rhi::Format::R8G8B8A8_UNORM_SRGB},
+        { img::ImageFormat::R8G8B8A8_UNORM_SRGB , rhi::Format::R8G8B8A8_UNORM_SRGB},
         //{ img::ImageFormat::R8G8B8A8_UINT , rhi::Format::R8G8B8A8_UINT},
         { img::ImageFormat::R8G8B8A8_SNORM , rhi::Format::R8G8B8A8_SNORM},
         //{ img::ImageFormat::R8G8B8A8_SINT , rhi::Format::R8G8B8A8_SINT},
@@ -179,7 +179,7 @@ namespace
 
     void UploadTextureData(rhi::CommandList* commandList, const std::filesystem::path& path, std::shared_ptr<rhi::Texture> texture, std::shared_ptr<rhi::Buffer> intermediateBuffer)
     {
-        img::Image image = img::LoadImageFromDDS(path.string().c_str());
+        img::Image image = img::LoadImageFromFile(path.string().c_str());
 
         const std::uint32_t sliceCount = image.GetSliceCount();
         std::vector<rhi::SubresourceData> subresources(sliceCount);
@@ -255,8 +255,7 @@ TextureHandle TextureManager::EnqueueTexture(const std::string& filepath)
         }
     }
 
-    // TODO: add support for other formats (hdr, tga, etc)
-    img::Metadata metadata = img::LoadMetadataFromDDS(filepath.c_str());
+    img::Metadata metadata = img::LoadMetadataFromFile(filepath.c_str());
     rhi::TextureDescription description = GetTextureDescription(metadata);
 
     UploadInfo info =

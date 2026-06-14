@@ -1,4 +1,6 @@
 
+find_package(Stb REQUIRED)
+
 add_library(ImageLoader STATIC ${IMAGE_LOADER_SOURCES})
 
 file(GLOB_RECURSE IMAGE_LOADER_SOURCES CONFIGURE_DEPENDS
@@ -18,6 +20,7 @@ endforeach()
 
 target_include_directories(ImageLoader PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(ImageLoader PRIVATE ${EXTERNAL_DIR} ${CMAKE_SOURCE_DIR}/Source)
+target_include_directories(ImageLoader PRIVATE ${Stb_INCLUDE_DIR})
 
 if (MSVC)
     target_compile_options(ImageLoader PRIVATE /W4)

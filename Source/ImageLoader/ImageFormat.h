@@ -2,8 +2,7 @@
 
 namespace img
 {
-    // ImageFormat corresponds to DXGI_FORMAT, but only contains formats that we support for loading from DDS files. 
-    // This is used to avoid unnecessary conversions from DXGI_FORMAT to ImageFormat and back when loading DDS files.
+    // ImageFormat corresponds to DXGI_FORMAT and covers all formats supported by the image loaders.
     enum class ImageFormat
     {
         Unknown,
@@ -47,6 +46,7 @@ namespace img
         R16_SNORM = 58,
 
         R8G8B8A8_UNORM = 28,
+        R8G8B8A8_UNORM_SRGB = 29,
         R8G8B8A8_SNORM = 31,
         R8G8_UNORM = 49,
         R8G8_SNORM = 51,

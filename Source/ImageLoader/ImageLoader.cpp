@@ -3,9 +3,13 @@
 
 #include "DDS.h"
 
+#include <algorithm>
 #include <cassert>
 #include <fstream>
 #include <filesystem>
+
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 
 namespace img
 {
@@ -132,6 +136,39 @@ namespace img
 
             return DDSMap[index].ImageFormat;
         }
+
+        constexpr std::string_view EXTENSION_DDS = ".dds";
+        constexpr std::string_view EXTENSION_PNG = ".png";
+        constexpr std::string_view EXTENSION_HDR = ".hdr";
+
+        std::int32_t GetRequestedChannels(std::int32_t channels)
+        {
+            if (channels == 3) // 3-channel RGB has no direct GPU format equivalent, so we always expand to 4 channels.
+                return 4;
+            return channels;
+        }
+
+        ImageFormat GetPNGFormat(std::int32_t channels, bool is16bit)
+        {
+            if (is16bit)
+            {
+                switch (channels)
+                {
+                case 1:  return ImageFormat::R16_UNORM;
+                case 2:  return ImageFormat::R16G16_UNORM;
+                default: return ImageFormat::R16G16B16A16_UNORM;
+                }
+            }
+            else
+            {
+                switch (channels)
+                {
+                case 1:  return ImageFormat::R8_UNORM;
+                case 2:  return ImageFormat::R8G8_UNORM;
+                default: return ImageFormat::R8G8B8A8_UNORM;
+                }
+            }
+        }
     } // namespace unnamed
 
     Metadata DecodeDDSHeader(const void* source, size_t size)
@@ -217,9 +254,47 @@ namespace img
             }
         }
 
-        assert(metadata.Format != ImageFormat::Unknown && "Unsupported DDS format");
+        assert((metadata.Format != ImageFormat::Unknown) && "Unsupported DDS format");
 
         return metadata;
+    }
+
+    Metadata LoadMetadataFromFile(const char* filepath)
+    {
+        const std::filesystem::path path(filepath);
+        std::string extension = path.extension().string();
+        std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
+
+        Metadata metadata = {};
+
+        if (extension == EXTENSION_DDS)
+            metadata = LoadMetadataFromDDS(filepath);
+        else if (extension == EXTENSION_PNG)
+            metadata = LoadMetadataFromPNG(filepath);
+        else if (extension == EXTENSION_HDR)
+            metadata = LoadMetadataFromHDR(filepath);
+        else
+            assert(false && "Unsupported file extension");
+
+        return metadata;
+    }
+
+    Image LoadImageFromFile(const char* filepath)
+    {
+        const std::filesystem::path path(filepath);
+        std::string extension = path.extension().string();
+        std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
+
+        if (extension == EXTENSION_DDS)
+            return LoadImageFromDDS(filepath);
+        else if (extension == EXTENSION_PNG)
+            return LoadImageFromPNG(filepath);
+        else if (extension == EXTENSION_HDR)
+            return LoadImageFromHDR(filepath);
+        else
+            assert(false && "Unsupported file extension");
+
+        return Image({});
     }
 
     Metadata LoadMetadataFromDDS(const char* filepath)
@@ -281,6 +356,135 @@ namespace img
         std::uint8_t* rawData = image.GetData().data();
         inFile.read(reinterpret_cast<char*>(rawData), remaining);
         assert(inFile && "Failed to read DDS image data");
+
+        return image;
+    }
+
+    Metadata LoadMetadataFromPNG(const char* filepath)
+    {
+        assert(std::filesystem::exists(filepath) && "PNG file does not exist");
+
+        std::int32_t width = 0;
+        std::int32_t height = 0;
+        std::int32_t channels = 0;
+        const std::int32_t ok = stbi_info(filepath, &width, &height, &channels);
+        assert(ok && "Failed to read PNG metadata");
+
+        const bool is16bit = stbi_is_16_bit(filepath);
+        const std::int32_t requestedChannels = GetRequestedChannels(channels);
+
+        Metadata metadata   = {};
+        metadata.Width      = static_cast<std::uint64_t>(width);
+        metadata.Height     = static_cast<std::uint64_t>(height);
+        metadata.Depth      = 1;
+        metadata.ArraySize  = 1;
+        metadata.MipLevels  = 1;
+        metadata.Format     = GetPNGFormat(requestedChannels, is16bit);
+        metadata.Dimension  = TextureDimension::Texture2D;
+
+        return metadata;
+    }
+
+    Image LoadImageFromPNG(const char* filepath)
+    {
+        assert(std::filesystem::exists(filepath) && "PNG file does not exist");
+
+        std::int32_t width = 0;
+        std::int32_t height = 0;
+        std::int32_t channels = 0;
+        const std::int32_t ok = stbi_info(filepath, &width, &height, &channels);
+        assert(ok && "Failed to read PNG metadata");
+
+        const bool is16bit = stbi_is_16_bit(filepath);
+        const std::int32_t requestedChannels = GetRequestedChannels(channels);
+
+        Metadata metadata           = {};
+        metadata.Depth              = 1;
+        metadata.ArraySize          = 1;
+        metadata.MipLevels          = 1;
+        metadata.Dimension          = TextureDimension::Texture2D;
+
+        std::uint64_t bytesPerPixel = 0;
+        void* pixels = nullptr;
+
+        if (is16bit)
+        {
+            std::uint16_t* p = stbi_load_16(filepath, &width, &height, &channels, requestedChannels);
+            assert(p && "Failed to load 16-bit PNG file");
+            pixels = p;
+            bytesPerPixel = sizeof(std::uint16_t) * requestedChannels;
+        }
+        else
+        {
+            std::uint8_t* p = stbi_load(filepath, &width, &height, &channels, requestedChannels);
+            assert(p && "Failed to load PNG file");
+            pixels = p;
+            bytesPerPixel = sizeof(std::uint8_t) * requestedChannels;
+        }
+
+        metadata.Width  = static_cast<std::uint64_t>(width);
+        metadata.Height = static_cast<std::uint64_t>(height);
+        metadata.Format = GetPNGFormat(requestedChannels, is16bit);
+
+        Image image(metadata);
+
+        const std::uint64_t dataSize = static_cast<std::uint64_t>(width) * height * bytesPerPixel;
+        std::memcpy(image.GetData().data(), pixels, dataSize);
+
+        stbi_image_free(pixels);
+
+        return image;
+    }
+
+    Metadata LoadMetadataFromHDR(const char* filepath)
+    {
+        assert(std::filesystem::exists(filepath) && "HDR file does not exist");
+        assert(stbi_is_hdr(filepath) && "File is not a valid HDR image");
+
+        std::int32_t width = 0;
+        std::int32_t height = 0;
+        std::int32_t channels = 0;
+        const std::int32_t ok = stbi_info(filepath, &width, &height, &channels);
+        assert(ok && "Failed to read HDR metadata");
+
+        Metadata metadata   = {};
+        metadata.Width      = static_cast<std::uint64_t>(width);
+        metadata.Height     = static_cast<std::uint64_t>(height);
+        metadata.Depth      = 1;
+        metadata.ArraySize  = 1;
+        metadata.MipLevels  = 1;
+        metadata.Format     = ImageFormat::R32G32B32_FLOAT;
+        metadata.Dimension  = TextureDimension::Texture2D;
+
+        return metadata;
+    }
+
+    Image LoadImageFromHDR(const char* filepath)
+    {
+        assert(std::filesystem::exists(filepath) && "HDR file does not exist");
+        assert(stbi_is_hdr(filepath) && "File is not a valid HDR image");
+
+        std::int32_t width = 0;
+        std::int32_t height = 0;
+        std::int32_t channels = 0;
+        float* pixels = stbi_loadf(filepath, &width, &height, &channels, STBI_rgb);
+        assert(pixels && "Failed to load HDR file");
+
+        Metadata metadata   = {};
+        metadata.Width      = static_cast<std::uint64_t>(width);
+        metadata.Height     = static_cast<std::uint64_t>(height);
+        metadata.Depth      = 1;
+        metadata.ArraySize  = 1;
+        metadata.MipLevels  = 1;
+        metadata.Format     = ImageFormat::R32G32B32_FLOAT;
+        metadata.Dimension  = TextureDimension::Texture2D;
+
+        Image image(metadata);
+
+        const std::uint64_t dataSize = static_cast<std::uint64_t>(width) * height * sizeof(float) * STBI_rgb;
+        std::memcpy(image.GetData().data(), pixels, dataSize);
+
+        stbi_image_free(pixels);
 
         return image;
     }

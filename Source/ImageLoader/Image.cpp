@@ -74,6 +74,8 @@ namespace img
                 return 4;
             case ImageFormat::R16_FLOAT:
                 return 2;
+            case ImageFormat::R8G8B8A8_UNORM_SRGB:
+                return 4;
             case ImageFormat::R8G8B8A8_UNORM:
                 return 4;
             case ImageFormat::R8G8_UNORM:
