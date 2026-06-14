@@ -18,7 +18,9 @@ namespace img
             case ImageFormat::BC3_UNORM:
             case ImageFormat::BC3_UNORM_SRGB:
             case ImageFormat::BC4_UNORM:
+            case ImageFormat::BC4_SNORM:
             case ImageFormat::BC5_UNORM:
+            case ImageFormat::BC5_SNORM:
             case ImageFormat::BC6H_TYPELESS:
             case ImageFormat::BC6H_SF16:
             case ImageFormat::BC6H_UF16:
@@ -34,54 +36,59 @@ namespace img
         {
             switch (format)
             {
-            case ImageFormat::BC1_UNORM:
-                return 8;
-            case ImageFormat::BC1_UNORM_SRGB:
-                return 8;
+            // 16 bytes
             case ImageFormat::BC2_UNORM:
-                return 16;
             case ImageFormat::BC2_UNORM_SRGB:
-                return 16;
             case ImageFormat::BC3_UNORM:
-                return 16;
             case ImageFormat::BC3_UNORM_SRGB:
-                return 16;
-            case ImageFormat::BC4_UNORM:
-                return 8;
             case ImageFormat::BC5_UNORM:
-                return 16;
+            case ImageFormat::BC5_SNORM:
             case ImageFormat::BC6H_TYPELESS:
-                return 16;
             case ImageFormat::BC6H_SF16:
-                return 16;
             case ImageFormat::BC6H_UF16:
-                return 16;
             case ImageFormat::BC7_UNORM:
-                return 16;
             case ImageFormat::BC7_UNORM_SRGB:
-                return 16;
             case ImageFormat::R32G32B32A32_FLOAT:
                 return 16;
+
+            // 12 bytes
             case ImageFormat::R32G32B32_FLOAT:
                 return 12;
+
+            // 8 bytes
+            case ImageFormat::BC1_UNORM:
+            case ImageFormat::BC1_UNORM_SRGB:
+            case ImageFormat::BC4_UNORM:
+            case ImageFormat::BC4_SNORM:
             case ImageFormat::R32G32_FLOAT:
-                return 8;
-            case ImageFormat::R32_FLOAT:
-                return 4;
             case ImageFormat::R16G16B16A16_FLOAT:
+            case ImageFormat::R16G16B16A16_UNORM:
+            case ImageFormat::R16G16B16A16_UINT:
+            case ImageFormat::R16G16B16A16_SNORM:
                 return 8;
+
+            // 4 bytes
+            case ImageFormat::R32_FLOAT:
             case ImageFormat::R16G16_FLOAT:
-                return 4;
-            case ImageFormat::R16_FLOAT:
-                return 2;
-            case ImageFormat::R8G8B8A8_UNORM_SRGB:
-                return 4;
+            case ImageFormat::R16G16_UNORM:
+            case ImageFormat::R16G16_SNORM:
             case ImageFormat::R8G8B8A8_UNORM:
+            case ImageFormat::R8G8B8A8_UNORM_SRGB:
+            case ImageFormat::R8G8B8A8_SNORM:
                 return 4;
+
+            // 2 bytes
+            case ImageFormat::R16_FLOAT:
+            case ImageFormat::R16_UNORM:
+            case ImageFormat::R16_SNORM:
             case ImageFormat::R8G8_UNORM:
+            case ImageFormat::R8G8_SNORM:
                 return 2;
+
+            // 1 byte
             case ImageFormat::R8_UNORM:
                 return 1;
+
             default:
                 assert(false && "Unsupported image format");
                 return 0;

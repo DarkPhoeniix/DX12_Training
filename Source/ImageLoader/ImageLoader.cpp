@@ -5,8 +5,11 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cstdio>
 #include <fstream>
 #include <filesystem>
+#include <limits>
+#include <vector>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -15,10 +18,10 @@ namespace img
 {
     namespace
     {
-        static constexpr std::uint32_t DDS_MAGIC = 0x20534444; // "DDS "
+        constexpr std::uint32_t DDS_MAGIC = 0x20534444; // "DDS "
 
-        static constexpr std::uint32_t DDS_HEADER_SIZE = sizeof(DDS_MAGIC) + sizeof(DDS_HEADER);
-        static constexpr std::uint32_t DDS_HEADER_DXT10_SIZE = DDS_HEADER_SIZE + sizeof(DDS_HEADER_DXT10);
+        constexpr std::uint32_t DDS_HEADER_SIZE = sizeof(DDS_MAGIC) + sizeof(DDS_HEADER);
+        constexpr std::uint32_t DDS_HEADER_DXT10_SIZE = DDS_HEADER_SIZE + sizeof(DDS_HEADER_DXT10);
 
         struct DDS
         {
@@ -65,11 +68,11 @@ namespace img
             { ImageFormat::R16G16_FLOAT,        { sizeof(DDS_PIXELFORMAT), DDPF_FOURCC, 112 ,0 ,0 ,0 ,0 ,0 } }
         };
 
-        ImageFormat GetImageFormat(const DDS_HEADER& header, const DDS_PIXELFORMAT& ddpf)
+        ImageFormat GetImageFormat(const DDS_PIXELFORMAT& ddpf)
         {
-            uint32_t ddpfFlags = ddpf.Flags;
-            constexpr size_t MAP_SIZE = sizeof(DDSMap) / sizeof(DDS);
-            size_t index = 0;
+            std::uint32_t ddpfFlags = ddpf.Flags;
+            constexpr std::size_t MAP_SIZE = sizeof(DDSMap) / sizeof(DDS);
+            std::size_t index = 0;
 
             for (index = 0; index < MAP_SIZE; ++index)
             {
@@ -169,95 +172,124 @@ namespace img
                 }
             }
         }
-    } // namespace unnamed
 
-    Metadata DecodeDDSHeader(const void* source, size_t size)
-    {
-        Metadata metadata = {};
-
-        unsigned long ddsMagic = *reinterpret_cast<const unsigned long*>(source);
-        if (ddsMagic != DDS_MAGIC)
+        Metadata DecodeDDSHeader(const void* source, std::size_t size)
         {
-            assert(false && "Invalid DDS file");
-            return metadata;
-        }
+            Metadata metadata = {};
 
-        assert(size >= DDS_HEADER_SIZE && "DDS file is too small to contain a valid header");
-
-        const DDS_HEADER* header = reinterpret_cast<const DDS_HEADER*>(static_cast<const std::uint8_t*>(source) + sizeof(DDS_MAGIC));
-        if ((header->Size != sizeof(DDS_HEADER)) || (header->PixelFormat.Size != sizeof(DDS_PIXELFORMAT)))
-        {
-            assert(false && "Invalid DDS header");
-            return metadata;
-        }
-
-        metadata.MipLevels = header->MipMapCount ? header->MipMapCount : 1;
-
-        if ((header->PixelFormat.Flags & DDS_FOURCC) && (header->PixelFormat.FourCC == MAKEFOURCC('D', 'X', '1', '0')))
-        {
-            assert(size >= DDS_HEADER_DXT10_SIZE && "DDS file is too small to contain a valid DXT10 header");
-
-            const DDS_HEADER_DXT10* dxt10Header = reinterpret_cast<const DDS_HEADER_DXT10*>(static_cast<const std::uint8_t*>(source) + DDS_HEADER_SIZE);
-
-            metadata.HasDXT10Header = true;
-            metadata.Format         = dxt10Header->Format;
-            metadata.Width          = header->Width;
-            metadata.Height         = header->Height;
-            metadata.Depth          = header->Depth;
-            metadata.ArraySize      = 1;
-
-            switch (dxt10Header->ResourceDimension)
+            std::uint32_t ddsMagic = *reinterpret_cast<const std::uint32_t*>(source);
+            if (ddsMagic != DDS_MAGIC)
             {
-            case D3D10_RESOURCE_DIMENSION::D3D10_RESOURCE_DIMENSION_TEXTURE1D:
-                metadata.Dimension  = TextureDimension::Texture1D;
-                metadata.Height     = 1;
-                metadata.Depth      = 1;
-                break;
-            case D3D10_RESOURCE_DIMENSION::D3D10_RESOURCE_DIMENSION_TEXTURE2D:
-                metadata.Dimension  = TextureDimension::Texture2D;
-                metadata.Depth      = 1;
-                break;
-            case D3D10_RESOURCE_DIMENSION::D3D10_RESOURCE_DIMENSION_TEXTURE3D:
-                metadata.Dimension  = TextureDimension::Texture3D;
-                break;
-            default:
-                assert(false && "Invalid resource dimension in DXT10 header");
-                break;
+                assert(false && "Invalid DDS file");
+                return metadata;
             }
-        }
-        else
-        {
-            metadata.HasDXT10Header = false;
-            metadata.Width          = header->Width;
-            metadata.Height         = header->Height;
-            metadata.Depth          = header->Depth;
-            metadata.ArraySize      = 1;
 
-            metadata.Format = GetImageFormat(*header, header->PixelFormat);
+            assert(size >= DDS_HEADER_SIZE && "DDS file is too small to contain a valid header");
 
-            if (header->Caps2 & DDSCAPS2_VOLUME)
+            const DDS_HEADER* header = reinterpret_cast<const DDS_HEADER*>(static_cast<const std::uint8_t*>(source) + sizeof(DDS_MAGIC));
+            if ((header->Size != sizeof(DDS_HEADER)) || (header->PixelFormat.Size != sizeof(DDS_PIXELFORMAT)))
             {
-                metadata.Dimension = TextureDimension::Texture3D;
+                assert(false && "Invalid DDS header");
+                return metadata;
+            }
+
+            metadata.MipLevels = header->MipMapCount ? header->MipMapCount : 1;
+
+            if ((header->PixelFormat.Flags & DDS_FOURCC) && (header->PixelFormat.FourCC == MAKEFOURCC('D', 'X', '1', '0')))
+            {
+                assert(size >= DDS_HEADER_DXT10_SIZE && "DDS file is too small to contain a valid DXT10 header");
+
+                const DDS_HEADER_DXT10* dxt10Header = reinterpret_cast<const DDS_HEADER_DXT10*>(static_cast<const std::uint8_t*>(source) + DDS_HEADER_SIZE);
+
+                metadata.HasDXT10Header = true;
+                metadata.Format         = dxt10Header->Format;
+                metadata.Width          = header->Width;
+                metadata.Height         = header->Height;
+                metadata.Depth          = header->Depth;
+                metadata.ArraySize      = 1;
+
+                switch (dxt10Header->ResourceDimension)
+                {
+                case D3D10_RESOURCE_DIMENSION::D3D10_RESOURCE_DIMENSION_TEXTURE1D:
+                    metadata.Dimension  = TextureDimension::Texture1D;
+                    metadata.Height     = 1;
+                    metadata.Depth      = 1;
+                    break;
+                case D3D10_RESOURCE_DIMENSION::D3D10_RESOURCE_DIMENSION_TEXTURE2D:
+                    metadata.Dimension  = TextureDimension::Texture2D;
+                    metadata.Depth      = 1;
+                    break;
+                case D3D10_RESOURCE_DIMENSION::D3D10_RESOURCE_DIMENSION_TEXTURE3D:
+                    metadata.Dimension  = TextureDimension::Texture3D;
+                    break;
+                default:
+                    assert(false && "Invalid resource dimension in DXT10 header");
+                    break;
+                }
             }
             else
             {
-                if (header->Caps2 & DDSCAPS2_CUBEMAP)
+                metadata.HasDXT10Header = false;
+                metadata.Width          = header->Width;
+                metadata.Height         = header->Height;
+                metadata.Depth          = header->Depth;
+                metadata.ArraySize      = 1;
+
+                metadata.Format = GetImageFormat(header->PixelFormat);
+
+                if (header->Caps2 & DDSCAPS2_VOLUME)
                 {
-                    metadata.ArraySize = 6;
-                    metadata.Dimension = TextureDimension::TextureCube;
+                    metadata.Dimension = TextureDimension::Texture3D;
                 }
                 else
                 {
-                    metadata.Depth = 1;
-                    metadata.Dimension = TextureDimension::Texture2D;
+                    if (header->Caps2 & DDSCAPS2_CUBEMAP)
+                    {
+                        metadata.ArraySize = 6;
+                        metadata.Dimension = TextureDimension::TextureCube;
+                    }
+                    else
+                    {
+                        metadata.Depth = 1;
+                        metadata.Dimension = TextureDimension::Texture2D;
+                    }
                 }
             }
+
+            assert((metadata.Format != ImageFormat::Unknown) && "Unsupported DDS format");
+
+            return metadata;
         }
 
-        assert((metadata.Format != ImageFormat::Unknown) && "Unsupported DDS format");
+        struct DDSFile
+        {
+            std::ifstream   stream;
+            std::size_t     fileLen = 0;
+            Metadata        metadata;
+        };
 
-        return metadata;
-    }
+        DDSFile OpenDDSFile(const char* filepath)
+        {
+            DDSFile result;
+            result.stream = std::ifstream(std::filesystem::path(filepath), std::ios::in | std::ios::binary | std::ios::ate);
+            assert(result.stream.is_open() && "Failed to open DDS file");
+
+            const std::streampos fileLen = result.stream.tellg();
+            assert(fileLen < std::numeric_limits<std::uint32_t>::max() && "DDS file is too large");
+            result.fileLen = static_cast<std::size_t>(fileLen);
+
+            result.stream.seekg(0, std::ios::beg);
+            assert(result.stream && "Failed to seek to beginning of DDS file");
+
+            std::uint8_t header[DDS_HEADER_DXT10_SIZE] = {};
+            const std::size_t headerLen = std::min<std::size_t>(result.fileLen, DDS_HEADER_DXT10_SIZE);
+            result.stream.read(reinterpret_cast<char*>(header), headerLen);
+            assert(result.stream && "Failed to read DDS header");
+
+            result.metadata = DecodeDDSHeader(header, headerLen);
+            return result;
+        }
+    } // namespace unnamed
 
     Metadata LoadMetadataFromFile(const char* filepath)
     {
@@ -299,78 +331,41 @@ namespace img
 
     Metadata LoadMetadataFromDDS(const char* filepath)
     {
-        std::ifstream inFile(std::filesystem::path(filepath), std::ios::in | std::ios::binary | std::ios::ate);
-        assert(inFile.is_open() && "Failed to open DDS file");
-
-        std::streampos fileLen = inFile.tellg();
-        assert(fileLen < UINT32_MAX && "DDS file is too large");
-
-        inFile.seekg(0, std::ios::beg);
-        assert(inFile && "Failed to seek to beginning of DDS file");
-
-        const size_t len = fileLen;
-
-        uint8_t header[DDS_HEADER_DXT10_SIZE] = {};
-        const auto headerLen = std::min<size_t>(len, DDS_HEADER_DXT10_SIZE);
-
-        inFile.read(reinterpret_cast<char*>(header), headerLen);
-        assert(inFile && "Failed to read DDS header");
-
-        return DecodeDDSHeader(header, headerLen);
+        return OpenDDSFile(filepath).metadata;
     }
 
     Image LoadImageFromDDS(const char* filepath)
     {
-        std::ifstream inFile(std::filesystem::path(filepath), std::ios::in | std::ios::binary | std::ios::ate);
-        assert(inFile.is_open() && "Failed to open DDS file");
+        DDSFile dds = OpenDDSFile(filepath);
 
-        std::streampos fileLen = inFile.tellg();
-        assert(fileLen < UINT32_MAX && "DDS file is too large");
+        const std::size_t offset = dds.metadata.HasDXT10Header ? DDS_HEADER_DXT10_SIZE : DDS_HEADER_SIZE;
+        dds.stream.seekg(offset, std::ios::beg);
 
-        inFile.seekg(0, std::ios::beg);
-        assert(inFile && "Failed to seek to beginning of DDS file");
-
-        const size_t len = fileLen;
-
-        uint8_t header[DDS_HEADER_DXT10_SIZE] = {};
-        const auto headerLen = std::min<size_t>(len, DDS_HEADER_DXT10_SIZE);
-
-        inFile.read(reinterpret_cast<char*>(header), headerLen);
-        assert(inFile && "Failed to read DDS header");
-
-        Metadata metadata = DecodeDDSHeader(header, headerLen);
-
-        size_t offset = DDS_HEADER_DXT10_SIZE;
-        if (!metadata.HasDXT10Header)
-        {
-            offset = DDS_HEADER_SIZE;
-        }
-
-        inFile.seekg(offset, std::ios::beg);
-
-        const size_t remaining = len - offset;
+        const std::size_t remaining = dds.fileLen - offset;
         assert(remaining > 0 && "DDS file does not contain any image data");
 
-        Image image(metadata);
+        Image image(dds.metadata);
 
         std::uint8_t* rawData = image.GetData().data();
-        inFile.read(reinterpret_cast<char*>(rawData), remaining);
-        assert(inFile && "Failed to read DDS image data");
+        dds.stream.read(reinterpret_cast<char*>(rawData), remaining);
+        assert(dds.stream && "Failed to read DDS image data");
 
         return image;
     }
 
     Metadata LoadMetadataFromPNG(const char* filepath)
     {
-        assert(std::filesystem::exists(filepath) && "PNG file does not exist");
+        FILE* f = std::fopen(filepath, "rb");
+        assert(f && "Failed to open PNG file");
 
-        std::int32_t width = 0;
-        std::int32_t height = 0;
-        std::int32_t channels = 0;
-        const std::int32_t ok = stbi_info(filepath, &width, &height, &channels);
+        std::int32_t width = 0, height = 0, channels = 0;
+        const std::int32_t ok = stbi_info_from_file(f, &width, &height, &channels);
         assert(ok && "Failed to read PNG metadata");
 
-        const bool is16bit = stbi_is_16_bit(filepath);
+        std::rewind(f);
+        const bool is16bit = stbi_is_16_bit_from_file(f);
+        std::fclose(f);
+
         const std::int32_t requestedChannels = GetRequestedChannels(channels);
 
         Metadata metadata   = {};
@@ -387,44 +382,47 @@ namespace img
 
     Image LoadImageFromPNG(const char* filepath)
     {
-        assert(std::filesystem::exists(filepath) && "PNG file does not exist");
+        std::ifstream file(std::filesystem::path(filepath), std::ios::binary | std::ios::ate);
+        assert(file.is_open() && "Failed to open PNG file");
 
-        std::int32_t width = 0;
-        std::int32_t height = 0;
-        std::int32_t channels = 0;
-        const std::int32_t ok = stbi_info(filepath, &width, &height, &channels);
+        const std::size_t fileSize = static_cast<std::size_t>(file.tellg());
+        file.seekg(0);
+        std::vector<std::uint8_t> fileData(fileSize);
+        file.read(reinterpret_cast<char*>(fileData.data()), fileSize);
+
+        const std::int32_t len = static_cast<std::int32_t>(fileSize);
+
+        std::int32_t width = 0, height = 0, channels = 0;
+        const std::int32_t ok = stbi_info_from_memory(fileData.data(), len, &width, &height, &channels);
         assert(ok && "Failed to read PNG metadata");
 
-        const bool is16bit = stbi_is_16_bit(filepath);
+        const bool is16bit = stbi_is_16_bit_from_memory(fileData.data(), len);
         const std::int32_t requestedChannels = GetRequestedChannels(channels);
 
-        Metadata metadata           = {};
-        metadata.Depth              = 1;
-        metadata.ArraySize          = 1;
-        metadata.MipLevels          = 1;
-        metadata.Dimension          = TextureDimension::Texture2D;
+        Metadata metadata   = {};
+        metadata.Width      = static_cast<std::uint64_t>(width);
+        metadata.Height     = static_cast<std::uint64_t>(height);
+        metadata.Depth      = 1;
+        metadata.ArraySize  = 1;
+        metadata.MipLevels  = 1;
+        metadata.Format     = GetPNGFormat(requestedChannels, is16bit);
+        metadata.Dimension  = TextureDimension::Texture2D;
 
-        std::uint64_t bytesPerPixel = 0;
         void* pixels = nullptr;
+        std::uint64_t bytesPerPixel = 0;
 
         if (is16bit)
         {
-            std::uint16_t* p = stbi_load_16(filepath, &width, &height, &channels, requestedChannels);
-            assert(p && "Failed to load 16-bit PNG file");
-            pixels = p;
+            pixels = stbi_load_16_from_memory(fileData.data(), len, &width, &height, &channels, requestedChannels);
+            assert(pixels && "Failed to load 16-bit PNG file");
             bytesPerPixel = sizeof(std::uint16_t) * requestedChannels;
         }
         else
         {
-            std::uint8_t* p = stbi_load(filepath, &width, &height, &channels, requestedChannels);
-            assert(p && "Failed to load PNG file");
-            pixels = p;
+            pixels = stbi_load_from_memory(fileData.data(), len, &width, &height, &channels, requestedChannels);
+            assert(pixels && "Failed to load PNG file");
             bytesPerPixel = sizeof(std::uint8_t) * requestedChannels;
         }
-
-        metadata.Width  = static_cast<std::uint64_t>(width);
-        metadata.Height = static_cast<std::uint64_t>(height);
-        metadata.Format = GetPNGFormat(requestedChannels, is16bit);
 
         Image image(metadata);
 
@@ -438,14 +436,16 @@ namespace img
 
     Metadata LoadMetadataFromHDR(const char* filepath)
     {
-        assert(std::filesystem::exists(filepath) && "HDR file does not exist");
-        assert(stbi_is_hdr(filepath) && "File is not a valid HDR image");
+        FILE* f = std::fopen(filepath, "rb");
+        assert(f && "Failed to open HDR file");
 
-        std::int32_t width = 0;
-        std::int32_t height = 0;
-        std::int32_t channels = 0;
-        const std::int32_t ok = stbi_info(filepath, &width, &height, &channels);
+        assert(stbi_is_hdr_from_file(f) && "File is not a valid HDR image");
+        std::rewind(f);
+
+        std::int32_t width = 0, height = 0, channels = 0;
+        const std::int32_t ok = stbi_info_from_file(f, &width, &height, &channels);
         assert(ok && "Failed to read HDR metadata");
+        std::fclose(f);
 
         Metadata metadata   = {};
         metadata.Width      = static_cast<std::uint64_t>(width);
@@ -461,14 +461,16 @@ namespace img
 
     Image LoadImageFromHDR(const char* filepath)
     {
-        assert(std::filesystem::exists(filepath) && "HDR file does not exist");
-        assert(stbi_is_hdr(filepath) && "File is not a valid HDR image");
+        FILE* f = std::fopen(filepath, "rb");
+        assert(f && "Failed to open HDR file");
 
-        std::int32_t width = 0;
-        std::int32_t height = 0;
-        std::int32_t channels = 0;
-        float* pixels = stbi_loadf(filepath, &width, &height, &channels, STBI_rgb);
+        assert(stbi_is_hdr_from_file(f) && "File is not a valid HDR image");
+        std::rewind(f);
+
+        std::int32_t width = 0, height = 0, channels = 0;
+        float* pixels = stbi_loadf_from_file(f, &width, &height, &channels, STBI_rgb);
         assert(pixels && "Failed to load HDR file");
+        std::fclose(f);
 
         Metadata metadata   = {};
         metadata.Width      = static_cast<std::uint64_t>(width);
