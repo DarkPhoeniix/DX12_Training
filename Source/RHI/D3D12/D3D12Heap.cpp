@@ -110,7 +110,7 @@ namespace rhi::d3d12
 
     void D3D12Heap::Reset()
     {
-        NOT_IMPLEMENTED();
+        _resourceOffset = 0;
     }
 
     void* D3D12Heap::GetNative() const
