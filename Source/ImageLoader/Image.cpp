@@ -98,11 +98,10 @@ namespace img
 
     Image::Image(const Metadata& metadata)
         : _metadata(metadata)
+        , _size(0)
+        , _pixelSize(GetBytesPerPixel(metadata.Format))
+        , _imageCount(metadata.MipLevels)
     {
-        _size = 0;
-        _pixelSize = GetBytesPerPixel(metadata.Format);
-        _imageCount = metadata.MipLevels;
-
         const bool isBC = IsBlockCompressed(metadata.Format);
 
         for (std::uint32_t i = 0; i < _imageCount; ++i)

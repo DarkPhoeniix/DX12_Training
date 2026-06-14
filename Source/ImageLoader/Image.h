@@ -65,7 +65,6 @@ namespace img
     private:
         void PatchPixelPointers();
 
-    private:
         Metadata _metadata;
 
         std::vector<ImageSlice> _images;
