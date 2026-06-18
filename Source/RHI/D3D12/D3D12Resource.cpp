@@ -10,6 +10,8 @@
 #include "Buffer.h"
 #include "Texture.h"
 
+#include <D3D12MemAlloc.h>
+
 namespace rhi::d3d12
 {
     namespace
@@ -44,7 +46,7 @@ namespace rhi::d3d12
         }
     } // namespace unnamed
 
-    D3D12Resource::D3D12Resource(rhi::Device* device, const BufferDescription& description, ResourceState initialState, const std::string& name)
+    D3D12Resource::D3D12Resource(rhi::Device* device, D3D12MA::Allocator* allocator, const BufferDescription& description, ResourceState initialState, const std::string& name)
         : _device(device)
         , _ID(rhi::ResourceIdGenerator::GenerateID())
         , _initialState(initialState)
@@ -59,10 +61,10 @@ namespace rhi::d3d12
         D3D12_HEAP_PROPERTIES heapDesc = CreateHeapProperties(description.Usage);
         D3D12_CLEAR_VALUE* pClearValue = nullptr;
 
-        CreateCommitedResource(resourceDesc, heapDesc, pClearValue);
+        CreateCommitedResource(allocator, resourceDesc, heapDesc, pClearValue);
     }
 
-    D3D12Resource::D3D12Resource(rhi::Device* device, const TextureDescription& description, ResourceState initialState, const std::string& name)
+    D3D12Resource::D3D12Resource(rhi::Device* device, D3D12MA::Allocator* allocator, const TextureDescription& description, ResourceState initialState, const std::string& name)
         : _device(device)
         , _ID(rhi::ResourceIdGenerator::GenerateID())
         , _initialState(initialState)
@@ -97,7 +99,7 @@ namespace rhi::d3d12
             pClearValue = &clearValue;
         }
 
-        CreateCommitedResource(resourceDesc, heapDesc, pClearValue);
+        CreateCommitedResource(allocator, resourceDesc, heapDesc, pClearValue);
     }
 
     D3D12Resource::D3D12Resource(rhi::Device* device, const BufferDescription& description, rhi::Heap* heap, std::uint64_t offset, ResourceState initialState, const std::string& name)
@@ -169,9 +171,16 @@ namespace rhi::d3d12
     {
     }
 
+    D3D12Resource::~D3D12Resource()
+    {
+        _allocation.Reset();
+        _resource.Reset();
+    }
+
     D3D12Resource::D3D12Resource(D3D12Resource&& other) noexcept
         : _device(std::move(other._device))
         , _resource(std::move(other._resource))
+        , _allocation(std::move(other._allocation))
         , _description(std::move(other._description))
         , _ID(std::move(other._ID))
         , _initialState(std::move(other._initialState))
@@ -190,6 +199,7 @@ namespace rhi::d3d12
         {
             _device = std::move(other._device);
             _resource = std::move(other._resource);
+            _allocation = std::move(other._allocation);
             _description = std::move(other._description);
             _ID = std::move(other._ID);
             _initialState = std::move(other._initialState);
@@ -260,18 +270,29 @@ namespace rhi::d3d12
         return static_cast<void*>(_resource.Get());
     }
 
-    void D3D12Resource::CreateCommitedResource(const D3D12_RESOURCE_DESC& resourceDesc, const D3D12_HEAP_PROPERTIES& heapProperties, D3D12_CLEAR_VALUE* clearValue)
+    void D3D12Resource::CreateCommitedResource(D3D12MA::Allocator* allocator, const D3D12_RESOURCE_DESC& resourceDesc, const D3D12_HEAP_PROPERTIES& heapProperties, D3D12_CLEAR_VALUE* clearValue)
     {
-        bool useClearValue = resourceDesc.Flags & (D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
+        ASSERT(allocator, "Allocator is nullptr when creating a committed resource.");
 
-        NativeDevice* d3d12NativeDevice = D3D12Cast<NativeDevice>(_device->GetNative());
-        d3d12NativeDevice->CreateCommittedResource(
-            &heapProperties,
-            D3D12_HEAP_FLAG_NONE,
+        D3D12MA::ALLOCATION_DESC allocationDesc = {};
+        allocationDesc.HeapType = heapProperties.Type;
+
+        // Render target and depth stencil resources are allocated as committed (their own heap) rather than suballocated.
+        // Placed resources have undefined initial contents and the runtime requires them to be initialized with a
+        // full-subresource Discard/Clear/Copy before use, whereas committed resources are implicitly initialized.
+        if (resourceDesc.Flags & (D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL))
+        {
+            allocationDesc.Flags = D3D12MA::ALLOCATION_FLAG_COMMITTED;
+        }
+
+        HRESULT result = allocator->CreateResource(
+            &allocationDesc,
             &resourceDesc,
             GetD3D12ResourceState(_initialState),
             clearValue,
+            &_allocation,
             IID_PPV_ARGS(&_resource));
+        CHECK(result, "Failed to create committed resource.");
 
 #if ENABLE_DEBUG_NAMES
         SetD3D12Name(_resource.Get(), _name);

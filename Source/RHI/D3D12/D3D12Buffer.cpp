@@ -5,9 +5,9 @@
 
 namespace rhi::d3d12
 {
-    D3D12Buffer::D3D12Buffer(rhi::Device* device, const rhi::BufferDescription& description, ResourceState initialState, const std::string& name)
+    D3D12Buffer::D3D12Buffer(rhi::Device* device, D3D12MA::Allocator* allocator, const rhi::BufferDescription& description, ResourceState initialState, const std::string& name)
         : _description(description)
-        , _resource(device, description, initialState, name)
+        , _resource(device, allocator, description, initialState, name)
 #if ENABLE_DEBUG_NAMES
         , _name(name)
 #endif // ENABLE_DEBUG_NAMES

@@ -7,6 +7,11 @@ namespace tracking
     class IGPUCrashTracker;
 } // namespace tracking
 
+namespace D3D12MA
+{
+    class Allocator;
+} // namespace D3D12MA
+
 namespace rhi::d3d12
 {
     using NativeDevice = ID3D12Device10;
@@ -82,6 +87,7 @@ namespace rhi::d3d12
     private:
         void CreateAdapter(bool userWarp = false);
         void CreateDevice();
+        void CreateAllocator();
         void CreateQueues();
         void CheckFeatureSupport();
 
@@ -96,6 +102,7 @@ namespace rhi::d3d12
 
         ComPtr<NativeDevice> _device;
         ComPtr<IDXGIAdapter4> _adapter;
+        ComPtr<D3D12MA::Allocator> _allocator;
 
         bool _enhancedBarriersSupported;
 
