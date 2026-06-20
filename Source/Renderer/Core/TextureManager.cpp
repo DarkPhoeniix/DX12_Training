@@ -277,9 +277,6 @@ TextureHandle TextureManager::EnqueueTexture(const std::string& filepath)
 
 void TextureManager::UploadTextures(rhi::CommandList* commandList)
 {
-    std::uint64_t totalRequiredHeapSize = 0;
-    std::uint64_t maxTextureSize = 0;
-
     std::unordered_map<std::string, UploadInfo> uploadQueueCopy;
     {
         std::lock_guard lock(_queueMutex);
@@ -297,7 +294,7 @@ void TextureManager::UploadTextures(rhi::CommandList* commandList)
     for (const auto& [filepath, uploadInfo] : uploadQueueCopy)
     {
         std::filesystem::path path(filepath);
-        std::string textureName = path.filename().string();
+        const std::string textureName = path.filename().string();
 
         std::shared_lock textureLock(_textureMutex);
         rhi::TextureDescription description = uploadInfo.Description;
@@ -313,21 +310,9 @@ void TextureManager::UploadTextures(rhi::CommandList* commandList)
         };
         _intermediateResources[uploadInfo.Handle] = _device->CreateBuffer(intermediateDesc, rhi::ResourceState::Common, "texture_intermediate_buffer");
 
-        totalRequiredHeapSize += requiredSize;
-        maxTextureSize = (maxTextureSize < requiredSize) ? requiredSize : maxTextureSize;
-    }
-
-    rhi::HeapDescription heapDesc = { .SizeInBytes = totalRequiredHeapSize };
-    _texturesHeap = _device->CreateHeap(heapDesc, "textures_heap");
-
-    for (const auto& [filepath, uploadInfo] : uploadQueueCopy)
-    {
-        std::filesystem::path path(filepath);
-        const std::string textureName = path.filename().string();
-
-        std::shared_lock textureLock(_textureMutex);
-        _handleToTexture[uploadInfo.Handle] = _texturesHeap->PlaceResource(uploadInfo.Description, rhi::ResourceState::CopyDest);
-        textureLock.unlock();
+        std::shared_lock placementLock(_textureMutex);
+        _handleToTexture[uploadInfo.Handle] = _device->CreateTexture(description, rhi::ResourceState::CopyDest, textureName);
+        placementLock.unlock();
 
         UploadTextureData(commandList, path, _handleToTexture[uploadInfo.Handle], _intermediateResources[uploadInfo.Handle]);
     }
@@ -349,11 +334,6 @@ void TextureManager::Clear()
 {
     ASSERT(!AreTexturesPendingUpload(), "Cannot clear TextureManager while there are pending texture uploads!");
     std::unique_lock writeLock(_textureMutex);
-
-    if (_texturesHeap)
-    {
-        _texturesHeap->Reset();
-    }
 
     _nextTextureHandle = 0;
     _handleToTexture.clear();

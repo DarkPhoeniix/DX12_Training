@@ -38,17 +38,14 @@ jobs:
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1.0.2
 
-    - name: Clone vcpkg
-      run: git clone https://github.com/microsoft/vcpkg.git vcpkg
-
-    - name: Setup and integrate vcpkg
+    - name: Clone and bootstrap vcpkg
       run: |
+        git clone https://github.com/microsoft/vcpkg.git vcpkg
         ./vcpkg/bootstrap-vcpkg.bat
-        vcpkg integrate install
 
     - name: Setup CMake
       working-directory: ${{ env.GITHUB_WORKSPACE }}
-      run: cmake --preset=${{ github.event.inputs.configuration || 'Release-x64' }} -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
+      run: cmake --preset=${{ github.event.inputs.configuration || 'Release-x64' }} -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
 
     - name: Build
       working-directory: ${{ env.GITHUB_WORKSPACE }}

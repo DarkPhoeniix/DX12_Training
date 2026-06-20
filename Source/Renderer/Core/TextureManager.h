@@ -1,6 +1,7 @@
 #pragma once
 
-#include "RHI/Heap.h"
+#include "RHI/Buffer.h"
+#include "RHI/Texture.h"
 
 #include <shared_mutex>
 
@@ -51,7 +52,6 @@ private:
 
     std::unordered_map<std::string, UploadInfo> _uploadQueue; // TODO: use set to remove duplicates
 
-    std::unique_ptr<rhi::Heap> _texturesHeap;	// TODO: this heap should be bigger and reused for multiple texture uploads
 	std::unordered_map<TextureHandle, std::shared_ptr<rhi::Buffer>> _intermediateResources;
 
 	rhi::Device* _device;

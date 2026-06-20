@@ -1,17 +1,24 @@
 {
-    "dependencies": [
-        "directx-headers",
-        {
-            "name": "imgui",
-            "features": [
-                "dx12-binding",
-                "win32-binding"
-            ]
-        },
-        "jsoncpp",
-        "spdlog",
-        "winpixevent",
-        "stb"
-    ],
-    "builtin-baseline": "d504de05dcd7b55df34976be1c824324ec6bca2b"
+  "dependencies": [
+    "d3d12-memory-allocator",
+    "directx-headers",
+    {
+      "name": "imgui",
+      "features": [
+        "dx12-binding",
+        "win32-binding"
+      ]
+    },
+    "jsoncpp",
+    "spdlog",
+    "winpixevent",
+    "stb"
+  ],
+  "builtin-baseline": "776a31fc8d3659de2c9cca4364062be5bbdf3857",
+  "overrides": [
+    {
+      "name": "imgui",
+      "version": "1.91.9"
+    }
+  ]
 }

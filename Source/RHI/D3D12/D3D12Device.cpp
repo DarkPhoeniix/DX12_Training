@@ -12,7 +12,6 @@
 #include "D3D12Descriptor.h"
 #include "D3D12Helpers.h"
 #include "D3D12Fence.h"
-#include "D3D12Heap.h"
 #include "D3D12QueryHeap.h"
 #include "D3D12PipelineState.h"
 #include "D3D12SwapChain.h"
@@ -27,6 +26,8 @@
 #include "ResourceCommon.h"
 #include "DescriptorHeap.h"
 #include "SwapChain.h"
+
+#include <D3D12MemAlloc.h>
 
 #include <dxgidebug.h>
 
@@ -87,6 +88,7 @@ namespace rhi::d3d12
 
         CreateAdapter();
         CreateDevice();
+        CreateAllocator();
         CreateQueues();
 
         CheckFeatureSupport();
@@ -100,6 +102,8 @@ namespace rhi::d3d12
 
     D3D12Device::~D3D12Device()
     {
+        // The allocator holds references to the device and adapter, so it must be released first
+        _allocator = nullptr;
         _adapter = nullptr;
         _device = nullptr;
 
@@ -109,6 +113,7 @@ namespace rhi::d3d12
     D3D12Device::D3D12Device(D3D12Device&& other) noexcept
         : _device(std::move(other._device))
         , _adapter(std::move(other._adapter))
+        , _allocator(std::move(other._allocator))
         , _queueGraphics(std::move(other._queueGraphics))
         , _queueCompute(std::move(other._queueCompute))
         , _queueCopy(std::move(other._queueCopy))
@@ -123,6 +128,7 @@ namespace rhi::d3d12
         {
             _device = std::move(other._device);
             _adapter = std::move(other._adapter);
+            _allocator = std::move(other._allocator);
             _queueGraphics = std::move(other._queueGraphics);
             _queueCompute = std::move(other._queueCompute);
             _queueCopy = std::move(other._queueCopy);
@@ -196,12 +202,7 @@ namespace rhi::d3d12
 
     std::shared_ptr<rhi::Buffer> D3D12Device::CreateBuffer(const rhi::BufferDescription& description, ResourceState initialState, const std::string& name)
     {
-        return std::unique_ptr<D3D12Buffer>(new D3D12Buffer(this, description, initialState, name));
-    }
-
-    std::shared_ptr<rhi::Buffer> D3D12Device::CreateBuffer(const rhi::BufferDescription& description, rhi::Heap* heap, std::uint64_t offset, ResourceState initialState, const std::string& name)
-    {
-        return std::unique_ptr<D3D12Buffer>(new D3D12Buffer(this, description, heap, offset, initialState, name));
+        return std::unique_ptr<D3D12Buffer>(new D3D12Buffer(this, _allocator.Get(), description, initialState, name));
     }
 
     std::shared_ptr<rhi::Buffer> D3D12Device::CreateBuffer(void* nativePtr, const std::string& name)
@@ -211,12 +212,7 @@ namespace rhi::d3d12
 
     std::shared_ptr<rhi::Texture> D3D12Device::CreateTexture(const rhi::TextureDescription& description, ResourceState initialState, const std::string& name)
     {
-        return std::unique_ptr<D3D12Texture>(new D3D12Texture(this, description, initialState, name));
-    }
-
-    std::shared_ptr<rhi::Texture> D3D12Device::CreateTexture(const rhi::TextureDescription& description, rhi::Heap* heap, std::uint64_t offset, ResourceState initialState, const std::string& name)
-    {
-        return std::unique_ptr<D3D12Texture>(new D3D12Texture(this, description, heap, offset, initialState, name));
+        return std::unique_ptr<D3D12Texture>(new D3D12Texture(this, _allocator.Get(), description, initialState, name));
     }
 
     std::shared_ptr<rhi::Texture> D3D12Device::CreateTexture(void* nativePtr, const std::string& name)
@@ -247,11 +243,6 @@ namespace rhi::d3d12
     std::unique_ptr<rhi::Fence> D3D12Device::CreateFence(std::uint64_t initialValue)
     {
         return std::unique_ptr<D3D12Fence>(new D3D12Fence(this, initialValue));
-    }
-
-    std::unique_ptr<rhi::Heap> D3D12Device::CreateHeap(const rhi::HeapDescription& description, const std::string& name)
-    {
-        return std::unique_ptr<D3D12Heap>(new D3D12Heap(this, description, name));
     }
 
     std::unique_ptr<rhi::StatisticsQuery> D3D12Device::CreateStatisticsQuery(const std::string& name)
@@ -474,6 +465,20 @@ namespace rhi::d3d12
         return _adapterInfo;
     }
 
+    rhi::AllocatorStats D3D12Device::QueryAllocatorStats() const
+    {
+        D3D12MA::Budget localBudget = {};
+        _allocator->GetBudget(&localBudget, nullptr);
+
+        return rhi::AllocatorStats
+        {
+            .AllocationBytes = localBudget.Stats.AllocationBytes,
+            .BlockBytes = localBudget.Stats.BlockBytes,
+            .AllocationCount = localBudget.Stats.AllocationCount,
+            .BlockCount = localBudget.Stats.BlockCount
+        };
+    }
+
     tracking::IGPUCrashTracker* D3D12Device::GetCrashTracker()
     {
         return _crashTracker.get();
@@ -591,6 +596,18 @@ namespace rhi::d3d12
             CHECK(result, "Failed to set D3D12 info queue filter.");
         }
 #endif // ENABLE_DEVICE_DEBUG
+    }
+
+    void D3D12Device::CreateAllocator()
+    {
+        D3D12MA::ALLOCATOR_DESC allocatorDesc = {};
+        allocatorDesc.pDevice = _device.Get();
+        allocatorDesc.pAdapter = _adapter.Get();
+
+        HRESULT result = D3D12MA::CreateAllocator(&allocatorDesc, &_allocator);
+        CHECK(result, "Failed to create D3D12MA allocator.");
+
+        LOG_INFO("D3D12MA allocator created.");
     }
 
     void D3D12Device::CreateQueues()

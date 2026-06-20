@@ -222,6 +222,20 @@ namespace gui
                 ImGui::Text("Memory usage:  %i MB", adapterInfo.VideoMemory.CurrentUsage / (1024 * 1024));
                 ImGui::Text("Memory budget: %i MB", adapterInfo.VideoMemory.Budget / (1024 * 1024));
             }
+
+            if (ImGui::CollapsingHeader("Allocator"))
+            {
+                const rhi::AllocatorStats stats = _device->QueryAllocatorStats();
+                constexpr std::uint64_t MB = 1024 * 1024;
+
+                ImGui::Text("Allocated: %llu MB in %u allocations", stats.AllocationBytes / MB, stats.AllocationCount);
+                ImGui::Text("Reserved:  %llu MB in %u heaps", stats.BlockBytes / MB, stats.BlockCount);
+                if (stats.BlockBytes > 0)
+                {
+                    const float occupancy = static_cast<float>(stats.AllocationBytes) / static_cast<float>(stats.BlockBytes);
+                    ImGui::Text("Occupancy: %.1f%%", occupancy * 100.0f);
+                }
+            }
         }
         ImGui::EndChild();
     }

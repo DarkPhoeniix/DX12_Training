@@ -73,6 +73,14 @@ Application::Application(HINSTANCE hInstance)
 
 Application::~Application()
 {
+    // Release all GPU resource owners explicitly here, before the device, rather than relying on
+    // the order of member declarations.
+    _renderer.reset();
+    _editor.reset();
+    _frames.clear();
+    _fencePool.reset();
+    _swapChain.reset();
+    _device.reset();
 }
 
 void Application::Init(HINSTANCE hInstance)

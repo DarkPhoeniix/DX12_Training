@@ -10,6 +10,8 @@
 #include "Buffer.h"
 #include "Texture.h"
 
+#include <D3D12MemAlloc.h>
+
 namespace rhi::d3d12
 {
     namespace
@@ -44,7 +46,7 @@ namespace rhi::d3d12
         }
     } // namespace unnamed
 
-    D3D12Resource::D3D12Resource(rhi::Device* device, const BufferDescription& description, ResourceState initialState, const std::string& name)
+    D3D12Resource::D3D12Resource(rhi::Device* device, D3D12MA::Allocator* allocator, const BufferDescription& description, ResourceState initialState, const std::string& name)
         : _device(device)
         , _ID(rhi::ResourceIdGenerator::GenerateID())
         , _initialState(initialState)
@@ -59,10 +61,10 @@ namespace rhi::d3d12
         D3D12_HEAP_PROPERTIES heapDesc = CreateHeapProperties(description.Usage);
         D3D12_CLEAR_VALUE* pClearValue = nullptr;
 
-        CreateCommitedResource(resourceDesc, heapDesc, pClearValue);
+        CreateCommitedResource(allocator, resourceDesc, heapDesc, pClearValue);
     }
 
-    D3D12Resource::D3D12Resource(rhi::Device* device, const TextureDescription& description, ResourceState initialState, const std::string& name)
+    D3D12Resource::D3D12Resource(rhi::Device* device, D3D12MA::Allocator* allocator, const TextureDescription& description, ResourceState initialState, const std::string& name)
         : _device(device)
         , _ID(rhi::ResourceIdGenerator::GenerateID())
         , _initialState(initialState)
@@ -97,61 +99,7 @@ namespace rhi::d3d12
             pClearValue = &clearValue;
         }
 
-        CreateCommitedResource(resourceDesc, heapDesc, pClearValue);
-    }
-
-    D3D12Resource::D3D12Resource(rhi::Device* device, const BufferDescription& description, rhi::Heap* heap, std::uint64_t offset, ResourceState initialState, const std::string& name)
-        : _device(device)
-        , _ID(rhi::ResourceIdGenerator::GenerateID())
-        , _initialState(initialState)
-        , _currentState(initialState)
-        , _stride(0)
-        , _uavCounterOffset(description.UAVCounterOffset)
-#if ENABLE_DEBUG_NAMES
-        , _name(name)
-#endif // ENABLE_DEBUG_NAMES
-    {
-        D3D12_RESOURCE_DESC resourceDesc = GetD3D12ResourceDesc(description);
-        D3D12_CLEAR_VALUE* pClearValue = nullptr;
-
-        CreatePlacedResource(resourceDesc, heap, offset, pClearValue);
-    }
-
-    D3D12Resource::D3D12Resource(rhi::Device* device, const TextureDescription& description, rhi::Heap* heap, std::uint64_t offset, ResourceState initialState, const std::string& name)
-        : _device(device)
-        , _ID(rhi::ResourceIdGenerator::GenerateID())
-        , _initialState(initialState)
-        , _currentState(initialState)
-        , _stride(0)
-        , _uavCounterOffset(static_cast<std::uint32_t>(-1))
-#if ENABLE_DEBUG_NAMES
-        , _name(name)
-#endif // ENABLE_DEBUG_NAMES
-    {
-        D3D12_RESOURCE_DESC resourceDesc = GetD3D12ResourceDesc(description);
-        D3D12_CLEAR_VALUE* pClearValue = nullptr;
-        D3D12_CLEAR_VALUE clearValue;
-
-        if (resourceDesc.Flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)
-        {
-            clearValue.Format = GetDXGIFormat(description.Format);
-            clearValue.Color[0] = description.ClearValue.Color.R;
-            clearValue.Color[1] = description.ClearValue.Color.G;
-            clearValue.Color[2] = description.ClearValue.Color.B;
-            clearValue.Color[3] = description.ClearValue.Color.A;
-
-            pClearValue = &clearValue;
-        }
-        else if (resourceDesc.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
-        {
-            clearValue.Format = GetDXGIFormat(description.Format);
-            clearValue.DepthStencil.Depth = description.ClearValue.DepthStencil.Depth;
-            clearValue.DepthStencil.Stencil = description.ClearValue.DepthStencil.Stencil;
-
-            pClearValue = &clearValue;
-        }
-
-        CreatePlacedResource(resourceDesc, heap, offset, pClearValue);
+        CreateCommitedResource(allocator, resourceDesc, heapDesc, pClearValue);
     }
 
     D3D12Resource::D3D12Resource(rhi::Device* device, ID3D12Resource* resource, const std::string& name)
@@ -169,9 +117,16 @@ namespace rhi::d3d12
     {
     }
 
+    D3D12Resource::~D3D12Resource()
+    {
+        _allocation.Reset();
+        _resource.Reset();
+    }
+
     D3D12Resource::D3D12Resource(D3D12Resource&& other) noexcept
         : _device(std::move(other._device))
         , _resource(std::move(other._resource))
+        , _allocation(std::move(other._allocation))
         , _description(std::move(other._description))
         , _ID(std::move(other._ID))
         , _initialState(std::move(other._initialState))
@@ -190,6 +145,7 @@ namespace rhi::d3d12
         {
             _device = std::move(other._device);
             _resource = std::move(other._resource);
+            _allocation = std::move(other._allocation);
             _description = std::move(other._description);
             _ID = std::move(other._ID);
             _initialState = std::move(other._initialState);
@@ -260,44 +216,47 @@ namespace rhi::d3d12
         return static_cast<void*>(_resource.Get());
     }
 
-    void D3D12Resource::CreateCommitedResource(const D3D12_RESOURCE_DESC& resourceDesc, const D3D12_HEAP_PROPERTIES& heapProperties, D3D12_CLEAR_VALUE* clearValue)
+    void D3D12Resource::CreateCommitedResource(D3D12MA::Allocator* allocator, const D3D12_RESOURCE_DESC& resourceDesc, const D3D12_HEAP_PROPERTIES& heapProperties, D3D12_CLEAR_VALUE* clearValue)
     {
-        bool useClearValue = resourceDesc.Flags & (D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
+        ASSERT(allocator, "Allocator is nullptr when creating a committed resource.");
 
-        NativeDevice* d3d12NativeDevice = D3D12Cast<NativeDevice>(_device->GetNative());
-        d3d12NativeDevice->CreateCommittedResource(
-            &heapProperties,
-            D3D12_HEAP_FLAG_NONE,
-            &resourceDesc,
-            GetD3D12ResourceState(_initialState),
-            clearValue,
-            IID_PPV_ARGS(&_resource));
+        D3D12MA::ALLOCATION_DESC allocationDesc = {};
+        allocationDesc.HeapType = heapProperties.Type;
 
-#if ENABLE_DEBUG_NAMES
-        SetD3D12Name(_resource.Get(), _name);
-#endif // ENABLE_DEBUG_NAMES
-    }
+        // Render target and depth stencil resources are allocated as committed (their own heap) rather than suballocated.
+        // Placed resources have undefined initial contents and the runtime requires them to be initialized with a
+        // full-subresource Discard/Clear/Copy before use, whereas committed resources are implicitly initialized.
+        if (resourceDesc.Flags & (D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL))
+        {
+            allocationDesc.Flags = D3D12MA::ALLOCATION_FLAG_COMMITTED;
+        }
 
-    void D3D12Resource::CreatePlacedResource(const D3D12_RESOURCE_DESC& resourceDesc, rhi::Heap* heap, std::uint64_t offset, D3D12_CLEAR_VALUE* clearValue)
-    {
-        NativeDevice* d3d12NativeDevice = D3D12Cast<NativeDevice>(_device->GetNative());
-        ID3D12Heap* d3d12NativeHeap = D3D12Cast<ID3D12Heap>(heap->GetNative());
+        // Create the resource with an enhanced-barrier initial layout so it interops with the engine's
+        // enhanced Barrier() transitions. Buffers have no layout and must use UNDEFINED; textures use the
+        // layout matching their initial state.
+        const bool isBuffer = (resourceDesc.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER);
+        const D3D12_BARRIER_LAYOUT initialLayout = isBuffer ? D3D12_BARRIER_LAYOUT_UNDEFINED : GetD3D12Layout(_initialState);
 
-        CD3DX12_RESOURCE_DESC1 desc1(resourceDesc);
-        HRESULT result = d3d12NativeDevice->CreatePlacedResource2(
-            d3d12NativeHeap,
-            offset,
-            &desc1,
-            GetD3D12Layout(_initialState),
+        CD3DX12_RESOURCE_DESC1 resourceDesc1(resourceDesc);
+
+        HRESULT result = allocator->CreateResource3(
+            &allocationDesc,
+            &resourceDesc1,
+            initialLayout,
             clearValue,
             0,
             nullptr,
+            &_allocation,
             IID_PPV_ARGS(&_resource));
-
-        CHECK(result, "Failed to create placed resource.");
+        CHECK(result, "Failed to create committed resource.");
 
 #if ENABLE_DEBUG_NAMES
         SetD3D12Name(_resource.Get(), _name);
+        // Name the allocation as well so it is labeled in D3D12MA's statistics dump and memory tooling
+        if (_allocation && !_name.empty())
+        {
+            _allocation->SetName(std::wstring(_name.begin(), _name.end()).c_str());
+        }
 #endif // ENABLE_DEBUG_NAMES
     }
 } // namespace rhi::d3d12

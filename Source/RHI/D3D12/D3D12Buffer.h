@@ -43,8 +43,7 @@ namespace rhi::d3d12
     private:
         friend class D3D12Device;
 
-        D3D12Buffer(rhi::Device* device, const rhi::BufferDescription& description, ResourceState initialState = ResourceState::Common, [[maybe_unused]] const std::string& name = "");
-        D3D12Buffer(rhi::Device* device, const rhi::BufferDescription& description, rhi::Heap* heap, std::uint64_t offset, ResourceState initialState = ResourceState::Common, [[maybe_unused]] const std::string& name = "");
+        D3D12Buffer(rhi::Device* device, D3D12MA::Allocator* allocator, const rhi::BufferDescription& description, ResourceState initialState = ResourceState::Common, [[maybe_unused]] const std::string& name = "");
         D3D12Buffer(rhi::Device* device, ID3D12Resource* nativeTexturePtr, const std::string& name = "");
 
         BufferDescription _description;

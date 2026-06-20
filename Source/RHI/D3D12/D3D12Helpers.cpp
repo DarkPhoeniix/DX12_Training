@@ -611,62 +611,6 @@ namespace rhi::d3d12
         }
     }
 
-    D3D12_HEAP_TYPE GetD3D12HeapType(rhi::HeapType type)
-    {
-        switch (type)
-        {
-        case rhi::HeapType::Default: return D3D12_HEAP_TYPE_DEFAULT;
-        case rhi::HeapType::Upload: return D3D12_HEAP_TYPE_UPLOAD;
-        case rhi::HeapType::GPUUpload: return D3D12_HEAP_TYPE_GPU_UPLOAD;
-        case rhi::HeapType::Readback: return D3D12_HEAP_TYPE_READBACK;
-        case rhi::HeapType::Custom: return D3D12_HEAP_TYPE_CUSTOM;
-        default:
-            UNREACHABLE("Unsupported heap type.");
-            return D3D12_HEAP_TYPE_DEFAULT;
-        }
-    }
-
-    D3D12_CPU_PAGE_PROPERTY GetD3D12CPUPageProperty(rhi::CPUPageProperty property)
-    {
-        switch (property)
-        {
-        case rhi::CPUPageProperty::Unknown: return D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-        case rhi::CPUPageProperty::NotAvailable: return D3D12_CPU_PAGE_PROPERTY_NOT_AVAILABLE;
-        case rhi::CPUPageProperty::WriteCombine: return D3D12_CPU_PAGE_PROPERTY_WRITE_COMBINE;
-        case rhi::CPUPageProperty::Writeback: return D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;
-        default:
-            UNREACHABLE("Unsupported CPU page property.");
-            return D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-        }
-    }
-
-    D3D12_MEMORY_POOL GetD3D12MemoryPool(rhi::MemoryPool memoryPool)
-    {
-        switch (memoryPool)
-        {
-        case rhi::MemoryPool::Unknown: return D3D12_MEMORY_POOL_UNKNOWN;
-        case rhi::MemoryPool::L0: return D3D12_MEMORY_POOL_L0;
-        case rhi::MemoryPool::L1: return D3D12_MEMORY_POOL_L1;
-        default:
-            UNREACHABLE("Unsupported memory pool.");
-            return D3D12_MEMORY_POOL_UNKNOWN;
-        }
-    }
-
-    D3D12_HEAP_PROPERTIES GetD3D12HeapProperties(rhi::HeapProperties properties)
-    {
-        D3D12_HEAP_PROPERTIES result =
-        {
-            .Type = GetD3D12HeapType(properties.Type),
-            .CPUPageProperty = GetD3D12CPUPageProperty(properties.CPUPageProperty),
-            .MemoryPoolPreference = GetD3D12MemoryPool(properties.MemoryPoolPreference),
-            .CreationNodeMask = properties.CreationNodeMask,
-            .VisibleNodeMask = properties.VisibleNodeMask
-        };
-
-        return result;
-    }
-
     D3D12_RESOURCE_DESC GetD3D12ResourceDesc(const rhi::BufferDescription& description)
     {
         D3D12_RESOURCE_DESC resourceDesc =
