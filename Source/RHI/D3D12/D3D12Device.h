@@ -77,6 +77,8 @@ namespace rhi::d3d12
 
         const AdapterInfo& QueryAdapterInfo() override;
 
+        rhi::AllocatorStats QueryAllocatorStats() const override;
+
         tracking::IGPUCrashTracker* GetCrashTracker() override;
 
         void* GetNative() const override;

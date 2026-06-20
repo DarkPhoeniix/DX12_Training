@@ -252,6 +252,11 @@ namespace rhi::d3d12
 
 #if ENABLE_DEBUG_NAMES
         SetD3D12Name(_resource.Get(), _name);
+        // Name the allocation as well so it is labeled in D3D12MA's statistics dump and memory tooling
+        if (_allocation && !_name.empty())
+        {
+            _allocation->SetName(std::wstring(_name.begin(), _name.end()).c_str());
+        }
 #endif // ENABLE_DEBUG_NAMES
     }
 } // namespace rhi::d3d12

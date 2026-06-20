@@ -68,6 +68,20 @@ namespace rhi
         VideoMemoryInfo VideoMemory = {};
     };
 
+    // AllocatorStats reports the internal suballocation accounting of the device's resource allocator.
+    // Unlike VideoMemoryInfo (OS-reported, whole-process), these numbers cover only memory managed by the allocator.
+    struct AllocatorStats
+    {
+        // Bytes actually occupied by live allocations
+        std::uint64_t AllocationBytes = 0;
+        // Bytes reserved in memory blocks/heaps; always >= AllocationBytes, the difference being free suballocation headroom
+        std::uint64_t BlockBytes = 0;
+        // Number of live allocations
+        std::uint32_t AllocationCount = 0;
+        // Number of memory blocks/heaps backing the allocations
+        std::uint32_t BlockCount = 0;
+    };
+
     // Device is an abstract interface representing a graphics device, responsible for managing GPU resources, command queues, and swap chains. It provides 
     // methods for creating buffers, textures, command lists, descriptor heaps, fences, query heaps, heaps, statistics queries, timestamp queries, command 
     // signatures, swap chains, and pipeline states. The device also allows querying for optional features and binding a swap chain for presentation.
@@ -181,6 +195,9 @@ namespace rhi
 
         // Queries the adapter information, including details about the GPU such as its name, vendor, device ID, driver version, and video memory statistics
         virtual const AdapterInfo& QueryAdapterInfo() = 0;
+
+        // Queries the resource allocator's suballocation statistics, for profiling and debugging
+        virtual AllocatorStats QueryAllocatorStats() const = 0;
 
         // Retrieves the GPU crash tracker interface, which can be used to track and analyze GPU crashes for debugging purposes
         virtual tracking::IGPUCrashTracker* GetCrashTracker() = 0;

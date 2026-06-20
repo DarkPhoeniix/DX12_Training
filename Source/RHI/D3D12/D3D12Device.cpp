@@ -465,6 +465,20 @@ namespace rhi::d3d12
         return _adapterInfo;
     }
 
+    rhi::AllocatorStats D3D12Device::QueryAllocatorStats() const
+    {
+        D3D12MA::Budget localBudget = {};
+        _allocator->GetBudget(&localBudget, nullptr);
+
+        return rhi::AllocatorStats
+        {
+            .AllocationBytes = localBudget.Stats.AllocationBytes,
+            .BlockBytes = localBudget.Stats.BlockBytes,
+            .AllocationCount = localBudget.Stats.AllocationCount,
+            .BlockCount = localBudget.Stats.BlockCount
+        };
+    }
+
     tracking::IGPUCrashTracker* D3D12Device::GetCrashTracker()
     {
         return _crashTracker.get();
