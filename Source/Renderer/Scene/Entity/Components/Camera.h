@@ -3,6 +3,8 @@
 #include "Renderer/Scene/Entity/Components/IComponent.h"
 #include "Renderer/Scene/Volumes/FrustumVolume.h"
 
+#include "RHI/CommandList.h"
+
 namespace scene
 {
     class Camera : public IComponent

@@ -1,9 +1,11 @@
 #pragma once
 
-#include "CommandList.h"
 #include "Descriptor.h"
-#include "DescriptorHeap.h"
 #include "ResourceCommon.h"
+
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace tracking
 {
@@ -12,7 +14,11 @@ namespace tracking
 
 namespace rhi
 {
+    enum class CommandListType : uint8_t;
+    enum class DescriptorHeapType : uint8_t;
+
     class CommandListPool;
+    class CommandList;
     class CommandQueue;
     class CommandSignature;
     class PipelineState;

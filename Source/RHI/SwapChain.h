@@ -3,6 +3,7 @@
 namespace rhi
 {
     class Texture;
+    struct ScissorRect;
 
     // Number of back buffers in the swap chain (triple buffering).
     constexpr std::uint32_t BACK_BUFFER_COUNT = 3;

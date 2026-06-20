@@ -57,7 +57,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPara
 Application::Application(HINSTANCE hInstance)
     : _hInstance(hInstance)
     , _currentFrame(nullptr)
-    , _device(rhi::CreateDevice(rhi::BackendAPI::D3D12))
+    , _device(rhi::CreateDevice(rhi::BackendAPI::Vulkan))
 {
     _frames.resize(rhi::BACK_BUFFER_COUNT);
     for (size_t i = 0; i < rhi::BACK_BUFFER_COUNT; ++i)

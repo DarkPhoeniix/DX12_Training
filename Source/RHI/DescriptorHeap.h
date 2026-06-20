@@ -5,7 +5,7 @@
 namespace rhi
 {
     // DescriptorHeapType represents the type of descriptor heap, which determines the types of descriptors that can be stored in the heap and their intended usage
-    enum class DescriptorHeapType
+    enum class DescriptorHeapType : uint8_t
     {
         RTV,
         DSV,

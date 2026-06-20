@@ -8,7 +8,7 @@
 #endif // USE_D3D12
 
 #if USE_VULKAN
-#include "Vulkan/VkDevice.h"
+#include "Vulkan/VulkanDevice.h"
 #endif // USE_VULKAN
 
 namespace rhi
@@ -26,7 +26,7 @@ namespace rhi
 #endif // USE_D3D12
 #if USE_VULKAN
         case BackendAPI::Vulkan:
-            device = std::make_unique<vk::VkDevice>();
+            device = std::make_unique<vulkan::VulkanDevice>();
             break;
 #endif // USE_VULKAN
         default:

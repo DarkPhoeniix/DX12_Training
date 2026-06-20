@@ -23,7 +23,7 @@ if(MSVC)
 endif()
 
 option(USE_D3D12 "Enable DirectX12 backend" ON)
-option(USE_VULKAN "Enable Vulkan backend" OFF)
+option(USE_VULKAN "Enable Vulkan backend" ON)
 option(ENABLE_NSIGHT_AFTERMATH "Enable Nvidia Aftermath SDK usage for crash tracking (Release only)" OFF)
 
 # Drive vcpkg manifest features from the backend options so only the selected

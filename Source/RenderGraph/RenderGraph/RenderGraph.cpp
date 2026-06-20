@@ -4,6 +4,7 @@
 
 #include "RenderPassBuilder.h"
 
+#include "RHI/CommandList.h"
 #include "RHI/ResourceBarrier.h"
 
 namespace
