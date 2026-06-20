@@ -1,5 +1,5 @@
 
-find_package(d3d12-memory-allocator CONFIG REQUIRED)
+find_package(D3D12MemoryAllocator CONFIG REQUIRED)
 find_package(directx-headers CONFIG REQUIRED)
 find_package(winpixevent CONFIG REQUIRED)
 find_package(jsoncpp CONFIG REQUIRED)
@@ -27,7 +27,7 @@ target_link_libraries(RHI PRIVATE Microsoft::DirectX-Headers Microsoft::WinPixEv
 target_precompile_headers(RHI PRIVATE "RHI_PCH.h")
 
 if (USE_D3D12)
-    target_link_libraries(RHI PRIVATE unofficial::D3D12MemoryAllocator)
+    target_link_libraries(RHI PRIVATE GPUOpen::D3D12MemoryAllocator)
     target_compile_definitions(RHI PRIVATE USE_D3D12=1)
 endif()
 
