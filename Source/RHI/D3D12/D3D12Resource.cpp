@@ -102,60 +102,6 @@ namespace rhi::d3d12
         CreateCommitedResource(allocator, resourceDesc, heapDesc, pClearValue);
     }
 
-    D3D12Resource::D3D12Resource(rhi::Device* device, const BufferDescription& description, rhi::Heap* heap, std::uint64_t offset, ResourceState initialState, const std::string& name)
-        : _device(device)
-        , _ID(rhi::ResourceIdGenerator::GenerateID())
-        , _initialState(initialState)
-        , _currentState(initialState)
-        , _stride(0)
-        , _uavCounterOffset(description.UAVCounterOffset)
-#if ENABLE_DEBUG_NAMES
-        , _name(name)
-#endif // ENABLE_DEBUG_NAMES
-    {
-        D3D12_RESOURCE_DESC resourceDesc = GetD3D12ResourceDesc(description);
-        D3D12_CLEAR_VALUE* pClearValue = nullptr;
-
-        CreatePlacedResource(resourceDesc, heap, offset, pClearValue);
-    }
-
-    D3D12Resource::D3D12Resource(rhi::Device* device, const TextureDescription& description, rhi::Heap* heap, std::uint64_t offset, ResourceState initialState, const std::string& name)
-        : _device(device)
-        , _ID(rhi::ResourceIdGenerator::GenerateID())
-        , _initialState(initialState)
-        , _currentState(initialState)
-        , _stride(0)
-        , _uavCounterOffset(static_cast<std::uint32_t>(-1))
-#if ENABLE_DEBUG_NAMES
-        , _name(name)
-#endif // ENABLE_DEBUG_NAMES
-    {
-        D3D12_RESOURCE_DESC resourceDesc = GetD3D12ResourceDesc(description);
-        D3D12_CLEAR_VALUE* pClearValue = nullptr;
-        D3D12_CLEAR_VALUE clearValue;
-
-        if (resourceDesc.Flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)
-        {
-            clearValue.Format = GetDXGIFormat(description.Format);
-            clearValue.Color[0] = description.ClearValue.Color.R;
-            clearValue.Color[1] = description.ClearValue.Color.G;
-            clearValue.Color[2] = description.ClearValue.Color.B;
-            clearValue.Color[3] = description.ClearValue.Color.A;
-
-            pClearValue = &clearValue;
-        }
-        else if (resourceDesc.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
-        {
-            clearValue.Format = GetDXGIFormat(description.Format);
-            clearValue.DepthStencil.Depth = description.ClearValue.DepthStencil.Depth;
-            clearValue.DepthStencil.Stencil = description.ClearValue.DepthStencil.Stencil;
-
-            pClearValue = &clearValue;
-        }
-
-        CreatePlacedResource(resourceDesc, heap, offset, pClearValue);
-    }
-
     D3D12Resource::D3D12Resource(rhi::Device* device, ID3D12Resource* resource, const std::string& name)
         : _device(device)
         , _resource(resource)
@@ -285,37 +231,24 @@ namespace rhi::d3d12
             allocationDesc.Flags = D3D12MA::ALLOCATION_FLAG_COMMITTED;
         }
 
-        HRESULT result = allocator->CreateResource(
+        // Create the resource with an enhanced-barrier initial layout so it interops with the engine's
+        // enhanced Barrier() transitions. Buffers have no layout and must use UNDEFINED; textures use the
+        // layout matching their initial state.
+        const bool isBuffer = (resourceDesc.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER);
+        const D3D12_BARRIER_LAYOUT initialLayout = isBuffer ? D3D12_BARRIER_LAYOUT_UNDEFINED : GetD3D12Layout(_initialState);
+
+        CD3DX12_RESOURCE_DESC1 resourceDesc1(resourceDesc);
+
+        HRESULT result = allocator->CreateResource3(
             &allocationDesc,
-            &resourceDesc,
-            GetD3D12ResourceState(_initialState),
-            clearValue,
-            &_allocation,
-            IID_PPV_ARGS(&_resource));
-        CHECK(result, "Failed to create committed resource.");
-
-#if ENABLE_DEBUG_NAMES
-        SetD3D12Name(_resource.Get(), _name);
-#endif // ENABLE_DEBUG_NAMES
-    }
-
-    void D3D12Resource::CreatePlacedResource(const D3D12_RESOURCE_DESC& resourceDesc, rhi::Heap* heap, std::uint64_t offset, D3D12_CLEAR_VALUE* clearValue)
-    {
-        NativeDevice* d3d12NativeDevice = D3D12Cast<NativeDevice>(_device->GetNative());
-        ID3D12Heap* d3d12NativeHeap = D3D12Cast<ID3D12Heap>(heap->GetNative());
-
-        CD3DX12_RESOURCE_DESC1 desc1(resourceDesc);
-        HRESULT result = d3d12NativeDevice->CreatePlacedResource2(
-            d3d12NativeHeap,
-            offset,
-            &desc1,
-            GetD3D12Layout(_initialState),
+            &resourceDesc1,
+            initialLayout,
             clearValue,
             0,
             nullptr,
+            &_allocation,
             IID_PPV_ARGS(&_resource));
-
-        CHECK(result, "Failed to create placed resource.");
+        CHECK(result, "Failed to create committed resource.");
 
 #if ENABLE_DEBUG_NAMES
         SetD3D12Name(_resource.Get(), _name);

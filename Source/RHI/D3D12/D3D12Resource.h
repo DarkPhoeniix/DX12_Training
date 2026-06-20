@@ -15,8 +15,6 @@ namespace rhi::d3d12
     public:
         D3D12Resource(rhi::Device* device, D3D12MA::Allocator* allocator, const BufferDescription& description, ResourceState initialState = ResourceState::Common, const std::string& name = "");
         D3D12Resource(rhi::Device* device, D3D12MA::Allocator* allocator, const TextureDescription& description, ResourceState initialState = ResourceState::Common, const std::string& name = "");
-        D3D12Resource(rhi::Device* device, const BufferDescription& description, rhi::Heap* heap, std::uint64_t offset, ResourceState initialState = ResourceState::Common, const std::string& name = "");
-        D3D12Resource(rhi::Device* device, const TextureDescription& description, rhi::Heap* heap, std::uint64_t offset, ResourceState initialState = ResourceState::Common, const std::string& name = "");
         D3D12Resource(rhi::Device* device, ID3D12Resource* resource, const std::string& name = "");
         D3D12Resource(const D3D12Resource& other) = delete;
         D3D12Resource(D3D12Resource&& other) noexcept;
@@ -42,7 +40,6 @@ namespace rhi::d3d12
 
     protected:
         void CreateCommitedResource(D3D12MA::Allocator* allocator, const D3D12_RESOURCE_DESC& resourceDesc, const D3D12_HEAP_PROPERTIES& heapProperties, D3D12_CLEAR_VALUE* clearValue);
-        void CreatePlacedResource(const D3D12_RESOURCE_DESC& resourceDesc, rhi::Heap* heap, std::uint64_t offset, D3D12_CLEAR_VALUE* clearValue);
 
         ResourceID _ID;
 

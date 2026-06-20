@@ -14,15 +14,6 @@ namespace rhi::d3d12
     {
     }
 
-    D3D12Texture::D3D12Texture(rhi::Device* device, const TextureDescription& description, rhi::Heap* heap, std::uint64_t offset, ResourceState initialState, const std::string& name)
-        : _description(description)
-        , _resource(device, description, heap, offset, initialState, name)
-#if ENABLE_DEBUG_NAMES
-        , _name(name)
-#endif // ENABLE_DEBUG_NAMES
-    {
-    }
-
     D3D12Texture::D3D12Texture(rhi::Device* device, ID3D12Resource* nativeTexturePtr, const std::string& name)
         : _resource(device, nativeTexturePtr, name)
 #if ENABLE_DEBUG_NAMES

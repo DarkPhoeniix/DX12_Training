@@ -3,7 +3,6 @@
 #include "Format.h"
 #include "ResourceCommon.h"
 #include "QueryHeap.h"
-#include "Heap.h"
 #include "CommandList.h"
 
 namespace rhi
@@ -70,11 +69,6 @@ namespace rhi::d3d12
     D3D12_DEPTH_STENCIL_DESC GetD3D12DepthStencilDesc(const rhi::DepthStencilState depthStencilState);
 
     D3D12_CLEAR_FLAGS GetD3D12ClearFlags(rhi::ClearFlags clearFlags);
-
-    D3D12_HEAP_TYPE GetD3D12HeapType(rhi::HeapType type);
-    D3D12_CPU_PAGE_PROPERTY GetD3D12CPUPageProperty(rhi::CPUPageProperty property);
-    D3D12_MEMORY_POOL GetD3D12MemoryPool(rhi::MemoryPool memoryPool);
-    D3D12_HEAP_PROPERTIES GetD3D12HeapProperties(rhi::HeapProperties properties);
 
     D3D12_RESOURCE_DESC GetD3D12ResourceDesc(const rhi::BufferDescription& description);
     D3D12_RESOURCE_DESC GetD3D12ResourceDesc(const rhi::TextureDescription& description);

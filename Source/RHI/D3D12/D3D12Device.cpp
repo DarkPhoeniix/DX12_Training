@@ -12,7 +12,6 @@
 #include "D3D12Descriptor.h"
 #include "D3D12Helpers.h"
 #include "D3D12Fence.h"
-#include "D3D12Heap.h"
 #include "D3D12QueryHeap.h"
 #include "D3D12PipelineState.h"
 #include "D3D12SwapChain.h"
@@ -206,11 +205,6 @@ namespace rhi::d3d12
         return std::unique_ptr<D3D12Buffer>(new D3D12Buffer(this, _allocator.Get(), description, initialState, name));
     }
 
-    std::shared_ptr<rhi::Buffer> D3D12Device::CreateBuffer(const rhi::BufferDescription& description, rhi::Heap* heap, std::uint64_t offset, ResourceState initialState, const std::string& name)
-    {
-        return std::unique_ptr<D3D12Buffer>(new D3D12Buffer(this, description, heap, offset, initialState, name));
-    }
-
     std::shared_ptr<rhi::Buffer> D3D12Device::CreateBuffer(void* nativePtr, const std::string& name)
     {
         return std::unique_ptr<D3D12Buffer>(new D3D12Buffer(this, D3D12Cast<ID3D12Resource>(nativePtr), name));
@@ -219,11 +213,6 @@ namespace rhi::d3d12
     std::shared_ptr<rhi::Texture> D3D12Device::CreateTexture(const rhi::TextureDescription& description, ResourceState initialState, const std::string& name)
     {
         return std::unique_ptr<D3D12Texture>(new D3D12Texture(this, _allocator.Get(), description, initialState, name));
-    }
-
-    std::shared_ptr<rhi::Texture> D3D12Device::CreateTexture(const rhi::TextureDescription& description, rhi::Heap* heap, std::uint64_t offset, ResourceState initialState, const std::string& name)
-    {
-        return std::unique_ptr<D3D12Texture>(new D3D12Texture(this, description, heap, offset, initialState, name));
     }
 
     std::shared_ptr<rhi::Texture> D3D12Device::CreateTexture(void* nativePtr, const std::string& name)
@@ -254,11 +243,6 @@ namespace rhi::d3d12
     std::unique_ptr<rhi::Fence> D3D12Device::CreateFence(std::uint64_t initialValue)
     {
         return std::unique_ptr<D3D12Fence>(new D3D12Fence(this, initialValue));
-    }
-
-    std::unique_ptr<rhi::Heap> D3D12Device::CreateHeap(const rhi::HeapDescription& description, const std::string& name)
-    {
-        return std::unique_ptr<D3D12Heap>(new D3D12Heap(this, description, name));
     }
 
     std::unique_ptr<rhi::StatisticsQuery> D3D12Device::CreateStatisticsQuery(const std::string& name)

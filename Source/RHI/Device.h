@@ -23,7 +23,6 @@ namespace rhi
     class TextureView;
     class DescriptorHeap;
     class QueryHeap;
-    class Heap;
     class SwapChain;
     class StatisticsQuery;
     class TimestampQuery;
@@ -32,7 +31,6 @@ namespace rhi
     struct IndirectArgumentDescription;
     struct DescriptorHeapDescription;
     struct QueryHeapDescription;
-    struct HeapDescription;
 
     // BackendAPI represents the graphics API that the device is using
     enum class BackendAPI
@@ -114,14 +112,10 @@ namespace rhi
 
         // Creates a buffer resource with the specified description, initial state, and optional name for debugging purposes
         virtual std::shared_ptr<Buffer> CreateBuffer(const BufferDescription& description, ResourceState initialState = ResourceState::Common, const std::string& name = "") = 0;
-        // Creates a buffer resource that is placed in a specific heap at a given offset, with the specified description, initial state, and optional name for debugging purposes
-        virtual std::shared_ptr<Buffer> CreateBuffer(const BufferDescription& description, Heap* heap, std::uint64_t offset, ResourceState initialState = ResourceState::Common, const std::string& name = "") = 0;
         // Creates a buffer resource that wraps an existing native buffer pointer, with an optional name for debugging purposes
         virtual std::shared_ptr<Buffer> CreateBuffer(void* nativePtr, const std::string& name = "") = 0;
         // Creates a texture resource with the specified description, initial state, and optional name for debugging purposes
         virtual std::shared_ptr<Texture> CreateTexture(const TextureDescription& description, ResourceState initialState = ResourceState::Common, const std::string& name = "") = 0;
-        // Creates a texture resource that is placed in a specific heap at a given offset, with the specified description, initial state, and optional name for debugging purposes
-        virtual std::shared_ptr<Texture> CreateTexture(const TextureDescription& description, Heap* heap, std::uint64_t offset, ResourceState initialState = ResourceState::Common, const std::string& name = "") = 0;
         // Creates a texture resource that wraps an existing native texture pointer, with an optional name for debugging purposes
         virtual std::shared_ptr<Texture> CreateTexture(void* nativePtr, const std::string& name = "") = 0;
 
@@ -139,9 +133,6 @@ namespace rhi
         virtual std::unique_ptr<QueryHeap> CreateQueryHeap(const QueryHeapDescription& description, const std::string& name = "") = 0;
         // Creates a fence with the specified initial value, allowing the application to synchronize GPU and CPU operations by signaling and waiting on the fence
         virtual std::unique_ptr<Fence> CreateFence(std::uint64_t initialValue) = 0;
-        // Creates a heap based on the provided description and an optional name for debugging purposes, allowing the application to manage memory allocations 
-        // for GPU resources
-        virtual std::unique_ptr<Heap> CreateHeap(const HeapDescription& description, const std::string& name = "") = 0;
         // Creates a statistics query, which can be used to gather performance data and other metrics from the GPU, with an optional name for debugging purposes
         virtual std::unique_ptr<StatisticsQuery> CreateStatisticsQuery(const std::string& name = "") = 0;
         // Creates a timestamp query, which can be used to measure GPU execution time for specific operations, with an optional name for debugging purposes
