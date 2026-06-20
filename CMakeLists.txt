@@ -23,20 +23,18 @@ if(MSVC)
 endif()
 
 option(USE_D3D12 "Enable DirectX12 backend" ON)
-option(USE_VULKAN "Enable Vulkan backend" ON)
+option(USE_VULKAN "Enable Vulkan backend" OFF)
 option(ENABLE_NSIGHT_AFTERMATH "Enable Nvidia Aftermath SDK usage for crash tracking (Release only)" OFF)
 
-set(ENABLE_CPU_PROFILING 
-    $<$<config:Debug>:TRUE>
-    $<$<config:RelWithDebInfo>:TRUE>
-    $<$<config:Release>:FALSE>
-)
-
-set(ENABLE_GPU_PROFILING 
-    $<$<config:Debug>:TRUE>
-    $<$<config:RelWithDebInfo>:TRUE>
-    $<$<config:Release>:FALSE>
-)
+# Drive vcpkg manifest features from the backend options so only the selected
+# backend's packages are installed. Must be set before project() (the vcpkg
+# toolchain reads VCPKG_MANIFEST_FEATURES when project() runs).
+if (USE_D3D12)
+    list(APPEND VCPKG_MANIFEST_FEATURES "d3d12")
+endif()
+if (USE_VULKAN)
+    list(APPEND VCPKG_MANIFEST_FEATURES "vulkan")
+endif()
 
 # Fetch all dependencies
 include(FetchContent)
@@ -48,7 +46,7 @@ set(EXTERNAL_DIR "${CMAKE_SOURCE_DIR}/External")
 set(FETCHCONTENT_BASE_DIR "${EXTERNAL_DIR}/Source")
 
 if (ENABLE_NSIGHT_AFTERMATH)
-  set(AFTERMATH_SDK_DIR "${EXTERNAL_DIR}/NsightAftermathSDK")
+  set(AFTERMATH_DIR "${EXTERNAL_DIR}/NsightAftermathSDK")
 
   if(NOT EXISTS "${AFTERMATH_DIR}/include")  # or check for a .lib file, etc.
       message(STATUS "Running Aftermath SDK setup script...")
@@ -61,8 +59,6 @@ if (ENABLE_NSIGHT_AFTERMATH)
           message(FATAL_ERROR "Aftermath SDK setup failed with code ${result}")
       endif()
   endif()
-  
-  set(AFTERMATH_DIR "${EXTERNAL_DIR}/NsightAftermathSDK")
 
   add_library(Aftermath STATIC IMPORTED)
   set_target_properties(Aftermath PROPERTIES

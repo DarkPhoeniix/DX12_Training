@@ -1,19 +1,44 @@
 {
   "dependencies": [
-    "d3d12-memory-allocator",
-    "directx-headers",
+    "jsoncpp",
+    "spdlog",
+    "stb",
     {
       "name": "imgui",
       "features": [
-        "dx12-binding",
         "win32-binding"
       ]
-    },
-    "jsoncpp",
-    "spdlog",
-    "winpixevent",
-    "stb"
+    }
   ],
+  "features": {
+    "d3d12": {
+      "description": "DirectX 12 backend",
+      "dependencies": [
+        "d3d12-memory-allocator",
+        "directx-headers",
+        "winpixevent",
+        {
+          "name": "imgui",
+          "features": [
+            "dx12-binding"
+          ]
+        }
+      ]
+    },
+    "vulkan": {
+      "description": "Vulkan backend",
+      "dependencies": [
+        "vulkan",
+        "vulkan-memory-allocator",
+        {
+          "name": "imgui",
+          "features": [
+            "vulkan-binding"
+          ]
+        }
+      ]
+    }
+  },
   "builtin-baseline": "776a31fc8d3659de2c9cca4364062be5bbdf3857",
   "overrides": [
     {

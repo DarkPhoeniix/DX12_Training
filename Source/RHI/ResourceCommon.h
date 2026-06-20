@@ -33,7 +33,7 @@ namespace rhi
         AllowSimultaneousAccess         = 1 << 4,
         RaytracingAccelerationStructure = 1 << 5
     };
-    DEFINE_ENUM_FLAG_OPERATORS(ResourceFlags);
+    BINARY_OPERATION_TO_ENUM(ResourceFlags)
 
     // ResourceState represents the current state of a GPU resource, which is used to manage resource state transitions and ensure proper synchronization and usage of resources in rendering operations
     enum class ResourceState : std::uint16_t
@@ -61,7 +61,7 @@ namespace rhi
         AllCopy                         = CopySource | CopyDest,
         AllResolve                      = ResolveSource | ResolveDest,
     };
-    DEFINE_ENUM_FLAG_OPERATORS(ResourceState);
+    BINARY_OPERATION_TO_ENUM(ResourceState)
 
     // TextureDimension represents the dimensionality of a texture resource, which can be used to specify the type of texture being created or accessed
     enum class TextureDimension : std::uint8_t
