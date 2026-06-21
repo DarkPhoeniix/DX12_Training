@@ -60,4 +60,4 @@ using namespace Microsoft::WRL;
 #include <deque>
 #include <map>
 
-#endif // DX12LIB_PCH_H
+#endif // RHI_PCH
