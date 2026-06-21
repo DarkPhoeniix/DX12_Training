@@ -31,7 +31,6 @@ namespace rhi::vulkan
 
         void BindSwapChain(SwapChain* swapChain) override;
 
-        CommandQueue* GetQueue(rhi::CommandListType type) override;
         CommandQueue* GetGraphicsQueue() override;
         CommandQueue* GetComputeQueue() override;
         CommandQueue* GetCopyQueue() override;
@@ -80,15 +79,33 @@ namespace rhi::vulkan
         tracking::IGPUCrashTracker* GetCrashTracker() override;
 
         void* GetNative() const override;
+        // Retrieves the native Vulkan instance object, allowing the application to access
+        // the underlying Vulkan instance for integration with other Vulkan-based libraries or tools
+        vk::Instance GetVulkanInstance() const;
+        // Retrieves the selected physical device (needed for surface capability/format queries)
+        vk::PhysicalDevice GetPhysicalDevice() const;
 
     private:
         vk::Instance CreateInstance();
         vk::Device CreateDevice();
+#if ENABLE_DEVICE_DEBUG
+        vk::DebugUtilsMessengerEXT SetupDebugMessenger();
+#endif // ENABLE_DEVICE_DEBUG
         void EnumerateExtensions() const;
         bool CheckExtensionsSupport(const std::vector<const char*>& extensions) const;
         bool CheckLayersSupport(const std::vector<const char*>& layers) const;
+        bool CheckFeatureSupport(const vk::PhysicalDevice& physicalDevice) const;
 
         vk::Instance _instance;
-        vk::Device _device;
+        vk::PhysicalDevice _physicalDevice;
+        vk::Device _logicalDevice;
+
+        std::unique_ptr<rhi::CommandQueue> _graphicsQueue;
+        std::unique_ptr<rhi::CommandQueue> _computeQueue;
+#if ENABLE_DEVICE_DEBUG
+        vk::DebugUtilsMessengerEXT _debugMessenger;
+#endif // ENABLE_DEVICE_DEBUG
+
+        std::unique_ptr<tracking::IGPUCrashTracker> _crashTracker;
     };
 } // namespace rhi::vulkan

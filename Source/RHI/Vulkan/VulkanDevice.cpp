@@ -3,7 +3,9 @@
 
 #include "VulkanDevice.h"
 
+#include "VulkanCommandQueue.h"
 #include "VulkanHelpers.h"
+#include "VulkanSwapChain.h"
 
 #include "CommandListPool.h"
 #include "CommandQueue.h"
@@ -16,10 +18,62 @@
 #include "SwapChain.h"
 #include "TimestampQuery.h"
 
+#include "IGPUCrashTracker.h"
+
+VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
+
 namespace rhi::vulkan
 {
     namespace
     {
+        // Instance-scoped extensions
+        const std::vector<const char*> kInstanceExtensions =
+        {
+#if ENABLE_DEVICE_DEBUG
+            vk::EXTDebugUtilsExtensionName,
+#endif // ENABLE_DEVICE_DEBUG
+        };
+
+        // Device-scoped extensions
+        const std::vector<const char*> kDeviceExtensions =
+        {
+            vk::KHRSwapchainExtensionName,
+        };
+
+        // Instance-scoped validation layers
+        const std::vector<const char*> kValidationLayers =
+        {
+#if ENABLE_DEVICE_DEBUG
+            "VK_LAYER_KHRONOS_validation",
+#endif // ENABLE_DEVICE_DEBUG
+        };
+
+        static VKAPI_ATTR vk::Bool32 VKAPI_CALL debugCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT severity,
+            vk::DebugUtilsMessageTypeFlagsEXT type,
+            const vk::DebugUtilsMessengerCallbackDataEXT* pCallbackData,
+            void*)
+        {
+            switch (severity)
+            {
+            case vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose:
+                LOG_DEBUG("Vulkan validation layer: type {} msg: {}", to_string(type), pCallbackData->pMessage);
+                break;
+            case vk::DebugUtilsMessageSeverityFlagBitsEXT::eInfo:
+                LOG_INFO("Vulkan validation layer: type {} msg: {}", to_string(type), pCallbackData->pMessage);
+                break;
+            case vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning:
+                LOG_WARNING("Vulkan validation layer: type {} msg: {}", to_string(type), pCallbackData->pMessage);
+                break;
+            case vk::DebugUtilsMessageSeverityFlagBitsEXT::eError:
+                LOG_ERROR("Vulkan validation layer: type {} msg: {}", to_string(type), pCallbackData->pMessage);
+                break;
+            default:
+                break;
+            }
+
+            return vk::False;
+        }
+
         std::uint64_t GetDeviceLocalMemory(const vk::PhysicalDevice& physicalDevice)
         {
             std::uint64_t localMemory = 0;
@@ -38,36 +92,64 @@ namespace rhi::vulkan
     } // namespace unnamed
 
     VulkanDevice::VulkanDevice()
-        : _instance(CreateInstance())
-        , _device(CreateDevice())
+        : _instance(nullptr)
+        , _physicalDevice(nullptr)
+        , _logicalDevice(nullptr)
+        , _graphicsQueue(nullptr)
+        , _computeQueue(nullptr)
+#if ENABLE_DEVICE_DEBUG
+        , _debugMessenger(nullptr)
+#endif // ENABLE_DEVICE_DEBUG
     {
+        _instance = CreateInstance();
+#if ENABLE_DEVICE_DEBUG
+        _debugMessenger = SetupDebugMessenger();
+#endif // ENABLE_DEVICE_DEBUG
+        _logicalDevice = CreateDevice();
+
+        LOG_INFO("Vulkan instance created successfully.");
     }
 
     VulkanDevice::VulkanDevice(VulkanDevice&& other) noexcept
-        : _instance(std::move(other._instance))
-        , _device(std::move(other._device))
+        : _instance(std::exchange(other._instance, nullptr))
+        , _physicalDevice(std::exchange(other._physicalDevice, nullptr))
+        , _logicalDevice(std::exchange(other._logicalDevice, nullptr))
+        , _graphicsQueue(std::exchange(other._graphicsQueue, nullptr))
+#if ENABLE_DEVICE_DEBUG
+        , _debugMessenger(std::exchange(other._debugMessenger, nullptr))
+#endif // ENABLE_DEVICE_DEBUG
     {
     }
 
     VulkanDevice::~VulkanDevice()
     {
-        if (_device)
+        if (_logicalDevice)
         {
-            _device.destroy();
+            _logicalDevice.destroy();
         }
+#if ENABLE_DEVICE_DEBUG
+        if (_debugMessenger)
+        {
+            _instance.destroyDebugUtilsMessengerEXT(_debugMessenger);
+        }
+#endif // ENABLE_DEVICE_DEBUG
         if (_instance)
         {
             _instance.destroy();
         }
-        NOT_IMPLEMENTED();
     }
 
     VulkanDevice& VulkanDevice::operator=(VulkanDevice&& other) noexcept
     {
         if (this != &other)
         {
-            _instance = std::move(other._instance);
-            _device = std::move(other._device);
+            _instance = std::exchange(other._instance, nullptr);
+            _physicalDevice = std::exchange(other._physicalDevice, nullptr);
+            _logicalDevice = std::exchange(other._logicalDevice, nullptr);
+            _graphicsQueue = std::exchange(other._graphicsQueue, nullptr);
+#if ENABLE_DEVICE_DEBUG
+            _debugMessenger = std::exchange(other._debugMessenger, nullptr);
+#endif // ENABLE_DEVICE_DEBUG
         }
 
         return *this;
@@ -89,16 +171,9 @@ namespace rhi::vulkan
         NOT_IMPLEMENTED();
     }
 
-    CommandQueue* VulkanDevice::GetQueue(rhi::CommandListType type)
-    {
-        NOT_IMPLEMENTED();
-        return nullptr;
-    }
-
     CommandQueue* VulkanDevice::GetGraphicsQueue()
     {
-        NOT_IMPLEMENTED();
-        return nullptr;
+        return _graphicsQueue.get();
     }
 
     CommandQueue* VulkanDevice::GetComputeQueue()
@@ -203,8 +278,7 @@ namespace rhi::vulkan
 
     std::unique_ptr<SwapChain> VulkanDevice::CreateSwapChain(void* windowHandle, std::uint32_t width, std::uint32_t height, bool vSync)
     {
-        NOT_IMPLEMENTED();
-        return std::unique_ptr<SwapChain>();
+        return std::unique_ptr<SwapChain>(new VulkanSwapChain(this, (HWND)windowHandle, width, height, vSync));
     }
 
     std::unique_ptr<PipelineState> VulkanDevice::CreatePipelineState(const std::string& filepath)
@@ -290,43 +364,39 @@ namespace rhi::vulkan
 
     tracking::IGPUCrashTracker* VulkanDevice::GetCrashTracker()
     {
-        NOT_IMPLEMENTED();
-        return nullptr;
+        return _crashTracker.get();
     }
 
     void* VulkanDevice::GetNative() const
     {
-        NOT_IMPLEMENTED();
-        return nullptr;
+        return VulkanNative(_logicalDevice);
+    }
+
+    vk::Instance VulkanDevice::GetVulkanInstance() const
+    {
+        return _instance;
+    }
+
+    vk::PhysicalDevice VulkanDevice::GetPhysicalDevice() const
+    {
+        return _physicalDevice;
     }
 
     vk::Instance VulkanDevice::CreateInstance()
     {
+        VULKAN_HPP_DEFAULT_DISPATCHER.init();
+
         EnumerateExtensions();
 
-        std::vector<const char*> requiredLayers = 
-        {
-#if ENABLE_DEVICE_DEBUG
-            "VK_LAYER_KHRONOS_validation"
-#endif // ENABLE_DEVICE_DEBUG
-        };
-
-        if (!CheckLayersSupport(requiredLayers))
+        if (!CheckLayersSupport(kValidationLayers))
         {
             LOG_ERROR("Required Vulkan layers are not supported.");
             return nullptr;
         }
 
-        std::vector<const char*> requiredExtensions =
+        if (!CheckExtensionsSupport(kInstanceExtensions))
         {
-#if ENABLE_DEVICE_DEBUG
-            vk::EXTDebugUtilsExtensionName
-#endif // ENABLE_DEVICE_DEBUG
-        };
-
-        if (!CheckExtensionsSupport(requiredExtensions))
-        {
-            LOG_ERROR("Required Vulkan extensions are not supported.");
+            LOG_ERROR("Required Vulkan instance extensions are not supported.");
             return nullptr;
         }
 
@@ -342,14 +412,16 @@ namespace rhi::vulkan
         const vk::InstanceCreateInfo createInfo =
         {
             .pApplicationInfo = &appInfo,
-            .enabledLayerCount = static_cast<std::uint32_t>(requiredLayers.size()),
-            .ppEnabledLayerNames = requiredLayers.data(),
-            .enabledExtensionCount = static_cast<std::uint32_t>(requiredExtensions.size()),
-            .ppEnabledExtensionNames = requiredExtensions.data()
+            .enabledLayerCount = static_cast<std::uint32_t>(kValidationLayers.size()),
+            .ppEnabledLayerNames = kValidationLayers.data(),
+            .enabledExtensionCount = static_cast<std::uint32_t>(kInstanceExtensions.size()),
+            .ppEnabledExtensionNames = kInstanceExtensions.data()
         };
 
         auto [result, instance] = vk::createInstance(createInfo);
         VK_CHECK(result, "Failed to create Vulkan instance");
+
+        VULKAN_HPP_DEFAULT_DISPATCHER.init(instance);
 
         return instance;
     }
@@ -360,7 +432,6 @@ namespace rhi::vulkan
         VK_CHECK(enumerateResult, "Failed to enumerate Vulkan physical devices");
 
         std::uint64_t maxMemory = 0;
-        vk::PhysicalDevice* selectedDevice = nullptr;
 
         for (auto& physicalDevice : physicalDevices)
         {
@@ -371,21 +442,81 @@ namespace rhi::vulkan
                 continue; // Skip software adapters
             }
 
+            if (!CheckFeatureSupport(physicalDevice))
+            {
+                continue; // Skip devices that do not support required features
+            }
+
             const std::uint64_t memory = GetDeviceLocalMemory(physicalDevice);
             if (memory > maxMemory)
             {
                 maxMemory = memory;
-                selectedDevice = &physicalDevice;
+                _physicalDevice = physicalDevice;
             }
         }
-        ASSERT(selectedDevice != nullptr, "No suitable Vulkan physical device found.");
+        ASSERT(_physicalDevice, "No suitable Vulkan physical device found.");
 
-        vk::DeviceCreateInfo deviceCreateInfo = {};
-        auto [createResult, device] = selectedDevice->createDevice(deviceCreateInfo);
+        std::vector<vk::QueueFamilyProperties> queueFamilyProperties = _physicalDevice.getQueueFamilyProperties();
+        auto graphicsQueueFamilyProperty = std::ranges::find_if(queueFamilyProperties, 
+            [](auto const& qfp) 
+            { return (qfp.queueFlags & vk::QueueFlagBits::eGraphics) != static_cast<vk::QueueFlags>(0); }
+        );
+        const std::uint32_t graphicsQueueFamilyIndex = static_cast<std::uint32_t>(std::distance(queueFamilyProperties.begin(), graphicsQueueFamilyProperty));
+        vk::DeviceQueueCreateInfo deviceQueueCreateInfo = { .queueFamilyIndex = graphicsQueueFamilyIndex };
+
+        // Create a chain of feature structures
+        vk::StructureChain<vk::PhysicalDeviceFeatures2,
+            vk::PhysicalDeviceVulkan11Features,
+            vk::PhysicalDeviceVulkan13Features,
+            vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>
+            featureChain = {
+                {},                                    // vk::PhysicalDeviceFeatures2 (empty for now)
+                {.shaderDrawParameters = true},        // Enable shader draw parameters from Vulkan 1.1
+                {.dynamicRendering = true},            // Enable dynamic rendering from Vulkan 1.3
+                {.extendedDynamicState = true}         // Enable extended dynamic state from the extension
+        };
+
+        vk::DeviceCreateInfo deviceCreateInfo = 
+        {
+            .pNext = &featureChain.get<vk::PhysicalDeviceFeatures2>(),
+            .queueCreateInfoCount = 1,
+            .pQueueCreateInfos = &deviceQueueCreateInfo,
+            .enabledExtensionCount = static_cast<uint32_t>(kDeviceExtensions.size()),
+            .ppEnabledExtensionNames = kDeviceExtensions.data()
+        };
+
+        auto [createResult, device] = _physicalDevice.createDevice(deviceCreateInfo);
         VK_CHECK(createResult, "Failed to create Vulkan logical device");
+
+        VULKAN_HPP_DEFAULT_DISPATCHER.init(device);
+
+        // Assign the member before creating the queue: VulkanCommandQueue reads the
+        // logical device back through _device->GetNative().
+        _logicalDevice = device;
+        _graphicsQueue = std::unique_ptr<VulkanCommandQueue>(new VulkanCommandQueue(this, rhi::CommandListType::Graphics, graphicsQueueFamilyIndex));
 
         return device;
     }
+
+#if ENABLE_DEVICE_DEBUG
+    vk::DebugUtilsMessengerEXT VulkanDevice::SetupDebugMessenger()
+    {
+        using Severity = vk::DebugUtilsMessageSeverityFlagBitsEXT;
+        using Type = vk::DebugUtilsMessageTypeFlagBitsEXT;
+
+        const vk::DebugUtilsMessengerCreateInfoEXT createInfo =
+        {
+            .messageSeverity = Severity::eVerbose | Severity::eInfo | Severity::eWarning | Severity::eError,
+            .messageType = Type::eGeneral | Type::eValidation | Type::ePerformance,
+            .pfnUserCallback = debugCallback,
+        };
+
+        auto [result, debugMessenger] = _instance.createDebugUtilsMessengerEXT(createInfo);
+        VK_CHECK(result, "Failed to create Vulkan debug messenger");
+
+        return debugMessenger;
+    }
+#endif // ENABLE_DEVICE_DEBUG
 
     void VulkanDevice::EnumerateExtensions() const
     {
@@ -441,5 +572,21 @@ namespace rhi::vulkan
         }
 
         return true;
+    }
+
+    bool VulkanDevice::CheckFeatureSupport(const vk::PhysicalDevice& physicalDevice) const
+    {
+        auto features = physicalDevice.template getFeatures2<
+            vk::PhysicalDeviceFeatures2,
+            vk::PhysicalDeviceVulkan11Features,
+            vk::PhysicalDeviceVulkan13Features,
+            vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>();
+
+        bool supportsRequiredFeatures = features.template get<
+            vk::PhysicalDeviceVulkan11Features>().shaderDrawParameters &&
+            features.template get<vk::PhysicalDeviceVulkan13Features>().dynamicRendering &&
+            features.template get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>().extendedDynamicState;
+
+        return supportsRequiredFeatures;
     }
 } // namespace rhi::vulkan
