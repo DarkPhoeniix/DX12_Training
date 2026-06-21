@@ -3,6 +3,8 @@
 
 #include "Device.h"
 
+#include "CommandList.h"
+
 #if USE_D3D12
 #include "D3D12/D3D12Device.h"
 #endif // USE_D3D12
@@ -13,6 +15,22 @@
 
 namespace rhi
 {
+    CommandQueue* Device::GetQueue(rhi::CommandListType type)
+    {
+        switch (type)
+        {
+        case rhi::CommandListType::Graphics:
+            return GetGraphicsQueue();
+        case rhi::CommandListType::Compute:
+            return GetComputeQueue();
+        case rhi::CommandListType::Copy:
+            return GetCopyQueue();
+        default:
+            UNREACHABLE("Unsupported command queue type.");
+            return GetGraphicsQueue();
+        }
+    }
+
     std::unique_ptr<Device> CreateDevice(BackendAPI backend)
     {
         std::unique_ptr<Device> device = nullptr;

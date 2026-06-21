@@ -16,7 +16,6 @@
 #include "D3D12PipelineState.h"
 #include "D3D12SwapChain.h"
 #include "D3D12Texture.h"
-#include "IGPUCrashTracker.h"
 #include "D3D12StatisticsQuery.h"
 #include "D3D12TimestampQuery.h"
 #include "D3D12PipelineState.h"
@@ -26,6 +25,8 @@
 #include "ResourceCommon.h"
 #include "DescriptorHeap.h"
 #include "SwapChain.h"
+
+#include "IGPUCrashTracker.h"
 
 #include <D3D12MemAlloc.h>
 
@@ -152,22 +153,6 @@ namespace rhi::d3d12
     void D3D12Device::BindSwapChain(rhi::SwapChain* swapChain)
     {
         _swapChain = swapChain;
-    }
-
-    CommandQueue* D3D12Device::GetQueue(rhi::CommandListType type)
-    {
-        switch (type)
-        {
-        case rhi::CommandListType::Graphics:
-            return GetGraphicsQueue();
-        case rhi::CommandListType::Compute:
-            return GetComputeQueue();
-        case rhi::CommandListType::Copy:
-            return GetCopyQueue();
-        default:
-            UNREACHABLE("Unsupported command queue type.");
-            return GetGraphicsQueue();
-        }
     }
 
     rhi::CommandQueue* D3D12Device::GetGraphicsQueue()

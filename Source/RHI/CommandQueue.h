@@ -20,7 +20,7 @@ namespace rhi
 
         // Executes the specified command lists on the GPU, allowing the application to submit recorded commands for execution. 
         // The command lists may be processed asynchronously by the GPU, depending on the implementation of the command queue and the underlying graphics API
-        virtual void ExecuteCommandLists(std::vector<CommandList*> commandLists) = 0;
+        virtual void ExecuteCommandLists(const std::vector<CommandList*>& commandLists) = 0;
 
         // Signals the fence with a value, allowing the application to synchronize GPU and CPU operations by indicating that a certain point in the command queue has been reached
         virtual void Signal(Fence* fence, uint64_t value) = 0;

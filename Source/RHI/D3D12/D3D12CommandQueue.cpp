@@ -79,7 +79,7 @@ namespace rhi::d3d12
         return *this;
     }
 
-    void D3D12CommandQueue::ExecuteCommandLists(std::vector<rhi::CommandList*> commandLists)
+    void D3D12CommandQueue::ExecuteCommandLists(const std::vector<CommandList*>& commandLists)
     {
         std::vector<ID3D12CommandList*> d3d12CommandLists;
         //std::transform(commandLists.begin(), commandLists.end(), d3d12CommandLists.begin(), [](const std::shared_ptr<rhi::CommandList>& elem) { return elem.get(); });

@@ -21,7 +21,7 @@ namespace rhi::d3d12
         D3D12CommandQueue& operator=(const D3D12CommandQueue& other) = delete;
         D3D12CommandQueue& operator=(D3D12CommandQueue&& other) noexcept;
 
-        void ExecuteCommandLists(std::vector<rhi::CommandList*> commandLists) override;
+        void ExecuteCommandLists(const std::vector<CommandList*>& commandLists) override;
 
         void Signal(rhi::Fence* fence, std::uint64_t value) override;
         void Wait(rhi::Fence* fence, std::uint64_t value) override;

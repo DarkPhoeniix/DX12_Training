@@ -33,7 +33,6 @@ namespace rhi::d3d12
 
         void BindSwapChain(rhi::SwapChain* swapChain) override; 
 
-        CommandQueue* GetQueue(rhi::CommandListType type) override;
         rhi::CommandQueue* GetGraphicsQueue() override;
         rhi::CommandQueue* GetComputeQueue() override;
         rhi::CommandQueue* GetCopyQueue() override;
