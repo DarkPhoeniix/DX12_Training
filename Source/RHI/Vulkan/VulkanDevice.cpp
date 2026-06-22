@@ -3,6 +3,8 @@
 
 #include "VulkanDevice.h"
 
+#include "VulkanCommandList.h"
+#include "VulkanCommandListPool.h"
 #include "VulkanCommandQueue.h"
 #include "VulkanHelpers.h"
 #include "VulkanSwapChain.h"
@@ -230,14 +232,12 @@ namespace rhi::vulkan
 
     std::unique_ptr<CommandList> VulkanDevice::CreateCommandList(CommandListType type, const std::string& name)
     {
-        NOT_IMPLEMENTED();
-        return std::unique_ptr<CommandList>();
+        return std::unique_ptr<CommandList>(new VulkanCommandList(this, type, name));
     }
 
     std::unique_ptr<CommandListPool> VulkanDevice::CreateCommandListPool()
     {
-        NOT_IMPLEMENTED();
-        return std::unique_ptr<CommandListPool>();
+        return std::unique_ptr<CommandListPool>(new VulkanCommandListPool(this));
     }
 
     std::unique_ptr<DescriptorHeap> VulkanDevice::CreateDescriptorHeap(const DescriptorHeapDescription& description, const std::string& name)
