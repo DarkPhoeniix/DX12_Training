@@ -3,11 +3,14 @@
 
 #include "VulkanDevice.h"
 
+#include "VulkanBuffer.h"
 #include "VulkanCommandList.h"
 #include "VulkanCommandListPool.h"
 #include "VulkanCommandQueue.h"
 #include "VulkanHelpers.h"
+#include "VulkanPipelineState.h"
 #include "VulkanSwapChain.h"
+#include "VulkanTexture.h"
 
 #include "CommandListPool.h"
 #include "CommandQueue.h"
@@ -208,26 +211,22 @@ namespace rhi::vulkan
 
     std::shared_ptr<Buffer> VulkanDevice::CreateBuffer(const BufferDescription& description, ResourceState initialState, const std::string& name)
     {
-        NOT_IMPLEMENTED();
-        return std::shared_ptr<Buffer>();
+        return std::unique_ptr<Buffer>(new VulkanBuffer(this, description, initialState, name));
     }
 
     std::shared_ptr<Buffer> VulkanDevice::CreateBuffer(void* nativePtr, const std::string& name)
     {
-        NOT_IMPLEMENTED();
-        return std::shared_ptr<Buffer>();
+        return std::unique_ptr<Buffer>(new VulkanBuffer(this, nativePtr, name));
     }
 
     std::shared_ptr<Texture> VulkanDevice::CreateTexture(const TextureDescription& description, ResourceState initialState, const std::string& name)
     {
-        NOT_IMPLEMENTED();
-        return std::shared_ptr<Texture>();
+        return std::unique_ptr<Texture>(new VulkanTexture(this, description, initialState, name));
     }
 
     std::shared_ptr<Texture> VulkanDevice::CreateTexture(void* nativePtr, const std::string& name)
     {
-        NOT_IMPLEMENTED();
-        return std::shared_ptr<Texture>();
+        return std::unique_ptr<Texture>(new VulkanTexture(this, nativePtr, name));
     }
 
     std::unique_ptr<CommandList> VulkanDevice::CreateCommandList(CommandListType type, const std::string& name)
@@ -283,8 +282,7 @@ namespace rhi::vulkan
 
     std::unique_ptr<PipelineState> VulkanDevice::CreatePipelineState(const std::string& filepath)
     {
-        NOT_IMPLEMENTED();
-        return std::unique_ptr<PipelineState>();
+        return std::unique_ptr<PipelineState>(new VulkanPipelineState(this, filepath));
     }
 
     void VulkanDevice::CreateBufferView(const BufferView& view, CPUDescriptor& descriptor)

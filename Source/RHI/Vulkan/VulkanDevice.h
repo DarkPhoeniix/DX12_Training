@@ -40,21 +40,21 @@ namespace rhi::vulkan
 
         void Present() override;
 
-        std::shared_ptr<Buffer> CreateBuffer(const BufferDescription& description, ResourceState initialState = ResourceState::Common, const std::string& name = "") override;
-        std::shared_ptr<Buffer> CreateBuffer(void* nativePtr, const std::string& name = "") override;
-        std::shared_ptr<Texture> CreateTexture(const TextureDescription& description, ResourceState initialState = ResourceState::Common, const std::string& name = "") override;
-        std::shared_ptr<Texture> CreateTexture(void* nativePtr, const std::string& name = "") override;
+        std::shared_ptr<rhi::Buffer> CreateBuffer(const BufferDescription& description, ResourceState initialState = ResourceState::Common, const std::string& name = "") override;
+        std::shared_ptr<rhi::Buffer> CreateBuffer(void* nativePtr, const std::string& name = "") override;
+        std::shared_ptr<rhi::Texture> CreateTexture(const TextureDescription& description, ResourceState initialState = ResourceState::Common, const std::string& name = "") override;
+        std::shared_ptr<rhi::Texture> CreateTexture(void* nativePtr, const std::string& name = "") override;
 
-        std::unique_ptr<CommandList> CreateCommandList(CommandListType type, const std::string& name = "") override;
+        std::unique_ptr<rhi::CommandList> CreateCommandList(CommandListType type, const std::string& name = "") override;
         std::unique_ptr<CommandListPool> CreateCommandListPool() override;
-        std::unique_ptr<DescriptorHeap> CreateDescriptorHeap(const DescriptorHeapDescription& description, const std::string& name = "") override;
-        std::unique_ptr<QueryHeap> CreateQueryHeap(const QueryHeapDescription& description, const std::string& name = "") override;
-        std::unique_ptr<Fence> CreateFence(std::uint64_t initialValue) override;
-        std::unique_ptr<StatisticsQuery> CreateStatisticsQuery(const std::string& name = "") override;
-        std::unique_ptr<TimestampQuery> CreateTimestampQuery(std::uint32_t timestampsCount, const std::string& name = "") override;
-        std::unique_ptr<CommandSignature> CreateCommandSignature(const std::vector<IndirectArgumentDescription>& arguments, PipelineState* pipelineState, const std::string& name = "") override;
-        std::unique_ptr<SwapChain> CreateSwapChain(void* windowHandle, std::uint32_t width, std::uint32_t height, bool vSync) override;
-        std::unique_ptr<PipelineState> CreatePipelineState(const std::string& filepath) override;
+        std::unique_ptr<rhi::DescriptorHeap> CreateDescriptorHeap(const DescriptorHeapDescription& description, const std::string& name = "") override;
+        std::unique_ptr<rhi::QueryHeap> CreateQueryHeap(const QueryHeapDescription& description, const std::string& name = "") override;
+        std::unique_ptr<rhi::Fence> CreateFence(std::uint64_t initialValue) override;
+        std::unique_ptr<rhi::StatisticsQuery> CreateStatisticsQuery(const std::string& name = "") override;
+        std::unique_ptr<rhi::TimestampQuery> CreateTimestampQuery(std::uint32_t timestampsCount, const std::string& name = "") override;
+        std::unique_ptr<rhi::CommandSignature> CreateCommandSignature(const std::vector<IndirectArgumentDescription>& arguments, PipelineState* pipelineState, const std::string& name = "") override;
+        std::unique_ptr<rhi::SwapChain> CreateSwapChain(void* windowHandle, std::uint32_t width, std::uint32_t height, bool vSync) override;
+        std::unique_ptr<rhi::PipelineState> CreatePipelineState(const std::string& filepath) override;
 
         void CreateBufferView(const BufferView& view, CPUDescriptor& descriptor) override;
         void CreateBufferSRV(std::shared_ptr<Buffer> resource, CPUDescriptor& descriptor) override;
@@ -99,6 +99,8 @@ namespace rhi::vulkan
         vk::Instance _instance;
         vk::PhysicalDevice _physicalDevice;
         vk::Device _logicalDevice;
+
+        vma::Allocator _allocator;
 
         std::unique_ptr<rhi::CommandQueue> _graphicsQueue;
         std::unique_ptr<rhi::CommandQueue> _computeQueue;
