@@ -8,7 +8,7 @@
 
 namespace rhi::d3d12
 {
-    D3D12QueryHeap::D3D12QueryHeap(rhi::Device* device, const QueryHeapDescription& description, const std::string& name)
+    D3D12QueryHeap::D3D12QueryHeap(Device* device, const QueryHeapDescription& description, const std::string& name)
         : _type(description.Type)
 #if ENABLE_DEBUG_NAMES
         , _name(name)
@@ -31,7 +31,7 @@ namespace rhi::d3d12
     }
 
     D3D12QueryHeap::D3D12QueryHeap(D3D12QueryHeap&& other) noexcept
-        : rhi::QueryHeap(std::move(other))
+        : QueryHeap(std::move(other))
         , _type(other._type)
         , _queryHeap(std::move(other._queryHeap))
 #if ENABLE_DEBUG_NAMES
@@ -48,7 +48,7 @@ namespace rhi::d3d12
     {
         if (this != &other)
         {
-            rhi::QueryHeap::operator=(std::move(other));
+            QueryHeap::operator=(std::move(other));
             _queryHeap = std::move(other._queryHeap);
             _type = other._type;
 #if ENABLE_DEBUG_NAMES

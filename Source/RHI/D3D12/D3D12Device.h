@@ -16,7 +16,7 @@ namespace rhi::d3d12
 {
     using NativeDevice = ID3D12Device10;
 
-    class D3D12Device final : public rhi::Device
+    class D3D12Device final : public Device
     {
     public:
         D3D12Device();
@@ -31,52 +31,52 @@ namespace rhi::d3d12
 
         bool IsEnhancedBarriersSupported() override;
 
-        void BindSwapChain(rhi::SwapChain* swapChain) override; 
+        void BindSwapChain(SwapChain* swapChain) override;
 
-        rhi::CommandQueue* GetGraphicsQueue() override;
-        rhi::CommandQueue* GetComputeQueue() override;
-        rhi::CommandQueue* GetCopyQueue() override;
+        CommandQueue* GetGraphicsQueue() override;
+        CommandQueue* GetComputeQueue() override;
+        CommandQueue* GetCopyQueue() override;
 
         void OnResize(std::uint32_t width, std::uint32_t height) override;
-        std::shared_ptr<rhi::Texture> GetBackBuffer() override;
+        std::shared_ptr<Texture> GetBackBuffer() override;
 
         void Present() override;
 
-        std::shared_ptr<rhi::Buffer> CreateBuffer(const rhi::BufferDescription& description, ResourceState initialState, const std::string& name) override;
-        std::shared_ptr<rhi::Buffer> CreateBuffer(void* nativePtr, const std::string& name) override;
-        std::shared_ptr<rhi::Texture> CreateTexture(const rhi::TextureDescription& description, ResourceState initialState, const std::string& name) override;
-        std::shared_ptr<rhi::Texture> CreateTexture(void* nativePtr, const std::string& name) override;
+        std::shared_ptr<Buffer> CreateBuffer(const BufferDescription& description, ResourceState initialState, const std::string& name) override;
+        std::shared_ptr<Buffer> CreateBuffer(void* nativePtr, const std::string& name) override;
+        std::shared_ptr<Texture> CreateTexture(const TextureDescription& description, ResourceState initialState, const std::string& name) override;
+        std::shared_ptr<Texture> CreateTexture(void* nativePtr, const std::string& name) override;
 
-        std::unique_ptr<rhi::CommandList> CreateCommandList(CommandListType type, const std::string& name) override;
+        std::unique_ptr<CommandList> CreateCommandList(CommandListType type, const std::string& name) override;
         std::unique_ptr<CommandListPool> CreateCommandListPool() override;
-        std::unique_ptr<rhi::DescriptorHeap> CreateDescriptorHeap(const DescriptorHeapDescription& description, const std::string& name) override;
-        std::unique_ptr<rhi::Fence> CreateFence(std::uint64_t initialValue) override;
-        std::unique_ptr<rhi::QueryHeap> CreateQueryHeap(const QueryHeapDescription& description, const std::string& name) override;
-        std::unique_ptr<rhi::StatisticsQuery> CreateStatisticsQuery(const std::string& name) override;
-        std::unique_ptr<rhi::TimestampQuery> CreateTimestampQuery(std::uint32_t timestampsCount, const std::string& name) override;
-        std::unique_ptr<rhi::CommandSignature> CreateCommandSignature(const std::vector<rhi::IndirectArgumentDescription>& arguments, rhi::PipelineState* pipelineState, const std::string& name) override;
-        std::unique_ptr<rhi::SwapChain> CreateSwapChain(void* windowHandle, std::uint32_t width, std::uint32_t height, bool vSync) override;
-        std::unique_ptr<rhi::PipelineState> CreatePipelineState(const std::string& filepath) override;
+        std::unique_ptr<DescriptorHeap> CreateDescriptorHeap(const DescriptorHeapDescription& description, const std::string& name) override;
+        std::unique_ptr<Fence> CreateFence(std::uint64_t initialValue) override;
+        std::unique_ptr<QueryHeap> CreateQueryHeap(const QueryHeapDescription& description, const std::string& name) override;
+        std::unique_ptr<StatisticsQuery> CreateStatisticsQuery(const std::string& name) override;
+        std::unique_ptr<TimestampQuery> CreateTimestampQuery(std::uint32_t timestampsCount, const std::string& name) override;
+        std::unique_ptr<CommandSignature> CreateCommandSignature(const std::vector<IndirectArgumentDescription>& arguments, PipelineState* pipelineState, const std::string& name) override;
+        std::unique_ptr<SwapChain> CreateSwapChain(void* windowHandle, std::uint32_t width, std::uint32_t height, bool vSync) override;
+        std::unique_ptr<PipelineState> CreatePipelineState(const std::string& filepath) override;
 
-        void CreateBufferView(const rhi::BufferView& view, CPUDescriptor& descriptor) override;
-        void CreateBufferSRV(std::shared_ptr<rhi::Buffer> resource, rhi::CPUDescriptor& descriptor) override;
-        void CreateBufferCBV(std::shared_ptr<rhi::Buffer> resource, rhi::CPUDescriptor& descriptor) override;
-        void CreateBufferUAV(std::shared_ptr<rhi::Buffer> resource, rhi::CPUDescriptor& descriptor, std::shared_ptr<rhi::Buffer> counterResource) override;
+        void CreateBufferView(const BufferView& view, CPUDescriptor& descriptor) override;
+        void CreateBufferSRV(std::shared_ptr<Buffer> resource, CPUDescriptor& descriptor) override;
+        void CreateBufferCBV(std::shared_ptr<Buffer> resource, CPUDescriptor& descriptor) override;
+        void CreateBufferUAV(std::shared_ptr<Buffer> resource, CPUDescriptor& descriptor, std::shared_ptr<Buffer> counterResource) override;
 
-        void CreateTextureView(const rhi::TextureView& view, CPUDescriptor& descriptor) override;
-        void CreateTextureRTV(std::shared_ptr<rhi::Texture> texture, rhi::CPUDescriptor& descriptor) override;
-        void CreateTextureDSV(std::shared_ptr<rhi::Texture> texture, rhi::CPUDescriptor& descriptor) override;
-        void CreateTextureSRV(std::shared_ptr<rhi::Texture> texture, rhi::CPUDescriptor& descriptor) override;
-        void CreateTextureUAV(std::shared_ptr<rhi::Texture> texture, rhi::CPUDescriptor& descriptor) override;
+        void CreateTextureView(const TextureView& view, CPUDescriptor& descriptor) override;
+        void CreateTextureRTV(std::shared_ptr<Texture> texture, CPUDescriptor& descriptor) override;
+        void CreateTextureDSV(std::shared_ptr<Texture> texture, CPUDescriptor& descriptor) override;
+        void CreateTextureSRV(std::shared_ptr<Texture> texture, CPUDescriptor& descriptor) override;
+        void CreateTextureUAV(std::shared_ptr<Texture> texture, CPUDescriptor& descriptor) override;
 
-        std::uint32_t GetDescriptorHandleIncrementSize(rhi::DescriptorHeapType type) const override;
+        std::uint32_t GetDescriptorHandleIncrementSize(DescriptorHeapType type) const override;
 
-        rhi::AllocationInfo GetAllocationInfo(const rhi::BufferDescription& description) const override;
-        rhi::AllocationInfo GetAllocationInfo(const rhi::TextureDescription& description) const override;
+        AllocationInfo GetAllocationInfo(const BufferDescription& description) const override;
+        AllocationInfo GetAllocationInfo(const TextureDescription& description) const override;
 
         const AdapterInfo& QueryAdapterInfo() override;
 
-        rhi::AllocatorStats QueryAllocatorStats() const override;
+        AllocatorStats QueryAllocatorStats() const override;
 
         tracking::IGPUCrashTracker* GetCrashTracker() override;
 
@@ -106,11 +106,11 @@ namespace rhi::d3d12
 
         AdapterInfo _adapterInfo;
 
-        std::unique_ptr<rhi::CommandQueue> _queueGraphics;
-        std::unique_ptr<rhi::CommandQueue> _queueCompute;
-        std::unique_ptr<rhi::CommandQueue> _queueCopy;
+        std::unique_ptr<CommandQueue> _queueGraphics;
+        std::unique_ptr<CommandQueue> _queueCompute;
+        std::unique_ptr<CommandQueue> _queueCopy;
 
-        rhi::SwapChain* _swapChain;
+        SwapChain* _swapChain;
 
         std::unique_ptr<tracking::IGPUCrashTracker> _crashTracker;
     };

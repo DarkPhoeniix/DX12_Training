@@ -10,7 +10,7 @@ namespace rhi
 
 namespace rhi::d3d12
 {
-    class D3D12CommandList final : public rhi::CommandList
+    class D3D12CommandList final : public CommandList
     {
     public:
         D3D12CommandList(const D3D12CommandList& other) = delete;
@@ -20,12 +20,12 @@ namespace rhi::d3d12
         D3D12CommandList& operator=(const D3D12CommandList& other) = delete;
         D3D12CommandList& operator=(D3D12CommandList&& other) noexcept;
 
-        rhi::CommandListType GetCommandListType() const override;
+        CommandListType GetCommandListType() const override;
 
         void SetPredication(std::shared_ptr<Buffer> buffer, std::uint64_t offset, PredicationOperation operation) override;
 
         void BeginQuery(QueryHeap* queryHeap, QueryType type, std::uint32_t index) override;
-        void ResolveQueryData(QueryHeap* queryHeap, 
+        void ResolveQueryData(QueryHeap* queryHeap,
                               QueryType type,
                               std::uint32_t index,
                               std::shared_ptr<Buffer> destination,
@@ -59,19 +59,19 @@ namespace rhi::d3d12
                                  std::shared_ptr<Texture> destinationTexture,
                                  const std::vector<SubresourceData>& subresources) override;
 
-        void SetGraphicsPipelineState(rhi::PipelineState* pipelineState) override;
-        void SetComputePipelineState(rhi::PipelineState* pipelineState) override;
-        void SetPrimitiveTopology(rhi::PrimitiveTopology primitiveTopology) override;
-        void SetVertexBuffer(std::uint32_t slot, const rhi::VertexBufferView& vertexBufferView) override;
-        void SetIndexBuffer(const rhi::IndexBufferView& indexBufferView) override;
+        void SetGraphicsPipelineState(PipelineState* pipelineState) override;
+        void SetComputePipelineState(PipelineState* pipelineState) override;
+        void SetPrimitiveTopology(PrimitiveTopology primitiveTopology) override;
+        void SetVertexBuffer(std::uint32_t slot, const VertexBufferView& vertexBufferView) override;
+        void SetIndexBuffer(const IndexBufferView& indexBufferView) override;
 
-        void SetRenderTarget(rhi::CPUDescriptor* renderTargetDescriptor, rhi::CPUDescriptor* depthStencilDescriptor) override;
-        void SetRenderTargets(const std::vector<rhi::CPUDescriptor>& renderTargetDescriptors, rhi::CPUDescriptor* depthStencilDescriptor) override;
+        void SetRenderTarget(CPUDescriptor* renderTargetDescriptor, CPUDescriptor* depthStencilDescriptor) override;
+        void SetRenderTargets(const std::vector<CPUDescriptor>& renderTargetDescriptors, CPUDescriptor* depthStencilDescriptor) override;
         void SetViewport(const Viewport& viewport, const ScissorRect& scissorRectangle) override;
 
-        void ClearRTV(rhi::CPUDescriptor renderTargetView, const float color[4], ScissorRect* rectangle = nullptr) override;
-        void ClearDSV(rhi::CPUDescriptor depthStencilView,
-                      rhi::ClearFlags clearFlags = ClearFlags::Depth,
+        void ClearRTV(CPUDescriptor renderTargetView, const float color[4], ScissorRect* rectangle = nullptr) override;
+        void ClearDSV(CPUDescriptor depthStencilView,
+                      ClearFlags clearFlags = ClearFlags::Depth,
                       float depth = 1.0f,
                       std::uint8_t stencil = 0,
                       ScissorRect* rectangle = nullptr) override;
@@ -88,15 +88,15 @@ namespace rhi::d3d12
         void Dispatch(std::uint32_t xThreadGroupsCount = 1,
                       std::uint32_t yThreadGroupsCount = 1,
                       std::uint32_t zThreadGroupsCount = 1) override;
-        void ExecuteIndirect(rhi::CommandSignature* commandSignature,
+        void ExecuteIndirect(CommandSignature* commandSignature,
                              std::uint32_t maxCommandCount,
                              std::shared_ptr<Buffer> argumentBuffer,
                              std::shared_ptr<Buffer> countBuffer,
                              std::uint32_t argumentBufferOffset = 0,
                              std::uint32_t countBufferOffset = 0) override;
 
-        void SetDescriptorHeaps(rhi::DescriptorHeap* descriptorHeap) override;
-        void SetDescriptorHeaps(const std::vector<rhi::DescriptorHeap*>& descriptorHeaps) override;
+        void SetDescriptorHeaps(DescriptorHeap* descriptorHeap) override;
+        void SetDescriptorHeaps(const std::vector<DescriptorHeap*>& descriptorHeaps) override;
         void SetGraphicsConstant(std::uint32_t index, std::uint32_t data, std::uint32_t offset = 0) override;
         void SetComputeConstant(std::uint32_t index, std::uint32_t data, std::uint32_t offset = 0) override;
         void SetGraphicsConstants(std::uint32_t index, std::uint32_t numValues, const void* data, std::uint32_t offset = 0) override;
@@ -107,10 +107,10 @@ namespace rhi::d3d12
         void SetComputeSRV(std::uint32_t index, std::uint64_t bufferLocation) override;
         void SetGraphicsUAV(std::uint32_t index, std::uint64_t bufferLocation) override;
         void SetComputeUAV(std::uint32_t index, std::uint64_t bufferLocation) override;
-        void SetGraphicsDescriptorTable(std::uint32_t index, rhi::GPUDescriptor descriptor) override;
-        void SetComputeDescriptorTable(std::uint32_t index, rhi::GPUDescriptor descriptor) override;
+        void SetGraphicsDescriptorTable(std::uint32_t index, GPUDescriptor descriptor) override;
+        void SetComputeDescriptorTable(std::uint32_t index, GPUDescriptor descriptor) override;
 
-        void Reset(rhi::PipelineState* pipelineState) override;
+        void Reset(PipelineState* pipelineState) override;
 
         void Close() override;
 
@@ -126,14 +126,14 @@ namespace rhi::d3d12
     private:
         friend class D3D12Device;
 
-        D3D12CommandList(rhi::Device* device, rhi::CommandListType type, [[maybe_unused]] const std::string& name = "");
+        D3D12CommandList(Device* device, CommandListType type, [[maybe_unused]] const std::string& name = "");
 
         ComPtr<ID3D12GraphicsCommandList7> _commandList;
         ComPtr<ID3D12CommandAllocator> _commandAllocator;
 
         CommandListType _type;
 
-        rhi::Device* _device;
+        Device* _device;
 
 #if ENABLE_DEBUG_NAMES
         std::string _name;

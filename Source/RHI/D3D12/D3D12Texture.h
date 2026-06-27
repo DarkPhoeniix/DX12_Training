@@ -5,7 +5,7 @@
 
 namespace rhi::d3d12
 {
-    class D3D12Texture final : public rhi::Texture
+    class D3D12Texture final : public Texture
     {
     public:
         D3D12Texture(const D3D12Texture& other) = delete;
@@ -40,8 +40,8 @@ namespace rhi::d3d12
     private:
         friend class D3D12Device;
 
-        D3D12Texture(rhi::Device* device, D3D12MA::Allocator* allocator, const TextureDescription& description, ResourceState initialState = ResourceState::Common, const std::string& name = "");
-        D3D12Texture(rhi::Device* device, ID3D12Resource* nativeTexturePtr, const std::string& name = "");
+        D3D12Texture(Device* device, D3D12MA::Allocator* allocator, const TextureDescription& description, ResourceState initialState = ResourceState::Common, const std::string& name = "");
+        D3D12Texture(Device* device, ID3D12Resource* nativeTexturePtr, const std::string& name = "");
 
         TextureDescription _description;
 

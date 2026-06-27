@@ -20,8 +20,6 @@ namespace rhi
         }
 
     private:
-        static std::atomic<ResourceID> _currentID;
+        inline static std::atomic<ResourceID> _currentID = 0;
     };
-
-    std::atomic<ResourceID> ResourceIdGenerator::_currentID = 0;
-} // namespace rhi::helpers
+} // namespace rhi

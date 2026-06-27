@@ -46,7 +46,7 @@ namespace rhi::d3d12
         }
     } // namespace unnamed
 
-    D3D12Resource::D3D12Resource(rhi::Device* device, D3D12MA::Allocator* allocator, const BufferDescription& description, ResourceState initialState, const std::string& name)
+    D3D12Resource::D3D12Resource(Device* device, D3D12MA::Allocator* allocator, const BufferDescription& description, ResourceState initialState, const std::string& name)
         : _device(device)
         , _ID(rhi::ResourceIdGenerator::GenerateID())
         , _initialState(initialState)
@@ -64,7 +64,7 @@ namespace rhi::d3d12
         CreateCommitedResource(allocator, resourceDesc, heapDesc, pClearValue);
     }
 
-    D3D12Resource::D3D12Resource(rhi::Device* device, D3D12MA::Allocator* allocator, const TextureDescription& description, ResourceState initialState, const std::string& name)
+    D3D12Resource::D3D12Resource(Device* device, D3D12MA::Allocator* allocator, const TextureDescription& description, ResourceState initialState, const std::string& name)
         : _device(device)
         , _ID(rhi::ResourceIdGenerator::GenerateID())
         , _initialState(initialState)
@@ -102,13 +102,13 @@ namespace rhi::d3d12
         CreateCommitedResource(allocator, resourceDesc, heapDesc, pClearValue);
     }
 
-    D3D12Resource::D3D12Resource(rhi::Device* device, ID3D12Resource* resource, const std::string& name)
+    D3D12Resource::D3D12Resource(Device* device, ID3D12Resource* resource, const std::string& name)
         : _device(device)
         , _resource(resource)
         , _description(resource->GetDesc())
         , _ID(rhi::ResourceIdGenerator::GenerateID())
-        , _initialState(rhi::ResourceState::Common)
-        , _currentState(rhi::ResourceState::Common)
+        , _initialState(ResourceState::Common)
+        , _currentState(ResourceState::Common)
         , _stride(0)
         , _uavCounterOffset(static_cast<std::uint32_t>(-1))
 #if ENABLE_DEBUG_NAMES

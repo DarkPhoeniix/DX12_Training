@@ -9,7 +9,7 @@
 
 namespace rhi::d3d12
 {
-    D3D12TimestampQuery::D3D12TimestampQuery(rhi::Device* device, std::uint32_t timestampsCount, const std::string& name)
+    D3D12TimestampQuery::D3D12TimestampQuery(Device* device, std::uint32_t timestampsCount, const std::string& name)
         : _frequency(device->GetGraphicsQueue()->GetTimestampFrequency())
 #if ENABLE_DEBUG_NAMES
         , _name(name)
@@ -17,7 +17,7 @@ namespace rhi::d3d12
     {
         QueryHeapDescription description =
         {
-            .Type = rhi::QueryHeapType::Timestamp,
+            .Type = QueryHeapType::Timestamp,
             .Count = timestampsCount,
             .NodeMask = 0
         };
@@ -25,7 +25,7 @@ namespace rhi::d3d12
     }
 
     D3D12TimestampQuery::D3D12TimestampQuery(D3D12TimestampQuery&& other) noexcept
-        : rhi::TimestampQuery(std::move(other))
+        : TimestampQuery(std::move(other))
         , _frequency(other._frequency)
 #if ENABLE_DEBUG_NAMES
         , _name(std::move(other._name))
@@ -37,7 +37,7 @@ namespace rhi::d3d12
     {
         if (this != &other)
         {
-            rhi::TimestampQuery::operator=(std::move(other));
+            TimestampQuery::operator=(std::move(other));
             _frequency = other._frequency;
 #if ENABLE_DEBUG_NAMES
             _name = std::move(other._name);
@@ -47,19 +47,19 @@ namespace rhi::d3d12
         return *this;
     }
 
-    void D3D12TimestampQuery::Begin(rhi::CommandList* commandList, std::uint32_t index)
+    void D3D12TimestampQuery::Begin(CommandList* commandList, std::uint32_t index)
     {
-        commandList->EndQuery(_queryHeap.get(), rhi::QueryType::Timestamp, index);
+        commandList->EndQuery(_queryHeap.get(), QueryType::Timestamp, index);
     }
 
-    void D3D12TimestampQuery::End(rhi::CommandList* commandList, std::uint32_t index)
+    void D3D12TimestampQuery::End(CommandList* commandList, std::uint32_t index)
     {
-        commandList->EndQuery(_queryHeap.get(), rhi::QueryType::Timestamp, index);
+        commandList->EndQuery(_queryHeap.get(), QueryType::Timestamp, index);
     }
 
-    void D3D12TimestampQuery::Resolve(rhi::CommandList* commandList, std::uint32_t numTimestamps, std::shared_ptr<rhi::Buffer> destinationBuffer, std::uint64_t destinationOffset)
+    void D3D12TimestampQuery::Resolve(CommandList* commandList, std::uint32_t numTimestamps, std::shared_ptr<Buffer> destinationBuffer, std::uint64_t destinationOffset)
     {
-        commandList->ResolveQueryData(_queryHeap.get(), rhi::QueryType::Timestamp, 0, numTimestamps, destinationBuffer, destinationOffset);
+        commandList->ResolveQueryData(_queryHeap.get(), QueryType::Timestamp, 0, numTimestamps, destinationBuffer, destinationOffset);
     }
 
     std::uint64_t D3D12TimestampQuery::GetFrequency() const

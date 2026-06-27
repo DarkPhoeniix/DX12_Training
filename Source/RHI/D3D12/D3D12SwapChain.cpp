@@ -13,10 +13,10 @@
 
 namespace rhi::d3d12
 {
-    D3D12SwapChain::D3D12SwapChain(rhi::Device* device, HWND windowHandle, std::uint32_t width, std::uint32_t height, bool vSync)
+    D3D12SwapChain::D3D12SwapChain(Device* device, HWND windowHandle, std::uint32_t width, std::uint32_t height, bool vSync)
         : _dxgiSwapChain{}
         , _device(device)
-        , _RTVDescriptorSize(device->GetDescriptorHandleIncrementSize(rhi::DescriptorHeapType::RTV))
+        , _RTVDescriptorSize(device->GetDescriptorHandleIncrementSize(DescriptorHeapType::RTV))
         , _currentBackBufferIndex(0)
         , _windowHandle{}
         , _width(0)
@@ -26,7 +26,7 @@ namespace rhi::d3d12
     {
         DescriptorHeapDescription desc =
         {
-            .Type = rhi::DescriptorHeapType::RTV,
+            .Type = DescriptorHeapType::RTV,
             .NumDescriptors = BACK_BUFFER_COUNT,
             .ShaderVisible = false,
             .Flags = 0
@@ -80,12 +80,12 @@ namespace rhi::d3d12
         return *this;
     }
 
-    std::shared_ptr<rhi::Texture> D3D12SwapChain::GetBuffer(std::uint32_t index)
+    std::shared_ptr<Texture> D3D12SwapChain::GetBuffer(std::uint32_t index)
     {
         return _backBuffers[index];
     }
 
-    std::shared_ptr<rhi::Texture> D3D12SwapChain::GetBackBuffer()
+    std::shared_ptr<Texture> D3D12SwapChain::GetBackBuffer()
     {
         return _backBuffers[_currentBackBufferIndex];
     }
@@ -135,7 +135,7 @@ namespace rhi::d3d12
         }
     }
 
-    rhi::ScissorRect D3D12SwapChain::GetDesktopCoordinates()
+    ScissorRect D3D12SwapChain::GetDesktopCoordinates()
     {
         ComPtr<IDXGIOutput> containingOutput;
         _dxgiSwapChain->GetContainingOutput(&containingOutput);
@@ -144,7 +144,7 @@ namespace rhi::d3d12
         HRESULT result = containingOutput->GetDesc(&outputDescription);
         CHECK(result, "Failed to get swap chain description.");
 
-        rhi::ScissorRect rect =
+        ScissorRect rect =
         {
             .Left = outputDescription.DesktopCoordinates.left,
             .Top = outputDescription.DesktopCoordinates.top,
@@ -234,7 +234,7 @@ namespace rhi::d3d12
 
     void D3D12SwapChain::UpdateRenderTargetViews()
     {
-        rhi::CPUDescriptor heapStart = _RTVDescriptorHeap->GetHeapStartCPUHandle();
+        CPUDescriptor heapStart = _RTVDescriptorHeap->GetHeapStartCPUHandle();
 
         for (int i = 0; i < BACK_BUFFER_COUNT; ++i)
         {

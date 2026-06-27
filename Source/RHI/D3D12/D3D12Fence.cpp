@@ -8,7 +8,7 @@
 
 namespace rhi::d3d12
 {
-    D3D12Fence::D3D12Fence(rhi::Device* device, std::uint64_t initialValue)
+    D3D12Fence::D3D12Fence(Device* device, std::uint64_t initialValue)
         : _eventOnCompletion(nullptr)
         , _fenceValue(initialValue)
         , _cpuCallback()

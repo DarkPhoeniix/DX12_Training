@@ -9,10 +9,10 @@ namespace Json
 
 namespace rhi::d3d12
 {
-    class D3D12PipelineState final : public rhi::PipelineState
+    class D3D12PipelineState final : public PipelineState
     {
     public:
-        D3D12PipelineState(rhi::Device* device, const std::string& filepath);
+        D3D12PipelineState(Device* device, const std::string& filepath);
         D3D12PipelineState(const D3D12PipelineState& other) = delete;
         D3D12PipelineState(D3D12PipelineState&& other) noexcept;
         ~D3D12PipelineState() override;
@@ -23,7 +23,7 @@ namespace rhi::d3d12
         ComPtr<ID3D12RootSignature> GetRootSignature() const;
         ComPtr<ID3D12PipelineState> GetPipelineState() const;
 
-        rhi::PipelineStateType GetType() const override;
+        PipelineStateType GetType() const override;
 
         void* GetNative() const override;
         void* GetNativeRootSignature() const override;
@@ -31,22 +31,22 @@ namespace rhi::d3d12
     private:
         friend class D3D12Device;
 
-        D3D12PipelineState(rhi::Device* device);
+        D3D12PipelineState(Device* device);
 
         void Parse(const std::string& filepath);
         void ParseGraphicsPipeline(const Json::Value& fileRoot);
         void ParseComputePipeline(const Json::Value& fileRoot);
 
-        rhi::BlendState ParseBlendDescription(const std::string& filepath);
-        rhi::RasterizerState ParseRasterizerDescription(const std::string& filepath);
-        rhi::DepthStencilState ParseDepthStencilDescription(const std::string& filepath);
+        BlendState ParseBlendDescription(const std::string& filepath);
+        RasterizerState ParseRasterizerDescription(const std::string& filepath);
+        DepthStencilState ParseDepthStencilDescription(const std::string& filepath);
 
         ComPtr<ID3D12RootSignature> _rootSignature;
         ComPtr<ID3D12PipelineState> _pipelineState;
 
-        rhi::PipelineStateType _type;
+        PipelineStateType _type;
 
-        rhi::Device* _device;
+        Device* _device;
 
 #if ENABLE_DEBUG_NAMES
         std::string _name;

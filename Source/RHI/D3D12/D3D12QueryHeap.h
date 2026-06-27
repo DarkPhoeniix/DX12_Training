@@ -9,7 +9,7 @@ namespace rhi
 
 namespace rhi::d3d12
 {
-    class D3D12QueryHeap final : public rhi::QueryHeap
+    class D3D12QueryHeap final : public QueryHeap
     {
     public:
         D3D12QueryHeap(const D3D12QueryHeap& other) = delete;
@@ -26,9 +26,9 @@ namespace rhi::d3d12
     private:
         friend class D3D12Device;
 
-        D3D12QueryHeap(rhi::Device* device, const QueryHeapDescription& description, const std::string& name = "");
+        D3D12QueryHeap(Device* device, const QueryHeapDescription& description, const std::string& name = "");
 
-        rhi::QueryHeapType _type;
+        QueryHeapType _type;
         ComPtr<ID3D12QueryHeap> _queryHeap;
 #if ENABLE_DEBUG_NAMES
         std::string _name;

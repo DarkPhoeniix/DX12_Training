@@ -111,7 +111,7 @@ namespace rhi
         virtual void BindSwapChain(SwapChain* swapChain) = 0;
 
         // Retrieves the command queue for the specified command list type
-        CommandQueue* GetQueue(rhi::CommandListType type);
+        CommandQueue* GetQueue(CommandListType type);
         // Convenience methods for retrieving specific command queues
         // Get the graphics command queue, used for rendering operations
         virtual CommandQueue* GetGraphicsQueue() = 0;

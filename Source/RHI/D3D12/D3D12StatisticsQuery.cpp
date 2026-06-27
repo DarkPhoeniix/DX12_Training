@@ -10,28 +10,28 @@
 
 namespace rhi::d3d12
 {
-    D3D12StatisticsQuery::D3D12StatisticsQuery(rhi::Device* device, const std::string& name)
+    D3D12StatisticsQuery::D3D12StatisticsQuery(Device* device, const std::string& name)
         : _statisticsResource(nullptr)
         , _statistics()
 #if ENABLE_DEBUG_NAMES
         , _name(name)
 #endif // ENABLE_DEBUG_NAMES
     {
-        rhi::QueryHeapDescription heapDescription =
+        QueryHeapDescription heapDescription =
         {
-            .Type = rhi::QueryHeapType::PipelineStatistics,
+            .Type = QueryHeapType::PipelineStatistics,
             .Count = 1,
             .NodeMask = 0
         };
         _queryHeap = device->CreateQueryHeap(heapDescription);
 
-        rhi::BufferDescription bufferDescription =
+        BufferDescription bufferDescription =
         {
-            .Size = sizeof(rhi::PipelineStatistics),
+            .Size = sizeof(PipelineStatistics),
             .Stride = 0,
-            .Format = rhi::Format::UNKNOWN,
-            .Usage = rhi::ResourceUsage::Readback,
-            .Flags = rhi::ResourceFlags::None
+            .Format = Format::UNKNOWN,
+            .Usage = ResourceUsage::Readback,
+            .Flags = ResourceFlags::None
         };
         _statisticsResource = device->CreateBuffer(bufferDescription);
     }
@@ -65,24 +65,24 @@ namespace rhi::d3d12
         return *this;
     }
 
-    void D3D12StatisticsQuery::BeginQuery(rhi::CommandList* commandList)
+    void D3D12StatisticsQuery::BeginQuery(CommandList* commandList)
     {
-        commandList->BeginQuery(_queryHeap.get(), rhi::QueryType::PipelineStatistics, 0);
+        commandList->BeginQuery(_queryHeap.get(), QueryType::PipelineStatistics, 0);
     }
 
-    void D3D12StatisticsQuery::EndQuery(rhi::CommandList* commandList)
+    void D3D12StatisticsQuery::EndQuery(CommandList* commandList)
     {
-        commandList->EndQuery(_queryHeap.get(), rhi::QueryType::PipelineStatistics, 0);
+        commandList->EndQuery(_queryHeap.get(), QueryType::PipelineStatistics, 0);
     }
 
-    void D3D12StatisticsQuery::ResolveQueryData(rhi::CommandList* commandList)
+    void D3D12StatisticsQuery::ResolveQueryData(CommandList* commandList)
     {
-        commandList->ResolveQueryData(_queryHeap.get(), rhi::QueryType::PipelineStatistics, 0, _statisticsResource, 0);
+        commandList->ResolveQueryData(_queryHeap.get(), QueryType::PipelineStatistics, 0, _statisticsResource, 0);
     }
 
-    const rhi::PipelineStatistics& D3D12StatisticsQuery::GetStatistics()
+    const PipelineStatistics& D3D12StatisticsQuery::GetStatistics()
     {
-        _statistics = *_statisticsResource->Map<rhi::PipelineStatistics>();
+        _statistics = *_statisticsResource->Map<PipelineStatistics>();
         return _statistics;
     }
 } // namespace rhi::d3d12

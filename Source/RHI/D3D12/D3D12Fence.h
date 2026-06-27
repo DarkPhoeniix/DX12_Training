@@ -4,7 +4,7 @@
 
 namespace rhi::d3d12
 {
-    class D3D12Fence final : public rhi::Fence
+    class D3D12Fence final : public Fence
     {
     public:
         D3D12Fence(const D3D12Fence& other) = delete;
@@ -29,7 +29,7 @@ namespace rhi::d3d12
     private:
         friend class D3D12Device;
 
-        D3D12Fence(rhi::Device* device, std::uint64_t initialValue);
+        D3D12Fence(Device* device, std::uint64_t initialValue);
 
         ComPtr<ID3D12Fence> _fence;
         HANDLE _eventOnCompletion;

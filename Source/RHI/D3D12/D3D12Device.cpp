@@ -18,7 +18,6 @@
 #include "D3D12Texture.h"
 #include "D3D12StatisticsQuery.h"
 #include "D3D12TimestampQuery.h"
-#include "D3D12PipelineState.h"
 
 #include "BufferView.h"
 #include "TextureView.h"
@@ -150,22 +149,22 @@ namespace rhi::d3d12
         return _enhancedBarriersSupported;
     }
 
-    void D3D12Device::BindSwapChain(rhi::SwapChain* swapChain)
+    void D3D12Device::BindSwapChain(SwapChain* swapChain)
     {
         _swapChain = swapChain;
     }
 
-    rhi::CommandQueue* D3D12Device::GetGraphicsQueue()
+    CommandQueue* D3D12Device::GetGraphicsQueue()
     {
         return _queueGraphics.get();
     }
 
-    rhi::CommandQueue* D3D12Device::GetComputeQueue()
+    CommandQueue* D3D12Device::GetComputeQueue()
     {
         return _queueCompute.get();
     }
 
-    rhi::CommandQueue* D3D12Device::GetCopyQueue()
+    CommandQueue* D3D12Device::GetCopyQueue()
     {
         return _queueCopy.get();
     }
@@ -175,7 +174,7 @@ namespace rhi::d3d12
         _swapChain->OnResize(width, height);
     }
 
-    std::shared_ptr<rhi::Texture> D3D12Device::GetBackBuffer()
+    std::shared_ptr<Texture> D3D12Device::GetBackBuffer()
     {
         return _swapChain->GetBackBuffer();
     }
@@ -185,27 +184,27 @@ namespace rhi::d3d12
         _swapChain->Present();
     }
 
-    std::shared_ptr<rhi::Buffer> D3D12Device::CreateBuffer(const rhi::BufferDescription& description, ResourceState initialState, const std::string& name)
+    std::shared_ptr<Buffer> D3D12Device::CreateBuffer(const BufferDescription& description, ResourceState initialState, const std::string& name)
     {
         return std::unique_ptr<D3D12Buffer>(new D3D12Buffer(this, _allocator.Get(), description, initialState, name));
     }
 
-    std::shared_ptr<rhi::Buffer> D3D12Device::CreateBuffer(void* nativePtr, const std::string& name)
+    std::shared_ptr<Buffer> D3D12Device::CreateBuffer(void* nativePtr, const std::string& name)
     {
         return std::unique_ptr<D3D12Buffer>(new D3D12Buffer(this, D3D12Cast<ID3D12Resource>(nativePtr), name));
     }
 
-    std::shared_ptr<rhi::Texture> D3D12Device::CreateTexture(const rhi::TextureDescription& description, ResourceState initialState, const std::string& name)
+    std::shared_ptr<Texture> D3D12Device::CreateTexture(const TextureDescription& description, ResourceState initialState, const std::string& name)
     {
         return std::unique_ptr<D3D12Texture>(new D3D12Texture(this, _allocator.Get(), description, initialState, name));
     }
 
-    std::shared_ptr<rhi::Texture> D3D12Device::CreateTexture(void* nativePtr, const std::string& name)
+    std::shared_ptr<Texture> D3D12Device::CreateTexture(void* nativePtr, const std::string& name)
     {
         return std::unique_ptr<D3D12Texture>(new D3D12Texture(this, D3D12Cast<ID3D12Resource>(nativePtr), name));
     }
 
-    std::unique_ptr<rhi::CommandList> D3D12Device::CreateCommandList(rhi::CommandListType type, const std::string& name)
+    std::unique_ptr<CommandList> D3D12Device::CreateCommandList(CommandListType type, const std::string& name)
     {
         return std::unique_ptr<D3D12CommandList>(new D3D12CommandList(this, type, name));
     }
@@ -215,47 +214,47 @@ namespace rhi::d3d12
         return std::unique_ptr<D3D12CommandListPool>(new D3D12CommandListPool(this));
     }
 
-    std::unique_ptr<rhi::DescriptorHeap> D3D12Device::CreateDescriptorHeap(const rhi::DescriptorHeapDescription& description, const std::string& name)
+    std::unique_ptr<DescriptorHeap> D3D12Device::CreateDescriptorHeap(const DescriptorHeapDescription& description, const std::string& name)
     {
         return std::unique_ptr<D3D12DescriptorHeap>(new D3D12DescriptorHeap(this, description, name));
     }
 
-    std::unique_ptr<rhi::QueryHeap> D3D12Device::CreateQueryHeap(const rhi::QueryHeapDescription& description, const std::string& name)
+    std::unique_ptr<QueryHeap> D3D12Device::CreateQueryHeap(const QueryHeapDescription& description, const std::string& name)
     {
         return std::unique_ptr<D3D12QueryHeap>(new D3D12QueryHeap(this, description, name));
     }
 
-    std::unique_ptr<rhi::Fence> D3D12Device::CreateFence(std::uint64_t initialValue)
+    std::unique_ptr<Fence> D3D12Device::CreateFence(std::uint64_t initialValue)
     {
         return std::unique_ptr<D3D12Fence>(new D3D12Fence(this, initialValue));
     }
 
-    std::unique_ptr<rhi::StatisticsQuery> D3D12Device::CreateStatisticsQuery(const std::string& name)
+    std::unique_ptr<StatisticsQuery> D3D12Device::CreateStatisticsQuery(const std::string& name)
     {
         return std::unique_ptr<D3D12StatisticsQuery>(new D3D12StatisticsQuery(this, name));
     }
 
-    std::unique_ptr<rhi::TimestampQuery> D3D12Device::CreateTimestampQuery(std::uint32_t timestampsCount, const std::string& name)
+    std::unique_ptr<TimestampQuery> D3D12Device::CreateTimestampQuery(std::uint32_t timestampsCount, const std::string& name)
     {
         return std::unique_ptr<D3D12TimestampQuery>(new D3D12TimestampQuery(this, timestampsCount, name));
     }
 
-    std::unique_ptr<rhi::CommandSignature> D3D12Device::CreateCommandSignature(const std::vector<rhi::IndirectArgumentDescription>& arguments, rhi::PipelineState* pipelineState, const std::string& name)
+    std::unique_ptr<CommandSignature> D3D12Device::CreateCommandSignature(const std::vector<IndirectArgumentDescription>& arguments, PipelineState* pipelineState, const std::string& name)
     {
         return std::unique_ptr<D3D12CommandSignature>(new D3D12CommandSignature(this, arguments, pipelineState, name));
     }
 
-    std::unique_ptr<rhi::SwapChain> D3D12Device::CreateSwapChain(void* windowHandle, std::uint32_t width, std::uint32_t height, bool vSync)
+    std::unique_ptr<SwapChain> D3D12Device::CreateSwapChain(void* windowHandle, std::uint32_t width, std::uint32_t height, bool vSync)
     {
         return std::unique_ptr<D3D12SwapChain>(new D3D12SwapChain(this, (HWND)windowHandle, width, height, vSync));
     }
 
-    std::unique_ptr<rhi::PipelineState> D3D12Device::CreatePipelineState(const std::string& filepath)
+    std::unique_ptr<PipelineState> D3D12Device::CreatePipelineState(const std::string& filepath)
     {
         return std::unique_ptr<D3D12PipelineState>(new D3D12PipelineState(this, filepath));
     }
 
-    void D3D12Device::CreateBufferView(const rhi::BufferView& view, CPUDescriptor& descriptor)
+    void D3D12Device::CreateBufferView(const BufferView& view, CPUDescriptor& descriptor)
     {
         switch (view.GetType())
         {
@@ -314,7 +313,7 @@ namespace rhi::d3d12
         CreateBufferUAV(view, descriptor);
     }
 
-    void D3D12Device::CreateTextureView(const rhi::TextureView& view, CPUDescriptor& descriptor)
+    void D3D12Device::CreateTextureView(const TextureView& view, CPUDescriptor& descriptor)
     {
         switch (view.GetType())
         {
@@ -392,15 +391,15 @@ namespace rhi::d3d12
         CreateTextureUAV(view, descriptor);
     }
 
-    std::uint32_t D3D12Device::GetDescriptorHandleIncrementSize(rhi::DescriptorHeapType type) const
+    std::uint32_t D3D12Device::GetDescriptorHandleIncrementSize(DescriptorHeapType type) const
     {
         switch (type)
         {
-        case rhi::DescriptorHeapType::RTV:
+        case DescriptorHeapType::RTV:
             return _device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-        case rhi::DescriptorHeapType::DSV:
+        case DescriptorHeapType::DSV:
             return _device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-        case rhi::DescriptorHeapType::CBV_SRV_UAV:
+        case DescriptorHeapType::CBV_SRV_UAV:
             return _device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
         default:
             UNREACHABLE("Unsupported descriptor heap type.");
@@ -408,12 +407,12 @@ namespace rhi::d3d12
         }
     }
 
-    rhi::AllocationInfo D3D12Device::GetAllocationInfo(const BufferDescription& description) const
+    AllocationInfo D3D12Device::GetAllocationInfo(const BufferDescription& description) const
     {
         D3D12_RESOURCE_DESC desc = GetD3D12ResourceDesc(description);
         D3D12_RESOURCE_ALLOCATION_INFO allocation = _device->GetResourceAllocationInfo(0, 1, &desc);
 
-        rhi::AllocationInfo allocationInfo =
+        AllocationInfo allocationInfo =
         {
             .SizeInBytes = allocation.SizeInBytes,
             .Alignment = allocation.Alignment
@@ -421,12 +420,12 @@ namespace rhi::d3d12
         return allocationInfo;
     }
 
-    rhi::AllocationInfo D3D12Device::GetAllocationInfo(const rhi::TextureDescription& description) const
+    AllocationInfo D3D12Device::GetAllocationInfo(const TextureDescription& description) const
     {
         D3D12_RESOURCE_DESC desc = GetD3D12ResourceDesc(description);
         D3D12_RESOURCE_ALLOCATION_INFO allocation = _device->GetResourceAllocationInfo(0, 1, &desc);
 
-        rhi::AllocationInfo allocationInfo =
+        AllocationInfo allocationInfo =
         {
             .SizeInBytes = allocation.SizeInBytes,
             .Alignment = allocation.Alignment
@@ -450,12 +449,12 @@ namespace rhi::d3d12
         return _adapterInfo;
     }
 
-    rhi::AllocatorStats D3D12Device::QueryAllocatorStats() const
+    AllocatorStats D3D12Device::QueryAllocatorStats() const
     {
         D3D12MA::Budget localBudget = {};
         _allocator->GetBudget(&localBudget, nullptr);
 
-        return rhi::AllocatorStats
+        return AllocatorStats
         {
             .AllocationBytes = localBudget.Stats.AllocationBytes,
             .BlockBytes = localBudget.Stats.BlockBytes,
@@ -597,9 +596,9 @@ namespace rhi::d3d12
 
     void D3D12Device::CreateQueues()
     {
-        _queueGraphics = std::unique_ptr<D3D12CommandQueue>(new D3D12CommandQueue(this, rhi::CommandListType::Graphics, "D3D12 Direct Queue"));
-        _queueCompute = std::unique_ptr<D3D12CommandQueue>(new D3D12CommandQueue(this, rhi::CommandListType::Compute, "D3D12 Compute Queue"));
-        _queueCopy = std::unique_ptr<D3D12CommandQueue>(new D3D12CommandQueue(this, rhi::CommandListType::Copy, "D3D12 Copy Queue"));
+        _queueGraphics = std::unique_ptr<D3D12CommandQueue>(new D3D12CommandQueue(this, CommandListType::Graphics, "D3D12 Direct Queue"));
+        _queueCompute = std::unique_ptr<D3D12CommandQueue>(new D3D12CommandQueue(this, CommandListType::Compute, "D3D12 Compute Queue"));
+        _queueCopy = std::unique_ptr<D3D12CommandQueue>(new D3D12CommandQueue(this, CommandListType::Copy, "D3D12 Copy Queue"));
 
         LOG_INFO("DX12 Command Queues created.");
     }

@@ -11,27 +11,27 @@ namespace rhi::d3d12
 {
     namespace
     {
-        std::uint32_t GetArgumentSize(const rhi::IndirectArgumentDescription& argument)
+        std::uint32_t GetArgumentSize(const IndirectArgumentDescription& argument)
         {
             switch (argument.Type)
             {
-            case rhi::IndirectArgumentType::Draw:
+            case IndirectArgumentType::Draw:
                 return 16; // VertexCountPerInstance(4) + InstanceCount(4) + StartVertexLocation(4) + StartInstanceLocation(4)
-            case rhi::IndirectArgumentType::DrawIndexed:
+            case IndirectArgumentType::DrawIndexed:
                 return 20; // IndexCountPerInstance(4) + InstanceCount(4) + StartIndexLocation(4) + BaseVertexLocation(4) + StartInstanceLocation(4)
-            case rhi::IndirectArgumentType::Dispatch:
+            case IndirectArgumentType::Dispatch:
                 return 12; // XThreadGroups(4) + YThreadGroups(4) + ZThreadGroups(4)
-            case rhi::IndirectArgumentType::VertexBufferView:
+            case IndirectArgumentType::VertexBufferView:
                 return 16; // VirtualSddress(8) + Stride(4) + Size(4)
-            case rhi::IndirectArgumentType::IndexBufferView:
+            case IndirectArgumentType::IndexBufferView:
                 return 16; // VirtualSddress(8) + Size(4) + Format(4)
-            case rhi::IndirectArgumentType::Constant:
+            case IndirectArgumentType::Constant:
                 return 4 * argument.Constant.Num32BitValuesToSet; // Data(4) * numValues
-            case rhi::IndirectArgumentType::ConstantBufferView:
+            case IndirectArgumentType::ConstantBufferView:
                 return 8; // VirtualSddress(8)
-            case rhi::IndirectArgumentType::ShaderResourceView:
+            case IndirectArgumentType::ShaderResourceView:
                 return 8; // VirtualSddress(8)
-            case rhi::IndirectArgumentType::UnorderedResourceView:
+            case IndirectArgumentType::UnorderedResourceView:
                 return 8; // VirtualSddress(8)
             default:
                 UNREACHABLE("Unsupported indirect argument type.");
@@ -39,7 +39,7 @@ namespace rhi::d3d12
             }
         }
 
-        std::uint32_t CalculateCommandSignatureSize(const std::vector<rhi::IndirectArgumentDescription>& arguments)
+        std::uint32_t CalculateCommandSignatureSize(const std::vector<IndirectArgumentDescription>& arguments)
         {
             std::uint32_t size = 0;
 
@@ -53,7 +53,7 @@ namespace rhi::d3d12
         }
     } // namespace unnamed
 
-    D3D12CommandSignature::D3D12CommandSignature(rhi::Device* device, const std::vector<rhi::IndirectArgumentDescription>& arguments, rhi::PipelineState* pipelineState, const std::string& name)
+    D3D12CommandSignature::D3D12CommandSignature(Device* device, const std::vector<IndirectArgumentDescription>& arguments, PipelineState* pipelineState, const std::string& name)
 #if ENABLE_DEBUG_DESC
         : _arguments(arguments)
 #endif // ENABLE_DEBUG_DESC

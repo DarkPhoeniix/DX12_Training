@@ -19,7 +19,7 @@
 
 namespace rhi::d3d12
 {
-    D3D12CommandList::D3D12CommandList(rhi::Device* device, rhi::CommandListType type, const std::string& name)
+    D3D12CommandList::D3D12CommandList(Device* device, CommandListType type, const std::string& name)
         : _commandList(nullptr)
         , _device(device)
         , _type(type)
@@ -78,7 +78,7 @@ namespace rhi::d3d12
         return *this;
     }
 
-    rhi::CommandListType D3D12CommandList::GetCommandListType() const
+    CommandListType D3D12CommandList::GetCommandListType() const
     {
         return _type;
     }
@@ -390,7 +390,7 @@ namespace rhi::d3d12
         }
     }
 
-    void D3D12CommandList::SetGraphicsPipelineState(rhi::PipelineState* pipelineState)
+    void D3D12CommandList::SetGraphicsPipelineState(PipelineState* pipelineState)
     {
         FAIL(_type == CommandListType::Graphics, "Command list type is not Graphics.");
 
@@ -401,7 +401,7 @@ namespace rhi::d3d12
         _commandList->SetGraphicsRootSignature(signature);
     }
 
-    void D3D12CommandList::SetComputePipelineState(rhi::PipelineState* pipelineState)
+    void D3D12CommandList::SetComputePipelineState(PipelineState* pipelineState)
     {
         FAIL((_type == CommandListType::Graphics) || (_type == CommandListType::Compute), "Command list type is not Graphics or Compute.");
 
@@ -439,7 +439,7 @@ namespace rhi::d3d12
         _commandList->IASetIndexBuffer(&ibv);
     }
 
-    void D3D12CommandList::SetRenderTarget(rhi::CPUDescriptor* renderTargetDescriptor, rhi::CPUDescriptor* depthStencilDescriptor)
+    void D3D12CommandList::SetRenderTarget(CPUDescriptor* renderTargetDescriptor, CPUDescriptor* depthStencilDescriptor)
     {
         std::uint32_t numTargets = renderTargetDescriptor ? 1 : 0;
 
@@ -461,7 +461,7 @@ namespace rhi::d3d12
         _commandList->OMSetRenderTargets(numTargets, pRTHandle, FALSE, pDSHandle);
     }
 
-    void D3D12CommandList::SetRenderTargets(const std::vector<rhi::CPUDescriptor>& renderTargetDescriptors, rhi::CPUDescriptor* depthStencilDescriptor)
+    void D3D12CommandList::SetRenderTargets(const std::vector<CPUDescriptor>& renderTargetDescriptors, CPUDescriptor* depthStencilDescriptor)
     {
         std::uint32_t numTargets = static_cast<std::uint32_t>(renderTargetDescriptors.size());
 
@@ -504,7 +504,7 @@ namespace rhi::d3d12
         _commandList->RSSetScissorRects(1, &nativeRect);
     }
 
-    void D3D12CommandList::ClearRTV(rhi::CPUDescriptor renderTargetView, const float color[4], ScissorRect* rectangle)
+    void D3D12CommandList::ClearRTV(CPUDescriptor renderTargetView, const float color[4], ScissorRect* rectangle)
     {
         std::uint32_t numRects = rectangle ? 1 : 0;
         D3D12_RECT scissorRect = {};
@@ -523,7 +523,7 @@ namespace rhi::d3d12
         _commandList->ClearRenderTargetView(ToD3D12Handle(renderTargetView), color, numRects, rectangle ? &scissorRect : nullptr);
     }
 
-    void D3D12CommandList::ClearDSV(rhi::CPUDescriptor depthStencilView, rhi::ClearFlags clearFlags, float depth, std::uint8_t stencil, ScissorRect* rectangle)
+    void D3D12CommandList::ClearDSV(CPUDescriptor depthStencilView, ClearFlags clearFlags, float depth, std::uint8_t stencil, ScissorRect* rectangle)
     {
         std::uint32_t numRects = rectangle ? 1 : 0;
         D3D12_RECT scissorRect = {};
@@ -544,26 +544,26 @@ namespace rhi::d3d12
 
     void D3D12CommandList::Draw(std::uint32_t vertexCount, std::uint32_t instanceCount, std::uint32_t startVertex, std::uint32_t startInstance)
     {
-        FAIL(_type == rhi::CommandListType::Graphics, "Command list type is not Graphics.");
+        FAIL(_type == CommandListType::Graphics, "Command list type is not Graphics.");
 
         _commandList->DrawInstanced(vertexCount, instanceCount, startVertex, startInstance);
     }
 
     void D3D12CommandList::DrawIndexed(std::uint32_t indexCount, std::uint32_t instanceCount, std::uint32_t startIndex, std::uint32_t baseVertex, std::uint32_t startInstance)
     {
-        FAIL(_type == rhi::CommandListType::Graphics, "Command list type is not Graphics.");
+        FAIL(_type == CommandListType::Graphics, "Command list type is not Graphics.");
 
         _commandList->DrawIndexedInstanced(indexCount, instanceCount, startIndex, baseVertex, startInstance);
     }
 
     void D3D12CommandList::Dispatch(std::uint32_t xThreadGroupsCount, std::uint32_t yThreadGroupsCount, std::uint32_t zThreadGroupsCount)
     {
-        FAIL(_type == rhi::CommandListType::Graphics || _type == CommandListType::Compute, "Command list type is not Compute.");
+        FAIL(_type == CommandListType::Graphics || _type == CommandListType::Compute, "Command list type is not Compute.");
 
         _commandList->Dispatch(xThreadGroupsCount, yThreadGroupsCount, zThreadGroupsCount);
     }
 
-    void D3D12CommandList::ExecuteIndirect(rhi::CommandSignature* commandSignature, std::uint32_t maxCommandCount, std::shared_ptr<Buffer> argumentBuffer, std::shared_ptr<Buffer> countBuffer, std::uint32_t argumentBufferOffset, std::uint32_t countBufferOffset)
+    void D3D12CommandList::ExecuteIndirect(CommandSignature* commandSignature, std::uint32_t maxCommandCount, std::shared_ptr<Buffer> argumentBuffer, std::shared_ptr<Buffer> countBuffer, std::uint32_t argumentBufferOffset, std::uint32_t countBufferOffset)
     {
         ID3D12CommandSignature* d3d12CommandSignature = D3D12Cast<ID3D12CommandSignature>(commandSignature->GetNative());
         ID3D12Resource* d3d12ArgumentResource = D3D12Cast<ID3D12Resource>(argumentBuffer->GetNative());
@@ -575,13 +575,13 @@ namespace rhi::d3d12
         _commandList->ExecuteIndirect(d3d12CommandSignature, maxCommandCount, d3d12ArgumentResource, argumentBufferOffset, d3d12CounterResource, countBufferOffset);
     }
 
-    void D3D12CommandList::SetDescriptorHeaps(rhi::DescriptorHeap* descriptorHeap)
+    void D3D12CommandList::SetDescriptorHeaps(DescriptorHeap* descriptorHeap)
     {
         ID3D12DescriptorHeap* nativeHeap = D3D12Cast<ID3D12DescriptorHeap>(descriptorHeap->GetNative());
         _commandList->SetDescriptorHeaps(1, &nativeHeap);
     }
 
-    void D3D12CommandList::SetDescriptorHeaps(const std::vector<rhi::DescriptorHeap*>& descriptorHeaps)
+    void D3D12CommandList::SetDescriptorHeaps(const std::vector<DescriptorHeap*>& descriptorHeaps)
     {
         const std::uint32_t heapCount = static_cast<std::uint32_t>(descriptorHeaps.size());
         FAIL(heapCount <= 2, "Too many decriptor heaps.");
@@ -665,21 +665,21 @@ namespace rhi::d3d12
         _commandList->SetComputeRootUnorderedAccessView(index, bufferLocation);
     }
 
-    void D3D12CommandList::SetGraphicsDescriptorTable(std::uint32_t index, rhi::GPUDescriptor descriptor)
+    void D3D12CommandList::SetGraphicsDescriptorTable(std::uint32_t index, GPUDescriptor descriptor)
     {
         FAIL(_type == CommandListType::Graphics, "Command list type is not Graphics.");
 
         _commandList->SetGraphicsRootDescriptorTable(index, ToD3D12Handle(descriptor));
     }
 
-    void D3D12CommandList::SetComputeDescriptorTable(std::uint32_t index, rhi::GPUDescriptor descriptor)
+    void D3D12CommandList::SetComputeDescriptorTable(std::uint32_t index, GPUDescriptor descriptor)
     {
         FAIL((_type == CommandListType::Graphics) || (_type == CommandListType::Compute), "Command list type is not Graphics or Compute.");
 
         _commandList->SetComputeRootDescriptorTable(index, ToD3D12Handle(descriptor));
     }
 
-    void D3D12CommandList::Reset(rhi::PipelineState* pipelineState)
+    void D3D12CommandList::Reset(PipelineState* pipelineState)
     {
         ID3D12PipelineState* d3d12PipelineState = nullptr;
         if (pipelineState)

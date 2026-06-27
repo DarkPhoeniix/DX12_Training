@@ -5,7 +5,7 @@
 
 namespace rhi::d3d12
 {
-    D3D12Texture::D3D12Texture(rhi::Device* device, D3D12MA::Allocator* allocator, const TextureDescription& description, ResourceState initialState, const std::string& name)
+    D3D12Texture::D3D12Texture(Device* device, D3D12MA::Allocator* allocator, const TextureDescription& description, ResourceState initialState, const std::string& name)
         : _description(description)
         , _resource(device, allocator, description, initialState, name)
 #if ENABLE_DEBUG_NAMES
@@ -14,7 +14,7 @@ namespace rhi::d3d12
     {
     }
 
-    D3D12Texture::D3D12Texture(rhi::Device* device, ID3D12Resource* nativeTexturePtr, const std::string& name)
+    D3D12Texture::D3D12Texture(Device* device, ID3D12Resource* nativeTexturePtr, const std::string& name)
         : _resource(device, nativeTexturePtr, name)
 #if ENABLE_DEBUG_NAMES
         , _name(name)
@@ -50,7 +50,7 @@ namespace rhi::d3d12
     }
 
     D3D12Texture::D3D12Texture(D3D12Texture&& other) noexcept
-        : rhi::Texture(std::move(other))
+        : Texture(std::move(other))
         , _description(std::move(other._description))
         , _resource(std::move(other._resource))
 #if ENABLE_DEBUG_NAMES
@@ -63,7 +63,7 @@ namespace rhi::d3d12
     {
         if (this != &other)
         {
-            rhi::Texture::operator=(std::move(other));
+            Texture::operator=(std::move(other));
             _description = std::move(other._description);
             _resource = std::move(other._resource);
 #if ENABLE_DEBUG_NAMES

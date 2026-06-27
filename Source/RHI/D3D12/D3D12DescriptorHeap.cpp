@@ -11,15 +11,15 @@ namespace rhi::d3d12
 {
     namespace
     {
-        constexpr D3D12_DESCRIPTOR_HEAP_TYPE ToD3D12DescriptorHeapType(rhi::DescriptorHeapType type)
+        constexpr D3D12_DESCRIPTOR_HEAP_TYPE ToD3D12DescriptorHeapType(DescriptorHeapType type)
         {
             switch (type)
             {
-            case rhi::DescriptorHeapType::RTV:
+            case DescriptorHeapType::RTV:
                 return D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-            case rhi::DescriptorHeapType::DSV:
+            case DescriptorHeapType::DSV:
                 return D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-            case rhi::DescriptorHeapType::CBV_SRV_UAV:
+            case DescriptorHeapType::CBV_SRV_UAV:
                 return D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
             default:
                 UNREACHABLE("Invalid descriptor heap type!");
@@ -28,7 +28,7 @@ namespace rhi::d3d12
         }
     } // namespace unnamed
 
-    D3D12DescriptorHeap::D3D12DescriptorHeap(rhi::Device* device, const rhi::DescriptorHeapDescription& description, const std::string& name)
+    D3D12DescriptorHeap::D3D12DescriptorHeap(Device* device, const DescriptorHeapDescription& description, const std::string& name)
         : _description(description)
         , _device(device)
         , _currentOffset(0)
@@ -94,7 +94,7 @@ namespace rhi::d3d12
         _currentOffset = 0;
     }
 
-    std::uint32_t D3D12DescriptorHeap::CopyResourceDescriptor(rhi::CPUDescriptor descriptor)
+    std::uint32_t D3D12DescriptorHeap::CopyResourceDescriptor(CPUDescriptor descriptor)
     {
         ASSERT((_currentOffset + 1) < _description.NumDescriptors, "Descriptor heap is full, cannot copy descriptor");
 
@@ -109,31 +109,31 @@ namespace rhi::d3d12
         return _currentOffset++;
     }
 
-    rhi::CPUDescriptor D3D12DescriptorHeap::GetHeapStartCPUHandle()
+    CPUDescriptor D3D12DescriptorHeap::GetHeapStartCPUHandle()
     {
         return ToRHIHandle(_descriptorHeap->GetCPUDescriptorHandleForHeapStart());
     }
 
-    rhi::GPUDescriptor D3D12DescriptorHeap::GetHeapStartGPUHandle()
+    GPUDescriptor D3D12DescriptorHeap::GetHeapStartGPUHandle()
     {
         return ToRHIHandle(_descriptorHeap->GetGPUDescriptorHandleForHeapStart());
     }
 
-    rhi::CPUDescriptor D3D12DescriptorHeap::GetCPUHandleWithOffset(std::uint32_t offset)
+    CPUDescriptor D3D12DescriptorHeap::GetCPUHandleWithOffset(std::uint32_t offset)
     {
         ASSERT(offset < _description.NumDescriptors, "Offset is out of bounds for descriptor heap");
 
-        rhi::CPUDescriptor descriptor = ToRHIHandle(_descriptorHeap->GetCPUDescriptorHandleForHeapStart());
+        CPUDescriptor descriptor = ToRHIHandle(_descriptorHeap->GetCPUDescriptorHandleForHeapStart());
         descriptor.Offset(offset * _heapIncrementSize);
 
         return descriptor;
     }
 
-    rhi::GPUDescriptor D3D12DescriptorHeap::GetGPUHandleWithOffset(std::uint32_t offset)
+    GPUDescriptor D3D12DescriptorHeap::GetGPUHandleWithOffset(std::uint32_t offset)
     {
         ASSERT(offset < _description.NumDescriptors, "Offset is out of bounds for descriptor heap");
 
-        rhi::GPUDescriptor descriptor = ToRHIHandle(_descriptorHeap->GetGPUDescriptorHandleForHeapStart());
+        GPUDescriptor descriptor = ToRHIHandle(_descriptorHeap->GetGPUDescriptorHandleForHeapStart());
         descriptor.Offset(offset * _heapIncrementSize);
 
         return descriptor;

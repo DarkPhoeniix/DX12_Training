@@ -10,7 +10,7 @@ namespace rhi
 namespace rhi::d3d12
 {
     // Wrapper for a DXGI swap chain, managing frame buffers and presentation.
-    class D3D12SwapChain final : public rhi::SwapChain
+    class D3D12SwapChain final : public SwapChain
     {
     public:
         D3D12SwapChain(const D3D12SwapChain& other) = delete;
@@ -20,21 +20,21 @@ namespace rhi::d3d12
         D3D12SwapChain& operator=(const D3D12SwapChain& other) = delete;
         D3D12SwapChain& operator=(D3D12SwapChain&& other) noexcept;
 
-        std::shared_ptr<rhi::Texture> GetBuffer(std::uint32_t index) override;
-        std::shared_ptr<rhi::Texture> GetBackBuffer() override;
+        std::shared_ptr<Texture> GetBuffer(std::uint32_t index) override;
+        std::shared_ptr<Texture> GetBackBuffer() override;
 
         std::uint32_t Present() override;
 
         void OnResize(std::uint32_t width, std::uint32_t height) override;
 
-        rhi::ScissorRect GetDesktopCoordinates() override;
+        ScissorRect GetDesktopCoordinates() override;
 
         void* GetNative() const override;
 
     private:
         friend class D3D12Device;
 
-        D3D12SwapChain(rhi::Device* device, HWND windowHandle, std::uint32_t width, std::uint32_t height, bool vSync);
+        D3D12SwapChain(Device* device, HWND windowHandle, std::uint32_t width, std::uint32_t height, bool vSync);
 
         ComPtr<IDXGISwapChain4> CreateSwapChain();
         bool CheckTearingSupport() const;
@@ -42,12 +42,12 @@ namespace rhi::d3d12
         void UpdateRenderTargetViews();
 
         ComPtr<IDXGISwapChain4> _dxgiSwapChain;
-        rhi::Device* _device;
+        Device* _device;
 
         std::unique_ptr<DescriptorHeap> _RTVDescriptorHeap;
         std::uint32_t _RTVDescriptorSize;
 
-        std::shared_ptr<rhi::Texture> _backBuffers[BACK_BUFFER_COUNT];
+        std::shared_ptr<Texture> _backBuffers[BACK_BUFFER_COUNT];
         std::uint32_t _currentBackBufferIndex;
 
         HWND _windowHandle;

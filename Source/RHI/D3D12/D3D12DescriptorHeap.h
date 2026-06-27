@@ -4,7 +4,7 @@
 
 namespace rhi::d3d12
 {
-    class D3D12DescriptorHeap final : public rhi::DescriptorHeap
+    class D3D12DescriptorHeap final : public DescriptorHeap
     {
     public:
         D3D12DescriptorHeap(const D3D12DescriptorHeap& other) = delete;
@@ -16,13 +16,13 @@ namespace rhi::d3d12
 
         void Reset() override;
 
-        std::uint32_t CopyResourceDescriptor(rhi::CPUDescriptor descriptor) override;
+        std::uint32_t CopyResourceDescriptor(CPUDescriptor descriptor) override;
 
-        rhi::CPUDescriptor GetHeapStartCPUHandle() override;
-        rhi::GPUDescriptor GetHeapStartGPUHandle() override;
+        CPUDescriptor GetHeapStartCPUHandle() override;
+        GPUDescriptor GetHeapStartGPUHandle() override;
 
-        rhi::CPUDescriptor GetCPUHandleWithOffset(std::uint32_t offset) override;
-        rhi::GPUDescriptor GetGPUHandleWithOffset(std::uint32_t offset) override;
+        CPUDescriptor GetCPUHandleWithOffset(std::uint32_t offset) override;
+        GPUDescriptor GetGPUHandleWithOffset(std::uint32_t offset) override;
 
         std::uint32_t Offset() override;
         std::uint32_t GetCurrentOffset() const override;
@@ -32,15 +32,15 @@ namespace rhi::d3d12
     private:
         friend class D3D12Device;
 
-        D3D12DescriptorHeap(rhi::Device* device, const rhi::DescriptorHeapDescription& description, [[maybe_unused]] const std::string& name = "");
+        D3D12DescriptorHeap(Device* device, const DescriptorHeapDescription& description, [[maybe_unused]] const std::string& name = "");
 
         ComPtr<ID3D12DescriptorHeap> _descriptorHeap;
-        rhi::DescriptorHeapDescription _description;
+        DescriptorHeapDescription _description;
 
         UINT _heapIncrementSize;
         std::uint32_t _currentOffset;
 
-        rhi::Device* _device;
+        Device* _device;
 #if ENABLE_DEBUG_NAMES
         std::string _name;
 #endif // ENABLE_DEBUG_NAMES

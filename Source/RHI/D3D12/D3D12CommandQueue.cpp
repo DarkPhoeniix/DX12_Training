@@ -10,7 +10,7 @@
 
 namespace rhi::d3d12
 {
-    D3D12CommandQueue::D3D12CommandQueue(rhi::Device* device, rhi::CommandListType type, const std::string& name)
+    D3D12CommandQueue::D3D12CommandQueue(Device* device, CommandListType type, const std::string& name)
         : _type(type)
         , _timestampFrequency(0)
 #if ENABLE_DEBUG_NAMES
@@ -26,13 +26,13 @@ namespace rhi::d3d12
 
         switch (type)
         {
-        case rhi::CommandListType::Graphics:
+        case CommandListType::Graphics:
             desc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
             break;
-        case rhi::CommandListType::Compute:
+        case CommandListType::Compute:
             desc.Type = D3D12_COMMAND_LIST_TYPE_COMPUTE;
             break;
-        case rhi::CommandListType::Copy:
+        case CommandListType::Copy:
             desc.Type = D3D12_COMMAND_LIST_TYPE_COPY;
             break;
         default:
@@ -55,7 +55,7 @@ namespace rhi::d3d12
     }
 
     D3D12CommandQueue::D3D12CommandQueue(D3D12CommandQueue&& other) noexcept
-        : rhi::CommandQueue(std::move(other))
+        : CommandQueue(std::move(other))
         , _type(other._type)
         , _timestampFrequency(other._timestampFrequency)
 #if ENABLE_DEBUG_NAMES
@@ -68,7 +68,7 @@ namespace rhi::d3d12
     {
         if (this != &other)
         {
-            rhi::CommandQueue::operator=(std::move(other));
+            CommandQueue::operator=(std::move(other));
             _type = other._type;
             _timestampFrequency = other._timestampFrequency;
 #if ENABLE_DEBUG_NAMES
@@ -90,19 +90,19 @@ namespace rhi::d3d12
         _commandQueue->ExecuteCommandLists(static_cast<UINT>(d3d12CommandLists.size()), d3d12CommandLists.data());
     }
 
-    void D3D12CommandQueue::Signal(rhi::Fence* fence, std::uint64_t value)
+    void D3D12CommandQueue::Signal(Fence* fence, std::uint64_t value)
     {
         ID3D12Fence* d3d12Fence = D3D12Cast<ID3D12Fence>(fence->GetNative());
         _commandQueue->Signal(d3d12Fence, value);
     }
 
-    void D3D12CommandQueue::Wait(rhi::Fence* fence, std::uint64_t value)
+    void D3D12CommandQueue::Wait(Fence* fence, std::uint64_t value)
     {
         ID3D12Fence* d3d12Fence = D3D12Cast<ID3D12Fence>(fence->GetNative());
         _commandQueue->Wait(d3d12Fence, value);
     }
 
-    rhi::CommandListType D3D12CommandQueue::GetType() const
+    CommandListType D3D12CommandQueue::GetType() const
     {
         return _type;
     }

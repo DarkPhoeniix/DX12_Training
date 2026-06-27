@@ -9,7 +9,7 @@ namespace rhi
 
 namespace rhi::d3d12
 {
-    class D3D12CommandSignature : public rhi::CommandSignature
+    class D3D12CommandSignature : public CommandSignature
     {
     public:
         D3D12CommandSignature(const D3D12CommandSignature& other) = delete;
@@ -24,7 +24,7 @@ namespace rhi::d3d12
     private:
         friend class D3D12Device;
 
-        D3D12CommandSignature(rhi::Device* device, const std::vector<rhi::IndirectArgumentDescription>& arguments, rhi::PipelineState* pipelineState, const std::string& name = "");
+        D3D12CommandSignature(Device* device, const std::vector<IndirectArgumentDescription>& arguments, PipelineState* pipelineState, const std::string& name = "");
 
         ComPtr<ID3D12CommandSignature> _commandSignature;
 

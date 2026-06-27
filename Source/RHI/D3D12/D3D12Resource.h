@@ -13,9 +13,9 @@ namespace rhi::d3d12
     class D3D12Resource : std::enable_shared_from_this<D3D12Resource>
     {
     public:
-        D3D12Resource(rhi::Device* device, D3D12MA::Allocator* allocator, const BufferDescription& description, ResourceState initialState = ResourceState::Common, const std::string& name = "");
-        D3D12Resource(rhi::Device* device, D3D12MA::Allocator* allocator, const TextureDescription& description, ResourceState initialState = ResourceState::Common, const std::string& name = "");
-        D3D12Resource(rhi::Device* device, ID3D12Resource* resource, const std::string& name = "");
+        D3D12Resource(Device* device, D3D12MA::Allocator* allocator, const BufferDescription& description, ResourceState initialState = ResourceState::Common, const std::string& name = "");
+        D3D12Resource(Device* device, D3D12MA::Allocator* allocator, const TextureDescription& description, ResourceState initialState = ResourceState::Common, const std::string& name = "");
+        D3D12Resource(Device* device, ID3D12Resource* resource, const std::string& name = "");
         D3D12Resource(const D3D12Resource& other) = delete;
         D3D12Resource(D3D12Resource&& other) noexcept;
         virtual ~D3D12Resource();
@@ -53,7 +53,7 @@ namespace rhi::d3d12
         ComPtr<ID3D12Resource> _resource;
         ComPtr<D3D12MA::Allocation> _allocation;
 
-        rhi::Device* _device;
+        Device* _device;
 
 #if ENABLE_DEBUG_NAMES
         std::string _name;

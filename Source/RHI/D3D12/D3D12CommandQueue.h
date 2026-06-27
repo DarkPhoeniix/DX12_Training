@@ -11,7 +11,7 @@ namespace rhi
 
 namespace rhi::d3d12
 {
-    class D3D12CommandQueue final : public rhi::CommandQueue
+    class D3D12CommandQueue final : public CommandQueue
     {
     public:
         D3D12CommandQueue(const D3D12CommandQueue& other) = delete;
@@ -23,22 +23,22 @@ namespace rhi::d3d12
 
         void ExecuteCommandLists(const std::vector<CommandList*>& commandLists) override;
 
-        void Signal(rhi::Fence* fence, std::uint64_t value) override;
-        void Wait(rhi::Fence* fence, std::uint64_t value) override;
+        void Signal(Fence* fence, std::uint64_t value) override;
+        void Wait(Fence* fence, std::uint64_t value) override;
 
         std::uint64_t GetTimestampFrequency() const override;
-        rhi::CommandListType GetType() const override;
+        CommandListType GetType() const override;
 
         void* GetNative() const override;
 
     private:
         friend class D3D12Device;
 
-        D3D12CommandQueue(rhi::Device* device, rhi::CommandListType type, [[maybe_unused]] const std::string& name = "");
+        D3D12CommandQueue(Device* device, CommandListType type, [[maybe_unused]] const std::string& name = "");
 
         ComPtr<ID3D12CommandQueue> _commandQueue;
         std::uint64_t _timestampFrequency;
-        rhi::CommandListType _type;
+        CommandListType _type;
 
 #if ENABLE_DEBUG_NAMES
         std::string _name;
