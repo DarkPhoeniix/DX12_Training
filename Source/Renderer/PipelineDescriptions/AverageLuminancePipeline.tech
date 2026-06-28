@@ -3,5 +3,5 @@
 
 	"PipelineType": "Compute",
 
-	"CS": "Shaders\\AverageLuminance_cs.cso"
+	"CS": "Shaders\\AverageLuminance_cs"
 }

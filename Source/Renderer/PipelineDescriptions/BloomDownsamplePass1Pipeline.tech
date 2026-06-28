@@ -3,5 +3,5 @@
 
 	"PipelineType": "Compute",
 
-	"CS": "Shaders\\BloomDownsample_Pass1_cs.cso"
+	"CS": "Shaders\\BloomDownsample_Pass1_cs"
 }

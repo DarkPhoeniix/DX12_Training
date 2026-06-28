@@ -15,7 +15,7 @@
 	"DepthBuffer": "BackBufferDepth",
 	"Layout": null,
 
-	"VS": "Shaders\\AABB_vs.cso",
-	"GS": "Shaders\\AABB_gs.cso",
-	"PS": "Shaders\\AABB_ps.cso"
+	"VS": "Shaders\\AABB_vs",
+	"GS": "Shaders\\AABB_gs",
+	"PS": "Shaders\\AABB_ps"
 }

@@ -3,5 +3,5 @@
 
 	"PipelineType": "Compute",
 
-	"CS": "Shaders\\ToneMapping_cs.cso"
+	"CS": "Shaders\\ToneMapping_cs"
 }

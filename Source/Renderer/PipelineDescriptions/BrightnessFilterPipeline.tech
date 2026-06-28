@@ -3,5 +3,5 @@
 
 	"PipelineType": "Compute",
 
-	"CS": "Shaders\\BrightnessFilter_cs.cso"
+	"CS": "Shaders\\BrightnessFilter_cs"
 }

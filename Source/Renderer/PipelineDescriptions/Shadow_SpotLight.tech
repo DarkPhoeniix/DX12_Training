@@ -56,5 +56,5 @@
 		}
 	],
 
-	"VS": "Shaders\\ShadowMapping_SpotLight_vs.cso"
+	"VS": "Shaders\\ShadowMapping_SpotLight_vs"
 }

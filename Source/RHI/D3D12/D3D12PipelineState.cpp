@@ -17,6 +17,8 @@ namespace rhi::d3d12
 {
     namespace
     {
+        static const std::string kShaderNameExtension = ".spv";
+
         const std::map<std::string, D3D12_PRIMITIVE_TOPOLOGY_TYPE> TOPOLOGY_TYPE =
         {
             { "point", D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT},
@@ -136,7 +138,7 @@ namespace rhi::d3d12
         ComPtr<ID3DBlob> vertexShaderBlob = nullptr;
         if (!fileRoot["VS"].isNull())
         {
-            std::string vertexShaderFilepath = fileRoot["VS"].asCString();
+            std::string vertexShaderFilepath = fileRoot["VS"].asString() + kShaderNameExtension;
             HRESULT result = D3DReadFileToBlob(std::wstring(vertexShaderFilepath.begin(), vertexShaderFilepath.end()).c_str(), &vertexShaderBlob);
             CHECK(result, "Failed to load vertex shader from file: " + vertexShaderFilepath);
         }
@@ -145,7 +147,7 @@ namespace rhi::d3d12
         ComPtr<ID3DBlob> geometryShaderBlob = nullptr;
         if (!fileRoot["GS"].isNull())
         {
-            std::string geometryShaderFilepath = fileRoot["GS"].asCString();
+            std::string geometryShaderFilepath = fileRoot["GS"].asString() + kShaderNameExtension;
             HRESULT result = D3DReadFileToBlob(std::wstring(geometryShaderFilepath.begin(), geometryShaderFilepath.end()).c_str(), &geometryShaderBlob);
             CHECK(result, "Failed to load geometry shader from file: " + geometryShaderFilepath);
         }
@@ -154,7 +156,7 @@ namespace rhi::d3d12
         ComPtr<ID3DBlob> pixelShaderBlob = nullptr;
         if (!fileRoot["PS"].isNull())
         {
-            std::string pixelShaderFilepath = fileRoot["PS"].asCString();
+            std::string pixelShaderFilepath = fileRoot["PS"].asString() + kShaderNameExtension;
             HRESULT result = D3DReadFileToBlob(std::wstring(pixelShaderFilepath.begin(), pixelShaderFilepath.end()).c_str(), &pixelShaderBlob);
             CHECK(result, "Failed to load pixel shader from file: " + pixelShaderFilepath);
         }
@@ -254,7 +256,7 @@ namespace rhi::d3d12
         ComPtr<ID3DBlob> computeShaderBlob = nullptr;
         if (!fileRoot["CS"].isNull())
         {
-            std::string computeShaderFilepath = fileRoot["CS"].asCString();
+            std::string computeShaderFilepath = fileRoot["CS"].asString() + kShaderNameExtension;
             HRESULT result = D3DReadFileToBlob(std::wstring(computeShaderFilepath.begin(), computeShaderFilepath.end()).c_str(), &computeShaderBlob);
             CHECK(result, "Failed to load compute shader from file: " + computeShaderFilepath);
         }

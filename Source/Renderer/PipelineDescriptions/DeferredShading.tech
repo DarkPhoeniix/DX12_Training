@@ -3,5 +3,5 @@
 
 	"PipelineType": "Compute",
 
-	"CS": "Shaders\\DeferredShading_cs.cso"
+	"CS": "Shaders\\DeferredShading_cs"
 }

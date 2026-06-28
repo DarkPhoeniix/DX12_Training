@@ -13,7 +13,6 @@ namespace
         { "Compute",  rhi::PipelineStateType::Compute  }
     };
 
-    // TODO: add types !!!!!!!!!!!!!!!!!!!!!!!!!!!!
     const std::map<std::string, rhi::Format> FORMAT =
     {
         { "float4", rhi::Format::R32G32B32A32_FLOAT },

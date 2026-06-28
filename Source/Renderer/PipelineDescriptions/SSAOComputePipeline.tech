@@ -3,5 +3,5 @@
 
 	"PipelineType": "Compute",
 
-	"CS": "Shaders\\SSAOCompute_cs.cso"
+	"CS": "Shaders\\SSAOCompute_cs"
 }

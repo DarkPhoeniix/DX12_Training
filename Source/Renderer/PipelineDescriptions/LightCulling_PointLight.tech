@@ -3,5 +3,5 @@
 
 	"PipelineType": "Compute",
 
-	"CS": "Shaders\\LightCulling_PointLight_cs.cso"
+	"CS": "Shaders\\LightCulling_PointLight_cs"
 }

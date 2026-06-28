@@ -3,5 +3,5 @@
 
 	"PipelineType": "Compute",
 
-	"CS": "Shaders\\IBL_GenerateBRDFEnvironmentLUT_cs.cso"
+	"CS": "Shaders\\IBL_GenerateBRDFEnvironmentLUT_cs"
 }

@@ -56,6 +56,6 @@
 		}
 	],
 
-	"VS": "Shaders\\ShadowMapping_PointLight_vs.cso",
-	"GS": "Shaders\\ShadowMapping_PointLight_gs.cso"
+	"VS": "Shaders\\ShadowMapping_PointLight_vs",
+	"GS": "Shaders\\ShadowMapping_PointLight_gs"
 }

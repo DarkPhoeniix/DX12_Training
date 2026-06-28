@@ -3,5 +3,5 @@
 
 	"PipelineType": "Compute",
 
-	"CS": "Shaders\\SSAOBlurHorizontal_cs.cso"
+	"CS": "Shaders\\SSAOBlurHorizontal_cs"
 }

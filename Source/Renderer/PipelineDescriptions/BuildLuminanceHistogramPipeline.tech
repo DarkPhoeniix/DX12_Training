@@ -3,5 +3,5 @@
 
 	"PipelineType": "Compute",
 
-	"CS": "Shaders\\BuildLuminanceHistogram_cs.cso"
+	"CS": "Shaders\\BuildLuminanceHistogram_cs"
 }

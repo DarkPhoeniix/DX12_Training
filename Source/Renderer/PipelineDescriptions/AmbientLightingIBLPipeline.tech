@@ -3,5 +3,5 @@
 
 	"PipelineType": "Compute",
 
-	"CS": "Shaders\\AmbientLighting_IBL_cs.cso"
+	"CS": "Shaders\\AmbientLighting_IBL_cs"
 }

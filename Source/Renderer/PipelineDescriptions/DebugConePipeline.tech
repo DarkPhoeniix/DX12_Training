@@ -15,7 +15,7 @@
 	"DepthBuffer": "BackBufferDepth",
 	"Layout": null,
 
-	"VS": "Shaders\\Cone_vs.cso",
-	"GS": "Shaders\\Cone_gs.cso",
-	"PS": "Shaders\\Cone_ps.cso"
+	"VS": "Shaders\\Cone_vs",
+	"GS": "Shaders\\Cone_gs",
+	"PS": "Shaders\\Cone_ps"
 }

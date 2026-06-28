@@ -3,5 +3,5 @@
 
 	"PipelineType": "Compute",
 
-	"CS": "Shaders\\FXAA_Pass1_cs.cso"
+	"CS": "Shaders\\FXAA_Pass1_cs"
 }

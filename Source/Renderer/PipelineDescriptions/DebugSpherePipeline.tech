@@ -15,7 +15,7 @@
 	"DepthBuffer": "BackBufferDepth",
 	"Layout": null,
 
-	"VS": "Shaders\\Sphere_vs.cso",
-	"GS": "Shaders\\Sphere_gs.cso",
-	"PS": "Shaders\\Sphere_ps.cso"
+	"VS": "Shaders\\Sphere_vs",
+	"GS": "Shaders\\Sphere_gs",
+	"PS": "Shaders\\Sphere_ps"
 }
