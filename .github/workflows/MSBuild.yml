@@ -11,7 +11,7 @@ on:
       configuration:
         description: 'Build configuration'
         required: true
-        default: 'Release'
+        default: 'Release-x64'
         type: choice
         options:
           - Debug-x64
@@ -27,7 +27,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: windows-2022
+    runs-on: windows-2025-vs2026
 
     steps:
     - name: Checkout
