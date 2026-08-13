@@ -54,7 +54,14 @@ if (USE_VULKAN)
         Vulkan::Vulkan
         GPUOpen::VulkanMemoryAllocator
     )
-    target_compile_definitions(RHI PRIVATE USE_VULKAN=1)
+    # VMA must see the same configuration in every translation unit that includes its header,
+    # not just in the one providing the implementation. Entry points come from the vulkan.hpp
+    # dynamic dispatcher, so the static ones are off
+    target_compile_definitions(RHI PRIVATE
+        USE_VULKAN=1
+        VMA_STATIC_VULKAN_FUNCTIONS=0
+        VMA_DYNAMIC_VULKAN_FUNCTIONS=1
+    )
 endif()
 
 # --- Build options -----------------------------------------------------------

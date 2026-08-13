@@ -5,8 +5,50 @@
 
 #include "ResourceIdGenerator.h"
 
+#include <vma/vk_mem_alloc.h>
+
 namespace rhi::vulkan
 {
+    namespace
+    {
+        constexpr vk::BufferUsageFlags kBufferUsage =
+            vk::BufferUsageFlagBits::eTransferSrc |
+            vk::BufferUsageFlagBits::eTransferDst |
+            vk::BufferUsageFlagBits::eUniformBuffer |
+            vk::BufferUsageFlagBits::eStorageBuffer |
+            vk::BufferUsageFlagBits::eIndexBuffer |
+            vk::BufferUsageFlagBits::eVertexBuffer |
+            vk::BufferUsageFlagBits::eIndirectBuffer |
+            vk::BufferUsageFlagBits::eShaderDeviceAddress;
+
+        VmaAllocationCreateInfo GetAllocationInfo(ResourceUsage usage)
+        {
+            VmaAllocationCreateInfo info = {};
+            info.usage = VMA_MEMORY_USAGE_AUTO;
+
+            switch (usage)
+            {
+            case ResourceUsage::Default:
+                break;
+            case ResourceUsage::Upload:
+                info.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+                break;
+            case ResourceUsage::GPUUpload:
+                info.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+                info.requiredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+                break;
+            case ResourceUsage::Readback:
+                info.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
+                break;
+            default:
+                UNREACHABLE("Unsupported resource usage!");
+                break;
+            }
+
+            return info;
+        }
+    } // namespace unnamed
+
     VulkanBuffer::VulkanBuffer(rhi::Device* device, VmaAllocator allocator, const rhi::BufferDescription& description, ResourceState initialState, const std::string& name)
         : _buffer(nullptr)
         , _allocator(allocator)
@@ -21,7 +63,27 @@ namespace rhi::vulkan
         , _name(name)
 #endif // ENABLE_DEBUG_NAMES
     {
-        NOT_IMPLEMENTED();
+        const vk::BufferCreateInfo createInfo =
+        {
+            .size = description.Size,
+            .usage = kBufferUsage,
+            .sharingMode = vk::SharingMode::eExclusive
+        };
+
+        const VmaAllocationCreateInfo allocationInfo = GetAllocationInfo(description.Usage);
+
+        VkBuffer buffer = VK_NULL_HANDLE;
+        VkResult result = vmaCreateBuffer(_allocator,
+            reinterpret_cast<const VkBufferCreateInfo*>(&createInfo),
+            &allocationInfo,
+            &buffer,
+            &_allocation,
+            nullptr);
+        VK_CHECK(static_cast<vk::Result>(result), "Failed to allocate buffer");
+
+        _buffer = buffer;
+
+        SetVulkanName(VulkanCast<vk::Device>(_device->GetNative()), _buffer, name);
     }
 
     VulkanBuffer::VulkanBuffer(rhi::Device* device, vk::Buffer nativeBuffer, const std::string& name)
@@ -58,7 +120,10 @@ namespace rhi::vulkan
 
     VulkanBuffer::~VulkanBuffer()
     {
-        NOT_IMPLEMENTED();
+        if (_allocation)
+        {
+            vmaDestroyBuffer(_allocator, _buffer, _allocation);
+        }
     }
 
     VulkanBuffer& VulkanBuffer::operator=(VulkanBuffer&& other) noexcept
@@ -84,19 +149,28 @@ namespace rhi::vulkan
 
     void* VulkanBuffer::Map(std::uint32_t, std::uint32_t)
     {
-        NOT_IMPLEMENTED();
-        return nullptr;
+        ASSERT(_allocation, "Trying to map a buffer that owns no allocation.");
+
+        void* data = nullptr;
+        VkResult result = vmaMapMemory(_allocator, _allocation, &data);
+        VK_CHECK(static_cast<vk::Result>(result), "Failed to map buffer");
+
+        return data;
     }
 
     void VulkanBuffer::Unmap()
     {
-        NOT_IMPLEMENTED();
+        ASSERT(_allocation, "Trying to unmap a buffer that owns no allocation.");
+        vmaUnmapMemory(_allocator, _allocation);
     }
 
     std::uint64_t VulkanBuffer::GetVirtualAddress(std::uint64_t offset)
     {
-        NOT_IMPLEMENTED();
-        return offset;
+        vk::Device logicalDevice = VulkanCast<vk::Device>(_device->GetNative());
+
+        const vk::BufferDeviceAddressInfo addressInfo = { .buffer = _buffer };
+
+        return logicalDevice.getBufferAddress(addressInfo) + offset;
     }
 
     ResourceState VulkanBuffer::GetInitialState() const

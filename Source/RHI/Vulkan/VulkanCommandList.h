@@ -87,6 +87,9 @@ namespace rhi::vulkan
         vk::CommandBuffer _commandBuffer;
         CommandListType   _type;
 
+        // Recorded by SetDescriptorHeaps and bound once a pipeline provides a layout
+        rhi::DescriptorHeap* _boundDescriptorHeap;
+
         rhi::Device* _device;
     };
 } // namespace rhi::vulkan

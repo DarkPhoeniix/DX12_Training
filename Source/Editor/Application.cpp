@@ -9,8 +9,13 @@
 #include "Renderer/Input/InputDevice.h"
 #include "Renderer/Window/Win32Window.h"
 
+#include "Renderer/Core/DescriptorHeapManager.h"
+
+#include "RHI/CommandList.h"
 #include "RHI/CommandQueue.h"
+#include "RHI/ResourceBarrier.h"
 #include "RHI/SwapChain.h"
+#include "RHI/Texture.h"
 
 #include "Resources/resource.h"
 
@@ -123,6 +128,9 @@ int Application::Run(const ApplicationConfig& config)
 
         _renderer->SetFrame(*_currentFrame);
     }
+
+    // TEMP: Vulkan bring-up — delete once the render graph runs
+    return _RunClearOnly();
 
     _win32Window->AddEventListener(_renderer.get());
 
@@ -281,4 +289,56 @@ void Application::_ExecuteFrameTasks()
         }
         queue->Signal(fence, fence->GetValue());
     }
+}
+
+int Application::_RunClearOnly()
+{
+    constexpr float clearColor[4] = { 0.1f, 0.3f, 0.6f, 1.0f };
+
+    // The driver picks the swapchain image count, so the table fills itself on first sight of
+    // each backbuffer rather than being sized up front
+    std::unordered_map<const rhi::Texture*, DescriptorHandle> backBufferRTVs;
+
+    MSG msg = { 0 };
+    while (msg.message != WM_QUIT)
+    {
+        if (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
+        {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+
+        _currentFrame->WaitCPU();
+        _currentFrame->ResetGPU();
+
+        std::shared_ptr<rhi::Texture> backBuffer = _device->GetBackBuffer();
+
+        auto [rtv, inserted] = backBufferRTVs.try_emplace(backBuffer.get());
+        if (inserted)
+        {
+            rtv->second = DescriptorHeapManager::Get().AllocateStatic(DescriptorHeapType::RTV);
+            _device->CreateTextureRTV(backBuffer, rtv->second.CpuHandle);
+        }
+
+        rg::ITask* task = _currentFrame->AllocateTask(rhi::CommandListType::Graphics, nullptr);
+        // _ExecuteFrameTasks keys the present off this name
+        task->SetName("present_pass");
+
+        rhi::CommandList* commandList = _currentFrame->GetTask("present_pass")->GetCommandList();
+
+        commandList->TransitionBarriers({ rhi::TextureBarrier(backBuffer, rhi::ResourceState::Present, rhi::ResourceState::RenderTarget) });
+        commandList->ClearRTV(rtv->second.CpuHandle, clearColor, nullptr);
+        commandList->TransitionBarriers({ rhi::TextureBarrier(backBuffer, rhi::ResourceState::RenderTarget, rhi::ResourceState::Present) });
+        commandList->Close();
+
+        _ExecuteFrameTasks();
+        _currentFrame = _currentFrame->Next;
+    }
+
+    for (const auto& frame : _frames)
+    {
+        frame->WaitCPU();
+    }
+
+    return static_cast<int>(msg.wParam);
 }

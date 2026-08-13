@@ -36,7 +36,6 @@ using namespace Microsoft::WRL;
 #include <d3dcompiler.h>        // Contains functions to compile HLSL code at runtime
 #endif // USE_D3D12
 
-// Vulkan specific headers
 #if USE_VULKAN
 #define VULKAN_HPP_NO_CONSTRUCTORS
 #define VULKAN_HPP_NO_EXCEPTIONS

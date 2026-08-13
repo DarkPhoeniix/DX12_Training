@@ -3,16 +3,26 @@
 
 #include "VulkanTimestampQuery.h"
 
+#include "CommandList.h"
+#include "CommandQueue.h"
+#include "QueryHeap.h"
+
 namespace rhi::vulkan
 {
     VulkanTimestampQuery::VulkanTimestampQuery(rhi::Device* device, std::uint32_t timestampsCount, const std::string& name)
         : _queryHeap(nullptr)
-        , _frequency(0)
+        , _frequency(device->GetGraphicsQueue()->GetTimestampFrequency())
 #if ENABLE_DEBUG_NAMES
         , _name(name)
 #endif // ENABLE_DEBUG_NAMES
     {
-        NOT_IMPLEMENTED();
+        const QueryHeapDescription description =
+        {
+            .Type = QueryHeapType::Timestamp,
+            .Count = timestampsCount,
+            .NodeMask = 0
+        };
+        _queryHeap = device->CreateQueryHeap(description, name);
     }
 
     VulkanTimestampQuery::VulkanTimestampQuery(VulkanTimestampQuery&& other) noexcept
@@ -37,19 +47,19 @@ namespace rhi::vulkan
         return *this;
     }
 
-    void VulkanTimestampQuery::Begin(rhi::CommandList*, std::uint32_t)
+    void VulkanTimestampQuery::Begin(rhi::CommandList* commandList, std::uint32_t index)
     {
-        NOT_IMPLEMENTED();
+        commandList->EndQuery(_queryHeap.get(), QueryType::Timestamp, index);
     }
 
-    void VulkanTimestampQuery::End(rhi::CommandList*, std::uint32_t)
+    void VulkanTimestampQuery::End(rhi::CommandList* commandList, std::uint32_t index)
     {
-        NOT_IMPLEMENTED();
+        commandList->EndQuery(_queryHeap.get(), QueryType::Timestamp, index);
     }
 
-    void VulkanTimestampQuery::Resolve(rhi::CommandList*, std::uint32_t, std::shared_ptr<rhi::Buffer>, std::uint64_t)
+    void VulkanTimestampQuery::Resolve(rhi::CommandList* commandList, std::uint32_t numTimestamps, std::shared_ptr<rhi::Buffer> destination, std::uint64_t destinationOffset)
     {
-        NOT_IMPLEMENTED();
+        commandList->ResolveQueryData(_queryHeap.get(), QueryType::Timestamp, 0, numTimestamps, destination, destinationOffset);
     }
 
     std::uint64_t VulkanTimestampQuery::GetFrequency() const

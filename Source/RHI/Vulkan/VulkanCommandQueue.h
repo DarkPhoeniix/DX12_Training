@@ -28,7 +28,6 @@ namespace rhi::vulkan
 
         rhi::CommandListType GetType() const override;
 
-        // The Vulkan queue family this queue belongs to (present support, command pools).
         std::uint32_t GetQueueFamilyIndex() const;
 
         void* GetNative() const override;

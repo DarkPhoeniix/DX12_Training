@@ -72,7 +72,8 @@ namespace rhi::vulkan
             .pValues        = &_fenceValue
         };
 
-        VK_CHECK(vkDevice.waitSemaphores(waitInfo, std::numeric_limits<std::uint64_t>::max()), "Failed to wait on timeline semaphore");
+        const vk::Result waitResult = vkDevice.waitSemaphores(waitInfo, std::numeric_limits<std::uint64_t>::max());
+        VK_CHECK(waitResult, "Failed to wait on timeline semaphore");
 
         if (_cpuCallback)
         {

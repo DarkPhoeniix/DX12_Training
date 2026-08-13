@@ -5,6 +5,9 @@
 
 #include <json/json.h>
 
+#include <filesystem>
+#include <fstream>
+
 namespace
 {
     const std::map<std::string, rhi::PipelineStateType> PIPELINE_TYPE =

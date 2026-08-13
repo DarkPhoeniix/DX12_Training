@@ -5,6 +5,8 @@
 
 #include "ResourceIdGenerator.h"
 
+#include <vma/vk_mem_alloc.h>
+
 namespace rhi::vulkan
 {
     VulkanTexture::VulkanTexture(rhi::Device* device, VmaAllocator allocator, const TextureDescription& description, ResourceState initialState, const std::string& name)
@@ -20,7 +22,56 @@ namespace rhi::vulkan
         , _name(name)
 #endif // ENABLE_DEBUG_NAMES
     {
-        NOT_IMPLEMENTED();
+        const vk::ImageCreateInfo createInfo =
+        {
+            .imageType = GetVkImageType(description.Dimension),
+            .format = GetVkFormat(description.Format),
+            .extent =
+            {
+                .width = description.Width,
+                .height = description.Height,
+                .depth = description.Dimension == TextureDimension::Texture3D ? description.DepthOrArraySize : 1u
+            },
+            .mipLevels = description.MipLevels,
+            .arrayLayers = description.Dimension == TextureDimension::Texture3D ? 1u : description.DepthOrArraySize,
+            .samples = vk::SampleCountFlagBits::e1,
+            .tiling = vk::ImageTiling::eOptimal,
+            .usage = GetVkImageUsage(description.Flags),
+            .sharingMode = vk::SharingMode::eExclusive,
+            .initialLayout = vk::ImageLayout::eUndefined
+        };
+
+        VmaAllocationCreateInfo allocationInfo = {};
+        allocationInfo.usage = VMA_MEMORY_USAGE_AUTO;
+
+        VkImage image = VK_NULL_HANDLE;
+        VkResult result = vmaCreateImage(_allocator,
+            reinterpret_cast<const VkImageCreateInfo*>(&createInfo),
+            &allocationInfo,
+            &image,
+            &_allocation,
+            nullptr);
+        VK_CHECK(static_cast<vk::Result>(result), "Failed to allocate texture");
+
+        _image = image;
+
+        SetVulkanName(VulkanCast<vk::Device>(_device->GetNative()), _image, name);
+    }
+
+    VulkanTexture::VulkanTexture(rhi::Device* device, vk::Image nativeImage, const std::string& name)
+        : _image(nativeImage)
+        , _allocator(nullptr)
+        , _allocation(nullptr)
+        , _description{}
+        , _ID(rhi::ResourceIdGenerator::GenerateID())
+        , _initialState(ResourceState::Common)
+        , _currentState(ResourceState::Common)
+        , _device(device)
+#if ENABLE_DEBUG_NAMES
+        , _name(name)
+#endif // ENABLE_DEBUG_NAMES
+    {
+        SetVulkanName(VulkanCast<vk::Device>(_device->GetNative()), _image, name);
     }
 
     VulkanTexture::VulkanTexture(VulkanTexture&& other) noexcept
@@ -41,7 +92,10 @@ namespace rhi::vulkan
 
     VulkanTexture::~VulkanTexture()
     {
-        NOT_IMPLEMENTED();
+        if (_allocation)
+        {
+            vmaDestroyImage(_allocator, _image, _allocation);
+        }
     }
 
     VulkanTexture& VulkanTexture::operator=(VulkanTexture&& other) noexcept
@@ -66,13 +120,19 @@ namespace rhi::vulkan
 
     void* VulkanTexture::Map(std::uint32_t, std::uint32_t)
     {
-        NOT_IMPLEMENTED();
-        return nullptr;
+        ASSERT(_allocation, "Trying to map a texture that owns no allocation.");
+
+        void* data = nullptr;
+        VkResult result = vmaMapMemory(_allocator, _allocation, &data);
+        VK_CHECK(static_cast<vk::Result>(result), "Failed to map texture");
+
+        return data;
     }
 
     void VulkanTexture::Unmap()
     {
-        NOT_IMPLEMENTED();
+        ASSERT(_allocation, "Trying to unmap a texture that owns no allocation.");
+        vmaUnmapMemory(_allocator, _allocation);
     }
 
     std::uint64_t VulkanTexture::GetVirtualAddress()

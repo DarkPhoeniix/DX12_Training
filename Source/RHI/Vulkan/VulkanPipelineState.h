@@ -1,7 +1,6 @@
 #pragma once
 
 #include "PipelineState.h"
-#include "VulkanHelpers.h"
 
 namespace Json
 {
@@ -42,9 +41,17 @@ namespace rhi::vulkan
         rhi::RasterizerState ParseRasterizerDescription(const std::string& filepath);
         rhi::DepthStencilState ParseDepthStencilDescription(const std::string& filepath);
 
-        // vk::PipelineLayout is the Vulkan equivalent of ID3D12RootSignature
+        std::vector<vk::PipelineShaderStageCreateInfo> LoadShaderStages(const Json::Value& fileRoot);
+        vk::PipelineShaderStageCreateInfo LoadShaderStage(const std::string& filepath, vk::ShaderStageFlagBits stage);
+        vk::ShaderModule LoadShaderModule(const std::string& filepath);
+
         vk::PipelineLayout _pipelineLayout;
         vk::Pipeline       _pipeline;
+
+        // TODO: unified root signature — descriptor set layouts and samplers are identical across all
+        // pipelines and should be owned by VulkanDevice (same duplication problem exists in D3D12)
+        std::vector<vk::DescriptorSetLayout> _descriptorSetLayouts;
+        std::vector<vk::Sampler>             _immutableSamplers;
 
         rhi::PipelineStateType _type;
 

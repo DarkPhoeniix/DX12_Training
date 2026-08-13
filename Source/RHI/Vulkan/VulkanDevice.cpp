@@ -7,11 +7,17 @@
 #include "VulkanCommandList.h"
 #include "VulkanCommandListPool.h"
 #include "VulkanCommandQueue.h"
+#include "VulkanDescriptorHeap.h"
 #include "VulkanHelpers.h"
 #include "VulkanPipelineState.h"
 #include "VulkanSwapChain.h"
 #include "VulkanTexture.h"
+#include "VulkanTimestampQuery.h"
+#include "VulkanStatisticsQuery.h"
+#include "VulkanFence.h"
+#include "VulkanQueryHeap.h"
 
+#include "BufferView.h"
 #include "CommandListPool.h"
 #include "CommandQueue.h"
 #include "CommandSignature.h"
@@ -21,9 +27,12 @@
 #include "QueryHeap.h"
 #include "StatisticsQuery.h"
 #include "SwapChain.h"
+#include "TextureView.h"
 #include "TimestampQuery.h"
 
 #include "IGPUCrashTracker.h"
+
+#include <vma/vk_mem_alloc.h>
 
 VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
 
@@ -34,6 +43,8 @@ namespace rhi::vulkan
         // Instance-scoped extensions
         const std::vector<const char*> kInstanceExtensions =
         {
+            vk::KHRSurfaceExtensionName,
+            vk::KHRWin32SurfaceExtensionName,
 #if ENABLE_DEVICE_DEBUG
             vk::EXTDebugUtilsExtensionName,
 #endif // ENABLE_DEVICE_DEBUG
@@ -43,6 +54,9 @@ namespace rhi::vulkan
         const std::vector<const char*> kDeviceExtensions =
         {
             vk::KHRSwapchainExtensionName,
+            vk::KHRDynamicRenderingExtensionName,   // core in Vulkan 1.3
+            vk::EXTDescriptorIndexingExtensionName, // core in Vulkan 1.2
+            vk::EXTMutableDescriptorTypeExtensionName,
         };
 
         // Instance-scoped validation layers
@@ -94,23 +108,62 @@ namespace rhi::vulkan
 
             return localMemory;
         }
+
+        constexpr std::uint32_t kInvalidQueueFamily = std::uint32_t(-1);
+
+        std::uint32_t FindQueueFamilyIndex(const std::vector<vk::QueueFamilyProperties>& families, vk::QueueFlags required, vk::QueueFlags avoided)
+        {
+            std::uint32_t result = kInvalidQueueFamily;
+
+            for (std::uint32_t i = 0; i < static_cast<std::uint32_t>(families.size()); ++i)
+            {
+                const vk::QueueFlags flags = families[i].queueFlags;
+                if ((flags & required) != required)
+                {
+                    continue;
+                }
+
+                if ((flags & avoided) == vk::QueueFlags{})
+                {
+                    result = i;
+                    break;
+                }
+
+                if (result == kInvalidQueueFamily)
+                {
+                    result = i;
+                }
+            }
+
+            return result;
+        }
     } // namespace unnamed
 
     VulkanDevice::VulkanDevice()
         : _instance(nullptr)
         , _physicalDevice(nullptr)
         , _logicalDevice(nullptr)
+        , _allocator(nullptr)
+        , _swapChain(nullptr)
         , _graphicsQueue(nullptr)
         , _computeQueue(nullptr)
+        , _copyQueue(nullptr)
 #if ENABLE_DEVICE_DEBUG
         , _debugMessenger(nullptr)
 #endif // ENABLE_DEVICE_DEBUG
+        , _crashTracker(tracking::IGPUCrashTracker::Create())
     {
         _instance = CreateInstance();
 #if ENABLE_DEVICE_DEBUG
         _debugMessenger = SetupDebugMessenger();
 #endif // ENABLE_DEVICE_DEBUG
         _logicalDevice = CreateDevice();
+        if (!_logicalDevice)
+        {
+            return;
+        }
+
+        _allocator = CreateAllocator();
 
         LOG_INFO("Vulkan instance created successfully.");
     }
@@ -120,6 +173,8 @@ namespace rhi::vulkan
         , _physicalDevice(std::exchange(other._physicalDevice, nullptr))
         , _logicalDevice(std::exchange(other._logicalDevice, nullptr))
         , _graphicsQueue(std::exchange(other._graphicsQueue, nullptr))
+        , _computeQueue(std::exchange(other._computeQueue, nullptr))
+        , _copyQueue(std::exchange(other._copyQueue, nullptr))
 #if ENABLE_DEVICE_DEBUG
         , _debugMessenger(std::exchange(other._debugMessenger, nullptr))
 #endif // ENABLE_DEVICE_DEBUG
@@ -130,6 +185,14 @@ namespace rhi::vulkan
     {
         if (_logicalDevice)
         {
+            const vk::Result waitResult = _logicalDevice.waitIdle();
+            VK_CHECK(waitResult, "Failed to wait for device idle before destruction");
+
+            if (_allocator)
+            {
+                vmaDestroyAllocator(_allocator);
+            }
+
             _logicalDevice.destroy();
         }
 #if ENABLE_DEVICE_DEBUG
@@ -152,6 +215,8 @@ namespace rhi::vulkan
             _physicalDevice = std::exchange(other._physicalDevice, nullptr);
             _logicalDevice = std::exchange(other._logicalDevice, nullptr);
             _graphicsQueue = std::exchange(other._graphicsQueue, nullptr);
+            _computeQueue = std::exchange(other._computeQueue, nullptr);
+            _copyQueue = std::exchange(other._copyQueue, nullptr);
 #if ENABLE_DEVICE_DEBUG
             _debugMessenger = std::exchange(other._debugMessenger, nullptr);
 #endif // ENABLE_DEVICE_DEBUG
@@ -173,7 +238,7 @@ namespace rhi::vulkan
 
     void VulkanDevice::BindSwapChain(SwapChain* swapChain)
     {
-        NOT_IMPLEMENTED();
+        _swapChain = swapChain;
     }
 
     CommandQueue* VulkanDevice::GetGraphicsQueue()
@@ -183,50 +248,47 @@ namespace rhi::vulkan
 
     CommandQueue* VulkanDevice::GetComputeQueue()
     {
-        NOT_IMPLEMENTED();
-        return nullptr;
+        return _computeQueue.get();
     }
 
     CommandQueue* VulkanDevice::GetCopyQueue()
     {
-        NOT_IMPLEMENTED();
-        return nullptr;
+        return _copyQueue.get();
     }
 
     void VulkanDevice::OnResize(std::uint32_t width, std::uint32_t height)
     {
-        NOT_IMPLEMENTED();
+        _swapChain->OnResize(width, height);
     }
 
     std::shared_ptr<Texture> VulkanDevice::GetBackBuffer()
     {
-        NOT_IMPLEMENTED();
-        return std::shared_ptr<Texture>();
+        return _swapChain->GetBackBuffer();
     }
 
     void VulkanDevice::Present()
     {
-        NOT_IMPLEMENTED();
+        _swapChain->Present();
     }
 
     std::shared_ptr<Buffer> VulkanDevice::CreateBuffer(const BufferDescription& description, ResourceState initialState, const std::string& name)
     {
-        return std::unique_ptr<Buffer>(new VulkanBuffer(this, description, initialState, name));
+        return std::unique_ptr<Buffer>(new VulkanBuffer(this, _allocator, description, initialState, name));
     }
 
     std::shared_ptr<Buffer> VulkanDevice::CreateBuffer(void* nativePtr, const std::string& name)
     {
-        return std::unique_ptr<Buffer>(new VulkanBuffer(this, nativePtr, name));
+        return std::unique_ptr<Buffer>(new VulkanBuffer(this, VulkanCast<vk::Buffer>(nativePtr), name));
     }
 
     std::shared_ptr<Texture> VulkanDevice::CreateTexture(const TextureDescription& description, ResourceState initialState, const std::string& name)
     {
-        return std::unique_ptr<Texture>(new VulkanTexture(this, description, initialState, name));
+        return std::unique_ptr<Texture>(new VulkanTexture(this, _allocator, description, initialState, name));
     }
 
     std::shared_ptr<Texture> VulkanDevice::CreateTexture(void* nativePtr, const std::string& name)
     {
-        return std::unique_ptr<Texture>(new VulkanTexture(this, nativePtr, name));
+        return std::unique_ptr<Texture>(new VulkanTexture(this, VulkanCast<vk::Image>(nativePtr), name));
     }
 
     std::unique_ptr<CommandList> VulkanDevice::CreateCommandList(CommandListType type, const std::string& name)
@@ -241,32 +303,27 @@ namespace rhi::vulkan
 
     std::unique_ptr<DescriptorHeap> VulkanDevice::CreateDescriptorHeap(const DescriptorHeapDescription& description, const std::string& name)
     {
-        NOT_IMPLEMENTED();
-        return std::unique_ptr<DescriptorHeap>();
+        return std::unique_ptr<DescriptorHeap>(new VulkanDescriptorHeap(this, description, name));
     }
 
     std::unique_ptr<QueryHeap> VulkanDevice::CreateQueryHeap(const QueryHeapDescription& description, const std::string& name)
     {
-        NOT_IMPLEMENTED();
-        return std::unique_ptr<QueryHeap>();
+        return std::unique_ptr<QueryHeap>(new VulkanQueryHeap(this, description, name));
     }
 
     std::unique_ptr<Fence> VulkanDevice::CreateFence(std::uint64_t initialValue)
     {
-        NOT_IMPLEMENTED();
-        return std::unique_ptr<Fence>();
+        return std::unique_ptr<Fence>(new VulkanFence(this, initialValue));
     }
 
     std::unique_ptr<StatisticsQuery> VulkanDevice::CreateStatisticsQuery(const std::string& name)
     {
-        NOT_IMPLEMENTED();
-        return std::unique_ptr<StatisticsQuery>();
+        return std::unique_ptr<StatisticsQuery>(new VulkanStatisticsQuery(this, name));
     }
 
     std::unique_ptr<TimestampQuery> VulkanDevice::CreateTimestampQuery(std::uint32_t timestampsCount, const std::string& name)
     {
-        NOT_IMPLEMENTED();
-        return std::unique_ptr<TimestampQuery>();
+        return std::unique_ptr<TimestampQuery>(new VulkanTimestampQuery(this, timestampsCount, name));
     }
 
     std::unique_ptr<CommandSignature> VulkanDevice::CreateCommandSignature(const std::vector<IndirectArgumentDescription>& arguments, PipelineState* pipelineState, const std::string& name)
@@ -287,53 +344,248 @@ namespace rhi::vulkan
 
     void VulkanDevice::CreateBufferView(const BufferView& view, CPUDescriptor& descriptor)
     {
-        NOT_IMPLEMENTED();
+        switch (view.GetType())
+        {
+        case ResourceViewType::CBV:
+            CreateBufferCBV(view, descriptor);
+            break;
+        case ResourceViewType::SRV:
+            CreateBufferSRV(view, descriptor);
+            break;
+        case ResourceViewType::UAV:
+            CreateBufferUAV(view, descriptor);
+            break;
+        default:
+            UNREACHABLE("Unsupported buffer view type.");
+            break;
+        }
     }
 
     void VulkanDevice::CreateBufferSRV(std::shared_ptr<Buffer> resource, CPUDescriptor& descriptor)
     {
-        NOT_IMPLEMENTED();
+        BufferView view(resource.get(),
+            ResourceViewType::SRV,
+            resource->GetSize(),
+            0,
+            0,
+            resource->GetElementCount(),
+            resource->GetStride());
+
+        CreateBufferSRV(view, descriptor);
     }
 
     void VulkanDevice::CreateBufferCBV(std::shared_ptr<Buffer> resource, CPUDescriptor& descriptor)
     {
-        NOT_IMPLEMENTED();
+        BufferView view(resource.get(),
+            ResourceViewType::CBV,
+            resource->GetSize(),
+            0,
+            0,
+            resource->GetElementCount(),
+            resource->GetStride());
+
+        CreateBufferCBV(view, descriptor);
     }
 
     void VulkanDevice::CreateBufferUAV(std::shared_ptr<Buffer> resource, CPUDescriptor& descriptor, std::shared_ptr<Buffer> counterResource)
     {
-        NOT_IMPLEMENTED();
+        BufferView view(resource.get(),
+            ResourceViewType::UAV,
+            resource->GetSize(),
+            0,
+            0,
+            resource->GetElementCount(),
+            resource->GetStride(),
+            counterResource.get());
+
+        CreateBufferUAV(view, descriptor);
     }
 
     void VulkanDevice::CreateTextureView(const TextureView& view, CPUDescriptor& descriptor)
     {
-        NOT_IMPLEMENTED();
+        switch (view.GetType())
+        {
+        case ResourceViewType::RTV:
+            CreateTextureRTV(view, descriptor);
+            break;
+        case ResourceViewType::DSV:
+            CreateTextureDSV(view, descriptor);
+            break;
+        case ResourceViewType::SRV:
+            CreateTextureSRV(view, descriptor);
+            break;
+        case ResourceViewType::UAV:
+            CreateTextureUAV(view, descriptor);
+            break;
+        default:
+            UNREACHABLE("Unsupported texture view type.");
+            break;
+        }
     }
 
     void VulkanDevice::CreateTextureRTV(std::shared_ptr<Texture> texture, CPUDescriptor& descriptor)
     {
-        NOT_IMPLEMENTED();
+        TextureView view(texture.get(),
+            ResourceViewType::RTV,
+            texture->GetDescription().Dimension,
+            0,
+            texture->GetMipLevels(),
+            0,
+            0,
+            texture->GetDepthOrArraySize());
+
+        CreateTextureRTV(view, descriptor);
     }
 
     void VulkanDevice::CreateTextureDSV(std::shared_ptr<Texture> texture, CPUDescriptor& descriptor)
     {
-        NOT_IMPLEMENTED();
+        TextureView view(texture.get(),
+            ResourceViewType::DSV,
+            texture->GetDescription().Dimension,
+            0,
+            texture->GetMipLevels(),
+            0,
+            0,
+            texture->GetDepthOrArraySize());
+
+        CreateTextureDSV(view, descriptor);
     }
 
     void VulkanDevice::CreateTextureSRV(std::shared_ptr<Texture> texture, CPUDescriptor& descriptor)
     {
-        NOT_IMPLEMENTED();
+        TextureView view(texture.get(),
+            ResourceViewType::SRV,
+            texture->GetDescription().Dimension,
+            0,
+            texture->GetMipLevels(),
+            0,
+            0,
+            texture->GetDepthOrArraySize());
+
+        CreateTextureSRV(view, descriptor);
     }
 
     void VulkanDevice::CreateTextureUAV(std::shared_ptr<Texture> texture, CPUDescriptor& descriptor)
     {
-        NOT_IMPLEMENTED();
+        TextureView view(texture.get(),
+            ResourceViewType::UAV,
+            texture->GetDescription().Dimension,
+            0,
+            texture->GetMipLevels(),
+            0,
+            0,
+            texture->GetDepthOrArraySize());
+
+        CreateTextureUAV(view, descriptor);
     }
 
-    std::uint32_t VulkanDevice::GetDescriptorHandleIncrementSize(DescriptorHeapType type) const
+    void VulkanDevice::CreateBufferSRV(const BufferView& view, CPUDescriptor& descriptor)
     {
-        NOT_IMPLEMENTED();
-        return std::uint32_t();
+        auto* heap = static_cast<VulkanDescriptorHeap*>(descriptor.Heap);
+        ASSERT(heap, "Descriptor was not issued by a heap.");
+
+        heap->WriteBufferDescriptor(static_cast<std::uint32_t>(descriptor.ptr),
+            VulkanCast<vk::Buffer>(view.GetBuffer()->GetNative()),
+            view.GetOffset(),
+            view.GetSize(),
+            vk::DescriptorType::eStorageBuffer);
+    }
+
+    void VulkanDevice::CreateBufferCBV(const BufferView& view, CPUDescriptor& descriptor)
+    {
+        auto* heap = static_cast<VulkanDescriptorHeap*>(descriptor.Heap);
+        ASSERT(heap, "Descriptor was not issued by a heap.");
+
+        heap->WriteBufferDescriptor(static_cast<std::uint32_t>(descriptor.ptr),
+            VulkanCast<vk::Buffer>(view.GetBuffer()->GetNative()),
+            view.GetOffset(),
+            view.GetSize(),
+            vk::DescriptorType::eUniformBuffer);
+    }
+
+    void VulkanDevice::CreateBufferUAV(const BufferView& view, CPUDescriptor& descriptor)
+    {
+        auto* heap = static_cast<VulkanDescriptorHeap*>(descriptor.Heap);
+        ASSERT(heap, "Descriptor was not issued by a heap.");
+
+        // A UAV counter needs its own descriptor in Vulkan, not an offset into this one
+        heap->WriteBufferDescriptor(static_cast<std::uint32_t>(descriptor.ptr),
+            VulkanCast<vk::Buffer>(view.GetBuffer()->GetNative()),
+            view.GetOffset(),
+            view.GetSize(),
+            vk::DescriptorType::eStorageBuffer);
+    }
+
+    void VulkanDevice::CreateTextureRTV(const TextureView& view, CPUDescriptor& descriptor)
+    {
+        auto* heap = static_cast<VulkanDescriptorHeap*>(descriptor.Heap);
+        ASSERT(heap, "Descriptor was not issued by a heap.");
+
+        heap->SetImageView(static_cast<std::uint32_t>(descriptor.ptr),
+            CreateImageView(view),
+            { view.GetTexture()->GetWidth(), view.GetTexture()->GetHeight() });
+    }
+
+    void VulkanDevice::CreateTextureDSV(const TextureView& view, CPUDescriptor& descriptor)
+    {
+        auto* heap = static_cast<VulkanDescriptorHeap*>(descriptor.Heap);
+        ASSERT(heap, "Descriptor was not issued by a heap.");
+
+        heap->SetImageView(static_cast<std::uint32_t>(descriptor.ptr),
+            CreateImageView(view),
+            { view.GetTexture()->GetWidth(), view.GetTexture()->GetHeight() });
+    }
+
+    void VulkanDevice::CreateTextureSRV(const TextureView& view, CPUDescriptor& descriptor)
+    {
+        auto* heap = static_cast<VulkanDescriptorHeap*>(descriptor.Heap);
+        ASSERT(heap, "Descriptor was not issued by a heap.");
+
+        heap->WriteImageDescriptor(static_cast<std::uint32_t>(descriptor.ptr),
+            CreateImageView(view),
+            GetVkDescriptorImageLayout(ResourceViewType::SRV, view.GetFormat()),
+            vk::DescriptorType::eSampledImage);
+    }
+
+    void VulkanDevice::CreateTextureUAV(const TextureView& view, CPUDescriptor& descriptor)
+    {
+        auto* heap = static_cast<VulkanDescriptorHeap*>(descriptor.Heap);
+        ASSERT(heap, "Descriptor was not issued by a heap.");
+
+        heap->WriteImageDescriptor(static_cast<std::uint32_t>(descriptor.ptr),
+            CreateImageView(view),
+            GetVkDescriptorImageLayout(ResourceViewType::UAV, view.GetFormat()),
+            vk::DescriptorType::eStorageImage);
+    }
+
+    vk::ImageView VulkanDevice::CreateImageView(const TextureView& view)
+    {
+        const std::uint32_t arraySize = view.GetArraySize();
+
+        const vk::ImageViewCreateInfo createInfo =
+        {
+            .image = VulkanCast<vk::Image>(view.GetTexture()->GetNative()),
+            .viewType = GetVkImageViewType(view.GetDimension(), arraySize),
+            .format = GetVkFormat(view.GetFormat()),
+            .subresourceRange =
+            {
+                .aspectMask = GetVkImageAspect(view.GetFormat()),
+                .baseMipLevel = view.GetMostDetailedMip(),
+                .levelCount = view.GetMipLevels() > 0 ? view.GetMipLevels() : vk::RemainingMipLevels,
+                .baseArrayLayer = view.GetFirstArraySlice(),
+                .layerCount = arraySize > 0 ? arraySize : 1
+            }
+        };
+
+        auto [result, imageView] = _logicalDevice.createImageView(createInfo);
+        VK_CHECK(result, "Failed to create image view");
+
+        return imageView;
+    }
+
+    std::uint32_t VulkanDevice::GetDescriptorHandleIncrementSize(DescriptorHeapType) const
+    {
+        return 1;
     }
 
     AllocationInfo VulkanDevice::GetAllocationInfo(const BufferDescription& description) const
@@ -378,6 +630,11 @@ namespace rhi::vulkan
     vk::PhysicalDevice VulkanDevice::GetPhysicalDevice() const
     {
         return _physicalDevice;
+    }
+
+    SwapChain* VulkanDevice::GetSwapChain() const
+    {
+        return _swapChain;
     }
 
     vk::Instance VulkanDevice::CreateInstance()
@@ -452,33 +709,92 @@ namespace rhi::vulkan
                 _physicalDevice = physicalDevice;
             }
         }
-        ASSERT(_physicalDevice, "No suitable Vulkan physical device found.");
+        if (!_physicalDevice)
+        {
+            LOG_CRITICAL("No Vulkan physical device supports the required feature set.");
+            return nullptr;
+        }
 
-        std::vector<vk::QueueFamilyProperties> queueFamilyProperties = _physicalDevice.getQueueFamilyProperties();
-        auto graphicsQueueFamilyProperty = std::ranges::find_if(queueFamilyProperties, 
-            [](auto const& qfp) 
-            { return (qfp.queueFlags & vk::QueueFlagBits::eGraphics) != static_cast<vk::QueueFlags>(0); }
-        );
-        const std::uint32_t graphicsQueueFamilyIndex = static_cast<std::uint32_t>(std::distance(queueFamilyProperties.begin(), graphicsQueueFamilyProperty));
-        vk::DeviceQueueCreateInfo deviceQueueCreateInfo = { .queueFamilyIndex = graphicsQueueFamilyIndex };
+        LOG_INFO("Selected Vulkan device: {}", _physicalDevice.getProperties().deviceName.data());
 
-        // Create a chain of feature structures
+        const std::vector<vk::QueueFamilyProperties> queueFamilyProperties = _physicalDevice.getQueueFamilyProperties();
+
+        const std::uint32_t graphicsQueueFamilyIndex = FindQueueFamilyIndex(queueFamilyProperties, vk::QueueFlagBits::eGraphics, {});
+        if (graphicsQueueFamilyIndex == kInvalidQueueFamily)
+        {
+            LOG_CRITICAL("Selected Vulkan device exposes no graphics queue family.");
+            return nullptr;
+        }
+
+        std::uint32_t computeQueueFamilyIndex = FindQueueFamilyIndex(queueFamilyProperties, vk::QueueFlagBits::eCompute, vk::QueueFlagBits::eGraphics);
+        if (computeQueueFamilyIndex == kInvalidQueueFamily)
+        {
+            computeQueueFamilyIndex = graphicsQueueFamilyIndex;
+        }
+
+        std::uint32_t copyQueueFamilyIndex = FindQueueFamilyIndex(queueFamilyProperties, vk::QueueFlagBits::eTransfer, vk::QueueFlagBits::eGraphics | vk::QueueFlagBits::eCompute);
+        if (copyQueueFamilyIndex == kInvalidQueueFamily)
+        {
+            copyQueueFamilyIndex = graphicsQueueFamilyIndex;
+        }
+
+        constexpr float queuePriority = 1.0f;
+        std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
+        for (std::uint32_t queueFamilyIndex : { graphicsQueueFamilyIndex, computeQueueFamilyIndex, copyQueueFamilyIndex })
+        {
+            const auto isAlreadyRequested = [queueFamilyIndex](const vk::DeviceQueueCreateInfo& info)
+            {
+                return info.queueFamilyIndex == queueFamilyIndex;
+            };
+
+            if (std::ranges::none_of(queueCreateInfos, isAlreadyRequested))
+            {
+                queueCreateInfos.push_back(
+                {
+                    .queueFamilyIndex = queueFamilyIndex,
+                    .queueCount = 1,
+                    .pQueuePriorities = &queuePriority
+                });
+            }
+        }
+
         vk::StructureChain<vk::PhysicalDeviceFeatures2,
             vk::PhysicalDeviceVulkan11Features,
+            vk::PhysicalDeviceVulkan12Features,
             vk::PhysicalDeviceVulkan13Features,
-            vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>
+            vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT,
+            vk::PhysicalDeviceMutableDescriptorTypeFeaturesEXT>
             featureChain = {
-                {},                                    // vk::PhysicalDeviceFeatures2 (empty for now)
+                {.features = {.pipelineStatisticsQuery = true } },
                 {.shaderDrawParameters = true},        // Enable shader draw parameters from Vulkan 1.1
-                {.dynamicRendering = true},            // Enable dynamic rendering from Vulkan 1.3
-                {.extendedDynamicState = true}         // Enable extended dynamic state from the extension
+                {                                      // Descriptor indexing, required by the bindless heap
+                    .descriptorIndexing = true,
+                    .shaderSampledImageArrayNonUniformIndexing = true,
+                    .shaderStorageBufferArrayNonUniformIndexing = true,
+                    .shaderStorageImageArrayNonUniformIndexing = true,
+                    .descriptorBindingUniformBufferUpdateAfterBind = true,
+                    .descriptorBindingSampledImageUpdateAfterBind = true,
+                    .descriptorBindingStorageImageUpdateAfterBind = true,
+                    .descriptorBindingStorageBufferUpdateAfterBind = true,
+                    .descriptorBindingUpdateUnusedWhilePending = true,
+                    .descriptorBindingPartiallyBound = true,
+                    .runtimeDescriptorArray = true,
+                    .timelineSemaphore = true,
+                    .bufferDeviceAddress = true
+                },
+                {                                      // Vulkan 1.3
+                    .synchronization2 = true,          // Sync2 barriers and submits
+                    .dynamicRendering = true
+                },
+                {.extendedDynamicState = true},        // Enable extended dynamic state from the extension
+                {.mutableDescriptorType = true}        // One descriptor array holding mixed types
         };
 
         vk::DeviceCreateInfo deviceCreateInfo = 
         {
             .pNext = &featureChain.get<vk::PhysicalDeviceFeatures2>(),
-            .queueCreateInfoCount = 1,
-            .pQueueCreateInfos = &deviceQueueCreateInfo,
+            .queueCreateInfoCount = static_cast<std::uint32_t>(queueCreateInfos.size()),
+            .pQueueCreateInfos = queueCreateInfos.data(),
             .enabledExtensionCount = static_cast<uint32_t>(kDeviceExtensions.size()),
             .ppEnabledExtensionNames = kDeviceExtensions.data()
         };
@@ -488,12 +804,33 @@ namespace rhi::vulkan
 
         VULKAN_HPP_DEFAULT_DISPATCHER.init(device);
 
-        // Assign the member before creating the queue: VulkanCommandQueue reads the
-        // logical device back through _device->GetNative().
         _logicalDevice = device;
         _graphicsQueue = std::unique_ptr<VulkanCommandQueue>(new VulkanCommandQueue(this, rhi::CommandListType::Graphics, graphicsQueueFamilyIndex));
+        _computeQueue  = std::unique_ptr<VulkanCommandQueue>(new VulkanCommandQueue(this, rhi::CommandListType::Compute, computeQueueFamilyIndex));
+        _copyQueue     = std::unique_ptr<VulkanCommandQueue>(new VulkanCommandQueue(this, rhi::CommandListType::Copy, copyQueueFamilyIndex));
 
         return device;
+    }
+
+    VmaAllocator VulkanDevice::CreateAllocator()
+    {
+        VmaVulkanFunctions functions = {};
+        functions.vkGetInstanceProcAddr = VULKAN_HPP_DEFAULT_DISPATCHER.vkGetInstanceProcAddr;
+        functions.vkGetDeviceProcAddr = VULKAN_HPP_DEFAULT_DISPATCHER.vkGetDeviceProcAddr;
+
+        VmaAllocatorCreateInfo createInfo = {};
+        createInfo.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
+        createInfo.physicalDevice = _physicalDevice;
+        createInfo.device = _logicalDevice;
+        createInfo.instance = _instance;
+        createInfo.vulkanApiVersion = VK_API_VERSION_1_4;
+        createInfo.pVulkanFunctions = &functions;
+
+        VmaAllocator allocator = nullptr;
+        VkResult result = vmaCreateAllocator(&createInfo, &allocator);
+        VK_CHECK(static_cast<vk::Result>(result), "Failed to create Vulkan memory allocator");
+
+        return allocator;
     }
 
 #if ENABLE_DEVICE_DEBUG
@@ -577,13 +914,43 @@ namespace rhi::vulkan
         auto features = physicalDevice.template getFeatures2<
             vk::PhysicalDeviceFeatures2,
             vk::PhysicalDeviceVulkan11Features,
+            vk::PhysicalDeviceVulkan12Features,
             vk::PhysicalDeviceVulkan13Features,
-            vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>();
+            vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT,
+            vk::PhysicalDeviceMutableDescriptorTypeFeaturesEXT>();
 
-        bool supportsRequiredFeatures = features.template get<
-            vk::PhysicalDeviceVulkan11Features>().shaderDrawParameters &&
-            features.template get<vk::PhysicalDeviceVulkan13Features>().dynamicRendering &&
-            features.template get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>().extendedDynamicState;
+        const auto& vulkan11 = features.template get<vk::PhysicalDeviceVulkan11Features>();
+        const auto& vulkan12 = features.template get<vk::PhysicalDeviceVulkan12Features>();
+        const auto& vulkan13 = features.template get<vk::PhysicalDeviceVulkan13Features>();
+        const auto& dynamicState = features.template get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>();
+        const auto& mutableType = features.template get<vk::PhysicalDeviceMutableDescriptorTypeFeaturesEXT>();
+
+        const std::array<std::pair<const char*, bool>, 13> required =
+        {{
+            { "shaderDrawParameters",                          bool(vulkan11.shaderDrawParameters) },
+            { "dynamicRendering",                              bool(vulkan13.dynamicRendering) },
+            { "synchronization2",                              bool(vulkan13.synchronization2) },
+            { "extendedDynamicState",                          bool(dynamicState.extendedDynamicState) },
+            { "mutableDescriptorType",                         bool(mutableType.mutableDescriptorType) },
+            { "descriptorBindingPartiallyBound",               bool(vulkan12.descriptorBindingPartiallyBound) },
+            { "descriptorBindingSampledImageUpdateAfterBind",  bool(vulkan12.descriptorBindingSampledImageUpdateAfterBind) },
+            { "descriptorBindingStorageBufferUpdateAfterBind", bool(vulkan12.descriptorBindingStorageBufferUpdateAfterBind) },
+            { "descriptorBindingStorageImageUpdateAfterBind",  bool(vulkan12.descriptorBindingStorageImageUpdateAfterBind) },
+            { "runtimeDescriptorArray",                        bool(vulkan12.runtimeDescriptorArray) },
+            { "timelineSemaphore",                             bool(vulkan12.timelineSemaphore) },
+            { "bufferDeviceAddress",                           bool(vulkan12.bufferDeviceAddress) },
+            { "pipelineStatisticsQuery",                       bool(features.template get<vk::PhysicalDeviceFeatures2>().features.pipelineStatisticsQuery) },
+        }};
+
+        bool supportsRequiredFeatures = true;
+        for (const auto& [name, supported] : required)
+        {
+            if (!supported)
+            {
+                LOG_WARNING("Device '{}' is missing required feature: {}", physicalDevice.getProperties().deviceName.data(), name);
+                supportsRequiredFeatures = false;
+            }
+        }
 
         return supportsRequiredFeatures;
     }

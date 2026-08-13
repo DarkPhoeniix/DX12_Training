@@ -16,7 +16,7 @@ namespace rhi::vulkan
     public:
         VulkanStatisticsQuery(const VulkanStatisticsQuery&) = delete;
         VulkanStatisticsQuery(VulkanStatisticsQuery&& other) noexcept;
-        ~VulkanStatisticsQuery() override;
+        ~VulkanStatisticsQuery() override = default;
 
         VulkanStatisticsQuery& operator=(const VulkanStatisticsQuery&) = delete;
         VulkanStatisticsQuery& operator=(VulkanStatisticsQuery&& other) noexcept;

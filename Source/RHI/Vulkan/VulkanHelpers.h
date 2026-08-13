@@ -1,6 +1,10 @@
 #pragma once
 
-// VMA opaque handle forward declarations — avoids including vk_mem_alloc.h in headers
+#include "Format.h"
+#include "ResourceCommon.h"
+#include "QueryHeap.h"
+#include "CommandList.h"
+
 struct VmaAllocator_T;
 using VmaAllocator = VmaAllocator_T*;
 struct VmaAllocation_T;
@@ -52,4 +56,42 @@ namespace rhi::vulkan
         }
 #endif // ENABLE_DEBUG_NAMES
     }
+
+    vk::PrimitiveTopology GetVkPrimitiveTopology(PrimitiveTopology topology);
+    vk::BlendFactor GetVkBlendFactor(Blend blend);
+    vk::BlendOp GetVkBlendOp(BlendOpType blendOp);
+    vk::LogicOp GetVkLogicOp(LogicOp logicOp);
+    vk::PolygonMode GetVkPolygonMode(FillMode fillMode);
+    vk::CullModeFlags GetVkCullMode(CullMode cullMode);
+    vk::FrontFace GetVkFrontFace(bool isCCW);
+    vk::ColorComponentFlags GetVkColorWriteMask(ColorWriteEnable colorWriteMask);
+    vk::PipelineRasterizationStateCreateInfo GetVkRasterizationDesc(const RasterizerState& rasterizerState);
+    vk::PipelineMultisampleStateCreateInfo GetVkMultisampleDesc(const RasterizerState& multrasterizerStateisampleState);
+    vk::PipelineDepthStencilStateCreateInfo GetVkDepthStencilDescription(const DepthStencilState& depthStencilState);
+    vk::PipelineColorBlendAttachmentState GetVkColorBlendAttachmentDesc(const RTBlendState& rtBlendState);
+    vk::PipelineColorBlendStateCreateInfo GetVkColorBlendDesc(const BlendState& blendState);
+    vk::CompareOp GetVkCompareOp(ComparisonFunc comparisonFunc);
+    vk::Format GetVkFormat(rhi::Format format);
+    vk::Format GetVkVertexFormat(rhi::Format format);
+    std::uint32_t GetVkFormatSize(rhi::Format format);
+    vk::PipelineInputAssemblyStateCreateInfo GetVkInputAssemblyDesc(vk::PrimitiveTopology topology);
+    vk::PipelineViewportStateCreateInfo GetVkViewportDesc();
+
+    rhi::Format GetRHIFormat(vk::Format format);
+
+    struct ResourceStateInfo
+    {
+        vk::ImageLayout Layout;
+        vk::PipelineStageFlags2 Stage;
+        vk::AccessFlags2 Access;
+    };
+
+    ResourceStateInfo GetVkResourceStateInfo(ResourceState state, bool isSwapChainImage);
+
+    vk::ImageAspectFlags GetVkImageAspect(rhi::Format format);
+    vk::ImageType GetVkImageType(TextureDimension dimension);
+    vk::ImageViewType GetVkImageViewType(TextureDimension dimension, std::uint32_t arraySize);
+    vk::ImageUsageFlags GetVkImageUsage(ResourceFlags flags);
+    vk::DescriptorType GetVkDescriptorType(ResourceViewType viewType);
+    vk::ImageLayout GetVkDescriptorImageLayout(ResourceViewType viewType, rhi::Format format);
 } // namespace rhi::vulkan

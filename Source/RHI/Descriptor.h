@@ -2,6 +2,8 @@
 
 namespace rhi
 {
+    class DescriptorHeap;
+
     // DescriptorType represents the type of descriptor, which can be either CPU or GPU
     enum class DescriptorType
     {
@@ -14,10 +16,11 @@ namespace rhi
     struct TypedDescriptor
     {
         std::uint64_t ptr;
+        DescriptorHeap* Heap;
 
-        TypedDescriptor() : ptr(std::uint64_t(-1)) {}
-        bool operator==(const TypedDescriptor& other) const { return ptr == other.ptr; }
-        bool operator!=(const TypedDescriptor& other) const { return ptr != other.ptr; }
+        TypedDescriptor() : ptr(std::uint64_t(-1)), Heap(nullptr) {}
+        bool operator==(const TypedDescriptor& other) const { return ptr == other.ptr && Heap == other.Heap; }
+        bool operator!=(const TypedDescriptor& other) const { return !(*this == other); }
 
         // Checks if the descriptor is valid by comparing the pointer to an invalid value (-1)
         bool Valid() const { return ptr != std::uint64_t(-1); }

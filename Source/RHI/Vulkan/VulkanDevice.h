@@ -1,19 +1,17 @@
 #pragma once
 
 #include "Device.h"
+#include "VulkanHelpers.h"
 
 namespace tracking
 {
     class IGPUCrashTracker;
 } // namespace tracking
 
-namespace vma
-{
-    class Allocator;
-} // namespace vma
-
 namespace rhi::vulkan
 {
+    class VulkanDescriptorHeap;
+
     class VulkanDevice final : public rhi::Device
     {
     public:
@@ -79,31 +77,46 @@ namespace rhi::vulkan
         tracking::IGPUCrashTracker* GetCrashTracker() override;
 
         void* GetNative() const override;
-        // Retrieves the native Vulkan instance object, allowing the application to access
-        // the underlying Vulkan instance for integration with other Vulkan-based libraries or tools
         vk::Instance GetVulkanInstance() const;
-        // Retrieves the selected physical device (needed for surface capability/format queries)
         vk::PhysicalDevice GetPhysicalDevice() const;
+        SwapChain* GetSwapChain() const;
 
     private:
         vk::Instance CreateInstance();
         vk::Device CreateDevice();
-#if ENABLE_DEVICE_DEBUG
-        vk::DebugUtilsMessengerEXT SetupDebugMessenger();
-#endif // ENABLE_DEVICE_DEBUG
+        VmaAllocator CreateAllocator();
+
+        void CreateBufferSRV(const BufferView& view, CPUDescriptor& descriptor);
+        void CreateBufferCBV(const BufferView& view, CPUDescriptor& descriptor);
+        void CreateBufferUAV(const BufferView& view, CPUDescriptor& descriptor);
+
+        void CreateTextureRTV(const TextureView& view, CPUDescriptor& descriptor);
+        void CreateTextureDSV(const TextureView& view, CPUDescriptor& descriptor);
+        void CreateTextureSRV(const TextureView& view, CPUDescriptor& descriptor);
+        void CreateTextureUAV(const TextureView& view, CPUDescriptor& descriptor);
+
+        vk::ImageView CreateImageView(const TextureView& view);
+
         void EnumerateExtensions() const;
         bool CheckExtensionsSupport(const std::vector<const char*>& extensions) const;
         bool CheckLayersSupport(const std::vector<const char*>& layers) const;
         bool CheckFeatureSupport(const vk::PhysicalDevice& physicalDevice) const;
 
+#if ENABLE_DEVICE_DEBUG
+        vk::DebugUtilsMessengerEXT SetupDebugMessenger();
+#endif // ENABLE_DEVICE_DEBUG
+
         vk::Instance _instance;
         vk::PhysicalDevice _physicalDevice;
         vk::Device _logicalDevice;
 
-        vma::Allocator _allocator;
+        VmaAllocator _allocator;
+
+        SwapChain* _swapChain;
 
         std::unique_ptr<rhi::CommandQueue> _graphicsQueue;
         std::unique_ptr<rhi::CommandQueue> _computeQueue;
+        std::unique_ptr<rhi::CommandQueue> _copyQueue;
 #if ENABLE_DEVICE_DEBUG
         vk::DebugUtilsMessengerEXT _debugMessenger;
 #endif // ENABLE_DEVICE_DEBUG

@@ -42,8 +42,7 @@ namespace rhi::vulkan
         friend class VulkanSwapChain;
 
         VulkanTexture(rhi::Device* device, VmaAllocator allocator, const TextureDescription& description, ResourceState initialState = ResourceState::Common, const std::string& name = "");
-        // Wraps an externally-owned image (e.g. swapchain) — no VMA allocation
-        VulkanTexture(rhi::Device* device, vk::Image nativeImage, const TextureDescription& description, const std::string& name = "");
+        VulkanTexture(rhi::Device* device, vk::Image nativeImage, const std::string& name = "");
 
         vk::Image     _image;
         VmaAllocator  _allocator;   // non-owning, nullptr for wrapped native images
