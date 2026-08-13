@@ -19,7 +19,7 @@ struct PassConstants
     float4 Color;
 };
 
-ConstantBuffer<PassConstants> PassCB : register(b1);
+URootConstants(PassConstants, PassCB);
 
 const static float3 _kBoxMin = float3(-1.0f, -1.0f, -1.0f);
 const static float3 _kBoxMax = float3(+1.0f, +1.0f, +1.0f);

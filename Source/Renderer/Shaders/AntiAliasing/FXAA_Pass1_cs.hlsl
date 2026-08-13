@@ -20,7 +20,7 @@ struct PassConstants
     uint LumaTextureIndex;
 };
 
-ConstantBuffer<PassConstants> PassCB : register(b1);
+URootConstants(PassConstants, PassCB);
 
 #define BOUNDARY_SIZE 1
 #define ROW_WIDTH (8 + BOUNDARY_SIZE * 2)

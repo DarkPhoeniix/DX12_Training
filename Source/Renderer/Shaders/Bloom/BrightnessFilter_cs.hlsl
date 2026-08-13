@@ -10,7 +10,7 @@ struct PassConstants
     float Threshold;
 };
 
-ConstantBuffer<PassConstants> PassCB : register(b1);
+URootConstants(PassConstants, PassCB);
 
 [numthreads(16, 16, 1)]
 [RootSignature(URootSignature)]

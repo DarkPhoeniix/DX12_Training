@@ -419,7 +419,7 @@ namespace rhi::vulkan
         {
             .stageFlags = vk::ShaderStageFlagBits::eAll,
             .offset     = 0,
-            .size       = 16 * sizeof(std::uint32_t) // matches RootConstants(num32BitConstants = 16, b1)
+            .size       = ROOT_CONSTANT_COUNT * sizeof(std::uint32_t)
         };
 
         const vk::PipelineLayoutCreateInfo layoutCreateInfo =
@@ -511,7 +511,7 @@ namespace rhi::vulkan
         {
             .stageFlags = vk::ShaderStageFlagBits::eAll,
             .offset     = 0,
-            .size       = 16 * sizeof(std::uint32_t)
+            .size       = ROOT_CONSTANT_COUNT * sizeof(std::uint32_t)
         };
 
         const vk::PipelineLayoutCreateInfo layoutCreateInfo =

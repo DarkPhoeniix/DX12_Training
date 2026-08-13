@@ -14,7 +14,7 @@ struct PassCB
     uint AverageLuminanceBufferIndex;
 };
 
-ConstantBuffer<PassCB> PassConstants : register(b1);
+URootConstants(PassCB, PassConstants);
 
 groupshared float HistogramShared[NUM_HISTOGRAM_BINS];
 

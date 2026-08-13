@@ -275,6 +275,21 @@ namespace rhi::vulkan
     void VulkanCommandList::CopyTextureRegion(std::shared_ptr<Texture>, std::shared_ptr<Texture>, uint32_t, uint32_t, uint32_t)                       { NOT_IMPLEMENTED(); }
     void VulkanCommandList::CopyBufferToTexture(std::shared_ptr<Buffer>, std::shared_ptr<Texture>, const std::vector<SubresourceData>&)               { NOT_IMPLEMENTED(); }
 
+    void VulkanCommandList::CopyDataToBuffer(std::shared_ptr<Buffer> intermediateBuffer, std::shared_ptr<Buffer> destinationBuffer, const void* data, std::uint32_t numBytes)
+    {
+        FAIL(intermediateBuffer->GetSize() >= numBytes, "Intermediate buffer is too small for the upload.");
+
+        std::uint8_t* mappedData = intermediateBuffer->Map<std::uint8_t>();
+        memcpy(mappedData, data, numBytes);
+        intermediateBuffer->Unmap();
+
+        const vk::BufferCopy region = { .srcOffset = 0, .dstOffset = 0, .size = numBytes };
+
+        _commandBuffer.copyBuffer(VulkanCast<vk::Buffer>(intermediateBuffer->GetNative()),
+                                  VulkanCast<vk::Buffer>(destinationBuffer->GetNative()),
+                                  region);
+    }
+
     void VulkanCommandList::SetGraphicsPipelineState(rhi::PipelineState*)  { NOT_IMPLEMENTED(); }
     void VulkanCommandList::SetComputePipelineState(rhi::PipelineState*)   { NOT_IMPLEMENTED(); }
     void VulkanCommandList::SetPrimitiveTopology(rhi::PrimitiveTopology)   { NOT_IMPLEMENTED(); }

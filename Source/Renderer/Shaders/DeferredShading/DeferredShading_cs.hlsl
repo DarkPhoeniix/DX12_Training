@@ -15,7 +15,7 @@ struct PassConstants
     uint TargetTextureIndex;
 };
 
-ConstantBuffer<PassConstants> PassCB : register(b1);
+URootConstants(PassConstants, PassCB);
 
 void SetLightParams(in LightDesc light, inout Surface surface);
 float CalculateShadowAttenuation_PCF3x3(in LightDesc light, in Surface surface);

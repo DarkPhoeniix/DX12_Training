@@ -89,7 +89,7 @@ add_custom_command(TARGET Renderer POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory "${EXE_OUTPUT_DIR}/Shaders"
 )
 
-# --- Shader compilation (DXC) ------------------------------------------------
+# --- Shader compilation ------------------------------------------------------
 set(SHADER_DEBUG_INFO $<$<CONFIG:Debug,RelWithDebInfo>:TRUE>)
 
 if (MSVC)
@@ -99,19 +99,42 @@ if (MSVC)
     set_property(SOURCE ${Renderer_PS_SHADERS} PROPERTY VS_SETTINGS "ExcludedFromBuild=true")
 endif()
 
-include(${CMAKE_SOURCE_DIR}/Scripts/CompileShaderDxc.cmake)
-foreach(ShaderFile ${Renderer_VS_SHADERS})
-    CompileShader("${EXE_OUTPUT_DIR}/Shaders" "${ShaderFile}" "vs" "O3" "${SHADER_DEBUG_INFO}")
-endforeach()
+# DXIL for the D3D12 backend
+if (USE_D3D12)
+    include(${CMAKE_SOURCE_DIR}/Scripts/CompileShaderDxc.cmake)
+    foreach(ShaderFile ${Renderer_VS_SHADERS})
+        CompileShader("${EXE_OUTPUT_DIR}/Shaders" "${ShaderFile}" "vs" "O3" "${SHADER_DEBUG_INFO}")
+    endforeach()
 
-foreach(ShaderFile ${Renderer_GS_SHADERS})
-    CompileShader("${EXE_OUTPUT_DIR}/Shaders" "${ShaderFile}" "gs" "O3" "${SHADER_DEBUG_INFO}")
-endforeach()
+    foreach(ShaderFile ${Renderer_GS_SHADERS})
+        CompileShader("${EXE_OUTPUT_DIR}/Shaders" "${ShaderFile}" "gs" "O3" "${SHADER_DEBUG_INFO}")
+    endforeach()
 
-foreach(ShaderFile ${Renderer_PS_SHADERS})
-    CompileShader("${EXE_OUTPUT_DIR}/Shaders" "${ShaderFile}" "ps" "O3" "${SHADER_DEBUG_INFO}")
-endforeach()
+    foreach(ShaderFile ${Renderer_PS_SHADERS})
+        CompileShader("${EXE_OUTPUT_DIR}/Shaders" "${ShaderFile}" "ps" "O3" "${SHADER_DEBUG_INFO}")
+    endforeach()
 
-foreach(ShaderFile ${Renderer_CS_SHADERS})
-    CompileShader("${EXE_OUTPUT_DIR}/Shaders" "${ShaderFile}" "cs" "O3" "${SHADER_DEBUG_INFO}")
-endforeach()
+    foreach(ShaderFile ${Renderer_CS_SHADERS})
+        CompileShader("${EXE_OUTPUT_DIR}/Shaders" "${ShaderFile}" "cs" "O3" "${SHADER_DEBUG_INFO}")
+    endforeach()
+endif()
+
+# SPIR-V for the Vulkan backend
+if (USE_VULKAN)
+    include(${CMAKE_SOURCE_DIR}/Scripts/CompileShaderSpirv.cmake)
+    foreach(ShaderFile ${Renderer_VS_SHADERS})
+        CompileShaderSpirv("${EXE_OUTPUT_DIR}/Shaders" "${ShaderFile}" "vs" "O3" "${SHADER_DEBUG_INFO}")
+    endforeach()
+
+    foreach(ShaderFile ${Renderer_GS_SHADERS})
+        CompileShaderSpirv("${EXE_OUTPUT_DIR}/Shaders" "${ShaderFile}" "gs" "O3" "${SHADER_DEBUG_INFO}")
+    endforeach()
+
+    foreach(ShaderFile ${Renderer_PS_SHADERS})
+        CompileShaderSpirv("${EXE_OUTPUT_DIR}/Shaders" "${ShaderFile}" "ps" "O3" "${SHADER_DEBUG_INFO}")
+    endforeach()
+
+    foreach(ShaderFile ${Renderer_CS_SHADERS})
+        CompileShaderSpirv("${EXE_OUTPUT_DIR}/Shaders" "${ShaderFile}" "cs" "O3" "${SHADER_DEBUG_INFO}")
+    endforeach()
+endif()

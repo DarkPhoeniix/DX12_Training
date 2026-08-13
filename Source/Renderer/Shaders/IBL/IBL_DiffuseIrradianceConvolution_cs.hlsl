@@ -12,7 +12,7 @@ struct PassConstants
     uint DiffuseIrradianceMapIndex;
 };
 
-ConstantBuffer<PassConstants> PassCB : register(b1);
+URootConstants(PassConstants, PassCB);
 
 const static float k_SampleDelta = 0.005f;
 

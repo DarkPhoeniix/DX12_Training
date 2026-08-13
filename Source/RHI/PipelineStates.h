@@ -5,7 +5,11 @@
 
 namespace rhi
 {
-    // PipelineStateType represents the type of pipeline state. 
+    // Number of 32-bit values in the root constant slot (b1). Must match num32BitConstants
+    // declared by URootSignature in UnifiedRootSignature.hlsli
+    constexpr std::uint32_t ROOT_CONSTANT_COUNT = 16;
+
+    // PipelineStateType represents the type of pipeline state.
     // It is used to specify the intended usage of a pipeline state object and determine the appropriate stages of the pipeline
     enum class PipelineStateType : std::uint8_t
     {

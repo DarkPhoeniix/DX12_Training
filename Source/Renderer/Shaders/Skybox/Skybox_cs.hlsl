@@ -13,7 +13,7 @@ struct PassConstants
     uint TargetTextureIndex;
 };
 
-ConstantBuffer<PassConstants> PassCB : register(b1);
+URootConstants(PassConstants, PassCB);
 
 [RootSignature(URootSignature)]
 [numthreads(8, 8, 1)]

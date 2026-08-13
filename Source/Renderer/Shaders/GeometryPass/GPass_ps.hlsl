@@ -27,7 +27,7 @@ struct PassConstants
     uint Instance;
 };
 
-ConstantBuffer<PassConstants> PassCB : register(b1);
+URootConstants(PassConstants, PassCB);
 
 PSOutput main(PSinput IN)
 {

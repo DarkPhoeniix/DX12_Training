@@ -390,6 +390,20 @@ namespace rhi::d3d12
         }
     }
 
+    void D3D12CommandList::CopyDataToBuffer(std::shared_ptr<Buffer> intermediateBuffer,
+                                            std::shared_ptr<Buffer> destinationBuffer,
+                                            const void* data,
+                                            std::uint32_t numBytes)
+    {
+        FAIL(intermediateBuffer->GetSize() >= numBytes, "Intermediate buffer is too small for the upload.");
+
+        std::uint8_t* mappedData = intermediateBuffer->Map<std::uint8_t>();
+        memcpy(mappedData, data, numBytes);
+        intermediateBuffer->Unmap();
+
+        CopyBufferRegion(intermediateBuffer, destinationBuffer, numBytes);
+    }
+
     void D3D12CommandList::SetGraphicsPipelineState(PipelineState* pipelineState)
     {
         FAIL(_type == CommandListType::Graphics, "Command list type is not Graphics.");
@@ -598,6 +612,7 @@ namespace rhi::d3d12
     void D3D12CommandList::SetGraphicsConstant(std::uint32_t index, std::uint32_t data, std::uint32_t offset)
     {
         FAIL(_type == CommandListType::Graphics, "Command list type is not Graphics.");
+        FAIL(offset < ROOT_CONSTANT_COUNT, "Root constant index is outside the root signature's constant slot.");
 
         _commandList->SetGraphicsRoot32BitConstant(index, data, offset);
     }
@@ -605,6 +620,7 @@ namespace rhi::d3d12
     void D3D12CommandList::SetComputeConstant(std::uint32_t index, std::uint32_t data, std::uint32_t offset)
     {
         FAIL((_type == CommandListType::Graphics) || (_type == CommandListType::Compute), "Command list type is not Graphics or Compute.");
+        FAIL(offset < ROOT_CONSTANT_COUNT, "Root constant index is outside the root signature's constant slot.");
 
         _commandList->SetComputeRoot32BitConstant(index, data, offset);
     }
@@ -612,6 +628,7 @@ namespace rhi::d3d12
     void D3D12CommandList::SetGraphicsConstants(std::uint32_t index, std::uint32_t numValues, const void* data, std::uint32_t offset)
     {
         FAIL(_type == CommandListType::Graphics, "Command list type is not Graphics.");
+        FAIL(offset + numValues <= ROOT_CONSTANT_COUNT, "Root constant range is outside the root signature's constant slot.");
 
         _commandList->SetGraphicsRoot32BitConstants(index, numValues, data, offset);
     }
@@ -619,6 +636,7 @@ namespace rhi::d3d12
     void D3D12CommandList::SetComputeConstants(std::uint32_t index, std::uint32_t numValues, const void* data, std::uint32_t offset)
     {
         FAIL((_type == CommandListType::Graphics) || (_type == CommandListType::Compute), "Command list type is not Graphics or Compute.");
+        FAIL(offset + numValues <= ROOT_CONSTANT_COUNT, "Root constant range is outside the root signature's constant slot.");
 
         _commandList->SetComputeRoot32BitConstants(index, numValues, data, offset);
     }

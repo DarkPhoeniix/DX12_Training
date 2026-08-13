@@ -19,7 +19,7 @@ struct PassConstants
     uint OutputTextureIndex;
 };
 
-ConstantBuffer<PassConstants> PassCB : register(b1);
+URootConstants(PassConstants, PassCB);
 
 // Note that the number of samples in each direction is one less than the number of sample distances.  The last
 // is the maximum distance that should be used, but whether that sample is "good" or "bad" doesn't affect the result,

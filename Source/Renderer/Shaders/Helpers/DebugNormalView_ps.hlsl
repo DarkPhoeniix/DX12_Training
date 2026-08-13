@@ -1,4 +1,5 @@
 
+#include "../UnifiedRootSignature.hlsli"
 #include "../CommonResources.hlsli"
 
 struct PSInput
@@ -12,7 +13,7 @@ struct PassConstants
     uint NormalRoughnessTextureIndex;
 };
 
-ConstantBuffer<PassConstants> PassCB : register(b1);
+URootConstants(PassConstants, PassCB);
 
 float4 main(PSInput input) : SV_Target0
 {

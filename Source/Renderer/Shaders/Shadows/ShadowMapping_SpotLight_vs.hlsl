@@ -29,7 +29,7 @@ struct PassConstants
     uint LightIndex;
 };
 
-ConstantBuffer<PassConstants> PassCB : register(b1);
+URootConstants(PassConstants, PassCB);
 
 [RootSignature(URootSignature)]
 VSOutput main(VSinput IN)

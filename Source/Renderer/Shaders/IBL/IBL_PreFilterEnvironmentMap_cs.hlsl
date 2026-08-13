@@ -15,7 +15,7 @@ struct PassContants
     uint PreFilteredEnvironmentMapIndex;
 };
 
-ConstantBuffer<PassContants> PassCB : register(b1);
+URootConstants(PassContants, PassCB);
 
 const static uint k_SamplesCount = 4096u;
 

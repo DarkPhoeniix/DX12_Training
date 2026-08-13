@@ -9,7 +9,7 @@ struct RootConstants
     uint TargetTextureIndex;
 };
 
-ConstantBuffer<RootConstants> RootCB : register(b1);
+URootConstants(RootConstants, RootCB);
 
 [numthreads(NUM_THREADS, NUM_THREADS, 1)]
 [RootSignature(URootSignature)]

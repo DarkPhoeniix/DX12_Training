@@ -8,7 +8,7 @@ struct PassConstants
     float4 Color;
 };
 
-ConstantBuffer<PassConstants> PassCB : register(b1);
+URootConstants(PassConstants, PassCB);
 
 float4 main() : SV_TARGET
 {

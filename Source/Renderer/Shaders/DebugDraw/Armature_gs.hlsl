@@ -19,7 +19,7 @@ struct PassConstants
     float4 End;
 };
 
-ConstantBuffer<PassConstants> PassCB : register(b1);
+URootConstants(PassConstants, PassCB);
 
 [maxvertexcount(170)]
 void main(point GeometryInput input[1], inout LineStream<PixelInput> lineStream)

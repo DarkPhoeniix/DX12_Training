@@ -10,7 +10,7 @@ struct PassConstants
     uint brdfLUTTextureIndex;
 };
 
-ConstantBuffer<PassConstants> PassCB : register(b1);
+URootConstants(PassConstants, PassCB);
 
 const static uint k_SamplesCount = 1024u;
 

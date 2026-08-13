@@ -15,7 +15,7 @@ struct PassConstants
     uint LightIndex;
 };
 
-ConstantBuffer<PassConstants> PassCB : register(b1);
+URootConstants(PassConstants, PassCB);
 
 [maxvertexcount(18)]
 void main(triangle float4 input[3] : SV_POSITION, inout TriangleStream<GSOutput> triangleStream)

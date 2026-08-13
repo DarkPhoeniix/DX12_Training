@@ -33,6 +33,7 @@ namespace rhi::vulkan
         void CopyTexture(std::shared_ptr<Texture> sourceResource, std::shared_ptr<Texture> destinationResource) override;
         void CopyTextureRegion(std::shared_ptr<Texture> sourceResource, std::shared_ptr<Texture> destinationResource, uint32_t numBytes, uint32_t sourceOffset, uint32_t destinationOffset) override;
         void CopyBufferToTexture(std::shared_ptr<Buffer> intermediateBuffer, std::shared_ptr<Texture> destinationTexture, const std::vector<SubresourceData>& subresources) override;
+        void CopyDataToBuffer(std::shared_ptr<Buffer> intermediateBuffer, std::shared_ptr<Buffer> destinationBuffer, const void* data, std::uint32_t numBytes) override;
 
         void SetGraphicsPipelineState(rhi::PipelineState* pipelineState) override;
         void SetComputePipelineState(rhi::PipelineState* pipelineState) override;

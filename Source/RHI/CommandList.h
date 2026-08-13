@@ -171,6 +171,12 @@ namespace rhi
         virtual void CopyBufferToTexture(std::shared_ptr<Buffer> intermediateBuffer,
                                          std::shared_ptr<Texture> destinationTexture,
                                          const std::vector<SubresourceData>& subresources) = 0;
+        // Copies CPU-side data into a destination buffer through an upload buffer.
+        // The destination buffer must be in CopyDest state. The intermediateBuffer must be an Upload buffer at least numBytes large.
+        virtual void CopyDataToBuffer(std::shared_ptr<Buffer> intermediateBuffer,
+                                      std::shared_ptr<Buffer> destinationBuffer,
+                                      const void* data,
+                                      std::uint32_t numBytes) = 0;
 
         // Sets the graphics pipeline state for the command list, allowing the application to specify the configuration of the graphics pipeline
         virtual void SetGraphicsPipelineState(PipelineState* pipelineState) = 0;

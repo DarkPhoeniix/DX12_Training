@@ -765,7 +765,11 @@ namespace rhi::vulkan
             vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT,
             vk::PhysicalDeviceMutableDescriptorTypeFeaturesEXT>
             featureChain = {
-                {.features = {.pipelineStatisticsQuery = true } },
+                {.features = {
+                    .geometryShader = true,            // Debug draw and point light shadow passes
+                    .samplerAnisotropy = true,         // Static samplers s8..s11
+                    .pipelineStatisticsQuery = true
+                } },
                 {.shaderDrawParameters = true},        // Enable shader draw parameters from Vulkan 1.1
                 {                                      // Descriptor indexing, required by the bindless heap
                     .descriptorIndexing = true,
@@ -778,6 +782,7 @@ namespace rhi::vulkan
                     .descriptorBindingStorageBufferUpdateAfterBind = true,
                     .descriptorBindingUpdateUnusedWhilePending = true,
                     .descriptorBindingPartiallyBound = true,
+                    .descriptorBindingVariableDescriptorCount = true,
                     .runtimeDescriptorArray = true,
                     .timelineSemaphore = true,
                     .bufferDeviceAddress = true
@@ -924,8 +929,9 @@ namespace rhi::vulkan
         const auto& vulkan13 = features.template get<vk::PhysicalDeviceVulkan13Features>();
         const auto& dynamicState = features.template get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>();
         const auto& mutableType = features.template get<vk::PhysicalDeviceMutableDescriptorTypeFeaturesEXT>();
+        const auto& core = features.template get<vk::PhysicalDeviceFeatures2>().features;
 
-        const std::array<std::pair<const char*, bool>, 13> required =
+        const std::array<std::pair<const char*, bool>, 16> required =
         {{
             { "shaderDrawParameters",                          bool(vulkan11.shaderDrawParameters) },
             { "dynamicRendering",                              bool(vulkan13.dynamicRendering) },
@@ -936,10 +942,13 @@ namespace rhi::vulkan
             { "descriptorBindingSampledImageUpdateAfterBind",  bool(vulkan12.descriptorBindingSampledImageUpdateAfterBind) },
             { "descriptorBindingStorageBufferUpdateAfterBind", bool(vulkan12.descriptorBindingStorageBufferUpdateAfterBind) },
             { "descriptorBindingStorageImageUpdateAfterBind",  bool(vulkan12.descriptorBindingStorageImageUpdateAfterBind) },
+            { "descriptorBindingVariableDescriptorCount",      bool(vulkan12.descriptorBindingVariableDescriptorCount) },
             { "runtimeDescriptorArray",                        bool(vulkan12.runtimeDescriptorArray) },
             { "timelineSemaphore",                             bool(vulkan12.timelineSemaphore) },
             { "bufferDeviceAddress",                           bool(vulkan12.bufferDeviceAddress) },
-            { "pipelineStatisticsQuery",                       bool(features.template get<vk::PhysicalDeviceFeatures2>().features.pipelineStatisticsQuery) },
+            { "pipelineStatisticsQuery",                       bool(core.pipelineStatisticsQuery) },
+            { "geometryShader",                                bool(core.geometryShader) },
+            { "samplerAnisotropy",                             bool(core.samplerAnisotropy) },
         }};
 
         bool supportsRequiredFeatures = true;

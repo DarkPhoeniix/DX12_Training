@@ -24,8 +24,6 @@
 
 #include <fstream>
 
-#include <directx/d3dx12.h>     // D3D12 extension library
-
 using namespace DirectX;
 
 namespace
@@ -644,25 +642,17 @@ namespace scene::helpers
                 std::uint32_t bufferSize = numElements * elementSize;
 
                 rhi::BufferDescription desc = { .Size = bufferSize };
-                std::shared_ptr<rhi::Buffer> destination = _device->CreateBuffer(desc, rhi::ResourceState::Common, name);
+                std::shared_ptr<rhi::Buffer> destination = _device->CreateBuffer(desc, rhi::ResourceState::CopyDest, name);
 
                 desc.Usage = rhi::ResourceUsage::Upload;
 
                 std::shared_ptr<rhi::Buffer> intermediate = _device->CreateBuffer(desc, rhi::ResourceState::Common, "Intermediate");
                 _intermediates.push_back(intermediate);
 
-                D3D12_SUBRESOURCE_DATA subresourceData = {};
-                subresourceData.pData = data;
-                subresourceData.RowPitch = bufferSize;
-                subresourceData.SlicePitch = subresourceData.RowPitch;
+                commandList->CopyDataToBuffer(intermediate, destination, data, bufferSize);
 
-                ID3D12GraphicsCommandList* d3d12CommandList = static_cast<ID3D12GraphicsCommandList*>(commandList->GetNative());
-                ID3D12Resource* d3d12TargetResource = static_cast<ID3D12Resource*>(destination->GetNative());
-                ID3D12Resource* d3d12IntermediateResource = static_cast<ID3D12Resource*>(intermediate->GetNative());
-
-                UpdateSubresources(d3d12CommandList,
-                    d3d12TargetResource, d3d12IntermediateResource,
-                    0, 0, 1, &subresourceData);
+                rhi::BufferBarrier barrier = { destination, rhi::ResourceState::CopyDest, rhi::ResourceState::Common };
+                commandList->TransitionBarriers({ barrier });
 
                 return destination;
             };

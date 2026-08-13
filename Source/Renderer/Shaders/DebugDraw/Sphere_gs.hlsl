@@ -20,7 +20,7 @@ struct PassConstants
     float4 Color;
 };
 
-ConstantBuffer<PassConstants> PassCB : register(b1);
+URootConstants(PassConstants, PassCB);
 
 float3 SphericalToCartesian(float radius, float polar, float azimuth)
 {

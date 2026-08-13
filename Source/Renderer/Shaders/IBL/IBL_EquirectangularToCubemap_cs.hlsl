@@ -11,7 +11,7 @@ struct PassConstants
     uint CubemapIndex;
 };
 
-ConstantBuffer<PassConstants> PassCB : register(b1);
+URootConstants(PassConstants, PassCB);
 
 SamplerState LinearSampler : register(s0);
 

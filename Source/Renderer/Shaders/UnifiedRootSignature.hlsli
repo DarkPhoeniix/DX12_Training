@@ -81,3 +81,11 @@
         "addressW = TEXTURE_ADDRESS_CLAMP," \
         "filter = FILTER_COMPARISON_MIN_MAG_MIP_LINEAR," \
         "comparisonFunc = COMPARISON_LESS)"
+
+// Declares the b1 immediate constants. Vulkan has no root constant register, so the
+// SPIR-V path maps the same struct onto push constants instead
+#ifdef __spirv__
+    #define URootConstants(type, name) [[vk::push_constant]] ConstantBuffer<type> name
+#else
+    #define URootConstants(type, name) ConstantBuffer<type> name : register(b1)
+#endif

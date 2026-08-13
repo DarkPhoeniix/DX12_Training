@@ -52,7 +52,6 @@ private:
     void _UpdateCall();
     void _RenderCall();
     void _ExecuteFrameTasks();
-    int _RunClearOnly();
 
     friend LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 

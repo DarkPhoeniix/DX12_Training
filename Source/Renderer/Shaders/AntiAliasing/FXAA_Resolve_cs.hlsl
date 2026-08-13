@@ -14,7 +14,7 @@ struct PassConstants
     uint WorkCountsBufferIndex;
 };
 
-ConstantBuffer<PassConstants> PassCB : register(b1);
+URootConstants(PassConstants, PassCB);
 
 [RootSignature(URootSignature)]
 [numthreads(64, 1, 1)]

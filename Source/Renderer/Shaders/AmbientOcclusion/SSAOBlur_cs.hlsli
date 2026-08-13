@@ -17,7 +17,7 @@ struct PassConstants
     uint OutputTextureIndex;
 };
 
-ConstantBuffer<PassConstants> PassCB : register(b1);
+URootConstants(PassConstants, PassCB);
 
 inline float LinearDepth(in float zBufferSample, in float A, in float B)
 {

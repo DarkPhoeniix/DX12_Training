@@ -43,7 +43,7 @@ struct PassConstants
     uint OutputCommandsBufferIndex;
 };
 
-ConstantBuffer<PassConstants> PassCB : register(b1);
+URootConstants(PassConstants, PassCB);
 
 [RootSignature(URootSignature)]
 [numthreads(THREAD_BLOCK_SIZE, 1, 1)]

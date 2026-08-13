@@ -18,7 +18,7 @@ struct PassConstants
     uint AmbientOcclusionTextureIndex;
 };
 
-ConstantBuffer<PassConstants> PassCB : register(b1);
+URootConstants(PassConstants, PassCB);
 
 // TODO: remove GetViewPosition
 static float3 GetViewPosition(float2 texcoord, float depth)
